@@ -3,14 +3,16 @@ set -e
 set -o pipefail
 
 sysroot=$1
-shift 1
+machine=$2
+arch=$3
+shift 3
 
 rm -rf "${sysroot}"
 mkdir -p "${sysroot}"
 pushd "${sysroot}"
 
 function rpm() {
-    curl -s https://vault.centos.org/6.0/os/x86_64/Packages/"$1".el6.x86_64.rpm | rpm2cpio - | cpio -i
+    curl -s https://vault.centos.org/6.0/os/"${machine}"/Packages/"$1".el6."${arch}".rpm | rpm2cpio - | cpio -i
     find . -type d ! -perm 755 -exec chmod 755 {} +
 }
 

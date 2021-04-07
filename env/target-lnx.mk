@@ -20,11 +20,19 @@ endif
 
 meson := linux
 
+archs += i386
+openssl/i386 := linux-x86
+host/i386 := i386-linux-$(libc)
+triple/i386 := i686-unknown-linux-$(libc)
+meson/i386 := x86
+centos/i386 := i686
+
 archs += x86_64
 openssl/x86_64 := linux-x86_64
 host/x86_64 := x86_64-linux-$(libc)
 triple/x86_64 := x86_64-unknown-linux-$(libc)
 meson/x86_64 := x86_64
+centos/x86_64 := x86_64
 
 archs += aarch64
 openssl/aarch64 := linux-aarch64
@@ -78,7 +86,7 @@ lflags += -lrt
 
 define _
 more/$(1) := 
-ifeq ($(1),x86_64)
+ifneq ($(1),aarch64)
 more/$(1) += --sysroot $(CURDIR)/$(output)/sysroot
 else
 more/$(1) += --sysroot $(CURDIR)/$(output)/sysroot/usr/$(host/$(1))
@@ -93,8 +101,8 @@ endef
 $(each)
 
 ifeq ($(distro),)
-ifeq ($(machine),x86_64)
-distro := centos6
+ifneq ($(machine),aarch64)
+distro := centos6 $(machine) $(centos/$(machine))
 else
 distro := ubuntu bionic
 endif

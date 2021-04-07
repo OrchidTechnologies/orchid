@@ -85,8 +85,16 @@ int Main(int argc, const char *const argv[]) {
         Execute("netsh", "interface", "ip", "set", "subinterface", device, "mtu=" + std::to_string(mtu));
         Execute("netsh", "interface", "ipv4", "set", "interface", device, "metric=0");
 
+        //Execute("netsh", "interface", "ipv6", "set", "address", device, "::ffff:" + std::string(local));
+
         const auto destination(args.count("capture") != 0 ? Host(args["capture"].as<std::string>())/32 : "0.0.0.0/0");
         Execute("netsh", "interface", "ipv4", "add", "route", destination, device, gateway, "metric=0");
+        if (args.count("capture") == 0) {
+            try {
+                Execute("netsh", "interface", "ipv6", "del", "route", "::/0", device, "::ffff:" + std::string(gateway));
+            } catch(...) {}
+            Execute("netsh", "interface", "ipv6", "add", "route", "::/0", device, "::ffff:" + std::string(gateway), "metric=0");
+        }
 
         //Execute("netsh", "interface", "ipv4", "add", "route", network, device, "metric=0");
 #else

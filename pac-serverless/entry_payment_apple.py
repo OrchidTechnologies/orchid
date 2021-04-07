@@ -20,8 +20,8 @@ def main(event, context):
     logging.debug(f'refund_failed_txn() stage:{stage}')
     logging.debug(f'event: {event}')
     logging.debug(f'context: {context}')
-    logging.debug(f'body: {body}')
 
+    logging.debug(f'body: {body}')
     receipt     = body.get('receipt', '')
     #bundle_id   = body.get('bundle_id', '')
     account_id  = body.get('account_id', '')
@@ -42,6 +42,8 @@ def main(event, context):
         account_id = receipt_hash
 
     if (msg == "success"):
+        logging.debug(f'conditional writing receipt with hash: {receipt_hash}')
+        w3_generic.dynamodb_cwrite1(os.environ['RECEIPT_TABLE_NAME'], 'receipt', receipt_hash )
         w3_generic.credit_account_balance(account_id, total_usd)
         return response(200,{'msg':msg,'account_id':account_id,'total_usd':total_usd})
     else:

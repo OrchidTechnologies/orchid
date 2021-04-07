@@ -196,7 +196,7 @@ static uint8_t Bless(char value) {
     orc_assert_(false, "'" << value << "' is not hex");
 }
 
-void Bless(const std::string &value, Mutable &region) {
+void Bless(const std::string_view &value, Mutable &region) {
     size_t size(value.size());
     orc_assert_((size & 1) == 0, "odd-length hex data");
     size >>= 1;

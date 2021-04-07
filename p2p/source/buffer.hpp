@@ -340,7 +340,7 @@ class Mutable :
     }
 };
 
-void Bless(const std::string &value, Mutable &region);
+void Bless(const std::string_view &value, Mutable &region);
 
 class Segment final :
     public Span<const uint8_t>
@@ -824,7 +824,7 @@ class Beam final :
 };
 
 template <typename Type_ = Beam>
-Type_ Bless(const std::string &value) {
+Type_ Bless(const std::string_view &value) {
     Type_ data;
     Bless(value, data);
     return data;
