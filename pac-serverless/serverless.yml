@@ -50,10 +50,6 @@ custom:
     TXN_MONITOR_MODE:
       prod: ''
       dev: 'auto'
-  datadog:
-    addLayers: true
-    flushMetricsToLogs: true
-    apiKey: ${ssm:DATADOG_API_KEY~true}
   enterprise:
     logIngestMode: pull
   dynamodb:
@@ -131,12 +127,10 @@ provider:
         - "lambda:InvokeFunction"
         - "lambda:InvokeAsync"
       Resource:
-        - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-MaintainPool"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-txn_monitor"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-payment_apple"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-send_raw"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-get_account"
-        - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-refund_failed_txn"
 functions:
   txn_monitor:
     handler: txn_monitor.main
@@ -171,13 +165,6 @@ functions:
       - http:
           path: send_raw
           method: post
-  refund_failed_txn:
-    handler: entry_refund_failed_txn.main
-    timeout: 10
-    events:
-      - http:
-          path: refund_failed_txn
-          method: post
   payment_apple:
     handler: entry_payment_apple.main
     timeout: 10
@@ -185,45 +172,6 @@ functions:
       - http:
           path: payment_apple
           method: post
-  pac:
-    handler: handler.main
-    timeout: 10
-    events:
-      - http:
-          path: submit
-          method: post
-  apple:
-    handler: handler.apple
-    timeout: 10
-    events:
-      - http:
-          path: apple
-          method: post
-  MaintainPool:
-    handler: pool.maintain_pool_wrapper
-    timeout: 900
-    events:
-      - schedule: cron(0/15 * * * ? *)
-  UpdateStatus:
-    handler: status.main
-    timeout: 900
-    events:
-      - schedule: cron(10/15 * * * ? *)
-  balance:
-    handler: balance.main
-    timeout: 300
-    events:
-      - schedule: cron(5/15 * * * ? *)
-  recycle:
-    handler: recycle.main
-    timeout: 30
-    events:
-      - http:
-          path: recycle
-          method: post
-  reclaim:
-    timeout: 900
-    handler: reclaim.main
   StoreStatus:
     handler: storestatus.main
     timeout: 30
@@ -239,7 +187,6 @@ functions:
           path: verify
           method: post
 plugins:
-  - serverless-plugin-datadog
   - serverless-pseudo-parameters
   - serverless-python-requirements
   - serverless-prune-plugin
