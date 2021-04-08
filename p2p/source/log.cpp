@@ -38,9 +38,19 @@ extern "C" void NSLog(NSString *, ...);
 #include "log.hpp"
 #include "task.hpp"
 
+#ifdef __APPLE__
+static const char *__crashreporter_info__ = 0;
+asm(".desc __crashreporter_info__, 0x10");
+#endif
+
 namespace orc {
 
 bool Verbose(false);
+
+namespace {
+    static std::mutex mutex_;
+    static std::string cause_;
+}
 
 void Log_(std::ostream &out, Fiber *fiber) {
     if (fiber == nullptr)
@@ -66,6 +76,8 @@ Log::~Log() { try {
     if (log.find('\e') != std::string::npos)
         log += "\e[0m";
 
+    std::unique_lock<std::mutex> lock(mutex_);
+
 #if 0
 #elif defined(__APPLE__)
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
@@ -75,8 +87,18 @@ Log::~Log() { try {
 #else
     std::cerr << log << std::endl;
 #endif
+
+    cause_ = std::move(log);
+#ifdef __APPLE__
+    __crashreporter_info__ = cause_.c_str();
+#endif
 } catch (...) {
     // XXX: maybe there's a backup plan?
 } }
+
+std::string Cause() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    return cause_;
+}
 
 }

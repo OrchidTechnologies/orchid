@@ -40,6 +40,8 @@ class Log final :
     ~Log() override;
 };
 
+std::string Cause();
+
 }
 
 inline constexpr orc::Fiber *const orc_fiber = nullptr;
