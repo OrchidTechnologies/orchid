@@ -48,8 +48,8 @@ namespace orc {
 bool Verbose(false);
 
 namespace {
-    static std::mutex mutex_;
-    static std::string cause_;
+    std::mutex mutex_;
+    std::string cause_;
 }
 
 void Log_(std::ostream &out, Fiber *fiber) {
