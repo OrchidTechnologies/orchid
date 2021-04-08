@@ -120,10 +120,6 @@ class Chain :
         if (chain_ == 30)
             return true;
 
-        // xDai {"code":-32071,"data":"See EIP: https://eips.ethereum.org/EIPS/eip-1186","message":"This method is not part of the official RPC API yet (EIP-1186). Run with `--jsonrpc-experimental` to enable it."}
-        if (chain_ == 100)
-            return true;
-
         // Ganache "Implement eth_getProof RPC message" https://github.com/trufflesuite/ganache-core/issues/382
         if (chain_ == 1337)
             return true;
