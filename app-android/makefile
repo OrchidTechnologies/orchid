@@ -80,6 +80,9 @@ endif
 verbose := 
 
 zipalign := 
+ifneq ($(ANDROID_SDK_ROOT),)
+zipalign := $(firstword $(wildcard $(ANDROID_SDK_ROOT)/build-tools/*/zipalign))
+endif
 ifneq ($(ANDROID_HOME),)
 zipalign := $(firstword $(wildcard $(ANDROID_HOME)/build-tools/*/zipalign))
 endif

@@ -9,6 +9,8 @@
 # }}}
 
 
+# XXX: consider checking ANDROID_SDK_ROOT
+
 ifeq ($(ANDROID_HOME),)
 export ANDROID_HOME := $(wildcard ~/Library/Android/sdk)
 endif
