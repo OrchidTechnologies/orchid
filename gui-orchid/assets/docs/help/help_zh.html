@@ -1,55 +1,90 @@
+
 <h1>Orchid 帮助</h1>
-<p>欢迎使用 Orchid。 如需帮助或提供一般反馈，请发送电子邮件至 contact@orchid.com。</p>
 
-<h1>Orchid 应用</h1>
-<p>Orchid 的使用与其它 VPN 应用有所不同。 Orchid 会将您连接至 VPN 市场，并设有多个 VPN 为您服务。 每次连接网络时，系统会根据质押权重目录结构，从提供商库中为您分配一个提供商。 无论何时，若不喜欢服务，您皆可关闭 Orchid，然后重新打开，以刷新连接并重新分配提供商。</p>
+<p>欢迎使用 Orchid 0.9.24</p>
 
-<p>如要向 VPN 提供商支付服务费用，本应用需要访问 Orchid 帐户的权限方可实现。 有关如何使用数字货币 OXT 和以太币创建 Orchid 帐户，或者如何添加别人分享给您的现有帐户，请见下述。 Orchid 网站上的<a href="https://www.orchid.com/join">“立即加入”页面</a>中包含最新指南以及介绍视频。</p>
+<b>产品支持</b>
+<ul><li>我需要更多帮助，应该怎么办？</li></ul>
 
-<!-- BEGIN: EXCLUDE(iOS,macOS) -->
+<b>入门</b>
+<ul><li>什么是 Orchid？</li>
+<li>如何打开 Orchid？</li>
+<li>如何操作“管理帐户”？</li>
+<li>什么是流量监控器？</li>
+<li>如何访问多跃点、OpenVPN 和 WireGuard？</li></ul>
 
-<h1>创建 Orchid 帐户</h1>
-<p>Orchid 帐户中含有已转入 Orchid 极微支付智能合约的 OXT 币。 创建帐户后，有权访问该帐户的任何人均可发送以该帐户中的 OXT 币为保证的极微付款。 创建帐户会耗费“燃料”中的以太币，因此，创建 Orchid 帐户需要 OXT 币和以太币两种数字货币。 </p>
+<b>Orchid 帐户</b>
+<ul>
+	<!-- BEGIN: EXCLUDE(Android) -->
+	<li>如何购买 Orchid 帐户？</li>
+	<!-- END: EXCLUDE(Android) -->
+<li>是否可以使用加密货币创建 Orchid 帐户？</li>
+<li>如何导入现有 Orchid 帐户？</li></ul>
 
-<h2>获取 OXT 币和以太币</h2>
-<p>您需要使用 OXT 数字货币向提供商支付服务费用。 只需 10 OXT 币即可开始使用，此面值应可提供约 60 GB 的 VPN 服务。 此外，还需约 0.005 以太币，用于支付创建 Orchid 帐户所需的两项以太坊交易。 现在，<a href="https://www.coinbase.com/price/orchid">Coinbase</a>上已可交易 OXT 币和以太币。 而且，通过 Coinbase 的 Earn Campaign，您还可赢取免费 OXT 币。 Uniswap 和其它以太坊交易所等地均可获取 OXT 币 。</p>
-<p>请记住：只需为您使用的服务付费。因此，一旦关闭 Orchid，就不会继续从您的 Orchid 帐户中消耗 OXT 币。 </p>
+<h1>产品支持</h1>
+<p>有关 Orchid 如何运作的详细信息和故障排除，请访问 <a href="https://docs.orchid.com/en/latest/">Orchid 帮助文档</a>。</p>
 
-<h2>添加 OXT 币和以太币至支持 Web3 的以太坊钱包</h2>
-<p>每个 Orchid 帐户都需要一个以太坊钱包，以便为帐户充值。 建议您为 Orchid 创建一个新的以太坊钱包，即未与其它以太坊服务绑定的钱包。 经过测试，我们可支持多种钱包，但有些钱包的运行效果更佳，具体视您的帐户创建情况而定。 最简单的方法是，在笔记本电脑或台式电脑上使用 Metamask 浏览器插件创建 Orchid 帐户。</p>
+<p>如果您仍需帮助或有一般反馈，请发送电子邮件至 <a href="mailto:contact@orchid.com">contact@orchid.com</a> 创建支持表单，我们将在 24 小时内回复您。</p>
+<h1>入门</h1>
 
-<p>推荐的钱包：</p>
-<ol>
-  <li><a href="https://metamask.io">Metamask</a> - 我们推荐在笔记本电脑或台式电脑上使用 Metamask Chrome 插件。</li>
-  <li><a href="https://trustwallet.com">Trust Wallet</a> - 在 Android 和 iOS 系统上均可使用。</li>
-  <li><a href="https://wallet.coinbase.com">Coinbase Wallet</a> - 在 Android 和 iOS 系统上均可使用， 但在 iOS 上可能会较快散失 DApp 功能。</li>
-  <li><a href="https://brd.com/">BRD Wallet</a> - 在 Android 和 iOS 系统上均可使用。</li>
-</ol>
+<h2>什么是 Orchid？</h2>
 
-<p>我们建议，出于隐私考虑，请创建一个新钱包，单独用于 Orchid。 <a href="https://www.orchid.com/faq#orchid-app--why-new-wallet">了解更多详情。 </a></p>
+<p>Orchid 会将您连接至 VPN 市场，并设有多个 VPN 提供商为您服务。 每次连接网络时，系统会从网络中随机为您分配一个提供商。 无论何时，若不喜欢服务，您皆可关闭 Orchid，然后重新打开，以刷新连接并重新分配提供商。 在连接网络并使用 VPN 后，您需要按字节支付服务费用，通过极微支付付款。</p>
 
-<p>将 OXT 币和以太币转入已创建的新钱包。 如果您使用 Coinbase 赚取或购买 OXT 币和以太币，请前往 Coinbase，并"发送"资金至以太坊钱包地址。 转移 OXT 币和以太币将会花费少量以太币作为燃料费用。 您的钱包中需要这两种数字货币才能创建 Orchid 帐户。</p>
+<p>如要向 VPN 提供商支付服务费用，本应用将需要访问至少一个 Orchid 帐户。 Orchid 帐户也必须具有适当的存款和余额，才能正常运作。 </p>
 
-<h2>创建 Orchid 帐户并充值</h2>
-<p>您可通过以下网关向 Orchid 充值：<a href="https://account.orchid.com/">account.orchid.com</a>。 该网页是支持 Web3 的前端，与 Orchid 极微支付合约连接。 加载 account.orchid.com 时需要启用 Metamask 插件，或者也可从您钱包的 DApp 浏览器加载。 正确加载页面后，即可在钱包和 Orchid 之间转账。 在这里，您也可给帐户充值；或者，在创建帐户并绑定至本应用后，提取资金。</p>
+<h2>如何打开 Orchid？</h2>
 
-<p>加载 account.orchid.com 网页后，您需要一个有资金的钱包，才能创建 Orchid 帐户。 移动钱包内置有浏览器，通常称为 DApp 浏览器。 对于 Metamask 插件，只需加载该网页及启用 Metamask，并接受连接请求。 建议收藏 account.orchid.com 网页，方便以后找回。</p>
+<p>一旦您拥有至少一个有资金的活动帐户时，无论是通过添加积分或通过 DApp 为该 Orchid 帐户提供资金，点击主页界面上的连接打开 Orchid，即可看见您的连接状态。</p>
 
-<p>请阅读 account.orchid.com 网页上的内容。 这是一个响应式网页，可告知是否需要给您的钱包添加更多 OXT 币或以太币以创建帐户。 准备就绪后，您可点击或轻按“转入可用 OXT 币：”的蓝色按钮，然后需批准两项交易。</p>
+<p>您将需要在首次打开 Orchid 时授予 VPN 权限。 每次打开 Orchid 时，您会随机连接到网络上的一个提供商。 使用按钮关闭 Orchid 后再打开，可刷新连接，并随机再次连接。</p>
 
-<p>注意：建议您编辑交易费，为“快速”创建支付额外以太币。这样一来，仅需 30-60 秒即可成功创建 Orchid 帐户。 如果您支付的是“慢速”创建，该交易可能会被挂起。 </p>
+<h2>如何操作“管理帐户”？</h2>
 
-<p>在帐户创建完毕后，页面上会出现一个二维码。 如果您在“概览”页面并未看到二维码，可点击页面右上角的“更多”链接，然后选择“信息”。 您将会在此处看到账户余额和该二维码。</p>
+<p>在“管理帐户”中，您可以查看有关 Orchid 地址及其所有关联帐户的详细信息。 您也可使用 Orchid 地址购买有积分的帐户，并在 Orchid DApp 中使用您自己的加密货币资金创建帐户。</p>
 
-<!-- END: EXCLUDE(iOS,macOS) -->
+<p>在您当前选择的 Orchid 地址下方，将看到与之关联的所有帐户。 您将需要选择一个活动帐户用于向 Orchid 网络上的提供商支付 VPN 费用。</p>
 
-<h2>添加 Orchid 帐户至本应用</h2>
+<p>有关购买和创建 Orchid 帐户的更多信息，请参阅以下内容。</p>
 
-<p>要添加新创建的 Orchid 帐户，只需打开本应用，在初始帮助文本弹出窗口中按下二维码图标。 若并未弹出该窗口，请前往主页选择“新跃点”，然后在添加跃点界面选择“我有二维码”。 扫描或粘贴该二维码至本应用。</p>
+<h2>什么是流量监控器？</h2>
 
-<p>扫描二维码后，本应用将使用该 Orchid 帐户和您默认的集展人设置创建一个跃点。 然后，您将看到跃点信息界面，其中会显示保存的信息。 按下“分享 Orchid 帐户”按钮后，会弹出一个二维码，您可将刚刚创建的 Orchid 帐户分享给其他人或其它设备。 按返回箭头，则可返回主界面。 </p>
+<p>流量监控器是一个网络协议分析器，可让您查看有关手机网络连接的信息。 在主页界面点击左上角的菜单图标，然后选择“流量监控器”即可进行访问。 </p>
 
-<p>在主界面中，可使用右上角的开关打开 Orchid。</p>
+<p>如果您希望启用流量监控器但不设置任何跃点，可以进入“设置”并启用“允许无跃点 VPN”（仅限流量监控）。</p>
+
+<h2>如何访问多跃点、OpenVPN 和 WireGuard？</h2>
+
+<p>目前，如需使用多跃点、OpenVPN 和 WireGuard，您需要切换回旧界面， 在“设置 ” -> “启用多跃点用户界面”中设置即可。</p>
+
+<p>目前，您只能在新界面中购买 Orchid 积分账户。</p>
+
+<h1>Orchid 地址和帐户</h1>
+
+<!-- BEGIN: EXCLUDE(Android) -->
+
+<h2>如何购买 Orchid 帐户？</h2>
+
+<p>配置 Orchid 最简单的方法是在应用内购买 Orchid 帐户。在主页界面中，前往“管理帐户”，然后单击“添加积分”。</p>
+
+<p>您将会在此处看到可供购买的选项。 在购买完成后，将返回“管理帐户”，您的帐户会显示可见余额和存款。 一旦帐户处于活动状态，即可连接到 Orchid。</p>
+<!-- END: EXCLUDE(Android) -->
+
+<h2>是否可以使用加密货币创建 Orchid 帐户？</h2>
+
+<p>是的！ Orchid 生态系统有一个 dApp（去中心化应用程序），用户可以绑定钱包，并使用加密货币资金为 Orchid 帐户充值。 </p>
+
+<p>您可通过为本应用中创建的 Orchid 地址充值来创建 Orchid 帐户。只需将 Orchid 地址从本应用复制到 Orchid dApp，绑定一个钱包，然后为待创建的帐户付款即可。 </p>
+
+<p>要复制 Orchid 地址，请在“管理帐户”屏幕上点击下方 Orchid 地址显示的号码。</p>
+
+<p>有关更多帮助，请参阅我们的 <a href="https://www.orchid.com/join" target="_blank">加入说明</a>或阅读<a href="http://docs.orchid.com">帮助文档</a>。</p>
+
+<h2>如何导入现有 Orchid 帐户？</h2>
+
+<p>一旦从应用内部或其他地方创建帐户后，即可导出和共享该帐户。 要导入现有帐户，请前往“管理帐户”，然后点击 Orchid 地址旁边的齿轮图标，接着选择“导入”。  然后，您可扫描或粘贴 Orchid 帐户，在新的 Orchid 地址下添加该帐户。</p>
+
+<p>添加完成后，您会看到与该帐户关联的余额和存款。</p>
 
 
 
