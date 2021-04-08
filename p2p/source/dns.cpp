@@ -60,7 +60,7 @@ task<std::vector<asio::ip::tcp::endpoint>> Base::Resolve(const std::string &host
             }
     }
 
-    co_return results;
+    co_return std::move(results);
 }, "resolving " << host << ":" << port); }
 
 cppcoro::shared_task<std::string> Base::Resolve_(Base &base, const std::string &host) {
