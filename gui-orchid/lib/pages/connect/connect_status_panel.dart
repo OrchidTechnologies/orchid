@@ -155,7 +155,7 @@ class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
                                         color: Colors.white, fontSize: 12)),
                                 padding: EdgeInsets.all(8),
                                 toAnimate: false,
-                                child: Text("Balance", style: textStyle)),
+                                child: Text(S.of(context).balance, style: textStyle)),
                             Container(
                                 width: 80,
                                 child: FittedBox(
