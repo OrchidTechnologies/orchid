@@ -79,6 +79,7 @@ Scheduled Schedule() {
     static Pool pool;
     static std::thread thread([]() {
         rtc::ThreadManager::Instance()->WrapCurrentThread();
+        rtc::SetCurrentThreadName("orchid:tasks");
         pool.Run();
     });
     return {&pool};

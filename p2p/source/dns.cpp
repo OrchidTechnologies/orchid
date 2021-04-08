@@ -44,7 +44,7 @@ task<std::vector<asio::ip::tcp::endpoint>> Base::Resolve(const std::string &host
 
     static const std::regex re("[0-9.]+");
     if (std::regex_match(host, re)) {
-        const auto endpoints(co_await resolver.async_resolve(host, port, orc::Adapt()));
+        const auto endpoints(resolver.resolve(host, port));
         for (auto &endpoint : endpoints)
             results.emplace_back(endpoint);
     } else {
@@ -54,7 +54,7 @@ task<std::vector<asio::ip::tcp::endpoint>> Base::Resolve(const std::string &host
 
         for (const auto &answer : result["Answer"])
             if (answer["type"].asUInt64() == 1) {
-                const auto endpoints(co_await resolver.async_resolve(answer["data"].asString(), port, orc::Adapt()));
+                const auto endpoints(resolver.resolve(answer["data"].asString(), port));
                 for (const auto &endpoint : endpoints)
                     results.emplace_back(endpoint);
             }

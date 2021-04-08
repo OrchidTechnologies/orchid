@@ -24,6 +24,8 @@
 
 #include <boost/asio/executor_work_guard.hpp>
 
+#include <rtc_base/platform_thread_types.h>
+
 #include "baton.hpp"
 #include "memory.hpp"
 
@@ -38,6 +40,7 @@ asio::io_context &Context() {
 
 std::thread &Thread() {
     static std::thread thread([]() {
+        rtc::SetCurrentThreadName("orchid:asio");
         Context().run();
     });
     return thread;
