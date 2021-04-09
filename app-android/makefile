@@ -64,7 +64,7 @@ $(output)/jnilibs/%/libflutter.so: $(pwd/flutter)/bin/cache/artifacts/engine/and
 	unzip -p $< lib/$*/libflutter.so >$@
 
 $(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json $(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar
-	@gradle -Pandroid.debug.obsoleteApi=true assembleRelease --console verbose --warning-mode all \
+	@./gradlew -Pandroid.debug.obsoleteApi=true assembleRelease --console verbose --warning-mode all \
 	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
 	    -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar -PorcInterface='$(pwd/gui)'
 	exit 0
