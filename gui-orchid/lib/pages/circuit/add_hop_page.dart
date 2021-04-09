@@ -6,7 +6,7 @@ import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
-import 'package:orchid/generated/l10n.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/pages/common/formatting.dart';

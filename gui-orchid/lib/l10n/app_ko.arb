@@ -1,5 +1,5 @@
 {
-    "@@locale": "en",
+    "@@locale": "ko",
     "newHop": "신규 홉 구성하기",
     "@newHop": {
         "description": "New network hop"

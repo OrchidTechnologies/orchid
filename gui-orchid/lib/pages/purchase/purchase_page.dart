@@ -18,7 +18,7 @@ import 'package:orchid/pages/common/link_text.dart';
 import 'package:orchid/pages/common/loading.dart';
 import 'package:orchid/pages/common/screen_orientation.dart';
 import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/generated/l10n.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';

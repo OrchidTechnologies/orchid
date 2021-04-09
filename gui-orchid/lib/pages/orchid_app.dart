@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:orchid/generated/l10n.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/common/side_drawer.dart';
 import 'connect/connect_page.dart';
@@ -21,7 +21,7 @@ class OrchidApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
       ],
       supportedLocales: OrchidPlatform.languageOverride == null
-          ? S.delegate.supportedLocales
+          ? S.supportedLocales
           : [Locale.fromSubtags(languageCode: OrchidPlatform.languageOverride)],
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,

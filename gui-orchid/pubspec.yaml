@@ -37,6 +37,7 @@ dependencies:
   http: 0.12.2 # XXX: web3dart
   in_app_purchase:
     path: in_app_purchase
+  intl: 0.17.0
   jdenticon_dart: 1.2.1+1 # XXX: uuid (crypto)
   percent_indicator: 3.0.1
   pointycastle: 1.0.2
@@ -56,6 +57,7 @@ dev_dependencies:
   pedantic: 1.11.0
 
 flutter:
+  generate: true
   uses-material-design: true
 
   assets:

@@ -4,7 +4,7 @@ import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
-import 'package:orchid/generated/l10n.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/pages/common/formatting.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
