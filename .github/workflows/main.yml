@@ -43,9 +43,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - name: rm -rf /opt
       run: sudo rm -rf /opt
 
@@ -65,7 +62,6 @@ jobs:
         name: orchid-apk
         path: app-android/out-and/Orchid.apk
         #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
-
 
 
   build-mac-app:
@@ -158,9 +154,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - name: install mingw-w64
       run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
@@ -184,9 +177,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - name: install mingw-w64
       run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
@@ -236,9 +226,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -259,9 +246,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -276,9 +260,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -297,9 +278,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -318,9 +296,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -338,9 +313,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - name: rm -rf /opt
       run: sudo rm -rf /opt
 
@@ -358,9 +330,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - name: rm -rf /opt
       run: sudo rm -rf /opt
 
@@ -404,9 +373,6 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -422,9 +388,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - name: download orchidd-dkr
       uses: actions/download-artifact@v2
       with:
