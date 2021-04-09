@@ -29,8 +29,9 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
         Json::Value root;
         root["jsonrpc"] = "2.0";
         root["method"] = method;
-        // XXX: xDAI eth_gasPrice has a JSON injection bug that requires this field be an integer :/
-        root["id"] = 0;
+        // xDAI eth_gasPrice used to have a bug that required the id be an integer;
+        // but now, Cloudflare has a bug that requires the id be a non-empty string
+        root["id"] = "0";
         root["params"] = std::move(args);
         return root;
     }()));
