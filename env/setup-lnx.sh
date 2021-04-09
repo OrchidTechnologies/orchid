@@ -4,7 +4,8 @@ set -e
 export DEBIAN_FRONTEND=noninteractive
 
 sudo -EH apt-get -y install \
-    bc cpio capnproto rpm tcl vim-common zstd \
+    bc cpio rpm rsync vim-common \
+    capnproto tcl zstd \
     clang clang-tidy lld \
     libc++-dev libc++abi-dev \
     python python3-pip python3-setuptools \

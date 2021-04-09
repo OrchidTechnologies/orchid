@@ -20,6 +20,10 @@ export ANDROID_HOME := $(wildcard /usr/local/lib/android/sdk)
 endif
 
 ifeq ($(ANDROID_HOME),)
+export ANDROID_HOME := $(wildcard /usr/lib/android-sdk)
+endif
+
+ifeq ($(ANDROID_HOME),)
 ifneq ($(shell which cygpath 2>/dev/null),)
 export ANDROID_HOME := $(wildcard $(shell cygpath '$(USERPROFILE)')/AppData/Local/Android/Sdk)
 endif

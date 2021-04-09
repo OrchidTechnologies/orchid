@@ -64,6 +64,24 @@ jobs:
         #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
 
 
+  build-and-dkr:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: rm -rf /opt
+      run: sudo rm -rf /opt
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup-git.sh
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make Android .apk
+      run: cd app-android && env/docker.sh -j3
+
+
+
   build-mac-app:
     runs-on: macos-latest
 
@@ -323,7 +341,7 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: make Linux server
-      run: cd srv-shared && ./docker.sh
+      run: cd srv-shared && env/docker.sh -j3
 
 
   build-lnx-bld:
