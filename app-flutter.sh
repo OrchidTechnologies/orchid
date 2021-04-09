@@ -11,6 +11,7 @@ ln -s ../gui-"$1" gui
 
 ln -s gui/pubspec.yaml
 ln -s gui/lib
+ln -s gui/l10n.yaml
 ln -s gui/assets
 
 make create
