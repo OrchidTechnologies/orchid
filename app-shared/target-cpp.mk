@@ -42,8 +42,8 @@ source += $(filter-out \
 ,$(wildcard $(pwd)/engine/shell/platform/common/cpp/client_wrapper/*.cc))
 
 cflags += -I$(pwd/gui)/$(assemble)
-source += $(subst %,.,$(generated))
-header += $(subst %,.,$(generated))
+source += $(subst %,.,$(word 1,$(generated)))
+header += $(subst %,.,$(word 2,$(generated)))
 
 # XXX: does flutter enforce that windows uses .cpp and linux uses .cc or is that an accident?
 source += $(wildcard $(pwd/gui)/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/*.cc)

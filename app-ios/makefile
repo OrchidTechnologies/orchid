@@ -66,7 +66,7 @@ $(call include,shared/target-ios.mk)
 local := 
 local += app.mm.o
 
-local += $(subst %,.,$(generated)).o
+local += $(subst %,.,$(word 1,$(generated))).o
 
 include env/output.mk
 

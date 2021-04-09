@@ -22,6 +22,7 @@ assemble := ios
 platform := ios
 
 generated := $(pwd/gui)/ios/Runner/GeneratedPluginRegistrant%m
+generated += $(pwd/gui)/ios/Runner/GeneratedPluginRegistrant%h
 
 framework := Flutter
 include $(pwd)/target-apl.mk
