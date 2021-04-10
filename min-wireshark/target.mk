@@ -76,6 +76,7 @@ wireshark := $(filter-out \
 ,$(wireshark))
 
 cflags/$(pwd/wireshark)/epan/addr_resolv.c += -include netdb.h
+cflags/$(pwd/wireshark)/wsutil/crash_info.c += -D__crashreporter_info__=orc_crashinfo
 endif
 
 cflags/$(pwd/wireshark)/ += -DHAVE_FCNTL_H

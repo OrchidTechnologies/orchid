@@ -39,8 +39,8 @@ extern "C" void NSLog(NSString *, ...);
 #include "task.hpp"
 
 #ifdef __APPLE__
-static const char *__crashreporter_info__ = nullptr;
-asm(".desc __crashreporter_info__, 0x10");
+extern "C" const char *__crashreporter_info__ = nullptr;
+asm(".desc ___crashreporter_info__, 0x10");
 #endif
 
 namespace orc {
