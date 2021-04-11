@@ -53,7 +53,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
 
     const auto id(data["id"]);
     orc_assert(!id.isNull());
-    orc_assert(id == 0);
+    orc_assert(id == "0");
     co_return data["result"];
 }, "calling " << method << " on " << locator_); }
 
