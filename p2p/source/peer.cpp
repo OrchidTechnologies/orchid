@@ -20,6 +20,7 @@
 /* }}} */
 
 
+#include <media/sctp/usrsctp_transport.h>
 #include <pc/sctp_transport.h>
 
 #include <rtc_base/openssl_identity.h>
@@ -92,8 +93,8 @@ Peer::Peer(S<Base> base, Configuration configuration) :
 }
 
 
-struct Internal_ { typedef struct socket *(cricket::SctpTransport::*type); };
-template struct Pirate<Internal_, &cricket::SctpTransport::sock_>;
+struct Internal_ { typedef struct socket *(cricket::UsrsctpTransport::*type); };
+template struct Pirate<Internal_, &cricket::UsrsctpTransport::sock_>;
 
 task<struct socket *> Peer::Internal() {
     auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
@@ -103,7 +104,7 @@ task<struct socket *> Peer::Internal() {
     orc_assert(sctp != nullptr);
 
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
-    co_return static_cast<cricket::SctpTransport *>(static_cast<webrtc::SctpTransport *>(sctp.get())->internal())->*Loot<Internal_>::pointer;
+    co_return static_cast<cricket::UsrsctpTransport *>(static_cast<webrtc::SctpTransport *>(sctp.get())->internal())->*Loot<Internal_>::pointer;
 }
 
 
