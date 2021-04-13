@@ -21,6 +21,7 @@
 include env/target.mk
 
 args := 0x264930d4c83496ebe0ef1615d6d500c1c1f0aee37160b17cf548e7f8cefb0121
+args := 0x1b2a017385b67a98ebc330a40f6845825fee6c7f52bc396f3ee950966692789e
 
 .PHONY: all
 all: $(output)/$(machine)/ticket$(exe)
