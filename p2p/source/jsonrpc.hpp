@@ -260,8 +260,12 @@ struct Coded<std::vector<Type_>, void> {
     }
 
     static std::vector<Type_> Decode(Window &window) {
-        orc_assert(Coded<uint256_t>::Decode(window) == 0);
-        return {};
+        orc_assert(!Coded<Type_>::dynamic_);
+        std::vector<Type_> values;
+        const auto size(Coded<uint256_t>::Decode(window));
+        for (auto i(0); i != size; ++i)
+            values.emplace_back(Coded<Type_>::Decode(window));
+        return values;
     }
 
     static void Encode(Builder &builder, const std::vector<Type_> &values) {
