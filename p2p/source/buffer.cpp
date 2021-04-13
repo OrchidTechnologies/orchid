@@ -23,6 +23,7 @@
 #include <iomanip>
 
 #include "buffer.hpp"
+#include "scope.hpp"
 
 namespace orc {
 
@@ -100,6 +101,12 @@ void Buffer::copy(uint8_t *data, size_t size) const {
 }
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
+    const auto flags(out.flags());
+    _scope({ out.flags(flags); });
+
+    out << std::setfill('0');
+    out << std::setbase(16);
+
     out << '{';
     bool comma(false);
     buffer.each([&](const uint8_t *data, size_t size) {
@@ -107,8 +114,6 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
             out << ',';
         else
             comma = true;
-        out << std::setfill('0');
-        out << std::setbase(16);
         for (size_t i(0); i != size; ++i)
             out << std::setw(2) << int(data[i]);
         return true;
