@@ -511,6 +511,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<uint256_t, Address, Address> allowed("allowed");
         std::cout << co_await allowed.Call(*chain_, "latest", seller, 90000, token, sender) << std::endl;
 
+    } else if (command == "orchid:enroll1") {
+        const auto [seller, cancel, recipient] = Options<Address, bool, Address>(args);
+        static Selector<void, bool, std::vector<Address>> enroll("enroll");
+        std::cout << (co_await executor_->Send(*chain_, {}, seller, 0, enroll(cancel, {recipient}))).hex() << std::endl;
+
     } else if (command == "orchid:hand") {
         const auto [seller, owner, manager] = Options<Address, Address, Address>(args);
         static Selector<void, Address, Address> hand("hand");
