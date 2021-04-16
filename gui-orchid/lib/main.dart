@@ -7,6 +7,7 @@ import 'api/monitoring/orchid_status.dart';
 import 'api/orchid_api.dart';
 import 'api/orchid_log_api.dart';
 import 'api/orchid_platform.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +22,13 @@ void main() async {
   if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
     OrchidPurchaseAPI().initStoreListener();
   }
-  OrchidPlatform.languageOverride = (await OrchidVPNConfig.getUserConfigJS())
-      .evalStringDefault("lang", null);
+  var languageOverride =
+      (await OrchidVPNConfig.getUserConfigJS()).evalStringDefault("lang", null);
+  if (languageOverride != null &&
+      S.supportedLocales
+          .map((e) => e.languageCode)
+          .contains(languageOverride)) {
+    OrchidPlatform.languageOverride = languageOverride;
+  }
   runApp(OrchidApp());
 }
