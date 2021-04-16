@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/pages/app_colors.dart';
 import 'package:orchid/pages/common/link_text.dart';
 import 'package:styled_text/action_text_style.dart';
@@ -191,8 +192,7 @@ class AppText {
     return LinkTextSpan(
       text: S.of(context).learnMore,
       style: AppText.linkStyle.copyWith(fontSize: 15),
-      url:
-          'https://docs.orchid.com/en/latest/accounts/#technical-parts-of-an-orchid-account',
+      url: OrchidUrls.partsOfOrchidAccount,
     );
   }
 }
