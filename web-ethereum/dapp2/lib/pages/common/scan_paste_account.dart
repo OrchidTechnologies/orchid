@@ -2,6 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/common/app_buttons.dart';
@@ -81,12 +82,9 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   void _pasteCode() async {
     ParseOrchidAccountResult parseAccountResult;
     try {
-      // ClipboardData data = await Clipboard.getData('text/plain');
-      // String text = data.text;
+      ClipboardData data = await Clipboard.getData('text/plain');
+      String text = data.text;
 
-      // TESTING
-      String text =
-      'account={ protocol: "orchid", funder: "0x9d975145a801efc657eb68a3fdca2343808c38fa", secret: "4e53d52b041cfcf381b31459c11aa21b7fe73fbd3481beb6a86ef369fcc02b97" }';
       try {
         parseAccountResult = await _parse(text);
       } catch (err) {
