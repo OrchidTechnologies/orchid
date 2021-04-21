@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/common/app_text_field.dart';
+import 'package:orchid/common/app_text_field.dart';
 
 typedef KeySelectionCallback = void Function(KeySelectionItem key);
 

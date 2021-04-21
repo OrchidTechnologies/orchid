@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:ethereum_address/ethereum_address.dart';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:pointycastle/api.dart';
@@ -16,7 +15,6 @@ import 'package:uuid/uuid.dart';
 import 'package:uuid/uuid_util.dart';
 import 'package:web3dart/credentials.dart';
 import 'package:web3dart/crypto.dart';
-import 'package:convert/convert.dart';
 
 class Crypto {
   static final ECDomainParameters curve = ECCurve_secp256k1();

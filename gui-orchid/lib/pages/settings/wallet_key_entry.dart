@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
-import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/dialogs.dart';
+import 'package:orchid/common/app_text.dart';
+import 'package:orchid/common/app_dialogs.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// A controller for the [WalletKeyEntry] supporting observation of validation

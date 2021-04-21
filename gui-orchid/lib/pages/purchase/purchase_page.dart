@@ -10,21 +10,21 @@ import 'package:orchid/api/purchase/orchid_pac_seller.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/gradients.dart';
-import 'package:orchid/pages/common/link_text.dart';
-import 'package:orchid/pages/common/loading.dart';
-import 'package:orchid/pages/common/screen_orientation.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/gradients.dart';
+import 'package:orchid/common/link_text.dart';
+import 'package:orchid/common/loading.dart';
+import 'package:orchid/common/screen_orientation.dart';
+import 'package:orchid/common/titled_page_base.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
-import '../app_colors.dart';
-import '../app_sizes.dart';
-import '../app_text.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_sizes.dart';
+import '../../common/app_text.dart';
 
 typedef PurchasePageCompletion = void Function(); // TODO: return
 

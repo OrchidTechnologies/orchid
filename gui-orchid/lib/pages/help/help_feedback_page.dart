@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:orchid/pages/app_colors.dart';
-import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/accommodate_keyboard.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/common/app_text_field.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/tap_clears_focus.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_colors.dart';
+import 'package:orchid/common/app_text.dart';
+import 'package:orchid/common/accommodate_keyboard.dart';
+import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_text_field.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/common/titled_page_base.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:email_validator/email_validator.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/preferences/user_secure_storage.dart';
 import 'package:orchid/api/purchase/purchase_rate.dart';
 import 'package:orchid/util/units.dart';
@@ -55,7 +55,7 @@ abstract class OrchidPurchaseAPI {
   /// Return the API config allowing overrides from configuration.
   static Future<PacApiConfig> apiConfigWithOverrides(
       PacApiConfig prodAPIConfig) async {
-    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    var jsConfig = await OrchidUserConfig().getUserConfigJS();
     return PacApiConfig(
       enabled: jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
       url: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
@@ -80,7 +80,7 @@ abstract class OrchidPurchaseAPI {
 
     /// Optionally override to lower the PAC daily purchase limit.
     /// Note: This can never raise the limit.
-    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    var jsConfig = await OrchidUserConfig().getUserConfigJS();
     var overrideDailyPurchaseLimit = jsConfig.evalDoubleDefault(
         'pacs.pacDailyPurchaseLimit', pacDailyPurchaseLimit.value);
     var dailyPurchaseLimit =

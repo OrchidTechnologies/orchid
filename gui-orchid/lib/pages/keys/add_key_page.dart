@@ -1,15 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/instructions_view.dart';
-import 'package:orchid/pages/common/tap_clears_focus.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/instructions_view.dart';
+import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/common/titled_page_base.dart';
 
-import '../app_colors.dart';
-import '../app_gradients.dart';
-import '../app_text.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_gradients.dart';
+import '../../common/app_text.dart';
 
 class AddKeyPage extends StatefulWidget {
   @override

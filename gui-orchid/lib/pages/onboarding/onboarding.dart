@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/app_routes.dart';
-import 'package:orchid/pages/app_transitions.dart';
+import 'package:orchid/common/app_transitions.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 

@@ -5,12 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/link_text.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/link_text.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import '../app_text.dart';
+import '../../common/app_text.dart';
 
 class PurchaseStatus extends StatefulWidget {
   const PurchaseStatus({Key key}) : super(key: key);

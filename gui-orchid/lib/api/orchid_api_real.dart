@@ -16,9 +16,6 @@ class RealOrchidAPI implements OrchidAPI {
   static final RealOrchidAPI _singleton = RealOrchidAPI._internal();
   static const _platform = const MethodChannel("orchid.com/feedback");
 
-  /// Transient, in-memory log implementation.
-  OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
-
   factory RealOrchidAPI() {
     return _singleton;
   }
@@ -129,7 +126,7 @@ class RealOrchidAPI implements OrchidAPI {
   /// Get the logging API.
   @override
   OrchidLogAPI logger() {
-    return _logAPI;
+    return OrchidLogAPI.defaultLogAPI;
   }
 
   @override

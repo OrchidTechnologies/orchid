@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
@@ -12,12 +12,12 @@ import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/titled_page_base.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-import '../app_colors.dart';
+import '../../common/app_colors.dart';
 
 class AccountsPage extends StatefulWidget {
   const AccountsPage({Key key}) : super(key: key);
@@ -180,7 +180,7 @@ class _AccountsPageState extends State<AccountsPage> {
     );
 
     // Deliberately leave orphaned keys for testing.
-    bool orphanKeys = (await OrchidVPNConfig.getUserConfigJS())
+    bool orphanKeys = (await OrchidUserConfig().getUserConfigJS())
         .evalBoolDefault('orphanKeys', false);
 
     // Remove the key if it is no longer used.

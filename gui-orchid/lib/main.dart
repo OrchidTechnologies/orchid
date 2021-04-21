@@ -2,7 +2,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/pages/orchid_app.dart';
-import 'api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'api/monitoring/orchid_status.dart';
 import 'api/orchid_api.dart';
 import 'api/orchid_log_api.dart';
@@ -14,7 +14,7 @@ void main() async {
   OrchidAPI().logger().write("App Startup");
   OrchidStatus().beginPollingStatus();
   OrchidAPI().applicationReady();
-  OrchidPlatform.pretendToBeAndroid = (await OrchidVPNConfig.getUserConfigJS())
+  OrchidPlatform.pretendToBeAndroid = (await OrchidUserConfig().getUserConfigJS())
       .evalBoolDefault('isAndroid', false);
   if (OrchidPlatform.pretendToBeAndroid) {
     log("pretendToBeAndroid = ${OrchidPlatform.pretendToBeAndroid}");
@@ -23,7 +23,7 @@ void main() async {
     OrchidPurchaseAPI().initStoreListener();
   }
   var languageOverride =
-      (await OrchidVPNConfig.getUserConfigJS()).evalStringDefault("lang", null);
+      (await OrchidUserConfig().getUserConfigJS()).evalStringDefault("lang", null);
   if (languageOverride != null &&
       S.supportedLocales
           .map((e) => e.languageCode)

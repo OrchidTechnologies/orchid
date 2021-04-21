@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
-import '../../configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import '../abi_encode.dart';
 import '../orchid_account.dart';
 import '../../orchid_budget_api.dart';
@@ -28,7 +28,7 @@ class OrchidEthereumV1 {
     TokenType tokenType = chain.nativeCurrency;
 
     // Allow override via config for testing
-    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    var jsConfig = await OrchidUserConfig().getUserConfigJS();
     double overrideValue = jsConfig.evalDoubleDefault('gasPrice', null);
     if (overrideValue != null) {
       return tokenType.fromDouble(overrideValue);

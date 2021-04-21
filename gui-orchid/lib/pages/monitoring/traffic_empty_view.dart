@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '../app_colors.dart';
-import '../app_text.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_text.dart';
 
 class TrafficEmptyView extends StatelessWidget {
   @override

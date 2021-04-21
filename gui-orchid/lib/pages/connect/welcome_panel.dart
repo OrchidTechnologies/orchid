@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/pages/circuit/circuit_page.dart';
-import 'package:orchid/pages/circuit/scan_paste_account.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import '../app_colors.dart';
+import 'package:orchid/common/scan_paste_account.dart';
+import 'package:orchid/common/formatting.dart';
+import '../../common/app_colors.dart';
 
 class WelcomePanel extends StatefulWidget {
   const WelcomePanel({

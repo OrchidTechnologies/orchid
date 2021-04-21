@@ -5,8 +5,6 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/util/ip_address.dart';
-import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
@@ -49,10 +47,6 @@ class MockOrchidAPI implements OrchidAPI {
 
   final circuitConfigurationChanged = BehaviorSubject<void>.seeded(null);
 
-  OrchidLogAPI _logAPI = MemoryOrchidLogAPI();
-
-  Timer _routeTimer;
-
   /// Initialize the Channel implementation.
   /// This method is called once when the application is initialized.
   void _initChannel() {
@@ -62,7 +56,7 @@ class MockOrchidAPI implements OrchidAPI {
     // Update the orchid connection state when the vpn or (mock) orchid
     // tunnel connection state changes.
     vpnConnectionStatus.listen((OrchidVPNConnectionState state) {
-      switch(state) {
+      switch (state) {
         case OrchidVPNConnectionState.Invalid:
           connectionStatus.add(OrchidConnectionState.Invalid);
           break;
@@ -82,28 +76,8 @@ class MockOrchidAPI implements OrchidAPI {
       }
     });
 
-    // fake route updates
-    routeStatus.add(_fakeRoute());
-    _routeTimer = Timer.periodic(Duration(seconds: 3), (timer) {
-      routeStatus.add(_fakeRoute());
-    });
-
     // vpn configuration / permission status
     vpnPermissionStatus.add(false);
-  }
-
-  // fake route
-  OrchidRoute _fakeRoute() {
-    return OrchidRoute([
-      // @formatter:off
-      OrchidNode(ip: IPAddress.random(), location: Location.SFO),
-      OrchidNode(ip: IPAddress.random(), location: Location.StraightOfGibralter),
-      OrchidNode(ip: IPAddress.random(), location: Location.PEK),
-      OrchidNode(ip: IPAddress.random(), location: Location.SoutherTipOfAfrica),
-      OrchidNode(ip: IPAddress.random(), location: Location.CapeHorn),
-      OrchidNode(ip: IPAddress.random(), location: Location.STL),
-      // @formatter:on
-    ]);
   }
 
   /// The Flutter application uses this method to indicate to the native channel code
@@ -116,7 +90,7 @@ class MockOrchidAPI implements OrchidAPI {
   /// Get the logging API.
   @override
   OrchidLogAPI logger() {
-    return _logAPI;
+    return OrchidLogAPI.defaultLogAPI;
   }
 
   /// Trigger a request for OS level permissions required to allow installation and activation of the
@@ -208,8 +182,8 @@ class MockOrchidAPI implements OrchidAPI {
         break;
       case OrchidVPNConnectionState.Connecting:
       case OrchidVPNConnectionState.Connected:
-      // TODO: This does not seem to work.  How do we cancel here?
-      // Cancel any pending connect
+        // TODO: This does not seem to work.  How do we cancel here?
+        // Cancel any pending connect
         if (_connectFuture != null) {
           CancelableOperation.fromFuture(_connectFuture).cancel();
           _connectFuture = null;

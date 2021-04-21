@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/pages/app_gradients.dart';
-import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/accommodate_keyboard.dart';
-import 'package:orchid/pages/common/app_bar.dart';
-import 'package:orchid/pages/common/link_text.dart';
+import 'package:orchid/common/app_gradients.dart';
+import 'package:orchid/common/app_text.dart';
+import 'package:orchid/common/accommodate_keyboard.dart';
+import 'package:orchid/common/app_bar.dart';
+import 'package:orchid/common/link_text.dart';
 import 'package:orchid/pages/onboarding/onboarding.dart';
 import 'package:orchid/pages/onboarding/walkthrough_content.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';

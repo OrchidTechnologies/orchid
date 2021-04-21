@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'dart:ui';
 
 /// Support overriding the platform for testing.
@@ -17,19 +16,40 @@ class OrchidPlatform {
   static Locale staticLocale;
 
   static bool get isMacOS {
-    return !pretendToBeAndroid && Platform.isMacOS;
+    try {
+      return !pretendToBeAndroid && Platform.isMacOS;
+    } catch (e) {
+      // e.g. Unsupported operation: Platform._operatingSystem on web.
+      print(e);
+      return false;
+    }
   }
 
   static bool get isWindows {
-    return !pretendToBeAndroid && Platform.isWindows;
+    try {
+      return !pretendToBeAndroid && Platform.isWindows;
+    } catch (e) {
+      print(e);
+      return false;
+    }
   }
 
   static bool get isAndroid {
-    return pretendToBeAndroid || Platform.isAndroid;
+    try {
+      return pretendToBeAndroid || Platform.isAndroid;
+    } catch (e) {
+      print(e);
+      return false;
+    }
   }
 
   static bool get isIOS {
-    return !pretendToBeAndroid && Platform.isIOS;
+    try {
+      return !pretendToBeAndroid && Platform.isIOS;
+    } catch (e) {
+      print(e);
+      return false;
+    }
   }
 
   static bool get isApple {

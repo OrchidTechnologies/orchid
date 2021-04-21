@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/util/hex.dart';
@@ -35,7 +35,7 @@ class OrchidEthereumV0 {
 
   // Get the provider URL allowing override in the advanced config
   static Future<String> get url async {
-    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    var jsConfig = await OrchidUserConfig().getUserConfigJS();
     // Note: This var is also used by the tunnel for the eth provider.
     return jsConfig.evalStringDefault('rpc', defaultEthereumProviderUrl);
   }
@@ -105,7 +105,7 @@ class OrchidEthereumV0 {
   /// TODO: Migrate to Token-abstracted version and remove
   Future<GWEI> getGasPrice() async {
     // Allow override via config for testing
-    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    var jsConfig = await OrchidUserConfig().getUserConfigJS();
     double overrideValue = jsConfig.evalDoubleDefault('gasPrice', null);
     if (overrideValue != null) {
       return GWEI(overrideValue);

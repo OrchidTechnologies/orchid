@@ -7,7 +7,6 @@ import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../orchid_api.dart';
 import '../orchid_log_api.dart';
 import 'accounts_preferences.dart';
 
@@ -128,14 +127,14 @@ class UserPreferences {
             try {
               return StoredEthereumKey.fromJson(el);
             } catch (err) {
-              OrchidAPI().logger().write("Error decoding key: $err");
+              log("Error decoding key: $err");
               return null;
             }
           })
           .where((key) => key != null)
           .toList();
     } catch (err) {
-      OrchidAPI().logger().write("Error retrieving keys!: $err");
+      log("Error retrieving keys!: $err");
       return [];
     }
   }
@@ -146,7 +145,7 @@ class UserPreferences {
       return (await SharedPreferences.getInstance())
           .setString(UserPreferenceKey.Keys.toString(), jsonEncode(keys));
     } catch (err) {
-      OrchidAPI().logger().write("Error storing keys!: $err");
+      log("Error storing keys!: $err");
       return false;
     }
   }

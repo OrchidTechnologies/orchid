@@ -3,9 +3,9 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/common/formatting.dart';
 
-import '../app_text.dart';
+import '../../common/app_text.dart';
 
 /// A tile representing a network or logical hop on the circuit page.
 class HopTile extends StatelessWidget {

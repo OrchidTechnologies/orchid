@@ -2,11 +2,11 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/pages/monitoring/traffic_view.dart';
 
-import '../app_colors.dart';
-import '../app_text.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_text.dart';
 
 class TrafficViewDetail extends StatefulWidget {
   final FlowEntry flow;

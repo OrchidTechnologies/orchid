@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/app_sizes.dart';
-import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
+import 'package:orchid/common/app_sizes.dart';
+import 'package:orchid/common/app_text.dart';
+import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 
 enum WalkthroughContentImageLocation { Top, Bottom }

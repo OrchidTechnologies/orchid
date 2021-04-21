@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
-import 'package:orchid/pages/app_colors.dart';
+import 'package:orchid/common/app_colors.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// The primiary connect and reroute buttons.

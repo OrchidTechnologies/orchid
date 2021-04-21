@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_eth/abi_encode.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -314,7 +314,7 @@ class OrchidPACServer {
   Future<PACStoreStatus> storeStatus() async {
     log("iap: check PAC server status");
 
-    bool overrideDown = (await OrchidVPNConfig.getUserConfigJS())
+    bool overrideDown = (await OrchidUserConfig().getUserConfigJS())
         .evalBoolDefault('pacs.storeDown', false);
     if (overrideDown) {
       log("iap: override server status");
@@ -336,7 +336,7 @@ class OrchidPACServer {
 
     // parse store message
     var jsonMessage = Json.trimStringOrNull(responseJson['message']);
-    String message = (await OrchidVPNConfig.getUserConfigJS())
+    String message = (await OrchidUserConfig().getUserConfigJS())
         .evalStringDefault('pacs.storeMessage', jsonMessage);
 
     // parse the seller address map
