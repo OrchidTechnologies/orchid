@@ -212,7 +212,7 @@ class _ConnectPageState extends State<ConnectPage>
   Widget _buildPageContent() {
     return OrientationBuilder(
         builder: (BuildContext context, Orientation builderOrientation) {
-      var portrait = builderOrientation != Orientation.landscape;
+      var tall = AppSize(context).tallerThan(AppSize.iphone_se);
       return Column(
         children: <Widget>[
           // Line art background, logo, and connect button
@@ -221,12 +221,12 @@ class _ConnectPageState extends State<ConnectPage>
             child: _buildCenterControls(),
           ),
 
-          if (_guiV1 && portrait) Spacer(flex: 1),
-          if (_guiV1 && portrait)
+          if (_guiV1 && tall) Spacer(flex: 1),
+          if (_guiV1 && tall)
             ConnectStatusPanel(darkBackground: _showConnectedBackground()),
 
-          Spacer(flex: 1),
-          _buildManageAccountsButton(),
+          if (tall) Spacer(flex: 1),
+          if (tall) _buildManageAccountsButton(),
 
           pady(24),
           _buildStatusMessage(context),
@@ -328,7 +328,7 @@ class _ConnectPageState extends State<ConnectPage>
                       height: 48,
                       child: _buildLogo()),
                 ],
-                pady(48),
+                pady(tall ? 48 : 16),
 
 //              if (_connectionState == OrchidConnectionState.Connecting ||
 //                  _connectionState == OrchidConnectionState.Disconnecting)
