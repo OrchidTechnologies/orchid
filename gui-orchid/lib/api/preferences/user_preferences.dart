@@ -29,10 +29,14 @@ class UserPreferences {
     return (await sharedPreferences()).getString(key.toString());
   }
 
-  // This method accepts null as equivalent to removing the preference.
-  static Future<void> writeStringForKey(
+  // This method accepts null for property removal.
+  static Future<bool> writeStringForKey(
       UserPreferenceKey key, String value) async {
-    return await (await sharedPreferences()).setString(key.toString(), value);
+    var shared = await sharedPreferences();
+    if (value == null) {
+      return await shared.remove(key.toString());
+    }
+    return await shared.setString(key.toString(), value);
   }
 
   ///
@@ -58,8 +62,7 @@ class UserPreferences {
   // Set the circuit / hops configuration
   Future<bool> setCircuit(Circuit circuit) async {
     String value = jsonEncode(circuit);
-    return (await SharedPreferences.getInstance())
-        .setString(UserPreferenceKey.Circuit.toString(), value);
+    return writeStringForKey(UserPreferenceKey.Circuit, value);
   }
 
   // Get the circuit / hops configuration
@@ -84,8 +87,7 @@ class UserPreferences {
   Future<bool> setRecentlyDeleted(Hops hops) async {
     log("saving recently deleted hops: ${hops.hops}");
     String value = jsonEncode(hops);
-    return (await SharedPreferences.getInstance())
-        .setString(UserPreferenceKey.RecentlyDeletedHops.toString(), value);
+    return writeStringForKey(UserPreferenceKey.RecentlyDeletedHops, value);
   }
 
   // Get a list of recently deleted hops.
@@ -106,8 +108,7 @@ class UserPreferences {
 
   // Set the user editable configuration file text.
   Future<bool> setUserConfig(String value) async {
-    return (await SharedPreferences.getInstance())
-        .setString(UserPreferenceKey.UserConfig.toString(), value);
+    return writeStringForKey(UserPreferenceKey.UserConfig, value);
   }
 
   /// Return the user's keys or [] empty array if uninitialized.
@@ -142,8 +143,8 @@ class UserPreferences {
   Future<bool> setKeys(List<StoredEthereumKey> keys) async {
     print("setKeys: storing keys: ${jsonEncode(keys)}");
     try {
-      return (await SharedPreferences.getInstance())
-          .setString(UserPreferenceKey.Keys.toString(), jsonEncode(keys));
+      var value = jsonEncode(keys);
+      return writeStringForKey(UserPreferenceKey.Keys, value);
     } catch (err) {
       log("Error storing keys!: $err");
       return false;
@@ -182,8 +183,7 @@ class UserPreferences {
   }
 
   Future<bool> setDefaultCurator(String value) async {
-    return (await SharedPreferences.getInstance())
-        .setString(UserPreferenceKey.DefaultCurator.toString(), value);
+    return writeStringForKey(UserPreferenceKey.DefaultCurator, value);
   }
 
   Future<bool> getQueryBalances() async {
