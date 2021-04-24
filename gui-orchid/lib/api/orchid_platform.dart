@@ -17,7 +17,7 @@ class OrchidPlatform {
 
   static bool get isMacOS {
     try {
-      return !pretendToBeAndroid && Platform.isMacOS;
+      return Platform.isMacOS;
     } catch (e) {
       // e.g. Unsupported operation: Platform._operatingSystem on web.
       print(e);
@@ -25,9 +25,18 @@ class OrchidPlatform {
     }
   }
 
+  static bool get isLinux {
+    try {
+      return Platform.isLinux;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
   static bool get isWindows {
     try {
-      return !pretendToBeAndroid && Platform.isWindows;
+      return Platform.isWindows;
     } catch (e) {
       print(e);
       return false;
@@ -58,5 +67,9 @@ class OrchidPlatform {
 
   static bool get isNotApple {
     return !isApple;
+  }
+
+  static bool get isDesktop {
+    return isMacOS || isLinux || isWindows;
   }
 }
