@@ -50,6 +50,8 @@ dependencies:
   url_launcher: 6.0.3
   uuid: 2.2.2 # XXX: web3dart
   web3dart: 1.2.3
+  window_size:
+    path: flutter-desktop-embedding/plugins/window_size
 
 dev_dependencies:
   flutter_test:

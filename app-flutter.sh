@@ -14,4 +14,6 @@ ln -s gui/lib
 ln -s gui/l10n.yaml
 ln -s gui/assets
 
+ln -s shared/flutter-desktop-embedding
+
 make create

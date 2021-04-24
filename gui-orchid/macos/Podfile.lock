@@ -1,57 +1,55 @@
 PODS:
-  - FlutterMacOS (1.12.1303)
+  - FlutterMacOS (1.0.0)
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/standard (2.7.5)
   - in_app_purchase (0.0.1):
     - FlutterMacOS
-  - shared_preferences (0.0.1)
   - shared_preferences_macos (0.0.1):
     - FlutterMacOS
   - sqflite (0.0.2):
     - FlutterMacOS
     - FMDB (>= 2.7.5)
-  - url_launcher (0.0.1)
   - url_launcher_macos (0.0.1):
+    - FlutterMacOS
+  - window_size (0.0.2):
     - FlutterMacOS
 
 DEPENDENCIES:
+  - FlutterMacOS (from `Flutter/ephemeral`)
   - in_app_purchase (from `Flutter/ephemeral/.symlinks/plugins/in_app_purchase/macos`)
-  - shared_preferences (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences/macos`)
   - shared_preferences_macos (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_macos/macos`)
   - sqflite (from `Flutter/ephemeral/.symlinks/plugins/sqflite/macos`)
-  - url_launcher (from `Flutter/ephemeral/.symlinks/plugins/url_launcher/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
+  - window_size (from `Flutter/ephemeral/.symlinks/plugins/window_size/macos`)
 
 SPEC REPOS:
   trunk:
-    - FlutterMacOS
     - FMDB
 
 EXTERNAL SOURCES:
+  FlutterMacOS:
+    :path: Flutter/ephemeral
   in_app_purchase:
     :path: Flutter/ephemeral/.symlinks/plugins/in_app_purchase/macos
-  shared_preferences:
-    :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences/macos
   shared_preferences_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_macos/macos
   sqflite:
     :path: Flutter/ephemeral/.symlinks/plugins/sqflite/macos
-  url_launcher:
-    :path: Flutter/ephemeral/.symlinks/plugins/url_launcher/macos
   url_launcher_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
+  window_size:
+    :path: Flutter/ephemeral/.symlinks/plugins/window_size/macos
 
 SPEC CHECKSUMS:
-  FlutterMacOS: de5edfe922e06361c592510905c3d2cbbbc23164
+  FlutterMacOS: 57701585bf7de1b3fc2bb61f6378d73bbdea8424
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   in_app_purchase: 2f8c1b5fb9138954a295fce2a313575b0646991d
-  shared_preferences: 9fec34d1bd906196a4da48fcf6c3ad521cc00b8d
   shared_preferences_macos: 480ce071d0666e37cef23fe6c702293a3d21799e
   sqflite: a5789cceda41d54d23f31d6de539d65bb14100ea
-  url_launcher: af78307ef9bafff91273b34f1c6c0c86a0004fd7
   url_launcher_macos: 45af3d61de06997666568a7149c1be98b41c95d4
+  window_size: 339dafa0b27a95a62a843042038fa6c3c48de195
 
-PODFILE CHECKSUM: aa314289921658992803542eb5e574a88ac56569
+PODFILE CHECKSUM: ef3c04ac491bdc2013db9b8ca9c26af12d4c542e
 
 COCOAPODS: 1.10.1
