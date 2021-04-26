@@ -325,7 +325,6 @@ class _PurchasePageState extends State<PurchasePage> {
     ];
   }
 
-  // TODO: Legacy?
   Widget _buildPurchaseCardView(
       {PAC pac,
       String title,
@@ -369,9 +368,8 @@ class _PurchasePageState extends State<PurchasePage> {
           enabled ? Color(0xff258993) : Colors.grey
         ]);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: enabled
+    return TextButton(
+      onPressed: enabled
           ? () {
               _confirmPurchase(pac: pac);
             }
@@ -430,40 +428,6 @@ class _PurchasePageState extends State<PurchasePage> {
                 fit: BoxFit.scaleDown,
                 child: RichText(text: subtitle, textAlign: TextAlign.left),
               )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPacPurchaseCard(PAC pac) {
-    const valueStyle = TextStyle(
-        color: Colors.black,
-        fontSize: 18.0,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.38,
-        fontFamily: 'SFProText-Regular',
-        height: 25.0 / 20.0);
-
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        _confirmPurchase(pac: pac);
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("PAC", style: valueStyle),
-              Text("${pac.localDisplayPrice ?? '...'}",
-                  style: valueStyle.copyWith(fontWeight: FontWeight.bold)),
             ],
           ),
         ),

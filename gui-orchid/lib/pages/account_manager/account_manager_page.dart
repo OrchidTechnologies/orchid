@@ -119,7 +119,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         } else {
           item.action();
         }
-        ConfigChangeDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+        ConfigChangeDialogs.showConfigurationChangeSuccess(context,
+            warnOnly: true);
       },
       itemBuilder: (BuildContext context) {
         var items = _accountStore.identities.map((StoredEthereumKey identity) {
@@ -211,8 +212,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             children: [
               body,
               pady(16),
-              GestureDetector(
-                onTap: () {
+              TextButton(
+                onPressed: () {
                   Clipboard.setData(ClipboardData(text: config));
                 },
                 child: Center(
