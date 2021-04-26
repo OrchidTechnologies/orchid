@@ -350,14 +350,6 @@ class _PurchasePageState extends State<PurchasePage> {
         fontFamily: 'SFProText-Regular',
         height: 16.0 / 12.0);
 
-    /*
-    var usdString = formatCurrency(pac.localPurchasePrice, ifNull: '...');
-    var oxtString = pac.localPurchasePrice != null
-        ? NumberFormat('0.00')
-            .format(_pricing?.toOXT(pac.localPurchasePrice ?? 0)
-        : '...';
-     */
-
     var enabled = pac.localPrice != null && _storeUp == true;
 
     Gradient grad = VerticalLinearGradient(
@@ -423,11 +415,8 @@ class _PurchasePageState extends State<PurchasePage> {
               ),
               pady(4),
 
-              // bottom tier description text
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: RichText(text: subtitle, textAlign: TextAlign.left),
-              )
+              // bottom description text
+              RichText(text: subtitle, textAlign: TextAlign.left)
             ],
           ),
         ),
