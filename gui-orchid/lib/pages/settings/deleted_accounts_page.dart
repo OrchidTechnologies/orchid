@@ -47,7 +47,7 @@ class _AccountsPageState extends State<AccountsPage> {
     return TitledPage(
       decoration: BoxDecoration(color: Colors.transparent),
       title: s.deletedHops,
-      child: buildPage(context),
+      child: SafeArea(child: buildPage(context)),
       lightTheme: true,
     );
   }
@@ -64,12 +64,11 @@ class _AccountsPageState extends State<AccountsPage> {
         ),
       ));
     } else {
-      //list.add(titleTile(s.recentlyDeleted));
       list.add(pady(16));
       list.add(_buildInstructions());
       list.add(pady(32));
       list.addAll((_recentlyDeleted ?? []).map((hop) {
-        return _buildInactiveHopTile(hop);
+        return Center(child: _buildInactiveHopTile(hop));
       }).toList());
       if (_orphanedPacAccounts.isNotEmpty)
         list.add(Center(
@@ -78,7 +77,7 @@ class _AccountsPageState extends State<AccountsPage> {
           child: Text(s.deletedPacs),
         )));
       list.addAll((_orphanedPacAccounts ?? []).map((oa) {
-        return _buildOrphanedAccountHopTile(oa);
+        return Center(child: _buildOrphanedAccountHopTile(oa));
       }).toList());
     }
     return ListView(children: list);
