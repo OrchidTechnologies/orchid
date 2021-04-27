@@ -103,6 +103,7 @@ $(eval folder := $(subst $(space),/,$(wordlist 2,$(words $(temp)),$(temp))))
 endef
 specific = $(eval $(value preamble))
 
+cflags += -I$(output)/extra
 cflags += -I@/extra
 
 

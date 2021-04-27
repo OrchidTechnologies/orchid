@@ -78,6 +78,8 @@ namespace orc {
 
 namespace po = boost::program_options;
 
+int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params);
+
 int Main(int argc, const char *const argv[]) {
     std::vector<std::string> chains;
 
@@ -204,6 +206,7 @@ int Main(int argc, const char *const argv[]) {
         host = boost::asio::ip::host_name();
 
     const auto port(args["port"].as<uint16_t>());
+    //return TestWorker(asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Certificates(), params);
 
     const Strung url("https://" + host + ":" + std::to_string(port) + "/");
     Bytes gpg;

@@ -17,3 +17,8 @@ source += $(wildcard $(pwd)/libcxx/src/*.cpp)
 cflags/$(pwd)/libcxx/ += -D_LIBCPP_BUILDING_LIBRARY
 cflags/$(pwd)/libcxx/ += -D__GLIBCXX__
 qflags += -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
+
+ifeq ($(target),lnx)
+source += env/libcxxabi/src/abort_message.cpp
+source += env/libcxxabi/src/cxa_thread_atexit.cpp
+endif

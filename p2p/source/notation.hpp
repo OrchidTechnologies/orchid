@@ -23,6 +23,7 @@
 #ifndef ORCHID_NOTATION_HPP
 #define ORCHID_NOTATION_HPP
 
+#include <boost/json.hpp>
 #include <json/json.h>
 
 #include "buffer.hpp"
@@ -144,6 +145,14 @@ inline Json::Value Parse(const std::string &data) { orc_block({
     Json::Reader reader;
     orc_assert(reader.parse(data, result, false));
     return result;
+}, "parsing " << data); }
+
+inline std::string UnparseB(const boost::json::object &data) {
+    return boost::json::serialize(data);
+}
+
+inline boost::json::value ParseB(const std::string &data) { orc_block({
+    return boost::json::parse(data);
 }, "parsing " << data); }
 
 template <typename Type_>

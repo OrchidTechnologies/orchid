@@ -47,6 +47,10 @@ class File final :
     {
     }
 
+    File_ &operator *() {
+        return file_;
+    }
+
     File_ *operator ->() {
         return &file_;
     }

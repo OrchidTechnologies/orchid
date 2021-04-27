@@ -57,6 +57,7 @@ boost += multiprecision
 boost += optional
 boost += predef
 boost += preprocessor
+boost += process
 boost += program_options
 boost += property_tree
 boost += random

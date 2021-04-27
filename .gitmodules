@@ -196,3 +196,12 @@
 [submodule "pugixml"]
 	path = p2p/pugixml
 	url = https://github.com/zeux/pugixml.git
+[submodule "mediasoup"]
+	path = srv-shared/mediasoup
+	url = https://github.com/versatica/mediasoup.git
+[submodule "json"]
+	path = srv-shared/json
+	url = https://github.com/nlohmann/json.git
+[submodule "libuv"]
+	path = srv-shared/libuv
+	url = https://github.com/libuv/libuv.git

@@ -67,6 +67,26 @@ cflags += -Iall/vpn-linux/source
 source += all/vpn-linux/source/tunnel.cpp
 endif
 
+
+# XXX: this should be done as part of env/output.mk for all autoconf builds
+p_libuv := -D__FILE__='\"libuv/*\"' -Wno-builtin-macro-redefined
+
+libuv := 
+libuv += libuv.a
+libuv := $(patsubst %,$(pwd)/libuv/.libs/%,$(libuv))
+
+$(subst @,%,$(patsubst %,$(output)/@/%,$(libuv))) \
+: $(output)/%/$(pwd)/libuv/Makefile $(sysroot)
+	$(MAKE) -C $(dir $<)
+
+linked += $(libuv)
+
+cflags += -I$(pwd)/libuv/include
+
+
+include mediasoup.mk
+
+
 include env/output.mk
 
 $(output)/%/orchidd$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
