@@ -691,7 +691,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
             co_await chain_->Header(height);
             if (height % 1000 == 0)
                 std::cerr << height << std::endl;
-        } while (height--);
+        } while (height-- != 0);
 
     } else if (command == "wif") {
         // https://en.bitcoin.it/wiki/Wallet_import_format

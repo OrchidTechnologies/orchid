@@ -44,7 +44,7 @@ int Protect(int socket, int (*attach)(int, const sockaddr *, socklen_t), const s
 
     if (interfaces != nullptr) {
 #if 0
-        for (ifaddrs *i(interfaces.get()); i != NULL; i = i->ifa_next) {
+        for (ifaddrs *i(interfaces.get()); i != nullptr; i = i->ifa_next) {
             Log() << "ifa_name: " << unsigned(i->ifa_addr->sa_family) << " " << i->ifa_name << std::endl;
             if (i->ifa_addr->sa_family == AF_INET)
                 Log() << "addr: " << inet_ntoa(reinterpret_cast<sockaddr_in *>(i->ifa_addr)->sin_addr) << std::endl;
@@ -53,7 +53,7 @@ int Protect(int socket, int (*attach)(int, const sockaddr *, socklen_t), const s
 
         if (address->sa_family == AF_INET) {
             const auto address4(reinterpret_cast<const sockaddr_in *>(address));
-            for (auto i(interfaces.get()); i != NULL; i = i->ifa_next)
+            for (auto i(interfaces.get()); i != nullptr; i = i->ifa_next)
                 if (i->ifa_addr->sa_family == AF_INET)
                     if (reinterpret_cast<sockaddr_in *>(i->ifa_addr)->sin_addr.s_addr == address4->sin_addr.s_addr) {
                         const auto index(if_nametoindex(i->ifa_name));
@@ -62,7 +62,7 @@ int Protect(int socket, int (*attach)(int, const sockaddr *, socklen_t), const s
                     }
         }
 
-        for (auto i(interfaces.get()); i != NULL; i = i->ifa_next) {
+        for (auto i(interfaces.get()); i != nullptr; i = i->ifa_next) {
             if (i->ifa_addr->sa_family == AF_INET && strncmp(i->ifa_name, "en0", 3) == 0) {
                 const auto index(if_nametoindex(i->ifa_name));
                 setsockopt(socket, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index));
