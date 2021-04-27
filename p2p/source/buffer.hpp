@@ -892,8 +892,12 @@ inline bool Each(const char (&data)[Size_], const std::function<bool (const uint
     return Subset(data, Size_ - 1).each(code);
 }
 
+inline bool Each(const char &data, const std::function<bool (const uint8_t *, size_t)> &code) {
+    return Subset(&data, 1).each(code);
+}
+
 template <typename Type_>
-inline typename std::enable_if<std::is_arithmetic<Type_>::value, bool>::type Each(const Type_ &value, const std::function<bool (const uint8_t *, size_t)> &code) {
+inline typename std::enable_if<std::is_arithmetic<Type_>::value && !std::is_same_v<Type_, char>, bool>::type Each(const Type_ &value, const std::function<bool (const uint8_t *, size_t)> &code) {
     return Number<Type_>(value).each(code);
 }
 
