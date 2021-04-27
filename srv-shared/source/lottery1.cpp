@@ -21,7 +21,6 @@
 
 
 #include "baton.hpp"
-#include "duplex.hpp"
 #include "lottery1.hpp"
 #include "notation.hpp"
 #include "parallel.hpp"
