@@ -22,8 +22,8 @@
 
 #include "base.hpp"
 #include "huobi.hpp"
-#include "json.hpp"
 #include "locator.hpp"
+#include "notation.hpp"
 
 namespace orc {
 

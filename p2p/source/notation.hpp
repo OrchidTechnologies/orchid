@@ -20,8 +20,8 @@
 /* }}} */
 
 
-#ifndef ORCHID_JSON_HPP
-#define ORCHID_JSON_HPP
+#ifndef ORCHID_NOTATION_HPP
+#define ORCHID_NOTATION_HPP
 
 #include <json/json.h>
 
@@ -176,4 +176,4 @@ std::tuple<Elements_...> Parse(const std::string &data) {
 
 }
 
-#endif//ORCHID_JSON_HPP
+#endif//ORCHID_NOTATION_HPP

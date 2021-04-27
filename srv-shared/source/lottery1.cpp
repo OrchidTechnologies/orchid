@@ -22,8 +22,8 @@
 
 #include "baton.hpp"
 #include "duplex.hpp"
-#include "json.hpp"
 #include "lottery1.hpp"
+#include "notation.hpp"
 #include "parallel.hpp"
 #include "sleep.hpp"
 #include "structured.hpp"

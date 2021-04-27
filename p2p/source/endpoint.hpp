@@ -24,8 +24,8 @@
 #define ORCHID_ENDPOINT_HPP
 
 #include "base.hpp"
-#include "json.hpp"
 #include "locator.hpp"
+#include "notation.hpp"
 
 namespace orc {
 

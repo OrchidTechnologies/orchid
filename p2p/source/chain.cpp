@@ -24,8 +24,8 @@
 
 #include "chain.hpp"
 #include "error.hpp"
-#include "json.hpp"
 #include "nested.hpp"
+#include "notation.hpp"
 
 namespace orc {
 

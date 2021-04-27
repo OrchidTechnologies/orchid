@@ -23,8 +23,8 @@
 #include "base.hpp"
 #include "binance.hpp"
 #include "currency.hpp"
-#include "json.hpp"
 #include "locator.hpp"
+#include "notation.hpp"
 #include "updater.hpp"
 
 namespace orc {

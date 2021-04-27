@@ -23,8 +23,8 @@
 #ifndef ORCHID_STRUCTURED_HPP
 #define ORCHID_STRUCTURED_HPP
 
-#include "json.hpp"
 #include "link.hpp"
+#include "notation.hpp"
 
 namespace orc {
 

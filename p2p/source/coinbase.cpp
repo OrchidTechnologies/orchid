@@ -22,8 +22,8 @@
 
 #include "base.hpp"
 #include "coinbase.hpp"
-#include "json.hpp"
 #include "locator.hpp"
+#include "notation.hpp"
 
 namespace orc {
 

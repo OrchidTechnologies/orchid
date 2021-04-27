@@ -20,8 +20,8 @@
 /* }}} */
 
 
-#ifndef ORCHID_BOND_HPP
-#define ORCHID_BOND_HPP
+#ifndef ORCHID_BONDED_HPP
+#define ORCHID_BONDED_HPP
 
 #include <set>
 
@@ -130,4 +130,4 @@ class Bonded {
 
 }
 
-#endif//ORCHID_BOND_HPP
+#endif//ORCHID_BONDED_HPP

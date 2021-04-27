@@ -24,7 +24,7 @@
 #define ORCHID_ADDRESS_HPP
 
 #include "crypto.hpp"
-#include "json.hpp"
+#include "notation.hpp"
 
 namespace orc {
 

@@ -29,8 +29,8 @@
 #include "baton.hpp"
 #include "dns.hpp"
 #include "error.hpp"
-#include "json.hpp"
 #include "locator.hpp"
+#include "notation.hpp"
 
 namespace orc {
 
