@@ -47,20 +47,22 @@ class Tube :
     }
 };
 
-class Stopper :
+class Flap :
     public Valve,
     public BufferDrain,
-    public Sunken<Pump<Buffer>>
+    public Sunken<Pump<Buffer>>,
+    public Pipe<Buffer>
 {
   protected:
     void Land(const Buffer &buffer) override {
     }
 
     void Stop(const std::string &error) noexcept override {
+        //orc_insist_(false, error);
     }
 
   public:
-    Stopper() :
+    Flap() :
         Valve(typeid(*this).name())
     {
     }
@@ -68,6 +70,10 @@ class Stopper :
     task<void> Shut() noexcept override {
         co_await Sunken::Shut();
         co_await Valve::Shut();
+    }
+
+    task<void> Send(const Buffer &data) override {
+        co_return co_await Inner().Send(data);
     }
 };
 

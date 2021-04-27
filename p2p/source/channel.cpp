@@ -263,8 +263,8 @@ task<std::string> Description(const S<Base> &base, std::vector<std::string> ice)
     Configuration configuration;
     configuration.ice_ = std::move(ice);
     const auto client(Make<Actor>(base, std::move(configuration)));
-    const auto stopper(Break<BufferSink<Stopper>>());
-    stopper->Wire<Channel>(client);
+    const auto flap(Break<BufferSink<Flap>>());
+    flap->Wire<Channel>(client);
     co_return co_await client->Offer();
 }
 
