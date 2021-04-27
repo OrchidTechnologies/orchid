@@ -58,7 +58,7 @@
 #include "oracle.hpp"
 #include "pile.hpp"
 #include "remote.hpp"
-#include "router.hpp"
+#include "site.hpp"
 #include "sleep.hpp"
 #include "store.hpp"
 #include "time.hpp"
@@ -388,9 +388,9 @@ int Main(int argc, const char *const argv[]) {
         co_await Sleep(1000);
     } orc_catch({ orc_insist(false); }) }, "Update");
 
-    Router router;
+    Site site;
 
-    router(http::verb::get, "/", [&](Request request) -> task<Response> {
+    site(http::verb::get, "/", [&](Request request) -> task<Response> {
         const auto state(std::atomic_load(&state_));
         orc_assert(state);
 
@@ -472,7 +472,9 @@ int Main(int argc, const char *const argv[]) {
         }
 
         markup << body.str();
-        co_return Respond(request, http::status::ok, "text/html", markup());
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "text/html"},
+        }, markup());
     });
 
     const auto median([&]() {
@@ -492,23 +494,29 @@ int Main(int argc, const char *const argv[]) {
         return costs.med();
     });
 
-    router(http::verb::get, "/chainlink/0", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "text/plain", median().str());
+    site(http::verb::get, "/chainlink/0", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "text/plain"},
+        }, median().str());
     });
 
-    router(http::verb::post, "/chainlink/1", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "application/json", Unparse(Multi{
+    site(http::verb::post, "/chainlink/1", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "application/json"},
+        }, Unparse(Multi{
             {"jobRunID", Parse(request.body())["id"].asString()},
             {"data", Multi{{"price", median().str()}}},
         }));
     });
 
-    router(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "text/plain", std::string(VersionData, VersionSize));
+    site(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "text/plain"},
+        }, std::string(VersionData, VersionSize));
     });
 
     const Store store(Load(args["tls"].as<std::string>()));
-    router.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Certificates());
+    site.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Certificates());
     Thread().join();
     return 0;
 }

@@ -28,7 +28,7 @@
 #include "link.hpp"
 #include "locked.hpp"
 #include "nest.hpp"
-#include "router.hpp"
+#include "site.hpp"
 #include "socket.hpp"
 
 namespace orc {
@@ -84,7 +84,7 @@ class Capture :
     U<Internal> internal_;
 
     // XXX: so this won't even manage its own memory correctly
-    Router router_;
+    Site site_;
 
     struct Locked_ {
         bool connected_ = false;

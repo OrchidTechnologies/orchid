@@ -45,8 +45,8 @@
 #include "parallel.hpp"
 #include "pile.hpp"
 #include "remote.hpp"
-#include "router.hpp"
 #include "sequence.hpp"
+#include "site.hpp"
 #include "sleep.hpp"
 #include "store.hpp"
 #include "time.hpp"
@@ -211,9 +211,9 @@ int Main(int argc, const char *const argv[]) {
     }());
 #endif
 
-    Router router;
+    Site site;
 
-    router(http::verb::get, "/c/1/diff.png", [&](Request request) -> task<Response> {
+    site(http::verb::get, "/c/1/diff.png", [&](Request request) -> task<Response> {
         std::multimap<uint256_t, std::tuple<uint64_t, uint64_t>> prices;
         uint64_t maximum(0);
 
@@ -265,10 +265,12 @@ int Main(int argc, const char *const argv[]) {
             cairo_stroke(cr);
         ++i; } }
 
-        co_return Respond(request, http::status::ok, "image/png", surface.png());
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "image/png"},
+        }, surface.png());
     });
 
-    router(http::verb::get, "/c/1/gas.png", [&](Request request) -> task<Response> {
+    site(http::verb::get, "/c/1/gas.png", [&](Request request) -> task<Response> {
         auto number(co_await chain->Height());
         Pile<uint256_t, uint64_t> prices;
         uint64_t limit(0);
@@ -380,15 +382,19 @@ int Main(int argc, const char *const argv[]) {
         cairo_move_to(cr, 10.0, 50.0);
         cairo_show_text(cr, "Disziplin ist Macht.");
 #endif
-        co_return Respond(request, http::status::ok, "image/png", surface.png());
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "image/png"},
+        }, surface.png());
     });
 
-    router(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "text/plain", std::string(VersionData, VersionSize));
+    site(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "text/plain"},
+        }, std::string(VersionData, VersionSize));
     });
 
     const Store store(Load(args["tls"].as<std::string>()));
-    router.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Certificates());
+    site.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Certificates());
     Thread().join();
     return 0;
 }

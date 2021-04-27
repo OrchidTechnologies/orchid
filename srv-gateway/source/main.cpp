@@ -50,7 +50,7 @@
 #include "locator.hpp"
 #include "markup.hpp"
 #include "remote.hpp"
-#include "router.hpp"
+#include "site.hpp"
 #include "sleep.hpp"
 #include "store.hpp"
 #include "time.hpp"
@@ -111,22 +111,31 @@ int Main(int argc, const char *const argv[]) {
     const auto base(Break<Local>());
     const Locator locator(args["rpc"].as<std::string>());
 
-    Router router;
+    Site site;
 
-    router(http::verb::post, "/"_ctre, [&](Matches matches, Request request) -> task<Response> {
+    site(http::verb::post, "/"_ctre, [&](Matches0 matches, Request request) -> task<Response> {
         const auto body(request.body());
         const auto parsed(Parse(body));
-        //co_return Respond(request, http::status::payment_required, "application/json", "{}");
+#if 0
+        co_return Respond(request, http::status::payment_required, {
+            {"content-type", "application/json"},
+        }, "{}");
+#else
         const auto response((co_await base->Fetch("POST", locator, {{"content-type", "application/json"}}, body)).ok());
-        co_return Respond(request, http::status::ok, "application/json", response);
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "application/json"},
+        }, response);
+#endif
     });
 
-    router(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "text/plain", std::string(VersionData, VersionSize));
+    site(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "text/plain"},
+        }, std::string(VersionData, VersionSize));
     });
 
     const Store store(Load(args["tls"].as<std::string>()));
-    router.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Certificates());
+    site.Run(boost::asio::ip::make_address("0.0.0.0"), args["port"].as<uint16_t>(), store.Key(), store.Certificates());
     Thread().join();
     return 0;
 }

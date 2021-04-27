@@ -20,8 +20,8 @@
 /* }}} */
 
 
-#ifndef ORCHID_ROUTER_HPP
-#define ORCHID_ROUTER_HPP
+#ifndef ORCHID_SITE_HPP
+#define ORCHID_SITE_HPP
 
 #include <functional>
 #include <list>
@@ -38,7 +38,10 @@
 namespace orc {
 
 using namespace ctre::literals;
-typedef ctre::regex_results<const char *> Matches;
+typedef ctre::regex_results<const char *> Matches0;
+typedef ctre::regex_results<const char *, ctre::captured_content<1>> Matches1;
+typedef ctre::regex_results<const char *, ctre::captured_content<1>, ctre::captured_content<2>> Matches2;
+typedef ctre::regex_results<const char *, ctre::captured_content<1>, ctre::captured_content<2>, ctre::captured_content<3>> Matches3;
 
 const char *Params();
 
@@ -55,7 +58,7 @@ inline std::ostream &operator <<(std::ostream &out, const Request &request) {
     return out << static_cast<const http::request<http::string_body> &>(request);
 }
 
-class Router {
+class Site {
   private:
     std::list<std::function<task<Response> (Request &)>> routes_;
 
@@ -80,7 +83,7 @@ class Router {
     }
 
     template <typename Path_>
-    void operator ()(http::verb verb, ctre::regular_expression<Path_> path, std::function<task<Response> (Matches, Request)> code) {
+    void operator ()(http::verb verb, ctre::regular_expression<Path_> path, std::function<task<Response> (decltype(path.match("")), Request)> code) {
         routes_.emplace_back([verb, path = std::move(path), code = std::move(code)](Request &request) -> task<Response> {
             if (verb != http::verb::unknown && verb != request.method())
                 return nullptr;
@@ -92,8 +95,8 @@ class Router {
     }
 };
 
-Response Respond(const Request &request, http::status status, const std::string &type, std::string body);
+Response Respond(const Request &request, http::status status, const std::map<std::string, std::string> &headers, std::string body);
 
 }
 
-#endif//ORCHID_ROUTER_HPP
+#endif//ORCHID_SITE_HPP

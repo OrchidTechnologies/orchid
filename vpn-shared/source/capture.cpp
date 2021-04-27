@@ -257,8 +257,10 @@ Capture::Capture(const Host &local) :
     local_(local),
     up_(32)
 {
-    router_(http::verb::get, "/connected", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "application/json", locked_()->connected_ ? "true" : "false");
+    site_(http::verb::get, "/connected", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "application/json"},
+        }, locked_()->connected_ ? "true" : "false");
     });
 }
 
@@ -736,7 +738,7 @@ void Capture::Start(const std::string &path) {
 #ifndef _WIN32
     const auto control(heap.eval<std::string>("control"));
     if (!control.empty())
-        router_.Run(boost::filesystem::absolute(control, group).string());
+        site_.Run(boost::filesystem::absolute(control, group).string());
 #endif
 
     const auto analysis(heap.eval<std::string>("logdb"));

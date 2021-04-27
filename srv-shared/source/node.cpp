@@ -22,15 +22,15 @@
 
 #include "baton.hpp"
 #include "node.hpp"
-#include "router.hpp"
+#include "site.hpp"
 #include "version.hpp"
 
 namespace orc {
 
 void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params) {
-    Router router;
+    Site site;
 
-    router(http::verb::post, "/", [&](Request request) -> task<Response> {
+    site(http::verb::post, "/", [&](Request request) -> task<Response> {
         const auto offer(request.body());
         // XXX: look up fingerprint
         static int fingerprint_(0);
@@ -38,7 +38,9 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
 
         // XXX: this is a fingerprint I used once in a curl command for testing and now spams the server
         if (offer.find("DB:7F:E8:DC:D7:D2:70:56:49:66:71:F7:A0:D9:1E:36:40:53:ED:EB:39:59:0A:D1:35:DA:88:C5:E9:A1:C5:78") != std::string::npos)
-            co_return Respond(request, http::status::ok, "text/plain", "v=");
+            co_return Respond(request, http::status::ok, {
+                {"content-type", "text/plain"},
+            }, "v=");
 
         const auto server(Find(fingerprint));
         auto answer(co_await server->Respond(base_, offer, ice_));
@@ -53,14 +55,18 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
             Log() << std::endl;
         }
 
-        co_return Respond(request, http::status::ok, "text/plain", std::move(answer));
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "text/plain"},
+        }, std::move(answer));
     });
 
-    router(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, "text/plain", std::string(VersionData, VersionSize));
+    site(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "text/plain"},
+        }, std::string(VersionData, VersionSize));
     });
 
-    router.Run(bind, port, key, certificates, params);
+    site.Run(bind, port, key, certificates, params);
     Thread().join();
 }
 

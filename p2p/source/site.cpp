@@ -29,7 +29,7 @@
 #include <boost/beast/websocket.hpp>
 
 #include "baton.hpp"
-#include "router.hpp"
+#include "site.hpp"
 #include "spawn.hpp"
 #include "task.hpp"
 
@@ -51,7 +51,7 @@ const char *Params() {
 }
 
 template <bool Expires_, typename Stream_>
-task<bool> Router::Handle(Stream_ &stream, const Socket &socket) {
+task<bool> Site::Handle(Stream_ &stream, const Socket &socket) {
     beast::flat_buffer buffer;
 
     for (;;) {
@@ -98,9 +98,13 @@ task<bool> Router::Handle(Stream_ &stream, const Socket &socket) {
                     co_return co_await std::move(response);
             Log() << request << std::endl;
             // XXX: maybe return method_not_allowed if path is found but method is not
-            co_return Respond(request, http::status::not_found, "text/plain", "");
+            co_return Respond(request, http::status::not_found, {
+                {"content-type", "text/plain"},
+            }, {});
         } catch (const std::exception &error) {
-            co_return Respond(request, http::status::internal_server_error, "text/plain", error.what());
+            co_return Respond(request, http::status::internal_server_error, {
+                {"content-type", "text/plain"},
+            }, error.what());
         } }());
 
         co_await http::async_write(stream, response, Adapt());
@@ -111,7 +115,7 @@ task<bool> Router::Handle(Stream_ &stream, const Socket &socket) {
     co_return true;
 }
 
-void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params) {
+void Site::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params) {
     asio::ssl::context ssl{asio::ssl::context::tlsv12};
 
     ssl.set_options(
@@ -155,13 +159,13 @@ void Router::Run(const asio::ip::address &bind, uint16_t port, const std::string
                     //else if (code == asio::ssl::error::stream_truncated);
                     else orc_adapt(error);
                 }
-            } orc_catch({}) }, "Router::handle");
+            } orc_catch({}) }, "Site::handle");
         }
-    }, "Router::accept");
+    }, "Site::accept");
 }
 
 #ifndef _WIN32
-void Router::Run(const std::string &path) {
+void Site::Run(const std::string &path) {
     Spawn([this, path]() noexcept -> task<void> {
         unlink(path.c_str());
         asio::local::stream_protocol::acceptor acceptor(Context(), path);
@@ -174,13 +178,13 @@ void Router::Run(const std::string &path) {
             co_await acceptor.async_accept(connection, Adapt());
             Spawn([this, connection = std::move(connection)]() mutable noexcept -> task<void> {
                 co_await Handle<false>(connection, Socket());
-            }, "Router::handle");
+            }, "Site::handle");
         }
-    }, "Router::accept");
+    }, "Site::accept");
 }
 #endif
 
-Response Respond(const Request &request, http::status status, const std::string &type, std::string body) {
+Response Respond(const Request &request, http::status status, const std::map<std::string, std::string> &headers, std::string body) {
     auto const size(body.size());
 
     Response response{std::piecewise_construct,
@@ -189,7 +193,9 @@ Response Respond(const Request &request, http::status status, const std::string 
     };
 
     response.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-    response.set(http::field::content_type, type);
+
+    for (const auto &[name, value] : headers)
+        response.set(name, value);
 
     response.content_length(size);
     response.keep_alive(request.keep_alive());
