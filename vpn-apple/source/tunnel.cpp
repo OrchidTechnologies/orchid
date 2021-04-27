@@ -36,7 +36,7 @@ namespace orc {
 
 void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &)> &code) {
     auto &family(sunk.Wire<BufferSink<Family>>());
-    auto &sync(family.Wire<SyncConnection<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
+    auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket, SyncConnection>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
     auto file(sync->native_handle());
 
     ctl_info info;

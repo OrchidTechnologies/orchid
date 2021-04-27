@@ -103,7 +103,7 @@ static inline std::string cfs(NSString *data) {
         auto capture(std::make_unique<Covered<BufferSink<Capture>>>(local));
         try {
             auto &family(capture->Wire<BufferSink<Family>>());
-            auto &sync(family.Wire<SyncConnection<asio::generic::datagram_protocol::socket>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
+            auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket, SyncConnection>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));
 
             capture->Start(config);
             sync.Open();

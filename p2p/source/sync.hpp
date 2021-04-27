@@ -29,20 +29,29 @@
 
 namespace orc {
 
+template <typename Sync_, typename Traits_>
 class Sync :
     public Link<Buffer>
 {
-  protected:
-    virtual size_t Read_(const Mutables &buffers) = 0;
-    virtual size_t Send_(const Buffer &data) = 0;
+  private:
+    Sync_ sync_;
 
   public:
-    using Link<Buffer>::Link;
+    template <typename... Args_>
+    Sync(BufferDrain &drain, Args_ &&...args) :
+        Link(typeid(*this).name(), drain),
+        sync_(std::forward<Args_>(args)...)
+    {
+    }
+
+    Sync_ *operator ->() {
+        return &sync_;
+    }
 
     size_t Read(const Mutables &buffers) {
         size_t writ;
         try {
-            writ = Read_(buffers);
+            writ = Traits_::Read(sync_, buffers);
         } catch (const asio::system_error &error) {
             const auto code(error.code());
             if (code == asio::error::eof)
@@ -82,7 +91,7 @@ class Sync :
     task<void> Send(const Buffer &data) override {
         size_t writ;
         try {
-            writ = Send_(data);
+            writ = Traits_::Send(sync_, data);
         } catch (const asio::system_error &error) {
             orc_adapt(error);
         }
@@ -92,69 +101,37 @@ class Sync :
     }
 };
 
-template <typename Sync_>
-class SyncConnection :
-    public Sync
-{
-  protected:
-    Sync_ sync_;
-
-    size_t Read_(const Mutables &buffers) override {
-        return sync_.receive(buffers);
+struct SyncConnection {
+    template <typename Sync_>
+    static size_t Read(Sync_ &sync, const Mutables &buffers) {
+        return sync.receive(buffers);
     }
 
-    size_t Send_(const Buffer &data) override {
-        return sync_.send(Sequence(data));
+    template <typename Sync_>
+    static size_t Send(Sync_ &sync, const Buffer &data) {
+        return sync.send(Sequence(data));
     }
 
-  public:
-    template <typename... Args_>
-    SyncConnection(BufferDrain &drain, Args_ &&...args) :
-        Sync(typeid(*this).name(), drain),
-        sync_(std::forward<Args_>(args)...)
-    {
-    }
-
-    Sync_ *operator ->() {
-        return &sync_;
-    }
-
-    task<void> Shut() noexcept override {
-        orc_except({ sync_.close(); })
-        co_await Link::Shut();
+    template <typename Sync_>
+    static void Shut(Sync_ &sync) noexcept {
+        orc_except({ sync.close(); })
     }
 };
 
-template <typename Sync_>
-class SyncFile :
-    public Sync
-{
-  protected:
-    Sync_ sync_;
-
-    size_t Read_(const Mutables &buffers) override {
-        return sync_.read_some(buffers);
+struct SyncFile {
+    template <typename Sync_>
+    static size_t Read(Sync_ &sync, const Mutables &buffers) {
+        return sync.read_some(buffers);
     }
 
-    size_t Send_(const Buffer &data) override {
-        return sync_.write_some(Sequence(data));
+    template <typename Sync_>
+    static size_t Send(Sync_ &sync, const Buffer &data) {
+        return sync.write_some(Sequence(data));
     }
 
-  public:
-    template <typename... Args_>
-    SyncFile(BufferDrain &drain, Args_ &&...args) :
-        Sync(typeid(*this).name(), drain),
-        sync_(std::forward<Args_>(args)...)
-    {
-    }
-
-    Sync_ *operator ->() {
-        return &sync_;
-    }
-
-    task<void> Shut() noexcept override {
-        sync_.close();
-        co_await Link::Shut();
+    template <typename Sync_>
+    static void Shut(Sync_ &sync) noexcept {
+        sync.close();
     }
 };
 

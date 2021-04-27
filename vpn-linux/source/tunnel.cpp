@@ -29,7 +29,7 @@
 namespace orc {
 
 void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &)> &code) {
-    auto &sync(sunk.Wire<SyncFile<asio::posix::stream_descriptor>>(Context(), open("/dev/net/tun", O_RDWR)));
+    auto &sync(sunk.Wire<Sync<asio::posix::stream_descriptor, SyncFile>>(Context(), open("/dev/net/tun", O_RDWR)));
     auto file(sync->native_handle());
 
     struct ifreq request;

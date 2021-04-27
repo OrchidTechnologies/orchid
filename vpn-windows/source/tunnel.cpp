@@ -191,7 +191,7 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
     }
     RegCloseKey(adapter_key);
 
-    auto &sync(sunk.Wire<SyncFile<asio::windows::stream_handle>>(Context(), h));
+    auto &sync(sunk.Wire<Sync<asio::windows::stream_handle, SyncFile>>(Context(), h));
 
     code("\"" + actual_name + "\"");
 
