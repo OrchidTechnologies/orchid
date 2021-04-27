@@ -52,10 +52,6 @@ cflags += -D_FORTIFY_SOURCE=2
 cflags += -D__STDC_CONSTANT_MACROS
 cflags += -D__STDC_FORMAT_MACROS
 
-qflags += -fdebug-prefix-map=./=
-qflags += -fdebug-prefix-map=$(CURDIR)=.
-rflags += --remap-path-prefix=$(CURDIR)=.
-
 cflags += -Wall
 cflags += -Werror
 cflags += -Wno-unknown-warning-option
@@ -108,6 +104,23 @@ endef
 specific = $(eval $(value preamble))
 
 cflags += -I@/extra
+
+
+# I doubt this will ever become important, but just in case: v8 had this idea ;P
+#qflags += -D__DATE__= -D__TIME__= -D__TIMESTAMP__= -Wno-builtin-macro-redefined
+
+# -fdebug-compilation-dir .
+# -no-canonical-prefixes
+
+# with clang 10 we get access to -ffile-prefix-map
+# XXX: I don't remember what this was actually for
+qflags += -fdebug-prefix-map=./=
+# XXX: I need to verify the lack of trailing slash
+qflags += -fdebug-prefix-map=$(CURDIR)=.
+
+rflags += --remap-path-prefix=$(CURDIR)/$(output)/cargo/=~/.cargo/
+
+qflags += -fno-ident
 
 .PHONY: force
 $(output)/%/extra/revision.hpp: force
