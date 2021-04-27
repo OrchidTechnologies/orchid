@@ -212,7 +212,7 @@ cflags += -DPUGIXML_HAS_LONG_LONG
 include $(pwd)/asio.mk
 include $(pwd)/protobuf.mk
 
-$(eval $(call protobuf,$(pwd)/trezor-common/protob))
+$(eval $(call protobuf,,$(pwd)/trezor-common/protob))
 source += $(output)/pb/messages.pb.cc
 header += $(output)/pb/messages.pb.h
 source += $(output)/pb/messages-common.pb.cc

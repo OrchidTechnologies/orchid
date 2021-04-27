@@ -35,10 +35,9 @@ pflags :=
 pflags += -I$(pwd)/protobuf/src
 
 define protobuf
-$(foreach ext,cc h,$$(output)/pb/%.pb.$(ext)): $(1)/%.proto $$(protoc)
+$(foreach ext,cc h,$$(output)/pb$(1)/%.pb.$(ext)): $(2)/%.proto $$(protoc)
 	@mkdir -p $$(dir $$@)
-	$$(protoc) $$< --cpp_out=$$(output)/pb $$(pflags)
-pflags += -I$(1)
+	$$(protoc) $$< --cpp_out=$$(output)/pb$(1) $$(pflags)
+pflags += -I$(2)
+cflags += -I$(output)/pb$(1)
 endef
-
-cflags += -I$(output)/pb
