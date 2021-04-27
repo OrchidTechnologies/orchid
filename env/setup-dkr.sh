@@ -16,7 +16,7 @@ curl -o android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux
 mkdir -p /usr/local/lib/android
 unzip -d /usr/local/lib/android/sdk android-sdk.zip
 rm -f android-sdk.zip
-echo y | /usr/local/lib/android/sdk/tools/bin/sdkmanager "build-tools;30.0.2" "ndk;21.3.6528147" >/dev/null
+echo y | /usr/local/lib/android/sdk/tools/bin/sdkmanager "build-tools;30.0.2" "ndk;21.4.7075529" >/dev/null
 
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain=stable --profile=minimal
 
