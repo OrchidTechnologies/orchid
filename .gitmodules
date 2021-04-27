@@ -155,7 +155,7 @@
 	path = tst-explore/leveldb
 	url = https://github.com/google/leveldb.git
 [submodule "c-ares"]
-	path = min-wireshark/c-ares
+	path = p2p/c-ares
 	url = https://github.com/c-ares/c-ares.git
 [submodule "plugins"]
 	path = gui-orchid/plugins

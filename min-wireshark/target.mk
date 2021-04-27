@@ -250,17 +250,3 @@ $(each)
 # }}}
 
 $(call include,glib/target.mk)
-
-# c-ares {{{
-$(output)/%/$(pwd)/c-ares/include/ares_build.h: $(output)/%/$(pwd)/c-ares/Makefile
-	touch $@
-	$(MAKE) -C $(dir $@)
-$(output)/%/$(pwd)/c-ares/src/lib/.libs/libcares.a: $(output)/%/$(pwd)/c-ares/include/ares_build.h
-	$(MAKE) -C $(patsubst %/include/ares_build.h,%,$<)/src
-
-cflags/$(pwd/wireshark)/ += -I@/$(pwd)/c-ares/include
-header += @/$(pwd)/c-ares/include/ares_build.h
-linked += $(pwd)/c-ares/src/lib/.libs/libcares.a
-cflags/$(pwd/wireshark)/ += -I$(pwd)/c-ares/include
-cflags += -DCARES_STATICLIB
-# }}}

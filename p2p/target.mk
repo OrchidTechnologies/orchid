@@ -222,5 +222,6 @@ header += $(output)/pb/messages-ethereum.pb.h
 
 $(call include,rtc/target.mk)
 $(call include,krypton/target.mk)
+$(call include,c-ares.mk)
 $(call include,openvpn3.mk)
 $(call include,sqlite.mk)
