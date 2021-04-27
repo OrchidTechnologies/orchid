@@ -159,6 +159,11 @@ class Span :
     {
     }
 
+    Span(const std::basic_string_view<std::remove_const_t<Type_>> &data) :
+        Span(data.data(), data.size())
+    {
+    }
+
     Span(const std::basic_string<std::remove_const_t<Type_>> &data) :
         Span(data.data(), data.size())
     {
@@ -267,6 +272,8 @@ auto Split(const View &value, const View &delimeter) {
     return Split(value, delimeter, std::make_index_sequence<Size_ - 1>());
 }
 
+class Subset;
+
 class Region :
     public Buffer
 {
@@ -293,6 +300,12 @@ class Region :
     Span<const uint8_t> span() const {
         return {data(), size()};
     }
+
+    Span<const char> view() const {
+        return {reinterpret_cast<const char *>(data()), size()};
+    }
+
+    Subset subset(size_t offset, size_t length) const;
 
     template <typename Type_>
     Type_ num() const {
@@ -427,13 +440,13 @@ class Subset final :
     size_t size() const override {
         return segment_.size();
     }
-
-    Subset subset(size_t offset, size_t length) const {
-        orc_insist(offset <= size());
-        orc_insist(size() - offset >= length);
-        return {data() + offset, length};
-    }
 };
+
+inline Subset Region::subset(size_t offset, size_t length) const {
+    orc_insist(offset <= size());
+    orc_insist(size() - offset >= length);
+    return {data() + offset, length};
+}
 
 template <size_t Size_>
 class Bounded :
@@ -810,12 +823,6 @@ class Beam final :
         else
             orc_assert(size_ >= value);
         size_ = value;
-    }
-
-    Subset subset(size_t offset, size_t length) const {
-        orc_insist(offset <= size());
-        orc_insist(size() - offset >= length);
-        return {data() + offset, length};
     }
 
     uint8_t &operator [](size_t index) {

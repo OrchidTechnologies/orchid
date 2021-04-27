@@ -87,13 +87,13 @@ struct Option;
 
 template <typename Type_>
 struct Option<std::optional<Type_>> {
-static std::optional<Type_> _(std::string arg) {
+static std::optional<Type_> _(std::string_view arg) {
     return Option<Type_>::_(arg);
 } };
 
 template <>
 struct Option<bool> {
-static bool _(std::string arg) {
+static bool _(std::string_view arg) {
     if (false);
     else if (arg == "true")
         return true;
@@ -104,25 +104,25 @@ static bool _(std::string arg) {
 
 template <>
 struct Option<std::string> {
-static std::string _(std::string arg) {
-    return arg;
+static std::string _(std::string_view arg) {
+    return std::string(arg);
 } };
 
 template <>
 struct Option<Bytes32> {
-static Bytes32 _(std::string arg) {
+static Bytes32 _(std::string_view arg) {
     return Bless(arg);
 } };
 
 template <>
 struct Option<Key> {
-static Key _(std::string arg) {
+static Key _(std::string_view arg) {
     return ToKey(Bless(arg));
 } };
 
 template <>
 struct Option<Signature> {
-static Signature _(std::string arg) {
+static Signature _(std::string_view arg) {
     return Brick<65>(Bless(arg));
 } };
 
@@ -187,7 +187,7 @@ static Address TransferV("0x2c1820DBc112149b30b8616Bf73D552BEa4C9F1F");
 
 template <>
 struct Option<Address> {
-static Address _(std::string arg) {
+static Address _(std::string_view arg) {
     if (false);
     else if (arg == "0") {
         return "0x0000000000000000000000000000000000000000"; }
@@ -212,7 +212,7 @@ static Address _(std::string arg) {
 
 template <>
 struct Option<std::optional<Address>> {
-static std::optional<Address> _(std::string arg) {
+static std::optional<Address> _(std::string_view arg) {
     if (arg == "null")
         return std::nullopt;
     return Option<Address>::_(arg);
@@ -220,7 +220,7 @@ static std::optional<Address> _(std::string arg) {
 
 template <>
 struct Option<Locator> {
-static Locator _(std::string arg) {
+static Locator _(std::string_view arg) {
     if (false);
     else if (arg == "cloudflare")
         arg = "https://cloudflare-eth.com/";
@@ -231,7 +231,7 @@ static Locator _(std::string arg) {
 
 template <>
 struct Option<S<Executor>> {
-static cppcoro::shared_task<S<Executor>> _(std::string arg) {
+static cppcoro::shared_task<S<Executor>> _(std::string_view arg) {
     if (boost::algorithm::starts_with(arg, "@")) {
         const auto json(Parse(Load(arg.substr(1))));
         std::cout << json << std::endl;
@@ -263,7 +263,7 @@ static cppcoro::shared_task<S<Executor>> _(std::string arg) {
 
 template <>
 struct Option<Bytes> {
-static Bytes _(std::string arg) {
+static Bytes _(std::string_view arg) {
     if (!arg.empty() && arg[0] == '@')
         arg = Load(arg.substr(1));
     return Bless(arg);

@@ -20,25 +20,30 @@
 /* }}} */
 
 
-#include <regex>
-
 #include <eEVM/util.h>
 
 #include "address.hpp"
+#include "ctre.hpp"
 #include "error.hpp"
 
 namespace orc {
 
-Address::Address(const std::string &address) :
+using namespace ctre::literals;
+
+Address::Address(const std::string_view &address) :
     uint160_t(address)
 {
-    static const std::regex re("0x[0-9a-fA-F]{40}");
-    orc_assert_(std::regex_match(address, re), "invalid address " << address);
+    orc_assert_("0x[0-9a-fA-F]{40}"_ctre.match(address), "invalid address " << address);
     //orc_assert(eevm::is_checksum_address(address));
 }
 
+Address::Address(const std::string &address) :
+    Address(std::string_view(address))
+{
+}
+
 Address::Address(const char *address) :
-    uint160_t(std::string(address))
+    Address(std::string_view(address))
 {
 }
 

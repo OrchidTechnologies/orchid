@@ -52,10 +52,11 @@ struct Locator final {
     Origin origin_;
     std::string path_;
 
+    Locator(const std::string_view &locator);
     Locator(const std::string &locator);
 
     Locator(const char *locator) :
-        Locator(std::string(locator))
+        Locator(std::string_view(locator))
     {
     }
 

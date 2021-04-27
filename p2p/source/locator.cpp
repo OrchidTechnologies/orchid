@@ -31,8 +31,14 @@ std::ostream &operator <<(std::ostream &out, const Origin &origin) {
     return out << origin.scheme_ << "://" << origin.host_ << ":" << origin.port_;
 }
 
+Locator::Locator(const std::string_view &locator) :
+    Locator(std::string(locator))
+{
+}
+
 Locator::Locator(const std::string &locator) :
     Locator([&]() {
+        // XXX: this should obviously take std::string_view
         auto result(skyr::make_url(locator));
         orc_assert_(result, result.error().message());
         auto &value(result.value());

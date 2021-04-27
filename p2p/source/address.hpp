@@ -45,6 +45,7 @@ class Address :
     {
     }
 
+    Address(const std::string_view &address);
     Address(const std::string &address);
     Address(const char *address);
 
