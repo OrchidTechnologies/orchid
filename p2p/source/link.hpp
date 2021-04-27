@@ -65,9 +65,8 @@ class Faucet :
 };
 
 template <typename Type_, typename Value_ = const Type_ &>
-class Pump :
-    public Faucet<Drain<Value_>>,
-    public Pipe<Type_>
+class Spout :
+    public Faucet<Drain<Value_>>
 {
   protected:
     void Land(const Type_ &data) {
@@ -75,10 +74,16 @@ class Pump :
     }
 
   public:
-    Pump(const char *type, Drain<Value_> &drain) :
-        Faucet<Drain<Value_>>(type, drain)
-    {
-    }
+    using Faucet<Drain<Value_>>::Faucet;
+};
+
+template <typename Type_, typename Value_ = const Type_ &>
+class Pump :
+    public Spout<Type_, Value_>,
+    public Pipe<Type_>
+{
+  public:
+    using Spout<Type_, Value_>::Spout;
 };
 
 template <typename Type_>
@@ -96,10 +101,7 @@ class Link :
     }
 
   public:
-    Link(const char *type, Drain<const Buffer &> &drain) :
-        Pump<Type_>(type, drain)
-    {
-    }
+    using Pump<Type_>::Pump;
 };
 
 using BufferDrain = Drain<const Buffer &>;

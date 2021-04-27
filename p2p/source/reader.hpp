@@ -57,12 +57,12 @@ class Reader {
 };
 
 class Stream :
-    public Reader
+    public Reader,
+    public Pipe<Buffer>
 {
   public:
     ~Stream() override = default;
     virtual void Shut() noexcept = 0;
-    virtual task<void> Send(const Buffer &data) = 0;
 };
 
 

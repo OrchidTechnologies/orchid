@@ -58,7 +58,7 @@ orc_trace();
 };
 
 Channel::Channel(BufferDrain &drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
-    Pump<Buffer>(typeid(*this).name(), drain),
+    Pump(typeid(*this).name(), drain),
     peer_(peer),
     channel_(channel)
 {

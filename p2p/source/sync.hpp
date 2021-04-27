@@ -31,7 +31,7 @@ namespace orc {
 
 template <typename Sync_, typename Traits_>
 class Sync :
-    public Link<Buffer>
+    public Pump<Buffer>
 {
   private:
     Sync_ sync_;
@@ -39,7 +39,7 @@ class Sync :
   public:
     template <typename... Args_>
     Sync(BufferDrain &drain, Args_ &&...args) :
-        Link(typeid(*this).name(), drain),
+        Pump(typeid(*this).name(), drain),
         sync_(std::forward<Args_>(args)...)
     {
     }
@@ -73,17 +73,17 @@ class Sync :
                     const auto what(error.what());
                     orc_insist(what != nullptr);
                     orc_insist(*what != '\0');
-                    Link::Stop(what);
+                    Pump::Stop(what);
                     break;
                 }
 
                 if (writ == 0) {
-                    Link::Stop();
+                    Pump::Stop();
                     break;
                 }
 
                 const auto subset(beam.subset(0, writ));
-                Link::Land(subset);
+                Pump::Land(subset);
             }
         }).detach();
     }
