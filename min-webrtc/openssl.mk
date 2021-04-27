@@ -18,10 +18,10 @@ $(output)/%/openssl/Makefile $(subst @,%,$(patsubst %,$(output)/@/openssl/includ
 	    no-dso \
 	    no-engine \
 	    no-shared \
-	    no-stdio \
 	    no-ui-console \
 	    no-unit-test \
 	    no-weak-ssl-ciphers \
+	    $(if $(filter $(target),and),CPPFLAGS="-D__ANDROID_API__=$(aver)") \
 	    CC="$(cc) $(more/$*)" CFLAGS="$(qflags)" RANLIB="$(ranlib/$*)" AR="$(ar/$*)"
 	$(MAKE) -C $(output)/$*/openssl include/openssl/opensslconf.h
 	# XXX: this is needed because the rust openssl-sys package only accepts a single include folder
