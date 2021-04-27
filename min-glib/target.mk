@@ -51,8 +51,6 @@ cflags += -I$(pwd)/glib/gmodule
 #glib += gio/libgio-2.0.a
 # }}}
 # libiconv {{{
-w_libiconv := LDFLAGS="$(wflags)"
-
 export GNULIB_SRCDIR := $(CURDIR)/$(pwd)/gnulib
 export GNULIB_TOOL := $(GNULIB_SRCDIR)/gnulib-tool
 
