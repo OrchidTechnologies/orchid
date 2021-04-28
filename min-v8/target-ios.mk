@@ -9,9 +9,6 @@
 # }}}
 
 
-vflags += -DV8_TARGET_OS_LINUX
+vflags += -DV8_TARGET_OS_IOS
 
 include $(pwd)/target-psx.mk
-
-v8src += $(filter %-linux.cc,$(v8all))
-v8src += $(pwd)/v8/src/base/platform/platform-linux.cc

@@ -48,6 +48,7 @@ archive :=
 qflags += -gfull -Os
 cflags += -DNDEBUG
 cflags += -D_FORTIFY_SOURCE=2
+qflags += -fno-omit-frame-pointer
 
 cflags += -D__STDC_CONSTANT_MACROS
 cflags += -D__STDC_FORMAT_MACROS

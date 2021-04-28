@@ -9,11 +9,12 @@
 # }}}
 
 
-v8src += $(pwd/v8)/src/base/debug/stack_trace_win.cc
+vflags += -DV8_TARGET_OS_WIN
+
+v8src += $(filter %_win.cc %-win.cc %-win64.cc,$(v8all))
 v8src += $(pwd/v8)/src/base/platform/platform-win32.cc
-v8src += $(pwd/v8)/src/diagnostics/unwinding-info-win64.cc
-v8src += $(pwd/v8)/src/trap-handler/handler-inside-win.cc
-v8src += $(pwd/v8)/src/trap-handler/handler-outside-win.cc
+
+v8src := $(filter-out %/trace-writer.cc,$(v8src))
 
 cflags/$(pwd/v8)/src/base/platform/platform-win32.cc += -U__MINGW32__ -DPAGE_TARGETS_INVALID=0x40000000
 cflags/$(pwd/v8)/src/./base/platform/time.cc += -include $(pwd/v8)/../time.hpp

@@ -9,8 +9,6 @@
 # }}}
 
 
-v8src += $(pwd)/v8/src/base/debug/stack_trace_posix.cc
+v8src += $(filter %_posix.cc %-posix.cc,$(v8all))
 v8src += $(pwd)/v8/src/base/platform/platform-posix.cc
 v8src += $(pwd)/v8/src/base/platform/platform-posix-time.cc
-v8src += $(pwd)/v8/src/trap-handler/handler-inside-posix.cc
-v8src += $(pwd)/v8/src/trap-handler/handler-outside-posix.cc

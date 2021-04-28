@@ -18,7 +18,7 @@ $(call include,zlb/google.mk)
 
 v8sub := codegen compiler/backend debug deoptimizer diagnostics execution
 
-v8src := $(patsubst %,$(pwd)/v8/src/%,$(shell cd $(pwd)/v8/src && find . \
+v8all := $(patsubst %,$(pwd/v8)/src/%,$(shell cd $(pwd/v8)/src && find . \
     $(foreach sub,$(v8sub),-path "./$(sub)" -prune -o) \
     -path "./d8" -prune -o \
     -path "./heap/base/asm" -prune -o \
@@ -34,10 +34,8 @@ v8src := $(patsubst %,$(pwd)/v8/src/%,$(shell cd $(pwd)/v8/src && find . \
     ! -path "./init/setup-isolate-deserialize.cc" \
     ! -path "./snapshot/snapshot-external.cc" \
     \
-    ! -path "./base/debug/stack_trace_*.cc" \
     ! -path "./base/platform/platform-*.cc" \
-    ! -path "./trap-handler/handler-inside-*.cc" \
-    ! -path "./trap-handler/handler-outside-*.cc" \
+    ! -path "./libplatform/tracing/recorder-*.cc" \
     \
     ! -path "./base/ubsan.cc" \
     ! -path "./extensions/vtunedomain-support-extension.cc" \
@@ -46,17 +44,34 @@ v8src := $(patsubst %,$(pwd)/v8/src/%,$(shell cd $(pwd)/v8/src && find . \
     ! -path "./libplatform/tracing/trace-event-listener.cc" \
 -name "*.cc" -print))
 
-v8src += $(foreach temp,$(wildcard $(pwd)/v8/third_party/inspector_protocol/crdtp/*.cc),$(if $(findstring test,$(temp)),,$(temp)))
+v8all += $(foreach temp,$(wildcard $(pwd/v8)/third_party/inspector_protocol/crdtp/*.cc),$(if $(findstring test,$(temp)),,$(temp)))
+v8all += $(pwd/v8)/src/torque/class-debug-reader-generator.cc
 
-v8src += $(foreach sub,$(v8sub),$(wildcard $(pwd)/v8/src/$(sub)/*.cc))
-v8src := $(filter-out %/deoptimizer-cfi-builtins.cc,$(v8src))
-v8src := $(filter-out %/deoptimizer-cfi-empty.cc,$(v8src))
-v8src := $(filter-out %/unwinding-info-win64.cc,$(v8src))
+v8all += $(foreach sub,$(v8sub),$(wildcard $(pwd)/v8/src/$(sub)/*.cc))
+v8all := $(filter-out %/deoptimizer-cfi-builtins.cc,$(v8all))
+v8all := $(filter-out %/deoptimizer-cfi-empty.cc,$(v8all))
+v8all := $(filter-out %/system-jit-win.cc,$(v8all))
 
+v8src := $(filter-out \
+    %_android.cc \
+    %_fuchsia.cc \
+    %-mac.cc \
+    %-macos.cc \
+    %_posix.cc \
+    %-posix.cc \
+    %_win.cc \
+    %-win.cc \
+    %-win64.cc \
+,$(v8all))
+
+vflags += -DV8_TARGET_ARCH_X64
 v8src += $(foreach sub,$(v8sub),$(wildcard $(pwd)/v8/src/$(sub)/x64/*.cc))
+v8src += $(wildcard $(pwd)/v8/src/codegen/shared-ia32-x64/*.cc)
 v8src += $(wildcard $(pwd)/v8/src/compiler/backend/x64/*.cc)
 v8src += $(wildcard $(pwd)/v8/src/heap/base/asm/x64/*.cc)
 v8src += $(wildcard $(pwd)/v8/src/heap/cppgc/asm/x64/*.cc)
+
+vflags += -DV8_HAVE_TARGET_OS
 
 include $(pwd)/target-$(target).mk
 
@@ -69,19 +84,23 @@ vflags += -D__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES=0
 vflags += -DOFFICIAL_BUILD
 vflags += -DNVALGRIND
 
+# XXX: vflags += -DCPPGC_CAGED_HEAP
 vflags += -DDYNAMIC_ANNOTATIONS_ENABLED=0
+vflags += -DOBJECT_PRINT
 vflags += -DENABLE_GDB_JIT_INTERFACE
 vflags += -DENABLE_HANDLE_ZAPPING
 vflags += -DENABLE_MINOR_MC
+vflags += -DVERIFY_HEAP
 
 vflags += -DV8_31BIT_SMIS_ON_64BIT_ARCH
-vflags += -DV8_ARRAY_BUFFER_EXTENSION
+vflags += -DV8_ATOMIC_MARKING_STATE
+vflags += -DV8_ATOMIC_OBJECT_FIELD_WRITES
 vflags += -DV8_COMPRESS_POINTERS
-vflags += -DV8_CONCURRENT_MARKING
+vflags += -DV8_COMPRESS_POINTERS_IN_ISOLATE_CAGE
 vflags += -DV8_DEPRECATION_WARNINGS
-vflags += -DV8_EMBEDDED_BUILTINS
 vflags += -DV8_ENABLE_LAZY_SOURCE_POSITIONS
 vflags += -DV8_ENABLE_REGEXP_INTERPRETER_THREADED_DISPATCH
+vflags += -DV8_ENABLE_WEBASSEMBLY
 vflags += -DV8_IMMINENT_DEPRECATION_WARNINGS
 vflags += -DV8_INTL_SUPPORT
 vflags += -DV8_SNAPSHOT_COMPRESSION
@@ -135,31 +154,34 @@ $(output)/$(pwd/v8)/torque: $(wildcard $(pwd)/v8/src/torque/*.cc) $(pwd)/v8/src/
 	clang++ -std=c++14 -pthread -o $@ $^ $(vflags)
 
 tqsrc := $(patsubst %.tq,%-tq-csa.cc,$(torque))
-tqsrc += class-definitions-tq.cc
-tqsrc += class-verifiers-tq.cc
-tqsrc += exported-macros-assembler-tq.cc
+#tqsrc += class-debug-readers.cc
+tqsrc += class-verifiers.cc
+#tqsrc += debug-macros.cc
+tqsrc += exported-macros-assembler.cc
 tqsrc += $(patsubst %.cc,%.h,$(tqsrc))
-tqsrc += bit-fields-tq.h
-tqsrc += builtin-definitions-tq.h
-tqsrc += class-definitions-tq-inl.h
-tqsrc += csa-types-tq.h
-tqsrc += enum-verifiers-tq.cc
-tqsrc += exported-class-definitions-tq-inl.h
-tqsrc += exported-class-definitions-tq.h
-tqsrc += factory-tq.cc
-tqsrc += factory-tq.inc
-tqsrc += field-offsets-tq.h
-tqsrc += instance-types-tq.h
-tqsrc += interface-descriptors-tq.inc
-tqsrc += internal-class-definitions-tq-inl.h
-tqsrc += internal-class-definitions-tq.h
-tqsrc += objects-body-descriptors-tq-inl.inc
-tqsrc += objects-printer-tq.cc
+tqsrc += $(patsubst %.tq,%-tq.cc,$(torque))
+tqsrc += $(patsubst %.tq,%-tq.inc,$(torque))
+tqsrc += $(patsubst %.tq,%-tq-inl.inc,$(torque))
+tqsrc += bit-fields.h
+tqsrc += builtin-definitions.h
+tqsrc += class-forward-declarations.h
+tqsrc += csa-types.h
+tqsrc += enum-verifiers.cc
+tqsrc += factory.cc
+tqsrc += factory.inc
+tqsrc += interface-descriptors.inc
+tqsrc += field-offsets.h
+tqsrc += instance-types.h
+tqsrc += objects-body-descriptors-inl.inc
+tqsrc += objects-printer.cc
 tqsrc := $(patsubst %,$(output)/$(pwd/v8)/torque-generated/%,$(tqsrc))
+
+#$(error - $(filter-out $(subst /./,/,$(shell find $(output)/$(pwd/v8)/torque-generated -name '*.h' -o -name '*.cc' -o -name '*.inc')),$(subst /./,/,$(tqsrc))))
+#$(error + $(filter-out $(subst /./,/,$(tqsrc)),$(subst /./,/,$(shell find $(output)/$(pwd/v8)/torque-generated -name '*.h' -o -name '*.cc' -o -name '*.inc'))))
 
 $(call patternize,$(tqsrc)): $(output)/$(pwd/v8)/torque $(patsubst %,$(pwd)/v8/%,$(torque))
 	@for tq in $(tqsrc); do echo "$${tq}"; done | sed -e 's@\(.*\)/.*@\1@' | uniq | while read -r line; do mkdir -p "$${line}"; done
-	$< -o $(dir $<)/torque-generated -v8-root $(pwd/v8) $(torque)
+	$< -o $(dir $<)/torque-generated -v8-root $(pwd/v8) $(patsubst ./%,%,$(torque))
 	find $(dir $<)/torque-generated -type f -exec touch {} +
 
 source += $(filter %.cc,$(tqsrc))
@@ -167,13 +189,13 @@ header += $(filter %.h %.inc,$(tqsrc))
 
 
 inspector := $(patsubst %,$(output)/$(pwd/v8)/src/inspector/protocol/%, \
-    Schema.cpp \
-    Profiler.cpp \
     Console.cpp \
-    HeapProfiler.cpp \
     Debugger.cpp \
+    HeapProfiler.cpp \
+    Profiler.cpp \
     Protocol.cpp \
     Runtime.cpp \
+    Schema.cpp \
 )
 
 source += $(inspector)
@@ -191,15 +213,24 @@ cflags += -I$(pwd/v8)/include
 cflags += -I$(pwd/v8)/src
 cflags += -I$(pwd)/extra
 
-cflags/$(pwd)/v8/ += -Wno-builtin-assume-aligned-alignment
+# XXX: -fno-exceptions -fno-rtti
 
-# XXX: src/base/safe_conversions_impl.h:158:46: error: implicit conversion from 'std::__1::numeric_limits<long>::type' (aka 'long') to 'double' changes value from 9223372036854775807 to 9223372036854775808 [-Werror,-Wimplicit-int-float-conversion]
-#                : GetRangeConstraint(value <= std::numeric_limits<Dst>::max(),
-#                                           ~~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cflags/$(pwd)/v8/ += -Wno-implicit-int-float-conversion
+# XXX: consider making this a global decision
+#chacks/$(pwd/v8)/src/./profiler/heap-snapshot-generator.cc += s/V8_CC_MSVC/1/
+cflags += -mno-ms-bitfields
 
-# XXX: this was fixed in a later commit that broke a bunch of other stuff :(
-cflags/$(pwd)/v8/ += -Wno-final-dtor-non-final-class
+# https://bugs.chromium.org/p/v8/issues/detail?id=11692
+cflags/$(pwd/v8)/src/./runtime/runtime-classes.cc += -Wno-unused-variable
 
-# XXX: macro-assembler-x64.cc checks TARGET_ARCH_* without including this :/
-cflags/$(pwd)/v8/ += -include base/build_config.h
+# XXX: https://bugs.chromium.org/p/v8/issues/detail?id=11691
+cflags/$(pwd/v8)/ += -Wno-implicit-int-float-conversion
+
+# https://bugs.chromium.org/p/chromium/issues/detail?id=1016945
+cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment
+
+# XXX: v8's compile is ridiculously non-deterministic?! this seems to fix it
+cflags/$(pwd/v8)/src/./heap/ += -include src/heap/cppgc/heap.h
+
+
+archive += $(pwd/v8)
+linked += $(pwd/v8).a

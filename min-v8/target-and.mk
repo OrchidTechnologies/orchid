@@ -9,4 +9,9 @@
 # }}}
 
 
-include $(pwd)/target-lnx.mk
+vflags += -DV8_TARGET_OS_ANDROID
+
+include $(pwd)/target-psx.mk
+
+v8src += $(filter %_android.cc,$(v8all))
+v8src += $(pwd)/v8/src/base/platform/platform-linux.cc
