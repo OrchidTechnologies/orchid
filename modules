@@ -25,6 +25,7 @@ tag p2p/boost 'boost-[0-9.]*'
 tag min-webrtc/abseil-cpp '[0-9].*'
 tag min-webrtc/openssl 'OpenSSL_[0-9_]*[a-z]'
 head[min-krypton/vpn-libraries]=origin/main
+head[p2p/ctre]=origin/main
 head[srv-shared/GSL]=v2.1.0
 
 each | while read -r sub; do (
