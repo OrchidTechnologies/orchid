@@ -108,7 +108,7 @@ $(output)/$(1)/$(pwd)/tor/Makefile: $(patsubst %,$(output)/$(1)/%,$(deps))
 endef
 $(each)
 
-tor-c := $(shell find $(pwd)/tor -name '*.c')
+tor-c := $(shell find $(pwd)/tor -name '*.c' | LC_COLLATE=C sort)
 
 $(subst @,%,$(patsubst %,$(output)/@/%,$(tor))): $(output)/%/$(pwd)/tor/Makefile $(sysroot) $(tor-c)
 	$(MAKE) -C $(dir $<) --no-print-directory src/app/tor$(exe) src/core/libtor-app.a

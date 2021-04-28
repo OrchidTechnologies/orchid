@@ -42,7 +42,7 @@ v8all := $(patsubst %,$(pwd/v8)/src/%,$(shell cd $(pwd/v8)/src && find . \
     ! -path "./heap/cppgc/caged-heap.cc" \
     ! -path "./heap/conservative-stack-visitor.cc" \
     ! -path "./libplatform/tracing/trace-event-listener.cc" \
--name "*.cc" -print))
+-name "*.cc" -print | LC_COLLATE=C sort))
 
 v8all += $(foreach temp,$(wildcard $(pwd/v8)/third_party/inspector_protocol/crdtp/*.cc),$(if $(findstring test,$(temp)),,$(temp)))
 v8all += $(pwd/v8)/src/torque/class-debug-reader-generator.cc

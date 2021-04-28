@@ -40,7 +40,7 @@ cflags += -DMS_LOG_TRACE
 # XXX: maybe try to upstream an #ifndef __MINGW32__
 chacks/$(pwd)/mediasoup/worker/src/Utils/File.cpp += s/^\#define.*_S_.*//
 
-source += $(shell find $(pwd)/mediasoup/worker/deps/libwebrtc/libwebrtc -name '*.cc')
+source += $(shell find $(pwd)/mediasoup/worker/deps/libwebrtc/libwebrtc -name '*.cc' | LC_COLLATE=C sort)
 cflags/$(pwd)/mediasoup/worker/ += -I$(pwd)/mediasoup/worker/deps/libwebrtc{/libwebrtc,}
 cflags/$(pwd)/mediasoup/worker/ += -Dwebrtc=mswebrtc -Drtc=msrtc
 
