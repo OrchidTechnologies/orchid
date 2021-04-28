@@ -165,6 +165,8 @@ cflags += -DECMULT_GEN_PREC_BITS=4
 
 
 cflags += -I$(pwd)/intx/include
+
+source += $(filter-out %/fmt.cc,$(wildcard $(pwd)/fmt/src/*.cc))
 cflags += -I$(pwd)/fmt/include
 
 source += $(pwd)/eEVM/src/processor.cpp
