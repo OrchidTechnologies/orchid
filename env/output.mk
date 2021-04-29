@@ -21,6 +21,7 @@ filter := (^|/)($(subst $(space),|,$(patsubst %,%,($(strip $(filter))))))$$
 printenv:
 	printenv
 
+# XXX: $(error $(shell echo $(patsubst $(output)/./%,%,$(source)) | tr ' ' $$'\n' | grep -F '/./'))
 object := $(foreach _,$(sort $(source)),$(_).o)
 
 code = $(patsubst @/%,$(output)/$(arch)/%,$(header)) $(sysroot)

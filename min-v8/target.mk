@@ -18,7 +18,7 @@ $(call include,zlb/google.mk)
 
 v8sub := codegen compiler/backend debug deoptimizer diagnostics execution
 
-v8all := $(patsubst %,$(pwd/v8)/src/%,$(shell cd $(pwd/v8)/src && find . \
+v8all := $(patsubst ./%,$(pwd/v8)/src/%,$(shell cd $(pwd/v8)/src && find . \
     $(foreach sub,$(v8sub),-path "./$(sub)" -prune -o) \
     -path "./d8" -prune -o \
     -path "./heap/base/asm" -prune -o \
@@ -146,7 +146,7 @@ $(output)/$(pwd/v8)/builtins-generated/bytecodes-builtins-list.h: $(output)/$(pw
 header += $(output)/$(pwd/v8)/builtins-generated/bytecodes-builtins-list.h
 
 
-torque := $(sort $(shell cd $(pwd)/v8 && find . -name '*.tq'))
+torque := $(patsubst ./%,%,$(sort $(shell cd $(pwd)/v8 && find . -name '*.tq')))
 
 $(output)/$(pwd/v8)/torque: $(wildcard $(pwd)/v8/src/torque/*.cc) $(pwd)/v8/src/base/functional.cc $(pwd)/fatal.cc
 	@rm -rf $(dir $@)
@@ -176,8 +176,8 @@ tqsrc += objects-body-descriptors-inl.inc
 tqsrc += objects-printer.cc
 tqsrc := $(patsubst %,$(output)/$(pwd/v8)/torque-generated/%,$(tqsrc))
 
-#$(error - $(filter-out $(subst /./,/,$(shell find $(output)/$(pwd/v8)/torque-generated -name '*.h' -o -name '*.cc' -o -name '*.inc')),$(subst /./,/,$(tqsrc))))
-#$(error + $(filter-out $(subst /./,/,$(tqsrc)),$(subst /./,/,$(shell find $(output)/$(pwd/v8)/torque-generated -name '*.h' -o -name '*.cc' -o -name '*.inc'))))
+#$(error - $(filter-out $(shell find $(output)/$(pwd/v8)/torque-generated -name '*.h' -o -name '*.cc' -o -name '*.inc'),$(tqsrc)))
+#$(error + $(filter-out $(tqsrc),$(shell find $(output)/$(pwd/v8)/torque-generated -name '*.h' -o -name '*.cc' -o -name '*.inc')))
 
 $(call patternize,$(tqsrc)): $(output)/$(pwd/v8)/torque $(patsubst %,$(pwd)/v8/%,$(torque))
 	@for tq in $(tqsrc); do echo "$${tq}"; done | sed -e 's@\(.*\)/.*@\1@' | uniq | while read -r line; do mkdir -p "$${line}"; done
@@ -220,14 +220,14 @@ cflags += -I$(pwd)/extra
 cflags += -mno-ms-bitfields
 
 # https://bugs.chromium.org/p/chromium/issues/detail?id=989932
-cflags/$(pwd/v8)/src/./compiler/representation-change.cc += -Wno-implicit-int-float-conversion
-cflags/$(pwd/v8)/src/./wasm/wasm-external-refs.cc += -Wno-implicit-int-float-conversion
+cflags/$(pwd/v8)/src/compiler/representation-change.cc += -Wno-implicit-int-float-conversion
+cflags/$(pwd/v8)/src/wasm/wasm-external-refs.cc += -Wno-implicit-int-float-conversion
 
 # https://bugs.chromium.org/p/chromium/issues/detail?id=1016945
 cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment
 
 # XXX: v8's compile is ridiculously non-deterministic?! this seems to fix it
-cflags/$(pwd/v8)/src/./heap/ += -include src/heap/cppgc/heap.h
+cflags/$(pwd/v8)/src/heap/ += -include src/heap/cppgc/heap.h
 
 
 archive += $(pwd/v8)
