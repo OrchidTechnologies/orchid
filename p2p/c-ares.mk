@@ -9,6 +9,12 @@
 # }}}
 
 
+ifeq ($(target),win)
+w_c_ares := --with-random=
+else
+w_c_ares := --with-random=/dev/urandom
+endif
+
 $(output)/%/$(pwd)/c-ares/include/ares_build.h: $(output)/%/$(pwd)/c-ares/Makefile
 	touch $@
 	$(MAKE) -C $(dir $@)
