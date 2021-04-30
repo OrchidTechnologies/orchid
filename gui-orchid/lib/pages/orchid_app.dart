@@ -22,7 +22,11 @@ class OrchidApp extends StatelessWidget {
       ],
       supportedLocales: OrchidPlatform.languageOverride == null
           ? S.supportedLocales
-          : [Locale.fromSubtags(languageCode: OrchidPlatform.languageOverride)],
+          : [
+              Locale.fromSubtags(
+                  languageCode: OrchidPlatform.languageOverrideCode,
+                  countryCode: OrchidPlatform.languageOverrideCountry)
+            ],
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
@@ -48,7 +52,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
     initStateAsync();
   }
 
-  void initStateAsync() async { }
+  void initStateAsync() async {}
 
   // If the hop is empty initialize it to defaults now.
   @override
