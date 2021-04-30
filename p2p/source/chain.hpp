@@ -261,6 +261,7 @@ class Selector final :
     const std::string name_;
     const uint32_t value_;
 
+
     template <bool Comma_, typename... Rest_>
     struct Args;
 
@@ -277,6 +278,22 @@ class Selector final :
     struct Args<Comma_> {
     static void Write(std::ostringstream &signature) {
     } };
+
+
+    static std::string Print() {
+        return "()";
+    }
+
+    template <typename Next_, typename... Rest_>
+    static std::string Print(const Next_ &next, const Rest_ &...rest) {
+        std::ostringstream data;
+        data << '(';
+        data << next;
+        ((data << ", " << rest), ...);
+        data << ')';
+        return std::move(data).str();
+    }
+
 
   public:
     Selector(uint32_t value) :
@@ -336,11 +353,13 @@ class Selector final :
             {"gas", gas},
             {"data", Tie(*this, builder)},
         }, height})).asString()));
-        Window window(data);
-        auto result(Coded<Result_>::Decode(window));
-        window.Stop();
-        co_return std::move(result);
-    }, "calling " << Name()); }
+        orc_block({
+            Window window(data);
+            auto result(Coded<Result_>::Decode(window));
+            window.Stop();
+            co_return std::move(result);
+        }, "decoding " << data);
+    }, "calling " << Name() << " with " << Print(args...)); }
 
     task<Result_> Call(const Chain &chain, const Address &from, const Argument &height, const Address &target, const uint256_t &gas, const Args_ &...args) const { orc_block({
         Builder builder;
@@ -351,11 +370,13 @@ class Selector final :
             {"gas", gas},
             {"data", Tie(*this, builder)},
         }, height})).asString()));
-        Window window(data);
-        auto result(Coded<Result_>::Decode(window));
-        window.Stop();
-        co_return std::move(result);
-    }, "calling " << Name()); }
+        orc_block({
+            Window window(data);
+            auto result(Coded<Result_>::Decode(window));
+            window.Stop();
+            co_return std::move(result);
+        }, "decoding " << data);
+    }, "calling " << Name() << " with " << Print(args...)); }
 };
 
 template <typename... Args_>
