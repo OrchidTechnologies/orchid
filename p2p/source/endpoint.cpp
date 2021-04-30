@@ -43,7 +43,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
     }, body)).ok()));
 
     if (false)
-        Log() << "JSON/RPC\n" << body << Unparse(data) << std::endl;
+        Log() << "JSON/RPC " << body << " " << Unparse(data) << std::endl;
 
     orc_assert(data["jsonrpc"] == "2.0");
 
