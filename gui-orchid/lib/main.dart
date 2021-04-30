@@ -8,27 +8,25 @@ import 'api/monitoring/orchid_status.dart';
 import 'api/orchid_api.dart';
 import 'api/orchid_log_api.dart';
 import 'api/orchid_platform.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   OrchidAPI().logger().write("App Startup");
   OrchidStatus().beginPollingStatus();
   OrchidAPI().applicationReady();
-  OrchidPlatform.pretendToBeAndroid = (await OrchidUserConfig().getUserConfigJS())
-      .evalBoolDefault('isAndroid', false);
+  OrchidPlatform.pretendToBeAndroid =
+      (await OrchidUserConfig().getUserConfigJS())
+          .evalBoolDefault('isAndroid', false);
   if (OrchidPlatform.pretendToBeAndroid) {
     log("pretendToBeAndroid = ${OrchidPlatform.pretendToBeAndroid}");
   }
   if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
     OrchidPurchaseAPI().initStoreListener();
   }
-  var languageOverride =
-      (await OrchidUserConfig().getUserConfigJS()).evalStringDefault("lang", null);
+  var languageOverride = (await OrchidUserConfig().getUserConfigJS())
+      .evalStringDefault("lang", null);
   if (languageOverride != null &&
-      S.supportedLocales
-          .map((e) => e.languageCode)
-          .contains(languageOverride)) {
+      OrchidPlatform.hasLanguage(languageOverride)) {
     OrchidPlatform.languageOverride = languageOverride;
   }
   if (OrchidPlatform.isDesktop) {

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 /// Support overriding the platform for testing.
 class OrchidPlatform {
@@ -7,8 +8,31 @@ class OrchidPlatform {
   // after changing the advanced config (which may override it).
   static bool pretendToBeAndroid = false;
 
-  // If non-null this is a language code.
+  /// If non-null this is a language code with optional country code, e.g.
+  /// en or en_US
   static String languageOverride;
+
+  /// Get the language code fro the language override
+  static String get languageOverrideCode {
+    return languageOverride.split('_')[0];
+  }
+
+  /// Get the country code fro the language override or null if there is none.
+  static String get languageOverrideCountry {
+    return languageOverride.contains('_')
+        ? languageOverride.split('_')[1]
+        : null;
+  }
+
+  /// lang should be a language code with optional country code, e.g.
+  /// en or en_US
+  static bool hasLanguage(String lang) {
+    return S.supportedLocales
+        .map((e) => (e.countryCode != null && e.countryCode.isNotEmpty)
+            ? e.languageCode + '_' + e.countryCode
+            : e.languageCode)
+        .contains(lang);
+  }
 
   // Providing this static snapshot of the locale for use in the
   // api layer that does not have access to the context.
