@@ -52,7 +52,7 @@ python-dateutil==2.8.1
 pytz==2019.3
 requests==2.23.0
 rlp==1.2.0
-rsa==4.0
+rsa==4.7
 s3transfer==0.3.3
 six==1.14.0
 toolz==0.10.0
