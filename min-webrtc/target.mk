@@ -49,7 +49,10 @@ webrtc += $(pwd)/webrtc/api/video/video_content_type.cc
 webrtc += $(pwd)/webrtc/api/video/video_source_interface.cc
 webrtc += $(pwd)/webrtc/api/video/video_timing.cc
 
+webrtc += $(pwd)/webrtc/api/video_codecs/h264_profile_level_id.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/sdp_video_format.cc
+webrtc += $(pwd)/webrtc/api/video_codecs/video_codec.cc
+webrtc += $(pwd)/webrtc/api/video_codecs/vp9_profile.cc
 
 webrtc += $(pwd)/webrtc/call/call_config.cc
 webrtc += $(pwd)/webrtc/call/rtp_demuxer.cc
@@ -196,6 +199,7 @@ source += $(webrtc)
 
 
 cflags += -DWEBRTC_HAVE_SCTP
+cflags += -DWEBRTC_HAVE_USRSCTP
 
 cflags += -DABSL_ALLOCATOR_NOTHROW=0
 cflags += -DDCHECK_ALWAYS_ON
