@@ -198,7 +198,7 @@ void Print(std::ostream &body, const std::string &name, const Maybe<Report> &may
         std::string what(error.what());
         boost::replace_all(what, "\r", "");
         boost::replace_all(what, "\n", " || ");
-        body << what;
+        body << Escape(std::move(what));
     } else if (const auto report = std::get_if<1>(&maybe)) {
         body << std::fixed << std::setprecision(4);
         body << "$";
@@ -213,7 +213,7 @@ void Print(std::ostream &body, const std::string &name, const Maybe<Report> &may
             body << "\n" << std::string(13, ' ') << recipient.str().substr(2);
         }
         if (!report->version_.empty())
-            body << "\n" << std::string(13, ' ') << report->version_;
+            body << "\n" << std::string(13, ' ') << "<a href='https://github.com/OrchidTechnologies/orchid/commit/" << report->version_ << "'>" << report->version_ << "</a>";
     } else orc_insist(false);
 
     body << "\n";
@@ -463,9 +463,9 @@ int Main(int argc, const char *const argv[]) {
                 std::string what(error.what());
                 boost::replace_all(what, "\r", "");
                 boost::replace_all(what, "\n", " || ");
-                body << what;
+                body << Escape(std::move(what));
             } else if (const auto url = std::get_if<1>(&stake.url_)) {
-                body << *url;
+                body << Escape(*url);
             } else orc_insist(false);
 
             body << "\n";

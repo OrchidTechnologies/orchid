@@ -29,22 +29,28 @@
 
 namespace orc {
 
-class Markup {
+inline std::string Escape(std::string text) {
+    boost::replace_all(text, "&", "&amp;");
+    boost::replace_all(text, "<", "&lt;");
+    return text;
+}
+
+class Markup :
+    public std::ostringstream
+{
   private:
     std::ostringstream data_;
 
-    std::string Escape(std::string text) {
-        boost::replace_all(text, "&", "&amp;");
-        boost::replace_all(text, "<", "&lt;");
-        return text;
-    }
-
   public:
-    Markup(const std::string &title) { data_ <<
+    Markup(const std::string &title) { *this <<
         "<!DOCTYE html>"
         "<html><head>"
             "<title>" << Escape(title) << "</title>"
             "<style type='text/css'>"
+                "* {"
+                    "color: inherit;"
+                    "text-decoration: none;"
+                "}"
                 "body {"
                     "font-family: monospace;"
                     "white-space: pre-wrap;"
@@ -54,15 +60,10 @@ class Markup {
     ; }
 
     std::string operator()() {
-        data_ << "</body></html>";
-        auto data(data_.str());
-        data_.clear();
+        *this << "</body></html>";
+        auto data(str());
+        clear();
         return data;
-    }
-
-    Markup &operator <<(std::string text) {
-        data_ << Escape(std::move(text));
-        return *this;
     }
 };
 
