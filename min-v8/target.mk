@@ -213,6 +213,9 @@ cflags += -I$(pwd/v8)/include
 cflags += -I$(pwd/v8)/src
 cflags += -I$(pwd)/extra
 
+# XXX: v8 is using internal ICU API ListFormatter::createInstance
+cflags += -DU_SHOW_INTERNAL_API
+
 # XXX: -fno-exceptions -fno-rtti
 
 # XXX: consider making this a global decision

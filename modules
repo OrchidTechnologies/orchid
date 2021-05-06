@@ -33,8 +33,6 @@ git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
 # to upgrade zlib I need to upgrade base and build; the new base is using
 # features from libcxx after what I have, so I need to move to llvm embed
 
-# icu is stuck due to v8 using an internal: ListFormatter::createInstance
-
 # GSL is stuck due to cpp-libp2p using the stupid cmake "hunter" thing :/
 # I've filed a bug on hunter: https://github.com/cpp-pm/hunter/issues/399
 
