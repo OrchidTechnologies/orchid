@@ -74,7 +74,7 @@
 	path = p2p/eEVM
 	url = https://github.com/microsoft/eEVM.git
 [submodule "tap-windows6"]
-	path = vpn-windows/tap-windows6
+	path = p2p/tap-windows6
 	url = https://github.com/OpenVPN/tap-windows6
 [submodule "sqlite"]
 	path = p2p/sqlite

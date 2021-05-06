@@ -38,3 +38,11 @@ cflags += -DOPENVPN_EXTERNAL_TRANSPORT_FACTORY
 cflags += -DOPENVPN_EXTERNAL_TUN_FACTORY
 
 cflags/$(pwd)/openvpn3/ += -Wno-deprecated-enum-enum-conversion
+
+ifeq ($(target),win)
+cflags/$(pwd)/openvpn3/ += -Wno-missing-braces
+cflags/$(pwd)/openvpn3/ += -Wno-pointer-bool-conversion
+cflags/$(pwd)/openvpn3/ += -Wno-return-type
+cflags/$(pwd)/openvpn3/ += -UUNICODE
+cflags += -I$(pwd)/tap-windows6/src
+endif

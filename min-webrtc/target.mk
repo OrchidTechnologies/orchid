@@ -218,7 +218,7 @@ cflags += -DHAVE_UINT64_T
 
 cflags += -DPACKAGE_STRING='""'
 # this matches the version of libmaxminddb
-cflags += -DPACKAGE_VERSION='"1.5.0"'
+cflags += -DPACKAGE_VERSION='"1.6.0"'
 
 cflags += -D__Userspace__
 cflags += -DSCTP_DEBUG
