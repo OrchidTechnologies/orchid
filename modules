@@ -23,7 +23,7 @@ git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
     cd "${sub}"
     echo
     echo "${sub}"
-    git log --color --graph --format=oneline HEAD...${head[${sub}]-origin/HEAD} || echo $sub
+    git log --color --graph --format=oneline HEAD..${head[${sub}]-origin/HEAD} || echo $sub
 ) done | less -R
 
 # url is stuck due to https://forums.developer.apple.com/thread/120977 :/
