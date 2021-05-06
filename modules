@@ -14,7 +14,8 @@ head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 head[app-shared/flutter]=2.0.4
 head[env/libcxx]=origin/release_90
 head[env/libcxxabi]=origin/release_90
-tag p2p/boost 'boost-[0-9.]*'
+# XXX: tag p2p/boost 'boost-[0-9.]*'
+head[p2p/boost]=boost-1.75.0
 tag min-webrtc/abseil-cpp '[0-9].*'
 tag min-webrtc/openssl 'OpenSSL_[0-9_]*[a-z]'
 head[srv-shared/GSL]=v2.1.0
@@ -33,4 +34,9 @@ git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
 # features from libcxx after what I have, so I need to move to llvm embed
 
 # icu is stuck due to v8 using an internal: ListFormatter::createInstance
+
 # GSL is stuck due to cpp-libp2p using the stupid cmake "hunter" thing :/
+# I've filed a bug on hunter: https://github.com/cpp-pm/hunter/issues/399
+
+# XXX: boost is stuck due to cpp-libp2p and its use of old outcome macros
+# I filed a bug for this: https://github.com/libp2p/cpp-libp2p/issues/144
