@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-function each() {
-    sed -e $'/^\tpath = /!d;s///' .gitmodules | sort
-}
-
-each | while read -r sub; do (
-    cd "${sub}"
-    git fetch -v
-) done
+git submodule foreach git fetch -v
 
 declare -A head
 
@@ -28,7 +21,7 @@ head[min-krypton/vpn-libraries]=origin/main
 head[p2p/ctre]=origin/main
 head[srv-shared/GSL]=v2.1.0
 
-each | while read -r sub; do (
+git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
     cd "${sub}"
     echo
     echo "${sub}"
