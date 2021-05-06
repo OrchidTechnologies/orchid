@@ -41,7 +41,7 @@ $(call include,p2p/target.mk)
 
 source += $(wildcard source/*.cpp)
 
-$(call depend,$(pwd)/source/main.o,@/$(pwd)/cro/cairo/src/cairo-features.h)
+$(call depend,$(pwd)/source/main.cpp.o,@/$(pwd)/cro/cairo/src/cairo-features.h)
 
 source += $(filter-out \
     %/db_bench.cc \
