@@ -60,7 +60,7 @@ jobs:
     - name: rm -rf /opt
       run: sudo rm -rf /opt
 
-    - name: install NDK r21 for OpenSSL # XXX https://github.com/openssl/openssl/issues/13877
+    - name: install NDK r21
       run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;21.4.7075529" >/dev/null
 
     - uses: actions/checkout@v2
