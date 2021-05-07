@@ -6,7 +6,6 @@ import 'package:window_size/window_size.dart';
 import 'api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'api/monitoring/orchid_status.dart';
 import 'api/orchid_api.dart';
-import 'api/orchid_log_api.dart';
 import 'api/orchid_platform.dart';
 
 void main() async {
@@ -17,10 +16,7 @@ void main() async {
   OrchidPlatform.pretendToBeAndroid =
       (await OrchidUserConfig().getUserConfigJS())
           .evalBoolDefault('isAndroid', false);
-  if (OrchidPlatform.pretendToBeAndroid) {
-    log("pretendToBeAndroid = ${OrchidPlatform.pretendToBeAndroid}");
-  }
-  if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
+  if (OrchidPlatform.isApple || OrchidPlatform.isAndroid) {
     OrchidPurchaseAPI().initStoreListener();
   }
   var languageOverride = (await OrchidUserConfig().getUserConfigJS())

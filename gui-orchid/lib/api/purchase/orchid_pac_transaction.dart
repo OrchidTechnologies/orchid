@@ -144,7 +144,6 @@ class PacTransaction {
   static PacTransactionType toTransactionType(String s) {
     return Enums.fromString(PacTransactionType.values, s);
   }
-
 }
 
 class PacAddBalanceTransaction extends PacTransaction
@@ -152,6 +151,7 @@ class PacAddBalanceTransaction extends PacTransaction
   EthereumAddress signer;
   String productId;
   String receipt;
+  ReceiptType receiptType;
 
   PacAddBalanceTransaction.pending(
       {@required EthereumAddress signer, String productId})
@@ -170,8 +170,9 @@ class PacAddBalanceTransaction extends PacTransaction
         );
 
   /// Add the receipt and advance the state to ready
-  PacTransaction addReceipt(String receipt) {
+  PacTransaction addReceipt(String receipt, ReceiptType receiptType) {
     this.receipt = receipt;
+    this.receiptType = receiptType;
     this.state = PacTransactionState.Ready;
     return this;
   }
@@ -183,8 +184,8 @@ class PacAddBalanceTransaction extends PacTransaction
     signer = EthereumAddress.fromNullable(json['signer']);
     productId = json['productId'];
     receipt = json['receipt'];
+    receiptType = Enums.fromString(ReceiptType.values, json['receiptType']);
   }
-
 
   @override
   bool operator ==(Object other) =>
@@ -205,16 +206,26 @@ class PacAddBalanceTransaction extends PacTransaction
       'signer': signer?.toString() ?? null,
       'productId': productId,
       'receipt': receipt,
+      'receiptType': receiptType != null ? Enums.toStringValue(receiptType) : null,
     });
     return json;
   }
+}
+
+enum ReceiptType {
+  // ios in-app purchase receipt
+  ios,
+  // android play store in-app purchase receipt
+  android,
 }
 
 // Interface
 abstract class ReceiptTransaction extends PacTransaction {
   String get receipt;
 
-  PacTransaction addReceipt(String receipt);
+  ReceiptType get receiptType;
+
+  PacTransaction addReceipt(String receipt, ReceiptType receiptType);
 }
 
 /// Encapsulates a raw on-chain transaction for submission to the pac server,
@@ -267,7 +278,6 @@ class PacSubmitSellerTransaction extends PacTransaction {
     return jsonEncode(json).replaceAll("'", '"').replaceAll(' ', '');
   }
 
-
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -278,7 +288,6 @@ class PacSubmitSellerTransaction extends PacTransaction {
 
   @override
   int get hashCode => signerKey.hashCode ^ txParams.hashCode;
-
 }
 
 /// Combines a add balance and a submit raw transaction to fund an account.
@@ -299,8 +308,13 @@ class PacPurchaseTransaction extends PacTransaction
   }
 
   @override
-  PacTransaction addReceipt(String receipt) {
-    this.addBalance.addReceipt(receipt);
+  ReceiptType get receiptType {
+    return addBalance.receiptType;
+  }
+
+  @override
+  PacTransaction addReceipt(String receipt, ReceiptType receiptType) {
+    this.addBalance.addReceipt(receipt, receiptType);
     this.state = PacTransactionState.Ready;
     return this;
   }

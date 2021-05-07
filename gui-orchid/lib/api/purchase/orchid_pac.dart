@@ -31,6 +31,6 @@ class PAC {
 
   @override
   String toString() {
-    return 'PAC{_productId: $productId, localPurchasePrice: $localPrice, localDisplayName: $localDisplayPrice}, usdPriceApproximate: $usdPriceExact';
+    return 'PAC{_productId: $productId, localPurchasePrice: $localPrice, localDisplayName: $localDisplayPrice}, usdPriceExact: $usdPriceExact';
   }
 }

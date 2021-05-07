@@ -32,7 +32,8 @@ class OrchidPACServer {
   OrchidPACServer._internal();
 
   /// Apply the receipt to any pending pac receipt transaction and advance it.
-  Future<void> advancePACTransactionsWithReceipt(String receiptIn) async {
+  Future<void> advancePACTransactionsWithReceipt(
+      String receiptIn, ReceiptType receiptType) async {
     // Allow override of receipts with the test receipt.
     var apiConfig = await OrchidPurchaseAPI().apiConfig();
     if (apiConfig.testReceipt != null) {
@@ -51,7 +52,7 @@ class OrchidPACServer {
 
     // Attach the receipt
     if (tx is ReceiptTransaction) {
-      await tx.addReceipt(receipt).save();
+      await tx.addReceipt(receipt, receiptType).save();
     } else {
       throw Exception("Unknown pending transaction not ready for receipt: $tx");
     }
@@ -167,7 +168,8 @@ class OrchidPACServer {
       throw Exception('receipt is null');
     }
 
-    return addBalance(signer: tx.signer, receipt: tx.receipt);
+    return addBalance(
+        signer: tx.signer, receipt: tx.receipt, receiptType: tx.receiptType);
   }
 
   Future<String> _callSubmitSellerTx(
@@ -247,15 +249,26 @@ class OrchidPACServer {
   Future<String> addBalance({
     @required EthereumAddress signer,
     @required String receipt,
+    @required ReceiptType receiptType,
     PacApiConfig apiConfig, // optional override
   }) async {
     var params = {
       'account_id': signer.toString(prefix: true),
       'receipt': receipt,
     };
-    var result = await _postJson(
-        method: 'payment_apple', paramsIn: params, apiConfig: apiConfig);
-    print("XXX: add balance result = " + result.toString());
+    String method;
+    switch (receiptType) {
+      case ReceiptType.ios:
+        method = 'payment_apple';
+        break;
+      case ReceiptType.android:
+        method = 'payment_google';
+        break;
+    }
+    log('pac_server: sending payment to method: $method');
+    var result =
+        await _postJson(method: method, paramsIn: params, apiConfig: apiConfig);
+    print("pac_server: add balance result = " + result.toString());
     return result.toString();
   }
 
@@ -359,7 +372,7 @@ class OrchidPACServer {
     var url = '${apiConfig.url}/$method';
 
     // Guard the unknown map type
-    var params = Map<String,dynamic>();
+    var params = Map<String, dynamic>();
     params.addAll(paramsIn);
 
     // Optional dev testing params
@@ -383,7 +396,7 @@ class OrchidPACServer {
         '${OrchidPlatform.staticLocale.languageCode}-${OrchidPlatform.staticLocale.countryCode}';
 
     // Guard the unknown map type
-    var params = Map<String,dynamic>();
+    var params = Map<String, dynamic>();
     params.addAll(paramsIn);
 
     // Version and locale

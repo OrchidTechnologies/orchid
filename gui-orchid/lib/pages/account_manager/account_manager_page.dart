@@ -360,7 +360,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     });
 
     Widget footer() {
-      if (OrchidPlatform.isNotApple) {
+      if (!(OrchidPlatform.isApple || OrchidPlatform.isAndroid)) {
         return Container();
       }
       return Padding(

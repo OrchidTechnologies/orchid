@@ -223,7 +223,7 @@ packages:
       path: in_app_purchase
       relative: true
     source: path
-    version: "0.3.5+1"
+    version: "0.5.1"
   intl:
     dependency: "direct main"
     description:
@@ -258,7 +258,7 @@ packages:
       name: json_annotation
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.1.1"
+    version: "4.0.1"
   json_rpc_2:
     dependency: transitive
     description:

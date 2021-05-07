@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_urls.dart';
+import 'package:orchid/api/purchase/ios_purchase.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_seller.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
@@ -553,7 +554,7 @@ class _PurchasePageState extends State<PurchasePage> {
 
     var signer = widget.signerKey.address;
     // Add the pending transaction(s) for this purchase
-    PacPurchaseTransaction(
+    await PacPurchaseTransaction(
             PacAddBalanceTransaction.pending(
                 signer: signer, productId: purchase.productId),
             fundingTx)
@@ -563,10 +564,11 @@ class _PurchasePageState extends State<PurchasePage> {
     try {
       await OrchidPurchaseAPI().purchase(purchase);
     } catch (err) {
+      // TODO: Is this still possible?
       if (err is SKError) {
         var skerror = err;
-        if (skerror.code == OrchidPurchaseAPI.SKErrorPaymentCancelled) {
-          log("iap: user cancelled");
+        if (skerror.code == IOSOrchidPurchaseAPI.SKErrorPaymentCancelled) {
+          log("iap: payment cancelled error, purchase page");
         }
       }
       log("iap: Error in purchase call: $err");

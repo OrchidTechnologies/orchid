@@ -5,11 +5,14 @@ import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.d
 import 'package:orchid/api/preferences/user_secure_storage.dart';
 import 'package:orchid/api/purchase/purchase_rate.dart';
 import 'package:orchid/util/units.dart';
+import '../orchid_api.dart';
 import '../orchid_platform.dart';
 import 'android_purchase.dart';
 import 'ios_purchase.dart';
 import 'orchid_pac.dart';
 import '../orchid_log_api.dart';
+import 'orchid_pac_server.dart';
+import 'orchid_pac_transaction.dart';
 
 /// Support in-app purchase of purchased access credits (PACs).
 /// @See the iOS and Android implementations of this class.
@@ -29,6 +32,8 @@ abstract class OrchidPurchaseAPI {
     return _shared;
   }
 
+  OrchidPurchaseAPI.internal();
+
   // Domain used in product ID prefix, e.g. 'net.orchid'
   static String productIdPrefix = 'net.orchid';
 
@@ -39,18 +44,69 @@ abstract class OrchidPurchaseAPI {
     OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier11',
   ];
 
-  // The raw value from the iOS API
-  static const int SKErrorPaymentCancelled = 2;
-
   Future<PacApiConfig> apiConfig();
 
-  void initStoreListener();
+  Future<void> initStoreListener() async {
+    log("iap: init store listener");
+
+    OrchidPurchaseAPI.initPacLogListener();
+
+    if (!OrchidAPI.mockAPI) {
+      await initStoreListenerImpl();
+    }
+
+    // Note: Products are also fetched immediately prior to purchase.
+    try {
+      await requestProducts();
+    } catch (err) {
+      log("iap: error in request products: $err");
+    }
+
+    await OrchidPurchaseAPI.recoverTx();
+  }
+
+
+  Future<void> initStoreListenerImpl();
 
   Future<Map<String, PAC>> requestProducts({bool refresh = false});
 
   /// Make the app store purchase. This method will throw
   /// PACPurchaseExceedsRateLimit if the daily purchase rate has been exceeded.
-  Future<void> purchase(PAC pac);
+  /// Initiate a PAC purchase. The caller should watch PacTransaction.shared
+  /// for progress and results.
+  Future<void> purchase(PAC pac) async {
+    log("iap: purchase pac");
+
+    // Mock support
+    if (OrchidAPI.mockAPI) {
+      log("iap: mock purchase, delay");
+      Future.delayed(Duration(seconds: 2)).then((_) async {
+        log("iap: mock purchase, advance with receipt");
+        // The receipt may be overridden for testing with pac.receipt
+        OrchidPACServer().advancePACTransactionsWithReceipt("mock receipt", ReceiptType.ios);
+      });
+      return;
+    }
+
+    // Check purchase limit
+    if (!await OrchidPurchaseAPI.isWithinPurchaseRateLimit(pac)) {
+      throw PACPurchaseExceedsRateLimit();
+    }
+
+    // Refresh the products list:
+    // Note: Doing this on app start does not seem to be sufficient.
+    await requestProducts();
+
+    // Ensure no other transaction is pending completion.
+    // if (await PacTransaction.shared.hasValue()) {
+    //   throw Exception('PAC transaction already in progress.');
+    // }
+    log('iap: XXX: PAC transaction already in progress.');
+
+    await purchaseImpl(pac);
+  }
+
+  Future<void> purchaseImpl(PAC pac);
 
   /// Return the API config allowing overrides from configuration.
   static Future<PacApiConfig> apiConfigWithOverrides(
@@ -61,7 +117,8 @@ abstract class OrchidPurchaseAPI {
       url: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
       verifyReceipt: jsConfig.evalBoolDefault(
           'pacs.verifyReceipt', prodAPIConfig.verifyReceipt),
-      testReceipt: jsConfig.evalStringDefault('pacs.receipt', prodAPIConfig.testReceipt),
+      testReceipt:
+          jsConfig.evalStringDefault('pacs.receipt', prodAPIConfig.testReceipt),
       debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug),
       serverFail:
           jsConfig.evalBoolDefault('pacs.serverFail', prodAPIConfig.debug),
@@ -92,13 +149,81 @@ abstract class OrchidPurchaseAPI {
     return history.sum() + pac.usdPriceExact.value <= dailyPurchaseLimit;
   }
 
-  /// Record a purchase in the PAC purchase rate limit history.
-  static void addPurchaseToRateLimit(PAC pac) async {
-    PurchaseRateHistory history =
-        await UserSecureStorage().getPurchaseRateHistory();
-    history.removeOlderThan(Duration(days: 1));
-    history.add(pac);
-    history.save();
+  static Future addPurchaseToRateLimit(String productId) async {
+    // Record the purchase for rate limiting
+    try {
+      Map<String, PAC> productMap = await OrchidPurchaseAPI().requestProducts();
+      PAC pac = productMap[productId];
+
+      PurchaseRateHistory history =
+          await UserSecureStorage().getPurchaseRateHistory();
+      history.removeOlderThan(Duration(days: 1));
+      history.add(pac);
+      history.save();
+    } catch (err) {
+      log("pac: Unable to find pac for product id!");
+    }
+  }
+
+  static Future<void> recoverTx() async {
+    // Reset any existing tx after an app restart.
+    var tx = await PacTransaction.shared.get();
+    if (tx != null && tx.state != PacTransactionState.Complete) {
+      log("iap: Found PAC tx in progress after app startup: $tx");
+      tx.state = PacTransactionState.WaitingForUserAction;
+      return tx.save();
+    }
+  }
+
+  static Future initPacLogListener() async {
+    // Log all PAC Tx activity for now
+    await PacTransaction.shared.ensureInitialized();
+    PacTransaction.shared.stream().listen((PacTransaction tx) {
+      log("iap: PAC Tx updated: ${tx == null ? '(no tx)' : tx}");
+    });
+  }
+
+  // Note: currently hardcoded
+  // Return the exact USD price of the product
+  static USD usdPriceForProduct(String productId) {
+    final priceMap = {
+      OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4': USD(0.99),
+      OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier10': USD(4.99),
+      OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier11': USD(19.99),
+    };
+    var price = priceMap[productId];
+    if (price == null) {
+      throw Exception("No price known for product id: $productId");
+    }
+    return price;
+  }
+
+  static Map<String, PAC> mockPacs() {
+    var price = 0.99;
+    var pacs = [
+      PAC(
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4',
+        localCurrencyCode: "USD",
+        localCurrencySymbol: '\$',
+        localPrice: price,
+        usdPriceExact: USD(price),
+      ),
+      PAC(
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier10',
+        localCurrencyCode: "USD",
+        localCurrencySymbol: '\$',
+        localPrice: price,
+        usdPriceExact: USD(price),
+      ),
+      PAC(
+        productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier11',
+        localCurrencyCode: "EUR",
+        localCurrencySymbol: '€',
+        localPrice: price,
+        usdPriceExact: USD(price),
+      ),
+    ];
+    return {for (var pac in pacs) pac.productId: pac};
   }
 }
 
@@ -133,3 +258,5 @@ class PacApiConfig {
 }
 
 class PACPurchaseExceedsRateLimit implements Exception {}
+
+//class UserCancelledException implements Exception { }
