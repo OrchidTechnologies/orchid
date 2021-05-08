@@ -1,7 +1,4 @@
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
-import 'package:orchid/api/orchid_crypto.dart';
-
-import '../abi_encode.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 
 class OrchidContractV1 {
   // Lottery contract address (all chains, singleton deployment).
@@ -12,7 +9,7 @@ class OrchidContractV1 {
   static var _lotteryContractAddressV1 = '0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82';
 
   static Future<String> get lotteryContractAddressV1 async {
-    return (await OrchidVPNConfig.getUserConfigJS())
+    return (await OrchidUserConfig().getUserConfigJS())
         .evalStringDefault("lottery", _lotteryContractAddressV1);
   }
 

@@ -6,9 +6,9 @@ import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/pages/monitoring/traffic_view.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 
-import '../app_colors.dart';
-import '../app_gradients.dart';
-import '../app_transitions.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_gradients.dart';
+import '../../common/app_transitions.dart';
 
 // TODO: Remove if this remains unused.
 // This page wraps the traffic monitor and offers a switch to enable the VPN.

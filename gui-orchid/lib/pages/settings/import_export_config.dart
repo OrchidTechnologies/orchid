@@ -1,23 +1,20 @@
-import 'dart:io';
-
-import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:orchid/pages/common/qrcode.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/tap_clears_focus.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/qrcode_scan.dart';
+import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/common/titled_page_base.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:rxdart/rxdart.dart';
 
-import '../app_colors.dart';
-import '../app_text.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_text.dart';
 
 enum ImportExportMode { Import, Export }
 

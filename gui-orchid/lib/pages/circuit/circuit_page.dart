@@ -3,29 +3,25 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/api/purchase/orchid_pac_server.dart';
-import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/app_sizes.dart';
-import 'package:orchid/pages/common/app_reorderable_list.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/link_text.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/pages/common/wrapped_switch.dart';
-import 'package:orchid/pages/onboarding/legacy_welcome_dialog.dart';
-import 'package:orchid/pages/onboarding/welcome_dialog.dart';
+import 'package:orchid/common/app_sizes.dart';
+import 'package:orchid/common/app_reorderable_list.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/link_text.dart';
+import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/common/wrapped_switch.dart';
+import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 
-import '../app_gradients.dart';
-import '../app_text.dart';
+import '../../common/app_gradients.dart';
+import '../../common/app_text.dart';
 import 'add_hop_page.dart';
 import 'hop_editor.dart';
 import 'hop_tile.dart';
@@ -681,7 +677,7 @@ class CircuitPageState extends State<CircuitPage>
     }
     try {
       _dialogInProgress = true;
-      await AppDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+      await ConfigChangeDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
     } finally {
       _dialogInProgress = false;
     }
@@ -728,7 +724,7 @@ class CircuitPageState extends State<CircuitPage>
   // Recycle the hop if configured to do so.
   /*
   Future _recycleHopIfAllowed(UniqueHop uniqueHop) async {
-    bool recycle = (await OrchidVPNConfig.getUserConfigJS())
+    bool recycle = (await OrchidUserConfig.getUserConfigJS())
         .evalBoolDefault('pacs.recycle', false);
     if (recycle) {
       CircuitHop hop = uniqueHop.hop;

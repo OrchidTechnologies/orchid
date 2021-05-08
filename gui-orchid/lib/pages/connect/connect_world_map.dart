@@ -1,11 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/common/images.dart';
+import 'package:orchid/common/images.dart';
 import 'package:orchid/util/location.dart';
-import 'package:orchid/pages/common/path_dash.dart';
-import 'package:orchid/pages/common/path_trim.dart';
-import 'package:orchid/pages/common/paths.dart';
-import '../app_colors.dart';
+import 'package:orchid/common/path_dash.dart';
+import 'package:orchid/common/path_trim.dart';
+import 'package:orchid/common/paths.dart';
+import '../../common/app_colors.dart';
 import 'dart:ui' as ui;
 
 class WorldMapImage {

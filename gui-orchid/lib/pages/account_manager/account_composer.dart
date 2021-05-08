@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/pages/common/app_text_field.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/tap_clears_focus.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_text_field.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/common/titled_page_base.dart';
 
-import '../app_text.dart';
+import '../../common/app_text.dart';
 
 class AccountComposerPage extends StatelessWidget {
   final TokenType tokenType;

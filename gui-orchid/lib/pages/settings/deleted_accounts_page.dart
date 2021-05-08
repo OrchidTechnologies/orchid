@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
@@ -12,12 +12,12 @@ import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/circuit/orchid_hop_page.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/titled_page_base.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-import '../app_colors.dart';
+import '../../common/app_colors.dart';
 
 class AccountsPage extends StatefulWidget {
   const AccountsPage({Key key}) : super(key: key);
@@ -47,7 +47,7 @@ class _AccountsPageState extends State<AccountsPage> {
     return TitledPage(
       decoration: BoxDecoration(color: Colors.transparent),
       title: s.deletedHops,
-      child: buildPage(context),
+      child: SafeArea(child: buildPage(context)),
       lightTheme: true,
     );
   }
@@ -64,12 +64,11 @@ class _AccountsPageState extends State<AccountsPage> {
         ),
       ));
     } else {
-      //list.add(titleTile(s.recentlyDeleted));
       list.add(pady(16));
       list.add(_buildInstructions());
       list.add(pady(32));
       list.addAll((_recentlyDeleted ?? []).map((hop) {
-        return _buildInactiveHopTile(hop);
+        return Center(child: _buildInactiveHopTile(hop));
       }).toList());
       if (_orphanedPacAccounts.isNotEmpty)
         list.add(Center(
@@ -78,7 +77,7 @@ class _AccountsPageState extends State<AccountsPage> {
           child: Text(s.deletedPacs),
         )));
       list.addAll((_orphanedPacAccounts ?? []).map((oa) {
-        return _buildOrphanedAccountHopTile(oa);
+        return Center(child: _buildOrphanedAccountHopTile(oa));
       }).toList());
     }
     return ListView(children: list);
@@ -180,7 +179,7 @@ class _AccountsPageState extends State<AccountsPage> {
     );
 
     // Deliberately leave orphaned keys for testing.
-    bool orphanKeys = (await OrchidVPNConfig.getUserConfigJS())
+    bool orphanKeys = (await OrchidUserConfig().getUserConfigJS())
         .evalBoolDefault('orphanKeys', false);
 
     // Remove the key if it is no longer used.

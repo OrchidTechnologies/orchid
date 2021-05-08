@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jdenticon_dart/jdenticon_dart.dart';
+import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -13,15 +13,15 @@ import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/circuit/scan_paste_dialog.dart';
-import 'package:orchid/pages/common/account_chart.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/pages/circuit/config_change_dialogs.dart';
+import 'package:orchid/common/scan_paste_dialog.dart';
+import 'package:orchid/common/account_chart.dart';
+import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/formatting.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:orchid/pages/common/link_text.dart';
-import 'package:orchid/pages/common/tap_copy_text.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/tap_copy_text.dart';
+import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
@@ -29,9 +29,9 @@ import 'package:orchid/util/strings.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
 
-import '../app_colors.dart';
-import '../app_sizes.dart';
-import '../app_text.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_sizes.dart';
+import '../../common/app_text.dart';
 import 'account_detail_poller.dart';
 import 'account_model.dart';
 import 'account_store.dart';
@@ -119,7 +119,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         } else {
           item.action();
         }
-        AppDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+        ConfigChangeDialogs.showConfigurationChangeSuccess(context,
+            warnOnly: true);
       },
       itemBuilder: (BuildContext context) {
         var items = _accountStore.identities.map((StoredEthereumKey identity) {
@@ -211,8 +212,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             children: [
               body,
               pady(16),
-              GestureDetector(
-                onTap: () {
+              TextButton(
+                onPressed: () {
                   Clipboard.setData(ClipboardData(text: config));
                 },
                 child: Center(
@@ -359,7 +360,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     });
 
     Widget footer() {
-      if (OrchidPlatform.isNotApple) {
+      if (!(OrchidPlatform.isApple || OrchidPlatform.isAndroid)) {
         return Container();
       }
       return Padding(
@@ -503,7 +504,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   void _setActiveAccount(AccountModel account) {
     _accountStore.setActiveAccount(account.detail.account); // a bit convoluted
-    AppDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+    ConfigChangeDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
   }
 
   void _showAccount(AccountModel account) async {

@@ -31,17 +31,19 @@
     <key>DTPlatformName</key>
     <string>iphoneos</string>
     <key>DTPlatformVersion</key>
-    <string>12.2</string>
+    <string>14.4</string>
     <key>DTPlatformBuild</key>
-    <string>16E226</string>
+    <string>18D46</string>
     <key>DTSDKBuild</key>
-    <string>16E226</string>
+    <string>18D46</string>
     <key>DTSDKName</key>
-    <string>iphoneos12.0</string>
+    <string>iphoneos14.4</string>
     <key>DTXcode</key>
-    <string>1020</string>
+    <string>1240</string>
     <key>DTXcodeBuild</key>
-    <string>10E125</string>
+    <string>12D4e</string>
+    <key>DTAppStoreToolsBuild</key>
+    <string>12D4d</string>
 
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.utilities</string>
@@ -160,6 +162,7 @@
         <string>ja</string>
         <string>ko</string>
         <string>pt</string>
+        <string>pt_BR</string>
         <string>ru</string>
         <string>zh</string>
     </array>

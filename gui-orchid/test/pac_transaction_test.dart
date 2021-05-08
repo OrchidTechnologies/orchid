@@ -90,7 +90,7 @@ void main() {
       var tx = PacPurchaseTransaction(addBalance, submitRaw);
 
       var receipt = 'receipt:' + ('x' * 7000) + 'y';
-      tx.addReceipt(receipt);
+      tx.addReceipt(receipt, ReceiptType.ios);
 
       tx = roundTrip(tx);
 
@@ -108,6 +108,7 @@ void main() {
       expect(tx.state, PacTransactionState.Ready);
       expect(tx.date, isNotNull);
       expect(tx.receipt, receipt);
+      expect(tx.receiptType, ReceiptType.ios);
     });
 
     test('raw eth tx round trip', () {

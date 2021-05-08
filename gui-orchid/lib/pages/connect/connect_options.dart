@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/common/notification_banner.dart';
-import 'package:orchid/pages/common/options_bar.dart';
+import 'package:orchid/common/options_bar.dart';
 
 class ConnectOptionsBar extends StatelessWidget {
   const ConnectOptionsBar({
@@ -23,7 +22,8 @@ class ConnectOptionsBar extends StatelessWidget {
         children: <Widget>[
           // The optional notification banner
           AnimatedSwitcher(
-            child: NotificationBannerFactory.current() ?? Container(),
+            //child: NotificationBannerFactory.current() ?? Container(),
+            child: Container(),
             transitionBuilder: (widget, anim) {
               var tween =
                   Tween<Offset>(begin: Offset(0.0, -1.0), end: Offset.zero)

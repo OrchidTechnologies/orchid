@@ -4,15 +4,16 @@ import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/tap_clears_focus.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:jsparser/jsparser.dart';
 
-import '../app_colors.dart';
-import '../app_text.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_text.dart';
 
 /// A page presenting a full screen editable text box for the Orchid config file.
 class AdvancedConfigurationPage extends StatefulWidget {
@@ -163,7 +164,7 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
       }
     } catch (err) {
       print("Error parsing config: $err");
-      AppDialogs.showConfigurationChangeFailed(context,
+      ConfigChangeDialogs.showConfigurationChangeFailed(context,
           errorText: err.toString());
       return;
     }
@@ -172,10 +173,10 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
       if (saved) {
         UserPreferences().setUserConfig(newConfig);
         _configFileTextLast = newConfig;
-        AppDialogs.showConfigurationChangeSuccess(context);
+        ConfigChangeDialogs.showConfigurationChangeSuccess(context);
       } else {
         _readyToSave.add(true);
-        AppDialogs.showConfigurationChangeFailed(context);
+        ConfigChangeDialogs.showConfigurationChangeFailed(context);
       }
     });
   }

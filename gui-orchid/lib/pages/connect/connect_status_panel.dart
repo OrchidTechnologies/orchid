@@ -12,8 +12,8 @@ import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/app_colors.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/util/units.dart';
 
 import '../app_routes.dart';

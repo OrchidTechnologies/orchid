@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/orchid_scroll.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/orchid_scroll.dart';
 import 'package:collection/collection.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/titled_page_base.dart';
 
-import '../app_colors.dart';
-import '../app_gradients.dart';
-import '../app_text.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_gradients.dart';
+import '../../common/app_text.dart';
 import 'traffic_empty_view.dart';
 import 'traffic_view_detail.dart';
 

@@ -103,6 +103,7 @@ provider:
         - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:provider.environment.PAC_FUNDER_PRIVKEY_SECRET}"
         - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/WEB3_INFURA_PROJECT_ID"
         - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/WEB3_INFURA_PROJECT_SECRET"
+        - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/ORCHID_GOOGLE_SERVICE_ACCOUNT2"
         - "arn:aws:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:provider.environment.RECYCLE_KEY}"
     - Effect: Allow
       Action:
@@ -129,6 +130,7 @@ provider:
       Resource:
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-txn_monitor"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-payment_apple"
+        - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-payment_google"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-send_raw"
         - "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:pac-${self:provider.stage}-get_account"
 functions:
@@ -171,6 +173,13 @@ functions:
     events:
       - http:
           path: payment_apple
+          method: post
+  payment_google:
+    handler: entry_payment_google.main
+    timeout: 10
+    events:
+      - http:
+          path: payment_google
           method: post
   StoreStatus:
     handler: storestatus.main

@@ -13,7 +13,6 @@ import 'package:orchid/pages/settings/keygen_page.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/pages/settings/manage_config_page.dart';
 import 'package:orchid/pages/settings/deleted_accounts_page.dart';
-import 'package:orchid/pages/settings/settings_dev_page.dart';
 import 'package:orchid/pages/settings/settings_log_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
 import 'package:orchid/pages/settings/settings_vpn_credentials_page.dart';
@@ -56,7 +55,6 @@ class AppRoutes {
     settings: (context) => SettingsPage(),
     settings_vpn: (context) => SettingsVPNCredentialsPage(),
     settings_log: (context) => SettingsLogPage(),
-    settings_dev: (context) => SettingsDevPage(),
     configuration: (context) => AdvancedConfigurationPage(),
     help_overview: (context) => HelpOverviewPage(),
     privacy: (context) => PrivacyPage(),

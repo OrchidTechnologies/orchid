@@ -7,6 +7,7 @@ import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/api/purchase/orchid_pac_seller.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
+import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 
 ///
@@ -36,20 +37,25 @@ void main() async {
 
     test('get balance', () async {
       print("Get balance...");
-      var account = await OrchidPACServer().getPacAccount(signer: signer, apiConfig: apiConfig);
+      var account = await OrchidPACServer()
+          .getPacAccount(signer: signer, apiConfig: apiConfig);
       print("account: $account");
     });
 
     test('get L3 nonce', () async {
       print("Get L3 Nonce...");
-      var signer = EthereumAddress.from('0xb033bA40615293740e863AB470C2c171291482Ba');
+      var signer =
+          EthereumAddress.from('0xb033bA40615293740e863AB470C2c171291482Ba');
       await OrchidPacSeller.getL3Nonce(chain: Chains.xDAI, signer: signer);
     });
 
     test('add balance', () async {
       print("Add balance...");
-      await OrchidPACServer()
-          .addBalance(signer: signer, receipt: receipt, apiConfig: apiConfig);
+      await OrchidPACServer().addBalance(
+          signer: signer,
+          receipt: receipt,
+          receiptType: ReceiptType.ios,
+          apiConfig: apiConfig);
       print("Add balance complete...");
     });
 
@@ -112,7 +118,6 @@ void main() async {
       var price = await OrchidEthereumV1.getBandwidthPrice();
       print("bandwidth price = $price");
     });
-    
 
     /// curl \
     //     $url -H 'Content-Type: application/json' \

@@ -5,26 +5,27 @@ import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_urls.dart';
+import 'package:orchid/api/purchase/ios_purchase.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_seller.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/gradients.dart';
-import 'package:orchid/pages/common/link_text.dart';
-import 'package:orchid/pages/common/loading.dart';
-import 'package:orchid/pages/common/screen_orientation.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/gradients.dart';
+import 'package:orchid/common/link_text.dart';
+import 'package:orchid/common/loading.dart';
+import 'package:orchid/common/screen_orientation.dart';
+import 'package:orchid/common/titled_page_base.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
-import '../app_colors.dart';
-import '../app_sizes.dart';
-import '../app_text.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_sizes.dart';
+import '../../common/app_text.dart';
 
 typedef PurchasePageCompletion = void Function(); // TODO: return
 
@@ -325,7 +326,6 @@ class _PurchasePageState extends State<PurchasePage> {
     ];
   }
 
-  // TODO: Legacy?
   Widget _buildPurchaseCardView(
       {PAC pac,
       String title,
@@ -351,14 +351,6 @@ class _PurchasePageState extends State<PurchasePage> {
         fontFamily: 'SFProText-Regular',
         height: 16.0 / 12.0);
 
-    /*
-    var usdString = formatCurrency(pac.localPurchasePrice, ifNull: '...');
-    var oxtString = pac.localPurchasePrice != null
-        ? NumberFormat('0.00')
-            .format(_pricing?.toOXT(pac.localPurchasePrice ?? 0)
-        : '...';
-     */
-
     var enabled = pac.localPrice != null && _storeUp == true;
 
     Gradient grad = VerticalLinearGradient(
@@ -369,9 +361,8 @@ class _PurchasePageState extends State<PurchasePage> {
           enabled ? Color(0xff258993) : Colors.grey
         ]);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: enabled
+    return TextButton(
+      onPressed: enabled
           ? () {
               _confirmPurchase(pac: pac);
             }
@@ -425,45 +416,8 @@ class _PurchasePageState extends State<PurchasePage> {
               ),
               pady(4),
 
-              // bottom tier description text
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: RichText(text: subtitle, textAlign: TextAlign.left),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPacPurchaseCard(PAC pac) {
-    const valueStyle = TextStyle(
-        color: Colors.black,
-        fontSize: 18.0,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.38,
-        fontFamily: 'SFProText-Regular',
-        height: 25.0 / 20.0);
-
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        _confirmPurchase(pac: pac);
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("PAC", style: valueStyle),
-              Text("${pac.localDisplayPrice ?? '...'}",
-                  style: valueStyle.copyWith(fontWeight: FontWeight.bold)),
+              // bottom description text
+              RichText(text: subtitle, textAlign: TextAlign.left)
             ],
           ),
         ),
@@ -600,7 +554,7 @@ class _PurchasePageState extends State<PurchasePage> {
 
     var signer = widget.signerKey.address;
     // Add the pending transaction(s) for this purchase
-    PacPurchaseTransaction(
+    await PacPurchaseTransaction(
             PacAddBalanceTransaction.pending(
                 signer: signer, productId: purchase.productId),
             fundingTx)
@@ -610,10 +564,11 @@ class _PurchasePageState extends State<PurchasePage> {
     try {
       await OrchidPurchaseAPI().purchase(purchase);
     } catch (err) {
+      // TODO: Is this still possible?
       if (err is SKError) {
         var skerror = err;
-        if (skerror.code == OrchidPurchaseAPI.SKErrorPaymentCancelled) {
-          log("iap: user cancelled");
+        if (skerror.code == IOSOrchidPurchaseAPI.SKErrorPaymentCancelled) {
+          log("iap: payment cancelled error, purchase page");
         }
       }
       log("iap: Error in purchase call: $err");

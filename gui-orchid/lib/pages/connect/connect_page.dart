@@ -14,15 +14,15 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/pages/account_manager/account_store.dart';
-import 'package:orchid/pages/app_sizes.dart';
-import 'package:orchid/pages/app_text.dart';
+import 'package:orchid/common/app_sizes.dart';
+import 'package:orchid/common/app_text.dart';
 import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/gradients.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/gradients.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/pages/app_colors.dart';
+import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
 
@@ -212,7 +212,7 @@ class _ConnectPageState extends State<ConnectPage>
   Widget _buildPageContent() {
     return OrientationBuilder(
         builder: (BuildContext context, Orientation builderOrientation) {
-      var portrait = builderOrientation != Orientation.landscape;
+      var tall = AppSize(context).tallerThan(AppSize.iphone_se);
       return Column(
         children: <Widget>[
           // Line art background, logo, and connect button
@@ -221,12 +221,12 @@ class _ConnectPageState extends State<ConnectPage>
             child: _buildCenterControls(),
           ),
 
-          if (_guiV1 && portrait) Spacer(flex: 1),
-          if (_guiV1 && portrait)
+          if (_guiV1 && tall) Spacer(flex: 1),
+          if (_guiV1 && tall)
             ConnectStatusPanel(darkBackground: _showConnectedBackground()),
 
-          Spacer(flex: 1),
-          _buildManageAccountsButton(),
+          if (tall) Spacer(flex: 1),
+          if (tall) _buildManageAccountsButton(),
 
           pady(24),
           _buildStatusMessage(context),
@@ -328,7 +328,7 @@ class _ConnectPageState extends State<ConnectPage>
                       height: 48,
                       child: _buildLogo()),
                 ],
-                pady(48),
+                pady(tall ? 48 : 16),
 
 //              if (_connectionState == OrchidConnectionState.Connecting ||
 //                  _connectionState == OrchidConnectionState.Disconnecting)

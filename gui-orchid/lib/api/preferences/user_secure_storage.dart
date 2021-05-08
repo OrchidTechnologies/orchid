@@ -15,9 +15,13 @@ class NonSecureStorage {
         .getString(key.toString());
   }
 
+  // This method accepts null for property removal.
   Future<void> write({String key, String value}) async {
-    return await (await UserPreferences.sharedPreferences())
-        .setString(key.toString(), value);
+    var shared = await UserPreferences.sharedPreferences();
+    if (value == null) {
+      return await shared.remove(key);
+    }
+    return await shared.setString(key, value);
   }
 }
 

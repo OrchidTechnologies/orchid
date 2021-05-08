@@ -4,16 +4,16 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/pages/account_manager/account_composer.dart';
-import 'package:orchid/pages/common/account_chart.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/common/tap_copy_text.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
-import 'package:orchid/pages/common/formatting.dart';
+import 'package:orchid/common/account_chart.dart';
+import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/tap_copy_text.dart';
+import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/common/formatting.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/util/listenable_builder.dart';
 
-import '../app_sizes.dart';
-import '../app_text.dart';
+import '../../common/app_sizes.dart';
+import '../../common/app_text.dart';
 import 'account_model.dart';
 import 'account_detail_poller.dart';
 

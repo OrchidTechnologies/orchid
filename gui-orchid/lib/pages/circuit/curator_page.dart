@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/common/app_text_field.dart';
-import 'package:orchid/pages/common/tap_clears_focus.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
-import '../app_colors.dart';
-import '../app_text.dart';
+import 'package:orchid/common/app_text_field.dart';
+import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/common/titled_page_base.dart';
+import '../../common/app_colors.dart';
+import '../../common/app_text.dart';
 import 'hop_editor.dart';
 import 'model/orchid_hop.dart';
 

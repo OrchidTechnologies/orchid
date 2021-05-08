@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/app_sizes.dart';
-import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/accommodate_keyboard.dart';
-import 'package:orchid/pages/common/link_text.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/common/tap_clears_focus.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_sizes.dart';
+import 'package:orchid/common/app_text.dart';
+import 'package:orchid/common/accommodate_keyboard.dart';
+import 'package:orchid/common/link_text.dart';
+import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/pages/settings/vpn_credentials_entry.dart';
 
 class SettingsVPNCredentialsPage extends StatefulWidget {

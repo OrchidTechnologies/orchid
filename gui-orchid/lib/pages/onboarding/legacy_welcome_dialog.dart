@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v1.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/app_sizes.dart';
-import 'package:orchid/pages/app_text.dart';
+import 'package:orchid/common/app_sizes.dart';
+import 'package:orchid/common/app_text.dart';
 import 'package:orchid/pages/circuit/add_hop_page.dart';
-import 'package:orchid/pages/circuit/scan_paste_account.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/link_text.dart';
+import 'package:orchid/common/scan_paste_account.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/link_text.dart';
 
 class LegacyWelcomeDialog {
   static Future<void> show(

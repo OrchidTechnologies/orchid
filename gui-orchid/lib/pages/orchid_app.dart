@@ -5,7 +5,7 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/pages/app_routes.dart';
-import 'package:orchid/pages/common/side_drawer.dart';
+import 'package:orchid/pages/side_drawer.dart';
 import 'connect/connect_page.dart';
 
 // Provide the MaterialApp wrapper and localization context.
@@ -22,7 +22,11 @@ class OrchidApp extends StatelessWidget {
       ],
       supportedLocales: OrchidPlatform.languageOverride == null
           ? S.supportedLocales
-          : [Locale.fromSubtags(languageCode: OrchidPlatform.languageOverride)],
+          : [
+              Locale.fromSubtags(
+                  languageCode: OrchidPlatform.languageOverrideCode,
+                  countryCode: OrchidPlatform.languageOverrideCountry)
+            ],
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
@@ -48,7 +52,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
     initStateAsync();
   }
 
-  void initStateAsync() async { }
+  void initStateAsync() async {}
 
   // If the hop is empty initialize it to defaults now.
   @override

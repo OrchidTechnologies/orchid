@@ -4,12 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/app_colors.dart';
-import 'package:orchid/pages/app_text.dart';
-import 'package:orchid/pages/common/app_buttons.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/page_tile.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_colors.dart';
+import 'package:orchid/common/app_text.dart';
+import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/page_tile.dart';
+import 'package:orchid/common/titled_page_base.dart';
 
 /// The logging settings page
 class SettingsLogPage extends StatefulWidget {

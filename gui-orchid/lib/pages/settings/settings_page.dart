@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
-import 'package:orchid/pages/common/app_text_field.dart';
-import 'package:orchid/pages/common/dialogs.dart';
-import 'package:orchid/pages/common/formatting.dart';
-import 'package:orchid/pages/common/page_tile.dart';
-import 'package:orchid/pages/common/screen_orientation.dart';
-import 'package:orchid/pages/common/titled_page_base.dart';
+import 'package:orchid/common/app_text_field.dart';
+import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/page_tile.dart';
+import 'package:orchid/common/screen_orientation.dart';
+import 'package:orchid/common/titled_page_base.dart';
 
-import '../app_colors.dart';
+import '../../common/app_colors.dart';
 import '../app_routes.dart';
-import '../app_sizes.dart';
+import '../../common/app_sizes.dart';
 
 /// The main settings page.
 class SettingsPage extends StatefulWidget {
@@ -54,7 +54,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   /// Update system config based on changes to user advanced config
   void advancedConfigChanged() async {
-    var jsConfig = await OrchidVPNConfig.getUserConfigJS();
+    var jsConfig = await OrchidUserConfig().getUserConfigJS();
 
     _showLogging = jsConfig.evalBoolDefault('logging', false);
     _tester = jsConfig.evalBoolDefault('tester', false);
@@ -163,7 +163,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         onChanged: (bool value) async {
                           await UserPreferences().guiV0.set(value);
                           OrchidAPI().updateConfiguration();
-                          AppDialogs.showConfigurationChangeSuccess(context,
+                          ConfigChangeDialogs.showConfigurationChangeSuccess(context,
                               warnOnly: true);
                           setState(() {
                             _guiV0 = value;
