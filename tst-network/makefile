@@ -46,7 +46,7 @@ report: $(output)/$(machine)/orchid$(exe)
 
 $(call include,vpn/target.mk)
 
-source += $(wildcard source/*.cpp)
+source += $(wildcard $(pwd)/source/*.cpp)
 
 cflags += -DORC_FIBER
 

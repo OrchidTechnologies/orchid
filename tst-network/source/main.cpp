@@ -33,6 +33,7 @@
 #include <boost/program_options/variables_map.hpp>
 
 #include <rtc_base/logging.h>
+#include <system_wrappers/include/field_trial.h>
 
 #include "baton.hpp"
 #include "binance.hpp"
@@ -272,6 +273,7 @@ int Main(int argc, const char *const argv[]) {
     }
 
     Initialize();
+    //webrtc::field_trial::InitFieldTrialsFromString("WebRTC-DataChannel-Dcsctp/Enabled/");
 
     const unsigned milliseconds(60*1000);
 

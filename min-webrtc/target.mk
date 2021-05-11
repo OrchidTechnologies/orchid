@@ -92,6 +92,7 @@ webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.cc
 webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc
 
 webrtc += $(wildcard $(pwd)/webrtc/modules/utility/source/*.cc)
+webrtc += $(shell find $(pwd)/webrtc/net -name '*.cc' | LC_COLLATE=C sort)
 
 webrtc += $(wildcard $(pwd)/webrtc/p2p/base/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/p2p/client/*.cc)
@@ -153,6 +154,8 @@ cflags/$(pwd)/usrsctp/usrsctplib/ += -Wno-unused-function
 cflags/$(pwd)/congestion.cc += -Wno-unused-function
 endif
 
+webrtc += $(wildcard $(pwd)/crc32c/src/*.cc)
+
 
 webrtc := $(filter-out %_noop.cc,$(webrtc))
 
@@ -184,6 +187,7 @@ webrtc := $(filter-out %_slowtest.cc,$(webrtc))
 webrtc := $(filter-out %_test.cc,$(webrtc))
 webrtc := $(filter-out %_test_common.cc,$(webrtc))
 webrtc := $(filter-out %_test_helper.cc,$(webrtc))
+webrtc := $(filter-out %_test_main.cc,$(webrtc))
 webrtc := $(filter-out %_testing.cc,$(webrtc))
 webrtc := $(filter-out %_tests.cc,$(webrtc))
 webrtc := $(filter-out %_unittest.cc,$(webrtc))
@@ -199,6 +203,7 @@ source += $(webrtc)
 
 
 cflags += -DWEBRTC_HAVE_SCTP
+cflags += -DWEBRTC_HAVE_DCSCTP
 cflags += -DWEBRTC_HAVE_USRSCTP
 
 cflags += -DABSL_ALLOCATOR_NOTHROW=0

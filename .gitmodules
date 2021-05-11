@@ -226,3 +226,6 @@
 [submodule "sqlite_modern_cpp"]
 	path = srv-shared/sqlite_modern_cpp
 	url = https://github.com/SqliteModernCpp/sqlite_modern_cpp.git
+[submodule "crc32c"]
+	path = min-webrtc/crc32c
+	url = https://github.com/google/crc32c.git
