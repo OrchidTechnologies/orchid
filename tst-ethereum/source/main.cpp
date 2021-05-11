@@ -426,7 +426,7 @@ task<int> Main(int argc, const char *const argv[]) {
         co_return 0;
     }
 
-    const auto base(Break<Local>());
+    const S<Base> base(Break<Local>());
     const auto chain(co_await Chain::New({args["rpc"].as<std::string>(), base}, {}));
 
     std::vector<UnlockedExecutor> accounts;

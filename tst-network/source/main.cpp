@@ -275,7 +275,7 @@ int Main(int argc, const char *const argv[]) {
 
     const unsigned milliseconds(60*1000);
 
-    const auto base(Break<Local>());
+    const S<Base> base(Break<Local>());
     const Locator locator(args["rpc"].as<std::string>());
     const auto chain(Wait(Chain::New({locator, base}, {}, 1)));
 

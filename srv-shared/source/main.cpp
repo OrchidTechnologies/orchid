@@ -221,7 +221,7 @@ int Main(int argc, const char *const argv[]) {
     std::cerr << "gpg = " << gpg << std::endl;
 
 
-    auto base(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
+    S<Base> base(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
 
 
     {
