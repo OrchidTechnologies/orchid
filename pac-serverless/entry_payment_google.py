@@ -3,6 +3,8 @@ import json
 import logging
 import os
 import w3_generic
+import hashlib
+import base64
 import products
 
 from decimal import Decimal
@@ -31,7 +33,7 @@ def verify_(GOOGLE_SERVICE_ACCOUNT_KEY_FILE, purchase_token, product_id, bundle_
         result = verifier.verify_with_result(
             purchase_token,
             product_id,
-            is_subscription=True
+            is_subscription=False
         )
     except Exception as e:
         logging.info(f'verify exception: {str(e)} ')
@@ -45,7 +47,7 @@ def verify_(GOOGLE_SERVICE_ACCOUNT_KEY_FILE, purchase_token, product_id, bundle_
 
     print(raw_response)
 
-    receipt_data_str = purchase_token
+    receipt_data_str = str(purchase_token).encode('utf-8')
     receipt_hash = hashlib.sha256(receipt_data_str).hexdigest()
     logging.debug(f'receipt_hash: {receipt_hash}')
 
