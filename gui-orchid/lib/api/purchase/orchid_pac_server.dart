@@ -169,7 +169,10 @@ class OrchidPACServer {
     }
 
     return addBalance(
-        signer: tx.signer, receipt: tx.receipt, receiptType: tx.receiptType);
+        signer: tx.signer,
+        productId: tx.productId,
+        receipt: tx.receipt,
+        receiptType: tx.receiptType);
   }
 
   Future<String> _callSubmitSellerTx(
@@ -248,12 +251,14 @@ class OrchidPACServer {
    */
   Future<String> addBalance({
     @required EthereumAddress signer,
+    @required String productId,
     @required String receipt,
     @required ReceiptType receiptType,
     PacApiConfig apiConfig, // optional override
   }) async {
     var params = {
       'account_id': signer.toString(prefix: true),
+      'product_id': productId,
       'receipt': receipt,
     };
     String method;

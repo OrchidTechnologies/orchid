@@ -53,6 +53,7 @@ void main() async {
       print("Add balance...");
       await OrchidPACServer().addBalance(
           signer: signer,
+          productId: "net.orchid.pactier4",
           receipt: receipt,
           receiptType: ReceiptType.ios,
           apiConfig: apiConfig);
