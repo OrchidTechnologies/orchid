@@ -50,6 +50,9 @@ source += $(wildcard $(pwd)/source/*.cpp)
 
 cflags += -DORC_FIBER
 
+# XXX: this is some kind of weird boost thing
+cflags/$(pwd)/source/main.cpp += -Wno-implicit-const-int-float-conversion
+
 include env/output.mk
 
 $(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
