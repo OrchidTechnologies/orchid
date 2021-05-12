@@ -6,7 +6,7 @@ import w3_generic
 import products
 
 from decimal import Decimal
-from utils import configure_logging, is_true, response
+from utils import configure_logging, is_true, response, get_secret
 from typing import Any, Dict, Optional, Tuple
 from inapppy import GooglePlayVerifier, InAppPyValidationError
 
@@ -17,24 +17,26 @@ def product_to_usd(product_id: str) -> float:
     mapping = products.get_product_id_mapping('google')
     return mapping.get(product_id, 0)
 
-def verify_receipt(GOOGLE_SERVICE_ACCOUNT_KEY_FILE, receipt):
+def verify_(GOOGLE_SERVICE_ACCOUNT_KEY_FILE, purchase_token, product_id, bundle_id):
     """
     Accepts receipt, validates in Google.
     """
-    purchase_token = receipt['purchaseToken']
-    product_id = receipt['productId']
-    bundle_id  = receipt['packageName']
     verifier = GooglePlayVerifier(
         bundle_id,
         GOOGLE_SERVICE_ACCOUNT_KEY_FILE,
     )
     response = {'valid': False, 'transactions': []}
 
-    result = verifier.verify_with_result(
-        purchase_token,
-        product_sku,
-        is_subscription=True
-    )
+    try:
+        result = verifier.verify_with_result(
+            purchase_token,
+            product_id,
+            is_subscription=True
+        )
+    except Exception as e:
+        logging.info(f'verify exception: {str(e)} ')
+        txn_receipt = None
+        return 'Invalid Receipt', None, 0
 
     # result contains data
     raw_response = result.raw_response
@@ -67,12 +69,13 @@ def main(event, context):
     if is_true(body.get('debug', '')):
         configure_logging(level="DEBUG")
 
-    logging.debug(f'refund_failed_txn() stage:{stage}')
+    logging.debug(f'entry_payment_google stage:{stage}')
+    logging.debug(f'os.environ: {os.environ}')
     logging.debug(f'event: {event}')
     logging.debug(f'context: {context}')
 
     logging.debug(f'body: {body}')
-    receipt     = body.get('receipt', '')
+    #receipt     = body.get('receipt', '')
     #bundle_id   = body.get('bundle_id', '')
     account_id  = body.get('account_id', '')
     verify_receipt = True
@@ -85,9 +88,16 @@ def main(event, context):
         if body.get('verify_receipt') or body.get('product_id'):
             return response(402,{'msg':'invalid_dev_param'})
 
-    GOOGLE_SERVICE_ACCOUNT_KEY_FILE = os.environ['ORCHID_GOOGLE_SERVICE_ACCOUNT2']
+    GOOGLE_SERVICE_ACCOUNT_KEY_FILE = get_secret('ORCHID_GOOGLE_SERVICE_ACCOUNT2')
+    logging.debug(f'{GOOGLE_SERVICE_ACCOUNT_KEY_FILE}')
+
+    GOOGLE_SERVICE_ACCOUNT_KEY = json.loads(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)
     
-    msg, receipt_hash, total_usd = verify_receipt(GOOGLE_SERVICE_ACCOUNT_KEY_FILE, receipt)
+    purchase_token = body.get('receipt', '')
+    product_id = body.get('product_id', '')
+    bundle_id  = body.get('bundle_id', 'net.orchid')
+
+    msg, receipt_hash, total_usd = verify_(GOOGLE_SERVICE_ACCOUNT_KEY, purchase_token, product_id, bundle_id)
 
     if ((account_id is None) or (account_id == '')):
         account_id = receipt_hash

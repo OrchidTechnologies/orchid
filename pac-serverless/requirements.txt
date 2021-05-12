@@ -30,7 +30,7 @@ hexbytes==0.2.0
 httplib2==0.18.0
 idna==2.9
 importlib-metadata==1.6.0
-inapppy==2.4.4
+inapppy==2.5.2
 ipfshttpclient==0.4.13.2
 jmespath==0.9.5
 jsonschema==3.2.0
