@@ -83,7 +83,7 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
       return;
     }
     var purchase = purchases.first;
-    log("iap: handling purchase: $purchase");
+    log("iap: handling purchase: ${purchase.originalJson}");
     log("iap: purchase package name: ${purchase.packageName}");
 
     // Acknowledge / "consume" the purchase: If this is not completed the

@@ -12,10 +12,3 @@ extension StringExtensions on String {
   }
 
 }
-
-/// Work around log line length limits
-void printWrapped(String text) {
-  final pattern = new RegExp('.{1,800}');
-  pattern.allMatches(text).forEach((match) => print(match.group(0)));
-}
-
