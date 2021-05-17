@@ -87,7 +87,7 @@ def main(event, context):
         verify_receipt = is_true(body.get('verify_receipt', 'True'))
 
     if os.environ['STAGE'] != 'dev':
-        if body.get('verify_receipt') or body.get('product_id'):
+        if body.get('verify_receipt',None) is not None:
             return response(402,{'msg':'invalid_dev_param'})
 
     GOOGLE_SERVICE_ACCOUNT_KEY_FILE = get_secret('ORCHID_GOOGLE_SERVICE_ACCOUNT2')
@@ -97,7 +97,7 @@ def main(event, context):
     
     purchase_token = body.get('receipt', '')
     product_id = body.get('product_id', '')
-    bundle_id  = body.get('bundle_id', 'net.orchid')
+    bundle_id  = body.get('bundle_id', 'net.orchid.Orchid')
 
     msg, receipt_hash, total_usd = verify_(GOOGLE_SERVICE_ACCOUNT_KEY, purchase_token, product_id, bundle_id)
 
