@@ -195,6 +195,9 @@ $(eval $(call parser,wiretap/candump_,scanner,parser))
 w_libgcrypt := 
 w_libgcrypt += --disable-doc
 
+# XXX: workaround for https://dev.gnupg.org/T5440
+p_libgcrypt += -Wno-macro-redefined
+
 ifeq ($(target),ios)
 # XXX: cipher-gcm-armv8-aarch64-ce.S
 # ADR/ADRP relocations must be GOT relative; unknown AArch64 fixup kind!
