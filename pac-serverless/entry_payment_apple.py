@@ -33,7 +33,7 @@ def main(event, context):
         verify_receipt = is_true(body.get('verify_receipt', 'True'))
 
     if os.environ['STAGE'] != 'dev':
-        if body.get('verify_receipt') or body.get('product_id'):
+        if body.get('verify_receipt'):
             return response(402,{'msg':'invalid_dev_param'})
 
     msg, receipt_hash, total_usd = payments_apple.handle_receipt(receipt, product_id, stage, verify_receipt)
