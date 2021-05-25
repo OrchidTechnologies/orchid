@@ -34,6 +34,8 @@ class OrchidPACServer {
   /// Apply the receipt to any pending pac receipt transaction and advance it.
   Future<void> advancePACTransactionsWithReceipt(
       String receiptIn, ReceiptType receiptType) async {
+    log("iap: advance transaction with receipt.");
+
     // Allow override of receipts with the test receipt.
     var apiConfig = await OrchidPurchaseAPI().apiConfig();
     if (apiConfig.testReceipt != null) {
@@ -84,7 +86,7 @@ class OrchidPACServer {
         break;
       case PacTransactionState.WaitingForRetry:
         // Assume it's retry time.
-        log("iap: retry");
+        log("iap: timed retry");
         tx.retries++;
         continue nextCase;
       nextCase:

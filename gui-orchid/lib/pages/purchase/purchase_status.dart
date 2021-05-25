@@ -215,6 +215,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
   }
 
   void _retryPurchase() async {
+    log("iap: User hit retry button.");
     (await (PacTransaction.shared).get()).ready().save();
     OrchidPACServer().advancePACTransactions();
   }
