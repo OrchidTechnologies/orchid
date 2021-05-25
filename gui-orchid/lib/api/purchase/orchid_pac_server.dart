@@ -125,7 +125,7 @@ class OrchidPACServer {
     } catch (err, stack) {
       // Server error
       log("iap: error in pac submit: $err, $stack");
-      tx.serverResponse = "$err";
+      tx.serverResponse = "Client side error: $err";
 
       // Schedule retry
       if (tx.retries < 2) {

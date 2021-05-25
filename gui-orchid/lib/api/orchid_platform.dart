@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/util/location.dart';
+
+import 'orchid_log_api.dart';
 
 /// Support overriding the platform for testing.
 class OrchidPlatform {
@@ -96,4 +99,14 @@ class OrchidPlatform {
   static bool get isDesktop {
     return isMacOS || isLinux || isWindows;
   }
+
+  static String get operatingSystem {
+    try {
+      return Platform.operatingSystem;
+    } catch (err) {
+      log("exception fetching osname: $err");
+      return "unknown";
+    }
+  }
+
 }

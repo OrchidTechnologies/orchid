@@ -76,17 +76,16 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
 
         case SKPaymentTransactionStateWrapper.purchased:
           log("iap: IAP purchased state");
+          await _completeIAPTransaction(tx);
           try {
             await SKPaymentQueueWrapper().finishTransaction(tx);
           } catch (err) {
             log("iap: error finishing purchased tx: $err");
           }
-          _completeIAPTransaction(tx);
           break;
 
         case SKPaymentTransactionStateWrapper.failed:
-          log("iap: IAP failed state");
-
+          log("iap: IAP failed state.");
           log("iap: finishing failed tx");
           try {
             await SKPaymentQueueWrapper().finishTransaction(tx);
@@ -107,12 +106,20 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
         case SKPaymentTransactionStateWrapper.deferred:
           log("iap: iap deferred");
           break;
+
+        case SKPaymentTransactionStateWrapper.unspecified:
+          log("iap: transaction in unknown state: $tx, ${tx.error}");
+          var pacTx = await PacTransaction.shared.get();
+          pacTx.error("iap failed: unknown state").save();
+          break;
       }
     }
   }
 
   // The IAP is complete, update AML and the pending transaction status.
   Future _completeIAPTransaction(SKPaymentTransactionWrapper tx) async {
+    log("iap: Completing transaction");
+
     // Record the purchase for rate limiting
     OrchidPurchaseAPI.addPurchaseToRateLimit(tx.payment.productIdentifier);
 
