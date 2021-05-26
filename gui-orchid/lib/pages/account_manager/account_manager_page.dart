@@ -326,14 +326,41 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                 AppSize(context).widerThan(AppSize.iphone_12_max) ? null : 250,
             child: Center(
               child: TapToCopyText(
-                  _accountStore.activeIdentity.address.toString(),
-                  key:
-                      ValueKey(_accountStore.activeIdentity.address.toString()),
-                  padding: EdgeInsets.zero,
-                  style: AppText.dialogTitle),
+                _accountStore.activeIdentity.address.toString(),
+                key: ValueKey(_accountStore.activeIdentity.address.toString()),
+                padding: EdgeInsets.zero,
+                style: AppText.dialogTitle,
+                onTap: _showOrchidAccountAddressWarning,
+              ),
             ),
           )
       ]..spaced(8),
+    );
+  }
+
+  Future<void> _showOrchidAccountAddressWarning() async {
+    var linkStyle = AppText.linkStyle; //.copyWith(fontSize: 15);
+    var title = "Copied Orchid Identity";
+    var body = StyledText(
+      style: AppText.dialogBody,
+      newLineAsBreaks: true,
+      text: "<alarm/> <bold>This is not a wallet address.</bold>"
+              "  "
+              "Do not send tokens to this address." +
+          "\n\n" +
+          "Your Orchid Identity uniquely identifies you on the network."
+              "  "
+              "Learn more about your <link>Orchid Identity</link>.",
+      styles: {
+        'bold': AppText.dialogBody.copyWith(fontWeight: FontWeight.bold),
+        'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),
+        'alarm': IconStyle(Icons.warning_amber_rounded)
+      },
+    );
+    return AppDialogs.showAppDialog(
+      context: context,
+      title: title,
+      body: body,
     );
   }
 
