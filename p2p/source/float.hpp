@@ -25,12 +25,24 @@
 
 #include <boost/multiprecision/cpp_bin_float.hpp>
 
+#include "error.hpp"
+
 namespace orc {
 
 typedef boost::multiprecision::cpp_bin_float_oct Float;
 
 static const Float Ten9("1000000000");
 static const Float Ten18("1000000000000000000");
+
+template <typename Type_>
+std::enable_if_t<std::is_same_v<Type_, double>, Type_> To(const std::string_view &value) {
+    const auto start(value.data());
+    const auto size(value.size());
+    char *end;
+    const auto number(strtod(start, &end));
+    orc_assert(end == start + size);
+    return number;
+}
 
 }
 
