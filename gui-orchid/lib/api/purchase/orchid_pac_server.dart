@@ -34,6 +34,8 @@ class OrchidPACServer {
   /// Apply the receipt to any pending pac receipt transaction and advance it.
   Future<void> advancePACTransactionsWithReceipt(
       String receiptIn, ReceiptType receiptType) async {
+    log("iap: advance transaction with receipt.");
+
     // Allow override of receipts with the test receipt.
     var apiConfig = await OrchidPurchaseAPI().apiConfig();
     if (apiConfig.testReceipt != null) {
@@ -84,7 +86,7 @@ class OrchidPACServer {
         break;
       case PacTransactionState.WaitingForRetry:
         // Assume it's retry time.
-        log("iap: retry");
+        log("iap: timed retry");
         tx.retries++;
         continue nextCase;
       nextCase:
@@ -125,7 +127,7 @@ class OrchidPACServer {
     } catch (err, stack) {
       // Server error
       log("iap: error in pac submit: $err, $stack");
-      tx.serverResponse = "$err";
+      tx.serverResponse = "Client side error: $err";
 
       // Schedule retry
       if (tx.retries < 2) {
@@ -169,7 +171,10 @@ class OrchidPACServer {
     }
 
     return addBalance(
-        signer: tx.signer, receipt: tx.receipt, receiptType: tx.receiptType);
+        signer: tx.signer,
+        productId: tx.productId,
+        receipt: tx.receipt,
+        receiptType: tx.receiptType);
   }
 
   Future<String> _callSubmitSellerTx(
@@ -248,12 +253,14 @@ class OrchidPACServer {
    */
   Future<String> addBalance({
     @required EthereumAddress signer,
+    @required String productId,
     @required String receipt,
     @required ReceiptType receiptType,
     PacApiConfig apiConfig, // optional override
   }) async {
     var params = {
       'account_id': signer.toString(prefix: true),
+      'product_id': productId,
       'receipt': receipt,
     };
     String method;
@@ -407,7 +414,7 @@ class OrchidPACServer {
 
     // Do the http post
     var postBody = jsonEncode(params);
-    printWrapped("iap: posting to $url, json = $postBody");
+    logWrapped("iap: posting to $url, json = $postBody");
     var response = await http.post(url,
         headers: {
           "Content-Type": "application/json; charset=utf-8",

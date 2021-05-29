@@ -5,6 +5,12 @@ void log(String text) {
   OrchidLogAPI.defaultLogAPI.write(text);
 }
 
+/// Work around log line length limits
+void logWrapped(String text) {
+  final pattern = new RegExp('.{1,800}');
+  pattern.allMatches(text).forEach((match) => log(match.group(0)));
+}
+
 /// Logging support, if any, implemented by the channel API.
 abstract class OrchidLogAPI {
   static OrchidLogAPI defaultLogAPI = MemoryOrchidLogAPI();

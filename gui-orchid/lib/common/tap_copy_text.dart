@@ -6,8 +6,9 @@ class TapToCopyText extends StatefulWidget {
   final String text;
   final TextStyle style;
   final EdgeInsets padding;
+  final VoidCallback onTap;
 
-  const TapToCopyText(this.text, {Key key, this.style, this.padding})
+  const TapToCopyText(this.text, {Key key, this.style, this.padding, this.onTap})
       : super(key: key);
 
   @override
@@ -37,7 +38,7 @@ class _TapToCopyTextState extends State<TapToCopyText> {
           style: widget.style,
         ),
       ),
-      onTap: _onTap,
+      onTap: widget.onTap ?? _onTap,
     );
   }
 

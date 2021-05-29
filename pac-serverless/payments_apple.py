@@ -102,10 +102,11 @@ def product_to_usd(product_id: str) -> float:
     mapping = products.get_product_id_mapping()
     return mapping.get(product_id, -1)
 
-def handle_receipt(receipt, product_id, Stage, verify_receipt):
+def handle_receipt(receipt, product_id_claim, Stage, verify_receipt):
 
     # extract and hash the receipt body payload
     receipt_hash = hash_receipt_body(receipt)
+    product_id = None
 
     apple_response = process_app_pay_receipt(receipt)
 
@@ -130,6 +131,9 @@ def handle_receipt(receipt, product_id, Stage, verify_receipt):
     if (product_id is None):
         product_id = validation_result['receipt']['in_app'][0]['product_id']
     quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
+
+    if product_id != product_id_claim:
+        return "invalid_product_id", None, 0
 
     if Stage == 'dev':
         total_usd = wildcard_product_to_usd(product_id=product_id) * quantity

@@ -9,7 +9,9 @@ import 'package:orchid/util/enums.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/json.dart';
 
+import '../orchid_api.dart';
 import '../orchid_crypto.dart';
+import '../orchid_platform.dart';
 
 enum PacTransactionType {
   /// Legacy transaction
@@ -117,8 +119,12 @@ class PacTransaction {
     throw Exception("Unknown transaction type: $json");
   }
 
-  String userDebugString() {
-    return jsonEncode(toJson());
+  Future<String> userDebugString() async {
+    var json = toJson();
+    json['os'] = OrchidPlatform.operatingSystem;
+    json['locale'] = OrchidPlatform.staticLocale.toString();
+    json['appVersion'] = await OrchidAPI().versionString();
+    return jsonEncode(json);
   }
 
   @override

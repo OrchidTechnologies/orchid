@@ -33,7 +33,7 @@ def main(event, context):
         verify_receipt = is_true(body.get('verify_receipt', 'True'))
 
     if os.environ['STAGE'] != 'dev':
-        if body.get('verify_receipt') or body.get('product_id'):
+        if body.get('verify_receipt'):
             return response(402,{'msg':'invalid_dev_param'})
 
     msg, receipt_hash, total_usd = payments_apple.handle_receipt(receipt, product_id, stage, verify_receipt)
@@ -43,7 +43,11 @@ def main(event, context):
 
     if (msg == "success"):
         logging.debug(f'conditional writing receipt with hash: {receipt_hash}')
-        w3_generic.dynamodb_cwrite1(os.environ['RECEIPT_TABLE_NAME'], 'receipt', receipt_hash )
+        try:
+            w3_generic.dynamodb_cwrite1(os.environ['RECEIPT_TABLE_NAME'], 'receipt', receipt_hash )
+        except Exception as e:
+            logging.info(f'writing receipt exception: {str(e)} ')
+            return response(403,{'msg':'Receipt already redeemed'})
         w3_generic.credit_account_balance(account_id, total_usd)
         return response(200,{'msg':msg,'account_id':account_id,'total_usd':total_usd})
     else:
