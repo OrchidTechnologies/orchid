@@ -370,6 +370,17 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [height] = Options<uint64_t>(args);
         co_await chain_->Header(height);
 
+    } else if (command == "bsc:transfer") {
+        const auto [segwit, amount] = Options<std::string, uint256_t>(args);
+        const auto recipient(FromSegwit(segwit));
+        orc_assert(recipient.first == "bnb");
+        const Address token("0x0000000000000000000000000000000000000000");
+        const Address hub("0x0000000000000000000000000000000000001004");
+        // https://raw.githubusercontent.com/binance-chain/bsc-genesis-contract/master/abi/tokenhub.abi
+        static Selector<uint256_t> relayFee("relayFee");
+        static Selector<bool, Address, Address, uint256_t, uint64_t> transferOut("transferOut");
+        std::cout << (co_await executor_->Send(*chain_, {}, hub, amount + co_await relayFee.Call(*chain_, "latest", hub, 90000), transferOut(token, recipient.second.num<uint160_t>(), amount, Timestamp() + 1000))).hex() << std::endl;
+
     } else if (command == "cb58") {
         auto [data] = Options<Bytes>(args);
         std::cout << ToBase58(Tie(data, Hash2(data).Clip<28, 4>())) << std::endl;

@@ -768,6 +768,11 @@ class Beam final :
     {
     }
 
+    Beam(const std::vector<uint8_t> &data) :
+        Beam(data.data(), data.size())
+    {
+    }
+
     explicit Beam(const Buffer &buffer);
 
     explicit Beam(const Beam &rhs) :
