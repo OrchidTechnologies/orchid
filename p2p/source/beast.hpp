@@ -56,14 +56,11 @@ task<Response> Beast<Stream_>::Fetch(http::request<http::string_body> &req) { or
     orc_block({ (void) co_await http::async_write(stream_, req, orc::Adapt()); },
         "writing http request");
 
-    http::response<http::dynamic_body> res;
+    Response res;
     orc_block({ (void) co_await http::async_read(stream_, buffer_, res, orc::Adapt()); },
         "reading http response");
 
-    // XXX: I can probably return this as a buffer array
-    Response response(res.result(), req.version());;
-    response.body() = boost::beast::buffers_to_string(res.body().data());
-    co_return response;
+    co_return res;
 }
 
 }
