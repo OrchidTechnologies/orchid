@@ -48,19 +48,19 @@ class Beast :
     {
     }
 
-    task<Response> Fetch(http::request<http::string_body> &req) override;
+    task<Response> Fetch(http::request<http::string_body> &request) override;
 };
 
 template <typename Stream_>
-task<Response> Beast<Stream_>::Fetch(http::request<http::string_body> &req) { orc_ahead
-    orc_block({ (void) co_await http::async_write(stream_, req, orc::Adapt()); },
+task<Response> Beast<Stream_>::Fetch(http::request<http::string_body> &request) { orc_ahead
+    orc_block({ (void) co_await http::async_write(stream_, request, orc::Adapt()); },
         "writing http request");
 
-    Response res;
-    orc_block({ (void) co_await http::async_read(stream_, buffer_, res, orc::Adapt()); },
+    Response response;
+    orc_block({ (void) co_await http::async_read(stream_, buffer_, response, orc::Adapt()); },
         "reading http response");
 
-    co_return res;
+    co_return response;
 }
 
 }

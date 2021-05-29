@@ -30,7 +30,7 @@ namespace orc {
 class Fetcher {
   public:
     virtual ~Fetcher() = default;
-    virtual task<Response> Fetch(http::request<http::string_body> &req) = 0;
+    virtual task<Response> Fetch(http::request<http::string_body> &request) = 0;
 };
 
 }
