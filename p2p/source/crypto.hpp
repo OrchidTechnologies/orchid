@@ -47,9 +47,6 @@ inline Brick<32> HashK(const std::string &data) {
     return HashK(Subset(data)); }
 
 Brick<32> Hash2(const Buffer &data);
-inline Brick<32> Hash2(const std::string &data) {
-    return Hash2(Subset(data)); }
-
 Brick<20> Hash1(const Buffer &data);
 
 Brick<20> HashR(const Buffer &data);
