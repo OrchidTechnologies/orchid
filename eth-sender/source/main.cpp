@@ -379,7 +379,8 @@ task<int> Main(int argc, const char *const argv[]) { try {
         // https://raw.githubusercontent.com/binance-chain/bsc-genesis-contract/master/abi/tokenhub.abi
         static Selector<uint256_t> relayFee("relayFee");
         static Selector<bool, Address, Address, uint256_t, uint64_t> transferOut("transferOut");
-        std::cout << (co_await executor_->Send(*chain_, {}, hub, amount + co_await relayFee.Call(*chain_, "latest", hub, 90000), transferOut(token, recipient.second.num<uint160_t>(), amount, Timestamp() + 1000))).hex() << std::endl;
+        // XXX: gas is manually specified as eth_estimateGas failed to give this enough gas?! *sigh* :/
+        std::cout << (co_await executor_->Send(*chain_, {.gas = 90000}, hub, amount + co_await relayFee.Call(*chain_, "latest", hub, 90000), transferOut(token, recipient.second.num<uint160_t>(), amount, Timestamp() + 1000))).hex() << std::endl;
 
     } else if (command == "cb58") {
         auto [data] = Options<Bytes>(args);
