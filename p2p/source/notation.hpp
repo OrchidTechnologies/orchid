@@ -183,6 +183,29 @@ std::tuple<Elements_...> Parse(const std::string &data) {
     return Parse<Elements_...>(data, std::index_sequence_for<Elements_...>());
 }
 
+template <typename Type_>
+inline std::enable_if_t<std::is_integral_v<Type_>, std::string> Str(const Type_ &value) {
+    return std::to_string(value); }
+inline std::string Str(const boost::string_view &value) {
+    return std::string(value); }
+inline std::string Str(const boost::json::string &value) {
+    return Str(value.operator boost::string_view()); }
+inline std::string Str(const boost::json::value &value) {
+    return Str(value.as_string()); }
+
+template <typename Type_>
+Type_ Num(const boost::json::value &value) {
+    switch (value.kind()) {
+        case boost::json::kind::int64:
+            return value.get_int64();
+        case boost::json::kind::uint64:
+            return value.get_uint64();
+        case boost::json::kind::double_:
+            return value.get_double();
+        default: orc_assert(false);
+    }
+}
+
 }
 
 #endif//ORCHID_NOTATION_HPP
