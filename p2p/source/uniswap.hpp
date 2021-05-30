@@ -32,11 +32,17 @@ class Address;
 class Chain;
 
 static const Float Ten6("1000000");
+static const Float Two96(uint256_t(1) << 96);
 
-extern const Address UniswapUSDCETH;
-extern const Address UniswapOXTETH;
+extern const Address Uniswap2OXTETH;
+extern const Address Uniswap2USDCETH;
 
-task<Float> Uniswap(const Chain &chain, const Address &pair, const Float &adjust);
+extern const Address Uniswap3OXTETH;
+extern const Address Uniswap3USDCETH;
+extern const Address Uniswap3ETHUSDT;
+
+task<Float> Uniswap2(const Chain &chain, const Address &pair, const Float &adjust);
+task<Float> Uniswap3(const Chain &chain, const Address &pair, const Float &adjust);
 
 }
 

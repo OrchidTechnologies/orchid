@@ -26,29 +26,26 @@
 
 namespace orc {
 
-const Address UniswapUSDCETH("0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc");
-const Address UniswapOXTETH("0x9B533F1cEaa5ceb7e5b8994ef16499E47A66312D");
+const Address Uniswap2OXTETH("0x9B533F1cEaa5ceb7e5b8994ef16499E47A66312D");
+const Address Uniswap2USDCETH("0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc");
 
-task<Float> Uniswap(const Chain &chain, const Address &pair, const Float &adjust) {
-    namespace mp = boost::multiprecision;
-    typedef mp::number<mp::cpp_int_backend<256, 256, mp::unsigned_magnitude, mp::unchecked, void>> uint112_t;
-    static const Selector<std::tuple<uint112_t, uint112_t, uint32_t>> getReserves_("getReserves");
-    const auto [reserve0after, reserve1after, after] = co_await getReserves_.Call(chain, "latest", pair, 90000);
-#if 0
-    const auto block(co_await chain.Header("latest"));
-    const auto [reserve0before, reserve1before, before] = co_await getReserves_.Call(chain, block.height_ - 100, pair, 90000);
-    static const Selector<uint256_t> price0CumulativeLast_("price0CumulativeLast");
-    static const Selector<uint256_t> price1CumulativeLast_("price1CumulativeLast");
-    const auto [price0before, price1before, price0after, price1after] = *co_await Parallel(
-        price0CumulativeLast_.Call(chain, block.height_ - 100, pair, 90000),
-        price1CumulativeLast_.Call(chain, block.height_ - 100, pair, 90000),
-        price0CumulativeLast_.Call(chain, block.height_, pair, 90000),
-        price1CumulativeLast_.Call(chain, block.height_, pair, 90000));
-    std::cout << price0before << " " << reserve0before << " | " << price1before << " " << reserve1before << " | " << before << std::endl;
-    std::cout << price0after << " " << reserve0after << " | " << price1after << " " << reserve1after << " | " << after << std::endl;
-    std::cout << block.timestamp_ << std::endl;
-#endif
+const Address Uniswap3OXTETH("0x1295E6B8C73a39a577Dfe8E00D954640970706AD");
+const Address Uniswap3USDCETH("0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8");
+const Address Uniswap3ETHUSDT("0x4e68Ccd3E89f51C3074ca5072bbAC773960dFa36");
+
+task<Float> Uniswap2(const Chain &chain, const Address &pair, const Float &adjust) {
+    typedef uint256_t uint112_t;
+    static const Selector<std::tuple<uint112_t, uint112_t, uint32_t>> getReserves("getReserves");
+    const auto [reserve0after, reserve1after, after] = co_await getReserves.Call(chain, "latest", pair, 90000);
     co_return Float(reserve0after) / Float(reserve1after) / adjust;
+}
+
+task<Float> Uniswap3(const Chain &chain, const Address &pair, const Float &adjust) {
+    typedef uint256_t int24_t;
+    static const Selector<std::tuple<uint160_t, int24_t, uint16_t, uint16_t, uint16_t, uint8_t, bool>> slot0("slot0");
+    const auto [sqrtPriceX96, tick, observationIndex, observationCardinality, observationCardinalityNext, feeProtocol, unlocked] = co_await slot0.Call(chain, "latest", pair, 90000);
+    const auto square(Float(sqrtPriceX96) / adjust / Two96);
+    co_return square * square;
 }
 
 }
