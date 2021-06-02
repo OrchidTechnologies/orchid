@@ -58,7 +58,7 @@ six==1.14.0
 toolz==0.10.0
 typing-extensions==3.7.4.2
 uritemplate==3.0.1
-urllib3==1.25.9
+urllib3==1.26.5
 varint==1.0.2
 web3==5.9.0
 websockets==8.1
