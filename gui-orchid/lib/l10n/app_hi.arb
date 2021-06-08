@@ -1,5 +1,5 @@
 {
-    "@@locale": "hi",
+    "@@locale": "en",
     "newHop": "नया हॉप",
     "@newHop": {
         "description": "New network hop"
@@ -13,6 +13,11 @@
     "orchidConnecting": "ऑर्किड कनेकट कर रहा है",
     "orchidDisconnecting": "ऑर्किड डिसकनेक्ट हो रह है",
     "numHopsConfigured": "{num, plural, one{एक हॉप कॉन्फिगर हो गया} other{{num} हॉप कॉन्फिगर हो गए}}",
+    "@numHopsConfigured": {
+        "placeholders": {
+            "num": {}
+        }
+    },
     "delete": "हटाएँ",
     "turnOnToActivate": "अपने हॉपों को सक्रिय करने और अपनी यातात की रक्षा करने के लिए ऑर्किड को चालू करें",
     "createFirstHop": "अपने कनेक्शन को रक्षित करने के लिए अपना पहला हॉप निर्मित करें।",
@@ -88,7 +93,7 @@
     "privacyPolicy": "गोपनीयता नीति",
     "openSourceLicenses": "मुक्त स्रोत लाइसेंस",
     "settings": "सेटिंग",
-    "advanced": "उन्नत",
+    "advanced": "Advanced",
     "version": "संस्करण",
     "noVersion": "कोई संस्करण नहीं है",
     "setup": "सेट अप",
@@ -269,6 +274,11 @@
     "seeOrchidcomForHelp": "मदद के लिए orchid.com देखें।",
     "payPerUseVpnService": "उपयोग के अनुसार भुगतान करें वीपीएन सेवा",
     "currentAvgVpnPriceIsPricePerGb": "वर्तमान औसत। वीपीएन दाम {price} प्रति जीबी है",
+    "@currentAvgVpnPriceIsPricePerGb": {
+        "placeholders": {
+            "price": {}
+        }
+    },
     "notASubscriptionCreditsDontExpire": "सदस्यता नहीं है, क्रेडिट कभी समाप्त नहीं होते",
     "shareAccountWithUnlimitedDevices": "खाते को असंख्य उपकरणों के साथ साझा करें",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "ऑर्किड स्टोर अस्थायी रूप से उपलब्ध नहीं है। चंद मिनटों के बाद दुबारा कोशिश करें।",
@@ -279,6 +289,11 @@
     "copied": "कॉपी कर लिया",
     "efficiency": "कार्यदक्षता",
     "minTicketsAvailableTickets": "न्यूनतम टिकट उपलब्ध हैं: {tickets}",
+    "@minTicketsAvailableTickets": {
+        "placeholders": {
+            "tickets": {}
+        }
+    },
     "transactionSentToBlockchain": "लेन-देन को ब्लाॉकचेइन को भेज दिया गया है",
     "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "आपकी खरीद पूरी हो गई है और इसे अब एक्स-डाई द्वारा प्रक्रमित किया जा रहा है, जिसमें एक मिनट का या कभी-कभी उससे ज्यादा समय लग सकता है। ताजा करने के लिए नीचे खीचें और अद्यतित शेष राशि के साथ आपका खाता नीचे दिखाई देगा।",
     "copyReceipt": "पावती को कॉपी करें",
