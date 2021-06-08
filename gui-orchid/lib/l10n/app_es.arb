@@ -1,5 +1,5 @@
 {
-    "@@locale": "es",
+    "@@locale": "en",
     "newHop": "Nuevo Hop",
     "@newHop": {
         "description": "New network hop"
@@ -13,6 +13,11 @@
     "orchidConnecting": "Conectando Orchid",
     "orchidDisconnecting": "Desconectando Orchid",
     "numHopsConfigured": "{num, plural, zero{Ningún Hop configurado} one{Un Hop configurado} two{Dos Hops configurados} other{{num} Hops configurados}}",
+    "@numHopsConfigured": {
+        "placeholders": {
+            "num": {}
+        }
+    },
     "delete": "Eliminar",
     "turnOnToActivate": "Conecta Orchid para activar tus Hops y proteger tu tráfico",
     "createFirstHop": "Crea tu primer Hop para proteger tu conexión.",
@@ -258,17 +263,22 @@
     "signerAddress": "Signer Address",
     "legal": "Legal",
     "whatsNewInOrchid": "Novedades de Orchid",
-    "orchidIsOnXdai": "¡Orchid disponible en xDai!",
+    "orchidIsOnXdai": "¡Orchid está en xDai!",
     "youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "¡Ahora puedes comprar créditos de Orchid en xDai! Empieza a usar la VPN por tan solo $1 USD.",
-    "xdaiAccountsForPastPurchases": "Cuenta xDai para compras anteriores",
-    "forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "Para cualquier compra en la app realizada antes de hoy, los fondos xDai se han agregado a la misma clave de cuenta. ¡Utiliza el ancho de banda con nosotros!",
+    "xdaiAccountsForPastPurchases": "Cuenta xDai para compras pasadas",
+    "forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "Para cualquier compra en la app realizada antes de hoy, los fondos xDai se han agregado a la misma clave de cuenta. ¡Usa el ancho de banda por nuestra cuenta!",
     "newInterface": "Nueva interfaz",
-    "accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "Las cuentas están organizadas ahora bajo la Dirección Orchid a la que están asociadas.",
-    "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Consulta el saldo activo de tu cuenta y el coste del ancho de banda en la pantalla de inicio.",
+    "accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "Las cuentas ahora están organizadas bajo la dirección Orchid a la que están asociadas.",
+    "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Consulta el saldo activo de tu cuenta y el costo de ancho de banda en la pantalla de inicio.",
     "noPacsAvailableAtThisTime": "No hay ninguna cuenta Orchid disponible en este momento.",
     "seeOrchidcomForHelp": "Consulta orchid.com para obtener ayuda.",
     "payPerUseVpnService": "Servicio VPN de pago por uso",
-    "currentAvgVpnPriceIsPricePerGb": "El precio medio actual de la VPN es de {price} por GB",
+    "currentAvgVpnPriceIsPricePerGb": "El precio promedio actual de la VPN es de {price} por GB",
+    "@currentAvgVpnPriceIsPricePerGb": {
+        "placeholders": {
+            "price": {}
+        }
+    },
     "notASubscriptionCreditsDontExpire": "Sin suscripción, los créditos no caducan",
     "shareAccountWithUnlimitedDevices": "Comparte la cuenta con dispositivos ilimitados",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "La Tienda Orchid no está disponible temporalmente. Vuelve en unos minutos.",
@@ -279,20 +289,25 @@
     "copied": "Copiado",
     "efficiency": "Eficiencia",
     "minTicketsAvailableTickets": "Mín de tickets disponibles: {tickets}",
-    "transactionSentToBlockchain": "Transacción enviada a Blockchain",
-    "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "Tu compra se ha completado y está siendo procesada por la blockchain de xDai, lo que puede tardar hasta un minuto, puede que más. Desliza hacia abajo para actualizar y que aparezca tu cuenta con el saldo actualizado.",
+    "@minTicketsAvailableTickets": {
+        "placeholders": {
+            "tickets": {}
+        }
+    },
+    "transactionSentToBlockchain": "Transacción enviada a blockchain",
+    "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "Tu compra ha sido completada y ahora está siendo procesada por la blockchain de xDai, lo que puede tardar hasta un minuto, a veces más. Desliza hacia abajo para actualizar y tu cuenta con el saldo actualizado aparecerá abajo.",
     "copyReceipt": "Copiar recibo",
-    "bandwidthCost": "Coste del ancho de banda",
+    "bandwidthCost": "Costo de ancho de banda",
     "manageAccounts": "Administrar Cuentas",
     "configurationManagement": "Gestión de la Configuración",
     "enableMultihopUi": "Habilitar IU multi-hop",
     "ifYouWantToUseMultihopOpenvpnAndWireguardYoull": "Si deseas utilizar multi-hop, OpenVPN y WireGuard, deberás habilitar la interfaz multi-hop. Para comprar créditos, deberás deshabilitar la interfaz multi-hop.",
-    "toRestoreADeletedHop": "Restaurar un hop eliminado:",
+    "toRestoreADeletedHop": "Para restaurar un hop eliminado:",
     "oneClickTheHopBelowThenClickShareOrchidAccount": "1. Haz clic en el hop abajo y luego en ‘Compartir Cuenta Orchid’ y pulsa ‘Copiar’.",
     "twoReturnToTheManageProfileScreenClickNewHop": "2. Vuelve a la pantalla 'Administrar Perfil', haz clic en 'Nuevo Hop' y luego en 'Vincular Cuenta Orchid' y 'Pegar'.",
-    "toPermanentlyDeleteAHopFromTheListBelowSwipe": "Para eliminar permanentemente un hop de la siguiente lista, deslízalo hacia la izquierda.",
+    "toPermanentlyDeleteAHopFromTheListBelowSwipe": "Para eliminar un hop permanentemente de la siguiente lista, deslízalo hacia la izquierda.",
     "optional": "Opcional",
-    "exportThisOrchidKey": "Exportar esta Clave Orchid",
+    "exportThisOrchidKey": "Exportar esta clave Orchid",
     "aQrCodeAndTextForAllTheOrchidAccounts": "A continuación se muestra un código QR y un texto para todas las cuentas Orchid asociadas a esta clave.",
     "importThisKeyOnAnotherDeviceToShareAllThe": "Importa esta clave en otro dispositivo para compartir todas las cuentas Orchid asociadas a esta identidad Orchid.",
     "orchidAccountInUse": "Cuenta Orchid en uso",
@@ -311,13 +326,13 @@
     "scanOrPasteAnOrchidKeyFromTheClipboardTo": "Escanea o pega una clave Orchid del portapapeles para importar todas las cuentas Orchid asociadas a esa clave.",
     "protectYourTraffic": "Protege tu tráfico",
     "setUpYourFirstHopToActivateYourVpnConnection": "Configura tu primer hop para activar la conexión VPN.",
-    "aHopIsARemoteServerAlongYourPathTo": "Un 'hop' es un servidor remoto a través del cual se enruta tu tráfico al acceder a Internet.",
-    "eachHopAddsALayerOfIndirectionAndObfuscationTo": "Cada Hop añade a tu conexión una capa de indirección y ofuscación.",
+    "aHopIsARemoteServerAlongYourPathTo": "Un 'hop' es un servidor remoto a lo largo de tu ruta a internet por el que se enruta tu tráfico.",
+    "eachHopAddsALayerOfIndirectionAndObfuscationTo": "Cada hop añade una capa de indirección y ofuscación a tu conexión.",
     "createYourFirstHopToGetStarted": "Crea tu primer hop para empezar.",
-    "account": "Cuenta",
-    "transactions": "Transacciones",
-    "viewDeletedHops": "Ver Hops eliminados",
+    "account": "Account",
+    "transactions": "Transactions",
+    "viewDeletedHops": "Ver hops eliminados",
     "weRecommendBackingItUp": "Recomendamos <link>respaldarlo</link>.",
-    "purchasedCreditAccountsConnectExclusively": "Las cuentas de crédito compradas se conectan exclusivamente a nuestros <link1>proveedores preferenciales</link1>.",
+    "purchasedCreditAccountsConnectExclusively": "Las cuentas de crédito compradas se conectan exclusivamente a nuestros <link1>proveedores preferidos</link1>.",
     "allPurchasedAccountsUseThe": "Todas las cuentas compradas utilizan la <link2>criptomoneda xDai</link2>."
 }
