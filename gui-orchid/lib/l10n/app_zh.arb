@@ -1,5 +1,5 @@
 {
-    "@@locale": "zh",
+    "@@locale": "en",
     "newHop": "新跃点",
     "@newHop": {
         "description": "New network hop"
@@ -13,8 +13,13 @@
     "orchidConnecting": "正在连接 Orchid",
     "orchidDisconnecting": "正在断开连接 Orchid",
     "numHopsConfigured": "{num, plural, other{{num} 个已配置跃点}}",
+    "@numHopsConfigured": {
+        "placeholders": {
+            "num": {}
+        }
+    },
     "delete": "删除",
-    "turnOnToActivate": "打开 Orchid，激活您的跃点",
+    "turnOnToActivate": "打开 Orchid，激活您的跃点并保护流量",
     "createFirstHop": "创建您的第一个跃点以保护连接。",
     "orchid": "Orchid",
     "openVPN": "OpenVPN",
@@ -32,7 +37,7 @@
     "learnMoreButtonTitle": "了解更多",
     "orchidRequiresOXT": "Orchid 需要 OXT 币",
     "credentials": "凭据",
-    "curation": "数据监管",
+    "curation": "集展",
     "rateLimit": "评价限制",
     "signerKey": "签名者密钥",
     "copy": "复制",
@@ -41,7 +46,7 @@
     "oxt": "OXT 币",
     "amount": "金额",
     "deposit": "存款",
-    "curator": "数据提供者",
+    "curator": "集展人",
     "viewOrModifyRateLimit": "查看或修改评价限制。",
     "shareOrchidAccount": "分享 Orchid 帐户",
     "myOrchidAccount": "我的 Orchid 帐户",
@@ -54,7 +59,7 @@
     "saved": "已保存",
     "configurationSaved": "配置已保存",
     "whoops": "糟糕",
-    "configurationFailedInstruction": "无法保存配置，请重试。",
+    "configurationFailedInstruction": "无法保存配置，请检查语法并重试。",
     "addHop": "添加跃点",
     "selectYourHop": "选择跃点",
     "iHaveAQRCode": "我有二维码",
@@ -94,7 +99,7 @@
     "setup": "设置",
     "orchidOverview": "Orchid 概述",
     "log": "日志",
-    "defaultCurator": "默认数据提供人",
+    "defaultCurator": "默认集展人",
     "allowNoHopVPN": "允许无跃点 VPN",
     "queryBalances": "查询余额",
     "showInstructions": "显示说明",
@@ -127,15 +132,15 @@
     "generateNewKey": "生成新密钥",
     "importKey": "导入密钥",
     "chooseKey": "选择密钥",
-    "welcomeToOrchid": "欢迎使用 Orchid",
-    "thisReleaseVPNInstruction": "此版本是 Orchid 的高级VPN客户端，支持多跃点和本地流量分析。",
-    "toGetStartedInstruction": "首先，请启用VPN。",
+    "welcomeToOrchid": "Welcome to Orchid",
+    "thisReleaseVPNInstruction": "此版本是 Orchid 的高级 VPN 客户端，支持多跃点和本地流量分析。",
+    "toGetStartedInstruction": "首先，请启用 VPN。",
     "nothingToDisplayYet": "尚无内容可供显示。存在可显示内容时，将于此处显示流量。",
     "disconnecting": "断开连接...",
     "connecting": "连接中",
     "pushToConnect": "按下即可连接。",
     "orchidIsRunning": "兰花正在运行！",
-    "purchase": "购买",
+    "purchase": "采购",
     "pacPurchaseWaiting": "购买等待",
     "retry": "重试",
     "getHelpResolvingIssue": "获取解决此问题的帮助。",
@@ -235,7 +240,7 @@
     "wireguard": "线路保护",
     "clearAllLogData": "清除所有日志数据？",
     "thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "该调试日志是非永久性的，并且在退出应用程序时会清除。",
-    "itMayContainSecretOrPersonallyIdentifyingInformation": "它可能包含隐私或个人识别信息。",
+    "itMayContainSecretOrPersonallyIdentifyingInformation": "它可能包含秘密或个人识别信息。",
     "loggingEnabled": "启用记录",
     "cancel": "取消",
     "logging": "记录中",
@@ -269,6 +274,11 @@
     "seeOrchidcomForHelp": "请登录 orchid.com 查看帮助。",
     "payPerUseVpnService": "按使用付费 VPN 服务",
     "currentAvgVpnPriceIsPricePerGb": "当前平均 VPN 价格为每 GB {price}",
+    "@currentAvgVpnPriceIsPricePerGb": {
+        "placeholders": {
+            "price": {}
+        }
+    },
     "notASubscriptionCreditsDontExpire": "无需订阅，且积分不会过期",
     "shareAccountWithUnlimitedDevices": "可以在无限数量的设备上共享帐户",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Orchid Store 暂时不可用。请几分钟后回来查看。",
@@ -279,6 +289,11 @@
     "copied": "已复制",
     "efficiency": "效率",
     "minTicketsAvailableTickets": "可用的最低使用价值：{tickets}",
+    "@minTicketsAvailableTickets": {
+        "placeholders": {
+            "tickets": {}
+        }
+    },
     "transactionSentToBlockchain": "交易已发送到区块链",
     "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "您已完成购买，现在由 xDai 区块链处理，这可能需要一分钟，有时甚至需要更长时间。请下拉刷新，下方将显示余额更新后的帐户。",
     "copyReceipt": "复制回执",
