@@ -17,7 +17,7 @@
 MAKEFLAGS += --no-builtin-rules
 MAKEFLAGS += --no-builtin-variables
 
-SHELL := /bin/bash -o pipefail -O extglob
+SHELL := bash -o pipefail -O extglob
 
 empty := 
 space := $(empty) #
