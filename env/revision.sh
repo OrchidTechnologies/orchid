@@ -24,8 +24,8 @@ if [[ $# -eq 0 ]]; then
 else
     "$@" --version | head -n 1
     # ld64 doesn't support --version and prints its version to stderr
-    # Android NDK has a temporary /buildbot folder for its repository
-    "$@" -Wl,-v 2>&1 | sed -e '1!d;s@/tmp[0-9A-Za-z]\{6\}@/tmpXXXXXX@' || true
+    # Android NDK uses inconsistent directories / urls for repository
+    "$@" -Wl,-v 2>&1 | sed -e '1!d;s/([^ ]* /(/' || true
 fi
 
 PATH=${PATH}:~/.cargo/bin rustc --version
