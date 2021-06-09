@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:jdenticon_dart/jdenticon_dart.dart';
 import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
@@ -26,7 +25,6 @@ import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
 import 'package:orchid/util/strings.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_colors.dart';
@@ -36,6 +34,7 @@ import 'account_detail_poller.dart';
 import 'account_model.dart';
 import 'account_store.dart';
 import 'account_view.dart';
+import 'export_identity_dialog.dart';
 
 class AccountManagerPage extends StatefulWidget {
   @override
@@ -204,60 +203,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     return AppDialogs.showAppDialog(
         context: context,
         title: title,
-        body: Container(
-          padding: EdgeInsets.all(8),
-          width: 300,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              body,
-              pady(16),
-              TextButton(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: config));
-                },
-                child: Center(
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        width: 1,
-                        color: Colors.black.withOpacity(0.3),
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      children: [
-                        QrImage(
-                          data: config,
-                          version: QrVersions.auto,
-                          size: 180.0,
-                        ),
-                        pady(8),
-                        Container(
-                          width: 180,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                s.copy,
-                                style: TextStyle(color: Colors.deepPurple),
-                              ),
-                              Icon(
-                                Icons.download_sharp,
-                                color: Colors.deepPurple,
-                              )
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ));
+        body: ExportIdentityDialog(body: body, config: config));
   }
 
   // Delete the active identity after in-use check and user confirmation.
