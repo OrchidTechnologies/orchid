@@ -108,9 +108,9 @@ distro := ubuntu bionic
 endif
 endif
 
+# XXX: consider naming sysroot folder after distro
 $(output)/sysroot: env/sys-$(word 1,$(distro)).sh env/setup-sys.sh
-	$< $@ $(wordlist 2,$(words $(distro)),$(distro))
-	@touch $@
+	$< $@ $(wordlist 2,$(words $(distro)),$(distro)) || { rm -rf $@; false; }
 
 .PHONY: sysroot
 sysroot: $(output)/sysroot
