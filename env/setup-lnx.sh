@@ -17,8 +17,13 @@ sudo -EH apt-get -y install \
 function usable() {
     # Ubuntu bionic ships meson 0.45, which is too old to build glib
     # XXX: consider checking for meson 0.52 (it broke cross linking)
+
+    # Ubuntu focal ships meson 0.53, which is still incompatible with the lld that comes in the r22 Android NDK
+    # meson passes --allow-shlib-undefined to lld, which only recently added it https://reviews.llvm.org/D57385
+    # this bug is now fixed in meson, but also not until recently https://github.com/mesonbuild/meson/pull/5912
+
     for version in $(apt-cache show meson | sed -e '/^Version: */!d;s///'); do
-        if dpkg --compare-versions "${version}" ">=" "0.48.0"; then
+        if dpkg --compare-versions "${version}" ">=" "0.54.0"; then
             return
         fi
     done
