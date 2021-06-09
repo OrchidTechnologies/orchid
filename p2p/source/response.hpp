@@ -39,18 +39,32 @@ namespace http = boost::beast::http;
 struct Response :
     public http::response<http::string_body>
 {
+    // XXX: this lint is so useful and yet so broken :/
+    // NOLINTNEXTLINE (modernize-use-equals-default)
     using http::response<http::string_body>::response;
 
     Response(const Response &response) = delete;
     Response(Response &&response) = default;
 
-    std::string is(http::status code) && {
-        orc_assert_(result() == code, "{ code: " << result() << ", body: ```" << body() << "``` }");
+    std::string on(bool check) && {
+        orc_assert_(check, "{ status: " << result() << ", body: ```" << body() << "``` }");
         return std::move(body());
+    }
+
+    std::string is(http::status status) && {
+        return std::move(*this).on(result() == status);
+    }
+
+    std::string is(http::status_class status) && {
+        return std::move(*this).on(to_status_class(result()) == status);
     }
 
     std::string ok() && {
         return std::move(*this).is(http::status::ok);
+    }
+
+    std::string operator ()() && {
+        return std::move(*this).is(http::status_class::successful);
     }
 };
 
