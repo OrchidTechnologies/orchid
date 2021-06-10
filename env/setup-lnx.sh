@@ -8,6 +8,7 @@ sudo -EH apt-get -y install \
     capnproto tcl zstd \
     clang clang-tidy lld \
     libc++-dev libc++abi-dev \
+    g++-multilib gcc-multilib \
     python python3-pip python3-setuptools \
     bison flex gperf \
     gettext groff texinfo \

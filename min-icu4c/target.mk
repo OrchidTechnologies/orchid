@@ -9,9 +9,12 @@
 # }}}
 
 
+# XXX: this now needs to be per target (due to -m$(bits))
+
 $(output)/icu4c/Makefile: $(pwd)/icu4c/configure
 	mkdir -p $(dir $@)
-	cd $(dir $@) && $(CURDIR)/$< --enable-static
+	cd $(dir $@) && $(CURDIR)/$< --enable-static \
+	    CC='clang -m$(bits/$(machine))' CXX='clang++ -m$(bits/$(machine))'
 
 $(output)/icu%c/bin/uconv $(output)/icu%c/lib/libicuuc.a $(output)/icu%c/lib/libicudata.a: $(output)/icu4c/Makefile
 	$(MAKE) -C $(dir $<) RM='rm -f'
