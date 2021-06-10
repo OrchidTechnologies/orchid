@@ -24,17 +24,12 @@ webrtc += $(filter-out \
 ,$(wildcard $(pwd)/webrtc/api/*.cc))
 
 webrtc += $(wildcard $(pwd)/webrtc/api/crypto/*.cc)
-
-webrtc += $(filter-out \
-    %/goog_cc_factory.cc \
-,$(wildcard $(pwd)/webrtc/api/transport/*.cc))
-
+webrtc += $(wildcard $(pwd)/webrtc/api/transport/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/transport/media/*.cc)
-
 webrtc += $(wildcard $(pwd)/webrtc/api/units/*.cc)
 
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
-
+webrtc += $(pwd)/webrtc/api/call/transport.cc
 webrtc += $(pwd)/webrtc/api/numerics/samples_stats_counter.cc
 
 webrtc += $(pwd)/webrtc/api/rtc_event_log/rtc_event.cc
@@ -45,7 +40,9 @@ webrtc += $(pwd)/webrtc/api/task_queue/task_queue_base.cc
 webrtc += $(pwd)/webrtc/api/video/color_space.cc
 webrtc += $(pwd)/webrtc/api/video/encoded_image.cc
 webrtc += $(pwd)/webrtc/api/video/hdr_metadata.cc
+webrtc += $(pwd)/webrtc/api/video/video_bitrate_allocation.cc
 webrtc += $(pwd)/webrtc/api/video/video_content_type.cc
+webrtc += $(pwd)/webrtc/api/video/video_frame_metadata.cc
 webrtc += $(pwd)/webrtc/api/video/video_source_interface.cc
 webrtc += $(pwd)/webrtc/api/video/video_timing.cc
 
@@ -55,13 +52,21 @@ webrtc += $(pwd)/webrtc/api/video_codecs/video_codec.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/vp9_profile.cc
 
 webrtc += $(pwd)/webrtc/call/call_config.cc
+webrtc += $(pwd)/webrtc/call/rtp_bitrate_configurator.cc
+webrtc += $(pwd)/webrtc/call/rtp_config.cc
 webrtc += $(pwd)/webrtc/call/rtp_demuxer.cc
+webrtc += $(pwd)/webrtc/call/rtp_payload_params.cc
+webrtc += $(pwd)/webrtc/call/rtp_transport_controller_send.cc
+webrtc += $(pwd)/webrtc/call/rtp_video_sender.cc
 
-webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_dtls_transport_state.cc
-webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_dtls_writable_state.cc
-webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_ice_candidate_pair_config.cc
-webrtc += $(pwd)/webrtc/logging/rtc_event_log/events/rtc_event_ice_candidate_pair.cc
+webrtc += $(pwd)/webrtc/common_video/h264/h264_common.cc
+webrtc += $(pwd)/webrtc/common_video/h264/pps_parser.cc
+webrtc += $(pwd)/webrtc/common_video/h264/sps_parser.cc
+webrtc += $(pwd)/webrtc/common_video/h264/sps_vui_rewriter.cc
+
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/ice_logger.cc
+webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_stream_config.cc
+webrtc += $(wildcard $(pwd)/webrtc/logging/rtc_event_log/events/*.cc)
 
 webrtc += $(filter-out \
     %/adapted_video_track_source.cc \
@@ -72,26 +77,22 @@ webrtc += $(filter-out \
 
 webrtc += $(wildcard $(pwd)/webrtc/media/sctp/*.cc)
 
+webrtc += $(pwd)/webrtc/modules/audio_coding/audio_network_adaptor/audio_network_adaptor_config.cc
 webrtc += $(pwd)/webrtc/modules/audio_processing/include/audio_processing_statistics.cc
 
+webrtc += $(wildcard $(pwd)/webrtc/modules/congestion_controller/goog_cc/*.cc)
+webrtc += $(wildcard $(pwd)/webrtc/modules/congestion_controller/rtp/*.cc)
+webrtc += $(wildcard $(pwd)/webrtc/modules/pacing/*.cc)
+webrtc += $(wildcard $(pwd)/webrtc/modules/remote_bitrate_estimator/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/include/*.cc)
-
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_dependency_descriptor_extension.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_dependency_descriptor_reader.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_dependency_descriptor_writer.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_generic_frame_descriptor.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_generic_frame_descriptor_extension.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_header_extension_map.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_header_extensions.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_packet.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtp_packet_received.cc
-
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.cc
-webrtc += $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc
-
+webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/source/*.cc)
+webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/source/deprecated/*.cc)
+webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/modules/utility/source/*.cc)
+
+webrtc += $(pwd)/webrtc/modules/video_coding/chain_diff_calculator.cc
+webrtc += $(pwd)/webrtc/modules/video_coding/frame_dependencies_calculator.cc
+
 webrtc += $(shell find $(pwd)/webrtc/net -name '*.cc' | LC_COLLATE=C sort)
 
 webrtc += $(wildcard $(pwd)/webrtc/p2p/base/*.cc)
