@@ -34,11 +34,17 @@ triple/x86_64 := x86_64-unknown-linux-$(libc)
 meson/x86_64 := x86_64
 centos/x86_64 := x86_64
 
-archs += aarch64
-openssl/aarch64 := linux-aarch64
-host/aarch64 := aarch64-linux-$(libc)
-triple/aarch64 := aarch64-unknown-linux-$(libc)
-meson/aarch64 := aarch64
+archs += arm64
+openssl/arm64 := linux-aarch64
+host/arm64 := aarch64-linux-$(libc)
+triple/arm64 := aarch64-unknown-linux-$(libc)
+meson/arm64 := aarch64
+
+archs += armhf
+openssl/armhf := linux-armv4
+host/armhf := arm-linux-$(libc)eabihf
+triple/armhf := arm-unknown-linux-$(libc)eabihf
+meson/armhf := arm
 
 archs += mips
 openssl/mips := linux-mips32
@@ -84,13 +90,13 @@ lflags += -lrt
 
 define _
 more/$(1) := 
-ifneq ($(1),aarch64)
+ifneq ($(centos/$(1)),)
 more/$(1) += --sysroot $(CURDIR)/$(output)/sysroot
 else
 more/$(1) += --sysroot $(CURDIR)/$(output)/sysroot/usr/$(host/$(1))
 endif
-more/$(1) += -B$(llvm)/$(1)-linux-android/bin
-more/$(1) += -target $(1)-linux-$(libc)
+more/$(1) += -B$(llvm)/$(subst -$(libc),-android,$(host/$(1)))/bin
+more/$(1) += -target $(host/$(1))
 ranlib/$(1) := $(llvm)/bin/llvm-ranlib
 ar/$(1) := $(llvm)/bin/llvm-ar
 strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
@@ -98,8 +104,10 @@ windres/$(1) := false
 endef
 $(each)
 
+more/armhf += -march=armv6 -D__ARM_MAX_ARCH__=8
+
 ifeq ($(distro),)
-ifneq ($(machine),aarch64)
+ifneq ($(centos/$(machine)),)
 distro := centos6 $(machine) $(centos/$(machine))
 else
 distro := ubuntu bionic

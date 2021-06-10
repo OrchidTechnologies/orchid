@@ -409,11 +409,36 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: make Linux client
-      run: debug=crossndk make -j3 -C cli-shared machine=aarch64
+      run: debug=crossndk make -j3 -C cli-shared machine=arm64
     - uses: actions/upload-artifact@v1
       with:
         name: orchidcd-lnx-arm64
-        path: cli-shared/out-lnx/aarch64/orchidcd
+        path: cli-shared/out-lnx/arm64/orchidcd
+
+
+  build-lnx-cli-armhf:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule status
+      id: git-submodule-status
+      run: echo "::set-output name=hash::$(git submodule foreach -q 'echo $name $sha1' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
+    - uses: actions/cache@v2
+      with:
+        path: .git/modules
+        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make Linux client
+      run: debug=crossndk make -j3 -C cli-shared machine=armhf
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchidcd-lnx-armhf
+        path: cli-shared/out-lnx/armhf/orchidcd
 
 
   build-lnx-srv:
