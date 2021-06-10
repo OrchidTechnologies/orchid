@@ -441,7 +441,7 @@ jobs:
         path: cli-shared/out-lnx/armhf/orchidcd
 
 
-  build-lnx-srv:
+  build-lnx-srv-amd64:
     runs-on: ubuntu-latest
 
     steps:
@@ -463,6 +463,68 @@ jobs:
 
     - name: make Linux server
       run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared
+
+    - name: git status
+      run: git status
+
+
+  build-lnx-srv-arm64:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: install NDK r22
+      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule status
+      id: git-submodule-status
+      run: echo "::set-output name=hash::$(git submodule foreach -q 'echo $name $sha1' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
+    - uses: actions/cache@v2
+      with:
+        path: .git/modules
+        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make Linux server
+      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared machine=arm64
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchidd-lnx-arm64
+        path: srv-shared/out-lnx/arm64/orchidd
+
+    - name: git status
+      run: git status
+
+
+  build-lnx-srv-armhf:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: install NDK r22
+      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
+
+    - uses: actions/checkout@v2
+    - name: env/setup
+      run: env/setup.sh
+    - name: git submodule status
+      id: git-submodule-status
+      run: echo "::set-output name=hash::$(git submodule foreach -q 'echo $name $sha1' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
+    - uses: actions/cache@v2
+      with:
+        path: .git/modules
+        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
+    - name: git submodule
+      run: env/submodule.sh --jobs 3
+
+    - name: make Linux server
+      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared machine=armhf
+    - uses: actions/upload-artifact@v1
+      with:
+        name: orchidd-lnx-armhf
+        path: srv-shared/out-lnx/armhf/orchidd
 
     - name: git status
       run: git status
@@ -538,7 +600,7 @@ jobs:
       run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 make -j3 -C srv-shared target=lnx
     - uses: actions/upload-artifact@v1
       with:
-        name: orchidd-lnx
+        name: orchidd-lnx-amd64
         path: srv-shared/out-lnx/x86_64/orchidd
 
 
@@ -580,7 +642,7 @@ jobs:
     - name: download orchidd-lnx
       uses: actions/download-artifact@v2
       with:
-        name: orchidd-lnx
+        name: orchidd-lnx-amd64
     - name: verify reproduction
       run: diff -u <(xxd usr/sbin/orchidd) <(xxd orchidd)
 

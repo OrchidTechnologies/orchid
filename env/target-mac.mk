@@ -14,12 +14,14 @@ openssl/i386 := darwin-i386-cc
 host/i386 := i386-apple-darwin
 triple/i386 := i686-apple-darwin
 meson/i386 := x86
+bits/i386 := 32
 
 archs += x86_64
 openssl/x86_64 := darwin64-x86_64-cc
 host/x86_64 := x86_64-apple-darwin
 triple/x86_64 := x86_64-apple-darwin
 meson/x86_64 := x86_64
+bits/x86_64 := 64
 
 ifeq ($(machine),)
 machine := x86_64
