@@ -109,7 +109,7 @@ cflags/$(pwd)/soralog/ += -Wno-pessimizing-move
 
 source += $(filter-out %/configurator.cpp,$(shell find $(pwd)/cpp-libp2p/src -name '*.cpp'))
 cflags += -I$(pwd)/cpp-libp2p/include
-cflags/$(pwd)/cpp-libp2p/ += -Wno-reorder -Wno-unused-function -Wno-unused-variable
+cflags/$(pwd)/cpp-libp2p/ += -Wno-reorder -Wno-unused
 
 $(eval $(call protobuf,/generated,$(pwd)/cpp-libp2p/src))
 source += $(output)/pb/generated/crypto/protobuf/keys.pb.cc

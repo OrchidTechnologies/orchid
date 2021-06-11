@@ -211,10 +211,11 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
     log("iap: Copy debug info");
     PacTransaction tx = await PacTransaction.shared.get();
     Clipboard.setData(
-        ClipboardData(text: tx != null ? tx.userDebugString() : '<no tx>'));
+        ClipboardData(text: tx != null ? (await tx.userDebugString()) : '<no tx>'));
   }
 
   void _retryPurchase() async {
+    log("iap: User hit retry button.");
     (await (PacTransaction.shared).get()).ready().save();
     OrchidPACServer().advancePACTransactions();
   }

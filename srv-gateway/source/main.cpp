@@ -108,7 +108,7 @@ int Main(int argc, const char *const argv[]) {
 
     Initialize();
 
-    const auto base(Break<Local>());
+    const S<Base> base(Break<Local>());
     const Locator locator(args["rpc"].as<std::string>());
 
     Site site;

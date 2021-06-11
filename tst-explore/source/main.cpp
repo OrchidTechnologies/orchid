@@ -119,7 +119,7 @@ int Main(int argc, const char *const argv[]) {
 
     Initialize();
 
-    const auto base(Break<Local>());
+    const S<Base> base(Break<Local>());
     const std::string rpc(args["rpc"].as<std::string>());
     const auto chain(Wait(Chain::New({rpc, base}, {})));
 

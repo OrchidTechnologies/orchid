@@ -43,7 +43,7 @@ inline bool operator ==(const std::from_chars_result &lhs, const std::from_chars
 }
 
 template <typename Type_>
-Type_ To(const std::string_view &value) {
+std::enable_if_t<std::is_integral_v<Type_>, Type_> To(const std::string_view &value) {
     auto start(value.data());
     const auto size(value.size());
     const auto end(start + size);

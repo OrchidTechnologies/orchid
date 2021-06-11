@@ -47,9 +47,6 @@ inline Brick<32> HashK(const std::string &data) {
     return HashK(Subset(data)); }
 
 Brick<32> Hash2(const Buffer &data);
-inline Brick<32> Hash2(const std::string &data) {
-    return Hash2(Subset(data)); }
-
 Brick<20> Hash1(const Buffer &data);
 
 Brick<20> HashR(const Buffer &data);
@@ -60,8 +57,8 @@ Brick<16> Hash5(const Buffer &data);
 inline Brick<16> Hash5(const std::string &data) {
     return Hash5(Subset(data)); }
 
-template <auto Hash_>
-auto Auth(const Region &secret, const std::string &data) {
+template <auto Hash_, typename Data_>
+auto Auth(const Region &secret, const Data_ &data) {
     Brick<64> inner; memset(inner.data(), 0x36, inner.size());
     Brick<64> outer; memset(outer.data(), 0x5c, outer.size());
 

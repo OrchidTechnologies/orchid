@@ -46,9 +46,12 @@ report: $(output)/$(machine)/orchid$(exe)
 
 $(call include,vpn/target.mk)
 
-source += $(wildcard source/*.cpp)
+source += $(wildcard $(pwd)/source/*.cpp)
 
 cflags += -DORC_FIBER
+
+# XXX: this is some kind of weird boost thing
+cflags/$(pwd)/source/main.cpp += -Wno-implicit-const-int-float-conversion
 
 include env/output.mk
 

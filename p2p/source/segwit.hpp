@@ -30,6 +30,7 @@
 namespace orc {
 
 std::string ToSegwit(const std::string &prefix, int version, const Buffer &data);
+std::pair<std::string, Beam> FromSegwit(const std::string &data);
 
 }
 

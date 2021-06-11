@@ -39,7 +39,7 @@ debug: $(output)/$(machine)/orchid$(exe)
 $(call include,cro/target.mk)
 $(call include,p2p/target.mk)
 
-source += $(wildcard source/*.cpp)
+source += $(wildcard $(pwd)/source/*.cpp)
 
 $(call depend,$(pwd)/source/main.cpp.o,@/$(pwd)/cro/cairo/src/cairo-features.h)
 

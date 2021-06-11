@@ -97,11 +97,9 @@ abstract class OrchidPurchaseAPI {
     // Note: Doing this on app start does not seem to be sufficient.
     await requestProducts();
 
-    // Ensure no other transaction is pending completion.
-    // if (await PacTransaction.shared.hasValue()) {
-    //   throw Exception('PAC transaction already in progress.');
-    // }
-    log('iap: XXX: PAC transaction already in progress.');
+    if (await PacTransaction.shared.hasValue()) {
+      log('iap: : PAC transaction in progress');
+    }
 
     await purchaseImpl(pac);
   }

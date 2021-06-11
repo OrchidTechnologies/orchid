@@ -33,6 +33,7 @@
 #include <boost/program_options/variables_map.hpp>
 
 #include <rtc_base/logging.h>
+#include <system_wrappers/include/field_trial.h>
 
 #include "baton.hpp"
 #include "binance.hpp"
@@ -272,10 +273,11 @@ int Main(int argc, const char *const argv[]) {
     }
 
     Initialize();
+    //webrtc::field_trial::InitFieldTrialsFromString("WebRTC-DataChannel-Dcsctp/Enabled/");
 
     const unsigned milliseconds(60*1000);
 
-    const auto base(Break<Local>());
+    const S<Base> base(Break<Local>());
     const Locator locator(args["rpc"].as<std::string>());
     const auto chain(Wait(Chain::New({locator, base}, {}, 1)));
 
@@ -311,10 +313,16 @@ int Main(int argc, const char *const argv[]) {
         co_return *co_await Parallel(Huobi(*base, "ethusdt"), Huobi(*base, "oxtusdt"));
     }, "Huobi"))));
 
-    const auto uniswap(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
-        const auto [eth, oxt] = *co_await Parallel(Uniswap(*chain, UniswapUSDCETH, Ten6), Uniswap(*chain, UniswapOXTETH, 1));
+    const auto uniswap2(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
+        const auto [eth, oxt] = *co_await Parallel(Uniswap2(*chain, Uniswap2USDCETH, Ten6), Uniswap2(*chain, Uniswap2OXTETH, 1));
         co_return std::make_tuple(eth, eth / oxt);
-    }, "Uniswap"))));
+    }, "Uniswap2"))));
+
+    const auto uniswap3(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
+        const auto [wei, oxt] = *co_await Parallel(Uniswap3(*chain, Uniswap3USDCETH, Ten6), Uniswap3(*chain, Uniswap3OXTETH, 1));
+        const auto eth(1 / wei / Ten18);
+        co_return std::make_tuple(eth, eth * oxt);
+    }, "Uniswap3"))));
 
     const auto chainlink(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
         co_return *co_await Parallel(Chainlink(*chain, ChainlinkETHUSD, 0, Ten8 * Ten18), Chainlink(*chain, ChainlinkOXTUSD, 0, Ten8 * Ten18));
@@ -406,7 +414,8 @@ int Main(int argc, const char *const argv[]) {
         { const auto [eth, oxt] = (*binance)(); body << "Binance:   $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*kraken)(); body << "Kraken:    $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*huobi)(); body << "Huobi:     $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
-        { const auto [eth, oxt] = (*uniswap)(); body << "Uniswap:   $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
+        { const auto [eth, oxt] = (*uniswap2)(); body << "Uniswap 2: $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
+        { const auto [eth, oxt] = (*uniswap3)(); body << "Uniswap 3: $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         { const auto [eth, oxt] = (*chainlink)(); body << "Chainlink: $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
         body << "\n";
 

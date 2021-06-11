@@ -30,10 +30,10 @@
 namespace orc {
 
 template <typename Code_, typename Data_>
-auto Map(Code_ &&code, const Data_ &data) {
+auto Map(Code_ &&code, Data_ &&data) {
     std::vector<std::decay_t<decltype(code(*data.begin()))>> mapped;
     mapped.reserve(data.size());
-    for (const auto &value : data)
+    for (auto &&value : data)
         mapped.emplace_back(code(value));
     return mapped;
 }

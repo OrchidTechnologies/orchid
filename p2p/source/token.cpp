@@ -32,7 +32,7 @@ task<Token> Token::OXT(unsigned milliseconds, S<Chain> chain) {
     auto [bid, fiat] = *co_await Parallel(
         Opened(Updating(milliseconds, [chain]() -> task<uint256_t> { co_return co_await chain->Bid(); }, "Bid")),
         Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
-            const auto [eth, oxt] = *co_await Parallel(Uniswap(*chain, UniswapUSDCETH, Ten6), Uniswap(*chain, UniswapOXTETH, 1));
+            const auto [eth, oxt] = *co_await Parallel(Uniswap2(*chain, Uniswap2USDCETH, Ten6), Uniswap2(*chain, Uniswap2OXTETH, 1));
             co_return std::make_tuple(eth, eth / oxt);
         }, "OXT"))
     );

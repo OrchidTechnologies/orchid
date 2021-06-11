@@ -58,16 +58,16 @@ U<cricket::PortAllocator> Base::Allocator() {
 }
 
 task<Response> Base::Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead orc_block({
-    http::request<http::string_body> req(http::string_to_verb(method), locator.path_, 11);
-    req.set(http::field::host, locator.origin_.host_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-    req.set(http::field::connection, "keep-alive");
+    http::request<http::string_body> request(http::string_to_verb(method), locator.path_, 11);
+    request.set(http::field::host, locator.origin_.host_);
+    request.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+    request.set(http::field::connection, "keep-alive");
 
     for (auto &[name, value] : headers)
-        req.set(name, value);
+        request.set(name, value);
 
-    req.set(http::field::content_length, std::to_string(data.size()));
-    req.body() = data;
+    request.set(http::field::content_length, std::to_string(data.size()));
+    request.body() = data;
 
     for (;;) {
         // XXX: if I ever have multiple threads I need to lock this
@@ -75,7 +75,7 @@ task<Response> Base::Fetch(const std::string &method, const Locator &locator, co
         if (range.first != range.second) try {
             auto fetcher(std::move(range.first->second));
             fetchers_.erase(range.first);
-            auto response(co_await fetcher->Fetch(req));
+            auto response(co_await fetcher->Fetch(request));
             fetchers_.emplace(locator.origin_, std::move(fetcher));
             co_return response;
         } catch (...) {
@@ -124,7 +124,7 @@ task<Response> Base::Fetch(const std::string &method, const Locator &locator, co
             } else orc_assert(false);
         }());
 
-        auto response(co_await orc_value(co_return co_await, fetcher->Fetch(req), "connected to " << endpoint));
+        auto response(co_await orc_value(co_return co_await, fetcher->Fetch(request), "connected to " << endpoint));
         // XXX: potentially allow this to be passed in as a custom response validator
         orc_assert_(response.result() != boost::beast::http::status::bad_gateway, response);
         // XXX: if verify were somehow part of origin we could pool this connection

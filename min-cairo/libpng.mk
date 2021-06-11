@@ -14,7 +14,9 @@ l_libpng := -L@/$(pwd)/zlb
 
 libpng := $(pwd)/libpng/.libs/libpng16.a
 
-$(output)/%/$(libpng): $(output)/%/$(pwd)/libpng/Makefile $(sysroot) $(output)/%/$(pwd)/zlb/libz.a
+$(call depend,$(pwd)/libpng/Makefile,@/$(pwd)/zlb/libz.a)
+
+$(output)/%/$(libpng): $(output)/%/$(pwd)/libpng/Makefile $(sysroot)
 	$(MAKE) -C $(dir $<)
 	@touch $@
 

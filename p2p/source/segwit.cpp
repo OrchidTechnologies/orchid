@@ -30,8 +30,16 @@ std::string ToSegwit(const std::string &prefix, int version, const Buffer &data)
     std::vector<uint8_t> bits;
     if (version >= 0)
         bits.push_back(version);
-    convertbits<8, 5, true>(bits, data.vec());
+    orc_assert((convertbits<8, 5, true>(bits, data.vec())));
     return bech32::encode(prefix, bits, version > 0 ? bech32::Encoding::BECH32M : bech32::Encoding::BECH32);
+}
+
+std::pair<std::string, Beam> FromSegwit(const std::string &data) {
+    auto result(bech32::decode(data));
+    std::vector<uint8_t> bits;
+    // XXX: if this fails, there's some other algorithm you are supposed to use
+    orc_assert((convertbits<5, 8, false>(bits, result.data)));
+    return {std::move(result.hrp), bits};
 }
 
 }
