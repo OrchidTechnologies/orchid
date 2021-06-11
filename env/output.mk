@@ -34,7 +34,7 @@ flags = $(qflags) $(patsubst -I@/%,-I$(output)/$(arch)/%,$(filter -I%,$(cflags/.
 flags += $(if $(filter $(output)/%,$<),-D__FILE__='"$(patsubst $(output)/%,%,$<)"' -Wno-builtin-macro-redefined)
 
 define compile
-$(job)@sed -e '1{x;s!.*!#line 1 "$<"!;p;x;};$(chacks/./$<)' $< | $(prefix) $($(1)) $(more/$(arch)) -MD -MP -c -o $@ $(3) $(flags) $(xflags) -iquote$(dir $<) -x $(2) -
+$(job)@LANG=C sed -e '1{x;s!.*!#line 1 "$<"!;p;x;};$(chacks/./$<)' $< | $(prefix) $($(1)) $(more/$(arch)) -MD -MP -c -o $@ $(3) $(flags) $(xflags) -iquote$(dir $<) -x $(2) -
 endef
 
 $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
