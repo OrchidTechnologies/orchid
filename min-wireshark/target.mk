@@ -11,8 +11,8 @@
 
 pwd/wireshark := $(pwd)/wireshark
 
-archive += $(pwd/wireshark)/epan
-linked += $(pwd/wireshark)/epan.a
+archive += $(pwd/wireshark)/epan/dissectors
+linked += $(pwd/wireshark)/epan/dissectors.a
 
 wireshark := 
 cflags/$(pwd/wireshark)/ := 
@@ -67,15 +67,18 @@ cflags/$(pwd/wireshark)/ += -DHAVE_ALLOCA_H
 cflags/$(pwd/wireshark)/ += -DHAVE_ARPA_INET_H
 cflags/$(pwd/wireshark)/ += -DHAVE_GRP_H
 cflags/$(pwd/wireshark)/ += -DHAVE_PWD_H
+cflags/$(pwd/wireshark)/ += -DHAVE_SYS_SELECT_H
 
 cflags/$(pwd/wireshark)/ += -DHAVE_MKSTEMPS
 cflags/$(pwd/wireshark)/ += -DHAVE_STRPTIME
+
+cflags/$(pwd/wireshark)/ += -D_GNU_SOURCE
 
 wireshark := $(filter-out \
     %/strptime.c \
 ,$(wireshark))
 
-cflags/$(pwd/wireshark)/epan/addr_resolv.c += -include netdb.h
+cflags/$(pwd/wireshark)/epan/addr_resolv.c += -include netdb.h -include sys/select.h
 cflags/$(pwd/wireshark)/wsutil/crash_info.c += -D__crashreporter_info__=orc_crashinfo
 endif
 
@@ -93,6 +96,13 @@ wireshark := $(filter-out \
     %/tvbtest.c \
     %_test.c \
 ,$(wireshark))
+
+wireshark := $(filter-out \
+    %/dot11decrypt_ccmp_compat.c \
+,$(wireshark))
+
+# XXX: https://gitlab.com/wireshark/wireshark/-/issues/17439
+chacks/$(pwd/wireshark)/epan/dissectors/packet-kerberos.c += s@^ *private_data->u2u_use_session_key.*@(void) private_data;@
 
 source += $(wireshark)
 cflags += -I$(pwd)/extra
@@ -130,7 +140,7 @@ source += $(output)/$(pwd/wireshark)/epan/ps.c
 
 
 ifeq ($(meson),darwin)
-source += $(pwd/wireshark)/../wireshark.c
+source += $(pwd/wireshark)/../dissectors.c
 else
 $(output)/$(pwd/wireshark)/epan/dissectors.c: $(pwd/wireshark)/tools/make-regs.py $(filter $(pwd/wireshark)/epan/dissectors/%.c,$(wireshark))
 	@mkdir -p $(dir $@)
@@ -139,6 +149,8 @@ $(output)/$(pwd/wireshark)/epan/dissectors.c: $(pwd/wireshark)/tools/make-regs.p
 
 source += $(output)/$(pwd/wireshark)/epan/dissectors.c
 endif
+
+source += $(pwd/wireshark)/../modules.c
 
 
 $(output)/$(pwd/wireshark)/epan/dissectors/packet-ncp2222.c: $(pwd/wireshark)/tools/ncp2222.py
@@ -185,8 +197,8 @@ endef
 
 $(eval $(call parser,epan/dfilter/,scanner,grammar))
 $(eval $(call parser,epan/dtd_,parse,grammar))
-$(eval $(call parser,epan/protobuf_lang,_scanner,))
-$(eval $(call parser,wiretap/ascend,_scanner,))
+$(eval $(call parser,epan/protobuf_lang_,scanner,parser))
+$(eval $(call parser,wiretap/ascend_,scanner,parser))
 $(eval $(call parser,wiretap/busmaster_,scanner,parser))
 $(eval $(call parser,wiretap/candump_,scanner,parser))
 

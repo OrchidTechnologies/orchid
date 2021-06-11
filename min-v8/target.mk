@@ -253,8 +253,7 @@ cflags += -DU_SHOW_INTERNAL_API
 cflags += -mno-ms-bitfields
 
 # https://bugs.chromium.org/p/chromium/issues/detail?id=989932
-cflags/$(pwd/v8)/src/compiler/representation-change.cc += -Wno-implicit-int-float-conversion
-cflags/$(pwd/v8)/src/wasm/wasm-external-refs.cc += -Wno-implicit-int-float-conversion
+cflags/$(pwd/v8)/ += -Wno-implicit-int-float-conversion
 
 # https://bugs.chromium.org/p/chromium/issues/detail?id=1016945
 cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment

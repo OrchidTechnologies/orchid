@@ -101,6 +101,20 @@ void write_failure_message(const char *filename, int err)
     orc::Log() << "An error occurred while writing to the file \"" << filename << "\" " << g_strerror(err) << std::endl;
 }
 
+static const struct report_message_routines routines_ =
+{
+    &failure_warning_message,
+    &failure_warning_message,
+    &open_failure_message,
+    &read_failure_message,
+    &write_failure_message,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+};
+
 const nstime_t* raw_get_frame_ts(struct packet_provider_data *prov, guint32 frame_num)
 {
     if (prov->ref && prov->ref->num == frame_num)
@@ -183,9 +197,7 @@ void wireshark_setup()
     g_log_set_handler(NULL, log_flags, log_func_ignore, NULL);
     g_log_set_handler(LOG_DOMAIN_CAPTURE_CHILD, log_flags, log_func_ignore, NULL);
 
-    init_report_message(failure_warning_message, failure_warning_message,
-                        open_failure_message, read_failure_message,
-                        write_failure_message);
+    init_report_message("orchid", &routines_);
 
     wtap_init(FALSE);
 
