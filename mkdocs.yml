@@ -1,4 +1,7 @@
 site_name: Orchid
+site_url: https://docs.orchid.com/
+use_directory_urls: true
+
 theme:
   name: readthedocs
 
