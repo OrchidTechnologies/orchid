@@ -48,6 +48,7 @@ $(pwd/gui)/.dart_tool/package_config%json $(pwd/gui)/%flutter-plugins $(pwd/gui)
 	cd $(pwd/gui) && $(flutter) pub get
 	@touch $(pwd/gui)/.packages
 
+dart += $(pwd/flutter)/packages/flutter/pubspec.lock
 dart += $(shell find $(pwd/gui)/lib/ -name '*.dart' -o -name '*.arb')
 
 ifeq ($(filter noaot,$(debug)),)
