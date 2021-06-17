@@ -108,7 +108,7 @@
 	url = https://github.com/llvm-mirror/libcxx.git
 [submodule "quickjs"]
 	path = vpn-shared/quickjs
-	url = https://github.com/horhof/quickjs
+	url = https://github.com/bellard/quickjs.git
 [submodule "intx"]
 	path = p2p/intx
 	url = https://github.com/chfast/intx.git

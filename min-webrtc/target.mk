@@ -233,6 +233,9 @@ cflags += -DSCTP_SIMPLE_ALLOCATOR
 cflags += -DSCTP_STDINT_INCLUDE='<stdint.h>'
 cflags += -DSCTP_USE_OPENSSL_SHA1
 
+# XXX: this is an orchid-specific hack
+chacks/$(pwd/webrtc)/media/sctp/dcsctp_transport.cc += s/ options;/ options{.cwnd_mtus_initial = 10000, .cwnd_mtus_min = 10000};/g;
+
 include $(pwd)/openssl.mk
 
 include $(pwd)/target-$(target).mk
