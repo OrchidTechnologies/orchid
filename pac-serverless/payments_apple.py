@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import requests
-import sha3
+#import sha3
 import time
 import hashlib
 import base64
@@ -133,6 +133,7 @@ def handle_receipt(receipt, product_id_claim, Stage, verify_receipt):
     quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
 
     if product_id != product_id_claim:
+        logging.debug(f"handle_receipt_apple  invalid_product_id  {product_id} != {product_id_claim}")
         return "invalid_product_id", None, 0
 
     if Stage == 'dev':

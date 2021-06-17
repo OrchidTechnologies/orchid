@@ -47,7 +47,7 @@ def main(event, context):
             w3_generic.dynamodb_cwrite1(os.environ['RECEIPT_TABLE_NAME'], 'receipt', receipt_hash )
         except Exception as e:
             logging.info(f'writing receipt exception: {str(e)} ')
-            return response(403,{'msg':'Receipt already redeemed'})
+            return response(403,{'msg':f'Receipt {receipt_hash} already redeemed'})
         w3_generic.credit_account_balance(account_id, total_usd)
         return response(200,{'msg':msg,'account_id':account_id,'total_usd':total_usd})
     else:
