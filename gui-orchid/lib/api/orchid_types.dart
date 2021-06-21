@@ -2,11 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:orchid/util/ip_address.dart';
 import 'package:orchid/util/location.dart';
 
-/// Physical layer level network connectivity type.
-enum NetworkConnectivityType { Unknown, Wifi, Mobile, NoConnectivity }
-
-/// The connection states of the system VPN
-enum OrchidVPNConnectionState {
+/// The connection states of the system VPN facility.
+enum OrchidVPNExtensionState {
   Invalid,
   NotConnected,
   Connecting,
@@ -14,9 +11,8 @@ enum OrchidVPNConnectionState {
   Disconnecting
 }
 
-/// The connection states of the Orchid network (a superset of the vpn connection state)
-enum OrchidConnectionState {
-  Invalid,
+/// The connection states of Orchid routing.
+enum OrchidVPNRoutingState {
   VPNNotConnected,
   VPNConnecting,
   VPNConnected,

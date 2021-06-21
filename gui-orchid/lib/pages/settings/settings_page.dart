@@ -28,7 +28,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   // TODO: These switches should work directly with ObservablePreference
   bool _queryBalances = false;
-  bool _allowNoHopVPN = false;
   bool _showLogging = false;
   bool _guiV0 = false;
   bool _tester = false;
@@ -45,7 +44,6 @@ class _SettingsPageState extends State<SettingsPage> {
     _queryBalances = await UserPreferences().getQueryBalances();
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
-    _allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
     _guiV0 = await UserPreferences().guiV0.get();
 
     advancedConfigChanged();
@@ -96,22 +94,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: AppTextField(
                           controller: _defaultCurator,
                           margin: EdgeInsets.zero)),
-                )),
-
-                // Allow enable vpn with no hops
-                _item(PageTile(
-                  title:
-                      s.allowNoHopVPN + "\n(" + s.trafficMonitoringOnly + ")",
-                  trailing: Switch(
-                    activeColor: AppColors.purple_3,
-                    value: _allowNoHopVPN,
-                    onChanged: (bool value) {
-                      UserPreferences().allowNoHopVPN.set(value);
-                      setState(() {
-                        _allowNoHopVPN = value;
-                      });
-                    },
-                  ),
                 )),
 
                 // Balance query

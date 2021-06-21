@@ -14,7 +14,7 @@ abstract class OrchidUserConfig {
     return _shared;
   }
 
-  /// Return a JS queryable representation of the user visible configuration
+  /// Return a JS queryable representation of the user-visible configuration
   /// If there is an error parsing the configuation an empty JSConfig is returned.
   Future<JSConfig> getUserConfigJS();
 }

@@ -1,29 +1,36 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:flutter/cupertino.dart';
+import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/orchid_scroll.dart';
 import 'package:collection/collection.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/common/wrapped_switch.dart';
 
 import '../../common/app_colors.dart';
 import '../../common/app_gradients.dart';
 import '../../common/app_text.dart';
+import 'clear_traffic_action_button.dart';
 import 'traffic_empty_view.dart';
 import 'traffic_view_detail.dart';
 
 class TrafficView extends StatefulWidget {
-  ClearTrafficActionButtonController clearTrafficController =
-      ClearTrafficActionButtonController();
+  ClearTrafficActionButtonController clearTrafficController;
 
-  TrafficView(
-      {Key key, ClearTrafficActionButtonController clearTrafficController})
-      : super(key: key) {
+  TrafficView({
+    Key key,
+    ClearTrafficActionButtonController clearTrafficController,
+    WrappedSwitchController monitoringEnabledController,
+  }) : super(key: key) {
     this.clearTrafficController =
-        clearTrafficController ?? this.clearTrafficController;
+        clearTrafficController ?? ClearTrafficActionButtonController();
   }
 
   @override
@@ -70,6 +77,8 @@ class _TrafficViewState extends State<TrafficView>
   // TODO: Determine what changed and fix this.
   var _scrollController = ScrollController();
 
+  // WrappedSwitchController monitoringEnabledController = WrappedSwitchController();
+
   @override
   void initState() {
     super.initState();
@@ -86,9 +95,11 @@ class _TrafficViewState extends State<TrafficView>
     });
 
     // Update periodically
-    _pollTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      _performQuery();
-    });
+    if (!OrchidAPI.mockAPI) {
+      _pollTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        _performQuery();
+      });
+    }
 
     // Update first view
     _performQuery();
@@ -97,6 +108,14 @@ class _TrafficViewState extends State<TrafficView>
     AnalysisDb().update.listen((_) {
       _performQuery();
     });
+
+    initStateAsync();
+  }
+
+  void initStateAsync() async {
+    // monitoringEnabledController.onChange = _monitoringSwitchChanged;
+    // monitoringEnabledController.controlledState.value =
+        await UserPreferences().monitoringEnabled.get();
   }
 
   @override
@@ -105,7 +124,7 @@ class _TrafficViewState extends State<TrafficView>
       title: s.traffic,
       decoration: BoxDecoration(),
       actions: [
-        ClearTrafficActionButton(controller: widget.clearTrafficController)
+        ClearTrafficActionButton(controller: widget.clearTrafficController),
       ],
       child: buildPage(),
     );
@@ -121,10 +140,21 @@ class _TrafficViewState extends State<TrafficView>
               visible: _uiInitialized(),
               replacement: Container(),
               child: Visibility(
-                visible: _showEmptyView(),
-                child: TrafficEmptyView(),
+                // visible: _showEmptyView(),
+                visible: false,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: TrafficEmptyView(),
+                ),
                 replacement: Column(
                   children: <Widget>[
+                    OrientationBuilder(
+                        builder: (BuildContext context, Orientation orientation) {
+                          return Visibility(
+                            visible: orientation == Orientation.portrait,
+                            child: _buildEnableMontoringSwitch(),
+                          );
+                        }),
                     _buildSearchView(),
                     _buildNewContentIndicator(),
                     _buildResultListView()
@@ -132,6 +162,37 @@ class _TrafficViewState extends State<TrafficView>
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Build the monitoring switch. This switch does not reflect current state of the
+  // VPN but only the user preference that monitoring be enabled.
+  Widget _buildEnableMontoringSwitch() {
+    return Container(
+      height: 48,
+      color: Color(0xFFEDEFF6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Analyze", style: AppText.headerStyle.copyWith(fontSize: 20)),
+            StreamBuilder<bool>(
+                stream: UserPreferences().monitoringEnabled.stream(),
+                builder: (context, snapshot) {
+                  if (snapshot.data == null) {
+                    return Container();
+                  }
+                  var monitoringEnabled = snapshot.data;
+                  return CupertinoSwitch(
+                    value: monitoringEnabled,
+                    onChanged: _confirmMonitoringSwitchChange,
+                    activeColor: Colors.deepPurple,
+                  );
+                }),
           ],
         ),
       ),
@@ -382,7 +443,8 @@ class _TrafficViewState extends State<TrafficView>
 
       // Maintain position
       if (scrollController != null && scrollController.hasClients) {
-        scrollController.jumpTo(scrollController.offset + delta * _renderedRowHeight);
+        scrollController
+            .jumpTo(scrollController.offset + delta * _renderedRowHeight);
 
         // Animate in the new data
         Future.delayed(Duration(milliseconds: 150)).then((_) {
@@ -430,61 +492,35 @@ class _TrafficViewState extends State<TrafficView>
   // Currently unused
   void dispose() {
     super.dispose();
-    _pollTimer.cancel();
+    if (_pollTimer != null) {
+      _pollTimer.cancel();
+    }
   }
 
   S get s {
     return S.of(context);
   }
-}
 
-class ClearTrafficActionButtonController {
-  // Tri-state enabled status
-  ValueNotifier<bool> enabled = ValueNotifier(null);
-}
-
-class ClearTrafficActionButton extends StatelessWidget {
-  final ClearTrafficActionButtonController controller;
-
-  const ClearTrafficActionButton({this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    S s = S.of(context);
-    return ValueListenableBuilder<bool>(
-        valueListenable: controller.enabled,
-        builder: (context, enabledOrNull, child) {
-          bool enabled = enabledOrNull ?? false;
-          return Visibility(
-            visible: enabledOrNull != null,
-            child: Opacity(
-              opacity: enabled ? 1.0 : 0.3,
-              child: FlatButton(
-                color: AppColors.white,
-                child: Text(s.clear,
-                    style: AppText.actionButtonStyle
-                        .copyWith(color: AppColors.purple_3)),
-                onPressed: enabled
-                    ? () {
-                        _confirmDelete(context);
-                      }
-                    : null,
-              ),
-            ),
-          );
-        });
+  // If the monitoring switch change would require a restart then confirm.
+  void _confirmMonitoringSwitchChange(bool enabled) async {
+    var enablingText =
+        "Changing monitoring status requires restarting the VPN, which may briefly interrupt privacy protection.";
+    if (await UserPreferences().routingEnabled.value) {
+      AppDialogs.showConfirmationDialog(
+          context: context,
+          title: "Confirm Restart",
+          bodyText: enablingText,
+          commitAction: () {
+            _monitoringSwitchChanged(enabled);
+          });
+    } else {
+      _monitoringSwitchChanged(enabled);
+    }
   }
 
-  void _confirmDelete(BuildContext context) {
-    S s = S.of(context);
-    AppDialogs.showConfirmationDialog(
-        context: context,
-        title: s.deleteAllData + "?",
-        bodyText: s.thisWillDeleteRecorded,
-        cancelText: s.cancelButtonTitle,
-        actionText: s.okButtonTitle,
-        commitAction: () async {
-          await AnalysisDb().clear();
-        });
+  void _monitoringSwitchChanged(bool enabled) async {
+    log("vpn: traffic monitoring enabled: $enabled");
+    UserPreferences().monitoringEnabled.set(enabled);
+    // monitoringEnabledController.controlledState.value = enabled;
   }
 }

@@ -95,7 +95,6 @@ class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
     var balanceString =
         _pot != null ? _pot.balance.formatCurrency(digits: 2) : "...";
 
-    // TODO: localize bandwidth price
     var bandwidthCostString = _bandwidthPrice != null
         ? '\$' + formatCurrency(_bandwidthPrice.value)
         : "...";

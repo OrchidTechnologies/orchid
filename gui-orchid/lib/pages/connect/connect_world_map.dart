@@ -8,6 +8,7 @@ import 'package:orchid/common/paths.dart';
 import '../../common/app_colors.dart';
 import 'dart:ui' as ui;
 
+// Currently unused but hopefully coming back at some point?
 class WorldMapImage {
   final projectionType = MapProjectionType.Gall;
 

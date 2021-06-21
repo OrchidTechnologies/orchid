@@ -17,7 +17,6 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/titled_page_base.dart';
-import 'package:orchid/common/wrapped_switch.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 
 import '../../common/app_gradients.dart';
@@ -29,16 +28,15 @@ import 'model/circuit.dart';
 import 'model/circuit_hop.dart';
 import 'model/orchid_hop.dart';
 
+// The V0 multi-hop config page.
 class CircuitPage extends StatefulWidget {
-  // TODO: Remove if unused
-  final WrappedSwitchController switchController;
 
   // Note: This performs a behavior like the iOSContacts App create flow for the
   // Note: add hop action, revealing the already pushed hop editor upon completing
   // Note: the add flow.
   static var iOSContactsStyleAddHopBehavior = false;
 
-  CircuitPage({Key key, this.switchController}) : super(key: key);
+  CircuitPage({Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -46,8 +44,6 @@ class CircuitPage extends StatefulWidget {
   }
 }
 
-// TODO: This class contains switch logic for activating the VPN that is not currently
-// TODO: used.  If this remains the case remove it.
 class CircuitPageState extends State<CircuitPage>
     with TickerProviderStateMixin {
   List<StreamSubscription> _rxSubs = [];
@@ -88,15 +84,6 @@ class CircuitPageState extends State<CircuitPage>
   Timer _checkBalancesTimer;
 
   void initStateAsync() async {
-    // Hook up to the provided vpn switch
-    //widget.switchController.onChange = _connectSwitchChanged;
-
-    // Set the initial state of the vpn switch based on the user pref.
-    // Note: By design the switch on this page does not track or respond to the
-    // Note: dynamic connection state but instead reflects the user pref.
-    // Note: See `monitoring_page.dart` or `legacy_connect_page` for controls that track the
-    // Note: system connection status.
-    _switchOn = await UserPreferences().getDesiredVPNState();
 
     //vpnSwitchInstructionsViewed = await UserPreferences().getVPNSwitchInstructionsViewed();
 
@@ -137,14 +124,6 @@ class CircuitPageState extends State<CircuitPage>
     }
   }
 
-  /*
-  void _checkFirstLaunch() async {
-    if (!await UserPreferences().getFirstLaunchInstructionsViewed()) {
-      _showWelcomeDialog();
-      UserPreferences().setFirstLaunchInstructionsViewed(true);
-    }
-  }*/
-
   void _updateCircuit() async {
     var circuit = await UserPreferences().getCircuit();
     if (mounted) {
@@ -157,7 +136,7 @@ class CircuitPageState extends State<CircuitPage>
       // Set the correct animation states for the connection status
       // Note: We cannot properly do this until we know if we have hops!
       log('init state, setting initial connection state');
-      _connectionStateChanged(OrchidAPI().connectionStatus.value,
+      _connectionStateChanged(OrchidAPI().vpnRoutingStatus.value,
           animated: false);
     }
     _checkHopAlerts(null); // refresh alert status
@@ -195,7 +174,7 @@ class CircuitPageState extends State<CircuitPage>
     _bunnyDuckTimer = Timer.periodic(Duration(seconds: 1), _checkBunny);
 
     // Update the UI on connection status changes
-    _rxSubs.add(OrchidAPI().connectionStatus.listen(_connectionStateChanged));
+    _rxSubs.add(OrchidAPI().vpnRoutingStatus.listen(_connectionStateChanged));
   }
 
   @override
@@ -471,16 +450,16 @@ class CircuitPageState extends State<CircuitPage>
       }
     }
 
-    var status = OrchidAPI().connectionStatus.value;
-    if (status == OrchidConnectionState.VPNConnecting) {
+    var status = OrchidAPI().vpnRoutingStatus.value;
+    if (status == OrchidVPNRoutingState.VPNConnecting) {
       text = s.starting;
       color = Colors.yellowAccent.withOpacity(0.7);
     }
-    if (status == OrchidConnectionState.VPNConnected) {
+    if (status == OrchidVPNRoutingState.VPNConnected) {
       text = s.orchidConnecting;
       color = Colors.yellowAccent.withOpacity(0.7);
     }
-    if (status == OrchidConnectionState.VPNDisconnecting) {
+    if (status == OrchidVPNRoutingState.VPNDisconnecting) {
       text = s.orchidDisconnecting;
       color = Colors.yellowAccent.withOpacity(0.7);
     }
@@ -607,35 +586,6 @@ class CircuitPageState extends State<CircuitPage>
         ));
   }
 
-  Container _buildFirstHopInstruction() {
-    return Container(
-        // match hop tile horizontal padding
-        padding: EdgeInsets.only(left: 24, right: 24, top: 12, bottom: 0),
-        child: SafeArea(
-          left: true,
-          bottom: false,
-          right: false,
-          top: false,
-          child: Row(
-            children: <Widget>[
-              Padding(
-                // align the arrow with the hop tile leading and text vertically
-                padding: const EdgeInsets.only(left: 19, right: 0, bottom: 24),
-                child: Image.asset('assets/images/drawnArrow2.png', height: 48),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 16, right: 16),
-                  child: Text(s.createFirstHop,
-                      textAlign: TextAlign.left,
-                      style: AppText.hopsInstructionsCallout),
-                ),
-              ),
-            ],
-          ),
-        ));
-  }
-
   ///
   /// Begin - Add / view hop logic
   ///
@@ -644,10 +594,6 @@ class CircuitPageState extends State<CircuitPage>
     CircuitUtils.addHop(context,
         onComplete: _addHopComplete, showCallouts: _hops.isEmpty);
   }
-
-  // void _addHopFromPACPurchase() {
-  //   CircuitUtils.purchasePAC(context, onComplete: _addHopComplete);
-  // }
 
   // Local page state updates after hop addition.
   void _addHopComplete(UniqueHop uniqueHop) {
@@ -721,21 +667,6 @@ class CircuitPageState extends State<CircuitPage>
     UserPreferences().addRecentlyDeletedHop(removedHop.hop);
   }
 
-  // Recycle the hop if configured to do so.
-  /*
-  Future _recycleHopIfAllowed(UniqueHop uniqueHop) async {
-    bool recycle = (await OrchidUserConfig.getUserConfigJS())
-        .evalBoolDefault('pacs.recycle', false);
-    if (recycle) {
-      CircuitHop hop = uniqueHop.hop;
-      if (hop is OrchidHop) {
-        var keys = await UserPreferences().getKeys();
-        EthereumAddress signer = hop.getSigner(keys);
-        OrchidPACServerV0().recycle(funder: hop.funder, signer: signer);
-      }
-    }
-  }*/
-
   // Callback for drag to reorder
   void _onReorder(int oldIndex, int newIndex) {
     setState(() {
@@ -749,41 +680,21 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   ///
-  /// Begin - VPN Switch Logic
+  /// Begin - VPN Connection Status Logic
   ///
 
   // Note: By design the switch on this page does not track or respond to the
   // Note: connection state after initialization.  See `monitoring_page.dart`
   // Note: for a version of the switch that does attempt to track the connection.
-  /*
-  void _connectSwitchChanged(bool toEnabled) async {
-    if (toEnabled) {
-      bool allowNoHopVPN = await UserPreferences().allowNoHopVPN.get();
-      if (_hasHops() || allowNoHopVPN) {
-        _checkPermissionAndConnect();
-      } else {
-        _switchOn = false; // force the switch off
-        _showWelcomeDialog();
-      }
-    } else {
-      _disconnect();
-    }
-  }
-   */
-
-  // Note: By design the switch on this page does not track or respond to the
-  // Note: connection state after initialization.  See `monitoring_page.dart`
-  // Note: for a version of the switch that does attempt to track the connection.
   bool _connected() {
-    var state = OrchidAPI().connectionStatus.value;
+    var state = OrchidAPI().vpnRoutingStatus.value;
     switch (state) {
-      case OrchidConnectionState.VPNDisconnecting:
-      case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.VPNNotConnected:
-      case OrchidConnectionState.VPNConnecting:
-      case OrchidConnectionState.VPNConnected:
+      case OrchidVPNRoutingState.VPNDisconnecting:
+      case OrchidVPNRoutingState.VPNNotConnected:
+      case OrchidVPNRoutingState.VPNConnecting:
+      case OrchidVPNRoutingState.VPNConnected:
         return false;
-      case OrchidConnectionState.OrchidConnected:
+      case OrchidVPNRoutingState.OrchidConnected:
         return true;
       default:
         throw Exception();
@@ -791,7 +702,7 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   /// Called upon a change to Orchid connection state
-  void _connectionStateChanged(OrchidConnectionState state,
+  void _connectionStateChanged(OrchidVPNRoutingState state,
       {bool animated = true}) {
     // We can't determine which animations may need to be run until hops are loaded.
     // Initialization will call us at least once after that.
@@ -816,110 +727,12 @@ class CircuitPageState extends State<CircuitPage>
     }
   }
 
-  // Prompt for VPN permissions if needed and then start the VPN.
-  // Note: If the UI will no longer be participating in the prompt then
-  // Note: we can just do this routinely in the channel api on first launch.
-  // Note: duplicates code in monitoring_page and legacy_connect_page.
-  void _checkPermissionAndConnect() {
-    UserPreferences().setDesiredVPNState(true);
-    //if (_showEnableVPNInstruction()) {
-    //UserPreferences().setVPNSwitchInstructionsViewed(true);
-    //setState(() {
-    //vpnSwitchInstructionsViewed = true;
-    //});
-    //}
-
-    // Get the most recent status, blocking if needed.
-    _rxSubs
-        .add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
-      if (installed) {
-        OrchidAPI().setConnected(true);
-        setState(() {
-          _switchOn = true;
-        });
-      } else {
-        bool ok = await OrchidAPI().requestVPNPermission();
-        if (ok) {
-          log('vpn: user chose to install');
-          // Note: It appears that trying to enable the connection too quickly
-          // Note: after installing the vpn permission / config fails.
-          // Note: Introducing a short artificial delay.
-          Future.delayed(Duration(milliseconds: 500)).then((_) {
-            OrchidAPI().setConnected(true);
-          });
-          setState(() {
-            _switchOn = true;
-          });
-        } else {
-          debugPrint('vpn: user skipped');
-          setState(() {
-            _switchOn = false;
-          });
-        }
-      }
-    }));
-  }
-
-  // Disconnect the VPN
-  void _disconnect() {
-    UserPreferences().setDesiredVPNState(false);
-    OrchidAPI().setConnected(false);
-    setState(() {
-      _switchOn = false;
-    });
-  }
-
   ///
   /// Begin - util
   ///
 
-  // Setter for the switch controller controlled state
-  set _switchOn(bool on) {
-    if (widget.switchController == null) {
-      return;
-    }
-    widget.switchController.controlledState.value = on;
-  }
-
-  // Getter for the switch controller controlled state
-//  bool get _switchOn {
-//    return widget.switchController?.controlledState?.value ?? false;
-//  }
-
   bool _hasHops() {
     return _hops != null && _hops.length > 0;
-  }
-
-  // TODO: No switch in current page impl so this is unused.
-  /*
-  void _showWelcomeDialog() async {
-    var pacsEnabled = (await OrchidPurchaseAPI().apiConfig()).enabled;
-    if (pacsEnabled) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return WelcomeDialog(
-              onBuyCredits: _addHopFromPACPurchase,
-              onSeeOptions: _addHop,
-            );
-          });
-    } else {
-      // TODO: Remove after PACs are in place on all platforms or when an alternate
-      // TODO: fallback for the PACs feature flag exists.
-      LegacyWelcomeDialog.show(
-          context: context, onAddFlowComplete: _legacyWelcomeScreenAddHop);
-    }
-  }*/
-
-  // TODO: Remove after PACs are in place on all platforms or when an alternate
-  // TODO: fallback for the PACs feature flag exists.
-  void _legacyWelcomeScreenAddHop(CircuitHop hop) async {
-    var circuit = await UserPreferences().getCircuit() ?? Circuit([]);
-    circuit.hops.add(hop);
-    await UserPreferences().setCircuit(circuit);
-    OrchidAPI().updateConfiguration();
-    // Notify that the hops config has changed externally
-    OrchidAPI().circuitConfigurationChanged.add(null);
   }
 
   void _userInteraction() {
@@ -1008,25 +821,6 @@ class CircuitUtils {
       onComplete(uniqueHop);
     }
   }
-
-  // Show the purchase PAC screen directly as a modal, skipping the 'add hop'
-  // choice screen. This is used by the welcome dialog.
-  /*
-  static void purchasePAC(BuildContext context,
-      {HopCompletion onComplete}) async {
-    var addFlowCompletion = (CircuitHop result) {
-      Navigator.pop(context, result);
-    };
-    var route = MaterialPageRoute<CircuitHop>(
-        builder: (BuildContext context) {
-          return PurchasePageV0(
-            onAddFlowComplete: addFlowCompletion,
-            cancellable: true,
-          );
-        },
-        fullscreenDialog: true);
-    _pushNewHopEditorRoute(context, route, onComplete);
-  }*/
 
   static void addHopToCircuit(CircuitHop hop) async {
     var circuit = await UserPreferences().getCircuit();

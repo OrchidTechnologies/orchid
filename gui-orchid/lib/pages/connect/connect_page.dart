@@ -4,6 +4,7 @@ import 'package:badges/badges.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:orchid/api/monitoring/restart_manager.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -16,7 +17,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/pages/account_manager/account_store.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/app_text.dart';
-import 'package:orchid/api/notifications.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
@@ -25,6 +25,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
+import 'package:orchid/util/streams.dart';
 
 import '../app_routes.dart';
 import 'connect_status_panel.dart';
@@ -43,33 +44,32 @@ class ConnectPage extends StatefulWidget {
 
 class _ConnectPageState extends State<ConnectPage>
     with TickerProviderStateMixin {
-  // Current state reflected by the page, driving color and animation.
-  OrchidConnectionState _connectionState =
-      OrchidConnectionState.VPNNotConnected;
+  List<StreamSubscription> _subs = [];
+
+  // Current routing state reflected by the page, driving color and animation.
+  OrchidVPNRoutingState _routingState = OrchidVPNRoutingState.VPNNotConnected;
+
+  // Lower level vpn state, used in the detail status message.
+  OrchidVPNExtensionState _vpnState = OrchidVPNExtensionState.Invalid;
 
   // Animation controller for transitioning to the connected state
   AnimationController _connectAnimController;
-
-  //AnimationController _highlightAnimationController;
 
   // Animations driven by the connected state
   Animation<LinearGradient> _backgroundGradient;
   Animation<Color> _iconColor;
 
   bool _hasConfiguredCircuit = false;
-
-  // TODO:
-  // bool get _showWelcomePane => !_hasConfiguredCircuit;
-  bool get _showWelcomePane => false;
-
-  bool _enableConnectWithoutHops = false;
-
   Timer _checkHopAlertsTimer;
   bool _showProfileBadge = false;
-
-  List<StreamSubscription> _subs = [];
-
   bool _guiV1 = true;
+  bool _routingEnabled;
+  bool _monitoringEnabled;
+
+  // An automated restart is in progress
+  bool _restarting;
+
+  bool get _showWelcomePane => false;
 
   @override
   void initState() {
@@ -92,7 +92,7 @@ class _ConnectPageState extends State<ConnectPage>
   /// Note: by hoisting the logic here and passing the data to circuit page.
   void _checkHopAlerts(timer) async {
     // TODO: don't show badges when in V1 UI mode
-    if (!(await UserPreferences().guiV0.get())) {
+    if (!(await UserPreferences().guiV0.value)) {
       if (mounted) {
         setState(() {
           _showProfileBadge = false;
@@ -125,62 +125,59 @@ class _ConnectPageState extends State<ConnectPage>
     }
   }
 
+  // TODO: We should migrate to a provider context
   /// Listen for changes in Orchid network status.
   void _initListeners() {
     log('Connect Page: Init listeners...');
 
-    // Monitor VPN permission status
-    /*
-    _rxSubscriptions
-        .add(OrchidAPI().vpnPermissionStatus.listen((bool installed) {
-      OrchidAPI().logger().write('VPN Perm status changed: $installed');
-      if (!installed) {
-        //var route = AppTransitions.downToUpTransition(
-        //OnboardingVPNPermissionPage(allowSkip: false));
-        //Navigator.push(context, route);
-        Navigator.push(context, MaterialPageRoute(builder: (context) =>
-                    OnboardingVPNPermissionPage(allowSkip: false)));
-      }
-    }));
-     */
-
     // Monitor connection status
-    _subs
-        .add(OrchidAPI().connectionStatus.listen((OrchidConnectionState state) {
+    OrchidAPI().vpnRoutingStatus.listen((OrchidVPNRoutingState state) {
       log('[connect page] Connection status changed: $state');
-      _connectionStateChanged(state);
-    }));
+      _routingStateChanged(state);
+    }).dispose(_subs);
 
-    // TEST:
-    // Future.delayed(Duration(seconds: 3)).then((_) {
-    //   _connectionStateChanged(OrchidConnectionState.OrchidConnected);
-    // });
-
-    _subs.add(AppNotifications().notification.listen((_) {
-      setState(() {}); // Trigger refresh of the UI
-    }));
-
-    // TODO: The circuit really should be observable directly via OrchidAPI
-    _subs.add(OrchidAPI().circuitConfigurationChanged.listen((value) {
+    // Monitor circuit changes
+    OrchidAPI().circuitConfigurationChanged.listen((value) {
       _updateCircuitStatus();
       _checkHopAlerts(null); // refresh alert status
-    }));
-
-    _subs.add(UserPreferences().allowNoHopVPN.stream().listen((value) {
-      setState(() {
-        _enableConnectWithoutHops = value;
-      });
-    }));
+    }).dispose(_subs);
 
     // Monitor changes in the UI version preference
-    _subs.add(UserPreferences().guiV0.stream().listen((guiV0) {
+    UserPreferences().guiV0.stream().listen((guiV0) {
       _guiV1 = !guiV0;
-      // TEST:
-      // _guiV1 = false;
       _checkHopAlerts(null);
       _updateCircuitStatus();
       setState(() {}); // Refresh UI
-    }));
+    }).dispose(_subs);
+
+    // Monitor routing preference
+    UserPreferences().routingEnabled.stream().listen((enabled) {
+      log("XXX: routing enabled changed: $enabled");
+      setState(() {
+        _routingEnabled = enabled;
+      });
+    }).dispose(_subs);
+
+    // Monitor traffic monitoring preference
+    UserPreferences().monitoringEnabled.stream().listen((enabled) {
+      setState(() {
+        _monitoringEnabled = enabled;
+      });
+    }).dispose(_subs);
+
+    // Monitor automated restarts
+    OrchidRestartManager().restarting.stream.listen((value) {
+      setState(() {
+        _restarting = value;
+      });
+    }).dispose(_subs);
+
+    // Monitor low level vpn changes for the status line.
+    OrchidAPI().vpnExtensionStatus.stream.listen((value) {
+      setState(() {
+        _vpnState = value;
+      });
+    }).dispose(_subs);
   }
 
   @override
@@ -255,7 +252,7 @@ class _ConnectPageState extends State<ConnectPage>
                   side: BorderSide(color: borderColor, width: 2),
                   borderRadius: BorderRadius.all(Radius.circular(24))),
               onPressed: () async {
-                if (await UserPreferences().guiV0.get()) {
+                if (await UserPreferences().guiV0.value) {
                   await Navigator.pushNamed(context, AppRoutes.circuit);
                 } else {
                   await Navigator.pushNamed(context, AppRoutes.identity);
@@ -330,15 +327,6 @@ class _ConnectPageState extends State<ConnectPage>
                 ],
                 pady(tall ? 48 : 16),
 
-//              if (_connectionState == OrchidConnectionState.Connecting ||
-//                  _connectionState == OrchidConnectionState.Disconnecting)
-//                AnimatedBuilder(
-//                    animation: _highlightAnimationController,
-//                    builder: (context, snapshot) {
-//                      return _buildConnectButton();
-//                    })
-//              else
-
                 // Connect button
                 Padding(
                   // Logo is asymmetric, shift right a bit
@@ -394,15 +382,14 @@ class _ConnectPageState extends State<ConnectPage>
     );
      */
 
-    switch (_connectionState) {
-      case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.VPNNotConnected:
+    switch (_routingState) {
+      case OrchidVPNRoutingState.VPNNotConnected:
         return image();
-      case OrchidConnectionState.VPNConnecting:
-      case OrchidConnectionState.VPNDisconnecting:
-      case OrchidConnectionState.VPNConnected:
+      case OrchidVPNRoutingState.VPNConnecting:
+      case OrchidVPNRoutingState.VPNDisconnecting:
+      case OrchidVPNRoutingState.VPNConnected:
         return transitionImage();
-      case OrchidConnectionState.OrchidConnected:
+      case OrchidVPNRoutingState.OrchidConnected:
         return glowImage();
     }
     throw Exception();
@@ -412,37 +399,43 @@ class _ConnectPageState extends State<ConnectPage>
     var textColor = Colors.white;
     var bgColor = AppColors.purple_3;
     var gradient;
+
     String text;
-    switch (_connectionState) {
-      case OrchidConnectionState.VPNDisconnecting:
-        text = s.disconnecting;
-        gradient = _buildTransitionGradient();
-        break;
-      case OrchidConnectionState.VPNConnecting:
-        text = s.starting; // vpn is starting
-        gradient = _buildTransitionGradient();
-        break;
-      case OrchidConnectionState.VPNConnected:
-        text = s.connecting; // orchid is connecting
-        gradient = _buildTransitionGradient();
-        break;
-      case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.VPNNotConnected:
-        text = s.connect;
-        break;
-      case OrchidConnectionState.OrchidConnected:
-        textColor = AppColors.purple_3;
-        bgColor = AppColors.teal_5;
-        text = s.disconnect;
+    if (_restarting) {
+      text = "Restarting";
+    } else {
+      switch (_routingState) {
+        case OrchidVPNRoutingState.VPNDisconnecting:
+          text = s.disconnecting;
+          gradient = _buildTransitionGradient();
+          break;
+        case OrchidVPNRoutingState.VPNConnecting:
+          text = s.starting; // vpn is starting
+          gradient = _buildTransitionGradient();
+          break;
+        case OrchidVPNRoutingState.VPNConnected:
+          text = s.connecting; // orchid is connecting
+          gradient = _buildTransitionGradient();
+          break;
+        case OrchidVPNRoutingState.VPNNotConnected:
+          text = s.connect;
+          break;
+        case OrchidVPNRoutingState.OrchidConnected:
+          textColor = AppColors.purple_3;
+          bgColor = AppColors.teal_5;
+          text = s.disconnect;
+      }
     }
 
     bool buttonEnabled =
-        // Enabled when there is a circuit (or overridden for traffic monitoring)
-        (_hasConfiguredCircuit || _enableConnectWithoutHops) ||
-            // Enabled if we are already connected (corner case of changed config while connected).
-            _connectionState == OrchidConnectionState.VPNConnecting ||
-            _connectionState == OrchidConnectionState.VPNConnected ||
-            _connectionState == OrchidConnectionState.OrchidConnected;
+        ( // Enabled when there is a circuit (or overridden for traffic monitoring)
+                _hasConfiguredCircuit ||
+                    // TODO:
+                    // Enabled if we are already connected (corner case of changed config while connected).
+                    _routingState == OrchidVPNRoutingState.VPNConnecting ||
+                    _routingState == OrchidVPNRoutingState.VPNConnected ||
+                    _routingState == OrchidVPNRoutingState.OrchidConnected) &&
+            !_restarting;
 
     if (!buttonEnabled) {
       bgColor = AppColors.neutral_4;
@@ -489,8 +482,6 @@ class _ConnectPageState extends State<ConnectPage>
 
   Gradient _buildTransitionGradient() {
     return LinearGradient(
-//        begin: Alignment(0, -1 + _highlightAnimationController.value ?? 0),
-//        end: Alignment(0, 1 + _highlightAnimationController.value ?? 0),
         begin: Alignment(0.15, -1.0),
         end: Alignment(0, 1),
         colors: [AppColors.teal_4, AppColors.purple_3],
@@ -516,34 +507,62 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
-  // TODO: This will be driven by the tunnel status messages when available
   Widget _buildStatusMessage(BuildContext context) {
-    // Localize
     String message;
-    switch (_connectionState) {
-      case OrchidConnectionState.VPNDisconnecting:
+
+    // The status message generally follows the routing state
+    switch (_routingState) {
+      case OrchidVPNRoutingState.VPNDisconnecting:
         message = s.orchidDisconnecting;
         break;
-      case OrchidConnectionState.VPNConnecting:
+      case OrchidVPNRoutingState.VPNConnecting:
         message = s.orchidConnecting;
         break;
-      case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.VPNNotConnected:
-        message = s.pushToConnect;
+      case OrchidVPNRoutingState.VPNNotConnected:
+        // Routing not connected, show vpn state if needed
+        switch (_vpnState) {
+          case OrchidVPNExtensionState.Invalid:
+          case OrchidVPNExtensionState.NotConnected:
+            message = s.pushToConnect;
+            break;
+          case OrchidVPNExtensionState.Connecting:
+            message = "(Starting VPN)";
+            break;
+          case OrchidVPNExtensionState.Disconnecting:
+            message = "(Disconnecting VPN)";
+            break;
+          case OrchidVPNExtensionState.Connected:
+            if (!_routingEnabled) {
+              message = "Orchid analyzing traffic";
+            } else {
+              message = "(VPN connected but not routing)";
+            }
+            break;
+        }
         break;
-      case OrchidConnectionState.VPNConnected:
+      case OrchidVPNRoutingState.VPNConnected:
         message = s.orchidIsStarting;
         break;
-      case OrchidConnectionState.OrchidConnected:
-        message = s.orchidIsRunning;
+      case OrchidVPNRoutingState.OrchidConnected:
+        if (_monitoringEnabled) {
+          message = "Orchid running and analyzing";
+        } else {
+          message = s.orchidIsRunning;
+        }
     }
 
+    if (_restarting) {
+      message = "Restarting: " + message;
+    }
+
+    return _buildStatusMessageView(message);
+  }
+
+  Widget _buildStatusMessageView(String message) {
     Color color =
         _showConnectedBackground() ? AppColors.neutral_6 : AppColors.neutral_1;
 
     return Container(
-      // Note: the emoji changes the baseline so we give this a couple of pixels
-      // Note: of extra hieght and bottom align it.
       height: 32.0,
       alignment: Alignment.bottomCenter,
       child: Text(message,
@@ -554,7 +573,7 @@ class _ConnectPageState extends State<ConnectPage>
 
   void _updateCircuitStatus() async {
     var prefs = UserPreferences();
-    if (await prefs.guiV0.get()) {
+    if (await prefs.guiV0.value) {
       _hasConfiguredCircuit = (await prefs.getCircuit()).hops.isNotEmpty;
     } else {
       var accountStore = await AccountStore(discoverAccounts: false).load();
@@ -564,7 +583,7 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   /// Called upon a change to Orchid connection state
-  void _connectionStateChanged(OrchidConnectionState state) {
+  void _routingStateChanged(OrchidVPNRoutingState state) async {
     // Fade the background animation in or out based on which direction we are going.
     var fromConnected = _showConnectedBackground();
     var toConnected = _showConnectedBackgroundFor(state);
@@ -575,22 +594,21 @@ class _ConnectPageState extends State<ConnectPage>
     if (fromConnected && !toConnected) {
       _connectAnimController.reverse().then((_) {});
     }
-    _connectionState = state;
+    _routingState = state;
     if (mounted) {
       setState(() {});
     }
   }
 
   /// True if we show the animated connected background for the given state.
-  bool _showConnectedBackgroundFor(OrchidConnectionState state) {
+  bool _showConnectedBackgroundFor(OrchidVPNRoutingState state) {
     switch (state) {
-      case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.VPNNotConnected:
-      case OrchidConnectionState.VPNConnecting:
-      case OrchidConnectionState.VPNConnected:
-      case OrchidConnectionState.VPNDisconnecting:
+      case OrchidVPNRoutingState.VPNNotConnected:
+      case OrchidVPNRoutingState.VPNConnecting:
+      case OrchidVPNRoutingState.VPNConnected:
+      case OrchidVPNRoutingState.VPNDisconnecting:
         return false;
-      case OrchidConnectionState.OrchidConnected:
+      case OrchidVPNRoutingState.OrchidConnected:
         return true;
     }
     throw Exception();
@@ -598,7 +616,7 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// True if we show the animated connected background for the current state.
   bool _showConnectedBackground() {
-    return _showConnectedBackgroundFor(_connectionState);
+    return _showConnectedBackgroundFor(_routingState);
   }
 
   /// Set up animations
@@ -629,60 +647,32 @@ class _ConnectPageState extends State<ConnectPage>
     _iconColor.addListener(() {
       widget.iconColor.value = _iconColor.value;
     });
-
-//    _highlightAnimationController = AnimationController(
-//        vsync: this, duration: Duration(milliseconds: 4000));
-//    _highlightAnimationController.repeat();
   }
 
-  void _onConnectButtonPressed() {
-    // Toggle the current connection state
+  /// Toggle the current connection state
+  void _onConnectButtonPressed() async {
+    UserPreferences().routingEnabled.set(!_routingEnabled);
+
+    /*
     switch (_connectionState) {
       case OrchidConnectionState.VPNDisconnecting:
         // Do nothing while we are trying to disconnect
         break;
       case OrchidConnectionState.Invalid:
       case OrchidConnectionState.VPNNotConnected:
-        _checkPermissionAndEnableConnection();
+        UserPreferences().routingEnabled.set(true);
         break;
       case OrchidConnectionState.VPNConnecting:
       case OrchidConnectionState.OrchidConnected:
       case OrchidConnectionState.VPNConnected:
-        _disableConnection();
+        UserPreferences().routingEnabled.set(false);
         break;
-    }
-  }
-
-  // duplicates code in monitoring_page
-  void _checkPermissionAndEnableConnection() {
-    UserPreferences().setDesiredVPNState(true);
-    // Get the most recent status, blocking if needed.
-    _subs.add(OrchidAPI().vpnPermissionStatus.take(1).listen((installed) async {
-      log('vpn: current perm: $installed');
-      if (installed) {
-        log('vpn: already installed');
-        OrchidAPI().setConnected(true);
-        setState(() {});
-      } else {
-        bool ok = await OrchidAPI().requestVPNPermission();
-        if (ok) {
-          log('vpn: user chose to install');
-          // Note: It appears that trying to enable the connection too quickly
-          // Note: after installing the vpn permission / config fails.
-          // Note: Introducing a short artificial delay.
-          Future.delayed(Duration(milliseconds: 500)).then((_) {
-            OrchidAPI().setConnected(true);
-          });
-        } else {
-          log('vpn: user skipped');
-        }
-      }
-    }));
+    }*/
   }
 
   /// Do first launch and per-release activities.
   Future<void> _releaseVersionCheck() async {
-    var version = await UserPreferences().releaseVersion.get();
+    var version = await UserPreferences().releaseVersion.value;
 
     log("first launch check.");
     if (version.isFirstLaunch) {
@@ -735,24 +725,12 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
-  void _disableConnection() {
-    UserPreferences().setDesiredVPNState(false);
-    OrchidAPI().setConnected(false);
-  }
-
-  void _rerouteButtonPressed() {
-    OrchidAPI().reroute();
-  }
-
   @override
   void dispose() {
     super.dispose();
     _connectAnimController.dispose();
-//    _highlightAnimationController.dispose();
     _checkHopAlertsTimer.cancel();
-    _subs.forEach((sub) {
-      sub.cancel();
-    });
+    _subs.dispose();
   }
 
   S get s {

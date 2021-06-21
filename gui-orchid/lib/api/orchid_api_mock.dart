@@ -6,6 +6,7 @@ import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:rxdart/rxdart.dart';
+import 'monitoring/restart_manager.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
 
@@ -24,20 +25,13 @@ class MockOrchidAPI implements OrchidAPI {
     _initChannel();
   }
 
-  /// Publish the physical layer level network connectivity type.
-  final networkConnectivity = BehaviorSubject<NetworkConnectivityType>.seeded(
-      NetworkConnectivityType.Unknown);
-
   /// Publish the connection status.
-  final vpnConnectionStatus = BehaviorSubject<OrchidVPNConnectionState>();
+  final vpnExtensionStatus = BehaviorSubject<OrchidVPNExtensionState>();
 
   /// Publish the orchid network connection status.
-  final BehaviorSubject<OrchidConnectionState> connectionStatus =
-      BehaviorSubject<OrchidConnectionState>.seeded(
-          OrchidConnectionState.Invalid);
-
-  /// Publish the network route status.
-  final routeStatus = BehaviorSubject<OrchidRoute>();
+  final BehaviorSubject<OrchidVPNRoutingState> vpnRoutingStatus =
+      BehaviorSubject<OrchidVPNRoutingState>.seeded(
+          OrchidVPNRoutingState.VPNNotConnected);
 
   /// Publishes a status of true if the user has granted any necessary OS level permissions to allow
   /// installation and activation of the Orchid VPN networking extension.
@@ -51,27 +45,36 @@ class MockOrchidAPI implements OrchidAPI {
   /// This method is called once when the application is initialized.
   void _initChannel() {
     // init connection status
-    vpnConnectionStatus.add(OrchidVPNConnectionState.NotConnected);
+    vpnExtensionStatus.add(OrchidVPNExtensionState.NotConnected);
 
-    // Update the orchid connection state when the vpn or (mock) orchid
+    // Update the orchid routing status when the vpn or (mock) orchid
     // tunnel connection state changes.
-    vpnConnectionStatus.listen((OrchidVPNConnectionState state) {
+    vpnExtensionStatus.listen((OrchidVPNExtensionState state) {
+      var applyRoutingStatus = RealOrchidAPI.applyRoutingStatus;
       switch (state) {
-        case OrchidVPNConnectionState.Invalid:
-          connectionStatus.add(OrchidConnectionState.Invalid);
+        case OrchidVPNExtensionState.Invalid:
+        case OrchidVPNExtensionState.NotConnected:
+          applyRoutingStatus(OrchidVPNRoutingState.VPNNotConnected);
           break;
-        case OrchidVPNConnectionState.NotConnected:
-          connectionStatus.add(OrchidConnectionState.VPNNotConnected);
+        case OrchidVPNExtensionState.Connecting:
+          applyRoutingStatus(OrchidVPNRoutingState.VPNConnecting);
           break;
-        case OrchidVPNConnectionState.Connecting:
-          connectionStatus.add(OrchidConnectionState.VPNConnecting);
+
+        case OrchidVPNExtensionState.Connected:
+          applyRoutingStatus(OrchidVPNRoutingState.VPNConnected);
+
+          // Mock orchid routing if routing is enabled.
+          UserPreferences().routingEnabled.get().then((routing) {
+            if (routing) {
+              Future.delayed(Duration(seconds: 1), (){
+                applyRoutingStatus(OrchidVPNRoutingState.OrchidConnected);
+              });
+            }
+          });
+
           break;
-        case OrchidVPNConnectionState.Connected:
-          // mock api maps vpn connected to orchid connected
-          connectionStatus.add(OrchidConnectionState.OrchidConnected);
-          break;
-        case OrchidVPNConnectionState.Disconnecting:
-          connectionStatus.add(OrchidConnectionState.VPNDisconnecting);
+        case OrchidVPNExtensionState.Disconnecting:
+          applyRoutingStatus(OrchidVPNRoutingState.VPNDisconnecting);
           break;
       }
     });
@@ -82,8 +85,9 @@ class MockOrchidAPI implements OrchidAPI {
 
   /// The Flutter application uses this method to indicate to the native channel code
   /// that the UI has finished launching and all listeners have been established.
-  Future<void> applicationReady() {
-    budget().applicationReady();
+  Future<void> applicationReady() async {
+    // Monitor user preferences and start or stop the VPN extension.
+    await OrchidRestartManager().initVPNControlListener();
     return null;
   }
 
@@ -109,91 +113,52 @@ class MockOrchidAPI implements OrchidAPI {
     OrchidAPI().vpnPermissionStatus.add(false);
   }
 
-  OrchidWallet _wallet;
-
-  /// Set or update the user's wallet info.
-  /// Returns true if the wallet was successfully saved.
-  /// TODO: Support more than one wallet?
-  @override
-  Future<bool> setWallet(OrchidWallet wallet) async {
-    this._wallet = wallet;
-    logger().write('Saved wallet');
-    return wallet.private.privateKey.startsWith('fail') ? false : true;
-  }
-
-  /// Remove any stored wallet credentials.
-  Future<void> clearWallet() async {
-    this._wallet = null;
-  }
-
-  /// If a wallet has been configured this method returns the user-visible
-  /// wallet info; otherwise this method returns null.
-  @override
-  Future<OrchidWalletPublic> getWallet() async {
-    if (_wallet == null) {
-      return null;
-    }
-    return _wallet.public;
-  }
-
-  VPNConfig _exitVPNConfig;
-
-  /// Set or update the user's exit VPN config.
-  /// Return true if the configuration was saved successfully.
-  @override
-  Future<bool> setExitVPNConfig(VPNConfig vpnConfig) async {
-    if (vpnConfig.public.userName.startsWith("fail")) {
-      return false;
-    }
-    this._exitVPNConfig = vpnConfig;
-    return true;
-  }
-
-  /// If an extenral VPN has been configured this method returns the user-visible
-  /// VPN configuration; otherwise this method returns null.
-  @override
-  Future<VPNConfigPublic> getExitVPNConfig() async {
-    if (_exitVPNConfig == null) {
-      return null;
-    }
-    return _exitVPNConfig.public;
-  }
-
-  Future<void> _connectFuture;
+  Timer _connectFuture;
 
   /// Set the desired connection state: true for connected, false to disconnect.
   /// Note: This mock shows the connecting state for N seconds and then connects
   /// Note: successfully.
-  /// TODO: Cancelling the mock connecting phase should cancel the future connect.
   @override
-  Future<void> setConnected(bool connect) async {
-    switch (vpnConnectionStatus.value) {
-      case OrchidVPNConnectionState.Invalid:
-      case OrchidVPNConnectionState.NotConnected:
-      case OrchidVPNConnectionState.Disconnecting:
-        if (connect) {
-          _setConnectionState(OrchidVPNConnectionState.Connecting);
-          _connectFuture = Future.delayed(Duration(milliseconds: 3000), () {
-            _setConnectionState(OrchidVPNConnectionState.Connected);
+  Future<void> setVPNExtensionEnabled(bool enabled) async {
+    const fakeDelay = 4000;
+    log("mock: setVPNExtensionEnabled = $enabled, vpnConnectionStatus = ${vpnExtensionStatus.value}");
+    switch (vpnExtensionStatus.value) {
+      case OrchidVPNExtensionState.Invalid:
+      case OrchidVPNExtensionState.NotConnected:
+      case OrchidVPNExtensionState.Disconnecting:
+        // Cancel any pending connect or disconnect
+        if (_connectFuture != null) {
+          _connectFuture.cancel();
+          _connectFuture = null;
+        }
+
+        if (enabled) {
+          _setConnectionState(OrchidVPNExtensionState.Connecting);
+
+          _connectFuture = Timer(Duration(milliseconds: fakeDelay), () {
+            _setConnectionState(OrchidVPNExtensionState.Connected);
           });
         } else {
           return; // redundant disconnect
         }
         break;
-      case OrchidVPNConnectionState.Connecting:
-      case OrchidVPNConnectionState.Connected:
-        // TODO: This does not seem to work.  How do we cancel here?
-        // Cancel any pending connect
+      case OrchidVPNExtensionState.Connecting:
+      case OrchidVPNExtensionState.Connected:
+        // Cancel any pending connect or disconnect
         if (_connectFuture != null) {
-          CancelableOperation.fromFuture(_connectFuture).cancel();
+          _connectFuture.cancel();
           _connectFuture = null;
         }
-
-        if (!connect) {
-          _setConnectionState(OrchidVPNConnectionState.NotConnected);
+        if (enabled) {
+          // redundant connect
+          return;
         } else {
-          return; // redundant connect
+          _setConnectionState(OrchidVPNExtensionState.Disconnecting);
+          _connectFuture = Timer(Duration(milliseconds: fakeDelay), () {
+            _setConnectionState(OrchidVPNExtensionState.NotConnected);
+          });
         }
+
         break;
     }
   }
@@ -202,9 +167,9 @@ class MockOrchidAPI implements OrchidAPI {
   @override
   Future<void> reroute() async {}
 
-  void _setConnectionState(OrchidVPNConnectionState state) {
+  void _setConnectionState(OrchidVPNExtensionState state) {
     logger().write('Connection state: $state');
-    vpnConnectionStatus.add(state);
+    vpnExtensionStatus.add(state);
   }
 
   @override
@@ -244,11 +209,9 @@ class MockOrchidAPI implements OrchidAPI {
   }
 
   void dispose() {
-    vpnConnectionStatus.close();
-    networkConnectivity.close();
+    vpnExtensionStatus.close();
     circuitConfigurationChanged.close();
-    connectionStatus.close();
-    routeStatus.close();
+    vpnRoutingStatus.close();
     vpnPermissionStatus.close();
   }
 }

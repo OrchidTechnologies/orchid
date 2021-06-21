@@ -197,20 +197,6 @@ class UserPreferences {
         .setBool(UserPreferenceKey.QueryBalances.toString(), value);
   }
 
-  // Get the user's desired vpn state where true is on, false is off.
-  // Defaults to false if never set.
-  Future<bool> getDesiredVPNState() async {
-    return (await SharedPreferences.getInstance())
-            .getBool(UserPreferenceKey.DesiredVPNState.toString()) ??
-        false;
-  }
-
-  // Set the user's desired vpn state where true is on, false is off.
-  Future<bool> setDesiredVPNState(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.DesiredVPNState.toString(), value);
-  }
-
   Future<bool> getShowStatusTab() async {
     return (await SharedPreferences.getInstance())
             .getBool(UserPreferenceKey.ShowStatusTab.toString()) ??
@@ -232,18 +218,6 @@ class UserPreferences {
     return (await SharedPreferences.getInstance()).setBool(
         UserPreferenceKey.VPNSwitchInstructionsViewed.toString(), value);
   }
-
-  ObservablePreference<bool> allowNoHopVPN = ObservablePreference(
-      key: UserPreferenceKey.AllowNoHopVPN,
-      loadValue: (key) async {
-        return (await SharedPreferences.getInstance())
-                .getBool(UserPreferenceKey.AllowNoHopVPN.toString()) ??
-            false;
-      },
-      storeValue: (key, value) async {
-        return (await SharedPreferences.getInstance())
-            .setBool(UserPreferenceKey.AllowNoHopVPN.toString(), value);
-      });
 
   /// The PAC transaction or null if there is none.
   ObservablePreference<PacTransaction> pacTransaction = ObservablePreference(
@@ -302,6 +276,27 @@ class UserPreferences {
         return (await SharedPreferences.getInstance())
             .setInt(key.toString(), value.version);
       });
+
+  /// User preference indicating that the VPN should be enabled to route traffic
+  /// per the user's hop configuration.
+  /// Note that the actual state of the VPN subsystem is controlled by the OrchidAPI
+  /// and may also take into account the monitoring preference.
+  ObservableBoolPreference routingEnabled = ObservableBoolPreference(
+      UserPreferenceKey.RoutingEnabled,
+      defaultValue: false);
+
+  /// User preference indicating that the Orchid VPN should be enabled to monitor traffic.
+  /// Note that the actual state of the VPN subsystem is controlled by the OrchidAPI
+  /// and may also take into account the vpn enabled preference.
+  ObservableBoolPreference monitoringEnabled = ObservableBoolPreference(
+      UserPreferenceKey.MonitoringEnabled,
+      defaultValue: false);
+
+  /// This is a synthetic preference that indicates that the user has set
+  /// the monitoring preference enabled and the routing preference disabled.
+  // Future<bool> monitorOnly() async {
+  //   return (await monitoringEnabled.value) && (!await routingEnabled.value);
+  // }
 }
 
 enum UserPreferenceKey {
@@ -315,10 +310,11 @@ enum UserPreferenceKey {
   DesiredVPNState,
   ShowStatusTab,
   VPNSwitchInstructionsViewed,
-  AllowNoHopVPN,
   PacTransaction,
   ActiveAccounts,
   CachedDiscoveredAccounts,
   GuiV0,
   ReleaseVersion,
+  RoutingEnabled,
+  MonitoringEnabled,
 }

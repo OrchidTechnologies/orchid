@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
@@ -25,12 +24,12 @@ class WrappedSwitch extends StatefulWidget {
   final WrappedSwitchController controller;
 
   const WrappedSwitch({Key key, this.controller}) : super(key: key);
+
   @override
   _WrappedSwitchState createState() => _WrappedSwitchState();
 }
 
 class _WrappedSwitchState extends State<WrappedSwitch> {
-
   // Workaround for dragged switch state issue
   // https://github.com/flutter/flutter/issues/46046
   int _switchKey = 0;
@@ -38,11 +37,11 @@ class _WrappedSwitchState extends State<WrappedSwitch> {
   @override
   void initState() {
     super.initState();
-    widget.controller.controlledState.addListener(_valueChanged);
+    widget.controller.controlledState.addListener(_controlledValueChanged);
   }
 
   // The desired switch state specified by the containing view changed
-  void _valueChanged() {
+  void _controlledValueChanged() {
     print("switch value changed");
     setState(() {
       _switchKey++;
@@ -53,23 +52,24 @@ class _WrappedSwitchState extends State<WrappedSwitch> {
   Widget build(BuildContext context) {
     //print("building switch with value: ${widget.controller.controlledState.value}, key=$_switchKey");
     return Switch(
-        key: Key(_switchKey.toString()),
-        activeColor: AppColors.purple_5,
-        value: widget.controller.controlledState.value,
-        onChanged: widget.controller.onChange
+      key: Key(_switchKey.toString()),
+      activeColor: Colors.deepPurple,
+      value: widget.controller.controlledState.value,
+      onChanged: widget.controller.onChange,
     );
   }
 
   @override
   void dispose() {
     super.dispose();
-    widget.controller.controlledState.removeListener(_valueChanged);
+    widget.controller.controlledState.removeListener(_controlledValueChanged);
   }
 }
 
 /// This is just a ValueNotifier that fires on every set rather than comparing
 /// new values for equality first.
-class WrappedSwitchValueNotifier extends ChangeNotifier implements ValueListenable<bool> {
+class WrappedSwitchValueNotifier extends ChangeNotifier
+    implements ValueListenable<bool> {
   bool _value;
 
   WrappedSwitchValueNotifier(this._value);

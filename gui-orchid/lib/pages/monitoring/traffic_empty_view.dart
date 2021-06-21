@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import '../../common/app_colors.dart';
 import '../../common/app_text.dart';
 
@@ -17,42 +18,30 @@ class TrafficEmptyView extends StatelessWidget {
                 padding: EdgeInsets.only(left: 36, right: 36),
                 child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: 450),
-                    child: StreamBuilder<OrchidConnectionState>(
-                        stream: OrchidAPI().connectionStatus,
+                    child: StreamBuilder<bool>(
+                        stream: UserPreferences().monitoringEnabled.stream(),
                         builder: (context, snapshot) {
-                          var state = OrchidAPI().connectionStatus.value;
-                          bool connected;
-                          switch (state) {
-                            case OrchidConnectionState.Invalid:
-                            case OrchidConnectionState.VPNNotConnected:
-                              connected = false;
-                              break;
-                            case OrchidConnectionState.VPNConnecting:
-                            case OrchidConnectionState.VPNConnected:
-                            case OrchidConnectionState.OrchidConnected:
-                            case OrchidConnectionState.VPNDisconnecting:
-                              connected = true;
-                              break;
+                          if (snapshot.data == null) {
+                            return Container();
                           }
-
+                          bool monitoring = snapshot.data;
                           return AnimatedSwitcher(
                             duration: Duration(milliseconds: 300),
                             child: Column(
                               key: ValueKey<String>(
-                                  "welcome:$connected:$orientation"),
+                                  "welcome:$monitoring:$orientation"),
                               children: <Widget>[
-                                Spacer(flex: 1),
+                                Spacer(flex: 2),
                                 AppText.header(
-                                    text: s.welcomeToOrchid,
+                                    text: "Analyze Your Connections",
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 28.0),
+                                    fontSize: 24.0),
                                 SizedBox(height: 20),
                                 AppText.body(
-                                    text: !connected
-                                        ? s.thisReleaseVPNInstruction +
-                                            "\n\n   " +
-                                            s.toGetStartedInstruction +
-                                            "   "
+                                    text: !monitoring
+                                        ? "Network analysis uses your device's VPN facility to capture packets and analyze your traffic.  Network analysis requires VPN permissions but does not by itself protect your data or hide your IP address.  To get the benefits of network privacy you must configure and activate a VPN connection from the home screen."
+                                                "\n\n   " +
+                                            "Turning on this feature will increase the battery usage of the Orchid App."
                                         : s.nothingToDisplayYet,
                                     fontSize: 15.0,
                                     color: AppColors.neutral_1),

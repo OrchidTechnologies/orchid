@@ -1,11 +1,8 @@
 import 'dart:async';
-import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/account_manager/account_store.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
-import '../../../util/js_config.dart';
 import 'orchid_vpn_config_v0.dart';
 
 /// Support for reading and generating the JavaScript configuration file used by the Orchid VPN.

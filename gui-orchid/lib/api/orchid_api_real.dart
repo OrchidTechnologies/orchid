@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:orchid/api/monitoring/restart_manager.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/util/ip_address.dart';
-import 'package:orchid/util/location.dart';
 import 'package:rxdart/rxdart.dart';
 import 'configuration/orchid_vpn_config/orchid_vpn_config.dart';
-import 'monitoring/orchid_status.dart';
+import 'monitoring/routing_status.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_eth/v0/orchid_eth_v0.dart';
 import 'orchid_log_api.dart';
@@ -20,17 +19,13 @@ class RealOrchidAPI implements OrchidAPI {
     return _singleton;
   }
 
-  final networkConnectivity = BehaviorSubject<NetworkConnectivityType>.seeded(
-      NetworkConnectivityType.Unknown);
+  final vpnExtensionStatus = BehaviorSubject<OrchidVPNExtensionState>.seeded(
+      OrchidVPNExtensionState.Invalid);
 
-  final vpnConnectionStatus = BehaviorSubject<OrchidVPNConnectionState>.seeded(
-      OrchidVPNConnectionState.Invalid);
-
-  final BehaviorSubject<OrchidConnectionState> connectionStatus =
-      BehaviorSubject<OrchidConnectionState>.seeded(
-          OrchidConnectionState.Invalid);
-
-  final routeStatus = BehaviorSubject<OrchidRoute>();
+  /// The Orchid network connection state, which combines both the vpn extension
+  /// status and the orchid network routing status.
+  final vpnRoutingStatus = BehaviorSubject<OrchidVPNRoutingState>.seeded(
+      OrchidVPNRoutingState.VPNNotConnected);
 
   final vpnPermissionStatus = BehaviorSubject<bool>();
 
@@ -39,56 +34,49 @@ class RealOrchidAPI implements OrchidAPI {
   RealOrchidAPI._internal() {
     // Update the overall orchid connection state when the vpn or orchid tunnel
     // connection state changes.
-    Rx.combineLatest2(vpnConnectionStatus, OrchidStatus().connected,
-        (OrchidVPNConnectionState vpnState, bool orchidConnected) {
-      log("status: combine status: $vpnState, $orchidConnected");
-      switch (vpnState) {
-        case OrchidVPNConnectionState.Invalid:
-          return OrchidConnectionState.Invalid;
-          break;
-        case OrchidVPNConnectionState.NotConnected:
-          return OrchidConnectionState.VPNNotConnected;
-          break;
-        case OrchidVPNConnectionState.Connecting:
-          return OrchidConnectionState.VPNConnecting;
-          break;
-        case OrchidVPNConnectionState.Connected:
-          // This differentiates the vpn and orchid layer connections
-          return (orchidConnected
-              ? OrchidConnectionState.OrchidConnected
-              : OrchidConnectionState.VPNConnected);
-          break;
-        case OrchidVPNConnectionState.Disconnecting:
-          return OrchidConnectionState.VPNDisconnecting;
-          break;
-      }
-    }).listen((OrchidConnectionState state) {
-      connectionStatus.add(state);
-    });
+    _initVPNRoutingStatusListener();
 
     // Respond to native channel callbacks
+    _initChannelListener();
+  }
+
+  /// The Flutter application uses this method to indicate to the native channel code
+  /// that the UI has finished launching and all listeners have been established.
+  Future<void> applicationReady() async {
+    log("api: Application ready.");
+    _platform.invokeMethod('ready');
+
+    // Write the config file on startup
+    await updateConfiguration();
+
+    // Monitor user preferences and start or stop the VPN extension.
+    await OrchidRestartManager().initVPNControlListener();
+  }
+
+  /// Respond to native channel callbacks
+  void _initChannelListener() {
     _platform.setMethodCallHandler((MethodCall call) async {
       //log("status: Method call handler: $call");
       switch (call.method) {
         case 'connectionStatus':
           switch (call.arguments) {
             case 'Invalid':
-              vpnConnectionStatus.add(OrchidVPNConnectionState.Invalid);
+              vpnExtensionStatus.add(OrchidVPNExtensionState.Invalid);
               break;
             case 'Disconnected':
-              vpnConnectionStatus.add(OrchidVPNConnectionState.NotConnected);
+              vpnExtensionStatus.add(OrchidVPNExtensionState.NotConnected);
               break;
             case 'Connecting':
-              vpnConnectionStatus.add(OrchidVPNConnectionState.Connecting);
+              vpnExtensionStatus.add(OrchidVPNExtensionState.Connecting);
               break;
             case 'Connected':
-              vpnConnectionStatus.add(OrchidVPNConnectionState.Connected);
+              vpnExtensionStatus.add(OrchidVPNExtensionState.Connected);
               break;
             case 'Disconnecting':
-              vpnConnectionStatus.add(OrchidVPNConnectionState.Disconnecting);
+              vpnExtensionStatus.add(OrchidVPNExtensionState.Disconnecting);
               break;
             case 'Reasserting':
-              vpnConnectionStatus.add(OrchidVPNConnectionState.Connecting);
+              vpnExtensionStatus.add(OrchidVPNExtensionState.Connecting);
               break;
           }
           break;
@@ -98,6 +86,7 @@ class RealOrchidAPI implements OrchidAPI {
           vpnPermissionStatus.add(call.arguments);
           break;
 
+        /*
         case 'route':
           routeStatus.add(call.arguments
               .map((route) => OrchidNode(
@@ -106,21 +95,68 @@ class RealOrchidAPI implements OrchidAPI {
                   ))
               .toList());
           break;
+           */
       }
     });
   }
 
-  /// The Flutter application uses this method to indicate to the native channel code
-  /// that the UI has finished launching and all listeners have been established.
-  Future<void> applicationReady() async {
-    budget().applicationReady();
-    _platform.invokeMethod('ready');
+  /// This listener weaves together changes in the vpn extension state and
+  /// the Orchid tunnel routing connection state for the composite state.
+  void _initVPNRoutingStatusListener() {
+    Rx.combineLatest2(vpnExtensionStatus, OrchidRoutingStatus().connected,
+        (OrchidVPNExtensionState vpnState, bool orchidConnected) {
+      log("status: combine status: $vpnState, $orchidConnected");
+      switch (vpnState) {
+        case OrchidVPNExtensionState.Invalid:
+        case OrchidVPNExtensionState.NotConnected:
+          return OrchidVPNRoutingState.VPNNotConnected;
+          break;
+        case OrchidVPNExtensionState.Connecting:
+          return OrchidVPNRoutingState.VPNConnecting;
+          break;
+        case OrchidVPNExtensionState.Connected:
+          // This differentiates the vpn running state from the orchid routing state
+          return (orchidConnected
+              ? OrchidVPNRoutingState.OrchidConnected
+              : OrchidVPNRoutingState.VPNConnected);
+          break;
+        case OrchidVPNExtensionState.Disconnecting:
+          return OrchidVPNRoutingState.VPNDisconnecting;
+          break;
+      }
+    }).listen((OrchidVPNRoutingState state) async {
+      applyRoutingStatus(state);
+    });
+  }
 
-    // Write the config file on startup
-    await updateConfiguration();
+  static applyRoutingStatus(OrchidVPNRoutingState state) async {
+    var vpnRoutingStatus = OrchidAPI().vpnRoutingStatus;
 
-    // Set the initial VPN state from user preferences
-    setConnected(await UserPreferences().getDesiredVPNState());
+    // Determine if the change in connection state is relevant to routing.
+    // (as opposed to e.g. a change in state for traffic monitoring)
+    var routingEnabled = await UserPreferences().routingEnabled.value;
+    switch (state) {
+      case OrchidVPNRoutingState.VPNNotConnected:
+        vpnRoutingStatus.add(state);
+        break;
+      case OrchidVPNRoutingState.VPNConnecting:
+      case OrchidVPNRoutingState.VPNConnected:
+      case OrchidVPNRoutingState.OrchidConnected:
+        if (routingEnabled) {
+          vpnRoutingStatus.add(state);
+        }
+        break;
+      case OrchidVPNRoutingState.VPNDisconnecting:
+        // If we are disconnecting and routing is disabled it is ambiguous
+        // whether the disconnect is due to shutting down routing or monitoring.
+        // Disambiguate using the current state of the routing status.
+        var residualRoutingStatus =
+            vpnRoutingStatus.value != OrchidVPNRoutingState.VPNNotConnected;
+        if (!routingEnabled && residualRoutingStatus) {
+          vpnRoutingStatus.add(state);
+        }
+        break;
+    }
   }
 
   /// Get the logging API.
@@ -135,35 +171,12 @@ class RealOrchidAPI implements OrchidAPI {
   }
 
   Future<void> revokeVPNPermission() async {
-    // TODO:
+    throw Exception("Unimplemented");
   }
 
   @override
-  Future<bool> setWallet(OrchidWallet wallet) {
-    return Future<bool>.value(false);
-  }
-
-  @override
-  Future<void> clearWallet() async {}
-
-  @override
-  Future<OrchidWalletPublic> getWallet() {
-    return Future<OrchidWalletPublic>.value(null);
-  }
-
-  @override
-  Future<bool> setExitVPNConfig(VPNConfig vpnConfig) {
-    return Future<bool>.value(false);
-  }
-
-  @override
-  Future<VPNConfigPublic> getExitVPNConfig() {
-    return Future<VPNConfigPublic>.value(null);
-  }
-
-  @override
-  Future<void> setConnected(bool connect) async {
-    if (connect) {
+  Future<void> setVPNExtensionEnabled(bool enabled) async {
+    if (enabled) {
       await updateConfiguration();
       await _platform.invokeMethod('connect');
     } else {
@@ -213,13 +226,21 @@ class RealOrchidAPI implements OrchidAPI {
   // The desired format is (JavaScript, not JSON) e.g.:
   static Future<String> generateManagedConfig() async {
     // Circuit configuration
-    var managedConfig = await OrchidVPNConfig.generateConfig();
+    var managedConfig = (await UserPreferences().routingEnabled.value)
+        ? await OrchidVPNConfig.generateConfig()
+        : "";
 
     // Inject the default (main net Ethereum) RPC provider
-    managedConfig += '\nrpc = "${OrchidEthereumV0.defaultEthereumProviderUrl}";';
+    managedConfig +=
+        '\nrpc = "${OrchidEthereumV0.defaultEthereumProviderUrl}";';
 
     // Inject the status socket name
-    managedConfig += '\ncontrol = "${OrchidStatus.socketName}";';
+    managedConfig += '\ncontrol = "${OrchidRoutingStatus.socketName}";';
+
+    // To disable monitoring set 'logdb' to an empty string.
+    if (!await UserPreferences().monitoringEnabled.value) {
+      managedConfig += '\nlogdb="";';
+    }
 
     return managedConfig;
   }
@@ -246,11 +267,9 @@ class RealOrchidAPI implements OrchidAPI {
   }
 
   void dispose() {
-    vpnConnectionStatus.close();
-    networkConnectivity.close();
+    vpnExtensionStatus.close();
     circuitConfigurationChanged.close();
-    connectionStatus.close();
-    routeStatus.close();
+    vpnRoutingStatus.close();
     vpnPermissionStatus.close();
   }
 }

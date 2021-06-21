@@ -26,18 +26,12 @@ abstract class OrchidAPI {
     return mockAPI ? _mockAPISingleton : _apiSingleton;
   }
 
-  /// Publish the physical layer level network connectivity type.
-  final BehaviorSubject<NetworkConnectivityType> networkConnectivity;
+  /// The system VPN extension connection status.
+  final BehaviorSubject<OrchidVPNExtensionState> vpnExtensionStatus;
 
-  /// Publish the system VPN connection status.
-  /// See also OrchidStatus for the app-level tunnel status.
-  final BehaviorSubject<OrchidVPNConnectionState> vpnConnectionStatus;
-
-  /// Publish the orchid network connection status.
-  final BehaviorSubject<OrchidConnectionState> connectionStatus;
-
-  /// Publish the network route status.
-  final BehaviorSubject<OrchidRoute> routeStatus;
+  /// The Orchid routing state, which is a superset of the vpn extension status
+  /// but only reflects how routing is affected.
+  final BehaviorSubject<OrchidVPNRoutingState> vpnRoutingStatus;
 
   /// Publishes a status of true if the user has granted any necessary OS level permissions to allow
   /// installation and activation of the Orchid VPN networking extension.
@@ -65,27 +59,10 @@ abstract class OrchidAPI {
   /// Remove the VPN networking extension.
   Future<void> revokeVPNPermission();
 
-  /// Set or update the user's wallet info.
-  /// Returns true if the wallet was successfully saved.
-  Future<bool> setWallet(OrchidWallet wallet);
-
-  /// Remove any stored wallet credentials.
-  Future<void> clearWallet();
-
-  /// If a wallet has been configured this method returns the user-visible
-  /// wallet info; otherwise this method returns null.
-  Future<OrchidWalletPublic> getWallet();
-
-  /// Set or update the user's external VPN config.
-  /// Return true if the configuration was saved successfully.
-  Future<bool> setExitVPNConfig(VPNConfig vpnConfig);
-
-  /// If an extenral VPN has been configured this method returns the user-visible
-  /// VPN configuration; otherwise this method returns null.
-  Future<VPNConfigPublic> getExitVPNConfig();
-
-  /// Set the desired connection state: true for connected, false to disconnect.
-  Future<void> setConnected(bool connect);
+  /// Start or stop the vpn extension at the OS level:
+  /// When the VPN is enabled it is capturing packets and routing them as
+  /// specified by its configuration file.
+  Future<void> setVPNExtensionEnabled(bool enabled);
 
   /// Choose a new, randomized, network route.
   Future<void> reroute();
@@ -111,11 +88,10 @@ abstract class OrchidAPI {
   Future<bool> updateConfiguration();
 
   void dispose() {
-    vpnConnectionStatus.close();
-    networkConnectivity.close();
     circuitConfigurationChanged.close();
-    connectionStatus.close();
-    routeStatus.close();
+    vpnRoutingStatus.close();
     vpnPermissionStatus.close();
+    vpnExtensionStatus.close();
+    vpnRoutingStatus.close();
   }
 }

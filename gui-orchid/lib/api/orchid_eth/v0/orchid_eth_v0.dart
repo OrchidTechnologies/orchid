@@ -261,7 +261,7 @@ class OrchidEthereumV0 {
 
     // json null params should not be quoted
     postBody = postBody.replaceAll('"null"', 'null');
-    log("XXX: postbody = $postBody");
+    log("jsonRPC: postbody = $postBody");
 
     // do the post
     var response = await http.post(

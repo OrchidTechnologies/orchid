@@ -10,15 +10,14 @@ class ConfigChangeDialogs {
       {bool warnOnly = false}) {
     S s = S.of(context);
     var warn;
-    switch (OrchidAPI().connectionStatus.value) {
-      case OrchidConnectionState.Invalid:
-      case OrchidConnectionState.VPNNotConnected:
-      case OrchidConnectionState.VPNDisconnecting:
+    switch (OrchidAPI().vpnRoutingStatus.value) {
+      case OrchidVPNRoutingState.VPNNotConnected:
+      case OrchidVPNRoutingState.VPNDisconnecting:
         warn = false;
         break;
-      case OrchidConnectionState.VPNConnecting:
-      case OrchidConnectionState.OrchidConnected:
-      case OrchidConnectionState.VPNConnected:
+      case OrchidVPNRoutingState.VPNConnecting:
+      case OrchidVPNRoutingState.OrchidConnected:
+      case OrchidVPNRoutingState.VPNConnected:
         warn = true;
     }
     if (warnOnly && !warn) {

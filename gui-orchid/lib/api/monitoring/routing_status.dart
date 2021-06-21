@@ -7,20 +7,21 @@ import 'package:rxdart/rxdart.dart';
 import '../orchid_api.dart';
 import '../orchid_log_api.dart';
 
-class OrchidStatus {
-  static OrchidStatus _shared = OrchidStatus._init();
+/// Status monitoring from the Orchid VPN extension.
+class OrchidRoutingStatus {
+  static OrchidRoutingStatus _shared = OrchidRoutingStatus._init();
   static String socketName = 'orchid.sock';
 
-  /// The app-level tunnel connected state
-  /// See also OrchidAPI connectionStatus for the system VPN state.
+  /// The app-level tunnel connected state indicating whether the extension
+  /// has connected to an Orchid server and is ready to send protected traffic.
   final BehaviorSubject<bool> connected = BehaviorSubject.seeded(false);
 
   Timer _timer;
 
-  OrchidStatus._init();
+  OrchidRoutingStatus._init();
 
   void beginPollingStatus() {
-    log("status: begin polling status");
+    log("vpn: begin polling orchid routing status");
     if (OrchidAPI.mockAPI) {
       return;
     }
@@ -30,7 +31,7 @@ class OrchidStatus {
     _timer = Timer.periodic(Duration(seconds: 1), _update);
   }
 
-  factory OrchidStatus() {
+  factory OrchidRoutingStatus() {
     return _shared;
   }
 
@@ -49,7 +50,7 @@ class OrchidStatus {
       client.close();
     } catch (err) {
       // Log connect attempt errors if we believe the tunnel is alive.
-      if (OrchidAPI().vpnConnectionStatus.value == OrchidVPNConnectionState.Connected) {
+      if (OrchidAPI().vpnExtensionStatus.value == OrchidVPNExtensionState.Connected) {
         log("status: vpn connected but error checking tunnel status: $err");
       }
 

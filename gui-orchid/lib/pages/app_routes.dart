@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/help/help_feedback_page.dart';
-import 'package:orchid/pages/connect/legacy_connect_page.dart';
 import 'package:orchid/pages/help/open_source_page.dart';
 import 'package:orchid/pages/help/privacy_page.dart';
-import 'package:orchid/pages/onboarding/onboarding_link_wallet_page.dart';
-import 'package:orchid/pages/onboarding/onboarding_link_wallet_success_page.dart';
-import 'package:orchid/pages/onboarding/onboarding_vpn_credentials_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:orchid/pages/settings/advanced_configuration_page.dart';
@@ -15,7 +11,6 @@ import 'package:orchid/pages/settings/manage_config_page.dart';
 import 'package:orchid/pages/settings/deleted_accounts_page.dart';
 import 'package:orchid/pages/settings/settings_log_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
-import 'package:orchid/pages/settings/settings_vpn_credentials_page.dart';
 import 'account_manager/account_manager_page.dart';
 import 'circuit/circuit_page.dart';
 import 'help/help_overview.dart';
@@ -51,9 +46,7 @@ class AppRoutes {
   static const String home = "/";
 
   static final Map<String, WidgetBuilder> routes = {
-    connect: (context) => LegacyConnectPage(),
     settings: (context) => SettingsPage(),
-    settings_vpn: (context) => SettingsVPNCredentialsPage(),
     settings_log: (context) => SettingsLogPage(),
     configuration: (context) => AdvancedConfigurationPage(),
     help_overview: (context) => HelpOverviewPage(),
@@ -63,9 +56,6 @@ class AppRoutes {
     feedback: (context) => HelpFeedbackPage(),
     onboarding_walkthrough: (context) => WalkthroughPages(),
     onboarding_vpn_permission: (context) => OnboardingVPNPermissionPage(),
-    onboarding_link_wallet: (context) => OnboardingLinkWalletPage(),
-    onboarding_link_wallet_success: (context) => OnboardingLinkWalletSuccessPage(),
-    onboarding_vpn_credentials: (context) => OnboardingVPNCredentialsPage(),
     keygen: (context) => KeyGenPage(),
     keys: (context) => KeysPage(),
     circuit: (context) => CircuitPage(),

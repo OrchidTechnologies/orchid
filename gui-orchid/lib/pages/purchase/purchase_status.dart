@@ -11,18 +11,13 @@ import 'package:orchid/common/link_text.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import '../../common/app_text.dart';
+import '../../util/streams.dart';
 
 class PurchaseStatus extends StatefulWidget {
   const PurchaseStatus({Key key}) : super(key: key);
 
   @override
   _PurchaseStatusState createState() => _PurchaseStatusState();
-}
-
-extension StreamExtensions on StreamSubscription {
-  void dispose(List<StreamSubscription> disposal) {
-    disposal.add(this);
-  }
 }
 
 class _PurchaseStatusState extends State<PurchaseStatus> {

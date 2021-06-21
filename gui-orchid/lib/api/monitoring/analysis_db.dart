@@ -1,10 +1,12 @@
 import 'package:flutter/cupertino.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sqflite/sqflite.dart';
 import '../orchid_api.dart';
 import 'iana.dart';
 import 'query_parser.dart';
 
+/// Traffic analysis database published by the Orchid extension.
 class AnalysisDb {
   static AnalysisDb _shared = AnalysisDb._init();
   static final String unknown = "???"; // Localize
@@ -36,9 +38,15 @@ class AnalysisDb {
   }
 
   Future<List<FlowEntry>> query({String filterText}) async {
-    var db = await _getDb();
-    if (db == null) {
-      return List();
+    var db;
+    try {
+      db = await _getDb();
+      if (db == null) {
+        return [];
+      }
+    } catch (err) {
+      log("Error querying analysis db: $err");
+      return [];
     }
     String query = QueryParser(filterText).parse();
     //debugPrint("Query: $query");
@@ -128,4 +136,3 @@ class FlowEntry {
       this.dst_port,
       this.hostname});
 }
-

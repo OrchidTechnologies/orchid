@@ -68,16 +68,31 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
             animation: Listenable.merge([_backgroundColor, _iconColor]),
             builder: (context, snapshot) {
               return AppBar(
-                  backgroundColor: _backgroundColor.value,
-                  elevation: 0,
-                  iconTheme: IconThemeData(color: _iconColor.value),
-                  brightness: Brightness.light // status bar
-                  );
+                backgroundColor: _backgroundColor.value,
+                elevation: 0,
+                iconTheme: IconThemeData(color: _iconColor.value),
+                brightness: Brightness.light,
+                // status bar
+                actions: [_buildTrafficButton()],
+              );
             }),
       ),
       body: _body(),
       backgroundColor: Colors.white,
       drawer: SideDrawer(),
+    );
+  }
+
+  Widget _buildTrafficButton() {
+    return TextButton(
+      onPressed: () {
+        Navigator.pushNamed(context, AppRoutes.traffic);
+      },
+      child: Image.asset(
+        'assets/images/swapVert.png',
+        width: 24,
+        height: 24,
+      ),
     );
   }
 

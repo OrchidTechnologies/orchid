@@ -174,7 +174,7 @@ class OrchidVPNConfigV0 {
     // Get the active hop keys
     var activeHops = (await UserPreferences().getCircuit()).hops;
     List<OrchidHop> activeOrchidHops =
-    activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
+        activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
     List<StoredEthereumKeyRef> activeKeys = activeOrchidHops.map((h) {
       return h.keyRef;
     }).toList();

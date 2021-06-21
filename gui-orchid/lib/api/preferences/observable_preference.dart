@@ -40,6 +40,10 @@ class ObservablePreference<T> {
     }
   }
 
+  Future<T> get value async {
+    return this.get();
+  }
+
   Future<bool> hasValue() async {
     return (await get()) != null;
   }
