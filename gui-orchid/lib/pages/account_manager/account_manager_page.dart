@@ -4,6 +4,7 @@ import 'package:jdenticon_dart/jdenticon_dart.dart';
 import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
@@ -12,6 +13,7 @@ import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/common/alert_badge.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:orchid/common/scan_paste_dialog.dart';
 import 'package:orchid/common/account_chart.dart';
@@ -394,32 +396,35 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
-  ListTile _buildAccountTile(AccountModel account, int index) {
+  ListTile _buildAccountTile(AccountModel accountModel, int index) {
+    var efficiency = accountModel.detail.marketConditions?.efficiency;
+    var showBadge = efficiency != null ? efficiency < MarketConditions.minEfficiency : false;
+
     var style = TextStyle(fontSize: 15);
     return ListTile(
-      tileColor: account.active ? Colors.green.shade50 : null,
+      tileColor: accountModel.active ? Colors.green.shade50 : null,
       onTap: () {
-        _showAccount(account);
+        _showAccount(accountModel);
       },
       key: Key(index.toString()),
       title: Row(
         children: [
-          Container(width: 24, height: 24, child: account.chain.icon),
+          Container(width: 24, height: 24, child: accountModel.chain.icon),
           padx(4),
           Container(
               width: 18,
               height: 18,
               child: FittedBox(
-                child: account.detail.marketConditions != null
+                child: accountModel.detail.marketConditions != null
                     ? AccountChart.circularEfficiencyChart(
-                        account.detail.marketConditions?.efficiency)
+                        accountModel.detail.marketConditions?.efficiency)
                     : Container(),
               )),
           padx(8),
           Flexible(
             flex: 1,
             child: Text(
-              account.funder.toString(),
+              accountModel.funder.toString(),
               style: AppText.logStyle.copyWith(fontSize: style.fontSize),
               overflow: TextOverflow.ellipsis,
             ),
@@ -434,24 +439,30 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                   LabeledCurrencyValue(
                       label: s.balance + ':',
                       style: style,
-                      value: account.balance),
+                      value: accountModel.balance),
                   padx(8),
                   LabeledCurrencyValue(
                       label: s.deposit + ':',
                       style: style,
-                      value: account.deposit),
+                      value: accountModel.deposit),
                 ],
               ),
             ),
           )
         ],
       ),
-      subtitle: account.active
+      subtitle: accountModel.active
           ? Padding(
-              padding: const EdgeInsets.only(left: 54.0, top: 2),
-              child: Text(
-                s.active,
-                textAlign: TextAlign.left,
+              padding: const EdgeInsets.only(left: 24.0, top: 2),
+              child: Row(
+                children: [
+                  SizedAlertBadge(visible: showBadge),
+                  padx(4),
+                  Text(
+                    s.active,
+                    textAlign: TextAlign.left,
+                  ),
+                ],
               ),
             )
           : null,
@@ -507,14 +518,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   // Return a cached or new account detail poller for the account.
   AccountDetailPoller _accountDetail(Account account) {
-    var signer =
-        StoredEthereumKey.find(_accountStore.identities, account.identityUid);
     var poller = _accountDetailMap[account];
     if (poller == null) {
-      poller =
-          AccountDetailPoller(account: account, resolvedSigner: signer.address);
+      poller = AccountDetailPoller(account: account);
       poller.addListener(_accountDetailChanged);
-      poller.start();
+      poller.startPolling();
       _accountDetailMap[account] = poller;
     }
     return poller;

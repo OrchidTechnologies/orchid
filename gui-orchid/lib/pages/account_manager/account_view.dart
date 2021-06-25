@@ -3,14 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/pages/account_manager/account_composer.dart';
+import 'package:orchid/api/orchid_urls.dart';
+import 'package:orchid/common/alert_badge.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/common/formatting.dart';
-import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/util/listenable_builder.dart';
+import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
@@ -87,7 +89,6 @@ class _AccountViewState extends State<AccountView> {
   }
 
   Widget _buildBottom() {
-    var style1 = TextStyle(fontSize: 17);
     return RefreshIndicator(
       onRefresh: _detail.refresh,
       child: Container(
@@ -101,7 +102,7 @@ class _AccountViewState extends State<AccountView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildBalance(style1),
+                  _buildBalance(),
                 ],
               ),
               pady(8),
@@ -111,7 +112,8 @@ class _AccountViewState extends State<AccountView> {
                 Container(width: 250, child: _buildAccountChart()),
               // if (_showAccountChart()) pady(24),
               // _buildAddFundsButton(),
-              pady(24),
+              pady(32),
+              if (_alert) _buildLowEfficiencyText()
             ]),
           ),
         ),
@@ -119,34 +121,91 @@ class _AccountViewState extends State<AccountView> {
     );
   }
 
-  Column _buildBalance(TextStyle style1) {
+  bool get _alert {
+    return _detail.showMarketStatsAlert;
+  }
+
+  Column _buildBalance() {
+    var style1 = TextStyle(
+      fontSize: 17,
+      color: _alert ? Colors.red.shade900 : null,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LabeledCurrencyValue(
-            label: s.balance + ':',
-            style: style1,
-            value: _detail.lotteryPot?.balance),
-        pady(8),
-        LabeledCurrencyValue(
-            label: s.deposit + ':',
-            style: style1,
-            value: _detail.lotteryPot?.deposit),
+        Row(
+          children: [
+            if (_alert)
+              SizedAlertBadge(
+                  visible: _alert, size: 26, insets: 6, maintainSize: false),
+            if (_alert) padx(8),
+            LabeledCurrencyValue(
+                label: s.balance + ':',
+                style: style1,
+                value: _detail.lotteryPot?.balance),
+          ],
+        ),
+        // The badge still has outside padding (fix this)
+        if (_alert) pady(4) else pady(8),
+        Row(
+          children: [
+            if (_alert)
+              SizedAlertBadge(
+                  visible: _alert, size: 26, insets: 6, maintainSize: false),
+            if (_alert) padx(8),
+            LabeledCurrencyValue(
+                label: s.deposit + ':',
+                style: style1,
+                value: _detail.lotteryPot?.deposit),
+          ],
+        ),
       ],
     );
   }
 
-  /*
-  Widget _buildAddFundsButton() {
-    return Container(
-      width: 150,
-      child: RoundedRectButton(
-        text: "Add Funds",
-        onPressed: _addFunds,
-      ),
+  Widget _buildLowEfficiencyText() {
+    var bodyStyle = TextStyle(
+      // color: Colors.black,
+      fontSize: 15,
+      height: 1.3,
+      // fontStyle: FontStyle.italic,
     );
+    var titleStyle = bodyStyle.copyWith(
+      fontWeight: FontWeight.bold,
+      // height: 2.0,
+    );
+    var linkStyle = AppText.linkStyle.copyWith(
+      fontSize: 15.0,
+      // height: 1.3,
+      // fontStyle: FontStyle.italic,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Efficiency too low', style: titleStyle),
+        pady(8),
+        Text(
+            'Your access to the Orchid network is currently limited by your efficiency.',
+            style: bodyStyle),
+        pady(8),
+        LinkText('What is efficiency?',
+            style: linkStyle, url: OrchidUrls.accountOrchid),
+      ],
+    );
+    /*
+    return StyledText(
+      style: bodyStyle,
+      newLineAsBreaks: true,
+      text: '<title>Efficiency too low</title>\n'
+          'Your access to the Orchid network is currently limited by your efficiency.\n'
+          '<link1>What is efficiency?</link1>',
+      styles: {
+        'title': titleStyle,
+        'link1': linkStyle.link(OrchidUrls.accountOrchid),
+      },
+    );
+     */
   }
-   */
 
   bool get _active {
     return widget.account.active || _activated;
@@ -168,26 +227,6 @@ class _AccountViewState extends State<AccountView> {
       ),
     );
   }
-
-  /*
-  void _addFunds() async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (BuildContext context) {
-            return PurchasePage(
-                signer: widget.account.signer, completion: () {});
-          }),
-
-      // MaterialPageRoute(
-      //     fullscreenDialog: true,
-      //     builder: (BuildContext context) {
-      //       return AccountComposerPage(widget.account.chain.nativeCurrency);
-      //     }),
-    );
-  }
-   */
 
   Widget _buildHeader() {
     var account = widget.account;
@@ -227,6 +266,7 @@ class _AccountViewState extends State<AccountView> {
       transactions: _detail.transactions,
       efficiency: _detail.marketConditions?.efficiency,
       lotteryPot: _detail.lotteryPot,
+      alert: _alert,
     );
   }
 

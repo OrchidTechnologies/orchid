@@ -1,11 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 
-import '../orchid_log_api.dart';
+import '../orchid_budget_api.dart';
+import 'orchid_eth.dart';
 
 /// The base model for accounts including signer, chain, and funder.
 class Account {
@@ -24,6 +24,26 @@ class Account {
     this.chainId,
     this.funder,
   });
+
+  /// Stream the current active account, ignoring identities with no selection.
+  static Stream<Account> get activeAccountStream {
+    return UserPreferences().activeAccounts.stream().map((accounts) {
+      return _filterActiveAccount(accounts);
+    });
+  }
+
+  static Future<Account> get activeAccount async {
+    return _filterActiveAccount(await UserPreferences().activeAccounts.get());
+  }
+
+  // Return the active account from the accounts list or null.
+  static Account _filterActiveAccount(List<Account> accounts) {
+    return accounts == null ||
+            accounts.isEmpty ||
+            accounts[0].isIdentityPlaceholder
+        ? null
+        : accounts[0];
+  }
 
   /// Indicates that this account selects an identity but not yet a designated
   /// account for the identity.
@@ -65,7 +85,17 @@ class Account {
       chainId.hashCode ^
       funder.hashCode;
 
-  static Future<EthereumAddress> getSigner(Account account) async {
+  Future<LotteryPot> getLotteryPot() async {
+    var signer = await Account.getSignerAddress(this);
+    var eth = OrchidEthereum(chain);
+    return eth.getLotteryPot(funder, signer);
+  }
+
+  Future<EthereumAddress> get signerAddress async {
+    return await getSignerAddress(this);
+  }
+
+  static Future<EthereumAddress> getSignerAddress(Account account) async {
     var identities = await UserPreferences().getKeys();
     return StoredEthereumKey.find(identities, account.identityUid)
         .get()

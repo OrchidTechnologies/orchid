@@ -97,7 +97,7 @@ abstract class OrchidPurchaseAPI {
     // Note: Doing this on app start does not seem to be sufficient.
     await requestProducts();
 
-    if (await PacTransaction.shared.hasValue()) {
+    if (PacTransaction.shared.hasValue()) {
       log('iap: : PAC transaction in progress');
     }
 

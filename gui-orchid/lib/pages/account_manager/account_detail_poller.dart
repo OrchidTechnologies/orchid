@@ -11,22 +11,37 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 
-class AccountDetailPoller extends ChangeNotifier {
+abstract class AccountDetail {
+  Account get account;
+
+  LotteryPot get lotteryPot;
+
+  MarketConditions get marketConditions;
+
+  bool get showMarketStatsAlert;
+
+  List<OrchidUpdateTransactionV0> get transactions;
+}
+
+class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   final Account account;
 
-  // the signer corresponding to the account's identity uid
-  final EthereumAddress resolvedSigner;
+  final Duration pollingPeriod;
 
   EthereumAddress get funder {
     return account.funder;
   }
 
-  AccountDetailPoller({this.account, this.resolvedSigner});
+  AccountDetailPoller({
+    @required this.account,
+    this.pollingPeriod = const Duration(seconds: 15),
+  });
 
   Timer _balanceTimer;
   bool _balancePollInProgress = false;
   DateTime _lotteryPotLastUpdate;
 
+  // Account Detail
   LotteryPot lotteryPot; // initially null
   MarketConditions marketConditions;
   bool showMarketStatsAlert = false;
@@ -38,19 +53,22 @@ class AccountDetailPoller extends ChangeNotifier {
     return OrchidEthereum(account.chain);
   }
 
-  void start() async {
-    const pollingPeriod = Duration(seconds: 15);
+  /// Start periodic polling
+  Future<void> startPolling() async {
     _balanceTimer = Timer.periodic(pollingPeriod, (_) {
       _pollBalanceAndAccountDetails();
     });
-    _pollBalanceAndAccountDetails(); // kick one off immediately
+    return _pollBalanceAndAccountDetails(); // kick one off immediately
   }
 
-  Future<void> refresh() {
+  /// Load data once
+  Future<void> refresh() async {
     return _pollBalanceAndAccountDetails();
   }
 
   Future<void> _pollBalanceAndAccountDetails() async {
+    var resolvedSigner = await account.signerAddress;
+
     //log("XXX: polling account details: signer = $resolvedSigner, funder = $funder");
     if (_balancePollInProgress) {
       return;
@@ -60,11 +78,12 @@ class AccountDetailPoller extends ChangeNotifier {
       // Fetch the pot balance
       LotteryPot _pot;
       try {
+        log("XXX: detail poller fetch pot, eth=$eth, funder=$funder, signer=$resolvedSigner");
         _pot = await eth
             .getLotteryPot(funder, resolvedSigner)
             .timeout(Duration(seconds: 30));
       } catch (err) {
-        log('Error fetching lottery pot: $err');
+        log('Error fetching lottery pot 1: $err');
         return;
       }
       lotteryPot = _pot;
@@ -94,7 +113,8 @@ class AccountDetailPoller extends ChangeNotifier {
       }
       transactions = _transactions;
 
-      showMarketStatsAlert = (await eth.getMaxTicketValue(_pot)).lteZero();
+      showMarketStatsAlert = (await eth.getMarketConditions(_pot)).efficiency <
+          MarketConditions.minEfficiency;
 
       this.notifyListeners();
     } catch (err, stack) {
@@ -112,8 +132,12 @@ class AccountDetailPoller extends ChangeNotifier {
     }
   }
 
-  void dispose() {
+  void cancel() {
     _balanceTimer?.cancel();
+  }
+
+  void dispose() {
+    cancel();
     super.dispose();
   }
 }

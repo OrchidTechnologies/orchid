@@ -134,7 +134,7 @@ class RealOrchidAPI implements OrchidAPI {
 
     // Determine if the change in connection state is relevant to routing.
     // (as opposed to e.g. a change in state for traffic monitoring)
-    var routingEnabled = await UserPreferences().routingEnabled.value;
+    var routingEnabled = await UserPreferences().routingEnabled.get();
     switch (state) {
       case OrchidVPNRoutingState.VPNNotConnected:
         vpnRoutingStatus.add(state);
@@ -226,7 +226,7 @@ class RealOrchidAPI implements OrchidAPI {
   // The desired format is (JavaScript, not JSON) e.g.:
   static Future<String> generateManagedConfig() async {
     // Circuit configuration
-    var managedConfig = (await UserPreferences().routingEnabled.value)
+    var managedConfig = (await UserPreferences().routingEnabled.get())
         ? await OrchidVPNConfig.generateConfig()
         : "";
 
@@ -238,7 +238,7 @@ class RealOrchidAPI implements OrchidAPI {
     managedConfig += '\ncontrol = "${OrchidRoutingStatus.socketName}";';
 
     // To disable monitoring set 'logdb' to an empty string.
-    if (!await UserPreferences().monitoringEnabled.value) {
+    if (!await UserPreferences().monitoringEnabled.get()) {
       managedConfig += '\nlogdb="";';
     }
 

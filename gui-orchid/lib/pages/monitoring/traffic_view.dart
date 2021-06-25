@@ -505,7 +505,7 @@ class _TrafficViewState extends State<TrafficView>
   void _confirmMonitoringSwitchChange(bool enabled) async {
     var enablingText =
         "Changing monitoring status requires restarting the VPN, which may briefly interrupt privacy protection.";
-    if (await UserPreferences().routingEnabled.value) {
+    if (await UserPreferences().routingEnabled.get()) {
       AppDialogs.showConfirmationDialog(
           context: context,
           title: "Confirm Restart",

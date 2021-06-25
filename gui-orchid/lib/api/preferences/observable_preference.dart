@@ -40,18 +40,20 @@ class ObservablePreference<T> {
     }
   }
 
-  Future<T> get value async {
-    return this.get();
-  }
-
-  Future<bool> hasValue() async {
-    return (await get()) != null;
-  }
-
   Future<T> set(T value) async {
     await storeValue(key, value);
     _broadcast(value);
     return value;
+  }
+
+  /// Return the latest value, which may be uninitialized.
+  /// Use [ensureInitialized] or an async [get] to ensure initialization.
+  T get value {
+    return _subject.value;
+  }
+
+  bool hasValue() {
+    return value != null;
   }
 
   Future<void> clear() async {

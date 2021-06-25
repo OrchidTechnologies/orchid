@@ -1,117 +1,51 @@
-import 'dart:async';
 import 'dart:ui';
 import 'package:badges/badges.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:orchid/api/orchid_budget_api.dart';
-import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/orchid_eth.dart';
-import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
-import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
-import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/app_colors.dart';
+import 'package:orchid/pages/account_manager/account_detail_poller.dart';
 import 'package:orchid/util/units.dart';
 
 import '../app_routes.dart';
 
-class ConnectStatusPanel extends StatefulWidget {
+class ConnectStatusPanel extends StatelessWidget {
   final bool darkBackground;
+  final AccountDetail data;
+  final USD bandwidthPrice;
 
   const ConnectStatusPanel({
     Key key,
     @required this.darkBackground,
+    @required this.data,
+    @required this.bandwidthPrice,
   }) : super(key: key);
 
-  @override
-  _ConnectStatusPanelState createState() => _ConnectStatusPanelState();
-}
-
-class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
-  List<StreamSubscription> _subs = [];
-  Account _activeAccount;
-  LotteryPot _pot;
-  MarketConditions _marketConditions;
-  USD _bandwidthPrice;
-  Timer _balanceTimer;
-
-  // TODO: Simplify this for V1: Publish the active account and pot info
-  // TODO: or move it to a context provider.
-  @override
-  void initState() {
-    super.initState();
-    _subs.add(
-      UserPreferences().activeAccounts.stream().listen((accounts) {
-        _activeAccount = accounts.isEmpty || accounts[0].isIdentityPlaceholder
-            ? null
-            : accounts[0];
-        _update();
-      }),
-    );
-
-    const pollingPeriod = Duration(seconds: 15);
-    _balanceTimer = Timer.periodic(pollingPeriod, (_) {
-      _update();
-    });
-    _update(); // kick one off immediately
-  }
-
-  void _update() async {
-    // Fetch pot balance
-    if (_activeAccount != null) {
-      try {
-        var signer = await Account.getSigner(_activeAccount);
-        var eth = OrchidEthereum(_activeAccount.chain);
-        _pot = await eth.getLotteryPot(_activeAccount.funder, signer);
-        _marketConditions = await eth.getMarketConditions(_pot);
-        // TEST: show badge
-        // _marketConditions = MarketConditions(null, 0.1, false);
-      } catch (err) {
-        log("error fetching pot: $err");
-      }
-    }
-
-    // Fetch bandwidth price
-    try {
-      _bandwidthPrice = await OrchidEthereumV1.getBandwidthPrice();
-    } catch (err) {
-      log("error fetching bw price: $err");
-    }
-
-    setState(() {});
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return _activeAccount == null ? Container() : buildView();
-  }
-
-  Widget buildView() {
-    var chainIcon = _activeAccount.chain.icon;
+    var chainIcon = data.account.chain.icon;
     // var balanceString = "10 xDai";
-    var balanceString =
-        _pot != null ? _pot.balance.formatCurrency(digits: 2) : "...";
-
-    var bandwidthCostString = _bandwidthPrice != null
-        ? '\$' + formatCurrency(_bandwidthPrice.value)
+    var balanceString = data.lotteryPot != null
+        ? data.lotteryPot.balance.formatCurrency(digits: 2)
         : "...";
 
-    var textColor =
-        widget.darkBackground ? AppColors.purple_5 : AppColors.neutral_3;
+    var bandwidthCostString = bandwidthPrice != null
+        ? '\$' + formatCurrency(bandwidthPrice.value)
+        : "...";
+
+    var textColor = darkBackground ? AppColors.purple_5 : AppColors.neutral_3;
     var textStyle = TextStyle(color: textColor, fontSize: 13);
-    var valueColor =
-        widget.darkBackground ? AppColors.teal_5 : AppColors.neutral_3;
+    var valueColor = darkBackground ? AppColors.teal_5 : AppColors.neutral_3;
     var valueStyle = TextStyle(color: valueColor, fontSize: 18);
     var imageSize = 42.0;
     var bgColor = Colors.transparent;
     var borderColor = AppColors.purple_4;
 
-    // TODO: Configurable efficiency setting
-    var showBadge =
-        _marketConditions != null && _marketConditions.efficiency <= 0.2;
+    // Show balance badge on low efficiency
+    var showBalanceBadge = data.marketConditions != null &&
+        data.marketConditions.efficiency <= 0.2 &&
+        data.marketConditions.limitedByBalance;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36),
@@ -144,9 +78,9 @@ class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Badge(
-                                showBadge: showBadge,
-                                position:
-                                    BadgePosition.bottomEnd(bottom: -3, end: -25),
+                                showBadge: showBalanceBadge,
+                                position: BadgePosition.bottomEnd(
+                                    bottom: -3, end: -25),
                                 elevation: 0,
                                 badgeContent: Text('!',
                                     textAlign: TextAlign.left,
@@ -154,7 +88,8 @@ class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
                                         color: Colors.white, fontSize: 12)),
                                 padding: EdgeInsets.all(8),
                                 toAnimate: false,
-                                child: Text(S.of(context).balance, style: textStyle)),
+                                child: Text(S.of(context).balance,
+                                    style: textStyle)),
                             Container(
                                 width: 80,
                                 child: FittedBox(
@@ -166,7 +101,7 @@ class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
                         ),
                       ],
                     ),
-                    
+
                     padx(8),
 
                     // Bandwidth Rate
@@ -186,8 +121,8 @@ class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
                             Text(S.of(context).bandwidthCost, style: textStyle),
                             Container(
                                 width: 80,
-                                child:
-                                    Text(bandwidthCostString, style: valueStyle)),
+                                child: Text(bandwidthCostString,
+                                    style: valueStyle)),
                           ],
                         ),
                       ],
@@ -198,14 +133,5 @@ class _ConnectStatusPanelState extends State<ConnectStatusPanel> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _balanceTimer?.cancel();
-    _subs.forEach((sub) {
-      sub.cancel();
-    });
-    super.dispose();
   }
 }

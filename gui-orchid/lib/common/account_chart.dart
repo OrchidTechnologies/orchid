@@ -15,20 +15,24 @@ class AccountChart extends StatelessWidget {
   final double efficiency;
   final List<OrchidUpdateTransactionV0> transactions;
 
+  // Efficiency alert
+  final bool alert;
+
   const AccountChart({
     Key key,
     @required this.lotteryPot,
     @required this.efficiency,
     @required this.transactions,
+    this.alert = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return buildAccountChart(context, lotteryPot, efficiency, transactions);
+    return buildAccountChart(context, lotteryPot, efficiency, transactions, alert);
   }
 
   static Widget buildAccountChart(BuildContext context, LotteryPot lotteryPot,
-      double efficiency, List<OrchidUpdateTransactionV0> transactions) {
+      double efficiency, List<OrchidUpdateTransactionV0> transactions, bool alert) {
     if (efficiency == null) {
       return LoadingIndicator();
     }
@@ -40,10 +44,16 @@ class AccountChart extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         circularEfficiencyChart(efficiency),
-        pady(2),
-        Text(S.of(context).efficiency +
-            ": " +
-            MarketConditionsV0.efficiencyAsPercString(efficiency)),
+        pady(4),
+        Text(
+          S.of(context).efficiency +
+              ": " +
+              MarketConditionsV0.efficiencyAsPercString(efficiency),
+          style: alert
+              ? TextStyle(
+                  color: Colors.red.shade900, fontWeight: FontWeight.w600)
+              : null,
+        ),
         pady(16),
         // Show the tickets available / used line
         if (chartModel != null)
@@ -52,7 +62,8 @@ class AccountChart extends StatelessWidget {
               buildTicketsAvailableLineChart(chartModel),
               pady(8),
               Text(
-                S.of(context).minTicketsAvailableTickets(chartModel.availableTicketsCurrentMax),
+                S.of(context).minTicketsAvailableTickets(
+                    chartModel.availableTicketsCurrentMax),
               ),
             ],
           ),

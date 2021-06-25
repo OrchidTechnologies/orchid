@@ -9,11 +9,13 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/pages/account_manager/account_detail_poller.dart';
 import 'package:orchid/pages/account_manager/account_store.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/app_text.dart';
@@ -26,6 +28,7 @@ import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
 import 'package:orchid/util/streams.dart';
+import 'package:orchid/util/units.dart';
 
 import '../app_routes.dart';
 import 'connect_status_panel.dart';
@@ -59,17 +62,23 @@ class _ConnectPageState extends State<ConnectPage>
   Animation<LinearGradient> _backgroundGradient;
   Animation<Color> _iconColor;
 
-  bool _hasConfiguredCircuit = false;
-  Timer _checkHopAlertsTimer;
-  bool _showProfileBadge = false;
-  bool _guiV1 = true;
+  bool get _showWelcomePane => false;
+
+  // Routing and monitoring status
   bool _routingEnabled;
   bool _monitoringEnabled;
-
-  // An automated restart is in progress
   bool _restarting;
 
-  bool get _showWelcomePane => false;
+  Timer _checkAlertsTimer;
+  bool _showManageAccountsBadge = false;
+  bool _guiV1 = true;
+
+  // V0 status data
+  bool _hasConfiguredCircuit = false;
+
+  // V1 status data
+  AccountDetailPoller _activeAccount;
+  USD _bandwidthPrice;
 
   @override
   void initState() {
@@ -77,57 +86,62 @@ class _ConnectPageState extends State<ConnectPage>
     _initListeners();
     _initAnimations();
 
-    _checkHopAlertsTimer =
-        Timer.periodic(Duration(seconds: 30), _checkHopAlerts);
-    _checkHopAlerts(null);
+    _checkAlertsTimer = Timer.periodic(Duration(seconds: 30), _checkAlerts);
+    _checkAlerts(null);
 
     _releaseVersionCheck();
   }
 
-  // TODO: This needs to handle v1 configs
-  /// Check Orchid Hop's lottery pot for alert conditions and reflect that in the
-  /// manage profile button.
-  /// Note: This should really be merged with the logic from circuit page that does
-  /// Note: the same, however this requires a unique id for hops. Refactor at that time
-  /// Note: by hoisting the logic here and passing the data to circuit page.
-  void _checkHopAlerts(timer) async {
-    // TODO: don't show badges when in V1 UI mode
-    if (!(await UserPreferences().guiV0.value)) {
-      if (mounted) {
-        setState(() {
-          _showProfileBadge = false;
-        });
-      }
-      return;
+  /// Update alerts, badging, and status information.
+  void _checkAlerts(timer) async {
+    bool showBadge = (await UserPreferences().guiV0.get())
+        ? await _checkHopAlertsV0()
+        : await _checkAlertsV1();
+    if (mounted) {
+      setState(() {
+        _showManageAccountsBadge = showBadge;
+      });
     }
+  }
 
+  Future<bool> _checkAlertsV1() async {
+    try {
+      await _activeAccount?.refresh();
+    } catch (err) {
+      log("eror refreshing account details: $err");
+    }
+    try {
+      _bandwidthPrice = await OrchidEthereumV1.getBandwidthPrice();
+    } catch (err) {
+      log("error getting bandwidth price: $err");
+    }
+    return _activeAccount?.showMarketStatsAlert ?? false;
+  }
+
+  // Note: Should be consolidated with logic in circuit page.
+  /// Check market conditions for V0 hops
+  Future<bool> _checkHopAlertsV0() async {
     var hops = (await UserPreferences().getCircuit()).hops;
     var keys = await UserPreferences().getKeys();
-    bool showBadge = false;
     for (var hop in hops) {
       if (hop is OrchidHop) {
         try {
           var pot = await OrchidEthereumV0.getLotteryPot(
               hop.funder, hop.getSigner(keys));
-          var ticketValue = await MarketConditionsV0.getMaxTicketValueV0(pot);
-          if (ticketValue.lteZero()) {
-            showBadge = true;
-          }
+
+          var efficiency = (await MarketConditionsV0.forPot(pot)).efficiency;
+          return efficiency < MarketConditions.minEfficiency;
         } catch (err) {
-          log("Error fetching lottery pot: err");
+          log("Error fetching lottery pot 2: err");
         }
       }
     }
-    if (mounted) {
-      setState(() {
-        _showProfileBadge = showBadge;
-      });
-    }
+    return false;
   }
 
   // TODO: We should migrate to a provider context
   /// Listen for changes in Orchid network status.
-  void _initListeners() {
+  void _initListeners() async {
     log('Connect Page: Init listeners...');
 
     // Monitor connection status
@@ -139,15 +153,18 @@ class _ConnectPageState extends State<ConnectPage>
     // Monitor circuit changes
     OrchidAPI().circuitConfigurationChanged.listen((value) {
       _updateCircuitStatus();
-      _checkHopAlerts(null); // refresh alert status
+      _checkAlerts(null); // refresh alert status
     }).dispose(_subs);
 
     // Monitor changes in the UI version preference
-    UserPreferences().guiV0.stream().listen((guiV0) {
+    UserPreferences().guiV0.stream().listen((guiV0) async {
       _guiV1 = !guiV0;
-      _checkHopAlerts(null);
-      _updateCircuitStatus();
-      setState(() {}); // Refresh UI
+      if (_guiV1) {
+        await _activeAccountChanged(await Account.activeAccount);
+      } else {
+        await _updateCircuitStatus();
+      }
+      _checkAlerts(null);
     }).dispose(_subs);
 
     // Monitor routing preference
@@ -178,6 +195,17 @@ class _ConnectPageState extends State<ConnectPage>
         _vpnState = value;
       });
     }).dispose(_subs);
+
+    // Monitor v1 account selection
+    Account.activeAccountStream.listen((account) async {
+      try {
+        await _activeAccountChanged(account);
+      } catch (err) {
+        log("error in v1 account selection: $err");
+      }
+    }).dispose(_subs);
+    // Prime with the current account
+    _activeAccountChanged(await Account.activeAccount);
   }
 
   @override
@@ -207,6 +235,7 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// The page content including the button title, button, and route info when connected.
   Widget _buildPageContent() {
+    log("XXX: guiv1 = $_guiV1");
     return OrientationBuilder(
         builder: (BuildContext context, Orientation builderOrientation) {
       var tall = AppSize(context).tallerThan(AppSize.iphone_se);
@@ -219,8 +248,7 @@ class _ConnectPageState extends State<ConnectPage>
           ),
 
           if (_guiV1 && tall) Spacer(flex: 1),
-          if (_guiV1 && tall)
-            ConnectStatusPanel(darkBackground: _showConnectedBackground()),
+          if (_guiV1 && tall) _buildStatusPanel(),
 
           if (tall) Spacer(flex: 1),
           if (tall) _buildManageAccountsButton(),
@@ -232,6 +260,19 @@ class _ConnectPageState extends State<ConnectPage>
         ],
       );
     });
+  }
+
+  // only shows for v1
+  Widget _buildStatusPanel() {
+    if (_activeAccount?.account == null) {
+      return Container();
+    }
+    return ConnectStatusPanel(
+      key: Key(_activeAccount?.account?.identityUid ?? ""),
+      darkBackground: _showConnectedBackground(),
+      data: _activeAccount,
+      bandwidthPrice: _bandwidthPrice,
+    );
   }
 
   Padding _buildManageAccountsButton() {
@@ -252,12 +293,12 @@ class _ConnectPageState extends State<ConnectPage>
                   side: BorderSide(color: borderColor, width: 2),
                   borderRadius: BorderRadius.all(Radius.circular(24))),
               onPressed: () async {
-                if (await UserPreferences().guiV0.value) {
+                if (await UserPreferences().guiV0.get()) {
                   await Navigator.pushNamed(context, AppRoutes.circuit);
                 } else {
                   await Navigator.pushNamed(context, AppRoutes.identity);
                 }
-                _checkHopAlerts(null);
+                _checkAlerts(null);
               },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -266,7 +307,7 @@ class _ConnectPageState extends State<ConnectPage>
                     s.manageAccounts,
                     style: TextStyle(color: textColor, fontSize: 16),
                   ),
-                  if (_showProfileBadge) ...[
+                  if (_showManageAccountsBadge) ...[
                     padx(8),
                     Badge(
                       elevation: 0,
@@ -571,9 +612,9 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
-  void _updateCircuitStatus() async {
+  Future _updateCircuitStatus() async {
     var prefs = UserPreferences();
-    if (await prefs.guiV0.value) {
+    if (await prefs.guiV0.get()) {
       _hasConfiguredCircuit = (await prefs.getCircuit()).hops.isNotEmpty;
     } else {
       var accountStore = await AccountStore(discoverAccounts: false).load();
@@ -672,7 +713,7 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// Do first launch and per-release activities.
   Future<void> _releaseVersionCheck() async {
-    var version = await UserPreferences().releaseVersion.value;
+    var version = await UserPreferences().releaseVersion.get();
 
     log("first launch check.");
     if (version.isFirstLaunch) {
@@ -725,11 +766,26 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
+  Future _activeAccountChanged(Account account) async {
+    log("XXX: active account changed invoked with: $account");
+    if (UserPreferences().guiV0.value) {
+      return;
+    }
+    if (account != null) {
+      _activeAccount = AccountDetailPoller(account: account);
+      await _activeAccount.refresh(); // poll once
+    } else {
+      _activeAccount = null;
+    }
+    log("XXX: active account left at: $_activeAccount");
+    setState(() {});
+  }
+
   @override
   void dispose() {
     super.dispose();
     _connectAnimController.dispose();
-    _checkHopAlertsTimer.cancel();
+    _checkAlertsTimer.cancel();
     _subs.dispose();
   }
 

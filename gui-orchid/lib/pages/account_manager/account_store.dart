@@ -10,7 +10,7 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 
-/// An observable list of identities and active accounts.
+/// An observable list of identities and active accounts on those identities.
 class AccountStore extends ChangeNotifier {
   /// If true accounts are discovered on-chain for the active identity,
   /// otherwise only the saved active accounts are loaded.

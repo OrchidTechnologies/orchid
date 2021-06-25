@@ -241,7 +241,10 @@ class UserPreferences {
   /// A list of account information indicating the active identity (signer key)
   /// and the active account (funder and chainid) for that identity.
   /// The order of this list is significant in that the first account designates
-  /// the active identity. The list should contain at most one account per identity.
+  /// the active identity for routing.  The remaining items in the list serve
+  /// as a history of previous account selections for the respective identities.
+  /// Identities should appear in this list only once.
+  /// @See Account.activeAccount
   ObservablePreference<List<Account>> activeAccounts =
       ObservableAccountListPreference(UserPreferenceKey.ActiveAccounts);
 

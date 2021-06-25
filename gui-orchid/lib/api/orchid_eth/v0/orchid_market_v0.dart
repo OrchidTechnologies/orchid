@@ -15,6 +15,8 @@ class MarketConditions {
   final bool limitedByBalance;
 
   MarketConditions(this.maxFaceValue, this.efficiency, this.limitedByBalance);
+
+  static double minEfficiency = 0.2;
 }
 
 class MarketConditionsV0 implements MarketConditions {
