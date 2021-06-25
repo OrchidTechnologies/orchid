@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/pages/account_manager/account_detail_poller.dart';
@@ -43,9 +44,10 @@ class ConnectStatusPanel extends StatelessWidget {
     var borderColor = AppColors.purple_4;
 
     // Show balance badge on low efficiency
-    var showBalanceBadge = data.marketConditions != null &&
-        data.marketConditions.efficiency <= 0.2 &&
-        data.marketConditions.limitedByBalance;
+    // var showBalanceBadge = data.marketConditions != null &&
+    //     data.marketConditions.efficiency <= MarketConditions.minEfficiency &&
+    //     data.marketConditions.limitedByBalance;
+    var showBalanceBadge = false;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36),
