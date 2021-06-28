@@ -253,9 +253,6 @@ class _ConnectPageState extends State<ConnectPage>
           if (tall) Spacer(flex: 1),
           if (tall) _buildManageAccountsButton(),
 
-          pady(24),
-          _buildStatusMessage(context),
-
           Spacer(flex: 2),
         ],
       );
@@ -372,7 +369,15 @@ class _ConnectPageState extends State<ConnectPage>
                 Padding(
                   // Logo is asymmetric, shift right a bit
                   padding: const EdgeInsets.only(left: 19.0),
-                  child: _buildConnectButton(),
+                  child: Column(
+                    children: [
+                      _buildConnectButton(),
+                      pady(8),
+                      Container(
+                        child: _buildStatusMessageLine(context),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -548,7 +553,7 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
-  Widget _buildStatusMessage(BuildContext context) {
+  Widget _buildStatusMessageLine(BuildContext context) {
     String message;
 
     // The status message generally follows the routing state
@@ -582,7 +587,7 @@ class _ConnectPageState extends State<ConnectPage>
         }
         break;
       case OrchidVPNRoutingState.VPNConnected:
-        message = s.orchidIsStarting;
+        message = "Connecting to a random Orchid provider";
         break;
       case OrchidVPNRoutingState.OrchidConnected:
         if (_monitoringEnabled) {
@@ -596,10 +601,6 @@ class _ConnectPageState extends State<ConnectPage>
       message = "Restarting: " + message;
     }
 
-    return _buildStatusMessageView(message);
-  }
-
-  Widget _buildStatusMessageView(String message) {
     Color color =
         _showConnectedBackground() ? AppColors.neutral_6 : AppColors.neutral_1;
 
