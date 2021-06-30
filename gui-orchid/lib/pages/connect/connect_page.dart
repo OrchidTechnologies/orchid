@@ -62,9 +62,6 @@ class _ConnectPageState extends State<ConnectPage>
   Animation<LinearGradient> _backgroundGradient;
   Animation<Color> _iconColor;
 
-  bool get _showWelcomePane => _activeAccount == null;
-  // bool get _showWelcomePane => true;
-
   // Routing and monitoring status
   bool _routingEnabled;
   bool _monitoringEnabled;
@@ -80,6 +77,8 @@ class _ConnectPageState extends State<ConnectPage>
   // V1 status data
   AccountDetailPoller _activeAccount;
   USD _bandwidthPrice;
+
+  bool get _showWelcomePane => _activeAccount == null && _guiV1;
 
   @override
   void initState() {
