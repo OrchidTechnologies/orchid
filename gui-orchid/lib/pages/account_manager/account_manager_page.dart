@@ -39,6 +39,15 @@ import 'account_view.dart';
 import 'export_identity_dialog.dart';
 
 class AccountManagerPage extends StatefulWidget {
+  final bool openToImport;
+  final bool openToPurchase;
+
+  const AccountManagerPage({
+    Key key,
+    this.openToImport = false,
+    this.openToPurchase = false,
+  }) : super(key: key);
+
   @override
   _AccountManagerPageState createState() => _AccountManagerPageState();
 }
@@ -55,8 +64,25 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void initStateAsync() async {
-    await _accountStore.load();
+    // Open the import dialog after the UI has rendered.
+    if (widget.openToImport) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _importIdentity());
+    }
+
+    // Open the purchase dialog after the account info has loaded.
+    VoidCallback doAddFunds = _addFunds;
+    if (widget.openToPurchase) {
+      _accountStore.addListener(() async {
+        if (_accountStore.activeIdentity != null && doAddFunds != null) {
+          await doAddFunds();
+          doAddFunds = null;
+        }
+      });
+    }
+
+    // Load account info
     _accountStore.addListener(_accountsUpdated);
+    await _accountStore.load();
   }
 
   void _accountsUpdated() async {
@@ -398,7 +424,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   ListTile _buildAccountTile(AccountModel accountModel, int index) {
     var efficiency = accountModel.detail.marketConditions?.efficiency;
-    var showBadge = efficiency != null ? efficiency < MarketConditions.minEfficiency : false;
+    var showBadge = efficiency != null
+        ? efficiency < MarketConditions.minEfficiency
+        : false;
 
     var style = TextStyle(fontSize: 15);
     return ListTile(
@@ -509,6 +537,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           builder: (BuildContext context) {
             return PurchasePage(
                 signerKey: signerKey,
+                cancellable: true,
                 completion: () {
                   log("purchase complete");
                 });

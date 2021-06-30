@@ -100,6 +100,10 @@ class OrchidPlatform {
     return isMacOS || isLinux || isWindows;
   }
 
+  static bool get hasPurchase {
+    return isApple || isAndroid;
+  }
+
   static String get operatingSystem {
     try {
       return Platform.operatingSystem;

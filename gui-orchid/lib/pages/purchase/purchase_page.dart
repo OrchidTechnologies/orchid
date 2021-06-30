@@ -23,7 +23,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
-import '../../common/app_colors.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
 

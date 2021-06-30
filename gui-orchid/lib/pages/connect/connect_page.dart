@@ -62,7 +62,8 @@ class _ConnectPageState extends State<ConnectPage>
   Animation<LinearGradient> _backgroundGradient;
   Animation<Color> _iconColor;
 
-  bool get _showWelcomePane => false;
+  bool get _showWelcomePane => _activeAccount == null;
+  // bool get _showWelcomePane => true;
 
   // Routing and monitoring status
   bool _routingEnabled;
@@ -226,7 +227,6 @@ class _ConnectPageState extends State<ConnectPage>
             child: Container(
               alignment: Alignment.bottomCenter,
               child: WelcomePanel(),
-              //child: Container(color: Colors.orange, width: 50, height: 50),
             ),
           )
       ],

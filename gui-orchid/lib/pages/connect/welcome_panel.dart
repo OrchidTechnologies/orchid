@@ -3,10 +3,13 @@ import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/common/app_sizes.dart';
+import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/pages/circuit/circuit_page.dart';
 import 'package:orchid/common/scan_paste_account.dart';
 import 'package:orchid/common/formatting.dart';
 import '../../common/app_colors.dart';
+import '../app_routes.dart';
 
 class WelcomePanel extends StatefulWidget {
   const WelcomePanel({
@@ -20,6 +23,18 @@ class WelcomePanel extends StatefulWidget {
 class _WelcomePanelState extends State<WelcomePanel>
     with TickerProviderStateMixin {
   bool _collapsed = false;
+
+  var bodyTextColor = AppColors.neutral_1;
+
+  TextStyle get bodyStyle {
+    return TextStyle(fontSize: 12, height: 16 / 12, color: bodyTextColor);
+  }
+
+  get titleStyle {
+    return bodyStyle.copyWith(
+      fontWeight: FontWeight.bold,
+    );
+  }
 
   @override
   void initState() {
@@ -43,109 +58,125 @@ class _WelcomePanelState extends State<WelcomePanel>
             duration: _collapsed
                 ? Duration(milliseconds: 10)
                 : Duration(milliseconds: 300),
-            child: _collapsed ? _buildClosedView() : _buildOpenView()),
+            child: SingleChildScrollView(child: _buildContent())),
       ),
     );
   }
 
-  Widget _buildOpenView() {
-    var iOSText = s.purchaseOrchidCreditsToConnectWithOrchid;
-    var androidText = s.createOrLinkAnOrchidAccountImportAnOvpnProfile;
-    var text = isApple ? iOSText : androidText;
+  Widget _buildContent() {
+    // return _buildNoPurchaseContent();
+    return OrchidPlatform.hasPurchase
+        ? _buildHasPurchaseContent()
+        : _buildNoPurchaseContent();
+  }
 
-    var iosButtonText = s.buyOrchidCredits;
-    var androidButtonText = s.setup;
-    var buttonText = isApple ? iosButtonText : androidButtonText;
-    var buttonAction = isApple ? _onBuyCredits : _onDoSetup;
+  Widget _buildNoPurchaseContent() {
+    return _buildCollapsiblePanel(
+        content: _buildImportAccountPanel(alert: true));
+  }
 
-    var textColor = AppColors.neutral_1;
-    var bodyStyle = TextStyle(fontSize: 12, height: 16 / 12, color: textColor);
-    var topTextSpan = TextSpan(
-      children: <TextSpan>[
-        TextSpan(text: text, style: bodyStyle),
+  Widget _buildHasPurchaseContent() {
+    var purchaseTitleText = s.newToOrchid;
+    var purchaseBodyTextCollapsed =
+        "Buy an Orchid account for less than \$2 USD or import an existing account.";
+    var purchaseBodyTextExpanded =
+        "Buy an Orchid account for less than \$2 USD.";
+    var bodyText =
+        _collapsed ? purchaseBodyTextCollapsed : purchaseBodyTextExpanded;
+    var buttonText = "Buy an Orchid Account";
+    var buttonAction = _purchaseOrchidAccount;
+
+    var content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildTitleRow(purchaseTitleText, alert: true),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Text(bodyText, style: bodyStyle),
+        ),
+        if (!_collapsed) pady(16),
+        if (!_collapsed)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: _buildButton(text: buttonText, onPressed: buttonAction),
+          ),
+        pady(24),
+        if (!_collapsed)
+          Container(height: 0.5, color: AppColors.grey_6), // divider
+        if (!_collapsed) _buildImportAccountPanel(alert: false),
       ],
     );
+    return _buildCollapsiblePanel(content: content);
+  }
 
-    return Container(
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _buildTop(
-              topText: topTextSpan,
-              buttonText: buttonText,
-              onPressed: buttonAction,
-            ),
-            Container(height: 0.5, color: AppColors.grey_6), // divider
-            _buildBottom(),
-          ],
-        ),
+  // title row with alert symbol
+  Padding _buildTitleRow(String titleText, {bool alert}) {
+    return Padding(
+      padding: EdgeInsets.only(top: 16, bottom: 8, left: 22, right: 22),
+      child: Row(
+        children: <Widget>[
+          Row(
+            children: [
+              if (alert) Icon(Icons.error, color: AppColors.teal_3, size: 20),
+              if (alert) padx(9),
+              RichText(text: TextSpan(text: titleText, style: titleStyle)),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Container _buildBottom() {
-    var iOSTitleText = s.haveAnOrchidAccountOrOxt;
-    var androidTitleText = s.alreadyHaveAnOrchidAccount;
-    var titleText = isApple ? iOSTitleText : androidTitleText;
-
-    var iOSText = s.createOrLinkAnOrchidAccountImportAnOvpnProfile;
-    var androidText = s.scanOrPasteYourExistingAccountBelow;
-    var text = isApple ? iOSText : androidText;
-
-    var textColor = AppColors.neutral_1;
-    var bodyStyle = TextStyle(fontSize: 12, height: 16 / 12, color: textColor);
-    var bodyText = TextSpan(
-      children: <TextSpan>[
-        TextSpan(
-          text: titleText,
-          style: TextStyle(
-              color: AppColors.neutral_1,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              height: 16.0 / 12.0),
-        ),
-        TextSpan(text: '\n\n' + text, style: bodyStyle),
-      ],
-    );
+  Container _buildImportAccountPanel({bool alert}) {
+    var titleText = "Have an Orchid Account?";
+    var bodyText = "Import an existing account or go to settings and enable "
+        "multi-hop to use the previous interface.";
+    var buttonText = "Import Account";
+    var buttonAction = _importOrchidAccount;
 
     return Container(
       color: Colors.white,
-      child: Padding(
-        padding: EdgeInsets.only(top: 8, bottom: 12, left: 22, right: 22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            pady(16),
-            RichText(text: bodyText),
-            pady(16),
-            if (isApple)
-              Center(
-                  child: _buildButton(
-                      text: s.customSetup,
-                      bgColor: Colors.white,
-                      textColor: AppColors.teal_3,
-                      onPressed: _onDoSetup))
-            else
-              ScanOrPasteOrchidAccount(
-                onImportAccount: (ParseOrchidAccountResult result) async {
-                  var hop = await OrchidVPNConfigV0.importAccountAsHop(
-                      result.account);
-                  CircuitUtils.addHopToCircuit(hop);
-                },
-                v0Only: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          _buildTitleRow(titleText, alert: alert),
+          pady(8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Text(bodyText, style: bodyStyle),
+          ),
+          pady(16),
+          if (!_collapsed)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: _buildButton(
+                text: buttonText,
+                lightColor: true,
+                onPressed: buttonAction,
               ),
-            pady(16)
-          ],
-        ),
+            ),
+          /*
+          if (!_collapsed)
+            ScanOrPasteOrchidAccount(
+              spacing: screenWidth < AppSize.iphone_12_max.width ? 8 : 16,
+              onImportAccount: (ParseOrchidAccountResult result) async {
+                var hop =
+                    await OrchidVPNConfigV0.importAccountAsHop(result.account);
+                CircuitUtils.addHopToCircuit(hop);
+              },
+              v0Only: false,
+            ),
+
+           */
+          pady(16)
+        ],
       ),
     );
   }
 
-  // open or closed view top, same structure
-  Container _buildTop(
-      {TextSpan topText, String buttonText, VoidCallback onPressed}) {
+  Container _buildCollapsiblePanel({
+    Widget content,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -156,84 +187,25 @@ class _WelcomePanelState extends State<WelcomePanel>
                 bottomRight: Radius.circular(20))
             : null,
       ),
-      child: Padding(
-        padding: EdgeInsets.only(top: 0, bottom: 0, left: 22, right: 22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Row(
-                  children: [
-                    Icon(Icons.error, color: AppColors.teal_3, size: 20),
-                    padx(9),
-                    RichText(
-                        text: TextSpan(
-                      text: s.newToOrchid,
-                      style: TextStyle(
-                          color: AppColors.neutral_1,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          height: 16.0 / 12.0),
-                    )),
-                  ],
-                ),
-                _buildToggleButton(context)
-              ],
-            ),
-            RichText(text: topText),
-            pady(16),
-            if (buttonText != null) ...[
-              Center(
-                  child: _buildButton(
-                text: buttonText,
-                onPressed: onPressed,
-              )),
-              pady(24),
-            ],
-          ],
-        ),
+      child: Stack(
+        children: [
+          content,
+          Align(alignment: Alignment.topRight, child: _buildToggleButton()),
+        ],
       ),
     );
   }
 
-  Widget _buildClosedView() {
-    var iosText = s.purchaseOrchidCreditsLinkAnAccountOrOvpnProfileTo;
-    var androidText = s.createAnOrchidAccountLinkAnExistingAccountOrImport;
-    var topText = isApple ? iosText : androidText;
-
-    var textColor = AppColors.neutral_1;
-    var bodyStyle = TextStyle(fontSize: 12, height: 16 / 12, color: textColor);
-    var topTextSpan = TextSpan(
-      children: <TextSpan>[
-        TextSpan(text: topText, style: bodyStyle),
-      ],
-    );
-
+  Widget _buildToggleButton() {
     return Container(
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _buildTop(topText: topTextSpan),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Container _buildToggleButton(BuildContext context) {
-    return Container(
-      width: 40,
-      child: FlatButton(
+      // color: Colors.green,
+      // width: 28,
+      child: TextButton(
         child: Icon(
           _collapsed ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-          color: AppColors.neutral_1,
+          color: bodyTextColor,
         ),
         onPressed: () {
-          //Navigator.of(context).pop();
           setState(() {
             _collapsed = !_collapsed;
           });
@@ -242,29 +214,28 @@ class _WelcomePanelState extends State<WelcomePanel>
     );
   }
 
-  Container _buildButton(
-      {@required String text,
-      Color bgColor = AppColors.teal_3,
-      Color borderColor = AppColors.teal_3,
-      Color textColor = Colors.white,
-      VoidCallback onPressed}) {
-    return Container(
-      width: 197,
-      height: 36,
-      child: FlatButton(
-        color: bgColor,
-        onPressed: onPressed,
-        shape: RoundedRectangleBorder(
-            side: BorderSide(
-                color: borderColor, width: 1, style: BorderStyle.solid),
-            borderRadius: BorderRadius.all(Radius.circular(24))),
-        child: Text(text,
-            style: TextStyle(
-              fontWeight: FontWeight.w400,
-              fontSize: 14.0,
-              color: textColor,
-            )),
-      ),
+  Widget _buildButton({
+    @required String text,
+    VoidCallback onPressed,
+    bool lightColor = false,
+  }) {
+    Color bgColor = lightColor ? Colors.white : AppColors.teal_3;
+    Color borderColor = AppColors.teal_3;
+    Color textColor = lightColor ? AppColors.teal_3 : Colors.white;
+
+    return FlatButton(
+      color: bgColor,
+      onPressed: onPressed,
+      shape: RoundedRectangleBorder(
+          side: BorderSide(
+              color: borderColor, width: 1, style: BorderStyle.solid),
+          borderRadius: BorderRadius.all(Radius.circular(24))),
+      child: Text(text,
+          style: TextStyle(
+            fontWeight: FontWeight.w400,
+            fontSize: 14.0,
+            color: textColor,
+          )),
     );
   }
 
@@ -272,13 +243,19 @@ class _WelcomePanelState extends State<WelcomePanel>
     return OrchidPlatform.isApple;
   }
 
-  void _onBuyCredits() {
-    // TODO: V1
-    // CircuitUtils.purchasePAC(context);
+  void _purchaseOrchidAccount() async {
+    _openAccountManager(purchase: true);
   }
 
-  void _onDoSetup() {
-    CircuitUtils.addHop(context);
+  void _importOrchidAccount() async {
+    _openAccountManager(import: true);
+  }
+
+  void _openAccountManager({bool import = false, bool purchase = false}) async {
+    await Navigator.push(context,
+        MaterialPageRoute(builder: (BuildContext context) {
+      return AccountManagerPage(openToImport: import, openToPurchase: purchase);
+    }));
   }
 
   S get s {

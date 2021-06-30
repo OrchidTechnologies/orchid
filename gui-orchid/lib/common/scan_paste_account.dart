@@ -69,6 +69,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   TitleIconButton _buildScanButton(bool showIcons) {
     return TitleIconButton(
         text: s.scan,
+        spacing: 6,
         trailing: showIcons
             ? Image.asset("assets/images/scan.png", color: Colors.white)
             : SizedBox(),
