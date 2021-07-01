@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/app_sizes.dart';
+import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
-import 'package:orchid/pages/circuit/circuit_page.dart';
-import 'package:orchid/common/scan_paste_account.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../common/app_colors.dart';
-import '../app_routes.dart';
 
 class WelcomePanel extends StatefulWidget {
   const WelcomePanel({
@@ -70,43 +66,81 @@ class _WelcomePanelState extends State<WelcomePanel>
         : _buildNoPurchaseContent();
   }
 
-  Widget _buildNoPurchaseContent() {
-    return _buildCollapsiblePanel(
-        content: _buildImportAccountPanel(alert: true));
-  }
+  static String yourAccountIsEmpty = "Your account is empty!";
 
-  Widget _buildHasPurchaseContent() {
-    var purchaseTitleText = s.newToOrchid;
-    var purchaseBodyTextCollapsed =
-        "Buy an Orchid account for less than \$2 USD or import an existing account.";
-    var purchaseBodyTextExpanded =
-        "Buy an Orchid account for less than \$2 USD.";
+  Widget _buildNoPurchaseContent() {
+    var titleText = yourAccountIsEmpty;
     var bodyText =
-        _collapsed ? purchaseBodyTextCollapsed : purchaseBodyTextExpanded;
-    var buttonText = "Buy an Orchid Account";
-    var buttonAction = _purchaseOrchidAccount;
+        "To connect, either add crypto using the Orchid DApp or use an existing account.";
 
     var content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildTitleRow(purchaseTitleText, alert: true),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Text(bodyText, style: bodyStyle),
-        ),
-        if (!_collapsed) pady(16),
-        if (!_collapsed)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: _buildButton(text: buttonText, onPressed: buttonAction),
-          ),
-        pady(24),
-        if (!_collapsed)
-          Container(height: 0.5, color: AppColors.grey_6), // divider
-        if (!_collapsed) _buildImportAccountPanel(alert: false),
+        _buildTitleRow(titleText, alert: true),
+        if (!_collapsed) ...[
+          _buildBodyText(bodyText),
+          pady(16),
+          if (OrchidPlatform.hasPurchase)
+            _buildBuyButton()
+          else
+            _buildUseCryptoWalletButton(),
+          pady(16),
+          _buildUseAnotherAccountButton(),
+          pady(24),
+        ],
       ],
     );
     return _buildCollapsiblePanel(content: content);
+  }
+
+  Widget _buildHasPurchaseContent() {
+    var titleText = yourAccountIsEmpty;
+    var bodyText =
+        "To connect, either add credits using an in-app purchase or use an existing account.";
+
+    bool isAndroid = OrchidPlatform.isAndroid;
+    var content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildTitleRow(titleText, alert: true),
+        if (!_collapsed) ...[
+          _buildBodyText(bodyText),
+          pady(16),
+          _buildBuyButton(),
+          if (isAndroid) pady(16),
+          if (isAndroid) _buildUseCryptoWalletButton(lightColor: true),
+          pady(16),
+          _buildUseAnotherAccountButton(),
+          pady(24),
+        ],
+      ],
+    );
+    return _buildCollapsiblePanel(content: content);
+  }
+
+  Padding _buildBodyText(String bodyText) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Text(bodyText, style: bodyStyle),
+    );
+  }
+
+  Widget _buildBuyButton() {
+    var text = "Buy credits";
+    var action = _purchaseOrchidAccount;
+    return _buildButton(text: text, onPressed: action);
+  }
+
+  Widget _buildUseAnotherAccountButton() {
+    var text = "Use another account";
+    var action = _importOrchidAccount;
+    return _buildButton(text: text, lightColor: true, onPressed: action);
+  }
+
+  Widget _buildUseCryptoWalletButton({bool lightColor = false}) {
+    var text = "Use crypto wallet";
+    var action = _openDapp;
+    return _buildButton(text: text, lightColor: lightColor, onPressed: action);
   }
 
   // title row with alert symbol
@@ -122,53 +156,6 @@ class _WelcomePanelState extends State<WelcomePanel>
               RichText(text: TextSpan(text: titleText, style: titleStyle)),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Container _buildImportAccountPanel({bool alert}) {
-    var titleText = "Have an Orchid Account?";
-    var bodyText = "Import an existing account or go to settings and enable "
-        "multi-hop to use the previous interface.";
-    var buttonText = "Import Account";
-    var buttonAction = _importOrchidAccount;
-
-    return Container(
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          _buildTitleRow(titleText, alert: alert),
-          pady(8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Text(bodyText, style: bodyStyle),
-          ),
-          pady(16),
-          if (!_collapsed)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: _buildButton(
-                text: buttonText,
-                lightColor: true,
-                onPressed: buttonAction,
-              ),
-            ),
-          /*
-          if (!_collapsed)
-            ScanOrPasteOrchidAccount(
-              spacing: screenWidth < AppSize.iphone_12_max.width ? 8 : 16,
-              onImportAccount: (ParseOrchidAccountResult result) async {
-                var hop =
-                    await OrchidVPNConfigV0.importAccountAsHop(result.account);
-                CircuitUtils.addHopToCircuit(hop);
-              },
-              v0Only: false,
-            ),
-
-           */
-          pady(16)
         ],
       ),
     );
@@ -222,20 +209,22 @@ class _WelcomePanelState extends State<WelcomePanel>
     Color bgColor = lightColor ? Colors.white : AppColors.teal_3;
     Color borderColor = AppColors.teal_3;
     Color textColor = lightColor ? AppColors.teal_3 : Colors.white;
-
-    return FlatButton(
-      color: bgColor,
-      onPressed: onPressed,
-      shape: RoundedRectangleBorder(
-          side: BorderSide(
-              color: borderColor, width: 1, style: BorderStyle.solid),
-          borderRadius: BorderRadius.all(Radius.circular(24))),
-      child: Text(text,
-          style: TextStyle(
-            fontWeight: FontWeight.w400,
-            fontSize: 14.0,
-            color: textColor,
-          )),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: FlatButton(
+        color: bgColor,
+        onPressed: onPressed,
+        shape: RoundedRectangleBorder(
+            side: BorderSide(
+                color: borderColor, width: 1, style: BorderStyle.solid),
+            borderRadius: BorderRadius.all(Radius.circular(24))),
+        child: Text(text,
+            style: TextStyle(
+              fontWeight: FontWeight.w400,
+              fontSize: 14.0,
+              color: textColor,
+            )),
+      ),
     );
   }
 
@@ -249,6 +238,10 @@ class _WelcomePanelState extends State<WelcomePanel>
 
   void _importOrchidAccount() async {
     _openAccountManager(import: true);
+  }
+
+  void _openDapp() async {
+    launch(OrchidUrls.accountOrchid, forceSafariVC: false);
   }
 
   void _openAccountManager({bool import = false, bool purchase = false}) async {
