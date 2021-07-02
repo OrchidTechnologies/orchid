@@ -84,17 +84,27 @@ Receipt::Receipt(Json::Value &&value) :
 {
 }
 
-Bytes32 Transaction::hash(const uint256_t &v, const uint256_t &r, const uint256_t &s) const {
-    return HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_, v, r, s}));
+Bytes32 Transaction::hash(const uint256_t &chain, const uint256_t &v, const uint256_t &r, const uint256_t &s) const {
+    switch (type_) {
+        case 0:
+            return HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_, v, r, s}));
+        case 1:
+            return HashK(Tie(uint8_t(1), Implode({chain, nonce_, bid_, gas_, target_, amount_, data_, access_, v, r, s})));
+        default:
+            orc_assert(false);
+    }
 }
 
 Address Transaction::from(const uint256_t &chain, const uint256_t &v, const uint256_t &r, const uint256_t &s) const {
-    if (v >= 35) {
-        Signature signature(Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v - 35 - chain * 2));
+    if (type_ == 1) {
+        Signature signature{Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v)};
+        return Recover(HashK(Tie(uint8_t(1), Implode({chain, nonce_, bid_, gas_, target_, amount_, data_, access_}))), signature);
+    } else if (v >= 35) {
+        Signature signature{Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v - 35 - chain * 2)};
         return Recover(HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_, chain, uint8_t(0), uint8_t(0)})), signature);
     } else {
         orc_assert(v >= 27);
-        Signature signature(Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v - 27));
+        Signature signature{Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v - 27)};
         return Recover(HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_})), signature);
     }
 }
@@ -112,15 +122,20 @@ Record::Record(
     const uint256_t &r,
     const uint256_t &s
 ) :
-    Transaction{nonce, bid, gas, target, amount, std::move(data)},
+    Transaction{0x00, nonce, bid, gas, target, amount, std::move(data)},
 
-    hash_(hash(v, r, s)),
+    hash_(hash(chain, v, r, s)),
     from_(from(chain, v, r, s))
 {
 }
 
 Record::Record(const uint256_t &chain, const Json::Value &value) :
     Transaction{
+        [&]() -> uint8_t {
+            if (const auto &type = value["type"])
+                return To<uint8_t>(value["type"].asString());
+            return 0x00;
+        }(),
         uint256_t(value["nonce"].asString()),
         uint256_t(value["gasPrice"].asString()),
         To<uint64_t>(value["gas"].asString()),
@@ -131,7 +146,18 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
             return target.asString();
         }(),
         uint256_t(value["value"].asString()),
-        Bless(value["input"].asString())
+        Bless(value["input"].asString()),
+        [&]() {
+            std::remove_const_t<decltype(access_)> access;
+            if (const auto list = value["accessList"])
+                for (const auto &entry : list) {
+                    std::vector<Bytes32> keys;
+                    for (const auto &key : entry["storageKeys"])
+                        keys.emplace_back(Bless(key.asString()));
+                    access.emplace_back(decltype(access_)::value_type(entry["address"].asString(), std::move(keys)));
+                }
+            return access;
+        }(),
     },
 
     hash_(Bless(value["hash"].asString())),
@@ -145,7 +171,8 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
         const uint256_t r(value["r"].asString());
         const uint256_t s(value["s"].asString());
 
-        orc_assert(hash_ == hash(v, r, s));
+        const auto expected(hash(chain, v, r, s));
+        orc_assert_(hash_ == expected, value << ' ' << expected);
         orc_assert(from_ == from(chain, v, r, s));
     } else {
         if (false);

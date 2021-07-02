@@ -24,6 +24,8 @@
 #define ORCHID_NESTED_HPP
 
 #include <iostream>
+#include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -116,11 +118,45 @@ class Nested {
     {
     }
 
+    template <typename Arg0_, typename Arg1_>
+    Nested(const std::pair<Arg0_, Arg1_> &value) :
+        scalar_(false)
+    {
+        array_.emplace_back(value.first);
+        array_.emplace_back(value.second);
+    }
+
     Nested(std::initializer_list<Nested> list) :
         scalar_(false)
     {
         for (auto nested(list.begin()); nested != list.end(); ++nested)
-            array_.emplace_back(nested->scalar_, std::move(nested->value_), std::move(nested->array_));
+            array_.emplace_back(std::move(*nested));
+    }
+
+    // XXX: this should just be "any iterable"
+
+    template <typename Type_>
+    Nested(const std::vector<Type_> &list) :
+        scalar_(false)
+    {
+        for (const auto &value : list)
+            array_.emplace_back(value);
+    }
+
+    template <typename Key_, typename Value_>
+    Nested(const std::map<Key_, Value_> &list) :
+        scalar_(false)
+    {
+        for (const auto &value : list)
+            array_.emplace_back(value);
+    }
+
+    template <typename Type_>
+    Nested(const std::set<Type_> &list) :
+        scalar_(false)
+    {
+        for (const auto &value : list)
+            array_.emplace_back(value);
     }
 
     Nested(Nested &&rhs) noexcept :

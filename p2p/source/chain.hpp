@@ -42,14 +42,17 @@ struct Receipt final {
 };
 
 struct Transaction {
+    // XXX: type_ probably shouldn't be stored
+    const uint8_t type_;
     const uint256_t nonce_;
     const uint256_t bid_;
     const uint64_t gas_;
     const std::optional<Address> target_;
     const uint256_t amount_;
     const Beam data_;
+    const std::vector<std::pair<Address, std::vector<Bytes32>>> access_;
 
-    Bytes32 hash(const uint256_t &v, const uint256_t &r, const uint256_t &s) const;
+    Bytes32 hash(const uint256_t &chain, const uint256_t &v, const uint256_t &r, const uint256_t &s) const;
     Address from(const uint256_t &chain, const uint256_t &v, const uint256_t &r, const uint256_t &s) const;
 };
 
