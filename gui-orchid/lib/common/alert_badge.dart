@@ -14,7 +14,7 @@ class SizedAlertBadge extends StatelessWidget {
     Key key,
     @required this.visible,
     this.size = 26,
-    this.insets,
+    this.insets = 6,
     this.maintainSize = true,
     this.badgeColor,
   }) : super(key: key) {
