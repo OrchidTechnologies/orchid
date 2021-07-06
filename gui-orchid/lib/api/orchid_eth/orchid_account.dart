@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 
 import '../orchid_budget_api.dart';
