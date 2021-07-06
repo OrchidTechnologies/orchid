@@ -276,7 +276,10 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                 key: ValueKey(_accountStore.activeIdentity.address.toString()),
                 padding: EdgeInsets.zero,
                 style: AppText.dialogTitle,
-                onTap: _showOrchidAccountAddressWarning,
+                onTap: (String text) async {
+                  await TapToCopyText.copyTextToClipboard(text);
+                  _showOrchidAccountAddressWarning();
+                },
               ),
             ),
           )

@@ -6,13 +6,20 @@ class TapToCopyText extends StatefulWidget {
   final String text;
   final TextStyle style;
   final EdgeInsets padding;
-  final VoidCallback onTap;
 
-  const TapToCopyText(this.text, {Key key, this.style, this.padding, this.onTap})
+  // Callback to be used in lieu of the default copy functionality
+  final Future<void> Function(String text) onTap;
+
+  const TapToCopyText(this.text,
+      {Key key, this.style, this.padding, this.onTap})
       : super(key: key);
 
   @override
   _TapToCopyTextState createState() => _TapToCopyTextState();
+
+  static copyTextToClipboard(String text) async {
+    return Clipboard.setData(ClipboardData(text: text));
+  }
 }
 
 class _TapToCopyTextState extends State<TapToCopyText> {
@@ -38,12 +45,18 @@ class _TapToCopyTextState extends State<TapToCopyText> {
           style: widget.style,
         ),
       ),
-      onTap: widget.onTap ?? _onTap,
+      onTap: () {
+        if (widget.onTap != null) {
+          widget.onTap(widget.text);
+        } else {
+          _doCopy();
+        }
+      },
     );
   }
 
-  void _onTap() async {
-    Clipboard.setData(ClipboardData(text: widget.text));
+  void _doCopy() async {
+    TapToCopyText.copyTextToClipboard(widget.text);
     setState(() {
       _showText = S.of(context).copied;
     });
