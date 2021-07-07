@@ -8,6 +8,7 @@ import {SubmitButton} from "./SubmitButton";
 import {copyTextToClipboard} from "../util/util";
 import {S} from "../i18n/S";
 import {WalletProviderStatus} from "../api/orchid-eth-web3";
+import {Header} from "./Header";
 
 export const NoWallet: FC<{ walletStatus: WalletProviderStatus }> = (props) => {
   const [buttonCopiedState, setButtonCopiedState] = useState(false);
@@ -27,6 +28,7 @@ export const NoWallet: FC<{ walletStatus: WalletProviderStatus }> = (props) => {
   if (wrongNetwork) {
     return (
       <Container className="WrongNetwork" style={{textAlign: 'center'}}>
+        <Header/>
         <div className="WrongNetwork-title">{S.youreAlmostThere}</div>
         <div className="WrongNetwork-text">{S.pleaseSelectEthNetwork}</div>
         <img className="WrongNetwork-image" src={bugs} alt="Bugs"/>
@@ -36,6 +38,7 @@ export const NoWallet: FC<{ walletStatus: WalletProviderStatus }> = (props) => {
 
     return (
       <Container className="NoWallet" style={{textAlign: 'center'}}>
+        <Header/>
         <div className="NoWallet-title">{S.letsGetStarted}</div>
         <div className="NoWallet-text">
           Create a new Ethereum wallet address and then load <a href="https://account.orchid.com">account.orchid.com</a> in that wallet's browser.
