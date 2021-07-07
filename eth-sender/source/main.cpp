@@ -616,7 +616,12 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "rlp") {
         const auto [data] = Options<Bytes>(args);
-        std::cout << Explode(data) << std::endl;
+        Window window(data);
+        const auto nested(Explode(window));
+        std::cout << nested;
+        if (!window.done())
+            std::cout << " " << window << std::endl;
+        std::cout << std::endl;
 
     } else if (command == "segwit") {
         const auto [prefix, version, key] = Options<std::string, int, Key>(args);
