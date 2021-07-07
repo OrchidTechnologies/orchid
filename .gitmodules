@@ -229,3 +229,6 @@
 [submodule "crc32c"]
 	path = min-webrtc/crc32c
 	url = https://github.com/google/crc32c.git
+[submodule "snappy"]
+	path = p2p/snappy
+	url = https://github.com/google/snappy.git

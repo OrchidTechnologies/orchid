@@ -213,6 +213,11 @@ cflags += -I$(pwd)/pugixml/src
 cflags += -DPUGIXML_HAS_LONG_LONG
 
 
+source += $(pwd)/snappy/snappy.cc
+source += $(pwd)/snappy/snappy-sinksource.cc
+cflags += -I$(pwd)/snappy
+
+
 include $(pwd)/asio.mk
 include $(pwd)/protobuf.mk
 
