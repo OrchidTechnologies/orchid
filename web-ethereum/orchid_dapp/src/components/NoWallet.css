@@ -1,0 +1,90 @@
+
+.WrongNetwork, .NoWallet {
+  padding-left: 30px;
+  padding-right: 30px;
+  max-width: 400px;
+}
+
+.WrongNetwork-title {
+  margin-top: 56px;
+  font-size: 28px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: 0.36px;
+  text-align: center;
+  color: #5f45ba;
+}
+.WrongNetwork-text {
+  margin-top: 20px;
+  font-size: 15px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.33;
+  letter-spacing: -0.24px;
+  text-align: center;
+  color: #000000;
+}
+.WrongNetwork-image {
+  margin-top: 40px;
+  width: 256px;
+  height: 244px;
+  object-fit: contain;
+}
+
+.NoWallet-title {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 28px;
+  text-align: center;
+  letter-spacing: 0.36px;
+  margin: 50px 0 21px 0;
+  color: #5F45BA;
+}
+
+.NoWallet-text {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.NoWallet-images {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.NoWallet-images > a > img {
+  max-width: 100%;
+}
+.NoWallet-images > a {
+  display: block;
+  width: 40%;
+  margin: 10px;
+  overflow: hidden;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.NoWallet-images > a.metamask {
+  width: 148px;
+}
+.NoWallet-images > a.coinbasewallet {
+  width: 150px;
+}
+
+.NoWallet-smalltext {
+  font-size: 11px;
+}
+
+.NoWallet .submit-button button {
+  width: 100%;
+  margin: 40px 0;
+}
+
+.NoWallet-fullguide {
+  font-size: 15px;
+}
+
