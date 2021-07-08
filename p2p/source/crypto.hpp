@@ -25,11 +25,11 @@
 
 #include <secp256k1.h>
 
-#include "buffer.hpp"
+extern "C" {
+#include <sha3.h>
+}
 
-#define _crycall(code) do { \
-    orc_assert((code) == 0); \
-} while (false)
+#include "buffer.hpp"
 
 namespace orc {
 
@@ -41,6 +41,17 @@ Brick<Size_> Random() {
     Random(value.data(), value.size());
     return value;
 }
+
+class StateK :
+    public sha3_context
+{
+  public:
+    StateK();
+    StateK &operator +=(const Span<const uint8_t> &data);
+    StateK &operator +=(const Buffer &data);
+    Brick<32> operator ()() const &;
+    Brick<32> operator ()() &&;
+};
 
 Brick<32> HashK(const Buffer &data);
 inline Brick<32> HashK(const std::string &data) {
@@ -86,14 +97,23 @@ struct Signature {
     }
 };
 
-using Secret = Brick<32>;
 typedef secp256k1_pubkey Key;
+bool operator ==(const Key &lhs, const Key &rhs);
+
+using Secret = Brick<32>;
+Secret Generate();
 Key Derive(const Secret &secret);
 
 Key ToKey(const Region &data);
 
+inline Key ToKey(const Buffer &data) {
+    return ToKey(Beam(data));
+}
+
 Brick<65> ToUncompressed(const Key &key);
 Brick<33> ToCompressed(const Key &key);
+
+Brick<32> Agree(const Secret &secret, const Key &key);
 
 Signature Sign(const Secret &secret, const Brick<32> &data);
 Key Recover(const Brick<32> &data, const Signature &signature);

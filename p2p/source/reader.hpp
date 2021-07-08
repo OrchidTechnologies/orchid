@@ -54,6 +54,14 @@ class Reader {
   public:
     virtual ~Reader() = default;
     virtual task<size_t> Read(const Mutables &buffers) = 0;
+
+    task<size_t> Read(uint8_t *data, size_t size) {
+        co_return co_await Read(asio::buffer(data, size));
+    }
+
+    task<size_t> Read(Beam &data) {
+        co_return co_await Read(data.data(), data.size());
+    }
 };
 
 class Stream :
@@ -88,7 +96,7 @@ class Inverted :
             for (;;) {
                 size_t writ;
                 try {
-                    writ = co_await stream_->Read(asio::buffer(beam.data(), beam.size()));
+                    writ = co_await stream_->Read(beam);
                 } catch (const std::exception &error) {
                     const auto what(error.what());
                     orc_insist(what != nullptr);

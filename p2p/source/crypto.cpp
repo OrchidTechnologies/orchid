@@ -28,14 +28,11 @@
 #include <openssl/ripemd.h>
 #include <openssl/sha.h>
 
-extern "C" {
-#include <sha3.h>
-}
-
 #include <secp256k1_ecdh.h>
 #include <secp256k1_recovery.h>
 
 #include "crypto.hpp"
+#include "scope.hpp"
 
 namespace orc {
 
@@ -48,19 +45,42 @@ void Random(uint8_t *data, size_t size) {
     generator.generate(data, data + size);
 }
 
-Brick<32> HashK(const Buffer &data) {
-    sha3_context context;
-    sha3_Init256(&context);
-    sha3_SetFlags(&context, SHA3_FLAGS_KECCAK);
+StateK::StateK() {
+    sha3_Init256(this);
+    sha3_SetFlags(this, SHA3_FLAGS_KECCAK);
+}
 
+StateK &StateK::operator +=(const Span<const uint8_t> &data) {
+    sha3_Update(this, data.data(), data.size());
+    return *this;
+}
+
+StateK &StateK::operator +=(const Buffer &data) {
     data.each([&](const uint8_t *data, size_t size) {
-        sha3_Update(&context, data, size);
+        operator +=({data, size});
         return true;
     });
 
+    return *this;
+}
+
+Brick<32> StateK::operator ()() const & {
+    sha3_context state(*this);
     Brick<32> hash;
-    memcpy(hash.data(), sha3_Finalize(&context), 32);
+    memcpy(hash.data(), sha3_Finalize(&state), 32);
     return hash;
+}
+
+Brick<32> StateK::operator ()() && {
+    Brick<32> hash;
+    memcpy(hash.data(), sha3_Finalize(this), 32);
+    return hash;
+}
+
+Brick<32> HashK(const Buffer &data) {
+    StateK context;
+    context += data;
+    return std::move(context)();
 }
 
 Brick<32> Hash2(const Buffer &data) {
@@ -146,6 +166,15 @@ static const secp256k1_context *Curve() {
     return context_.get();
 }
 
+bool operator ==(const Key &lhs, const Key &rhs) {
+    const auto context(Curve());
+    return secp256k1_ec_pubkey_cmp(context, &lhs, &rhs) == 0;
+}
+
+Secret Generate() {
+    return Random<32>();
+}
+
 Key Derive(const Secret &secret) {
     const auto context(Curve());
     Key key;
@@ -163,7 +192,7 @@ Key ToKey(const Region &data) {
 Brick<65> ToUncompressed(const Key &key) {
     const auto context(Curve());
 
-    std::array<uint8_t, 65> data;
+    Brick<65> data;
     size_t size(data.size());
     orc_assert(secp256k1_ec_pubkey_serialize(context, data.data(), &size, &key, SECP256K1_EC_UNCOMPRESSED) != 0);
     orc_assert(size == data.size());
@@ -182,6 +211,20 @@ Brick<33> ToCompressed(const Key &key) {
 
     orc_assert(data[0] == 0x02 || data[0] == 0x03);
     return data;
+}
+
+Brick<32> Agree(const Secret &secret, const Key &key) {
+    const auto context(Curve());
+
+    Brick<32> output;
+    orc_assert(secp256k1_ecdh(context, output.data(), &key, secret.data(),
+        [](unsigned char *output, const unsigned char *x32, const unsigned char *y32, void *arg) {
+            memcpy(output, x32, 32);
+            return 1;
+        }
+    , nullptr) != 0);
+
+    return output;
 }
 
 Signature Sign(const Secret &secret, const Brick<32> &data) {

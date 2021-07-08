@@ -43,7 +43,7 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
                     return Explode(proof[16].buf());
                 const auto data(proof[path.nib(offset++)].buf());
                 if (data.size() == 0)
-                    return Nested();
+                    return nullptr;
                 hash = data;
             } break;
 
@@ -52,7 +52,7 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
                 const auto type(leg.nib(0));
                 for (size_t i((type & 0x1) != 0 ? 1 : 2), e(leg.size() * 2); i != e; ++i)
                     if (path.nib(offset++) != leg.nib(i))
-                        return Nested();
+                        return nullptr;
                 const Segment segment(proof[1].buf());
                 if ((type & 0x2) != 0)
                     return Explode(segment);
@@ -65,7 +65,7 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
     }
 
     orc_assert(hash == EmptyVector);
-    return Nested();
+    return nullptr;
 }
 
 Receipt::Receipt(Json::Value &&value) :
@@ -199,7 +199,7 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
 
 Block::Block(const uint256_t &chain, Json::Value &&value) :
     height_(To<uint64_t>(value["number"].asString())),
-    state_(value["stateRoot"].asString()),
+    state_(Bless<Brick<32>>(value["stateRoot"].asString())),
     timestamp_(To<uint64_t>(value["timestamp"].asString())),
     limit_(To<uint64_t>(value["gasLimit"].asString())),
     miner_(value["miner"].asString()),
@@ -228,7 +228,7 @@ Account::Account(const Block &block, const Json::Value &value) :
     storage_(Bless(value["storageHash"].asString())),
     code_(Bless(value["codeHash"].asString()))
 {
-    const auto leaf(Verify(value["accountProof"], Number<uint256_t>(block.state_), HashK(Number<uint160_t>(value["address"].asString()))));
+    const auto leaf(Verify(value["accountProof"], block.state_, HashK(Number<uint160_t>(value["address"].asString()))));
     if (leaf.scalar()) {
         orc_assert(leaf.buf().size() == 0);
         orc_assert(nonce_ == 0);

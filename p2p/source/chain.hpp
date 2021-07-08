@@ -81,7 +81,7 @@ struct Record final :
 
 struct Block {
     const uint64_t height_;
-    const uint256_t state_;
+    const Brick<32> state_;
     const uint64_t timestamp_;
     const uint64_t limit_;
     const Address miner_;

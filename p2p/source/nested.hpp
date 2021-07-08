@@ -59,7 +59,7 @@ class Nested {
 
   public:
     Nested() :
-        scalar_(true)
+        scalar_(false)
     {
     }
 
@@ -84,18 +84,18 @@ class Nested {
     }
 
     Nested(const char *value) :
-        Nested(std::string(value))
+        Nested(value == nullptr ? std::string() : std::string(value))
     {
     }
 
     Nested(std::nullopt_t) :
-        Nested()
+        Nested(nullptr)
     {
     }
 
     template <typename Type_>
     Nested(std::optional<Type_> value) :
-        Nested()
+        Nested(std::nullopt)
     {
         if (value)
             operator =(std::move(*value));
@@ -130,7 +130,7 @@ class Nested {
         scalar_(false)
     {
         for (auto nested(list.begin()); nested != list.end(); ++nested)
-            array_.emplace_back(std::move(*nested));
+            array_.emplace_back(*nested);
     }
 
     // XXX: this should just be "any iterable"
@@ -179,9 +179,26 @@ class Nested {
     }
 
     const Nested &operator [](unsigned i) const {
+        return array_[i];
+    }
+
+    Nested &operator [](unsigned i) {
+        return array_[i];
+    }
+
+    const Nested &at(unsigned i) const {
         orc_assert(!scalar_);
         orc_assert(i < size());
-        return array_[i];
+        return operator [](i);
+    }
+
+    auto begin() const {
+        orc_assert(!scalar_);
+        return array_.begin();
+    }
+
+    auto end() const {
+        return array_.end();
     }
 
     Subset buf() const {

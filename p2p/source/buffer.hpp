@@ -474,8 +474,14 @@ class Bounded :
         return Size_;
     }
 
+    template <size_t Snip_>
+    auto snip() const {
+        static_assert(Snip_ <= Size_);
+        return Bounded<Snip_>(data());
+    }
+
     template <size_t Skip_>
-    auto skip() {
+    auto skip() const {
         static_assert(Skip_ <= Size_);
         return Bounded<Size_ - Skip_>(data() + Skip_);
     }
@@ -551,8 +557,14 @@ class Data :
         return data_ < rhs.data_;
     }
 
+    template <size_t Snip_>
+    auto snip() const {
+        static_assert(Snip_ <= Size_);
+        return Bounded<Snip_>(data());
+    }
+
     template <size_t Skip_>
-    auto skip() {
+    auto skip() const {
         static_assert(Skip_ <= Size_);
         return Bounded<Size_ - Skip_>(data() + Skip_);
     }
@@ -605,9 +617,32 @@ class Brick final :
 
 template <size_t Size_>
 Brick<Size_> Zero() {
-    Brick<Size_> brick;
-    memset(brick.data(), 0, brick.size());
-    return brick;
+    Brick<Size_> zero;
+    memset(zero.data(), 0, zero.size());
+    return zero;
+}
+
+template <size_t Size_>
+inline Brick<Size_> operator ^(const Span<const uint8_t> &lhs, const Data<Size_> &rhs) {
+    orc_assert(lhs.size() == Size_);
+    const auto data(lhs.data());
+    Brick<Size_> value;
+    for (size_t i(0); i != Size_; ++i)
+        value[i] = data[i] ^ rhs[i];
+    return value;
+}
+
+template <size_t Size_>
+inline Brick<Size_> operator ^(const Region &lhs, const Data<Size_> &rhs) {
+    return lhs.span() ^ rhs;
+}
+
+template <size_t Size_>
+inline Brick<Size_> operator ^(const Data<Size_> &lhs, const Data<Size_> &rhs) {
+    Brick<Size_> value;
+    for (size_t i(0); i != Size_; ++i)
+        value[i] = lhs[i] ^ rhs[i];
+    return value;
 }
 
 template <typename Type_, bool Arithmetic_ = std::is_arithmetic<Type_>::value>
@@ -656,6 +691,10 @@ class Number<Type_, true> final :
 
     bool zero() const override {
         return value_ != 0;
+    }
+
+    Type_ num() const {
+        return boost::endian::big_to_native(value_);
     }
 };
 
@@ -835,6 +874,12 @@ class Beam final :
     }
 };
 
+inline Beam Zero(size_t size) {
+    Beam zero(size);
+    memset(zero.data(), 0, zero.size());
+    return zero;
+}
+
 template <typename Type_ = Beam>
 Type_ Bless(const std::string_view &value) {
     Type_ data;
@@ -924,10 +969,10 @@ class Knot final :
     public Buffer
 {
   private:
-    const std::tuple<const Buffer_ &...> buffers_;
+    const std::tuple<Buffer_...> buffers_;
 
   public:
-    Knot(const Buffer_ &...buffers) :
+    Knot(Buffer_...buffers) :
         buffers_(buffers...)
     {
     }
@@ -939,7 +984,7 @@ class Knot final :
 
 template <typename... Buffer_>
 auto Tie(Buffer_ &&...buffers) {
-    return Knot<Buffer_...>(std::forward<Buffer_>(buffers)...);
+    return Knot<const Buffer_ &...>(std::forward<Buffer_>(buffers)...);
 }
 
 class Sequence final :

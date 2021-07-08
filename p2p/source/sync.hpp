@@ -68,7 +68,7 @@ class Sync :
             for (;;) {
                 size_t writ;
                 try {
-                    writ = Read(asio::buffer(beam.data(), beam.size()));
+                    writ = Read(asio::mutable_buffer(beam.data(), beam.size()));
                 } catch (const std::exception &error) {
                     const auto what(error.what());
                     orc_insist(what != nullptr);

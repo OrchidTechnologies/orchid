@@ -327,7 +327,7 @@ class Flow {
             Beam beam(2048);
             for (;;) {
                 size_t writ;
-                if (orc_ignore({ writ = co_await input->Read(asio::buffer(beam.data(), beam.size())); }) || writ == 0)
+                if (orc_ignore({ writ = co_await input->Read(beam.data(), beam.size()); }) || writ == 0)
                     break;
                 if (orc_ignore({ co_await output->Send(beam.subset(0, writ)); }))
                     break;
