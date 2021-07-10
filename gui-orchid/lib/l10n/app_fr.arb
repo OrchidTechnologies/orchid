@@ -18,7 +18,7 @@
             "num": {}
         }
     },
-    "delete": "Delete",
+    "delete": "Supprimer",
     "turnOnToActivate": "Turn Orchid on to activate your hops and protect your traffic",
     "createFirstHop": "Create your first hop to protect your connection.",
     "orchid": "Orchid",
@@ -54,7 +54,7 @@
     "ok": "OK",
     "settingsButtonTitle": "SETTINGS",
     "confirmThisAction": "Confirm this action",
-    "cancelButtonTitle": "CANCEL",
+    "cancelButtonTitle": "ANNULER",
     "changesWillTakeEffectInstruction": "Changes will take effect when the VPN is restarted.",
     "saved": "Saved",
     "configurationSaved": "Configuration saved",
@@ -242,7 +242,7 @@
     "thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "This debug log is non-persistent and cleared when quitting the app.",
     "itMayContainSecretOrPersonallyIdentifyingInformation": "It may contain secret or personally identifying information.",
     "loggingEnabled": "Logging enabled",
-    "cancel": "CANCEL",
+    "cancel": "ANNULER",
     "logging": "Logging",
     "loading": "Loading ...",
     "ethPrice": "ETH price:",
