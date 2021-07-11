@@ -154,9 +154,10 @@ void Site::Run(const asio::ip::address &bind, uint16_t port, const std::string &
                     co_await stream.async_shutdown(Adapt());
                 } catch (const asio::system_error &error) {
                     // XXX: SSL_OP_IGNORE_UNEXPECTED_EOF ?
-                    //const auto code(error.code());
+                    const auto code(error.code());
                     if (false);
                     //else if (code == asio::ssl::error::stream_truncated);
+                    else if (code == beast::error::timeout);
                     else orc_adapt(error);
                 }
             } orc_catch({}) }, "Site::handle");
