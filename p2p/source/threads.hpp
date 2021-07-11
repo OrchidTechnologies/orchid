@@ -110,9 +110,7 @@ class Threads {
 
 template <typename Code_>
 auto Post(Code_ code, const rtc::Location &location, rtc::Thread &thread) noexcept(noexcept(code())) -> task<decltype(code())> {
-    Invoker invoker(std::move(code));
-    auto value(co_await invoker(location, thread));
-    co_return value.get();
+    co_return (co_await Invoker(std::move(code))(location, thread)).get();
 }
 
 template <typename Code_>
