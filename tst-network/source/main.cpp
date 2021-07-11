@@ -373,7 +373,6 @@ int Main(int argc, const char *const argv[]) {
             for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
                 {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
                 {"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "BolehVPN"},
-                {"0xf885C3812DE5AD7B3F7222fF4E4e4201c7c7Bd4f", "LiquidVPN"},
                 //{"0xc654a58330b8659399067c309Be93659FbaCbEA6", "Orchid"},
                 {"0x69A4Ed2024bc7056fBA8E18cEfc2c40932B923E3", "PIA"},
                 {"0x2b1ce95573ec1b927a90cb488db113b40eeb064a", "SaurikIT"},
