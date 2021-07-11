@@ -183,12 +183,14 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     const auto digest(Ticket0{commit, issued, nonce, amount, ratio, start, range, funder, recipient}.Encode(contract, chain, receipt));
     const Address signer(Recover(HashK(Tie("\x19""Ethereum Signed Message:\n32", digest)), v, r, s));
 
-    const auto [reveal, winner] = [&, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
+    const auto [reveal, winner] = ({
         const auto locked(locked_());
 
-        orc_assert(issued >= locked->issued_);
+        if (issued < locked->issued_)
+            return;
         auto &nonces(locked->nonces_);
-        orc_assert(nonces.emplace(issued, nonce, signer).second);
+        if (!nonces.emplace(issued, nonce, signer).second)
+            return;
         while (nonces.size() > horizon_) {
             const auto oldest(nonces.begin());
             orc_assert(oldest != nonces.end());
@@ -196,7 +198,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
             nonces.erase(oldest);
         }
 
-        const auto reveal([&]() {
+        const auto reveal([&, &commit = commit]() {
             for (const auto &reveal : locked->reveals_)
                 if (HashK(reveal.first) == commit) {
                     const auto &expire(reveal.second);
@@ -212,9 +214,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
         const auto winner(HashK(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
         if (winner && locked->reveal_->first == commit)
             Commit(locked);
-
-        return std::make_tuple(reveal, winner);
-    }();
+    std::make_tuple(reveal, winner); });
 
     // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
     // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
@@ -292,12 +292,14 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     if (Verbose)
         Log() << std::dec << std::fixed << std::setprecision(16) << recipient << "<-" << funder << "/" << signer << " " << amount << " " << ratio << " " << issued << nonce << " " << expected << " " << locked_()->balance_ << std::endl;
 
-    const auto [reveal, winner] = [&, recipient = recipient, commit = commit, issued = issued, nonce = nonce, ratio = ratio, expected = expected] {
+    const auto [reveal, winner] = ({
         const auto locked(locked_());
 
-        orc_assert(issued >= locked->issued_);
+        if (issued < locked->issued_)
+            return;
         auto &nonces(locked->nonces_);
-        orc_assert(nonces.emplace(issued, Tie(Zero<24>(), nonce), signer).second);
+        if (!nonces.emplace(issued, Tie(Zero<24>(), nonce), signer).second)
+            return;
         while (nonces.size() > horizon_) {
             const auto oldest(nonces.begin());
             orc_assert(oldest != nonces.end());
@@ -305,7 +307,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
             nonces.erase(oldest);
         }
 
-        const auto reveal([&]() {
+        const auto reveal([&, &commit = commit]() {
             for (const auto &reveal : locked->reveals_)
                 if (HashK(reveal.first) == commit) {
                     const auto &expire(reveal.second);
@@ -321,9 +323,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
         const auto winner(HashK(Tie(reveal, issued, nonce)).skip<24>().num<uint64_t>() <= ratio);
         if (winner && locked->reveal_->first == commit)
             Commit(locked);
-
-        return std::make_tuple(reveal, winner);
-    }();
+    std::make_tuple(reveal, winner); });
 
     // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
     // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
