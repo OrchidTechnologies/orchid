@@ -180,7 +180,7 @@ task<void> Channel::Send(const Buffer &data) {
     rtc::CopyOnWriteBuffer buffer(size);
     data.copy(buffer.MutableData(), size);
 
-#if 0
+#if 1
     static const webrtc::SendDataParams params([]() {
         webrtc::SendDataParams params;
         params.type = webrtc::DataMessageType::kBinary;
@@ -190,9 +190,9 @@ task<void> Channel::Send(const Buffer &data) {
     }());
 #endif
 
-#if 1
+#if 0
     co_await Post([&]() {
-#if 1
+#if 0
         if (channel_->buffered_amount() == 0)
             channel_->Send({buffer, true});
 #else
