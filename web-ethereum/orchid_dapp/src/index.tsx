@@ -25,6 +25,7 @@ import {
 import {WalletProviderState, WalletProviderStatus} from "./api/orchid-eth-web3";
 import {Subscription} from "rxjs";
 import {LotteryPot, Wallet} from "./api/orchid-eth-types";
+import {NoWallet} from "./components/NoWallet";
 
 //const messages: Record<string, Record<string, any>> = {
 const messages: any = {
@@ -100,6 +101,9 @@ const App: FC = () => {
     }
   };
 
+
+  let api = OrchidAPI.shared();
+  console.log("contracts overridden = ", api.eth?.contractsOverridden);
   // Key on any change in chain, network, or account to clear UI state.
   return (
     <RouteContext.Provider value={routeContextValue}>
@@ -107,8 +111,13 @@ const App: FC = () => {
         <WalletProviderContext.Provider value={walletProviderStatus}>
           <WalletContext.Provider value={wallet}>
             <AccountContext.Provider value={pot}>
-              <Layout
-                key={walletProviderStatus.chainId + ":" + walletProviderStatus.networkId + ":" + walletProviderStatus.account}/>
+              {
+                // For now limit to main net V0
+                (walletProviderStatus.chainInfo?.isEthereumMainNet || api.eth?.contractsOverridden) ?
+                  <Layout
+                    key={walletProviderStatus.chainId + ":" + walletProviderStatus.networkId + ":" + walletProviderStatus.account}/>
+                  : <NoWallet walletStatus={walletProviderStatus}/>
+              }
             </AccountContext.Provider>
           </WalletContext.Provider>
         </WalletProviderContext.Provider>

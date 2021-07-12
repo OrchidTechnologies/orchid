@@ -39,11 +39,6 @@ class UserPreferences {
     return await shared.setString(key.toString(), value);
   }
 
-  ///
-  /// Onboarding pages related preferences
-  /// TODO: Replace these with one StringList?
-  ///
-
   /// Was the user prompted for the necessary permissions to install the VPN
   /// extension as part of onboarding
   Future<bool> getPromptedForVPNPermission() async {
@@ -197,28 +192,6 @@ class UserPreferences {
         .setBool(UserPreferenceKey.QueryBalances.toString(), value);
   }
 
-  Future<bool> getShowStatusTab() async {
-    return (await SharedPreferences.getInstance())
-            .getBool(UserPreferenceKey.ShowStatusTab.toString()) ??
-        false;
-  }
-
-  Future<bool> setShowStatusTab(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.ShowStatusTab.toString(), value);
-  }
-
-  Future<bool> getVPNSwitchInstructionsViewed() async {
-    return (await SharedPreferences.getInstance()).getBool(
-            UserPreferenceKey.VPNSwitchInstructionsViewed.toString()) ??
-        false;
-  }
-
-  Future<bool> setVPNSwitchInstructionsViewed(bool value) async {
-    return (await SharedPreferences.getInstance()).setBool(
-        UserPreferenceKey.VPNSwitchInstructionsViewed.toString(), value);
-  }
-
   /// The PAC transaction or null if there is none.
   ObservablePreference<PacTransaction> pacTransaction = ObservablePreference(
       key: UserPreferenceKey.PacTransaction,
@@ -267,8 +240,8 @@ class UserPreferences {
   ObservableBoolPreference guiV0 =
       ObservableBoolPreference(UserPreferenceKey.GuiV0);
 
-  /// An incrementing integer app release version used to track first launch
-  /// and new release launch messaging.
+  /// An incrementing internal UI app release version used to track first launch
+  /// and new release launch messaging.  See [Release]
   ObservablePreference<ReleaseVersion> releaseVersion = ObservablePreference(
       key: UserPreferenceKey.ReleaseVersion,
       loadValue: (key) async {
@@ -311,8 +284,6 @@ enum UserPreferenceKey {
   DefaultCurator,
   QueryBalances,
   DesiredVPNState,
-  ShowStatusTab,
-  VPNSwitchInstructionsViewed,
   PacTransaction,
   ActiveAccounts,
   CachedDiscoveredAccounts,
