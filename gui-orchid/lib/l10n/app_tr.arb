@@ -1,17 +1,17 @@
 {
     "@@locale": "en",
-    "newHop": "New Hop",
+    "newHop": "Yeni Zıplama",
     "@newHop": {
         "description": "New network hop"
     },
-    "orchidHop": "Orchid Hop",
+    "orchidHop": "Orchid Zıplama",
     "@orchidHop": {
         "description": "Orchid network hop"
     },
-    "orchidDisabled": "Orchid disabled",
-    "trafficMonitoringOnly": "Traffic monitoring only",
-    "orchidConnecting": "Orchid connecting",
-    "orchidDisconnecting": "Orchid disconnecting",
+    "orchidDisabled": "Orchid devre dışı",
+    "trafficMonitoringOnly": "Sadece trafik izleme",
+    "orchidConnecting": "Orchid bağlanıyor",
+    "orchidDisconnecting": "Orchid bağlantısı kesiliyor",
     "numHopsConfigured": "{num, plural, zero{No hops configured} one{One hop configured} two{Two hops configured} other{{num} hops configured}}",
     "@numHopsConfigured": {
         "placeholders": {
