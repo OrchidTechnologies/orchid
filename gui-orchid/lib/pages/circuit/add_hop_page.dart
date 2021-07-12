@@ -97,6 +97,7 @@ class _AddHopPageState extends State<AddHopPage> {
                      */
 
                     // Link Account
+                    /*
                     _divider(),
                     _buildHopChoice(
                         text: s.linkAnOrchidAccount,
@@ -116,17 +117,18 @@ class _AddHopPageState extends State<AddHopPage> {
                               });
                         },
                         imageName: 'assets/images/scan.png'),
+                     */
 
-                    // Custom Account
-                    if (!OrchidPlatform.isApple) ...[
+                    // Account Chooser
+                    // if (!OrchidPlatform.isApple) ...[
                       _divider(),
                       _buildHopChoice(
-                          text: s.createACustomAccount,
+                          text: "Use an Orchid Account",
                           onTap: () {
                             _addHopType(HopProtocol.Orchid);
                           },
                           imageName: 'assets/images/logo_small_purple.png'),
-                    ],
+                    // ],
 
                     // OVPN Subscription
                     _divider(),

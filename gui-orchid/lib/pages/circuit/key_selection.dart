@@ -55,6 +55,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
 
   @override
   Widget build(BuildContext context) {
+    print("XXX: selected key item = $_selectedItem");
     return Container(
       padding: EdgeInsets.only(left: 16, right: 16),
       decoration:
@@ -87,6 +88,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
     List<DropdownMenuItem<KeySelectionItem>> items = [];
 
     // Add the fixed options
+    /*
     items.addAll([
       DropdownMenuItem<KeySelectionItem>(
         value: KeySelectionItem(option: KeySelectionDropdown.generateKeyOption),
@@ -98,6 +100,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
         child: Text(KeySelectionDropdown.importKeyOption.displayName(context)),
       )
     ]);
+     */
 
     if (_keys != null) {
       items.addAll(_keys.map((key) {
@@ -146,4 +149,9 @@ class KeySelectionItem {
       o is KeySelectionItem &&
       o.option == option &&
       o.keyRef?.keyUid == keyRef?.keyUid;
+
+  @override
+  String toString() {
+    return 'KeySelectionItem{keyRef: $keyRef, option: $option}';
+  }
 }
