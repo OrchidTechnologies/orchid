@@ -25,12 +25,14 @@ import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/util/units.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_colors.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
+import '../app_routes.dart';
 import 'curator_page.dart';
 import 'funder_selection.dart';
 import 'hop_editor.dart';
@@ -193,7 +195,10 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           LinkText(
             "Take me to the Account Manager",
             style: AppText.linkStyle.copyWith(fontStyle: FontStyle.italic),
-            onTapped: () {},
+            onTapped: () {
+              Navigator.of(context).push(new MaterialPageRoute(
+                  builder: (context) => AccountManagerPage()));
+            },
           ),
           pady(24),
           divider(),
