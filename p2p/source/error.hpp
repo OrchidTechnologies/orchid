@@ -73,7 +73,7 @@ class Error final :
     const auto code(error.code()); \
     if (code.category() == orchid_category()) \
         std::rethrow_exception(Category::Convert(code.value())); \
-    orc_throw(code); \
+    orc_throw(code.message() << " (" << code << ")"); \
 } while (false)
 
 #define orc_assert_(code, text) do { \
