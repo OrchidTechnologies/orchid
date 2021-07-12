@@ -12,7 +12,6 @@ import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/util/listenable_builder.dart';
-import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';

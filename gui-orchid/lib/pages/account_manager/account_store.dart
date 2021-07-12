@@ -30,10 +30,10 @@ class AccountStore extends ChangeNotifier {
   /// The first account in this list designates the active identity.
   List<Account> activeAccounts = [];
 
-  /// Accounts discovered on chain
+  /// Accounts discovered on chain for the active identity
   List<Account> discoveredAccounts = [];
 
-  /// Cached accounts previously discovered on chain
+  /// Cached accounts previously discovered on chain for the active identity
   List<Account> cachedDiscoveredAccounts = [];
 
   AccountStore({this.discoverAccounts = true});
