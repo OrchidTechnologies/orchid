@@ -74,9 +74,9 @@ std::string Base58Encode(const std::vector<uint8_t>& data, CodecMapping mapping)
   }
   std::string result;
   for (size_t i = 0; i < (data.size() - 1) && data[i] == 0; i++)
-    result.push_back(mapping.BaseMapping[0]);
+    result.push_back(char(mapping.BaseMapping[0]));
   for (size_t i = 0; i < digitslen; i++)
-    result.push_back(mapping.BaseMapping[digits[digitslen - 1 - i]]);
+    result.push_back(char(mapping.BaseMapping[digits[digitslen - 1 - i]]));
   return result;
 }
 

@@ -49,7 +49,9 @@ Store::Store(std::string key, std::string certificates) :
 
 Store::Store(const std::string &store) {
     bssl::UniquePtr<PKCS12> p12([&]() {
-        bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(store.data(), store.size()));
+        // XXX: provide a safe cast abstraction for this
+        orc_assert(store.size() <= std::numeric_limits<int>::max());
+        bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(store.data(), int(store.size())));
         orc_assert(bio);
 
         return d2i_PKCS12_bio(bio.get(), nullptr);
