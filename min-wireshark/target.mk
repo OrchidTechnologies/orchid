@@ -29,7 +29,6 @@ wireshark += $(wildcard $(pwd/wireshark)/wsutil/*.c)
 
 wireshark += $(pwd/wireshark)/cfile.c
 wireshark += $(pwd/wireshark)/frame_tvbuff.c
-wireshark += $(pwd/wireshark)/version_info.c
 
 ifeq ($(target),and)
 # XXX: end??ent was added with SDK level 26
@@ -85,6 +84,8 @@ endif
 cflags/$(pwd/wireshark)/ += -DHAVE_FCNTL_H
 cflags/$(pwd/wireshark)/ += -DHAVE_UNISTD_H
 
+cflags/$(pwd/wireshark)/ += -DHAVE_CLOCK_GETTIME
+
 ifneq ($(msys),darwin)
 wireshark := $(filter-out \
     %/cfutils.c \
@@ -94,6 +95,7 @@ endif
 wireshark := $(filter-out \
     %/exntest.c \
     %/tvbtest.c \
+    %/test_wsutil.c \
     %_test.c \
 ,$(wireshark))
 

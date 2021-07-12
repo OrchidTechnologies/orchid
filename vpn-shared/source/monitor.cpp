@@ -46,8 +46,6 @@
 #include <epan/packet.h>
 #include <epan/prefs.h>
 #include <epan/tap.h>
-#include <version_info.h>
-#include "log.h"
 
 
 using namespace openvpn;
@@ -186,8 +184,6 @@ void wireshark_setup()
     DllMain(GetModuleHandle(nullptr), DLL_PROCESS_ATTACH, nullptr);
 #endif
 
-    ws_init_version_info("Orchid", NULL, epan_get_compiled_version_info,  NULL);
-
     // Get credential information for later use.
     init_process_policies();
 
@@ -195,7 +191,6 @@ void wireshark_setup()
     GLogLevelFlags log_flags = (GLogLevelFlags)(G_LOG_LEVEL_WARNING | G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO | G_LOG_LEVEL_DEBUG);
 
     g_log_set_handler(NULL, log_flags, log_func_ignore, NULL);
-    g_log_set_handler(LOG_DOMAIN_CAPTURE_CHILD, log_flags, log_func_ignore, NULL);
 
     init_report_message("orchid", &routines_);
 

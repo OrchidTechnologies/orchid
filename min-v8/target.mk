@@ -23,6 +23,7 @@ v8all := $(patsubst ./%,$(pwd/v8)/src/%,$(shell cd $(pwd/v8)/src && find . \
     -path "./d8" -prune -o \
     -path "./heap/base/asm" -prune -o \
     -path "./heap/cppgc/asm" -prune -o \
+    -path "./inspector" -prune -o \
     -path "./torque" -prune -o \
     -path "./third_party" -prune -o \
     \
@@ -45,7 +46,6 @@ v8all := $(patsubst ./%,$(pwd/v8)/src/%,$(shell cd $(pwd/v8)/src && find . \
     ! -path "./trap-handler/handler-inside-posix.cc" \
 -name "*.cc" -print | LC_COLLATE=C sort))
 
-v8all += $(foreach temp,$(wildcard $(pwd/v8)/third_party/inspector_protocol/crdtp/*.cc),$(if $(findstring test,$(temp)),,$(temp)))
 v8all += $(pwd/v8)/src/torque/class-debug-reader-generator.cc
 
 v8all += $(foreach sub,$(v8sub),$(wildcard $(pwd)/v8/src/$(sub)/*.cc))
@@ -115,6 +115,7 @@ vflags += -DENABLE_MINOR_MC
 vflags += -DVERIFY_HEAP
 
 vflags += -DV8_31BIT_SMIS_ON_64BIT_ARCH
+vflags += -DV8_ADVANCED_BIGINT_ALGORITHMS
 vflags += -DV8_ATOMIC_MARKING_STATE
 vflags += -DV8_ATOMIC_OBJECT_FIELD_WRITES
 ifeq ($(bits/$(machine)),64)
@@ -218,26 +219,6 @@ source += $(filter %.cc,$(tqsrc))
 header += $(filter %.h %.inc,$(tqsrc))
 
 
-inspector := $(patsubst %,$(output)/$(pwd/v8)/src/inspector/protocol/%, \
-    Console.cpp \
-    Debugger.cpp \
-    HeapProfiler.cpp \
-    Profiler.cpp \
-    Protocol.cpp \
-    Runtime.cpp \
-    Schema.cpp \
-)
-
-source += $(inspector)
-
-# XXX: this should just be the header files
-$(filter $(pwd)/v8/src/inspector/%,$(v8src)): $(inspector)
-
-$(call patternize,$(inspector)): $(pwd/v8)/third_party/inspector_protocol/code_generator.py $(pwd/v8)/src/inspector/inspector_protocol_config.json
-	@mkdir -p $(output)/$(pwd/v8)/{include,src}/inspector
-	cd $(pwd/v8) && PYTHONDONTWRITEBYTECODE=1 third_party/inspector_protocol/code_generator.py --output_base $(CURDIR)/$(output)/$(pwd/v8)/src/inspector --jinja_dir .. --config src/inspector/inspector_protocol_config.json --inspector_protocol_dir third_party/inspector_protocol
-
-
 cflags += $(vflags)
 cflags += -I$(pwd/v8)/include
 cflags += -I$(pwd/v8)/src
@@ -260,6 +241,9 @@ cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment
 
 # XXX: v8's compile is ridiculously non-deterministic?! this seems to fix it
 cflags/$(pwd/v8)/src/heap/ += -include src/heap/cppgc/heap.h
+
+# XXX: https://bugs.chromium.org/p/v8/issues/detail?id=11968
+chacks/$(pwd/v8)/src/utils/allocation.cc += 1s@^[^/]*/@/@
 
 
 archive += $(pwd/v8)

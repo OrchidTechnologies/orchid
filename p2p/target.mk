@@ -100,6 +100,9 @@ source += $(wildcard $(pwd)/boost/libs/program_options/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/random/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/regex/src/*.cpp)
 
+# XXX: https://github.com/boostorg/beast/issues/2282
+checks/$(pwd)/source/base64.cpp += -clang-analyzer-core.UndefinedBinaryOperatorResult
+
 ifeq ($(target),win)
 cflags/$(pwd)/boost/libs/filesystem/src/operations.cpp += -Wno-unused-const-variable
 endif

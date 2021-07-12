@@ -232,3 +232,6 @@
 [submodule "snappy"]
 	path = p2p/snappy
 	url = https://github.com/google/snappy.git
+[submodule "outcome"]
+	path = p2p/outcome
+	url = https://github.com/boostorg/outcome.git

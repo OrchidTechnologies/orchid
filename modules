@@ -6,26 +6,33 @@ git submodule foreach 'git fetch -v && git remote set-head origin -a'
 declare -A head
 
 function tag() {
-    head[$1]=$(cd "$1" && git tag -l | grep -P '^'"$2"'$' | tail -n 1)
+    head[$1]=$(cd "$1" && git tag -l --short=version:refname | grep -P '^'"$2"'$' | tail -n 1)
     echo "${head[$1]}"
 }
 
-head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
-head[app-shared/flutter]=2.0.4
+tag min-webrtc/abseil-cpp '[0-9].*'
+tag p2p/boost 'boost-[0-9.]*'
+tag min-webrtc/openssl 'OpenSSL_[0-9_]*[a-z]'
+tag p2p/sqlite 'version-[0-9.]*'
+
 head[env/libcxx]=origin/release_90
 head[env/libcxxabi]=origin/release_90
-# XXX: tag p2p/boost 'boost-[0-9.]*'
-head[p2p/boost]=boost-1.75.0
-tag min-webrtc/abseil-cpp '[0-9].*'
-tag min-webrtc/openssl 'OpenSSL_[0-9_]*[a-z]'
+
+head[app-shared/flutter]=2.0.4
+head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
+
+# fmt is stuck by soralog before 841aad95b42704ea77e3eb05a2cbb075dc5b1137
+# fmt broke on April Fools' with 15c10b0c666d274b378cf63429babfa202623db4
+# fmt fixed did not fix it until 69bdc20a3c1271b58f0d052ffc6b2466c44ef649
+
+# GSL is stuck due to cpp-libp2p using the stupid cmake "hunter" thing :/
+# I've filed a bug on hunter: https://github.com/cpp-pm/hunter/issues/399
 head[srv-shared/GSL]=v2.1.0
 
-git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
-    cd "${sub}"
-    echo
-    echo "${sub}"
-    git log --color --graph --format=oneline HEAD..${head[${sub}]-origin/HEAD} || echo $sub
-) done | less -R
+# XXX: boost's outcome is stuck due to cpp-libp2p using deprecated macros
+# I filed a bug for this: https://github.com/libp2p/cpp-libp2p/issues/144
+# as a workaround, I've checked out a second, older version of outcome :/
+head[p2p/outcome]=boost-1.75.0
 
 # url is stuck due to https://forums.developer.apple.com/thread/120977 :/
 # (I tried to use a local copy of libcxx on Apple, but crashed on iOS 14)
@@ -33,8 +40,9 @@ git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
 # to upgrade zlib I need to upgrade base and build; the new base is using
 # features from libcxx after what I have, so I need to move to llvm embed
 
-# GSL is stuck due to cpp-libp2p using the stupid cmake "hunter" thing :/
-# I've filed a bug on hunter: https://github.com/cpp-pm/hunter/issues/399
-
-# XXX: boost is stuck due to cpp-libp2p and its use of old outcome macros
-# I filed a bug for this: https://github.com/libp2p/cpp-libp2p/issues/144
+git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
+    cd "${sub}"
+    echo
+    echo "${sub}"
+    git log --color --graph --format=oneline HEAD..${head[${sub}]-origin/HEAD} || echo $sub
+) done | less -R
