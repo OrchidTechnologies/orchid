@@ -426,8 +426,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             Expanded(
               child: FunderSelectionDropdown(
                   signer: _selectedKeyItem?.keyRef,
-                  key: ValueKey(_selectedFunderItem?.toString() ??
-                      _initialSelectedFunderItem.toString()),
+                  key: ValueKey(_selectedKeyItem?.toString() ??
+                      _initialSelectedKeyItem.toString()),
                   enabled: widget.editable(),
                   initialSelection:
                       _selectedFunderItem ?? _initialSelectedFunderItem,
