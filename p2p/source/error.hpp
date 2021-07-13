@@ -86,7 +86,7 @@ class Error final :
 
 #define orc_catch(code) \
     catch (const std::exception &error) { \
-        orc_log(orc_Log(), "handled error " << error.what() << std::endl); \
+        orc_log(orc_Log(), "handled error: " << error.what() << std::endl); \
     code } catch (...) { code }
 
 #define orc_ignore(code) \

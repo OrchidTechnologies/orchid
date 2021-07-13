@@ -236,6 +236,9 @@ cflags += -DSCTP_USE_OPENSSL_SHA1
 # XXX: this is an orchid-specific hack
 chacks/$(pwd/webrtc)/media/sctp/dcsctp_transport.cc += s/ options;/ options{.cwnd_mtus_initial = 10000, .cwnd_mtus_min = 10000};/g;
 
+# XXX: https://bugs.chromium.org/p/webrtc/issues/detail?id=12967
+chacks/$(pwd/webrtc)/p2p/base/dtls_transport.cc += /Should not happen\./,/;/d;
+
 include $(pwd)/openssl.mk
 
 include $(pwd)/target-$(target).mk
