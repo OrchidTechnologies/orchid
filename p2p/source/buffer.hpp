@@ -278,7 +278,8 @@ class Region :
     public Buffer
 {
   public:
-    virtual const uint8_t *data() const = 0;
+    typedef const uint8_t *const_pointer;
+    virtual const_pointer data() const = 0;
     size_t size() const override = 0;
 
     bool have(size_t value) const override {
@@ -327,7 +328,8 @@ class Mutable :
 {
   public:
     using Region::data;
-    virtual uint8_t *data() = 0;
+    typedef uint8_t *pointer;
+    virtual pointer data() = 0;
 
     using Region::size;
     virtual void size(size_t value) {
