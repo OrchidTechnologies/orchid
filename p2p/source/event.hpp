@@ -26,6 +26,8 @@
 #include <cppcoro/async_manual_reset_event.hpp>
 #include <cppcoro/single_consumer_event.hpp>
 
+#include <boost/outcome/result.hpp>
+
 #include "spawn.hpp"
 
 namespace orc {
@@ -57,6 +59,15 @@ class Transfer :
         this->ready_.set();
         return *this;
     }
+
+    using Transfer_<Type_>::operator ();
+
+    template <typename Error_>
+    void operator ()(boost::outcome_v2::result<Type_, Error_, boost::outcome_v2::policy::default_policy<Type_, Error_, void>> &&value) noexcept { try {
+        operator =(std::move(value).value());
+    } catch (...) {
+        operator ()(std::current_exception());
+    } }
 
     task<void> operator ()(Task<Type_> &&code) noexcept { try {
         operator =(co_await std::move(code));
