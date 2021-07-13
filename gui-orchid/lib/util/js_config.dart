@@ -1,5 +1,6 @@
 import 'package:dartjsengine/dartjsengine.dart';
 import 'package:jsparser/jsparser.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 
 class JSConfig {
   var jsEngine = JSEngine();
@@ -10,7 +11,35 @@ class JSConfig {
       js = "{}";
     }
     Program jsProgram = parsejs(js, filename: 'program.js');
-    jsEngine.visitProgram(jsProgram);
+    visitProgram(jsProgram, jsEngine);
+  }
+
+  // Note: This executes the program like jsEngine.visitProgram() but guards
+  // Note: each statement execution, ignoring exceptions.
+  JsObject visitProgram(Program node, JSEngine jsEngine) {
+    String stackName = node.filename ?? '<entry>';
+    CallStack callStack = new CallStack();
+    JSContext ctx = new JSContext(jsEngine.globalScope, callStack);
+    callStack.push(node.filename, node.line, stackName);
+
+    JsObject out;
+    for (var statement in node.body) {
+      callStack.push(statement.filename, statement.line, stackName);
+      var result;
+      try {
+        result = jsEngine.visitStatement(statement, ctx, stackName);
+      } catch (err) {
+        log("js_config: Error in user config statement: $err");
+      }
+
+      if (statement is ExpressionStatement) {
+        out = result;
+      }
+      callStack.pop();
+    }
+
+    callStack.pop();
+    return out;
   }
 
   bool evalBoolDefault(String expression, bool defaultValue) {
@@ -60,7 +89,6 @@ class JSConfig {
     }
     throw Exception("Expression not double: $val");
   }
-
 
   String evalStringDefault(String expression, String defaultValue) {
     try {

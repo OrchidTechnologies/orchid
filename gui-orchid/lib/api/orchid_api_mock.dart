@@ -186,7 +186,6 @@ class MockOrchidAPI implements OrchidAPI {
     return "1.0.0";
   }
 
-  // TODO: Copied from orchid_api_real, combine.
   /// Get the Orchid Configuration file contents
   Future<String> getConfiguration() async {
     // return _platform.invokeMethod('get_config');
@@ -194,7 +193,6 @@ class MockOrchidAPI implements OrchidAPI {
     return await UserPreferences().getUserConfig();
   }
 
-  // TODO: Copied from orchid_api_real, combine.
   /// Set the Orchid Configuration file contents
   Future<bool> setConfiguration(String userConfig) async {
     var combinedConfig = await RealOrchidAPI.generateCombinedConfig(userConfig);
