@@ -103,9 +103,6 @@ wireshark := $(filter-out \
     %/dot11decrypt_ccmp_compat.c \
 ,$(wireshark))
 
-# XXX: https://gitlab.com/wireshark/wireshark/-/issues/17439
-chacks/$(pwd/wireshark)/epan/dissectors/packet-kerberos.c += s@^ *private_data->u2u_use_session_key.*@(void) private_data;@
-
 source += $(wireshark)
 cflags += -I$(pwd)/extra
 cflags += -iquote$(pwd)/extra
