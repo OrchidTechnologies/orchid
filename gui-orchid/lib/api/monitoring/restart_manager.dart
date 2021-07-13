@@ -118,6 +118,7 @@ class OrchidRestartManager {
     });
     sub.onError((err, stack) {
       log("restart_manager: Error waiting for vpn to restart (down): $err");
+      sub.cancel();
       restarting.add(false);
     });
   }
@@ -145,6 +146,7 @@ class OrchidRestartManager {
     });
     sub.onError((err, stack) {
       log("restart_manager: Error waiting for vpn to restart (up): $err");
+      sub.cancel();
       restarting.add(false);
     });
   }
