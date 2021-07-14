@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>The Orchid DApp - Orchid</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "The Orchid DApp";
+    var mkdocs_page_input_path = "orchid-dapp.md";
+    var mkdocs_page_url = "/orchid-dapp/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Orchid</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../accounts/">Orchid Accounts</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../using-orchid/">The Orchid Client</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">The Orchid DApp</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#the-orchid-dapp">The Orchid DApp</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#what-is-the-orchid-dapp">What is the Orchid Dapp</a></li>
+        
+            <li><a class="toctree-l3" href="#dapp-overview">DApp Overview</a></li>
+        
+            <li><a class="toctree-l3" href="#connecting-a-wallet">Connecting a wallet</a></li>
+        
+            <li><a class="toctree-l3" href="#create-account">Create account</a></li>
+        
+            <li><a class="toctree-l3" href="#add-funds">Add funds</a></li>
+        
+            <li><a class="toctree-l3" href="#withdraw">Withdraw</a></li>
+        
+            <li><a class="toctree-l3" href="#lockunlock-funds">Lock/Unlock Funds</a></li>
+        
+            <li><a class="toctree-l3" href="#account-info">Account info</a></li>
+        
+            <li><a class="toctree-l3" href="#notification-banners">Notification banners</a></li>
+        
+            <li><a class="toctree-l3" href="#orchid-dapp-faqs">Orchid DApp FAQs</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../faq/">FAQ</a>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Orchid</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>The Orchid DApp</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="the-orchid-dapp">The Orchid DApp</h1>
+<h2 id="what-is-the-orchid-dapp">What is the Orchid Dapp</h2>
+<p>The Orchid dApp is a hosted front-end for users to create and manage Orchid accounts so users don’t need to interact with the smart contract directly. At its core, the dApp is a wrapper for the function calls of the smart contract with UI elements to help users make decisions for account makeup.</p>
+<p>The dApp interface will ask users to set their efficiency and number of max-sized tickets in their balance, so a familiarity with Orchid accounts is helpful to understand the terminology.</p>
+<p>Orchid Labs hosts the dApp at <a href="https://account.orchid.com/">account.orchid.com</a></p>
+<h2 id="dapp-overview">DApp Overview</h2>
+<p>The interface allows users to create and manage multiple Orchid accounts, although for most users only one account is necessary. When arriving at the interface for the first time, the create account screen will display with the controls inactive.</p>
+<p>Once a wallet is connected, the interface will activate for the Orchid account associated with that wallet. If multiple accounts exist, clicking on the purple Orchid logo at the top right will bring them up so one can be selected.</p>
+<p>The Add and Withdraw buttons at the top of the interface are how you can add funds or remove them from the selected account. </p>
+<p>The More tab provides a few more screens for navigation.</p>
+<ul>
+<li>Info: more details about the selected account</li>
+<li>Transactions: a list of transactions associated with the attached wallet</li>
+<li>Move Funds: a function to move funds from balance -&gt; deposit</li>
+<li>Lock/Unlock Funds: a function to lock or unlock the deposit</li>
+<li>Advanced: a debugging output screen </li>
+</ul>
+<h2 id="connecting-a-wallet">Connecting a wallet</h2>
+<p>In order to make the dApp active, you will need to attach a funder wallet. The “Connect” button will pop-up your wallet options, depending on whether you are on desktop or mobile, and whether or not a wallet is detected. This step is similar to “logging in” in some sense, as the funder wallet you use to create the account is required to access and manage the account.</p>
+<p>The key supported wallet connection methods:</p>
+<ul>
+<li>Load the dApp in a dApp browser, such as MetaMask Mobile or Trust Wallet</li>
+<li>Use any desktop browser and then connect a mobile wallet with WalletConnect</li>
+<li>Use a desktop browser with MetaMask enabled as a web3 browser plugin</li>
+</ul>
+<p>Once the wallet is connected, you will see the address of that wallet displayed as the “funder wallet” with the funds associated with that wallet appearing next to the address. All of the Orchid accounts created by that funder are available to manage.</p>
+<p>To disconnect a wallet, click on the purple Orchid logo in the upper right corner. That will pop open a menu with a Disconnect button.</p>
+<h2 id="create-account">Create account</h2>
+<p>To create an account, you will first need to have a wallet connected. Once that is complete, the interface will activate and you will see your funder wallet address displayed.</p>
+<p>The first step is to determine how much currency you will need to fund the account. The key decisions are how much to put into the deposit and how much to put into the balance.</p>
+<h3 id="signer-address">Signer address</h3>
+<p>If you have created an Orchid signer in the Orchid app (Android-only feature labeled as “custom account creation”), you can paste the public portion of the signer, the signer address, into the box.</p>
+<p>For most users, you will not have a signer keypair generated. No problem. Use the button to create the signer. Once the signer is created, the account exists in some sense, and you can now scan the QR code, or copy and paste the account into the app. </p>
+<p>It is a great idea to backup the account credentials at this time. A simple way to do that is to click the “Copy” button under the QR code, and then paste the account info into a password manager.</p>
+<p>NOTE: the account will have a zero balance until all three of these actions have happened: the transactions are submitted by pressing the “create” button, the transactions are approved by the attached wallet and the transactions have been confirmed by the blockchain.</p>
+<h3 id="efficiency-slider-to-determine-deposit-size">Efficiency slider to determine deposit size</h3>
+<p>The efficiency slider shows what the payment efficiency will be for the current market conditions. The UI gathers the relevant information about the current price of the digital currencies and the amount of gas required for a provider to claim a payment, and then translates that into an efficiency metric.</p>
+<p>We recommend at least 50% efficiency, but that still means that 50% of your currency is going towards network fees. As you get into higher efficiency, the deposit size grows, but the amount paid to fees lessens. So there is a tradeoff between the total amount of money put into the deposit and the account efficiency.</p>
+<p>Because efficiency is coupled tightly with network transaction fees, it is useful to see if there is something abnormal happening with current Ethereum gas fees that could be causing the efficiencies of Orchid accounts to be rapidly changing. </p>
+<h3 id="size-picker-to-determine-balance-size">Size picker to determine balance size</h3>
+<p>Due to the nature of the nanopayment system, the size of the balance needs some thought. Because payments are sent as probabilities of winning larger sums of money (what we call “lottery tickets”) the balance needs to be large enough to make tickets that will be accepted by providers. Learn more about <a href="../accounts/#tickets">tickets here</a>.</p>
+<p>Since the deposit is not used to pay for bandwidth, the amount of currency in your account that can be used for purchasing service is determined by the balance amount. </p>
+<p>As of now, the size of lottery tickets is half of the balance of the deposit. The size picker simply turns this into a plus and minus button, so you can pick how many tickets worth of balance you want in your account. You can always enter a number into the box as well.</p>
+<p>Our recommendation is to have a minimum of 3 tickets worth of balance. That helps even out the probabilities of the tickets over time, so that you don’t experience too much variance.</p>
+<h3 id="add-enough-funds-to-your-funder-wallet">Add enough funds to your funder wallet</h3>
+<p>Once you have used the interface to pick an efficiency and size, you will then know how much funds you will need to create the account. The amount is totaled right above the create button as “Total OXT” as well as the “Network fee ETH”. You will need that amount of OXT and that amount of ETH in the funder wallet in order to enable the create account button.</p>
+<p>A current listing of exchanges where to buy OXT and ETH are listed here: <a href="https://www.orchid.com/oxt">https://www.orchid.com/oxt</a></p>
+<h3 id="funding-the-account">Funding the account</h3>
+<p>Once there are enough funds in the attached funder wallet, the Create button will become available. Click Create!</p>
+<p>That will trigger 2 transactions to be submitted to the blockchain. The first one is an approval and will be less expensive than the second one, which is a push. Both need to successfully complete in order for the account to be usable and created properly. Both transactions will pop-up in the funder wallet and require approval, along with the payment for associated network fees. </p>
+<p>The first transaction to accept will be an approve call for the ERC-20 OXT token. This is relatively cheap, and is typically picked up fast by Ethereum. The second transaction is a push call to the Orchid nanopay contract. This is the more expensive function, and typically will require more gas and time. If your wallet supports increasing the gas limit for transactions, it is a good idea to use a higher gas limit for the second transaction so that it gets confirmed by the blockchain faster.</p>
+<p>Once the 2 transactions are approved and submitted to the blockchain, two purple banners will appear so you can keep track of the status of each transaction. Depending on the load on the current blockchain and the fees submitted with the two transactions, this can end up taking either a few minutes or many hours to complete. Blockchain tools such as Etherscan can be used to get an estimation on how long it will take.</p>
+<h3 id="multiple-account-management">Multiple Account Management</h3>
+<p>Once you have an Orchid account created, it will become selected in the interface and the UI elements will be relevant for that Orchid account. The information appearing on the Overview screen is relevant to that account, along with adding/withdrawing funds, etc. </p>
+<p>The Orchid dApp supports a single attached funder wallet to make multiple accounts. To access multiple accounts, click on the purple Orchid logo in the upper right to open the account list. From there you can create a new account and select between existing accounts.</p>
+<h2 id="add-funds">Add funds</h2>
+<p>The Add Funds screen allows you to add funds to an existing account. In order to add funds to an account, the funder wallet of the account will need to be connected to the dApp interface.</p>
+<p>Clicking on Add Funds will bring up the interface. It is very similar to the account creation interface, except that the account has an existing balance and deposit. The efficiency slider and size picker will both help determine the amount of funds you need to add to the account.</p>
+<p>The total at the bottom of the interface is the amount of currency you will need in order to change the account makeup to be as selected in the interface. In addition to the currency that will be added to the balance and/or deposit, you will also need to pay the network fee.</p>
+<p>The recommendation is to have an efficiency of at least 50% and to have at least 3 tickets worth of balance.</p>
+<p>Once there is enough currency in the funder wallet, click the “Add Funds” button to initiate the two transactions needed to add funds. The funder wallet needs to approve both transactions and then two purple banners will appear with the status of both of those transactions.</p>
+<h2 id="withdraw">Withdraw</h2>
+<p>For the withdraw function to be available, a funder wallet will need to be connected first. The withdraw screen allows you to pull the currency out of the Balance and Deposit of the account to a wallet of your choice. If the deposit is still locked, only the balance will be able to be withdrawn. </p>
+<p>Note - if you are looking to withdraw everything from the account, the way to do this with the least amount of network fees is to unlock the Deposit and then withdraw the Balance and Deposit together. Then you only incur network fees for the unlock and withdraw, vs incurring fees for the withdraw twice.</p>
+<p>Once the Deposit is unlocked and the 24 hour cooling off period satisfied, the check box to “Withdraw Full Balance and Deposit” will be available. </p>
+<h2 id="lockunlock-funds">Lock/Unlock Funds</h2>
+<p>The deposit of all Orchid accounts requires a 24 hour cooling off period before it can be withdrawn. The cooling off period gives enough time for providers to settle up any winning tickets they may have, and prevents double spending on the network.</p>
+<p>In order to withdraw the deposit, the deposit will first need to be unlocked using the Lock/Unlock Funds screen.</p>
+<p>Connect the funder wallet of the Orchid account to unlock and then click on the More menu in the upper right hand corner. There is a link for Lock/Unlock funds. That will open the interface. </p>
+<p>The account’s deposit will either be locked or unlocked. Use the button to change the status back and forth. Note that there is a network fee for each lock and unlock. The amount of the network fee will be shown in the funder wallet after you click the lock/unlock purple button.</p>
+<h2 id="account-info">Account info</h2>
+<p>To see your Orchid Account info, go to ‘More’ and then ‘Info’. You’ll see the wallet associated with the Orchid Account, and the ETH and OXT amounts in the attached wallet at the top. Below that, you’ll see the Signer Key and then under ‘Orchid Account’ is your balance and deposit.</p>
+<p>At the bottom, you’ll see Market Stats including minimum and recommended amounts for your balance and deposit. These numbers will fluctuate depending on the current market conditions.</p>
+<p>Finally, you’ll see whether the funds in your account are locked or unlocked.</p>
+<h2 id="notification-banners">Notification banners</h2>
+<p>Notification banners alert you to changes related to market interactions and the Orchid network that impact your Orchid account balance and deposit. For help with specific notification messages, see <a href="../accounts/#orchid-account-troubleshooting">Orchid account troubleshooting</a>.</p>
+<p>Notification banners also appear when there are transactions submitted from the dApp, approved by the funder wallet and awaiting confirmation from the blockchain.</p>
+<h2 id="orchid-dapp-faqs">Orchid DApp FAQs</h2>
+<h3 id="why-do-i-need-a-new-ethereum-wallet-why-cant-i-use-my-main-wallet">Why do I need a new Ethereum wallet? Why can’t I use my main wallet?</h3>
+<p>While you could use your primary Ethereum wallet that you typically use for other Ethereum applications, we do not recommend it if you are seeking privacy with Orchid. The main reason is that using Orchid results in on chain payments flowing from your wallet to the Orchid nanopayment contract, and then on to VPN providers selling bandwidth. Ethereum on-chain analytics can easily link payments to/from the nanopayment smart contract and then to providers. If the source of the funds comes from your personal Ethereum wallet linked to other services, anyone using Etherscan would be able to see that you used Orchid and sent payments to VPN providers, when the occasional Orchid nanopayment system issues a winning ticket.</p>
+<h3 id="why-should-i-trust-a-big-exchange-with-my-personal-info-would-a-decentralized-exchange-that-doesnt-store-my-personal-info-be-better">Why should I trust a big exchange with my personal info? Would a decentralized exchange that doesn’t store my personal info be better?</h3>
+<p>While a decentralized exchange does not store your personal information that could link your source of funds to your identity, a decentralized exchange does typically require an Ethereum account with some sort of crypto such as ETH, which has its own history of transactions. If that ETH or wallet is linked to your identity, then the source of funds could be linked through the DEX back to your originating Ethereum wallet.</p>
+<p>A large exchange typically has a ledger they use to keep track of ownership, with a hot wallet they use to send funds in and out of the exchange. While the exchange knows your identity, the movement of currency in and out of the exchange is anonymous, as the funds can’t be tracked to your identity on the blockchain without the exchange being hacked, subpoenaed or otherwise compromised.</p>
+<h3 id="why-do-i-need-eth-and-oxt">Why do I need ETH and OXT?</h3>
+<p>Orchid is a series of decentralized smart contracts and client software that uses Ethereum. Certain operations require the use of ETH for gas to power the smart contracts that run Orchid. For users who use the Orchid app, ETH is required when adding or removing funds from your Orchid account through the web3 browser interface.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../faq/" class="btn btn-neutral float-right" title="FAQ">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../using-orchid/" class="btn btn-neutral" title="The Orchid Client"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../using-orchid/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../faq/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
