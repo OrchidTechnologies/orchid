@@ -53,9 +53,14 @@ struct Mutables {
 class Reader {
   public:
     virtual ~Reader() = default;
-    virtual task<size_t> Read(const Mutables &buffers) = 0;
 
-    task<size_t> Read(uint8_t *data, size_t size) {
+    virtual task<size_t> Read(const Mutables &buffers) {
+        const auto buffer(buffers.begin());
+        orc_assert(buffers.end() - buffer == 1);
+        co_return co_await Read(static_cast<uint8_t *>(buffer->data()), buffer->size());
+    }
+
+    virtual task<size_t> Read(uint8_t *data, size_t size) {
         co_return co_await Read(asio::buffer(data, size));
     }
 
