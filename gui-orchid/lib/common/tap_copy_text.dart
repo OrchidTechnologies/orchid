@@ -8,7 +8,7 @@ class TapToCopyText extends StatefulWidget {
   final EdgeInsets padding;
 
   // Callback to be used in lieu of the default copy functionality
-  final Future<void> Function(String text) onTap;
+  final void Function(String text) onTap;
 
   const TapToCopyText(this.text,
       {Key key, this.style, this.padding, this.onTap})

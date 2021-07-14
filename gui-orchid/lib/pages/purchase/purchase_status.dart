@@ -10,6 +10,7 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/common/tap_copy_text.dart';
 import '../../common/app_text.dart';
 import '../../util/streams.dart';
 
@@ -120,8 +121,12 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
         pady(16),
-        LinkText(s.copyReceipt,
-            style: AppText.linkStyle, onTapped: _copyDebugInfo),
+        TextButton(
+            onPressed: _copyDebugInfo,
+            child: Text(
+          s.copyReceipt,
+          style: AppText.linkStyle,
+        )),
       ],
     );
   }
@@ -205,8 +210,8 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
   void _copyDebugInfo() async {
     log("iap: Copy debug info");
     PacTransaction tx = await PacTransaction.shared.get();
-    Clipboard.setData(
-        ClipboardData(text: tx != null ? (await tx.userDebugString()) : '<no tx>'));
+    Clipboard.setData(ClipboardData(
+        text: tx != null ? (await tx.userDebugString()) : '<no tx>'));
   }
 
   void _retryPurchase() async {
