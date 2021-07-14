@@ -161,9 +161,8 @@ class _ConnectPageState extends State<ConnectPage>
       _guiV1 = !guiV0;
       if (_guiV1) {
         await _activeAccountChanged(await Account.activeAccount);
-      } else {
-        await _updateCircuitStatus();
       }
+      await _updateCircuitStatus();
       _checkAlerts(null);
     }).dispose(_subs);
 
