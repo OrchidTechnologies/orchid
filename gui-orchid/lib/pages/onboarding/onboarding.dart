@@ -40,7 +40,6 @@ class AppOnboarding {
     // TODO: race condition here.
     bool hasVPNPermission = OrchidAPI().vpnPermissionStatus.value;
     bool promptedForVPNPermission = await UserPreferences().getPromptedForVPNPermission();
-    debugPrint("XXX: hasVPNPerm: $hasVPNPermission, prompted: $promptedForVPNPermission");
     if (!(hasVPNPermission == true) && !promptedForVPNPermission) {
       return AppRoutes.onboarding_vpn_permission;
     }

@@ -181,7 +181,7 @@ class OrchidPACServer {
       PacSubmitSellerTransaction sellerTx) async {
     log("iap: submit seller tx to PAC server: ${sellerTx.toJson()}");
     var tx = sellerTx.txParams;
-    print("XXX: tx = $tx, tx.chainId = ${tx.chainId}");
+    print("iap: tx = $tx, tx.chainId = ${tx.chainId}");
     var chainId = tx.chainId;
     var chain = Chains.chainFor(chainId);
     var signerKey = await sellerTx.signerKey.get();

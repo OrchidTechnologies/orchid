@@ -115,7 +115,7 @@ class _TrafficViewState extends State<TrafficView>
   void initStateAsync() async {
     // monitoringEnabledController.onChange = _monitoringSwitchChanged;
     // monitoringEnabledController.controlledState.value =
-        await UserPreferences().monitoringEnabled.get();
+    await UserPreferences().monitoringEnabled.get();
   }
 
   @override
@@ -134,31 +134,32 @@ class _TrafficViewState extends State<TrafficView>
     return Container(
       decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
       child: SafeArea(
-        child: Stack(
+        child: Column(
           children: <Widget>[
-            Visibility(
-              visible: _uiInitialized(),
-              replacement: Container(),
+            OrientationBuilder(builder: (BuildContext context, Orientation _) {
+              var orientation = MediaQuery.of(context).orientation;
+              return Visibility(
+                visible: orientation == Orientation.portrait,
+                child: _buildEnableMontoringSwitch(),
+              );
+            }),
+            Expanded(
               child: Visibility(
-                // visible: _showEmptyView(),
-                visible: false,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: TrafficEmptyView(),
-                ),
-                replacement: Column(
-                  children: <Widget>[
-                    OrientationBuilder(
-                        builder: (BuildContext context, Orientation orientation) {
-                          return Visibility(
-                            visible: orientation == Orientation.portrait,
-                            child: _buildEnableMontoringSwitch(),
-                          );
-                        }),
-                    _buildSearchView(),
-                    _buildNewContentIndicator(),
-                    _buildResultListView()
-                  ],
+                visible: _uiInitialized(),
+                replacement: Container(),
+                child: Visibility(
+                  visible: _showEmptyView(),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 0.0),
+                    child: TrafficEmptyView(),
+                  ),
+                  replacement: Column(
+                    children: <Widget>[
+                      _buildSearchView(),
+                      _buildNewContentIndicator(),
+                      _buildResultListView()
+                    ],
+                  ),
                 ),
               ),
             ),

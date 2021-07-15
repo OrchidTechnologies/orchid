@@ -34,13 +34,13 @@ class MarketConditionsV1 implements MarketConditions {
                     maxFaceValue.floatValue)
             .toDouble();
 
-    //log("XXX: market conditions for: $balance, $escrow, costToRedeem = $costToRedeem, maxFaceValue=$maxFaceValue");
+    //log("market conditions for: $balance, $escrow, costToRedeem = $costToRedeem, maxFaceValue=$maxFaceValue");
     return new MarketConditionsV1(maxFaceValue, efficiency, limitedByBalance);
   }
 
   static Future<Token> getCostToRedeemTicket(Chain chain) async {
     Token gasPrice = await OrchidEthereumV1().getGasPrice(chain);
-    //log("XXX: gas price for chain: ${chain.name} = ${gasPrice.intValue}");
+    //log("gas price for chain: ${chain.name} = ${gasPrice.intValue}");
     return gasPrice * OrchidContractV1.gasCostToRedeemTicket.toDouble();
   }
 

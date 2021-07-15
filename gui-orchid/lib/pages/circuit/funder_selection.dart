@@ -54,15 +54,12 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
         .where((account) => account.identityUid == _signer.uid)
         .map((account) => account.funder)
         .toList();
-    print("XXX: funder addresses = $_funderAddresses");
-    print("XXX: selected funder item = $_selectedItem");
 
     // If the cached accounts list does not include the selected funder add it.
     // This can happen if the user pasted a prospective account that hasn't been
     // funded yet.
     if (widget.initialSelection?.funder != null &&
         !_funderAddresses.contains(widget.initialSelection?.funder)) {
-      print("XXX: adding funder to list: ${widget.initialSelection.funder}");
       _funderAddresses.add(widget.initialSelection.funder);
     }
 
@@ -77,7 +74,6 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    print("XXX: selected funder item = $_selectedItem");
     return Container(
       padding: EdgeInsets.only(left: 16, right: 16),
       decoration:

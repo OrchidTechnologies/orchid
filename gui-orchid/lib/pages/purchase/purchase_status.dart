@@ -82,7 +82,6 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
   }
 
   void _dismissCompleted() async {
-    print("XXX: dismiss complete");
     var tx = (await PacTransaction.shared.get());
     if (tx != null && tx.state != PacTransactionState.Complete) {
       throw Exception("not completed");

@@ -103,8 +103,7 @@ class AccountStore extends ChangeNotifier {
     // Publish the new config
     OrchidAPI().circuitConfigurationChanged.add(null);
     await OrchidAPI().updateConfiguration();
-    print(
-        "XXX: accounts changed: config = ${await OrchidVPNConfig.generateConfig()}");
+    //print( "accounts changed: config = ${await OrchidVPNConfig.generateConfig()}");
   }
 
   // Load available identities and user selected active account information

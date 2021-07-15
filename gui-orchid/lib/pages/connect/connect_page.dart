@@ -168,7 +168,7 @@ class _ConnectPageState extends State<ConnectPage>
 
     // Monitor routing preference
     UserPreferences().routingEnabled.stream().listen((enabled) {
-      log("XXX: routing enabled changed: $enabled");
+      log("routing enabled changed: $enabled");
       setState(() {
         _routingEnabled = enabled;
       });
@@ -233,7 +233,6 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// The page content including the button title, button, and route info when connected.
   Widget _buildPageContent() {
-    log("XXX: guiv1 = $_guiV1");
     return OrientationBuilder(
         builder: (BuildContext context, Orientation builderOrientation) {
       var tall = AppSize(context).tallerThan(AppSize.iphone_se);
@@ -766,7 +765,6 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   Future _activeAccountChanged(Account account) async {
-    log("XXX: active account changed invoked with: $account");
     if (UserPreferences().guiV0.value) {
       return;
     }
@@ -776,7 +774,6 @@ class _ConnectPageState extends State<ConnectPage>
     } else {
       _activeAccount = null;
     }
-    log("XXX: active account left at: $_activeAccount");
     setState(() {});
   }
 

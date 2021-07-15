@@ -61,7 +61,7 @@ class OrchidPacSeller {
     final escrowMax = currency.fromDouble(USD(0.25).value * usdToTokenRate);
     final escrow = Token.min(useableTokenValue * escrowPercentage, escrowMax);
 
-    log("eth: createFundingTransaction "
+    log("pac: createFundingTransaction "
         "totalUsdValue = $totalUsdValue, "
         "usdToTokenRate = $usdToTokenRate, "
         "totalTokenValue = $totalTokenValue, "
@@ -132,7 +132,7 @@ class OrchidPacSeller {
       data: encodedSellerEditCall,
       nonce: l2Nonce,
     );
-    log("XXX: pac seller, unsigned tx = ${tx.toJson()}");
+    log("pac: pac seller, unsigned tx = ${tx.toJson()}");
 
     return tx;
   }
@@ -145,7 +145,7 @@ class OrchidPacSeller {
         "Ethereum Signed Message:\n" +
         txString.length.toString() +
         txString;
-    print("XXX: signTransactionString: msg = $msg");
+    log("pac: signTransactionString: msg = $msg");
 
     var encoded = utf8.encode(msg);
     return Web3DartUtils.web3Sign(keccak256(encoded), signerKey);
@@ -166,7 +166,7 @@ class OrchidPacSeller {
     BigInt retrieve,
     BigInt refill,
   }) {
-    print("return '0x' +"
+    log("pac: return '0x' +"
             "editMethodHash = $editMethodHash" +
         '\n' +
         "AbiEncode.address(signer) = ${AbiEncode.address(signer)}" +
@@ -228,7 +228,7 @@ class OrchidPacSeller {
     @required BigInt retrieve,
     @required BigInt refill,
   }) {
-    print("XXX: packedAbiEncodedEditParams:\n"
+    log("pac: packedAbiEncodedEditParams:\n"
             "AbiEncodePacked.bytes1(0x19) = ${AbiEncodePacked.bytes1(0x19)}\n" +
         "AbiEncodePacked.bytes1(0x00) = ${AbiEncodePacked.bytes1(0x00)}\n" +
         "AbiEncodePacked.address(pacSellerAddress) = ${AbiEncodePacked.address(sellerContractAddress)}\n" +
@@ -271,7 +271,7 @@ class OrchidPacSeller {
         await OrchidEthereumV1.ethCall(url: chain.providerUrl, params: params);
     var buff = HexStringBuffer(result);
     var nonce = buff.takeUint256().toUnsigned(64).toInt();
-    print("XXX: getL3Nonce result = $result, nonce = $nonce");
+    log("pac: getL3Nonce result = $result, nonce = $nonce");
     return nonce;
   }
 }

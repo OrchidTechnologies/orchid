@@ -69,7 +69,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   Future<void> _pollBalanceAndAccountDetails() async {
     var resolvedSigner = await account.signerAddress;
 
-    //log("XXX: polling account details: signer = $resolvedSigner, funder = $funder");
+    //log("polling account details: signer = $resolvedSigner, funder = $funder");
     if (_balancePollInProgress) {
       return;
     }
@@ -78,7 +78,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       // Fetch the pot balance
       LotteryPot _pot;
       try {
-        log("XXX: detail poller fetch pot, eth=$eth, funder=$funder, signer=$resolvedSigner");
+        //log("Detail poller fetch pot, eth=$eth, funder=$funder, signer=$resolvedSigner");
         _pot = await eth
             .getLotteryPot(funder, resolvedSigner)
             .timeout(Duration(seconds: 30));

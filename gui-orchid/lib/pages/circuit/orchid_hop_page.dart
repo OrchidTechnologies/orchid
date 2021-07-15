@@ -707,7 +707,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   void _onKeySelected(KeySelectionItem key) {
-    print("XXX: on key selected");
     setState(() {
       _selectedKeyItem = key;
       _selectedFunderItem = null;
@@ -718,7 +717,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   void _onFunderSelected(FunderSelectionItem funder) {
-    print("XXX: on funder selected, funder = $funder");
     setState(() {
       _selectedFunderItem = funder;
     });
@@ -771,7 +769,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     } catch (err) {
       funder = null; // don't update it
     }
-    print("XXX: update hop, funder = $funder");
     // The selected key ref may be null here in the case of the generate
     // or import options.  In those cases the key will be filled in upon save.
     widget.editableHop.update(OrchidHop.from(widget.editableHop.value?.hop,

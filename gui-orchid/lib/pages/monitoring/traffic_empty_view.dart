@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_types.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import '../../common/app_colors.dart';
@@ -33,7 +31,7 @@ class TrafficEmptyView extends StatelessWidget {
                               children: <Widget>[
                                 Spacer(flex: 2),
                                 AppText.header(
-                                    text: "Analyze Your Connections",
+                                    text: monitoring ? "Analyzing Your Connections" : "Analyze Your Connections",
                                     fontWeight: FontWeight.bold,
                                     fontSize: 24.0),
                                 SizedBox(height: 20),
@@ -53,7 +51,7 @@ class TrafficEmptyView extends StatelessWidget {
                                     height: 330,
                                   ),
                                 ),
-                                Spacer(flex: 1),
+                                Spacer(flex: 2),
                               ],
                             ),
                           );

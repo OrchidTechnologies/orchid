@@ -55,7 +55,6 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    print("XXX: selected key item = $_selectedItem");
     return Container(
       padding: EdgeInsets.only(left: 16, right: 16),
       decoration:
