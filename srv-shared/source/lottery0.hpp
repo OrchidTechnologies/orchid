@@ -38,6 +38,7 @@
 #include "sleep.hpp"
 #include "signed.hpp"
 #include "spawn.hpp"
+#include "time.hpp"
 #include "token.hpp"
 #include "updated.hpp"
 
@@ -91,6 +92,10 @@ class Lottery0 :
                 // XXX: I should dump these to a disk queue as they are worth "real money"
                 // XXX: that same disk queue should maybe be in charge of the old tickets?
                 co_await Sleep(5000);
+
+                const auto refs(std::make_tuple(std::ref(args)...));
+                if (std::get<9>(refs) + std::get<10>(refs) <= Timestamp())
+                    break;
             }
         }, __FUNCTION__);
     }
