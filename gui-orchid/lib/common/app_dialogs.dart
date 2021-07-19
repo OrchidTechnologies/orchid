@@ -17,29 +17,31 @@ class AppDialogs {
       context: context,
       builder: (BuildContext context) {
         // return object of type Dialog
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(16.0))),
-          title: Text(title, style: AppText.dialogTitle),
-          content: body ?? Text(bodyText, style: AppText.dialogBody),
-          actions: <Widget>[
-            linkSettings
-                ? FlatButton(
-                    child: Text(s.settingsButtonTitle,
-                        style: AppText.dialogButton),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.pushNamed(context, '/settings');
-                    },
-                  )
-                : null,
-            FlatButton(
-              child: Text(s.ok, style: AppText.dialogButton),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
+        return FittedBox(
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(16.0))),
+            title: Text(title, style: AppText.dialogTitle),
+            content: body ?? Text(bodyText, style: AppText.dialogBody),
+            actions: <Widget>[
+              linkSettings
+                  ? FlatButton(
+                      child: Text(s.settingsButtonTitle,
+                          style: AppText.dialogButton),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.pushNamed(context, '/settings');
+                      },
+                    )
+                  : null,
+              FlatButton(
+                child: Text(s.ok, style: AppText.dialogButton),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
         );
       },
     );

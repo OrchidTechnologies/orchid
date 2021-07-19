@@ -30,57 +30,64 @@ class _ExportIdentityDialogState extends State<ExportIdentityDialog> {
     return Container(
       padding: EdgeInsets.all(8),
       width: 300,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          widget.body,
-          pady(16),
-          TextButton(
-            onPressed: _onPressed,
-            child: Center(
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    width: 1,
-                    color: Colors.black.withOpacity(0.3),
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    QrImage(
-                      data: widget.config,
-                      version: QrVersions.auto,
-                      size: 180.0,
+      child: OrientationBuilder(
+          builder: (BuildContext context, Orientation builderOrientation) {
+        var orientation = MediaQuery.of(context).orientation;
+        return Container(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (orientation == Orientation.portrait) widget.body,
+              if (orientation == Orientation.portrait) pady(16),
+              TextButton(
+                onPressed: _onPressed,
+                child: Center(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        width: 1,
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    pady(8),
-                    Container(
-                      width: 180,
-                      height: 20,
-                      child: _showCopiedText
-                          ? Center(child: Text(s.copied))
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  s.copy,
-                                  style: TextStyle(color: Colors.deepPurple),
+                    child: Column(
+                      children: [
+                        QrImage(
+                          data: widget.config,
+                          version: QrVersions.auto,
+                          size: 180.0,
+                        ),
+                        pady(8),
+                        Container(
+                          width: 180,
+                          height: 20,
+                          child: _showCopiedText
+                              ? Center(child: Text(s.copied))
+                              : Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      s.copy,
+                                      style: TextStyle(color: Colors.deepPurple),
+                                    ),
+                                    Icon(
+                                      Icons.download_sharp,
+                                      color: Colors.deepPurple,
+                                    )
+                                  ],
                                 ),
-                                Icon(
-                                  Icons.download_sharp,
-                                  color: Colors.deepPurple,
-                                )
-                              ],
-                            ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      }),
     );
   }
 
