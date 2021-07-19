@@ -22,9 +22,19 @@ class PurchaseStatus extends StatefulWidget {
 }
 
 class _PurchaseStatusState extends State<PurchaseStatus> {
+  // The status message to be shown to the user
   String _statusMessage;
-  bool _requiresUserAction = false;
+
+  // If true show the expandable help section
+  bool _waitingForUserAction = false;
+
+  // If true the user action should present the retry button
+  bool _userActionRetryable = false;
+
+  // If true the user has expanded the help section
   bool _showHelpExpanded = false;
+
+  // If true show the transation completed status
   bool _showCompleted = false;
 
   List<StreamSubscription> _subscriptions = [];
@@ -98,7 +108,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
     if (_showCompleted) {
       return _buildCompleted();
     }
-    return _requiresUserAction
+    return _waitingForUserAction
         ? _buildRequiresUserAction()
         : _buildProgressIndicator();
   }
@@ -123,9 +133,9 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         TextButton(
             onPressed: _copyDebugInfo,
             child: Text(
-          s.copyReceipt,
-          style: AppText.linkStyle,
-        )),
+              s.copyReceipt,
+              style: AppText.linkStyle,
+            )),
       ],
     );
   }
@@ -135,17 +145,18 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text(
-          s.pacPurchaseWaiting,
+          _userActionRetryable ? s.pacPurchaseWaiting : s.purchaseError,
           style: TextStyle(fontSize: 16),
         ),
         pady(16),
-        FlatButton(
-            color: Colors.deepPurple,
-            child: Text(
-              s.retry,
-              style: TextStyle(color: Colors.white),
-            ),
-            onPressed: _retryPurchase),
+        if (_userActionRetryable)
+          FlatButton(
+              color: Colors.deepPurple,
+              child: Text(
+                s.retry,
+                style: TextStyle(color: Colors.white),
+              ),
+              onPressed: _retryPurchase),
         _showHelpExpanded ? _buildHelpExpanded() : _buildHelp()
       ],
     );
@@ -253,10 +264,15 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         break;
       case PacTransactionState.WaitingForUserAction:
         var retry = tx.retries > 0 ? " (${tx.retries})" : "";
-        _show(s.retryPurchasedPAC + retry, requiresUserAction: true);
+        var retryWouldFail = (tx is ReceiptTransaction) && tx.receipt == null;
+        _show(
+          s.retryPurchasedPAC + retry,
+          waitingForUserAction: true,
+          userActionRetryable: !retryWouldFail,
+        );
         break;
       case PacTransactionState.Error:
-        _show(s.purchaseError, requiresUserAction: true);
+        _show(s.purchaseError, waitingForUserAction: true);
         break;
       case PacTransactionState.Complete:
         log("iap: purchase status set complete");
@@ -267,18 +283,20 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
     }
   }
 
-  void _show(String message, {bool requiresUserAction = false}) {
+  void _show(String message,
+      {bool waitingForUserAction = false, bool userActionRetryable = true}) {
     log("iap: display message: $message");
     setState(() {
       _statusMessage = message;
-      _requiresUserAction = requiresUserAction;
+      _waitingForUserAction = waitingForUserAction;
+      _userActionRetryable = userActionRetryable;
     });
   }
 
   void _hide() {
     setState(() {
       _statusMessage = null;
-      _requiresUserAction = false;
+      _waitingForUserAction = false;
     });
   }
 
