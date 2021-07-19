@@ -272,7 +272,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         );
         break;
       case PacTransactionState.Error:
-        _show(s.purchaseError, waitingForUserAction: true);
+        _show(s.purchaseError, waitingForUserAction: true, userActionRetryable: false);
         break;
       case PacTransactionState.Complete:
         log("iap: purchase status set complete");
