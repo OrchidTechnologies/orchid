@@ -249,8 +249,11 @@ class UserPreferences {
             (await SharedPreferences.getInstance()).getInt(key.toString()));
       },
       storeValue: (key, value) async {
-        return (await SharedPreferences.getInstance())
-            .setInt(key.toString(), value.version);
+        var sharedPreferences = await SharedPreferences.getInstance();
+        if (value.version == null) {
+          return sharedPreferences.remove(key.toString());
+        }
+        return sharedPreferences.setInt(key.toString(), value.version);
       });
 
   /// User preference indicating that the VPN should be enabled to route traffic
@@ -270,9 +273,9 @@ class UserPreferences {
 
   /// This is a synthetic preference that indicates that the user has set
   /// the monitoring preference enabled and the routing preference disabled.
-  // Future<bool> monitorOnly() async {
-  //   return (await monitoringEnabled.value) && (!await routingEnabled.value);
-  // }
+// Future<bool> monitorOnly() async {
+//   return (await monitoringEnabled.value) && (!await routingEnabled.value);
+// }
 }
 
 enum UserPreferenceKey {
