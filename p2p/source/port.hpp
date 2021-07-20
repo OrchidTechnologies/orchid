@@ -27,7 +27,7 @@
 
 namespace orc {
 
-extern const Host Host_;
+static constexpr Host Host_(10,7,0,3);
 
 }
 

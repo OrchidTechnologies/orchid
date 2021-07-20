@@ -46,7 +46,7 @@ class Host {
     }
 
   public:
-    Host(uint8_t q0, uint8_t q1, uint8_t q2, uint8_t q3) :
+    constexpr Host(uint8_t q0, uint8_t q1, uint8_t q2, uint8_t q3) :
         data_({0,0,0,0, 0,0,0,0, 0,0,0xff,0xff, q0,q1,q2,q3,})
     {
     }
