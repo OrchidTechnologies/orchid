@@ -11,37 +11,41 @@ class AppDialogs {
     String bodyText,
     Widget body,
     bool linkSettings = false,
+    bool showActions = true,
   }) {
     S s = S.of(context);
     return showDialog(
       context: context,
       builder: (BuildContext context) {
-        // return object of type Dialog
-        return FittedBox(
-          child: AlertDialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(16.0))),
-            title: Text(title, style: AppText.dialogTitle),
-            content: body ?? Text(bodyText, style: AppText.dialogBody),
-            actions: <Widget>[
-              linkSettings
-                  ? FlatButton(
-                      child: Text(s.settingsButtonTitle,
-                          style: AppText.dialogButton),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        Navigator.pushNamed(context, '/settings');
-                      },
-                    )
-                  : null,
+        return AlertDialog(
+          // actionsPadding: EdgeInsets.zero,
+          // buttonPadding: EdgeInsets.zero,
+          // titlePadding: EdgeInsets.zero,
+          // contentPadding: EdgeInsets.zero,
+          // insetPadding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16.0))),
+          title: Text(title, style: AppText.dialogTitle),
+          content: body ?? Text(bodyText, style: AppText.dialogBody),
+          actions: <Widget>[
+            linkSettings
+                ? FlatButton(
+                    child: Text(s.settingsButtonTitle,
+                        style: AppText.dialogButton),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.pushNamed(context, '/settings');
+                    },
+                  )
+                : null,
+            if (showActions)
               FlatButton(
                 child: Text(s.ok, style: AppText.dialogButton),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
-            ],
-          ),
+          ],
         );
       },
     );
