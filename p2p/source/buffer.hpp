@@ -712,7 +712,7 @@ class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_
     // NOLINTNEXTLINE (modernize-use-equals-default)
     using Data<(Bits_ >> 3)>::Data;
 
-    Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> value, uint8_t pad = 0) {
+    Number(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value, uint8_t pad = 0) {
         for (auto i(boost::multiprecision::export_bits(value, this->data_.rbegin(), 8, false)), e(this->data_.rend()); i != e; ++i)
             *i = pad;
     }
