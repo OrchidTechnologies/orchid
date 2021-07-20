@@ -48,14 +48,12 @@ cflags/$(pwd/wireshark)/ += -D_UNICODE
 cflags/$(pwd/wireshark)/ += -DUNICODE
 
 cflags/$(pwd/wireshark)/ += -DSTRSAFE_NO_DEPRECATE
-cflags/$(pwd/wireshark)/ += -include malloc.h
 cflags/$(pwd/wireshark)/ += -Wno-format
-cflags/$(pwd/wireshark)/ += -Wno-missing-braces
 
-cflags/$(pwd/wireshark)/epan/dissectors/packet-epl-profile-parser.c += -include stdlib.h
 cflags/$(pwd/wireshark)/epan/dissectors/packet-smb2.c += -D_MSC_VER
 cflags/$(pwd/wireshark)/wsutil/getopt_long.c += -DNO_OLDNAMES
 cflags/$(pwd/wireshark)/wsutil/filesystem.c += -Wno-unused-function
+cflags/$(pwd/wireshark)/wsutil/win32-utils.c += -Wno-missing-braces
 else
 wireshark := $(filter-out \
     %/file_util.c \
@@ -65,8 +63,10 @@ wireshark := $(filter-out \
 cflags/$(pwd/wireshark)/ += -DHAVE_ALLOCA_H
 cflags/$(pwd/wireshark)/ += -DHAVE_ARPA_INET_H
 cflags/$(pwd/wireshark)/ += -DHAVE_GRP_H
+cflags/$(pwd/wireshark)/ += -DHAVE_NETDB_H
 cflags/$(pwd/wireshark)/ += -DHAVE_PWD_H
 cflags/$(pwd/wireshark)/ += -DHAVE_SYS_SELECT_H
+cflags/$(pwd/wireshark)/ += -DHAVE_SYS_SOCKET_H
 
 cflags/$(pwd/wireshark)/ += -DHAVE_MKSTEMPS
 cflags/$(pwd/wireshark)/ += -DHAVE_STRPTIME
@@ -77,7 +77,6 @@ wireshark := $(filter-out \
     %/strptime.c \
 ,$(wireshark))
 
-cflags/$(pwd/wireshark)/epan/addr_resolv.c += -include netdb.h -include sys/select.h
 cflags/$(pwd/wireshark)/wsutil/crash_info.c += -D__crashreporter_info__=orc_crashinfo
 endif
 
@@ -221,8 +220,6 @@ w_libgcrypt += ac_cv_func_getentropy=no
 endif
 
 w_libgcrypt += --with-libgpg-error-prefix=@/usr
-# XXX: I believe this is a bug? https://dev.gnupg.org/T5365
-w_libgcrypt += ac_cv_path_GPGRT_CONFIG=@/usr/bin/gpgrt-config
 $(call depend,$(pwd)/libgcrypt/Makefile,@/usr/include/gpg-error.h)
 $(call depend,$(pwd)/libgcrypt/Makefile,@/usr/lib/libgpg-error.a)
 

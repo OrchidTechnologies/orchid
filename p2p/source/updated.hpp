@@ -34,7 +34,6 @@ class Updated {
     Locked<Type_> value_;
 
   public:
-    // XXX: remove this constructor
     Updated() = default;
 
     Updated(Type_ &&value) :

@@ -67,7 +67,7 @@ class Client0 :
   public:
     Client0(BufferDrain &drain, S<Updated<Prices>> oracle, Token token, const Address &lottery, const Secret &secret, const Address &funder, const Address &seller, Bytes hoarded, const uint128_t &face);
 
-    // XXX: this should be task<Client &> but cppcoro doesn't seem to support that
+    // XXX: this should be task<Client &> but my task Transfer doesn't support that
     static task<Client0 *> Wire(BufferSunk &sunk, S<Updated<Prices>> oracle, Token token, const Address &lottery, const Secret &secret, const Address &funder);
 
     uint128_t Face();

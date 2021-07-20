@@ -123,9 +123,7 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
 }
 
 std::ostream &operator <<(std::ostream &out, const View &view) {
-    // XXX: provide some kind of safe cast abstraction
-    orc_assert(view.size() <= std::numeric_limits<std::streamsize>::max());
-    out.write(view.data(), std::streamsize(view.size()));
+    out.write(view.data(), Fit<std::streamsize>(view.size()));
     return out;
 }
 

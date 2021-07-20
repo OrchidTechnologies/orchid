@@ -35,13 +35,6 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
         // XXX: look up fingerprint
         static int fingerprint_(0);
         std::string fingerprint(std::to_string(fingerprint_++));
-
-        // XXX: this is a fingerprint I used once in a curl command for testing and now spams the server
-        if (offer.find("DB:7F:E8:DC:D7:D2:70:56:49:66:71:F7:A0:D9:1E:36:40:53:ED:EB:39:59:0A:D1:35:DA:88:C5:E9:A1:C5:78") != std::string::npos)
-            co_return Respond(request, http::status::ok, {
-                {"content-type", "text/plain"},
-            }, "v=");
-
         const auto server(Find(fingerprint));
         auto answer(co_await server->Respond(base_, offer, ice_));
 

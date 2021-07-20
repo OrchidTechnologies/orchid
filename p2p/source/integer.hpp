@@ -58,6 +58,12 @@ std::enable_if_t<std::is_integral_v<Type_>, Type_> To(const std::string_view &va
     return number;
 }
 
+template <typename Type_, typename From_>
+Type_ Fit(const From_ &value) {
+    orc_assert(value <= std::numeric_limits<Type_>::max());
+    return Type_(value);
+}
+
 }
 
 #endif//ORCHID_INTEGER_HPP

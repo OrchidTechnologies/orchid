@@ -159,7 +159,7 @@ int Main(int argc, const char *const argv[]) {
     }
 
     if (args.count("version") != 0) {
-        std::cout.write(VersionData, VersionSize);
+        std::cout.write(VersionData, Fit<std::streamsize>(VersionSize));
         return 0;
     }
 

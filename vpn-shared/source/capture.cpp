@@ -449,8 +449,8 @@ class Transform :
     // https://www.snellman.net/blog/archive/2016-02-01-tcp-rst/
     // https://superuser.com/questions/1056492/rst-sequence-number-and-window-size/1075512
     void Reset(const Socket &source, const Socket &destination, uint32_t sequence, uint32_t acknowledge) noexcept {
-        // XXX: rename this to Packet packet (leaving Header for UDP headers)
-        struct Header {
+        // XXX: rename this to data
+        struct {
             openvpn::IPv4Header ip4;
             openvpn::TCPHeader tcp;
         } orc_packed header;

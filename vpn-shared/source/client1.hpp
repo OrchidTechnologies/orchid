@@ -23,12 +23,6 @@
 #ifndef ORCHID_CLIENT1_HPP
 #define ORCHID_CLIENT1_HPP
 
-// XXX: give a patch to Lewis Baker to fix this
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreorder"
-#include <cppcoro/shared_task.hpp>
-#pragma clang diagnostic pop
-
 #include "client.hpp"
 #include "crypto.hpp"
 #include "float.hpp"
@@ -63,7 +57,7 @@ class Client1 :
   public:
     Client1(BufferDrain &drain, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder, const uint128_t &face);
 
-    // XXX: this should be task<Client &> but cppcoro doesn't seem to support that
+    // XXX: this should be task<Client &> but my task Transfer doesn't support that
     static task<Client1 *> Wire(BufferSunk &sunk, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder);
 
     uint128_t Face();

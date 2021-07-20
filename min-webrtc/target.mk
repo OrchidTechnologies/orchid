@@ -120,8 +120,6 @@ webrtc += $(wildcard $(pwd)/webrtc/rtc_base/*/*/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/stats/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/system_wrappers/source/*.cc)
 
-cflags/$(pwd)/webrtc/rtc_base/random.cc += -Wno-implicit-int-float-conversion
-
 
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/internal/*.cc)
