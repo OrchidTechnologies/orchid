@@ -165,6 +165,8 @@
         <string>pt_BR</string>
         <string>ru</string>
         <string>zh</string>
+        <string>fr</string>
+        <string>tr</string>
     </array>
 </dict>
 </plist>
