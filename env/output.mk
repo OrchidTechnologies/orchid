@@ -150,7 +150,7 @@ define _
 $(output)/%/$(1).a: $(patsubst %,$(output)/$$(percent)/%,$(filter $(1)/%,$(object)))
 	@rm -f $$@
 	@echo [AR] $$@
-	@$$(ar/$$*) -rs $$@ $$^
+	@$$(ar/$$*) -rcs $$@ $$^
 object := $(filter-out $(1)/%.o,$(object))
 endef
 $(foreach archive,$(archive),$(eval $(call _,$(archive))))
