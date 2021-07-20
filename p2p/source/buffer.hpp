@@ -570,6 +570,10 @@ class Data :
         static_assert(Skip_ <= Size_);
         return Bounded<Size_ - Skip_>(data() + Skip_);
     }
+
+    const auto &arr() const {
+        return data_;
+    }
 };
 
 template <size_t Size_>
