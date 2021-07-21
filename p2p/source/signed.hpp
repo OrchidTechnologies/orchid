@@ -23,7 +23,10 @@
 #ifndef ORCHID_SIGNED_HPP
 #define ORCHID_SIGNED_HPP
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconversion"
 #include <boost/multiprecision/cpp_int.hpp>
+#pragma clang diagnostic pop
 
 namespace orc {
 

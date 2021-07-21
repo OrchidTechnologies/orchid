@@ -66,14 +66,12 @@ task<Response_> TrezorSession::Call(uint16_t type, const Request_ &request) cons
 
   retry:
     data = co_await Trezor(base_, "/call/" + session_, Tie(type, uint32_t(data.size()), data).hex(false));
-    const auto output(Bless(data));
-    Window window(output.subset(0, 6));
-    const auto [kind, size] = Take<uint16_t, uint32_t>(output.subset(0, 6));
-    orc_assert(size == output.size() - 6);
+    const auto [kind, size, rest] = Take<uint16_t, uint32_t, Rest>(Bless(data));
+    orc_assert(size == rest.size());
 
     #define ORC_RESPONSE(type) \
         type response; \
-        orc_assert(response.ParseFromArray(output.data() + 6, output.size() - 6));
+        orc_assert(response.ParseFromArray(rest.data(), Fit(rest.size())));
 
     switch (kind) {
         case tzr::MessageType_Failure: {
@@ -168,7 +166,7 @@ task<Bytes32> TrezorExecutor::Send(const Chain &chain, const uint256_t &nonce, c
 
     Window window(data);
     auto size(window.size());
-    request.set_data_length(size);
+    request.set_data_length(Fit(size));
     if (size > 1024) size = 1024;
 
     request.set_data_initial_chunk(window.Take(size).str());

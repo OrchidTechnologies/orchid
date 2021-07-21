@@ -26,8 +26,6 @@
 
 #include <cppcoro/async_mutex.hpp>
 
-#include <boost/multiprecision/cpp_int.hpp>
-
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>

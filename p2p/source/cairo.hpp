@@ -25,6 +25,8 @@
 
 #include <cairo.h>
 
+#include "fit.hpp"
+
 namespace orc {
 
 class Surface {
@@ -32,8 +34,9 @@ class Surface {
     cairo_surface_t *const handle_;
 
   public:
+    // XXX: reconsider these types
     Surface(unsigned width, unsigned height) :
-        handle_(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height))
+        handle_(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, Fit(width), Fit(height)))
     {
         orc_assert(handle_ != nullptr);
     }

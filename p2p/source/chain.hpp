@@ -26,6 +26,7 @@
 #include "base.hpp"
 #include "crypto.hpp"
 #include "endpoint.hpp"
+#include "fit.hpp"
 #include "jsonrpc.hpp"
 #include "locator.hpp"
 #include "parallel.hpp"
@@ -135,7 +136,7 @@ class Chain :
         ((std::get<Offset_ + Indices_>(result) = uint256_t(std::get<Index_ + Indices_>(hypothesis).asString())), ...);
     }
 
-    uint256_t Get(unsigned index, const Json::Value &storages, const Region &root, const uint256_t &key) const;
+    uint256_t Get(Json::Value::ArrayIndex index, const Json::Value &storages, const Region &root, const uint256_t &key) const;
 
     template <size_t Offset_, size_t Index_, typename Result_, typename... Args_>
     void Get(Result_ &result, const Json::Value &storages, const Region &root) const {
@@ -245,7 +246,7 @@ class Chain :
             std::tuple<Account, std::vector<uint256_t>> result(Account(block, proof));
             Number<uint256_t> root(proof["storageHash"].asString());
             auto storages(proof["storageProof"]);
-            for (size_t i(0); i != args.size(); ++i)
+            for (Json::Value::ArrayIndex e(Fit(args.size())), i(0); i != e; ++i)
                 std::get<1>(result).emplace_back(Get(i, storages, root, args[i]));
             co_return result;
         }

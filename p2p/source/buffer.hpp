@@ -1218,18 +1218,31 @@ class Window :
 };
 
 class Rest final :
-    public Window
+    public Region
 {
   private:
+    size_t size_;
     Beam data_;
 
   public:
-    Rest() = default;
+    Rest() :
+        size_(0)
+    {
+    }
 
-    Rest(Window &&window, Beam &&data) :
-        Window(std::move(window)),
+    Rest(size_t size, Beam &&data) :
+        size_(size),
         data_(std::move(data))
     {
+        orc_assert(size_ <= data_.size());
+    }
+
+    const uint8_t *data() const override {
+        return data_.data() + (data_.size() - size_);
+    }
+
+    size_t size() const override {
+        return size_;
     }
 };
 
@@ -1342,7 +1355,7 @@ template <size_t Index_>
 struct Taking<Index_, Rest, void> {
 template <typename Tuple_>
 static bool Take(Tuple_ &tuple, Window &window, Beam &&buffer) {
-    std::get<Index_>(tuple) = Rest(std::move(window), std::move(buffer));
+    std::get<Index_>(tuple) = Rest(window.size(), std::move(buffer));
     return false;
 } };
 

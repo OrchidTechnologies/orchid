@@ -70,7 +70,7 @@ int Main(int argc, const char *const argv[]) {
 
 
     const auto local(Host_);
-    const Host network(local.operator uint32_t() & ~0xff);
+    const Host network(local.operator uint32_t() & ~0xffu);
     const Host gateway(network.operator uint32_t() | 0x01);
 
     const auto capture(Break<BufferSink<Capture>>(local));

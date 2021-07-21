@@ -88,7 +88,7 @@ struct Signature {
     uint8_t v_;
 
     Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v);
-    Signature(const Brick<64> &data, int v);
+    Signature(const Brick<64> &data, uint8_t v);
     Signature(const Brick<65> &data);
 
     operator Brick<65>() const {

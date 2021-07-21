@@ -251,7 +251,7 @@ Account::Account(const Block &block, const Json::Value &value) :
     }
 }
 
-uint256_t Chain::Get(unsigned index, const Json::Value &storages, const Region &root, const uint256_t &key) const {
+uint256_t Chain::Get(Json::Value::ArrayIndex index, const Json::Value &storages, const Region &root, const uint256_t &key) const {
     const auto storage(storages[index]);
     orc_assert(uint256_t(storage["key"].asString()) == key);
     const uint256_t value(storage["value"].asString());

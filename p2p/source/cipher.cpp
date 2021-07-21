@@ -21,6 +21,7 @@
 
 
 #include "cipher.hpp"
+#include "fit.hpp"
 #include "scope.hpp"
 
 namespace orc {
@@ -47,7 +48,7 @@ Beam Encipher::operator ()(const Buffer &data) const {
 
     data.each([&](const uint8_t *data, size_t size) {
         int writ;
-        orc_assert(EVP_EncryptUpdate(ctx_, output.data() + offset, &writ, data, size) != 0);
+        orc_assert(EVP_EncryptUpdate(ctx_, output.data() + offset, &writ, data, Fit(size)) != 0);
         offset += writ;
         return true;
     });
@@ -76,7 +77,7 @@ Beam Decipher::operator ()(const Buffer &data) const {
 
     data.each([&](const uint8_t *data, size_t size) {
         int writ;
-        orc_assert(EVP_DecryptUpdate(ctx_, output.data() + offset, &writ, data, size) != 0);
+        orc_assert(EVP_DecryptUpdate(ctx_, output.data() + offset, &writ, data, Fit(size)) != 0);
         offset += writ;
         return true;
     });

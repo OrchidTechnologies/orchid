@@ -26,10 +26,10 @@
 
 namespace orc {
 
-std::string ToSegwit(const std::string &prefix, int version, const Buffer &data) {
+std::string ToSegwit(const std::string &prefix, const std::optional<uint8_t> &version, const Buffer &data) {
     std::vector<uint8_t> bits;
-    if (version >= 0)
-        bits.push_back(version);
+    if (version)
+        bits.push_back(*version);
     orc_assert((convertbits<8, 5, true>(bits, data.vec())));
     return bech32::encode(prefix, bits, version > 0 ? bech32::Encoding::BECH32M : bech32::Encoding::BECH32);
 }

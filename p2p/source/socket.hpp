@@ -52,7 +52,7 @@ class Host {
     }
 
     Host(uint32_t host) :
-        Host(host >> 24, host >> 16, host >> 8, host)
+        Host(host >> 24, host >> 16 & 0xffu, host >> 8 & 0xffu, host & 0xffu)
     {
     }
 

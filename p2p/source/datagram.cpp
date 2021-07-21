@@ -25,6 +25,7 @@
 #include <openvpn/ip/udp.hpp>
 
 #include "datagram.hpp"
+#include "fit.hpp"
 #include "syscall.hpp"
 
 namespace orc {
@@ -67,7 +68,7 @@ Beam Datagram(const Socket &source, const Socket &destination, const Buffer &dat
 
     header.ip4.version_len = openvpn::IPv4Header::ver_len(4, sizeof(header.ip4));
     header.ip4.tos = 0;
-    header.ip4.tot_len = boost::endian::native_to_big<uint16_t>(span.size());
+    header.ip4.tot_len = boost::endian::native_to_big<uint16_t>(Fit(span.size()));
     header.ip4.id = 0;
     header.ip4.frag_off = 0;
     header.ip4.ttl = 64;
@@ -80,7 +81,7 @@ Beam Datagram(const Socket &source, const Socket &destination, const Buffer &dat
 
     header.udp.source = boost::endian::native_to_big(source.Port());
     header.udp.dest = boost::endian::native_to_big(destination.Port());
-    header.udp.len = boost::endian::native_to_big<uint16_t>(sizeof(openvpn::UDPHeader) + data.size());
+    header.udp.len = boost::endian::native_to_big<uint16_t>(Fit(sizeof(openvpn::UDPHeader) + data.size()));
     header.udp.check = 0;
 
     header.udp.check = boost::endian::native_to_big(openvpn::udp_checksum(

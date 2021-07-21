@@ -24,6 +24,7 @@
 #include <openssl/pkcs12.h>
 
 #include "error.hpp"
+#include "fit.hpp"
 #include "integer.hpp"
 #include "store.hpp"
 
@@ -50,7 +51,7 @@ Store::Store(std::string key, std::string certificates) :
 
 Store::Store(const std::string &store) {
     bssl::UniquePtr<PKCS12> p12([&]() {
-        bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(store.data(), Fit<int>(store.size())));
+        bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(store.data(), Fit(store.size())));
         orc_assert(bio);
 
         return d2i_PKCS12_bio(bio.get(), nullptr);

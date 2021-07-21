@@ -1,3 +1,4 @@
+#include "fit.hpp"
 #include "port.hpp"
 #include "protect.hpp"
 #include "log.hpp"
@@ -49,7 +50,7 @@ bool vpn_protect(int s) {
         return false;
     }
     auto iface = *oiface;
-    return setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, iface.c_str(), iface.length()) >= 0;
+    return setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, iface.c_str(), Fit(iface.length())) >= 0;
 }
 
 int Protect(int socket, int (*attach)(int, const sockaddr *, socklen_t), const sockaddr *address, socklen_t length) {

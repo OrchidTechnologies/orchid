@@ -31,6 +31,7 @@ extern "C" {
 
 #include "base.hpp"
 #include "boring.hpp"
+#include "fit.hpp"
 #include "forge.hpp"
 #include "sleep.hpp"
 #include "trace.hpp"
@@ -46,7 +47,7 @@ void Boring::Land(const Buffer &data) {
 
     for (;;) {
         Beam output(65536);
-        const auto result(wireguard_read(wireguard_, input.data(), input.size(), output.data(), output.size()));
+        const auto result(wireguard_read(wireguard_, input.data(), Fit(input.size()), output.data(), Fit(output.size())));
         switch (result.op) {
             case WIREGUARD_DONE:
                 return;
@@ -101,7 +102,7 @@ void Boring::Open() {
     Spawn([&]() noexcept -> task<void> {
         Beam output(148);
         while (!stop_) {
-            const auto result(wireguard_tick(wireguard_, output.data(), output.size()));
+            const auto result(wireguard_tick(wireguard_, output.data(), Fit(output.size())));
             switch (result.op) {
                 case WIREGUARD_DONE:
                     break;
@@ -144,7 +145,7 @@ task<void> Boring::Send(const Buffer &data) {
     orc_assert_(local == local_, "packet from " << Host(local) << " != " << Host(local_));
 
     Beam output(std::max<size_t>(input.size() + 32, 148));
-    const auto result(wireguard_write(wireguard_, input.data(), input.size(), output.data(), output.size()));
+    const auto result(wireguard_write(wireguard_, input.data(), Fit(input.size()), output.data(), Fit(output.size())));
     switch (result.op) {
         case WIREGUARD_DONE:
             break;

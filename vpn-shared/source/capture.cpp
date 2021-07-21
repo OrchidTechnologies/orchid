@@ -559,7 +559,7 @@ task<bool> Transform::Send(const Beam &data) {
                     port = old_ephemeral->second.socket_.Port();
                     RemoveEmphemeral(old_four);
                 }
-                Socket socket(remote_, port);
+                Socket socket(remote_, Fit(port));
                 auto &flow(flows_[socket]);
                 orc_insist(flow == nullptr);
                 flow = Make<Flow>(this, four);
@@ -597,7 +597,7 @@ task<bool> Transform::Send(const Beam &data) {
                 punch = std::move(sink);
             }
 
-            const uint16_t offset(length + sizeof(openvpn::UDPHeader));
+            const auto offset(length + sizeof(openvpn::UDPHeader));
             const uint16_t size(boost::endian::big_to_native(udp.len) - sizeof(openvpn::UDPHeader));
             const Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
             co_await punch->Send(subset.subset(offset, size), destination);

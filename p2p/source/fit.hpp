@@ -20,18 +20,31 @@
 /* }}} */
 
 
-#ifndef ORCHID_SEGWIT_HPP
-#define ORCHID_SEGWIT_HPP
+#ifndef ORCHID_FIT_HPP
+#define ORCHID_FIT_HPP
 
-#include <string>
-
-#include "buffer.hpp"
+#include "error.hpp"
 
 namespace orc {
 
-std::string ToSegwit(const std::string &prefix, const std::optional<uint8_t> &version, const Buffer &data);
-std::pair<std::string, Beam> FromSegwit(const std::string &data);
+template <typename Value_>
+class Fit {
+  private:
+    const Value_ value_;
+
+  public:
+    inline Fit(Value_ value) :
+        value_(value)
+    {
+    }
+
+    template <typename Type_>
+    inline operator Type_() {
+        orc_assert(value_ <= std::numeric_limits<Type_>::max());
+        return Type_(value_);
+    }
+};
 
 }
 
-#endif//ORCHID_SEGWIT_HPP
+#endif//ORCHID_FIT_HPP

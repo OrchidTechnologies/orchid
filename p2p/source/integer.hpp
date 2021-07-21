@@ -26,7 +26,10 @@
 #include <charconv>
 #include <string>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconversion"
 #include <boost/multiprecision/cpp_int.hpp>
+#pragma clang diagnostic pop
 
 #include "error.hpp"
 
@@ -56,12 +59,6 @@ std::enable_if_t<std::is_integral_v<Type_>, Type_> To(const std::string_view &va
     Type_ number;
     orc_assert_((std::from_chars(start, end, number, base) == std::from_chars_result{end, std::errc()}), value << " is not a number");
     return number;
-}
-
-template <typename Type_, typename From_>
-Type_ Fit(const From_ &value) {
-    orc_assert(value <= std::numeric_limits<Type_>::max());
-    return Type_(value);
 }
 
 }

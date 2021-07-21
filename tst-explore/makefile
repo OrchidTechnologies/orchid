@@ -57,6 +57,8 @@ cflags += -Ileveldb
 cflags += -Ileveldb/include
 cflags/./leveldb/util/env_posix.cc += -Wno-unused-result
 
+cflags/$(pwd)/source/ += -Wno-implicit-int-float-conversion
+
 cflags += -DORC_FIBER
 
 include env/output.mk
