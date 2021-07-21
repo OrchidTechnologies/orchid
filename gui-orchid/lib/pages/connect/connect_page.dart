@@ -569,33 +569,33 @@ class _ConnectPageState extends State<ConnectPage>
             message = s.pushToConnect;
             break;
           case OrchidVPNExtensionState.Connecting:
-            message = "(Starting VPN)";
+            message = s.startingVpn;
             break;
           case OrchidVPNExtensionState.Disconnecting:
-            message = "(Disconnecting VPN)";
+            message = s.disconnectingVpn;
             break;
           case OrchidVPNExtensionState.Connected:
             if (!_routingEnabled) {
-              message = "Orchid analyzing traffic";
+              message = s.orchidAnalyzingTraffic;
             } else {
-              message = "(VPN connected but not routing)";
+              message = s.vpnConnectedButNotRouting;
             }
             break;
         }
         break;
       case OrchidVPNRoutingState.VPNConnected:
-        message = "Connecting to a random Orchid provider";
+        message = s.connectingToARandomOrchidProvider;
         break;
       case OrchidVPNRoutingState.OrchidConnected:
         if (_monitoringEnabled) {
-          message = "Orchid running and analyzing";
+          message = s.orchidRunningAndAnalyzing;
         } else {
           message = s.orchidIsRunning;
         }
     }
 
     if (_restarting) {
-      message = "Restarting: " + message;
+      message = s.restarting + ': ' + message;
     }
 
     Color color =

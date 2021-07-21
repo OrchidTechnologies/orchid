@@ -1,5 +1,7 @@
 #!/bin/sh
 #
+# NOTE: flutter gen-l10n now does this for us.  Maintain this only if we require other validations.
+#
 # Read all of the arb files and check for missing keys as compared to 'en'.
 #
 en=app_en.arb

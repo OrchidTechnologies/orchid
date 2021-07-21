@@ -180,7 +180,7 @@ class _TrafficViewState extends State<TrafficView>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Analyze", style: AppText.headerStyle.copyWith(fontSize: 20)),
+            Text(s.analyze, style: AppText.headerStyle.copyWith(fontSize: 20)),
             StreamBuilder<bool>(
                 stream: UserPreferences().monitoringEnabled.stream(),
                 builder: (context, snapshot) {
@@ -505,11 +505,11 @@ class _TrafficViewState extends State<TrafficView>
   // If the monitoring switch change would require a restart then confirm.
   void _confirmMonitoringSwitchChange(bool enabled) async {
     var enablingText =
-        "Changing monitoring status requires restarting the VPN, which may briefly interrupt privacy protection.";
+        s.changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly;
     if (await UserPreferences().routingEnabled.get()) {
       AppDialogs.showConfirmationDialog(
           context: context,
-          title: "Confirm Restart",
+          title: s.confirmRestart,
           bodyText: enablingText,
           commitAction: () {
             _monitoringSwitchChanged(enabled);
@@ -520,7 +520,7 @@ class _TrafficViewState extends State<TrafficView>
   }
 
   void _monitoringSwitchChanged(bool enabled) async {
-    log("vpn: traffic monitoring enabled: $enabled");
+    log('vpn: traffic monitoring enabled: $enabled');
     UserPreferences().monitoringEnabled.set(enabled);
     // monitoringEnabledController.controlledState.value = enabled;
   }

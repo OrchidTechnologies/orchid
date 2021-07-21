@@ -172,9 +172,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     var text = StyledText(
       style: bodyStyle,
       newLineAsBreaks: true,
-      text: "Choose an Orchid Account to use with this hop."
-          '  '
-          "If you don't see your account below you can use the account manager to import, purchase, or create a new one.",
+      text: s.chooseAnOrchidAccountToUseWithThisHop +
+          '  ' +
+          s.ifYouDontSeeYourAccountBelowYouCanUse,
       styles: {
         // 'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),
       },
@@ -188,12 +188,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           pady(36),
           InstructionsView(
             image: Image.asset('assets/images/group12.png'),
-            title: "Select an Orchid Account",
+            title: s.selectAnOrchidAccount,
           ),
           text,
           pady(16),
           LinkText(
-            "Take me to the Account Manager",
+            s.takeMeToTheAccountManager,
             style: AppText.linkStyle.copyWith(fontStyle: FontStyle.italic),
             onTapped: () {
               Navigator.of(context).push(new MaterialPageRoute(
@@ -354,7 +354,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text("Orchid Identity (signer key)" + ':',
+        Text(s.orchidIdentitySignerKey + ':',
             style: AppText.textLabelStyle.copyWith(
                 fontSize: 16,
                 color: _keyRefValid()
@@ -413,7 +413,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text("Funder Account" ':',
+        Text(s.funderAccount + ':',
             style: AppText.textLabelStyle.copyWith(
                 fontSize: 16,
                 color: _funderValid()

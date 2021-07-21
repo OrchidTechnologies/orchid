@@ -123,7 +123,7 @@ class _AddHopPageState extends State<AddHopPage> {
                     // if (!OrchidPlatform.isApple) ...[
                       _divider(),
                       _buildHopChoice(
-                          text: "Use an Orchid Account",
+                          text: s.useAnOrchidAccount,
                           onTap: () {
                             _addHopType(HopProtocol.Orchid);
                           },

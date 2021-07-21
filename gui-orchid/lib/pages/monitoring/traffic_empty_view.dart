@@ -27,19 +27,24 @@ class TrafficEmptyView extends StatelessWidget {
                             duration: Duration(milliseconds: 300),
                             child: Column(
                               key: ValueKey<String>(
-                                  "welcome:$monitoring:$orientation"),
+                                  'welcome:$monitoring:$orientation'),
                               children: <Widget>[
                                 Spacer(flex: 2),
                                 AppText.header(
-                                    text: monitoring ? "Analyzing Your Connections" : "Analyze Your Connections",
+                                    text: monitoring
+                                        ? s.analyzingYourConnections
+                                        : s.analyzeYourConnections,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 24.0),
                                 SizedBox(height: 20),
                                 AppText.body(
                                     text: !monitoring
-                                        ? "Network analysis uses your device's VPN facility to capture packets and analyze your traffic.  Network analysis requires VPN permissions but does not by itself protect your data or hide your IP address.  To get the benefits of network privacy you must configure and activate a VPN connection from the home screen."
-                                                "\n\n   " +
-                                            "Turning on this feature will increase the battery usage of the Orchid App."
+                                        ? s.networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets +
+                                            '  ' +
+                                            s.networkAnalysisRequiresVpnPermissionsButDoesNotByItself +
+                                            '  ' +
+                                            s.toGetTheBenefitsOfNetworkPrivacyYouMustConfigure +
+                                            s.turningOnThisFeatureWillIncreaseTheBatteryUsageOf
                                         : s.nothingToDisplayYet,
                                     fontSize: 15.0,
                                     color: AppColors.neutral_1),
@@ -47,7 +52,7 @@ class TrafficEmptyView extends StatelessWidget {
                                 Visibility(
                                   visible: orientation == Orientation.portrait,
                                   child: Image.asset(
-                                    "assets/images/analysisBunny.png",
+                                    'assets/images/analysisBunny.png',
                                     height: 330,
                                   ),
                                 ),

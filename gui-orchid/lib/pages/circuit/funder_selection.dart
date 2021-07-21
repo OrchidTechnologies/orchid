@@ -15,8 +15,7 @@ class FunderSelectionDropdown extends StatefulWidget {
   // Fixed options
   static final pasteKeyOption =
       FunderSelectionMenuOption(displayStringGenerator: (context) {
-    // return S.of(context).paste;
-    return "Paste Address";
+    return S.of(context).pasteAddress;
   });
 
   FunderSelectionDropdown({
@@ -82,7 +81,7 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
         ignoring: !widget.enabled,
         child: Container(
           child: DropdownButton<FunderSelectionItem>(
-            hint: Text("Choose Address"),
+            hint: Text(s.chooseAddress),
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
             //underline: !widget.enabled ? Container() : null,
@@ -133,7 +132,7 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
   }
 }
 
-/// Represents a fixed option such as "generate a new key"
+/// Represents a fixed option such as 'generate a new key'
 class FunderSelectionMenuOption {
   String Function(BuildContext context) displayStringGenerator;
 

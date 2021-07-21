@@ -317,17 +317,19 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   Future<void> _showOrchidAccountAddressWarning() async {
     var linkStyle = AppText.linkStyle; //.copyWith(fontSize: 15);
-    var title = "Copied Orchid Identity";
+    var title = s.copiedOrchidIdentity;
     var body = StyledText(
       style: AppText.dialogBody,
       newLineAsBreaks: true,
-      text: "<alarm/> <bold>This is not a wallet address.</bold>"
-              "  "
-              "Do not send tokens to this address." +
+      text: "<alarm/> <bold>" +
+          s.thisIsNotAWalletAddress +
+          "</bold>" +
+          "  " +
+          s.doNotSendTokensToThisAddress +
           "\n\n" +
-          "Your Orchid Identity uniquely identifies you on the network."
-              "  "
-              "Learn more about your <link>Orchid Identity</link>.",
+          s.yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork +
+          "  " +
+          s.learnMoreAboutYourLinkorchidIdentitylink,
       styles: {
         'bold': AppText.dialogBody.copyWith(fontWeight: FontWeight.bold),
         'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),

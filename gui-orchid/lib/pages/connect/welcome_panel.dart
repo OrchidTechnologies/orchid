@@ -66,12 +66,9 @@ class _WelcomePanelState extends State<WelcomePanel>
         : _buildNoPurchaseContent();
   }
 
-  static String yourAccountIsEmpty = "Your account is empty!";
-
   Widget _buildNoPurchaseContent() {
-    var titleText = yourAccountIsEmpty;
-    var bodyText =
-        "To connect, either add crypto using the Orchid DApp or use an existing account.";
+    var titleText = s.yourAccountIsEmpty;
+    var bodyText = s.toConnectEitherAddCryptoUsingTheOrchidDappOr;
 
     var content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -94,9 +91,8 @@ class _WelcomePanelState extends State<WelcomePanel>
   }
 
   Widget _buildHasPurchaseContent() {
-    var titleText = yourAccountIsEmpty;
-    var bodyText =
-        "To connect, either add credits using an in-app purchase or use an existing account.";
+    var titleText = s.yourAccountIsEmpty;
+    var bodyText = s.toConnectEitherAddCreditsUsingAnInappPurchaseOr;
 
     bool isAndroid = OrchidPlatform.isAndroid;
     var content = Column(
@@ -126,19 +122,19 @@ class _WelcomePanelState extends State<WelcomePanel>
   }
 
   Widget _buildBuyButton() {
-    var text = "Buy credits";
+    var text = s.buyCredits;
     var action = _purchaseOrchidAccount;
     return _buildButton(text: text, onPressed: action);
   }
 
   Widget _buildUseAnotherAccountButton() {
-    var text = "Use another account";
+    var text = s.useAnotherAccount;
     var action = _importOrchidAccount;
     return _buildButton(text: text, lightColor: true, onPressed: action);
   }
 
   Widget _buildUseCryptoWalletButton({bool lightColor = false}) {
-    var text = "Use crypto wallet";
+    var text = s.useCryptoWallet;
     var action = _openDapp;
     return _buildButton(text: text, lightColor: lightColor, onPressed: action);
   }
