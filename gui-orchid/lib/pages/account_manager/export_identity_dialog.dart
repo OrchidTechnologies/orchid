@@ -70,18 +70,11 @@ class _ExportIdentityDialogState extends State<ExportIdentityDialog> {
                     height: 20,
                     child: _showCopiedText
                         ? Center(child: Text(s.copied))
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                s.copy,
-                                style: TextStyle(color: Colors.deepPurple),
-                              ),
-                              Icon(
-                                Icons.download_sharp,
-                                color: Colors.deepPurple,
-                              )
-                            ],
+                        : Center(
+                            child: Text(
+                              s.copy,
+                              style: TextStyle(color: Colors.deepPurple),
+                            ),
                           ),
                   ),
                 ],
