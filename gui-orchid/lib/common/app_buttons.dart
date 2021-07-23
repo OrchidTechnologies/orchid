@@ -31,19 +31,21 @@ class RoundedRectButton extends StatelessWidget {
       elevation: elevation,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          icon ?? Container(),
-          icon != null ? padx(14) : Container(),
-          AppText.body(
-              textAlign: TextAlign.left,
-              text: text,
-              color: textColor ?? AppColors.text_light,
-              letterSpacing: 1.25,
-              lineHeight: 1.14),
-          if (icon != null) padx(8)
-        ],
+      child: FittedBox(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            icon ?? Container(),
+            icon != null ? padx(14) : Container(),
+            AppText.body(
+                textAlign: TextAlign.left,
+                text: text,
+                color: textColor ?? AppColors.text_light,
+                letterSpacing: 1.25,
+                lineHeight: 1.14),
+            if (icon != null) padx(8)
+          ],
+        ),
       ),
       color: backgroundColor ?? AppColors.purple_3,
       onPressed: onPressed,
