@@ -251,11 +251,28 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Widget _buildPacList() {
+    var linkStyle = AppText.linkStyle.copyWith(
+      fontSize: 15.0,
+      // height: 1.3,
+      // fontStyle: FontStyle.italic,
+    );
+    var unavailableText = StyledText(
+      style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
+      newLineAsBreaks: true,
+      text:
+          'Orchid is unable to display in-app purchases at this time.'
+              +'  Please confirm that this device supports and is configured '
+              'for in-app purchases or use our decentralized <link>account management</link> system.',
+      styles: {
+        'link': linkStyle.link(OrchidUrls.accountOrchid).copyWith(fontStyle: FontStyle.italic),
+      },
+    );
+
     if (_pacs == null) {
       return LoadingIndicator(height: 50);
     }
     if (_pacs.isEmpty) {
-      return LoadingIndicator(height: 50, text: s.noPacsAvailableAtThisTime);
+      return unavailableText;
     }
     return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -623,7 +640,7 @@ class _PurchasePageState extends State<PurchasePage> {
     try {
       Map<String, PAC> updatedPacs =
           await OrchidPurchaseAPI().requestProducts(refresh: refresh);
-      _pacs = updatedPacs.isNotEmpty ? updatedPacs.values.toList() : _pacs;
+      _pacs = updatedPacs.isNotEmpty ? updatedPacs.values.toList() : [];
     } catch (err) {
       log("iap: error requesting products for purchase page: $err");
     }
