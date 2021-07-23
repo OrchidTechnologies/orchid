@@ -59,6 +59,9 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
         }, std::string(VersionData, VersionSize));
     });
 
+    asio::signal_set signals(Context(), SIGINT, SIGTERM);
+    signals.async_wait([&](auto, auto) { Context().stop(); });
+
     site.Run(bind, port, key, certificates, params);
     Thread().join();
 }

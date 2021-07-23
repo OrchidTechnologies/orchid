@@ -20,9 +20,6 @@
 /* }}} */
 
 
-#include <iostream>
-#include <thread>
-
 #include <cppcoro/detail/lightweight_manual_reset_event.hpp>
 
 #include <rtc_base/thread.h>
@@ -32,57 +29,51 @@
 
 namespace orc {
 
-class Pool {
-  private:
-    std::mutex mutex_;
-    Work *begin_ = nullptr;
-    Work **end_ = &begin_;
+Pool::Pool() :
+    thread_([this]() {
+        rtc::ThreadManager::Instance()->WrapCurrentThread();
+        rtc::SetCurrentThreadName("orchid:tasks");
 
-    cppcoro::detail::lightweight_manual_reset_event ready_;
-
-  public:
-    void Drain() {
-        for (;;) {
+        for (;ready_.reset(), true; ready_.wait()) for (;;) {
             Work *work;
             { std::unique_lock<std::mutex> lock(mutex_);
-                if (begin_ == nullptr)
+                if (end_ == nullptr)
                     return;
+                if (begin_ == nullptr)
+                    continue;
                 work = begin_;
                 begin_ = work->next_;
                 if (end_ == &work->next_)
                     end_ = &begin_; }
             work->code_.resume();
         }
-    }
+    })
+{
+}
 
-    void Run() {
-        for (;;) {
-            ready_.reset();
-            Drain();
-            ready_.wait();
-        }
-    }
+void Pool::Shut() {
+    { std::unique_lock<std::mutex> lock(mutex_);
+        end_ = nullptr; }
+    ready_.set();
+    thread_.join();
+}
 
-    void Push(Work *work) noexcept {
-        { std::unique_lock<std::mutex> lock(mutex_);
-            *end_ = work; end_ = &work->next_; }
-        ready_.set();
-    }
-};
+void Pool::Push(Work *work) noexcept {
+    { std::unique_lock<std::mutex> lock(mutex_);
+        if (end_ == nullptr)
+            return;
+        *end_ = work; end_ = &work->next_; }
+    ready_.set();
+}
 
-void Scheduled::await_suspend(std::experimental::coroutine_handle<> code) noexcept {
+void Pool::Scheduled::await_suspend(std::experimental::coroutine_handle<> code) noexcept {
     code_ = code;
     pool_->Push(this);
 }
 
-Scheduled Schedule() {
+Pool &Schedule() {
     static Pool pool;
-    static std::thread thread([]() {
-        rtc::ThreadManager::Instance()->WrapCurrentThread();
-        rtc::SetCurrentThreadName("orchid:tasks");
-        pool.Run();
-    });
-    return {&pool};
+    return pool;
 }
 
 }
