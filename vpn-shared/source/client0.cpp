@@ -95,6 +95,8 @@ Client0::Client0(BufferDrain &drain, S<Updated<Prices>> oracle, Token token, con
     hoarded_(std::move(hoarded)),
     face_(face)
 {
+    // XXX: see above message about implications (and be concerned)
+    locked_()->ring_ = [&]() -> cppcoro::shared_task<Bytes> { co_return Bytes(); }();
 }
 
 task<Client0 *> Client0::Wire(BufferSunk &sunk, S<Updated<Prices>> oracle, Token token, const Address &lottery, const Secret &secret, const Address &funder) {
