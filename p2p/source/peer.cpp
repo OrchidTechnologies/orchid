@@ -97,14 +97,12 @@ struct Internal_ { typedef struct socket *(cricket::UsrsctpTransport::*type); };
 template struct Pirate<Internal_, &cricket::UsrsctpTransport::sock_>;
 
 task<struct socket *> Peer::Internal() {
-    auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
-        return peer_->GetSctpTransport();
-    }, RTC_FROM_HERE));
-
-    orc_assert(sctp != nullptr);
-
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
-    co_return static_cast<cricket::UsrsctpTransport *>(static_cast<webrtc::SctpTransport *>(sctp.get())->internal())->*Loot<Internal_>::pointer;
+    co_return co_await Post([&]() {
+        const auto sctp(peer_->GetSctpTransport());
+        orc_assert(sctp != nullptr);
+        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
+        return static_cast<cricket::UsrsctpTransport *>(static_cast<webrtc::SctpTransport *>(sctp.get())->internal())->*Loot<Internal_>::pointer;
+    }, RTC_FROM_HERE, base_->Thread());
 }
 
 

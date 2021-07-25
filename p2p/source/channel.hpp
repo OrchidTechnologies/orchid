@@ -42,8 +42,8 @@ class Channel :
     public webrtc::DataChannelObserver
 {
   private:
-    const S<Peer> peer_;
-    const rtc::scoped_refptr<webrtc::DataChannelInterface> channel_;
+    S<Peer> peer_;
+    rtc::scoped_refptr<webrtc::DataChannelInterface> channel_;
 
     Event opened_;
 
@@ -52,8 +52,6 @@ class Channel :
     Channel(BufferDrain &drain, const S<Peer> &peer, int id = -1, const std::string &label = std::string(), const std::string &protocol = std::string());
 
     static task<Socket> Wire(BufferSunk &sunk, S<Base> base, Configuration configuration, const std::function<task<std::string> (std::string)> &respond);
-
-    ~Channel() override;
 
     void OnStateChange() noexcept override;
     void OnBufferedAmountChange(uint64_t previous) noexcept override;
