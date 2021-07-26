@@ -27,23 +27,57 @@
 
 namespace orc {
 
-// XXX: this should not require the variant tag
+template <typename Value_>
+struct Hold {
+    typedef Value_ Value;
 
-template <typename Type_>
+    template <typename Type_>
+    inline static Type_ &&Address(Type_ &&value) {
+        return std::forward<Type_>(value); }
+    inline static Value_ &&Indirect(Value &value) {
+        return std::move(value); }
+};
+
+template <typename Value_>
+struct Hold<Value_ &> {
+    typedef Value_ *Value;
+
+    inline static Value Address(Value_ &value) {
+        return &value; }
+    inline static Value_ &Indirect(Value &value) {
+        return *value; }
+};
+
+// XXX: this should not require the variant tag
+// use a null exception_ptr to indicate success
+
+template <typename Value_>
 class Maybe :
-    public std::variant<std::exception_ptr, Type_>
+    public std::variant<std::exception_ptr, typename Hold<Value_>::Value>
 {
   public:
-    using std::variant<std::exception_ptr, Type_>::variant;
+    inline Maybe(std::in_place_index_t<0> index, const std::exception_ptr &error) :
+        std::variant<std::exception_ptr, typename Hold<Value_>::Value>(index, error)
+    {
+    }
+
+    template <typename Type_>
+    inline Maybe(std::in_place_index_t<1> index, Type_ &&value) :
+        std::variant<std::exception_ptr, typename Hold<Value_>::Value>(index, Hold<Value_>::Address(std::forward<Type_>(value)))
+    {
+    }
+
+    Maybe() = default;
 
     void operator()(const std::exception_ptr &error) noexcept {
         this->~Maybe();
-        new (this) Maybe(std::in_place_index_t<0>(), error);
+        new (this) Maybe<Value_>(std::in_place_index_t<0>(), error);
     }
 
+    template <typename Type_>
     Maybe &operator =(Type_ &&value) noexcept {
         this->~Maybe();
-        new (this) Maybe(std::in_place_index_t<1>(), std::move(value));
+        new (this) Maybe<Value_>(std::in_place_index_t<1>(), std::forward<Type_>(value));
         return *this;
     }
 
@@ -56,11 +90,11 @@ class Maybe :
         }
     }
 
-    Type_ operator *() && {
+    Value_ operator *() && {
         if (const auto error = std::get_if<0>(this))
             std::rethrow_exception(*error);
         else if (auto value = std::get_if<1>(this))
-            return std::move(*value);
+            return Hold<Value_>::Indirect(*value);
         else orc_assert(false);
     }
 };

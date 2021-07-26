@@ -137,14 +137,14 @@ task<Report> TestWireGuard(const S<Base> &base, std::string config) {
     });
 }
 
-task<Report> TestOrchid(const S<Base> &base, std::string name, const S<Network> &network, const char *address, std::function<task<Client *> (BufferSink<Remote> &)> code) {
+task<Report> TestOrchid(const S<Base> &base, std::string name, const S<Network> &network, const char *address, std::function<task<Client &> (BufferSink<Remote> &)> code) {
     (co_await orc_optic)->Name(address);
 
     std::cout << address << " " << name << std::endl;
 
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         const auto provider(co_await network->Select("untrusted.orch1d.eth", address));
-        Client &client(*co_await code(remote));
+        Client &client(co_await code(remote));
         co_await client.Open(provider, base);
         remote.Open();
 
@@ -378,7 +378,7 @@ int Main(int argc, const char *const argv[]) {
                 {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
             }) {
                 names.emplace_back(name);
-                tests.emplace_back(TestOrchid(base, name, network, provider, [&](BufferSink<Remote> &remote) -> task<Client *> {
+                tests.emplace_back(TestOrchid(base, name, network, provider, [&](BufferSink<Remote> &remote) -> task<Client &> {
                     co_return co_await Client0::Wire(remote, oracle, oxt, lottery0, secret, funder);
                     //co_return co_await Client1::Wire(remote, oracle, dai, lottery1, secret, funder);
                 }));

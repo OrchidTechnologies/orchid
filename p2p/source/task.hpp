@@ -150,7 +150,7 @@ class Task {
           public:
             using Awaitable::Awaitable;
 
-            auto await_resume() const {
+            Value_ await_resume() const {
 		return *this->code_.promise();
             }
         };
@@ -227,8 +227,7 @@ class Task<Value_>::promise_type :
 
     template <typename Type_, typename = std::enable_if_t<std::is_convertible_v<Type_ &&, Value_>>>
     void return_value(Type_ &&value) noexcept(std::is_nothrow_constructible_v<Value_, Type_ &&>) {
-        maybe_.~Maybe_();
-        new (&maybe_) Maybe_(std::in_place_index_t<1>(), std::forward<Type_>(value));
+        maybe_ = std::forward<Type_>(value);
     }
 
     Value_ operator *() {
@@ -250,8 +249,7 @@ class Task<void>::promise_type :
     }
 
     void unhandled_exception() noexcept {
-        maybe_.~Maybe_();
-        new (&maybe_) Maybe_(std::current_exception());
+        maybe_(std::current_exception());
     }
 
     void return_void() noexcept {

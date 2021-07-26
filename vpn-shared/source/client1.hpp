@@ -57,8 +57,7 @@ class Client1 :
   public:
     Client1(BufferDrain &drain, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder, const uint128_t &face);
 
-    // XXX: this should be task<Client &> but my task Transfer doesn't support that
-    static task<Client1 *> Wire(BufferSunk &sunk, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder);
+    static task<Client1 &> Wire(BufferSunk &sunk, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder);
 
     uint128_t Face();
     uint64_t Gas();
