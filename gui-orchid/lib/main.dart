@@ -24,9 +24,9 @@ void main() async {
       OrchidPlatform.hasLanguage(languageOverride)) {
     OrchidPlatform.languageOverride = languageOverride;
   }
-  if (OrchidPlatform.isDesktop) {
+  if (OrchidPlatform.isMacOS) {
     print("main: Setting window size");
-    setWindowFrame(Rect.fromLTWH(100, 100, 375, 650));
+    setWindowFrame(Rect.fromLTWH(100, 100, 360, 640));
     setWindowMinSize(Size(216, 250));
   }
   runApp(OrchidApp());

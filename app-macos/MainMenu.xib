@@ -324,14 +324,14 @@
                     </menu>
                 </menuItem>
             </items>
-            <point key="canvasLocation" x="142" y="-258"/>
+            <point key="canvasLocation" x="0" y="0"/>
         </menu>
         <window title="APP_NAME" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g" customClass="MainFlutterWindow">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-            <rect key="contentRect" x="335" y="390" width="800" height="600"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1577"/>
+            <rect key="contentRect" x="0" y="0" width="360" height="640"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="360" height="640"/>
             <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
+                <rect key="frame" x="0.0" y="0.0" width="360" height="640"/>
                 <autoresizingMask key="autoresizingMask"/>
             </view>
         </window>
