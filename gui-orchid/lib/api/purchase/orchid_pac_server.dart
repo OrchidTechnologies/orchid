@@ -399,8 +399,7 @@ class OrchidPACServer {
     @required Map<String, dynamic> paramsIn,
   }) async {
     var clientVersion = await OrchidAPI().versionString();
-    var clientLocale =
-        '${OrchidPlatform.staticLocale.languageCode}-${OrchidPlatform.staticLocale.countryCode}';
+    var clientLocale = OrchidPlatform.staticLocale.toLanguageTag();
 
     // Guard the unknown map type
     var params = Map<String, dynamic>();
@@ -408,7 +407,8 @@ class OrchidPACServer {
 
     // Version and locale
     params.addAll({
-      //'client_locale': clientLocale,
+      // client locale is in the accept headers
+      'client_platform': OrchidPlatform.operatingSystem,
       'client_version': clientVersion,
     });
 
