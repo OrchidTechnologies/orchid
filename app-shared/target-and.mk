@@ -28,7 +28,7 @@ include $(pwd)/target-all.mk
 jni := armeabi-v7a arm64-v8a
 #jnis := $(subst $(space),$(comma),$(foreach arch,$(jni),android-$(flutter/$(arch))))
 
-assembled := $(output)/flutter/flutter_assets/AssetManifest%json $(foreach arch,$(jni),$(output)/flutter/$(arch)/app%so)
+assembled := $(output)/flutter/flutter_assets/AssetManifest%json $(if $(filter noaot,$(debug)),,$(foreach arch,$(jni),$(output)/flutter/$(arch)/app%so))
 $(assembled): $(dart)
 	@rm -rf .dart_tool/flutter_build $(output)/flutter
 	cd $(pwd/gui) && $(flutter) assemble \
@@ -38,5 +38,5 @@ $(assembled): $(dart)
 	    -dTreeShakeIcons="true" \
 	    -dTrackWidgetCreation="true" \
 	    --output="$(CURDIR)/$(output)/flutter" \
-	    $(foreach arch,$(jni),android_aot_bundle_$(mode)_android-$(flutter/$(arch)))
+	    $(if $(filter noaot,$(debug)),debug_android_application,$(foreach arch,$(jni),android_aot_bundle_$(mode)_$(flutter/$(arch))))
 	@touch $(subst $(percent),.,$(assembled))

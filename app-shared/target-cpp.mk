@@ -19,6 +19,7 @@
 
 
 include $(pwd)/target-all.mk
+engine := $(pwd/flutter)/bin/cache/artifacts/engine/$(platform)$(engine)
 
 rsync := rsync -a --delete
 

@@ -19,6 +19,7 @@
 
 
 include shared/target-all.mk
+engine := $(pwd/flutter)/bin/cache/artifacts/engine/$(platform)$(engine)
 
 ifeq ($(filter ldid,$(debug)),)
 codesign = xattr -cr $(1) && $(if $(keychain),security unlock-keychain -p $(word 2,$(keychain)) $(word 1,$(keychain)).keychain &&) codesign -vfs $(identity) --entitlements $(2) $(1)

@@ -731,7 +731,9 @@ void Capture::Start(const std::string &path) {
         //stun = "stun:stun.l.google.com:19302";
     )");
 
+#ifdef GUI_orchid
     heap.eval<void>(Load(path));
+#endif
 
     const auto group(boost::filesystem::path(path).parent_path());
 
