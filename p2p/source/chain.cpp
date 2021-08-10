@@ -90,22 +90,28 @@ Bytes32 Transaction::hash(const uint256_t &chain, const uint256_t &v, const uint
             return HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_, v, r, s}));
         case 1:
             return HashK(Tie(uint8_t(1), Implode({chain, nonce_, bid_, gas_, target_, amount_, data_, access_, v, r, s})));
+        case 2:
+            return HashK(Tie(uint8_t(2), Implode({chain, nonce_, tip_, bid_, gas_, target_, amount_, data_, access_, v, r, s})));
         default:
-            orc_assert(false);
+            orc_assert_(false, "unknown type: " << unsigned(type_));
     }
 }
 
 Address Transaction::from(const uint256_t &chain, const uint256_t &v, const uint256_t &r, const uint256_t &s) const {
-    if (type_ == 1) {
-        Signature signature{Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v)};
-        return Recover(HashK(Tie(uint8_t(1), Implode({chain, nonce_, bid_, gas_, target_, amount_, data_, access_}))), signature);
-    } else if (v >= 35) {
-        Signature signature{Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v - 35 - chain * 2)};
-        return Recover(HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_, chain, uint8_t(0), uint8_t(0)})), signature);
-    } else {
-        orc_assert(v >= 27);
-        Signature signature{Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v - 27)};
-        return Recover(HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_})), signature);
+    switch (type_) {
+        case 0:
+            if (v >= 35)
+                return Recover(HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_, chain, uint8_t(0), uint8_t(0)})), {Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v - 35 - chain * 2)});
+            else {
+                orc_assert(v >= 27);
+                return Recover(HashK(Implode({nonce_, bid_, gas_, target_, amount_, data_})), {Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v - 27)});
+            }
+        case 1:
+            return Recover(HashK(Tie(uint8_t(1), Implode({chain, nonce_, bid_, gas_, target_, amount_, data_, access_}))), {Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v)});
+        case 2:
+            return Recover(HashK(Tie(uint8_t(2), Implode({chain, nonce_, tip_, bid_, gas_, target_, amount_, data_, access_}))), {Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v)});
+        default:
+            orc_assert_(false, "unknown type: " << unsigned(type_));
     }
 }
 
@@ -122,7 +128,7 @@ Record::Record(
     const uint256_t &r,
     const uint256_t &s
 ) :
-    Transaction{0x00, nonce, bid, gas, target, amount, std::move(data)},
+    Transaction{0x00, nonce, bid, bid, gas, target, amount, std::move(data)},
 
     hash_(hash(chain, v, r, s)),
     from_(from(chain, v, r, s))
@@ -137,7 +143,16 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
             return 0x00;
         }(),
         uint256_t(value["nonce"].asString()),
-        uint256_t(value["gasPrice"].asString()),
+        uint256_t([&]() {
+            if (const auto &tip = value["maxPriorityFeePerGas"])
+                return tip.asString();
+            return value["gasPrice"].asString();
+        }()),
+        uint256_t([&]() {
+            if (const auto &tip = value["maxFeePerGas"])
+                return tip.asString();
+            return value["gasPrice"].asString();
+        }()),
         To<uint64_t>(value["gas"].asString()),
         [&]() -> std::optional<Address> {
             const auto &target(value["to"]);
@@ -179,6 +194,7 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
         else if (chain == 137)
             orc_assert(nonce_ == 0);
 
+        orc_assert(tip_ == 0);
         orc_assert(bid_ == 0);
         orc_assert(gas_ == 0);
 

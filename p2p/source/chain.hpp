@@ -46,6 +46,7 @@ struct Transaction {
     // XXX: type_ probably shouldn't be stored
     const uint8_t type_;
     const uint256_t nonce_;
+    const uint256_t tip_;
     const uint256_t bid_;
     const uint64_t gas_;
     const std::optional<Address> target_;
