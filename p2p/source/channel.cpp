@@ -239,6 +239,10 @@ task<void> Channel::Send(const Buffer &data) {
 
     co_await Post([&]() {
         const auto interface(controller->data_channel_transport());
+        if (!interface->IsReadyToSend()) {
+            orc_trace();
+            return;
+        }
 #if 0
         interface->SendData(sctp->id(), params, buffer);
 #else
