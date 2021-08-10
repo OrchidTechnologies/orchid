@@ -486,6 +486,12 @@ task<int> Main(int argc, const char *const argv[]) { try {
         }
         std::cout << std::endl;
 
+    } else if (command == "lottery0:look") {
+        const auto [lottery, funder, signer] = Options<Address, Address, Address>(args);
+        static Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
+        const auto [amount, escrow, unlock, verify, codehash, shared] = co_await look.Call(*chain_, "latest", lottery, 90000, funder, signer);
+        std::cout << amount << " " << escrow << " " << unlock << std::endl;
+
     } else if (command == "lottery0:push") {
         const auto [lottery, signer, balance, escrow] = Options<Address, Address, uint128_t, uint128_t>(args);
         static Selector<void, Address, uint128_t, uint128_t> push("push");
