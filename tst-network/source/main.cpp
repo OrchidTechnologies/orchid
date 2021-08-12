@@ -505,7 +505,11 @@ int Main(int argc, const char *const argv[]) {
     site(http::verb::get, "/chainlink/0", [&](Request request) -> task<Response> {
         co_return Respond(request, http::status::ok, {
             {"content-type", "text/plain"},
-        }, median().str());
+        }, [&]() -> std::string { try {
+            return median().str();
+        } catch (const std::exception &error) {
+            return "0.6";
+        } }());
     });
 
     site(http::verb::post, "/chainlink/1", [&](Request request) -> task<Response> {
