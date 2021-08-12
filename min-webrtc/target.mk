@@ -120,8 +120,6 @@ webrtc += $(wildcard $(pwd)/webrtc/rtc_base/*/*/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/stats/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/system_wrappers/source/*.cc)
 
-cflags/$(pwd)/webrtc/rtc_base/random.cc += -Wno-implicit-int-float-conversion
-
 
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/internal/*.cc)
@@ -233,8 +231,15 @@ cflags += -DSCTP_SIMPLE_ALLOCATOR
 cflags += -DSCTP_STDINT_INCLUDE='<stdint.h>'
 cflags += -DSCTP_USE_OPENSSL_SHA1
 
-# XXX: this is an orchid-specific hack
+# disable dcsctp congestion controller
 chacks/$(pwd/webrtc)/media/sctp/dcsctp_transport.cc += s/ options;/ options{.cwnd_mtus_initial = 10000, .cwnd_mtus_min = 10000};/g;
+# disallow blocking signaling thread
+chacks/$(pwd/webrtc)/rtc_base/event.cc += /::Wait(/{s/\/\*//;s/\*\///;s/$$/ if (warn_after_ms != kForever) std::terminate();/;};
+# do not allocate statistics collector
+chacks/$(pwd/webrtc)/pc/rtc_stats_collector.cc += s/rtc::make_ref_counted<RTCStatsCollector>([^;]*/nullptr/g;
+
+# XXX: https://bugs.chromium.org/p/webrtc/issues/detail?id=12967
+chacks/$(pwd/webrtc)/p2p/base/dtls_transport.cc += /Should not happen\./,/;/d;
 
 include $(pwd)/openssl.mk
 

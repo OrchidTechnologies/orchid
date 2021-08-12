@@ -23,6 +23,8 @@
 #ifndef ORCHID_SPAWN_HPP
 #define ORCHID_SPAWN_HPP
 
+#include <thread>
+
 #include <cppcoro/sync_wait.hpp>
 #include <cppcoro/task.hpp>
 
@@ -37,29 +39,41 @@ struct Work {
     std::experimental::coroutine_handle<> code_;
 };
 
-class Scheduled :
-    protected Work
-{
+class Pool {
   private:
-    Pool *pool_;
+    std::mutex mutex_;
+    Work *begin_ = nullptr;
+    Work **end_ = &begin_;
+
+    std::thread thread_;
+    cppcoro::detail::lightweight_manual_reset_event ready_;
 
   public:
-    Scheduled(Pool *pool) :
-        pool_(pool)
+    Pool();
+    void Shut();
+
+  private:
+    void Push(Work *work) noexcept;
+
+  public:
+    class Scheduled :
+        protected Work
     {
-    }
+      private:
+        Pool *const pool_;
+      public:
+        Scheduled(Pool *pool) : pool_(pool) {}
+        bool await_ready() noexcept { return false; }
+        void await_suspend(std::experimental::coroutine_handle<> code) noexcept;
+        void await_resume() noexcept {}
+    };
 
-    bool await_ready() noexcept {
-        return false;
-    }
-
-    void await_suspend(std::experimental::coroutine_handle<> code) noexcept;
-
-    void await_resume() noexcept {
+    Scheduled operator co_await() noexcept {
+        return this;
     }
 };
 
-Scheduled Schedule();
+Pool &Schedule();
 
 template <typename Type_>
 Type_ Wait(task<Type_> code, const char *name = nullptr) {

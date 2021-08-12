@@ -23,7 +23,10 @@
 #ifndef ORCHID_FLOAT_HPP
 #define ORCHID_FLOAT_HPP
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconversion"
 #include <boost/multiprecision/cpp_bin_float.hpp>
+#pragma clang diagnostic pop
 
 #include "error.hpp"
 

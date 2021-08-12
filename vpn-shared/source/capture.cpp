@@ -449,8 +449,8 @@ class Transform :
     // https://www.snellman.net/blog/archive/2016-02-01-tcp-rst/
     // https://superuser.com/questions/1056492/rst-sequence-number-and-window-size/1075512
     void Reset(const Socket &source, const Socket &destination, uint32_t sequence, uint32_t acknowledge) noexcept {
-        // XXX: rename this to Packet packet (leaving Header for UDP headers)
-        struct Header {
+        // XXX: rename this to data
+        struct {
             openvpn::IPv4Header ip4;
             openvpn::TCPHeader tcp;
         } orc_packed header;
@@ -559,7 +559,7 @@ task<bool> Transform::Send(const Beam &data) {
                     port = old_ephemeral->second.socket_.Port();
                     RemoveEmphemeral(old_four);
                 }
-                Socket socket(remote_, port);
+                Socket socket(remote_, Fit(port));
                 auto &flow(flows_[socket]);
                 orc_insist(flow == nullptr);
                 flow = Make<Flow>(this, four);
@@ -597,7 +597,7 @@ task<bool> Transform::Send(const Beam &data) {
                 punch = std::move(sink);
             }
 
-            const uint16_t offset(length + sizeof(openvpn::UDPHeader));
+            const auto offset(length + sizeof(openvpn::UDPHeader));
             const uint16_t size(boost::endian::big_to_native(udp.len) - sizeof(openvpn::UDPHeader));
             const Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
             co_await punch->Send(subset.subset(offset, size), destination);
@@ -689,7 +689,7 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
         auto chain(co_await Chain::New({locator, base}, {}, uint256_t(heap.eval<double>(hops + ".chainid", 1))));
         const auto provider(co_await network->Select(curator, heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000")));
-        auto &client(*co_await Client0::Wire(sunk, oracle, oxt, lottery, secret, funder));
+        auto &client(co_await Client0::Wire(sunk, oracle, oxt, lottery, secret, funder));
         co_await client.Open(provider, base);
 
     } else if (protocol == "orch1d") {
@@ -701,7 +701,7 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network
         const auto provider(co_await network->Select(curator, heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000")));
         Locator locator(heap.eval<std::string>(hops + ".rpc"));
         std::string currency(heap.eval<std::string>(hops + ".currency"));
-        auto &client(*co_await Client1::Wire(sunk, oracle, co_await Market::New(5*60*1000, chain, base, std::move(locator), std::move(currency)), lottery, secret, funder));
+        auto &client(co_await Client1::Wire(sunk, oracle, co_await Market::New(5*60*1000, chain, base, std::move(locator), std::move(currency)), lottery, secret, funder));
         co_await client.Open(provider, base);
 
     } else if (protocol == "openvpn") {
@@ -731,7 +731,9 @@ void Capture::Start(const std::string &path) {
         //stun = "stun:stun.l.google.com:19302";
     )");
 
+#ifdef GUI_orchid
     heap.eval<void>(Load(path));
+#endif
 
     const auto group(boost::filesystem::path(path).parent_path());
 

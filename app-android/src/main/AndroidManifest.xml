@@ -12,7 +12,7 @@
         android:required="false" />
 
     <application
-        android:label="Orchid"
+        android:label="${orcName}"
         android:icon="@mipmap/ic_launcher"
     >
         <activity

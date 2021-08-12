@@ -26,7 +26,10 @@
 #include <charconv>
 #include <string>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconversion"
 #include <boost/multiprecision/cpp_int.hpp>
+#pragma clang diagnostic pop
 
 #include "error.hpp"
 

@@ -82,19 +82,14 @@ Channel::Channel(BufferDrain &drain, const S<Peer> &peer, int id, const std::str
 }
 
 task<Socket> Channel::Wire(BufferSunk &sunk, S<Base> base, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
-    const auto client(Make<Actor>(std::move(base), std::move(configuration)));
-    auto &channel(sunk.Wire<Channel>(client));
+    const auto client(co_await Post([&]() { return Make<Actor>(std::move(base), std::move(configuration)); }, RTC_FROM_HERE));
+    auto &channel(*co_await Post([&]() { return &sunk.Wire<Channel>(client); }, RTC_FROM_HERE));
     const auto answer(co_await respond(Strip(co_await client->Offer())));
     co_await client->Negotiate(answer);
     co_await channel.Open();
     const auto candidate(co_await client->Candidate());
     const auto &socket(candidate.address());
     co_return Socket(socket.ipaddr().ipv4_address(), socket.port());
-}
-
-Channel::~Channel() {
-    peer_->channels_.erase(this);
-    channel_->UnregisterObserver();
 }
 
 void Channel::OnStateChange() noexcept {
@@ -141,11 +136,23 @@ task<void> Channel::Open() noexcept {
 }
 
 task<void> Channel::Shut() noexcept {
-    channel_->Close();
-    // XXX: this should be checking if Peer has a data_transport
-    if (channel_->id() == -1)
-        Stop();
+    co_await Post([&]() {
+        channel_->Close();
+
+        // XXX: this should be checking if Peer has a data_transport
+        if (channel_->id() == -1)
+            Stop();
+    }, RTC_FROM_HERE);
+
     co_await Pump::Shut();
+
+    co_await Post([&]() {
+        channel_->UnregisterObserver();
+        channel_ = nullptr;
+
+        peer_->channels_.erase(this);
+        peer_ = nullptr;
+    }, RTC_FROM_HERE);
 }
 
 template <typename Type_, Type_ Pointer_>
@@ -192,6 +199,7 @@ task<void> Channel::Send(const Buffer &data) {
 
 #if 0
     co_await Post([&]() {
+        orc_assert(channel_ != nullptr);
 #if 0
         if (channel_->buffered_amount() == 0)
             channel_->Send({buffer, true});
@@ -221,6 +229,9 @@ task<void> Channel::Send(const Buffer &data) {
 #endif
     }, RTC_FROM_HERE);
 #else
+    // XXX: is this safe?
+    orc_assert(channel_ != nullptr);
+
     const auto sctp(reinterpret_cast<webrtc::SctpDataChannel *const *>(channel_.get() + 1)[1]);
     const auto provider(sctp->*Loot<SctpDataChannel$provider_>::pointer);
     // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
@@ -228,6 +239,10 @@ task<void> Channel::Send(const Buffer &data) {
 
     co_await Post([&]() {
         const auto interface(controller->data_channel_transport());
+        if (!interface->IsReadyToSend()) {
+            orc_trace();
+            return;
+        }
 #if 0
         interface->SendData(sctp->id(), params, buffer);
 #else
@@ -243,9 +258,9 @@ task<void> Channel::Send(const Buffer &data) {
 task<std::string> Description(const S<Base> &base, std::vector<std::string> ice) {
     Configuration configuration;
     configuration.ice_ = std::move(ice);
-    const auto client(Make<Actor>(base, std::move(configuration)));
+    const auto client(co_await Post([&]() { return Make<Actor>(base, std::move(configuration)); }, RTC_FROM_HERE));
     const auto flap(Break<BufferSink<Flap>>());
-    flap->Wire<Channel>(client);
+    co_await Post([&]() { flap->Wire<Channel>(client); }, RTC_FROM_HERE);
     co_return co_await client->Offer();
 }
 

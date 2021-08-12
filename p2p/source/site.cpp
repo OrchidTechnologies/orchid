@@ -50,24 +50,30 @@ const char *Params() {
     ;
 }
 
+template <typename Type_>
+Task<bool> Adapted(Task<Type_> code) { try {
+    co_await std::move(code);
+    co_return true;
+} catch (const asio::system_error &error) {
+    const auto code(error.code());
+    if (false);
+    else if (code == asio::error::connection_reset);
+    else if (code == asio::ssl::error::stream_truncated);
+    else if (code == beast::error::timeout);
+    else if (code == http::error::end_of_stream);
+    else if (code == http::error::partial_message);
+    else orc_adapt(error);
+    co_return 0;
+} }
+
 template <bool Expires_, typename Stream_>
 task<bool> Site::Handle(Stream_ &stream, const Socket &socket) {
     beast::flat_buffer buffer;
 
     for (;;) {
         Request request(socket);
-        try {
-            co_await http::async_read(stream, buffer, request, Adapt());
-        } catch (const asio::system_error &error) {
-            const auto code(error.code());
-            if (false);
-            else if (code == asio::ssl::error::stream_truncated);
-            else if (code == beast::error::timeout);
-            else if (code == http::error::end_of_stream);
-            else if (code == http::error::partial_message);
-            else orc_adapt(error);
+        if (!co_await Adapted(http::async_read(stream, buffer, request, Adapt())))
             co_return false;
-        }
 
         if (beast::websocket::is_upgrade(request)) {
             if constexpr (Expires_)
@@ -149,17 +155,13 @@ void Site::Run(const asio::ip::address &bind, uint16_t port, const std::string &
                 beast::ssl_stream<beast::tcp_stream> stream(std::move(connection), ssl);
                 beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(30));
 
-                co_await stream.async_handshake(asio::ssl::stream_base::server, Adapt());
-                if (co_await Handle<true>(stream, endpoint)) try {
-                    co_await stream.async_shutdown(Adapt());
-                } catch (const asio::system_error &error) {
-                    // XXX: SSL_OP_IGNORE_UNEXPECTED_EOF ?
-                    const auto code(error.code());
-                    if (false);
-                    //else if (code == asio::ssl::error::stream_truncated);
-                    else if (code == beast::error::timeout);
-                    else orc_adapt(error);
-                }
+                if (!co_await Adapted(stream.async_handshake(asio::ssl::stream_base::server, Adapt())))
+                    co_return;
+                if (!co_await Handle<true>(stream, endpoint))
+                    co_return;
+                // XXX: SSL_OP_IGNORE_UNEXPECTED_EOF ?
+                if (!co_await Adapted(stream.async_shutdown(Adapt())))
+                    co_return;
             } orc_catch({}) }, "Site::handle");
         }
     }, "Site::accept");

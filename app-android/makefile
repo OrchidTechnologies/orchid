@@ -21,21 +21,27 @@
 target := and
 include env/target.mk
 
-apk := build/outputs/apk/release/app-android-release-unsigned.apk
+cflags += -DGUI_$(gui)
 
 .PHONY: all
-all: $(output)/Orchid.apk
+all: $(output)/$(name).apk
 
 .PHONY: install
-install: $(output)/Orchid.apk
+install: $(output)/$(name).apk
 	adb install -d -r $<
 
+.PHONY: attach
+attach:
+	cd $(pwd/gui) && $(flutter) attach
+
 .PHONY: upload
-upload: $(output)/Orchid.apk
-	env/upload-apk.py net.orchid.Orchid $<
+upload: $(output)/$(name).apk
+	env/upload-apk.py $(domain).$(name) $<
 
 $(call include,vpn/target.mk)
 $(call include,shared/target-and.mk)
+
+apk := build/outputs/apk/$(mode)/app-android-$(if $(filter noaot,$(debug)),debug,release-unsigned).apk
 
 include env/output.mk
 
@@ -54,19 +60,20 @@ $(output)/assets/flutter_assets/AssetManifest%json: $(output)/flutter/flutter_as
 	@mkdir -p $(dir $@)
 	rsync -a --delete $(dir $<) $(dir $@)
 
-$(pwd/flutter)/bin/cache/artifacts/engine/android-%-release/flutter.jar: $(pwd/flutter)/packages/flutter/pubspec.lock
+$(pwd/flutter)/bin/cache/artifacts/engine/android-%$(engine)/flutter.jar: $(pwd/flutter)/packages/flutter/pubspec.lock
 	@
 
-temp := $(foreach arch,$(jni),$(foreach base,orchid flutter app,$(output)/jnilibs/$(arch)/lib$(base).so))
+temp := $(foreach arch,$(jni),$(foreach base,orchid flutter $(if $(filter noaot,$(debug)),,app),$(output)/jnilibs/$(arch)/lib$(base).so))
 
-$(output)/jnilibs/%/libflutter.so: $(pwd/flutter)/bin/cache/artifacts/engine/android-$$(flutter/$$*)-release/flutter.jar
+$(output)/jnilibs/%/libflutter.so: $(pwd/flutter)/bin/cache/artifacts/engine/$$(flutter/$$*)$(engine)/flutter.jar
 	@mkdir -p $(dir $@)
 	unzip -p $< lib/$*/libflutter.so >$@
 
-$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json $(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar
-	@./gradlew -Pandroid.debug.obsoleteApi=true assembleRelease --console verbose --warning-mode all \
+$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json $(pwd/flutter)/bin/cache/artifacts/engine/android-arm$(engine)/flutter.jar
+	@./gradlew -Pandroid.debug.obsoleteApi=true assemble$(if $(filter noaot,$(debug)),Debug,Release) --console verbose --warning-mode all \
+	    -PorcUnique='$(domain).$(name)' -PorcName='$(name)' \
 	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
-	    -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar -PorcInterface='$(pwd/gui)'
+	    -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/$(flutter/$(machine))$(engine)/flutter.jar -PorcInterface='$(pwd/gui)'
 	exit 0
 	touch $@
 
@@ -93,11 +100,11 @@ ifeq ($(zipalign),)
 $(error unable to find zipalign)
 endif
 
-$(output)/Orchid.apk: $(apk) $(word 1,$(keystore)).keystore
+$(output)/$(name).apk: $(apk) $(word 1,$(keystore)).keystore
 	cp -af $(apk) $(output)/signed.apk
-	jarsigner -digestalg SHA1 -sigalg SHA1withRSA $(if $(verbose),-verbose) -sigfile CERT -keystore $(word 1,$(keystore)).keystore -storepass '$(word 3,$(keystore))' -tsa http://timestamp.digicert.com/ $(output)/signed.apk $(word 2,$(keystore))
+	jarsigner -digestalg SHA-256 -sigalg SHA256withRSA $(if $(verbose),-verbose) -sigfile CERT -keystore $(word 1,$(keystore)).keystore -storepass '$(word 3,$(keystore))' -tsa http://timestamp.digicert.com/ $(output)/signed.apk $(word 2,$(keystore))
 	$(zipalign) -f $(if $(verbose),-v) 4 $(output)/signed.apk $@
 	@rm -rf $(output)/signed.apk
 
 .PHONY: apk
-apk: $(output)/Orchid.apk
+apk: $(output)/$(name).apk

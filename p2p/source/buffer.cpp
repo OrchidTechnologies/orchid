@@ -23,6 +23,7 @@
 #include <iomanip>
 
 #include "buffer.hpp"
+#include "fit.hpp"
 #include "scope.hpp"
 
 namespace orc {
@@ -123,9 +124,7 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
 }
 
 std::ostream &operator <<(std::ostream &out, const View &view) {
-    // XXX: provide some kind of safe cast abstraction
-    orc_assert(view.size() <= std::numeric_limits<std::streamsize>::max());
-    out.write(view.data(), std::streamsize(view.size()));
+    out.write(view.data(), Fit(view.size()));
     return out;
 }
 
@@ -219,7 +218,7 @@ void Bless(const std::string_view &value, Mutable &region) {
     region.size(size);
     auto data(region.data());
     for (size_t i(0); i != size; ++i)
-        data[i] = (Bless(value[offset + i * 2]) << 4) + Bless(value[offset + i * 2 + 1]);
+        data[i] = uint8_t((Bless(value[offset + i * 2]) << 4) + Bless(value[offset + i * 2 + 1]));
 }
 
 bool operator ==(const Region &lhs, const Buffer &rhs) {

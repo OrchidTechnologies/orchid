@@ -69,7 +69,7 @@ include $(pwd)/target-cxx.mk
 
 source += $(pwd)/libcxx/src/support/win32/locale_win32.cpp
 source += $(pwd)/libcxx/src/support/win32/support.cpp
-cflags += -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
+cflags += -D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS
 lflags += -nostdlib++ -lsupc++
 
 define _

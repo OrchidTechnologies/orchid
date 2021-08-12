@@ -21,14 +21,14 @@ openssl/armeabi-v7a := android-arm
 host/armeabi-v7a := armv7a-linux-androideabi
 triple/armeabi-v7a := armv7-linux-androideabi
 meson/armeabi-v7a := arm
-flutter/armeabi-v7a := arm
+flutter/armeabi-v7a := android-arm
 
 archs += arm64-v8a
 openssl/arm64-v8a := android-arm64
 host/arm64-v8a := aarch64-linux-android
 triple/arm64-v8a := aarch64-linux-android
 meson/arm64-v8a := aarch64
-flutter/arm64-v8a := arm64
+flutter/arm64-v8a := android-arm64
 
 archs += x86
 openssl/x86 := android-x86

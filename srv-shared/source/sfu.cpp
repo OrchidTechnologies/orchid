@@ -33,6 +33,7 @@
 #include <lib.hpp>
 
 #include "file.hpp"
+#include "fit.hpp"
 #include "load.hpp"
 #include "log.hpp"
 #include "sequence.hpp"
@@ -94,8 +95,8 @@ static uint32_t Ssrc_(13371337);
 struct Codec {
     Kind kind_;
     std::string type_;
-    unsigned rate_;
-    unsigned channels_;
+    uint64_t rate_;
+    uint64_t channels_;
     std::map<std::string, unsigned> parameters_;
 
     std::vector<std::pair<std::string, std::string>> feedbacks_;
@@ -106,7 +107,7 @@ struct Codec {
     }
 
 
-    Codec(Kind kind, std::string type, unsigned rate, unsigned channels, decltype(parameters_) parameters) :
+    Codec(Kind kind, std::string type, decltype(rate_) rate, decltype(channels_) channels, decltype(parameters_) parameters) :
         kind_(kind),
         type_(std::move(type)),
         rate_(rate),
@@ -118,9 +119,10 @@ struct Codec {
     Codec(const boost::json::object &object, const std::optional<Kind> &kind) :
         kind_(kind ? *kind : ToKind(Str(object.at("kind")))),
         type_(Str(object.at("mimeType"))),
-        rate_(Num<decltype(channels_)>(object.at("clockRate")))
+        rate_(Num<decltype(rate_)>(object.at("clockRate")))
     {
         if (const auto channels = object.if_contains("channels"))
+            // XXX: this should be as_uint64()
             channels_ = channels->as_int64();
         else
             channels_ = 0;
@@ -323,7 +325,8 @@ struct Capabilities {
             if (codec.rtx()) {
                 auto copy(codec);
                 auto &apt(copy.parameters_.at("apt"));
-                apt = payloads.at(apt);
+                // XXX: is apt really uint8_t?
+                apt = payloads.at(Fit(apt));
                 remap(copy);
             }
     }

@@ -193,15 +193,16 @@ inline std::string Str(const boost::json::string &value) {
 inline std::string Str(const boost::json::value &value) {
     return Str(value.as_string()); }
 
+// XXX: this is dangerous and needs Fit
 template <typename Type_>
 Type_ Num(const boost::json::value &value) {
     switch (value.kind()) {
         case boost::json::kind::int64:
-            return value.get_int64();
+            return Type_(value.get_int64());
         case boost::json::kind::uint64:
-            return value.get_uint64();
+            return Type_(value.get_uint64());
         case boost::json::kind::double_:
-            return value.get_double();
+            return Type_(value.get_double());
         default: orc_assert(false);
     }
 }

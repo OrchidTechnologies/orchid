@@ -17,10 +17,6 @@ w_glib += -Diconv=external
 m_glib := 
 
 m_glib += sed -i -e ' \
-    s@-Werror=format=2@-Werror=format@g; \
-' build.ninja;
-
-m_glib += sed -i -e ' \
     s@^G_BEGIN_DECLS$$@\#define G_INTL_STATIC_COMPILATION 1'$$'\\\n''G_BEGIN_DECLS@; \
 ' glib/glibconfig.h;
 

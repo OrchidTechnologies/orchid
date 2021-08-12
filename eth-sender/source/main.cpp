@@ -88,6 +88,8 @@ struct Option;
 template <typename Type_>
 struct Option<std::optional<Type_>> {
 static std::optional<Type_> _(std::string_view arg) {
+    if (arg.empty())
+        return std::nullopt;
     return Option<Type_>::_(arg);
 } };
 
@@ -130,6 +132,12 @@ template <>
 struct Option<Decimal> {
 static Decimal _(std::string_view arg) {
     return Decimal(arg);
+} };
+
+template <>
+struct Option<uint8_t> {
+static uint64_t _(std::string_view arg) {
+    return To<uint8_t>(arg);
 } };
 
 template <>
@@ -351,7 +359,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "avax") {
         // https://docs.avax.network/build/references/cryptographic-primitives
         const auto [key] = Options<Key>(args);
-        std::cout << ToSegwit("avax", -1, HashR(Hash2(ToCompressed(key)))) << std::endl;
+        std::cout << ToSegwit("avax", std::nullopt, HashR(Hash2(ToCompressed(key)))) << std::endl;
 
     } else if (command == "balance") {
         const auto [token, address] = Options<Address, Address>(args);
@@ -477,6 +485,12 @@ task<int> Main(int argc, const char *const argv[]) { try {
             std::cout << std::setw(2) << byte;
         }
         std::cout << std::endl;
+
+    } else if (command == "lottery0:look") {
+        const auto [lottery, funder, signer] = Options<Address, Address, Address>(args);
+        static Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
+        const auto [amount, escrow, unlock, verify, codehash, shared] = co_await look.Call(*chain_, "latest", lottery, 90000, funder, signer);
+        std::cout << amount << " " << escrow << " " << unlock << std::endl;
 
     } else if (command == "lottery0:push") {
         const auto [lottery, signer, balance, escrow] = Options<Address, Address, uint128_t, uint128_t>(args);
@@ -624,7 +638,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
         std::cout << std::endl;
 
     } else if (command == "segwit") {
-        const auto [prefix, version, key] = Options<std::string, int, Key>(args);
+        const auto [prefix, version, key] = Options<std::string, std::optional<uint8_t>, Key>(args);
         std::cout << ToSegwit(prefix, version, HashR(Hash2(ToCompressed(key)))) << std::endl;
 
     } else if (command == "send") {

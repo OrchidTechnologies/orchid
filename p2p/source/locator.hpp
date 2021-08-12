@@ -48,6 +48,8 @@ struct Origin final {
     }
 };
 
+std::ostream &operator <<(std::ostream &out, const Origin &origin);
+
 struct Locator final {
     Origin origin_;
     std::string path_;

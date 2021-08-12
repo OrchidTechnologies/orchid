@@ -33,11 +33,12 @@ android {
     compileSdkVersion 29
 
     defaultConfig {
-        applicationId "net.orchid.Orchid"
+        applicationId orcUnique
         minSdkVersion 21
         targetSdkVersion 29
         versionCode orcMonotonic.toInteger() - 946684800
         versionName orcVersion
+        manifestPlaceholders = [orcUnique: orcUnique, orcName: orcName]
     }
 
     compileOptions {
@@ -48,6 +49,7 @@ android {
     sourceSets {
         main {
             java.srcDirs += [orcInterface + "/android/app/src/main/java"]
+            res.srcDirs += [orcInterface + "/res"]
             assets.srcDirs += ['out-and/assets']
             jniLibs.srcDirs = ['out-and/jnilibs']
         }

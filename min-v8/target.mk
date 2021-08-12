@@ -43,7 +43,9 @@ v8all := $(patsubst ./%,$(pwd/v8)/src/%,$(shell cd $(pwd/v8)/src && find . \
     ! -path "./heap/cppgc/caged-heap.cc" \
     ! -path "./heap/conservative-stack-visitor.cc" \
     ! -path "./libplatform/tracing/trace-event-listener.cc" \
+    \
     ! -path "./trap-handler/handler-inside-posix.cc" \
+    ! -path "./trap-handler/handler-outside-simulator.cc" \
 -name "*.cc" -print | LC_COLLATE=C sort))
 
 v8all += $(pwd/v8)/src/torque/class-debug-reader-generator.cc
@@ -233,17 +235,11 @@ cflags += -DU_SHOW_INTERNAL_API
 #chacks/$(pwd/v8)/src/./profiler/heap-snapshot-generator.cc += s/V8_CC_MSVC/1/
 cflags += -mno-ms-bitfields
 
-# https://bugs.chromium.org/p/chromium/issues/detail?id=989932
-cflags/$(pwd/v8)/ += -Wno-implicit-int-float-conversion
-
 # https://bugs.chromium.org/p/chromium/issues/detail?id=1016945
 cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment
 
 # XXX: v8's compile is ridiculously non-deterministic?! this seems to fix it
 cflags/$(pwd/v8)/src/heap/ += -include src/heap/cppgc/heap.h
-
-# XXX: https://bugs.chromium.org/p/v8/issues/detail?id=11968
-chacks/$(pwd/v8)/src/utils/allocation.cc += 1s@^[^/]*/@/@
 
 
 archive += $(pwd/v8)

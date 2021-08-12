@@ -24,14 +24,14 @@
 
 namespace orc {
 
-void Nested::enc(std::string &data, unsigned length) {
+void Nested::enc(std::string &data, size_t length) {
     if (length == 0)
         return;
     enc(data, length >> 8);
     data += char(length & 0xff);
 }
 
-void Nested::enc(std::string &data, unsigned length, uint8_t offset) {
+void Nested::enc(std::string &data, size_t length, uint8_t offset) {
     if (length < 56)
         data += char(length + offset);
     else {

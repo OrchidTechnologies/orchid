@@ -23,7 +23,10 @@
 #ifndef ORCHID_DECIMAL_HPP
 #define ORCHID_DECIMAL_HPP
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconversion"
 #include <boost/multiprecision/cpp_dec_float.hpp>
+#pragma clang diagnostic pop
 
 namespace orc {
 

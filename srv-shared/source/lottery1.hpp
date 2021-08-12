@@ -37,6 +37,7 @@
 #include "sleep.hpp"
 #include "signed.hpp"
 #include "spawn.hpp"
+#include "time.hpp"
 #include "updated.hpp"
 
 namespace orc {
@@ -82,6 +83,9 @@ class Lottery1 :
                 // XXX: I should dump these to a disk queue as they are worth "real money"
                 // XXX: that same disk queue should maybe be in charge of the old tickets?
                 co_await Sleep(5000);
+
+                if ((std::get<2>(payment) >> 192) + (std::get<3>(payment) >> 225) <= Timestamp())
+                    break;
             }
         }, __FUNCTION__);
     }

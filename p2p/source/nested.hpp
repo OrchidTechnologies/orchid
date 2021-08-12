@@ -54,8 +54,8 @@ class Nested {
     mutable std::vector<Nested> array_;
 
   private:
-    static void enc(std::string &data, unsigned length);
-    static void enc(std::string &data, unsigned length, uint8_t offset);
+    static void enc(std::string &data, size_t length);
+    static void enc(std::string &data, size_t length, uint8_t offset);
 
   public:
     Nested() :
@@ -178,15 +178,15 @@ class Nested {
         return array_.size();
     }
 
-    const Nested &operator [](unsigned i) const {
+    const Nested &operator [](size_t i) const {
         return array_[i];
     }
 
-    Nested &operator [](unsigned i) {
+    Nested &operator [](size_t i) {
         return array_[i];
     }
 
-    const Nested &at(unsigned i) const {
+    const Nested &at(size_t i) const {
         orc_assert(!scalar_);
         orc_assert(i < size());
         return operator [](i);

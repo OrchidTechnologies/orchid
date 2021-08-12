@@ -20,10 +20,31 @@
 /* }}} */
 
 
-#include "port.hpp"
+#ifndef ORCHID_FIT_HPP
+#define ORCHID_FIT_HPP
+
+#include "error.hpp"
 
 namespace orc {
 
-const Host Host_(10,7,0,3);
+template <typename Value_>
+class Fit {
+  private:
+    const Value_ value_;
+
+  public:
+    inline Fit(Value_ value) :
+        value_(value)
+    {
+    }
+
+    template <typename Type_>
+    inline operator Type_() {
+        orc_assert(value_ <= std::numeric_limits<Type_>::max());
+        return Type_(value_);
+    }
+};
 
 }
+
+#endif//ORCHID_FIT_HPP

@@ -29,13 +29,9 @@
 namespace orc {
 
 task<cricket::Candidate> Peer::Candidate() {
-    const auto sctp(co_await Post([&]() -> rtc::scoped_refptr<webrtc::SctpTransportInterface> {
-        return peer_->GetSctpTransport();
-    }, RTC_FROM_HERE));
-
-    orc_assert(sctp != nullptr);
-
     co_return co_await Post([&]() -> cricket::Candidate {
+        const auto sctp(peer_->GetSctpTransport());
+        orc_assert(sctp != nullptr);
         const auto dtls(sctp->dtls_transport());
         orc_assert(dtls != nullptr);
         const auto ice(dtls->ice_transport());

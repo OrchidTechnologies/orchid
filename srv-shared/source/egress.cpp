@@ -21,6 +21,7 @@
 
 
 #include "egress.hpp"
+#include "fit.hpp"
 #include "forge.hpp"
 
 namespace orc {
@@ -61,7 +62,7 @@ Socket Egress::Translate(Translators::iterator translator, const Three &source) 
         }
     }
 
-    const auto translated(Three(source.Protocol(), local_, ephemeral));
+    const auto translated(Three(source.Protocol(), local_, Fit(ephemeral)));
     recents.emplace_front(translated);
     const auto external(externals.emplace(translated, External{source.Two(), translator, recents.begin()}));
     orc_insist(external.second);

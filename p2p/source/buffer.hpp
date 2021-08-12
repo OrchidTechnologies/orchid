@@ -278,7 +278,8 @@ class Region :
     public Buffer
 {
   public:
-    virtual const uint8_t *data() const = 0;
+    typedef const uint8_t *const_pointer;
+    virtual const_pointer data() const = 0;
     size_t size() const override = 0;
 
     bool have(size_t value) const override {
@@ -327,7 +328,8 @@ class Mutable :
 {
   public:
     using Region::data;
-    virtual uint8_t *data() = 0;
+    typedef uint8_t *pointer;
+    virtual pointer data() = 0;
 
     using Region::size;
     virtual void size(size_t value) {
@@ -568,6 +570,10 @@ class Data :
         static_assert(Skip_ <= Size_);
         return Bounded<Size_ - Skip_>(data() + Skip_);
     }
+
+    const auto &arr() const {
+        return data_;
+    }
 };
 
 template <size_t Size_>
@@ -706,7 +712,7 @@ class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_
     // NOLINTNEXTLINE (modernize-use-equals-default)
     using Data<(Bits_ >> 3)>::Data;
 
-    Number(boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> value, uint8_t pad = 0) {
+    Number(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value, uint8_t pad = 0) {
         for (auto i(boost::multiprecision::export_bits(value, this->data_.rbegin(), 8, false)), e(this->data_.rend()); i != e; ++i)
             *i = pad;
     }
@@ -1212,18 +1218,31 @@ class Window :
 };
 
 class Rest final :
-    public Window
+    public Region
 {
   private:
+    size_t size_;
     Beam data_;
 
   public:
-    Rest() = default;
+    Rest() :
+        size_(0)
+    {
+    }
 
-    Rest(Window &&window, Beam &&data) :
-        Window(std::move(window)),
+    Rest(size_t size, Beam &&data) :
+        size_(size),
         data_(std::move(data))
     {
+        orc_assert(size_ <= data_.size());
+    }
+
+    const uint8_t *data() const override {
+        return data_.data() + (data_.size() - size_);
+    }
+
+    size_t size() const override {
+        return size_;
     }
 };
 
@@ -1336,7 +1355,7 @@ template <size_t Index_>
 struct Taking<Index_, Rest, void> {
 template <typename Tuple_>
 static bool Take(Tuple_ &tuple, Window &window, Beam &&buffer) {
-    std::get<Index_>(tuple) = Rest(std::move(window), std::move(buffer));
+    std::get<Index_>(tuple) = Rest(window.size(), std::move(buffer));
     return false;
 } };
 

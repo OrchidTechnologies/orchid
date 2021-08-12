@@ -37,6 +37,7 @@
 
 #include "dns.hpp"
 #include "event.hpp"
+#include "fit.hpp"
 #include "locked.hpp"
 #include "lwip.hpp"
 #include "manager.hpp"
@@ -114,11 +115,11 @@ class Buffers :
   public:
     // XXX: this always copies, but sometimes I could pbuf_ref? ugh
     Buffers(const Buffer &data) :
-        buffer_(pbuf_alloc(PBUF_RAW, data.size(), PBUF_RAM))
+        buffer_(pbuf_alloc(PBUF_RAW, Fit(data.size()), PBUF_RAM))
     {
         u16_t offset(0);
         data.each([&](const uint8_t *data, size_t size) {
-            orc_lwipcall(pbuf_take_at, (buffer_, data, size, offset));
+            orc_lwipcall(pbuf_take_at, (buffer_, data, Fit(size), offset));
             copied_ += size;
             offset += size;
             return true;
@@ -375,7 +376,7 @@ class RemoteConnection final :
                 else {
                     const Buffers buffers(data);
                     self->Land(buffers);
-                    tcp_recved(pcb, buffers.size());
+                    tcp_recved(pcb, Fit(buffers.size()));
                     pbuf_free(data);
                 }
 
@@ -460,7 +461,7 @@ class RemoteConnection final :
                 u8_t flags(TCP_WRITE_FLAG_COPY);
                 if (rest != 0)
                     flags |= TCP_WRITE_FLAG_MORE;
-                orc_lwipcall(tcp_write, (pcb_, data, size, flags));
+                orc_lwipcall(tcp_write, (pcb_, data, Fit(size), flags));
                 copied_ += size;
                 return size;
             });

@@ -24,7 +24,11 @@
 
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-int-conversion"
 #include <boost/iostreams/filter/gzip.hpp>
+#pragma clang diagnostic pop
 
 #include <jwt/jwt.hpp>
 

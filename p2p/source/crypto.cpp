@@ -20,8 +20,11 @@
 /* }}} */
 
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-int-conversion"
 #include <boost/random.hpp>
 #include <boost/random/random_device.hpp>
+#pragma clang diagnostic pop
 
 #include <openssl/md5.h>
 #include <openssl/objects.h>
@@ -32,6 +35,7 @@
 #include <secp256k1_recovery.h>
 
 #include "crypto.hpp"
+#include "fit.hpp"
 #include "scope.hpp"
 
 namespace orc {
@@ -144,7 +148,7 @@ Signature::Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v) :
 {
 }
 
-Signature::Signature(const Brick<64> &data, int v) {
+Signature::Signature(const Brick<64> &data, uint8_t v) {
     std::tie(r_, s_) = Take<Brick<32>, Brick<32>>(data);
     v_ = v;
 
@@ -237,7 +241,7 @@ Signature Sign(const Secret &secret, const Brick<32> &data) {
     int v;
     orc_assert(secp256k1_ecdsa_recoverable_signature_serialize_compact(context, external.data(), &v, &internal) != 0);
 
-    return {external, v};
+    return {external, Fit(v)};
 }
 
 Key Recover(const Brick<32> &data, const Signature &signature) {

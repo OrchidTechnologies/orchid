@@ -159,7 +159,7 @@ int Main(int argc, const char *const argv[]) {
     }
 
     if (args.count("version") != 0) {
-        std::cout.write(VersionData, VersionSize);
+        std::cout.write(VersionData, Fit(VersionSize));
         return 0;
     }
 
@@ -366,6 +366,8 @@ int main(int argc, const char *const argv[]) { try {
 
     v8::V8::Initialize();
     _scope({ v8::V8::Dispose(); });
+
+    _scope({ orc::Schedule().Shut(); });
     return orc::Main(argc, argv);
 } catch (const std::exception &error) {
     std::cerr << error.what() << std::endl;

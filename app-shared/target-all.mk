@@ -60,5 +60,3 @@ mode := debug
 engine := 
 precompiled := 
 endif
-
-engine := $(pwd/flutter)/bin/cache/artifacts/engine/$(platform)$(engine)
