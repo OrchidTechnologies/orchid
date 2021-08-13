@@ -187,8 +187,10 @@ Float Client::Balance() {
 }
 
 Float Ratio(const uint128_t &face, const Float &amount, const Market &market, const Currency &currency, const uint64_t &gas) {
-    // XXX: this is entirely wrong, actually
-    return amount / (Float(face) * currency.dollars_() - Float(gas * (*market.bid_)()) * market.currency_.dollars_());
+    const auto value(Float(face) * currency.dollars_());
+    const auto cost(Float(gas * (*market.bid_)()) * market.currency_.dollars_());
+    orc_assert(1 - cost / value >= 0.10);
+    return amount / (value - cost);
 }
 
 }
