@@ -26,6 +26,7 @@ wireshark += $(wildcard $(pwd/wireshark)/epan/wmem/*.c)
 
 wireshark += $(wildcard $(pwd/wireshark)/wiretap/*.c)
 wireshark += $(wildcard $(pwd/wireshark)/wsutil/*.c)
+wireshark += $(wildcard $(pwd/wireshark)/wsutil/wmem/*.c)
 
 wireshark += $(pwd/wireshark)/cfile.c
 wireshark += $(pwd/wireshark)/frame_tvbuff.c

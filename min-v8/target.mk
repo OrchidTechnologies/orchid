@@ -241,6 +241,5 @@ cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment
 # XXX: v8's compile is ridiculously non-deterministic?! this seems to fix it
 cflags/$(pwd/v8)/src/heap/ += -include src/heap/cppgc/heap.h
 
-
 archive += $(pwd/v8)
 linked += $(pwd/v8).a
