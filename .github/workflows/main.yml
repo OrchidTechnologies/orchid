@@ -82,7 +82,6 @@ jobs:
       with:
         name: orchid-apk
         path: app-android/out-and/Orchid.apk
-        #path: app-android/build/outputs/apk/release/app-android-release-unsigned.apk
 
 
   build-and-dkr:

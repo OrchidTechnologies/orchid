@@ -41,7 +41,7 @@ upload: $(output)/$(name).apk
 $(call include,vpn/target.mk)
 $(call include,shared/target-and.mk)
 
-apk := build/outputs/apk/$(mode)/app-android-$(if $(filter noaot,$(debug)),debug,release-unsigned).apk
+apk := build/outputs/apk/$(mode)/app-android-$(if $(filter noaot,$(debug)),debug,release).apk
 
 include env/output.mk
 
@@ -69,14 +69,6 @@ $(output)/jnilibs/%/libflutter.so: $(pwd/flutter)/bin/cache/artifacts/engine/$$(
 	@mkdir -p $(dir $@)
 	unzip -p $< lib/$*/libflutter.so >$@
 
-$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json $(pwd/flutter)/bin/cache/artifacts/engine/android-arm$(engine)/flutter.jar
-	@./gradlew -Pandroid.debug.obsoleteApi=true assemble$(if $(filter noaot,$(debug)),Debug,Release) --console verbose --warning-mode all \
-	    -PorcUnique='$(domain).$(name)' -PorcName='$(name)' \
-	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
-	    -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/$(flutter/$(machine))$(engine)/flutter.jar -PorcInterface='$(pwd/gui)'
-	exit 0
-	touch $@
-
 ifeq ($(keystore),)
 keystore := ../debug androiddebugkey android
 
@@ -84,27 +76,17 @@ $(word 1,$(keystore)).keystore:
 	echo $$'$(word 3,$(keystore))\n$(word 3,$(keystore))\n\n\n' | keytool -genkey -v -keystore $@ -alias $(word 2,$(keystore)) -dname "CN=Android Debug,O=Android,C=US" -validity 365 -keyalg RSA -keysize 2048
 endif
 
-verbose := 
+$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle $(word 1,$(keystore)).keystore src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json $(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar
+	@./gradlew -Pandroid.debug.obsoleteApi=true assemble$(if $(filter noaot,$(debug)),Debug,Release) --console verbose --warning-mode all \
+	    -PorcUnique='$(domain).$(name)' -PorcName='$(name)' \
+	    -PorcStore='$(word 1,$(keystore)).keystore' -PorcAlias='$(word 2,$(keystore))' -PorcPassword='$(word 3,$(keystore))' \
+	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
+	    -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/$(flutter/$(machine))$(engine)/flutter.jar -PorcInterface='$(pwd/gui)'
+	exit 0
+	touch $@
 
-zipalign := 
-ifneq ($(ANDROID_SDK_ROOT),)
-zipalign := $(firstword $(wildcard $(ANDROID_SDK_ROOT)/build-tools/*/zipalign))
-endif
-ifneq ($(ANDROID_HOME),)
-zipalign := $(firstword $(wildcard $(ANDROID_HOME)/build-tools/*/zipalign))
-endif
-ifeq ($(zipalign),)
-zipalign := $(shell which zipalign)
-endif
-ifeq ($(zipalign),)
-$(error unable to find zipalign)
-endif
-
-$(output)/$(name).apk: $(apk) $(word 1,$(keystore)).keystore
-	cp -af $(apk) $(output)/signed.apk
-	jarsigner -digestalg SHA-256 -sigalg SHA256withRSA $(if $(verbose),-verbose) -sigfile CERT -keystore $(word 1,$(keystore)).keystore -storepass '$(word 3,$(keystore))' -tsa http://timestamp.digicert.com/ $(output)/signed.apk $(word 2,$(keystore))
-	$(zipalign) -f $(if $(verbose),-v) 4 $(output)/signed.apk $@
-	@rm -rf $(output)/signed.apk
+$(output)/Orchid.apk: $(apk)
+	cp -af $< $@
 
 .PHONY: apk
 apk: $(output)/$(name).apk
