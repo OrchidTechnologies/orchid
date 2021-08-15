@@ -697,7 +697,7 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network
         const auto secret(orc_value(return, Bless<Secret>(heap.eval<std::string>(hops + ".secret")), "parsing .secret"));
         const Address funder(heap.eval<std::string>(hops + ".funder"));
         const std::string curator(heap.eval<std::string>(hops + ".curator"));
-        const auto chain(uint256_t(heap.eval<double>(hops + ".chainid", 1)));
+        const auto chain(uint256_t(heap.eval<double>(hops + ".chainid")));
         const auto provider(co_await network->Select(curator, heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000")));
         Locator locator(heap.eval<std::string>(hops + ".rpc"));
         std::string currency(heap.eval<std::string>(hops + ".currency"));
