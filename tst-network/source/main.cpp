@@ -294,35 +294,37 @@ int Main(int argc, const char *const argv[]) {
     const auto oxt(Wait(Token::OXT(milliseconds, chain)));
     const auto bnb(Wait(Market::New(milliseconds, 56, base, "https://bsc-dataseed.binance.org/", "BNB")));
 
-    const auto coinbase(Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
+    std::map<std::string, S<Updated<std::pair<Float, Float>>>> prices;
+
+    prices.try_emplace("Coinbase", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
         co_return *co_await Parallel(Coinbase(*base, "ETH-USD"), Coinbase(*base, "OXT-USD"));
     }, "Coinbase"))));
 
-    const auto binance(Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
+    prices.try_emplace("Binance", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
         co_return *co_await Parallel(Binance(*base, "ETHUSDT"), Binance(*base, "OXTUSDT"));
     }, "Binance"))));
 
-    const auto kraken(Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
+    prices.try_emplace("Kraken", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
         const auto [eth, oxt] = *co_await Parallel(Kraken(*base, "XETHZUSD"), Kraken(*base, "OXTETH", 1));
         co_return std::make_tuple(eth, eth * oxt);
     }, "Kraken"))));
 
-    const auto huobi(Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
+    prices.try_emplace("Huobi", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
         co_return *co_await Parallel(Huobi(*base, "ethusdt"), Huobi(*base, "oxtusdt"));
     }, "Huobi"))));
 
-    const auto uniswap2(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
+    prices.try_emplace("Uniswap2", Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
         const auto [eth, oxt] = *co_await Parallel(Uniswap2(*chain, Uniswap2USDCETH, Ten6), Uniswap2(*chain, Uniswap2OXTETH, 1));
         co_return std::make_tuple(eth, eth / oxt);
     }, "Uniswap2"))));
 
-    const auto uniswap3(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
+    prices.try_emplace("Uniswap3", Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
         const auto [wei, oxt] = *co_await Parallel(Uniswap3(*chain, Uniswap3USDCETH, Ten6), Uniswap3(*chain, Uniswap3OXTETH, 1));
         const auto eth(1 / wei / Ten18);
         co_return std::make_tuple(eth, eth * oxt);
     }, "Uniswap3"))));
 
-    const auto chainlink(Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
+    prices.try_emplace("Chainlink", Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
         co_return *co_await Parallel(Chainlink(*chain, ChainlinkETHUSD, 0, Ten8 * Ten18), Chainlink(*chain, ChainlinkOXTUSD, 0, Ten8 * Ten18));
     }, "Chainlink"))));
 
@@ -407,13 +409,10 @@ int Main(int argc, const char *const argv[]) {
             std::setprecision(1) << (Float(balance) / Ten18) << "/" << (Float(escrow) / Ten18) << "\n";
         body << "\n";
 
-        { const auto [eth, oxt] = (*coinbase)(); body << "Coinbase:  $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
-        { const auto [eth, oxt] = (*binance)(); body << "Binance:   $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
-        { const auto [eth, oxt] = (*kraken)(); body << "Kraken:    $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
-        { const auto [eth, oxt] = (*huobi)(); body << "Huobi:     $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
-        { const auto [eth, oxt] = (*uniswap2)(); body << "Uniswap 2: $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
-        { const auto [eth, oxt] = (*uniswap3)(); body << "Uniswap 3: $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
-        { const auto [eth, oxt] = (*chainlink)(); body << "Chainlink: $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n"; }
+        for (const auto &[name, price] : prices) {
+            const auto [eth, oxt] = (*price)();
+            body << name << std::string(9 - name.size(), ' ') << ": $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18) << "\n";
+        }
         body << "\n";
 
         for (const auto &[name, provider] : state->providers_)
