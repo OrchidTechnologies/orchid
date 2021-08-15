@@ -61,6 +61,9 @@ source += $(wildcard source/*.cpp)
 
 cflags += -DORC_FIBER
 
+# XXX: this was a mistake
+cflags += -DGUI_orchid
+
 ifeq ($(target),lnx)
 lflags += -static
 endif
