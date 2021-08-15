@@ -184,7 +184,7 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
 
             // you can't close a PeerConnection if it is blocked in a signal
             Spawn([self = shared_from_this()]() mutable noexcept -> task<void> {
-                co_await Post([self = std::move(self)]() {
+                co_await Post([self = std::move(self)]() mutable {
                     for (auto current(self->channels_.begin()); current != self->channels_.end(); ) {
                         auto next(current);
                         ++next;
@@ -193,6 +193,7 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
                     }
 
                     self->Stop();
+                    self = nullptr;
                 }, RTC_FROM_HERE);
             }, __FUNCTION__);
         break;
