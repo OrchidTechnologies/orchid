@@ -100,7 +100,7 @@ class Heap {
 
     template <typename Type_>
     auto eval(const std::string &code) {
-        return eval<Type_>(code, [&]() -> Type_ { orc_assert(false); });
+        return eval<Type_>(code, [&]() -> Type_ { orc_assert_(false, "undefined " << code); });
     }
 };
 
