@@ -2,17 +2,22 @@
     "@@locale": "ru",
     "newHop": "Новый скачок",
     "@newHop": {
-        "description": "Новый сетевой скачок"
+        "description": "New network hop"
     },
     "orchidHop": "Orchid скачок",
     "@orchidHop": {
-        "description": "Orchid сетевой скачок"
+        "description": "Orchid network hop"
     },
     "orchidDisabled": "Служба Orchid отключена",
     "trafficMonitoringOnly": "Только мониторинг трафика",
     "orchidConnecting": "Orchid подключается",
     "orchidDisconnecting": "Orchid отключается",
     "numHopsConfigured": "{num, plural, zero{Скачки не настроены} one{Один скачок настроен} few {{num} скачков настроены} many {{num} скачков настроены} other{{num} скачков настроены}}",
+    "@numHopsConfigured": {
+        "placeholders": {
+            "num": {}
+        }
+    },
     "delete": "Удалить",
     "turnOnToActivate": "Включите Orchid, чтобы активировать скачки и защитить свой трафик",
     "orchid": "Orchid",
@@ -83,7 +88,7 @@
     "saveButtonTitle": "СОХРАНИТЬ",
     "search": "Поиск",
     "newContent": "Новый контент",
-    "clear": "Очистить",
+    "clear": "Clear",
     "deleteAllData": "Удалить все данные",
     "thisWillDeleteRecorded": "Это действие удалит все записанные данные о трафике в приложении.",
     "okButtonTitle": "ОК",
@@ -195,6 +200,11 @@
     "seeOrchidcomForHelp": "Подробнее на orchid.com.",
     "payPerUseVpnService": "VPN с платой по факту использования",
     "currentAvgVpnPriceIsPricePerGb": "Текущая средняя цена за VPN — {price} за ГБ",
+    "@currentAvgVpnPriceIsPricePerGb": {
+        "placeholders": {
+            "price": {}
+        }
+    },
     "notASubscriptionCreditsDontExpire": "Это не подписка — ваши кредиты не сгорают",
     "shareAccountWithUnlimitedDevices": "Пользуйтесь аккаунтом с неограниченного количества устройств",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Магазин Orchid Store временно недоступен. Попробуйте зайти через пару минут.",
@@ -205,6 +215,11 @@
     "copied": "Скопировано",
     "efficiency": "Эффективность",
     "minTicketsAvailableTickets": "Мин. заявки доступны: {tickets}",
+    "@minTicketsAvailableTickets": {
+        "placeholders": {
+            "tickets": {}
+        }
+    },
     "transactionSentToBlockchain": "Транзакция отправлена в блокчейн",
     "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "Ваша покупка завершена, сейчас она обрабатывается блокчейном xDai. Это занимает примерно минуту, иногда немного дольше. Потяните экран вниз, чтобы обновить, и информация об обновлении баланса в вашем аккаунте появится ниже.",
     "copyReceipt": "Копировать квитанцию",
@@ -245,39 +260,39 @@
     "weRecommendBackingItUp": "Рекомендуем <link>создать его резервную копию</link>.",
     "purchasedCreditAccountsConnectExclusively": "Приобретенные аккаунты с кредитами подключаются исключительно к <link1>нашим лучшим провайдерам</link1>.",
     "allPurchasedAccountsUseThe": "Во всех приобретенных аккаунтах используется <link2>криптовалюта xDai</link2>.",
-    "analyze": "анализировать",
-    "analyzeYourConnections": "Проанализируйте свои связи",
-    "analyzingYourConnections": "Анализ ваших связей",
-    "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "Для изменения статуса мониторинга требуется перезапуск VPN, что может ненадолго нарушить защиту конфиденциальности.",
+    "analyze": "Проанализировать",
+    "analyzeYourConnections": "Проанализировать подключения",
+    "analyzingYourConnections": "Анализируются ваши подключения",
+    "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "Для изменения статуса мониторинга нужно перезапустить VPN. Это может на короткое время оставить вас без защиты конфиденциальности.",
     "chooseAddress": "Выберите адрес",
-    "chooseAnOrchidAccountToUseWithThisHop": "Выберите учетную запись Orchid для использования с этим прыжком.",
-    "confirmRestart": "Подтвердите перезапуск",
+    "chooseAnOrchidAccountToUseWithThisHop": "Выберите учетную запись Orchid для этого подключения.",
+    "confirmRestart": "Подтверждение перезапуска",
     "connectingToARandomOrchidProvider": "Подключение к случайному провайдеру Orchid",
-    "copiedOrchidIdentity": "Копирование идентичности орхидеи",
-    "disconnectingVpn": "(Отключение VPN)",
+    "copiedOrchidIdentity": "Скопирован идентификатор Orchid",
+    "disconnectingVpn": "(Отключение от VPN)",
     "doNotSendTokensToThisAddress": "Не отправляйте токены на этот адрес.",
-    "funderAccount": "Счет спонсора",
-    "ifYouDontSeeYourAccountBelowYouCanUse": "Если вы не видите свою учетную запись ниже, вы можете использовать менеджер учетных записей для импорта, покупки или создания новой.",
-    "learnMoreAboutYourLinkorchidIdentitylink": "Узнайте больше о своей <link>идентичности орхидеи</link>.",
-    "networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "Для сетевого анализа требуются разрешения VPN, но он сам по себе не защищает ваши данные и не скрывает ваш IP-адрес.",
-    "networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "Сетевой анализ использует возможности VPN вашего устройства для захвата пакетов и анализа вашего трафика.",
-    "orchidAnalyzingTraffic": "Орхидея анализирует трафик",
-    "orchidIdentitySignerKey": "Идентичность Орхидеи (Ключ подписавшего)",
-    "orchidRunningAndAnalyzing": "Орхидея работает и анализирует",
-    "pasteAddress": "Вставить адрес",
+    "funderAccount": "Спонсорский счет",
+    "ifYouDontSeeYourAccountBelowYouCanUse": "Если вы не видите ниже свою учетную запись, вы можете воспользоваться менеджером, чтобы импортировать, купить или создать новую.",
+    "learnMoreAboutYourLinkorchidIdentitylink": "Подробнее о вашем <link>идентификаторе Orchid</link>.",
+    "networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "Функция анализа сети требует доступа к VPN, но сама по себе не защищает ваши данные и не скрывает ваш IP-адрес.",
+    "networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "Функция анализа сети использует функционал VPN на вашем устройстве, чтобы улавливать пакеты данных и анализировать трафик.",
+    "orchidAnalyzingTraffic": "Orchid анализирует трафик",
+    "orchidIdentitySignerKey": "Идентификатор Orchid (ключ подписи)",
+    "orchidRunningAndAnalyzing": "Orchid работает и выполняет анализ",
+    "pasteAddress": "Вставьте адрес",
     "restarting": "Перезапуск",
     "selectAnOrchidAccount": "Выберите учетную запись Orchid",
-    "startingVpn": "(Запуск VPN)",
-    "takeMeToTheAccountManager": "Отведите меня к менеджеру по работе с клиентами",
+    "startingVpn": "(Запускается VPN)",
+    "takeMeToTheAccountManager": "Перейти в менеджер учетных записей",
     "thisIsNotAWalletAddress": "Это не адрес кошелька.",
-    "toConnectEitherAddCreditsUsingAnInappPurchaseOr": "Чтобы подключиться, либо добавьте кредиты с помощью покупки в приложении, либо используйте существующую учетную запись.",
-    "toConnectEitherAddCryptoUsingTheOrchidDappOr": "Для подключения либо добавьте криптовалюту с помощью Orchid DApp, либо используйте существующую учетную запись.",
-    "toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Чтобы воспользоваться преимуществами сетевой конфиденциальности, вы должны настроить и активировать VPN-соединение на главном экране.",
-    "turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "Включение этой функции увеличит расход заряда батареи приложения Orchid.",
-    "useAnOrchidAccount": "Используйте учетную запись Orchid",
+    "toConnectEitherAddCreditsUsingAnInappPurchaseOr": "Чтобы подключиться, либо пополните запас кредитов в приложении или воспользуйтесь существующей учетной записью.",
+    "toConnectEitherAddCryptoUsingTheOrchidDappOr": "Чтобы подключиться, либо пополните запас криптовалюты в Orchid DApp или воспользуйтесь существующей учетной записью.",
+    "toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Чтобы пользоваться преимуществами приватного доступа к сети, настройте и активируйте VPN-подключение на домашней странице.",
+    "turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "Включение данной функции приведет к большему расходу заряда аккумулятора приложением Orchid.",
+    "useAnOrchidAccount": "Использовать учетную запись Orchid",
     "useAnotherAccount": "Использовать другую учетную запись",
     "useCryptoWallet": "Использовать криптокошелек",
-    "vpnConnectedButNotRouting": "(VPN подключен, но не маршрутизируется)",
-    "yourAccountIsEmpty": "Ваша учетная запись пуста!",
-    "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "Ваш Orchid Identity однозначно идентифицирует вас в сети."
+    "vpnConnectedButNotRouting": "(VPN-соединение установлено, но без маршрутизации)",
+    "yourAccountIsEmpty": "На вашем счету пусто!",
+    "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "Идентификатор Orchid уникален для вас в сети."
 }

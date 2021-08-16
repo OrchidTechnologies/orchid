@@ -2,29 +2,34 @@
     "@@locale": "it",
     "newHop": "Nuovo hop",
     "@newHop": {
-        "description": "Nuovo hop di rete"
+        "description": "New network hop"
     },
     "orchidHop": "Hop Orchid",
     "@orchidHop": {
-        "description": "Hop Orchid di rete"
+        "description": "Orchid network hop"
     },
     "orchidDisabled": "Orchid disabilitata",
     "trafficMonitoringOnly": "Solo monitoraggio del traffico",
     "orchidConnecting": "Orchid si sta connettendo",
     "orchidDisconnecting": "Orchid si sta disconnettendo",
     "numHopsConfigured": "{num, plural, zero{Nessun hop configurato} one{Un hop configurato} two{Due hops configurati} other{{num} hops configurati}}",
+    "@numHopsConfigured": {
+        "placeholders": {
+            "num": {}
+        }
+    },
     "delete": "Elimina",
     "turnOnToActivate": "Attiva Orchid per abilitare i tuoi hops e proteggere il tuo traffico",
     "orchid": "Orchid",
     "openVPN": "OpenVPN",
     "status": "Stato",
-    "hops": "Hops",
+    "hops": "Hop",
     "@hops": {
-        "description": "Hops di rete"
+        "description": "Network hops"
     },
     "traffic": "Traffico",
     "@traffic": {
-        "description": "Traffico di rete"
+        "description": "Network traffic"
     },
     "curation": "Cura",
     "signerKey": "Chiave del firmatario",
@@ -126,7 +131,7 @@
         "description": "Gigabytes"
     },
     "@ofTraffic": {
-        "description": "GB di traffico"
+        "description": "GB of traffic"
     },
     "scanOrPasteYourExistingAccountBelowToAddIt": "Scansiona o incolla di seguito il tuo account esistente per aggiungerlo come hop.",
     "linkAnOrchidAccount": "Collega account Orchid",
@@ -195,6 +200,11 @@
     "seeOrchidcomForHelp": "Per assistenza, visita orchid.com.",
     "payPerUseVpnService": "Servizio VPN a consumo, si paga solo l'effettivo utilizzo",
     "currentAvgVpnPriceIsPricePerGb": "L'attuale prezzo medio della VPN è {price} per GB",
+    "@currentAvgVpnPriceIsPricePerGb": {
+        "placeholders": {
+            "price": {}
+        }
+    },
     "notASubscriptionCreditsDontExpire": "Nessun abbonamento, i crediti non scadono",
     "shareAccountWithUnlimitedDevices": "Condividi l'account con un numero illimitato di dispositivi",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Lo Store di Orchid non è momentaneamente disponibile. Per favore, controlla di nuovo tra qualche minuto.",
@@ -205,6 +215,11 @@
     "copied": "Copiato",
     "efficiency": "Efficienza",
     "minTicketsAvailableTickets": "Ticket minimi disponibili: {tickets}",
+    "@minTicketsAvailableTickets": {
+        "placeholders": {
+            "tickets": {}
+        }
+    },
     "transactionSentToBlockchain": "Transazione inviata alla blockchain",
     "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "Il tuo acquisto è stato completato ed è in corso di elaborazione sulla blockchain di xDai, il quale può richiedere fino a un minuto, a volte più a lungo. Trascina verso il basso per aggiornare e il nuovo saldo verrà visualizzato di seguito.",
     "copyReceipt": "Copia ricevuta",
@@ -245,39 +260,39 @@
     "weRecommendBackingItUp": "Ti consigliamo di <link>effettuare il backup</link>.",
     "purchasedCreditAccountsConnectExclusively": "Gli account con il credito acquistato si connettono esclusivamente ai nostri <link1>provider predefiniti</link1>.",
     "allPurchasedAccountsUseThe": "Tutti gli account acquistati utilizzano <link2>la criptovaluta xDai</link2>.",
-    "analyze": "analizzare",
+    "analyze": "Analizza",
     "analyzeYourConnections": "Analizza le tue connessioni",
-    "analyzingYourConnections": "Analizzando le tue connessioni",
-    "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "La modifica dello stato di monitoraggio richiede il riavvio della VPN, che potrebbe interrompere brevemente la protezione della privacy.",
+    "analyzingYourConnections": "Analisi delle tue connessioni in corso",
+    "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "Per modificare lo stato di monitoraggio è necessario riavviare la VPN, il che potrebbe interrompere brevemente la protezione della tua privacy.",
     "chooseAddress": "Scegli indirizzo",
     "chooseAnOrchidAccountToUseWithThisHop": "Scegli un account Orchid da utilizzare con questo hop.",
-    "confirmRestart": "Conferma il riavvio",
-    "connectingToARandomOrchidProvider": "Connessione a un provider Orchid casuale",
-    "copiedOrchidIdentity": "Identità dell'orchidea copiata",
-    "disconnectingVpn": "(Disconnessione VPN)",
-    "doNotSendTokensToThisAddress": "Non inviare token a questo indirizzo.",
-    "funderAccount": "Conto finanziatore",
-    "ifYouDontSeeYourAccountBelowYouCanUse": "Se non vedi il tuo account di seguito, puoi utilizzare il gestore dell'account per importare, acquistare o crearne uno nuovo.",
-    "learnMoreAboutYourLinkorchidIdentitylink": "Ulteriori informazioni sulla tua <link>identità Orchid</link>.",
-    "networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "L'analisi della rete richiede le autorizzazioni VPN ma di per sé non protegge i tuoi dati né nasconde il tuo indirizzo IP.",
-    "networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "L'analisi della rete utilizza la funzione VPN del tuo dispositivo per acquisire pacchetti e analizzare il tuo traffico.",
-    "orchidAnalyzingTraffic": "Orchid che analizza il traffico",
-    "orchidIdentitySignerKey": "Identità dell'orchidea (chiave del firmatario)",
-    "orchidRunningAndAnalyzing": "Orchidea in esecuzione e analisi",
+    "confirmRestart": "Conferma riavvio",
+    "connectingToARandomOrchidProvider": "Connessione ad un provider casuale di Orchid in corso",
+    "copiedOrchidIdentity": "Identità Orchid copiata",
+    "disconnectingVpn": "(Disconnessione della VPN in corso)",
+    "doNotSendTokensToThisAddress": "Non inviare monete a questo indirizzo.",
+    "funderAccount": "Account finanziatore",
+    "ifYouDontSeeYourAccountBelowYouCanUse": "Se non riesci a visualizzare, di seguito, il tuo account, puoi utilizzare il Gestore Account per importare, acquistare o creare un nuovo account.",
+    "learnMoreAboutYourLinkorchidIdentitylink": "Ulteriori informazioni sulla tua <link>Identità Orchid</link>.",
+    "networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "L'analisi della rete richiede autorizzazioni della VPN ma, da sola, non protegge i tuoi dati o nasconde il tuo indirizzo IP.",
+    "networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "L'analisi della rete utilizza le funzioni VPN del tuo dispositivo per acquisire i pacchetti di rete e analizzare il tuo traffico.",
+    "orchidAnalyzingTraffic": "Orchid sta analizzando il traffico",
+    "orchidIdentitySignerKey": "Identità Orchid (Chiave del Firmatario)",
+    "orchidRunningAndAnalyzing": "Orchid è in esecuzione e sta effettuando l'analisi",
     "pasteAddress": "Incolla indirizzo",
-    "restarting": "riavvio",
+    "restarting": "Riavvio in corso",
     "selectAnOrchidAccount": "Seleziona un account Orchid",
-    "startingVpn": "(Avvio VPN)",
-    "takeMeToTheAccountManager": "Portami dall'Account Manager",
-    "thisIsNotAWalletAddress": "Questo non è un indirizzo di portafoglio.",
-    "toConnectEitherAddCreditsUsingAnInappPurchaseOr": "Per connetterti, aggiungi crediti utilizzando un acquisto in-app o utilizza un account esistente.",
-    "toConnectEitherAddCryptoUsingTheOrchidDappOr": "Per connetterti, aggiungi la crittografia utilizzando la DApp Orchid o utilizza un account esistente.",
-    "toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Per ottenere i vantaggi della privacy di rete è necessario configurare e attivare una connessione VPN dalla schermata principale.",
-    "turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "L'attivazione di questa funzione aumenterà l'utilizzo della batteria dell'app Orchid.",
-    "useAnOrchidAccount": "Usa un account Orchid",
-    "useAnotherAccount": "Usa un altro account",
-    "useCryptoWallet": "Usa il portafoglio crittografico",
-    "vpnConnectedButNotRouting": "(VPN connessa ma non instradata)",
+    "startingVpn": "(Avvio VPN in corso)",
+    "takeMeToTheAccountManager": "Vai al Gestore Account",
+    "thisIsNotAWalletAddress": "Questo non è un indirizzo di portafoglio valido.",
+    "toConnectEitherAddCreditsUsingAnInappPurchaseOr": "Per connetterti, aggiungi crediti tramite un acquisto in-app oppure utilizza un account esistente.",
+    "toConnectEitherAddCryptoUsingTheOrchidDappOr": "Per connetterti, aggiungi la criptovaluta utilizzando la dApp di Orchid oppure utilizza un account esistente.",
+    "toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Per ottenere i benefici della privacy di rete, è necessario configurare e attivare una connessione VPN dalla schermata iniziale.",
+    "turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "Attivando questa funzionalità, l'applicazione di Orchid avrà un consumo elevato della batteria.",
+    "useAnOrchidAccount": "Utilizza un account Orchid",
+    "useAnotherAccount": "Utilizza un altro account",
+    "useCryptoWallet": "Utilizza un portafoglio di criptovalute",
+    "vpnConnectedButNotRouting": "(VPN connessa ma senza routing)",
     "yourAccountIsEmpty": "Il tuo account è vuoto!",
-    "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "La tua identità Orchid ti identifica in modo univoco sulla rete."
+    "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "La tua Identità Orchid ti riconosce sulla rete in modo univoco."
 }
