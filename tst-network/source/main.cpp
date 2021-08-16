@@ -505,7 +505,7 @@ int Main(int argc, const char *const argv[]) {
         }, [&]() -> std::string { try {
             return median().str();
         } catch (const std::exception &error) {
-            return "0.6";
+            return "0.06";
         } }());
     });
 
