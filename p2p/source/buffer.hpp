@@ -198,6 +198,12 @@ class Span :
         return {this->data_, this->size_};
     }
 
+    Span clip(const Type_ &value) const {
+        orc_assert(this->size_ != 0);
+        orc_assert(this->data_[this->size_ - 1] == value);
+        return Span(this->data_, this->size_ - 1);
+    }
+
     Span operator +(size_t offset) const {
         orc_assert(this->size_ >= offset);
         return Span(this->data_ + offset, this->size_ - offset);
