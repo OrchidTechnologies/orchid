@@ -29,6 +29,8 @@
 
 #include "base.hpp"
 #include "base64.hpp"
+#include "notation.hpp"
+#include "time.hpp"
 
 namespace orc {
 
