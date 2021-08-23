@@ -68,8 +68,8 @@ class OrchidEthereumV1 {
         "address": "${await OrchidContractV1.lotteryContractAddressV1}",
         "topics": [
           OrchidContractV1.createEventHashV1, // topic[0]
-          "null", // no token address specified for topic[1]
-          "null", // no funder address specified for topic[2]
+          [], // no token address specified for topic[1]
+          [], // no funder address specified for topic[2]
           AbiEncode.address(signer, prefix: true) // topic[3]
         ],
         "fromBlock": "0x" + startBlock.toRadixString(16)
