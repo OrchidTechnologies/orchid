@@ -64,7 +64,9 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
     }
     if (purchasesResult.responseCode != BillingResponse.ok) {
       log("iap: Error: purchase result response code: ${purchasesResult.responseCode}");
-      (await PacTransaction.shared.get()).error("iap failed 1").save();
+      (await PacTransaction.shared.get())
+          .error("iap failed 1: responseCode = ${purchasesResult.responseCode}")
+          .save();
       return;
     }
 
