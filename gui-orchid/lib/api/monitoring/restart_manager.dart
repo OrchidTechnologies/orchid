@@ -6,6 +6,7 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:rxdart/rxdart.dart';
 import '../orchid_api.dart';
 import '../orchid_log_api.dart';
+import '../orchid_platform.dart';
 
 /// Manage automated restarts of the VPN extension.
 ///
@@ -94,8 +95,15 @@ class OrchidRestartManager {
     _waitForDown();
   }
 
-  void _waitForDown() {
+  void _waitForDown() async {
     log("restart_manager: wait for down");
+
+    // TODO: Remove this once the Android native channel correctly reflects the OS VPN status
+    if (OrchidPlatform.isAndroid) {
+      log("restart_manager: XXX ARTIFICIAL DELAY: 5 sec");
+      await Future.delayed(Duration(seconds: 5));
+    }
+
     var api = OrchidAPI();
     // Wait for a non-connected state before restarting.
     StreamSubscription<OrchidVPNExtensionState> sub;
@@ -123,8 +131,15 @@ class OrchidRestartManager {
     });
   }
 
-  void _waitForUp() {
+  void _waitForUp() async {
     log("restart_manager: wait for up");
+
+    // TODO: Remove this once the Android native channel correctly reflects the OS VPN status
+    if (OrchidPlatform.isAndroid) {
+      log("restart_manager: XXX ARTIFICIAL DELAY: 5 sec");
+      await Future.delayed(Duration(seconds: 5));
+    }
+
     var api = OrchidAPI();
     StreamSubscription<OrchidVPNExtensionState> sub;
     sub = api.vpnExtensionStatus.stream
