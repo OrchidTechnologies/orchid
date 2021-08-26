@@ -20,8 +20,6 @@
 /* }}} */
 
 
-#include <boost/asio/ssl/rfc2818_verification.hpp>
-#include <boost/beast/ssl/ssl_stream.hpp>
 #include <boost/beast/version.hpp>
 
 #include <p2p/base/basic_packet_socket_factory.h>
@@ -32,6 +30,7 @@
 #include "base.hpp"
 #include "baton.hpp"
 #include "beast.hpp"
+#include "layer.hpp"
 #include "locator.hpp"
 #include "pirate.hpp"
 
@@ -82,63 +81,15 @@ task<Response> Base::Fetch(const std::string &method, const Locator &locator, co
         } else break;
     }
 
-    const auto endpoints(co_await Resolve(locator.origin_.host_, locator.origin_.port_));
-    std::exception_ptr error;
-    for (const auto &endpoint : endpoints) try {
-        auto fetcher(co_await [&]() -> task<U<Fetcher>> {
-            Adapter adapter(Context(), co_await Connect(endpoint));
-
-            if (false) {
-            } else if (locator.origin_.scheme_ == "http") {
-                co_return std::make_unique<Beast<Adapter>>(std::move(adapter));
-            } else if (locator.origin_.scheme_ == "https") {
-                // XXX: this needs security
-                asio::ssl::context context{asio::ssl::context::sslv23_client};
-
-                if (!verify)
-                    context.set_verify_callback(asio::ssl::rfc2818_verification(locator.origin_.host_));
-                else {
-                    context.set_verify_mode(asio::ssl::verify_peer);
-
-                    context.set_verify_callback([&](bool preverified, boost::asio::ssl::verify_context &context) {
-                        const auto store(context.native_handle());
-                        const auto chain(X509_STORE_CTX_get0_chain(store));
-                        std::list<const rtc::OpenSSLCertificate> certificates;
-                        for (auto e(sk_X509_num(chain)), i(decltype(e)(0)); i != e; i++)
-                            certificates.emplace_back(sk_X509_value(chain, i));
-                        return verify(certificates);
-                    });
-                }
-
-                boost::beast::ssl_stream<Adapter> stream{std::move(adapter), context};
-                orc_assert(SSL_set_tlsext_host_name(stream.native_handle(), locator.origin_.host_.c_str()));
-                // XXX: beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
-
-                orc_block({ try {
-                    co_await stream.async_handshake(asio::ssl::stream_base::client, orc::Adapt());
-                } catch (const asio::system_error &error) {
-                    orc_adapt(error);
-                } }, "in ssl handshake");
-
-                co_return std::make_unique<Beast<boost::beast::ssl_stream<Adapter>>>(std::move(stream));
-            } else orc_assert(false);
-        }());
-
-        auto response(co_await orc_value(co_return co_await, fetcher->Fetch(request), "connected to " << endpoint));
+    co_return co_await Layer<Beast>(*this, locator, verify, [&](U<Fetcher> fetcher) -> task<Response> {
+        auto response(co_await fetcher->Fetch(request));
         // XXX: potentially allow this to be passed in as a custom response validator
         orc_assert_(response.result() != boost::beast::http::status::bad_gateway, response);
         // XXX: if verify were somehow part of origin we could pool this connection
         if (!verify)
             fetchers_.emplace(locator.origin_, std::move(fetcher));
         co_return response;
-    } catch (...) {
-        // XXX: maybe I should merge the exceptions? that would be cool
-        if (error == nullptr)
-            error = std::current_exception();
-    }
-
-    orc_assert_(error != nullptr, "failed connection");
-    std::rethrow_exception(error);
+    });
 }, "requesting " << locator); }
 
 }

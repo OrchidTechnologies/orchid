@@ -23,6 +23,10 @@
 #ifndef ORCHID_READER_HPP
 #define ORCHID_READER_HPP
 
+#include <boost/beast/core/detail/config.hpp>
+#include <boost/beast/core/detail/buffers_pair.hpp>
+#include <boost/beast/core/buffers_prefix.hpp>
+
 #include "buffer.hpp"
 #include "link.hpp"
 #include "spawn.hpp"
@@ -39,6 +43,20 @@ struct Mutables {
         data_(&data),
         size_(1)
     {
+    }
+
+    Mutables(const boost::beast::detail::buffers_pair<true> &data) :
+        data_(data.begin()),
+        size_(data.end() - data.begin())
+    {
+    }
+
+    template <typename Type_>
+    Mutables(const boost::beast::buffers_prefix_view<Type_> &data) :
+        data_(nullptr),
+        size_(0)
+    {
+        orc_insist(false);
     }
 
     auto begin() const {

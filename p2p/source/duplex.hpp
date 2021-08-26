@@ -23,39 +23,13 @@
 #ifndef ORCHID_DUPLEX_HPP
 #define ORCHID_DUPLEX_HPP
 
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
-
 #include "base.hpp"
 #include "locator.hpp"
 #include "reader.hpp"
 
 namespace orc {
 
-class Duplex final :
-    public Stream
-{
-  private:
-    S<Base> base_;
-
-  protected:
-    boost::beast::websocket::stream<boost::beast::tcp_stream> inner_;
-
-  public:
-    Duplex(S<Base> base);
-
-    decltype(inner_) *operator ->() {
-        return &inner_;
-    }
-
-    task<size_t> Read(const Mutables &buffers) override;
-
-    task<boost::asio::ip::tcp::endpoint> Open(const Locator &locator);
-
-    void Shut() noexcept override;
-
-    task<void> Send(const Buffer &data) override;
-};
+task<U<Stream>> Duplex(const S<Base> &base, const Locator &locator);
 
 }
 
