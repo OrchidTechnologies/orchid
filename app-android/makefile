@@ -63,7 +63,11 @@ $(output)/assets/flutter_assets/AssetManifest%json: $(output)/flutter/flutter_as
 $(pwd/flutter)/bin/cache/artifacts/engine/android-%$(engine)/flutter.jar: $(pwd/flutter)/packages/flutter/pubspec.lock
 	@
 
-temp := $(foreach arch,$(jni),$(foreach base,orchid $(if $(filter noaot,$(debug)),,app),$(output)/jnilibs/$(arch)/lib$(base).so))
+temp := $(foreach arch,$(jni),$(foreach base,orchid flutter $(if $(filter noaot,$(debug)),,app),$(output)/jnilibs/$(arch)/lib$(base).so))
+
+$(output)/jnilibs/%/libflutter.so: $(pwd/flutter)/bin/cache/artifacts/engine/$$(flutter/$$*)$(engine)/flutter.jar
+	@mkdir -p $(dir $@)
+	unzip -p $< lib/$*/libflutter.so >$@
 
 ifeq ($(keystore),)
 keystore := ../debug androiddebugkey android
