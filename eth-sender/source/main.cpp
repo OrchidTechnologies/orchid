@@ -215,6 +215,9 @@ static Address _(std::string_view arg) {
     else if (arg == "OXT") {
         orc_assert_(*chain_ == 1, "OXT is not on chain " << chain_);
         return "0x4575f41308EC1483f3d399aa9a2826d74Da13Deb"; }
+    else if (arg == "WAVAX") {
+        orc_assert_(*chain_ == 43114, "WAVAX is not on chain " << chain_);
+        return "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"; }
     else return arg;
 } };
 
@@ -711,6 +714,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<void, Address, std::vector<Send>> transferv("transferv");
         std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, TransferV, 0, transferv(token, sends))).hex() << std::endl;
 
+    } else if (command == "unwrap") {
+        const auto [token, amount] = Options<Address, uint256_t>(args);
+        static Selector<void, uint256_t> withdraw("withdraw");
+        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_, .gas = gas_}, token, amount, withdraw(amount))).hex() << std::endl;
+
     } else if (command == "value") {
         const auto [address] = Options<Address>(args);
         const auto [account] = co_await chain_->Get(co_await block(), address, nullptr);
@@ -730,6 +738,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         // suffix with 0x01 if this will be a compressed key
         const auto [data] = Options<Bytes>(args);
         std::cout << ToBase58Check(data) << std::endl;
+
+    } else if (command == "wrap") {
+        const auto [token, amount] = Options<Address, uint256_t>(args);
+        static Selector<void> deposit("deposit");
+        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_, .gas = gas_}, token, 0, deposit())).hex() << std::endl;
 
     } else orc_assert_(false, "unknown command " << command);
 
