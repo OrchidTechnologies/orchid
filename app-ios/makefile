@@ -21,6 +21,8 @@
 target := ios
 include env/target.mk
 
+cflags += -DGUI_$(gui)
+
 cflags += '-DORCHID_DOMAIN="$(domain)"'
 cflags += '-DORCHID_NAME="$(name)"'
 

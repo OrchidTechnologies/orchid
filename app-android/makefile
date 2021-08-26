@@ -85,7 +85,7 @@ $(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -n
 	exit 0
 	touch $@
 
-$(output)/Orchid.apk: $(apk)
+$(output)/$(name).apk: $(apk)
 	cp -af $< $@
 
 .PHONY: apk

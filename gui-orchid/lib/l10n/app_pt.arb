@@ -2,17 +2,22 @@
     "@@locale": "pt",
     "newHop": "Novo Hop",
     "@newHop": {
-        "description": "New network hop"
+      "description": "New network hop"
     },
     "orchidHop": "Salto Orchid",
     "@orchidHop": {
-        "description": "Orchid network hop"
+      "description": "Orchid network hop"
     },
     "orchidDisabled": "Orchid desativada",
     "trafficMonitoringOnly": "Apenas monitoração de tráfego",
     "orchidConnecting": "Orchid a estabelecer ligação",
     "orchidDisconnecting": "Orchid a terminar ligação",
     "numHopsConfigured": "{num, plural, zero{Sem Hop configurados} one{Um hop configurado} two{Dois hops configurados} other{{num} hops configurados}}",
+    "@numHopsConfigured": {
+      "placeholders": {
+        "num": {}
+      }
+    },
     "delete": "Remover",
     "turnOnToActivate": "Ligue a Orchid para ativar seus hops e proteger seu tráfego",
     "orchid": "Orchid",
@@ -20,19 +25,19 @@
     "status": "Status",
     "hops": "Saltos",
     "@hops": {
-        "description": "Network hops"
+      "description": "Network hops"
     },
     "traffic": "Tráfego",
     "@traffic": {
-        "description": "Network traffic"
+      "description": "Network traffic"
     },
     "curation": "Curadoria",
-    "signerKey": "Signer Key",
-    "copy": "Copy",
+    "signerKey": "Chave do signatário",
+    "copy": "Copiar",
     "paste": "Colar",
     "oxt": "OXT",
     "amount": "Quantidade",
-    "deposit": "Deposit",
+    "deposit": "Depositar",
     "curator": "Curador(a)",
     "shareOrchidAccount": "Partilhar a sua Conta Orchid",
     "myOrchidAccount": "A Minha Conta Orchid",
@@ -63,7 +68,7 @@
     "privacyPolicy": "Política de privacidade",
     "openSourceLicenses": "Licenças Open Source",
     "settings": "Configurações",
-    "advanced": "Advanced",
+    "advanced": "Avançado",
     "version": "Versão",
     "noVersion": "Sem versão",
     "setup": "Configuração",
@@ -123,10 +128,10 @@
     "seeTheOptions": "Ver opções",
     "scanOrPasteAccount": "Digitalize ou cole a conta",
     "@gb": {
-        "description": "Gigabytes"
+      "description": "Gigabytes"
     },
     "@ofTraffic": {
-        "description": "GB of traffic"
+      "description": "GB of traffic"
     },
     "scanOrPasteYourExistingAccountBelowToAddIt": "Digitalize ou cole sua conta existente abaixo para adicioná-la como um hop.",
     "linkAnOrchidAccount": "Conectar conta Orchid",
@@ -147,7 +152,7 @@
     "ticketValue": "Valor do ticket",
     "costToRedeem": "Custo do resgate:",
     "viewTheDocsForHelpOnThisIssue": "Consulte a documentação para obter ajuda.",
-    "more": "More",
+    "more": "Mais",
     "trafficMonitor": "Monitor de tráfego",
     "tryOutOrchid": "Experimente Orchid",
     "goodForBrowsingAndLightActivity": "Bom para navegação e atividade leve",
@@ -195,6 +200,11 @@
     "seeOrchidcomForHelp": "Consulte orchid.com para obter ajuda.",
     "payPerUseVpnService": "Serviço de VPN pago por uso",
     "currentAvgVpnPriceIsPricePerGb": "O preço médio atual da VPN é {price} por GB",
+    "@currentAvgVpnPriceIsPricePerGb": {
+      "placeholders": {
+        "price": {}
+      }
+    },
     "notASubscriptionCreditsDontExpire": "Sem subscrição, créditos que não vencem",
     "shareAccountWithUnlimitedDevices": "Partilhe a sua conta com dispositivos ilimitados",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "A loja Orchid está temporariamente indisponível. Volte dentro de alguns minutos.",
@@ -205,6 +215,11 @@
     "copied": "Copiada",
     "efficiency": "Eficiência",
     "minTicketsAvailableTickets": "Mín de tickets disponíveis: {tickets}",
+    "@minTicketsAvailableTickets": {
+      "placeholders": {
+        "tickets": {}
+      }
+    },
     "transactionSentToBlockchain": "Transação enviada para a blockchain",
     "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "A sua compra foi concluída encontra-se agora a ser processada pela blockchain xDai, o que pode levar até um minuto, algumas vezes mais. Puxe para baixo para atualizar, sua conta com o saldo atualizado será exibida abaixo.",
     "copyReceipt": "Copiar recibo",
@@ -243,41 +258,41 @@
     "transactions": "Transações",
     "viewDeletedHops": "Ver hops apagados",
     "weRecommendBackingItUp": "Recomendamos <link>fazer backup</link>.",
-    "purchasedCreditAccountsConnectExclusively": "Compre créditos de conta conectados exclusivamente com nossos <link1>provedores preferenciais</link1>.",
+    "purchasedCreditAccountsConnectExclusively": "Compre créditos de conta conectados exclusivamente aos nossos <link1>provedores preferenciais</link1>.",
     "allPurchasedAccountsUseThe": "Todas as contas adquiridas usam a <link2>criptomoeda xDai</link2>.",
     "analyze": "Analisar",
-    "analyzeYourConnections": "Analise suas conexões",
-    "analyzingYourConnections": "Analisando Suas Conexões",
-    "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "Para alterar o status de monitoramento, é necessário reiniciar a VPN, o que pode interromper brevemente a proteção de privacidade.",
-    "chooseAddress": "escolha o endereço",
-    "chooseAnOrchidAccountToUseWithThisHop": "Escolha uma conta Orchid para usar com este salto.",
-    "confirmRestart": "Confirme o reinício",
-    "connectingToARandomOrchidProvider": "Conectando-se a um provedor Orchid aleatório",
-    "copiedOrchidIdentity": "Identidade de orquídea copiada",
-    "disconnectingVpn": "(Desconectando VPN)",
-    "doNotSendTokensToThisAddress": "Não envie tokens para este endereço.",
-    "funderAccount": "Conta do Financiador",
-    "ifYouDontSeeYourAccountBelowYouCanUse": "Se você não vir sua conta abaixo, pode usar o gerente de contas para importar, comprar ou criar uma nova.",
-    "learnMoreAboutYourLinkorchidIdentitylink": "Saiba mais sobre a sua <link>identidade da orquídea</link>.",
-    "networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "A análise de rede requer permissões de VPN, mas não protege por si só seus dados ou oculta seu endereço IP.",
-    "networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "A análise de rede usa a facilidade VPN do seu dispositivo para capturar pacotes e analisar o tráfego.",
-    "orchidAnalyzingTraffic": "Orquídea analisando o tráfego",
-    "orchidIdentitySignerKey": "Identidade da orquídea (chave do signatário)",
-    "orchidRunningAndAnalyzing": "Orquídea correndo e analisando",
-    "pasteAddress": "Colar Endereço",
+    "analyzeYourConnections": "Analisar suas Ligações",
+    "analyzingYourConnections": "Analisando suas ligações",
+    "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "A alteração do status de monitoração exige o reinício da VPN, que pode interromper por momentos a proteção de privacidade.",
+    "chooseAddress": "Escolher endereço",
+    "chooseAnOrchidAccountToUseWithThisHop": "Escolha uma conta Orchid para usar com este hop.",
+    "confirmRestart": "Confirmar reinício",
+    "connectingToARandomOrchidProvider": "A ligar a um provedor Orchid aleatório",
+    "copiedOrchidIdentity": "Identidade Orchid copiada",
+    "disconnectingVpn": "(Desligando a VPN)",
+    "doNotSendTokensToThisAddress": "Não enviar tokens para este endereço.",
+    "funderAccount": "Conta Financiadora",
+    "ifYouDontSeeYourAccountBelowYouCanUse": "Caso não veja sua conta abaixo, pode usar o gestor de conta para importar, comprar ou criar uma nova.",
+    "learnMoreAboutYourLinkorchidIdentitylink": "Saiba mais sobre a sua <link>Identidade orchid</link>.",
+    "networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "A análise de rede requer permissões de VPN mas não protege por si só os seus dados nem esconde seu endereço de IP.",
+    "networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "A análise de rede utiliza as capacidades de VPN do seu dispositivo para capturar pacotes e analisar seu tráfego.",
+    "orchidAnalyzingTraffic": "Orchid a analisar tráfego",
+    "orchidIdentitySignerKey": "Identidade Orchid (chave do signatário)",
+    "orchidRunningAndAnalyzing": "Orchid a correr e a analisar",
+    "pasteAddress": "Colar endereço",
     "restarting": "Reiniciando",
     "selectAnOrchidAccount": "Selecione uma conta Orchid",
-    "startingVpn": "(Iniciando VPN)",
-    "takeMeToTheAccountManager": "Leve-me ao gerente da conta",
+    "startingVpn": "(A Iniciar VPN)",
+    "takeMeToTheAccountManager": "Leve-me para o Gestor de Conta",
     "thisIsNotAWalletAddress": "Este não é um endereço de carteira.",
-    "toConnectEitherAddCreditsUsingAnInappPurchaseOr": "Para se conectar, adicione créditos usando uma compra no aplicativo ou use uma conta existente.",
-    "toConnectEitherAddCryptoUsingTheOrchidDappOr": "Para se conectar, adicione criptografia usando o Orchid DApp ou use uma conta existente.",
-    "toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Para obter os benefícios da privacidade da rede, você deve configurar e ativar uma conexão VPN na tela inicial.",
-    "turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "Ativar esse recurso aumentará o uso da bateria do aplicativo Orchid.",
-    "useAnOrchidAccount": "Use uma conta Orchid",
-    "useAnotherAccount": "Use outra conta",
-    "useCryptoWallet": "Use carteira criptografada",
-    "vpnConnectedButNotRouting": "(VPN conectada, mas sem roteamento)",
+    "toConnectEitherAddCreditsUsingAnInappPurchaseOr": "Para se ligar, adicione créditos efetuando uma compra dentro da aplicação ou use uma conta existente.",
+    "toConnectEitherAddCryptoUsingTheOrchidDappOr": "Para se ligar, adicione cripto usando o Orchid DApp ou use uma conta existente.",
+    "toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Para obter os benefícios da privacidade de rede, necessita configurar e ativar uma ligação VPN a partir da vista inicial.",
+    "turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "Ligar esta funcionalidade aumenta o uso da bateria por parte da aplicação Orchid.",
+    "useAnOrchidAccount": "Usar uma conta Orchid",
+    "useAnotherAccount": "Usar outra conta",
+    "useCryptoWallet": "Usar carteira cripto",
+    "vpnConnectedButNotRouting": "(VPN conectado, mas sem roteamento)",
     "yourAccountIsEmpty": "Sua conta está vazia!",
-    "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "Sua identidade de orquídea identifica você de forma única na rede."
+    "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "A Sua identidade Orchid identifica-o com exclusividade na rede."
 }

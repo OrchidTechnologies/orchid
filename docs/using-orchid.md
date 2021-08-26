@@ -22,7 +22,7 @@ Learn more about how to [create an account](../orchid-dapp/#create-account) in t
 
 ### Buy an Orchid account
 
-In the iOS and macOS app, you can simply buy a pre-created Orchid account filled with [xDai](../#xdai), by tapping 'Add Credit' from the accounts screen. These accounts come in 3 different sizes. The purchased accounts can only connect to our list of [preferred providers](https://www.orchid.com/preferredproviders).
+In the iOS/macOS and Android app, you can simply buy a pre-created Orchid account filled with [xDai](../#xdai), by tapping 'Add Credit' from the accounts screen. These accounts come in 3 different sizes. The purchased accounts can only connect to our list of [preferred providers](https://www.orchid.com/preferredproviders).
 
 To add funds to an account that has a low balance, simply tap the 'Add Credit' button again with that Orchid address selected.
 
@@ -54,9 +54,9 @@ You can also copy your Orchid Address (by clicking on the number below where it 
 
 ### Orchid Accounts
 
-To access the Orchid network of providers, you need either Orchid Credits purchased with your native currency within the Orchid App (iOS/macOS only), or an Orchid Account created and funded using crypto currency with the dApp at account.orchid.com
+To access the Orchid network of providers, you need either Orchid Credits purchased with your native currency within the Orchid App (iOS/macOS/Android), or an Orchid Account created and funded using crypto currency with the dApp at account.orchid.com
 
-Credits can be purchased in the iOS or macOS app by going to Manage Accounts then Add Credit. While Orchid Credits are simpler to set up, creating an Orchid account using the dApp gives more control over the account.
+Credits can be purchased in the iOS/macOS or Android app by going to Manage Accounts then Add Credit. While Orchid Credits are simpler to set up, creating an Orchid account using the dApp gives more control over the account.
 
 Learn more about [Orchid accounts](../accounts/).
 

@@ -7,13 +7,13 @@ The Orchid accounts hold the funds that pay providers through the nanopayment sy
 
 ## How to get an Orchid account
 
-* Purchase an account (iOS/macOS only feature) custodied by Orchid
+* Purchase an account (iOS/macOS/Android only feature) custodied by Orchid
 * [Create](../orchid-dapp/#create-account) and self-custody an Orchid account using the Orchid dApp
 * [Access an account](../accounts/#Sharing-orchid-accounts) that was shared with you
 
-### Purchased Orchid accounts (iOS/macOS only feature)
+### Purchased Orchid accounts (iOS/macOS/Android)
 
-In the Orchid iOS and macOS apps, it is possible to simply purchase an Orchid account from Orchid Labs using an in-app purchase. These are distinct from Orchid accounts created in the dApp and have the following properties:
+In the Orchid Android, iOS and macOS apps, it is possible to simply purchase an Orchid account from Orchid Labs using an in-app purchase. These are distinct from Orchid accounts created in the dApp and have the following properties:
 
 * Purchased accounts connect only to [preferred providers](https://www.orchid.com/preferredproviders) for VPN service.  
 * It is not possible to transfer the crypto out of a purchased Orchid account in the same way as an account created in the dApp.
