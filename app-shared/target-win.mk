@@ -20,6 +20,7 @@
 
 assemble := windows
 platform := windows-x64
+mismatch := $(assemble)
 
 generated := $(pwd/gui)/$(assemble)/flutter/generated_plugin_registrant%cc
 

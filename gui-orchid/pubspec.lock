@@ -7,7 +7,7 @@ packages:
       name: async
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.5.0"
+    version: "2.6.1"
   badges:
     dependency: "direct main"
     description:
@@ -473,7 +473,7 @@ packages:
       name: source_span
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.8.0"
+    version: "1.8.1"
   sqflite:
     dependency: "direct main"
     description:
@@ -515,7 +515,7 @@ packages:
       name: styled_text
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.3+4"
+    version: "3.0.2"
   symbol_table:
     dependency: transitive
     description:
@@ -543,7 +543,7 @@ packages:
       name: test_api
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.19"
+    version: "0.3.0"
   typed_data:
     dependency: transitive
     description:
@@ -655,7 +655,7 @@ packages:
       name: xmlstream
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.12.0"
+    version: "1.0.0"
 sdks:
   dart: ">=2.12.0 <3.0.0"
-  flutter: ">=1.24.0-10.1.pre"
+  flutter: ">=2.0.0"

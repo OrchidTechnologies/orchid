@@ -32,7 +32,7 @@ $(output)/package/data/flutter_assets/AssetManifest%json: $(dart)
 	    -dTreeShakeIcons="false" \
 	    -dTrackWidgetCreation="true" \
 	    --output="$(CURDIR)/$(output)/flutter" \
-	    $(mode)_bundle_$(assemble)_assets
+	    $(mode)_bundle_$(mismatch)_assets
 	@mkdir -p $(dir $@)
 	$(rsync) $(output)/flutter/flutter_assets/ $(dir $@)
 signed += $(output)/package/data/flutter_assets/AssetManifest.json
@@ -40,7 +40,9 @@ signed += $(output)/package/data/flutter_assets/AssetManifest.json
 source += $(filter-out \
     %/engine_method_result.cc \
     %_unittests.cc \
-,$(wildcard $(pwd)/engine/shell/platform/common/cpp/client_wrapper/*.cc))
+,$(wildcard $(pwd)/engine/shell/platform/common/client_wrapper/*.cc))
+
+cflags += -I$(pwd)/engine/shell/platform/common/{client_wrapper,public}
 
 cflags += -I$(pwd/gui)/$(assemble)
 source += $(subst %,.,$(word 1,$(generated)))
@@ -50,6 +52,7 @@ header += $(subst %,.,$(word 2,$(generated)))
 source += $(wildcard $(pwd/gui)/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/*.cc)
 source += $(wildcard $(pwd/gui)/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/*.cpp)
 
+cflags += -I$(pwd/gui)/$(assemble)/flutter/ephemeral{/cpp_client_wrapper/include{/flutter,},}
 cflags += $(patsubst %,-I%,$(wildcard $(pwd/gui)/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/include))
 cflags += -DFLUTTER_PLUGIN_IMPL
 
