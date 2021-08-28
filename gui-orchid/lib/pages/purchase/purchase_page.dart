@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/purchase/ios_purchase.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
@@ -259,12 +260,16 @@ class _PurchasePageState extends State<PurchasePage> {
     var unavailableText = StyledText(
       style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
       newLineAsBreaks: true,
-      text:
-          'Orchid is unable to display in-app purchases at this time.'
-              +'  Please confirm that this device supports and is configured '
-              'for in-app purchases or use our decentralized <link>account management</link> system.',
+      text: "Orchid is unable to display in-app purchases at this time." +
+          "  Please confirm that this device supports and is configured " +
+          "for in-app purchases" +
+          (OrchidPlatform.isApple
+              ? "."
+              : " or use our decentralized <link>account management</link> system."),
       styles: {
-        'link': linkStyle.link(OrchidUrls.accountOrchid).copyWith(fontStyle: FontStyle.italic),
+        'link': linkStyle
+            .link(OrchidUrls.accountOrchid)
+            .copyWith(fontStyle: FontStyle.italic),
       },
     );
 
