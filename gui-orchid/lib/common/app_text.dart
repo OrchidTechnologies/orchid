@@ -3,7 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/common/link_text.dart';
-import 'package:styled_text/action_text_style.dart';
+import 'package:styled_text/styled_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppText {
@@ -199,38 +199,20 @@ class AppText {
 
 // Extension using the style_text package.
 // Create a tappable link using our default link style.
-class LinkTextStyle extends ActionTextStyle {
+class LinkTextStyle extends StyledTextActionTag {
   static LinkTextStyle link(String url, {style: TextStyle}) {
     return LinkTextStyle(
         style: style ?? AppText.linkStyle,
-        onTap: (text, attributes) => launch(url, forceSafariVC: false));
+        onTap: (text, attributes) {
+          print("XXX: link tapped: $text");
+          return launch(url, forceSafariVC: false);
+        });
   }
 
   LinkTextStyle({
     TextStyle style,
-    ActionTappedCallback onTap,
-  }) : super(
-          inherit: style.inherit,
-          color: style.color,
-          fontSize: style.fontSize,
-          fontWeight: style.fontWeight,
-          fontStyle: style.fontStyle,
-          letterSpacing: style.letterSpacing,
-          wordSpacing: style.wordSpacing,
-          textBaseline: style.textBaseline,
-          height: style.height,
-          locale: style.locale,
-          foreground: style.foreground,
-          background: style.background,
-          shadows: style.shadows,
-          decoration: style.decoration,
-          decorationColor: style.decorationColor,
-          decorationStyle: style.decorationStyle,
-          debugLabel: style.debugLabel,
-          fontFamily: style.fontFamily,
-          fontFamilyFallback: style.fontFamilyFallback,
-          onTap: onTap,
-        );
+    StyledTextTagActionCallback onTap,
+  }) : super(onTap, style: style);
 }
 
 extension LinkTextStyleExtensions on TextStyle {

@@ -175,7 +175,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       text: s.chooseAnOrchidAccountToUseWithThisHop +
           '  ' +
           s.ifYouDontSeeYourAccountBelowYouCanUse,
-      styles: {
+      tags: {
         // 'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),
       },
     );

@@ -223,7 +223,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           s.weRecommendBackingItUp +
           '\n\n' +
           s.importThisKeyOnAnotherDeviceToShareAllThe,
-      styles: {
+      tags: {
         'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),
       },
     );
@@ -330,10 +330,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           s.yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork +
           "  " +
           s.learnMoreAboutYourLinkorchidIdentitylink,
-      styles: {
-        'bold': AppText.dialogBody.copyWith(fontWeight: FontWeight.bold),
+      tags: {
+        'bold': StyledTextTag(
+            style: AppText.dialogBody.copyWith(fontWeight: FontWeight.bold)),
         'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),
-        'alarm': IconStyle(Icons.warning_amber_rounded)
+        'alarm': StyledTextIconTag(Icons.warning_amber_rounded)
       },
     );
     return AppDialogs.showAppDialog(

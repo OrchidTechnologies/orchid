@@ -198,7 +198,7 @@ class _AccountViewState extends State<AccountView> {
       text: '<title>Efficiency too low</title>\n'
           'Your access to the Orchid network is currently limited by your efficiency.\n'
           '<link1>What is efficiency?</link1>',
-      styles: {
+      tags: {
         'title': titleStyle,
         'link1': linkStyle.link(OrchidUrls.accountOrchid),
       },
