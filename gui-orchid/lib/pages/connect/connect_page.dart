@@ -152,7 +152,7 @@ class _ConnectPageState extends State<ConnectPage>
 
     // Monitor circuit changes
     OrchidAPI().circuitConfigurationChanged.listen((value) {
-      _updateCircuitStatus();
+      _circuitConfigurationChanged();
       _checkAlerts(null); // refresh alert status
     }).dispose(_subs);
 
@@ -162,7 +162,7 @@ class _ConnectPageState extends State<ConnectPage>
       if (_guiV1) {
         await _activeAccountChanged(await Account.activeAccount);
       }
-      await _updateCircuitStatus();
+      await _circuitConfigurationChanged();
       _checkAlerts(null);
     }).dispose(_subs);
 
@@ -610,17 +610,6 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
-  Future _updateCircuitStatus() async {
-    var prefs = UserPreferences();
-    if (await prefs.guiV0.get()) {
-      _hasConfiguredCircuit = (await prefs.getCircuit()).hops.isNotEmpty;
-    } else {
-      var accountStore = await AccountStore(discoverAccounts: false).load();
-      _hasConfiguredCircuit = accountStore.activeAccount != null;
-    }
-    setState(() {});
-  }
-
   /// Called upon a change to Orchid connection state
   void _routingStateChanged(OrchidVPNRoutingState state) async {
     // Fade the background animation in or out based on which direction we are going.
@@ -764,13 +753,32 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
+  // The overall circuit may have changed.
+  Future _circuitConfigurationChanged() async {
+    var prefs = UserPreferences();
+    if (await prefs.guiV0.get()) {
+      _hasConfiguredCircuit = (await prefs.getCircuit()).hops.isNotEmpty;
+    } else {
+      // Determine if there is an active account (valid v1 circuit).
+      // (The active account listener will update the detail poller.)
+      var accountStore = await AccountStore(discoverAccounts: false).load();
+      _hasConfiguredCircuit = accountStore.activeAccount != null;
+    }
+    setState(() {});
+  }
+
+  // The v1 active account has changed, update or remove the account detail poller.
   Future _activeAccountChanged(Account account) async {
     if (UserPreferences().guiV0.value) {
       return;
     }
     if (account != null) {
       _activeAccount = AccountDetailPoller(account: account);
-      await _activeAccount.refresh(); // poll once
+      try {
+        await _activeAccount.refresh(); // poll once
+      } catch (err) {
+        log("Error: $err");
+      }
     } else {
       _activeAccount = null;
     }

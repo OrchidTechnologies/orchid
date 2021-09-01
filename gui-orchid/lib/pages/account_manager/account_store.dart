@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_crypto.dart';
@@ -12,8 +11,11 @@ import 'package:orchid/api/orchid_eth/token_type.dart';
 
 /// An observable list of identities and active accounts on those identities.
 class AccountStore extends ChangeNotifier {
-  /// If true accounts are discovered on-chain for the active identity,
-  /// otherwise only the saved active accounts are loaded.
+  /// If true the account store attempts to find all accounts for the user's
+  /// identities.  This involves loading previously cached accounts as well as
+  /// actively searching for new ones on-chain.
+  /// If false only the saved user-selected active accounts for the user's one
+  /// or more identities is loaded.
   final bool discoverAccounts;
 
   /// Identity
@@ -95,19 +97,36 @@ class AccountStore extends ChangeNotifier {
     setActiveAccount(toActivate ?? Account(identityUid: identity.uid));
   }
 
-  // Notify listeners and publish changes.
+  // Called when the list of identities or active accounts is changed to
+  // update the account store internal state and publish changes throughout the UI.
   void _accountsChanged() async {
-    // Refresh everything
-    await load();
+    // Update the account list but don't wait for any new account discovery.
+    // (Falling through to publish the important change in active account selection)
+    await load(waitForDiscovered: false);
 
-    // Publish the new config
+    // The active account preference may be observed directly but we also need
+    // to publish the updated circuit configuration.
     OrchidAPI().circuitConfigurationChanged.add(null);
     await OrchidAPI().updateConfiguration();
     //print( "accounts changed: config = ${await OrchidVPNConfig.generateConfig()}");
   }
 
-  // Load available identities and user selected active account information
-  Future<AccountStore> load() async {
+  // Load available identities and user active account information
+  // Optionally return the future without waiting for network discovery to complete.
+  // (Only applicable if discoverAccounts is true.)
+  Future<AccountStore> load({bool waitForDiscovered = true}) async {
+    await _loadStored();
+    if (waitForDiscovered) {
+      await _loadDiscovered();
+    } else {
+      _loadDiscovered();
+    }
+    return this;
+  }
+
+  // Load the locally persisted and cached account information.
+  // This method can be awaited without potential long delays for network activity.
+  Future<AccountStore> _loadStored() async {
     // Load available identities
     identities = await UserPreferences().getKeys();
 
@@ -132,26 +151,35 @@ class AccountStore extends ChangeNotifier {
           "cached = $cached, filtered = $cachedDiscoveredAccounts");
     }
     notifyListeners();
+    return this;
+  }
 
+  // Discovery new account information for the active identity.
+  // This method performs potentially slow network activity.
+  Future<AccountStore> _loadDiscovered() async {
     // Discover new accounts for this identity
-    if (discoverAccounts && activeIdentity != null) {
-      log("account_store: Discovering accounts");
+    try {
+      if (discoverAccounts && activeIdentity != null) {
+        log("account_store: Discovering accounts");
 
-      // Discover accounts for the active identity on V1 chains.
-      discoveredAccounts = await OrchidEthereumV1()
-          .discoverAccounts(chain: Chains.xDAI, signer: activeIdentity);
-      notifyListeners();
+        // Discover accounts for the active identity on V1 chains.
+        discoveredAccounts = await OrchidEthereumV1()
+            .discoverAccounts(chain: Chains.xDAI, signer: activeIdentity);
+        notifyListeners();
 
-      // Discover accounts for the active identity on V0 Ethereum.
-      discoveredAccounts +=
-          await OrchidEthereumV0().discoverAccounts(signer: activeIdentity);
-      notifyListeners();
+        // Discover accounts for the active identity on V0 Ethereum.
+        discoveredAccounts +=
+            await OrchidEthereumV0().discoverAccounts(signer: activeIdentity);
+        notifyListeners();
 
-      // Cache any newly discovered accounts
-      if (discoveredAccounts.isNotEmpty) {
-        log("account_store: Saving discovered accounts: $discoveredAccounts");
-        UserPreferences().addCachedDiscoveredAccounts(discoveredAccounts);
+        // Cache any newly discovered accounts
+        if (discoveredAccounts.isNotEmpty) {
+          log("account_store: Saving discovered accounts: $discoveredAccounts");
+          UserPreferences().addCachedDiscoveredAccounts(discoveredAccounts);
+        }
       }
+    } catch (err) {
+      log("account_store: Error in account discovery: $err");
     }
 
     return this;

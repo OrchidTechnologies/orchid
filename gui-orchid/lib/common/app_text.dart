@@ -204,7 +204,6 @@ class LinkTextStyle extends StyledTextActionTag {
     return LinkTextStyle(
         style: style ?? AppText.linkStyle,
         onTap: (text, attributes) {
-          print("XXX: link tapped: $text");
           return launch(url, forceSafariVC: false);
         });
   }
