@@ -19,6 +19,11 @@ source += $(foreach temp,$(wildcard \
     $(pwd/protobuf)/src/google/protobuf/stubs/*.cc \
 ),$(if $(findstring mock,$(temp))$(findstring test,$(temp)),,$(temp)))
 
+ifeq ($(target),win)
+# XXX: I don't even know what they are trying to accomplish exactly here :(
+chacks/$(pwd/protobuf)/src/google/protobuf/io/zero_copy_stream_impl.cc += s/ifndef _MSC_VER/if 0/;
+endif
+
 cflags += -DHAVE_PTHREAD
 
 protoc := $(output)/protoc

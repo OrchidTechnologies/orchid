@@ -34,8 +34,8 @@
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
-#include <libplatform/libplatform.h>
-#include <v8.h>
+#include "libplatform/libplatform.h"
+#include "v8.h"
 
 #include <api/jsep_session_description.h>
 #include <pc/webrtc_sdp.h>

@@ -28,6 +28,7 @@
 #include <functional>
 #include <iostream>
 #include <list>
+#include <optional>
 #include <string>
 #include <vector>
 

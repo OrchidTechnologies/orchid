@@ -105,4 +105,7 @@ checks += -clang-analyzer-cplusplus.NewDelete
 checks += -clang-analyzer-cplusplus.NewDeleteLeaks
 # XXX: -Wno-nonportable-include-path isn't working
 checks += -clang-diagnostic-nonportable-include-path
+# XXX: https://github.com/chriskohlhoff/asio/issues/898
+checks += -clang-diagnostic-reorder
+cflags += -Wno-reorder -Wno-reorder-ctor
 endif

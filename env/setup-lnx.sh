@@ -12,7 +12,7 @@ sudo -EH apt-get -y install \
     python python3-pip python3-setuptools \
     bison flex gperf \
     gettext groff texinfo \
-    autoconf automake libtool \
+    autoconf autoconf-archive automake libtool \
     ninja-build pkg-config \
 
 function usable() {

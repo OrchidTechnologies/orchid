@@ -113,8 +113,8 @@ cflags/$(pwd)/soralog/ += -Wno-pessimizing-move
 source += $(filter-out %/configurator.cpp,$(shell find $(pwd)/cpp-libp2p/src -name '*.cpp'))
 cflags += -I$(pwd)/cpp-libp2p/include
 cflags/$(pwd)/cpp-libp2p/ += -Wno-reorder -Wno-unused
-# XXX: https://github.com/libp2p/cpp-libp2p/issues/162
-cflags/$(pwd)/cpp-libp2p/src/protocol/gossip/impl/gossip_core.cpp += -Wno-mismatched-tags
+# XXX: https://github.com/libp2p/cpp-libp2p/issues/166
+cflags/$(pwd)/cpp-libp2p/ += -include boost/asio.hpp -include boost/asio/ssl.hpp
 
 $(eval $(call protobuf,/generated,$(pwd)/cpp-libp2p/src))
 source += $(output)/pb/generated/crypto/protobuf/keys.pb.cc

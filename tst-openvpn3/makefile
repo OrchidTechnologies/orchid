@@ -40,7 +40,6 @@ cflags += -Ivpn/p2p/lz4/lib
 
 cflags += -DUSE_ASIO
 cflags += -DUSE_ASIO_THREADLOCAL
-cflags += -DASIO_NO_DEPRECATED
 cflags += -DHAVE_LZ4
 cflags += -DUSE_OPENSSL
 cflags += -D'OPENVPN_PACKET_LOG="packet.log"'

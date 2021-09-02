@@ -123,12 +123,19 @@ webrtc += $(wildcard $(pwd)/webrtc/system_wrappers/source/*.cc)
 
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/internal/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/debugging/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/debugging/internal/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/numeric/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/numeric/internal/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/types/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/types/internal/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/internal/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/synchronization/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/synchronization/internal/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/time/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/time/internal/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/time/internal/cctz/src/*.cc)
 cflags += -I$(pwd)/abseil-cpp
 
 

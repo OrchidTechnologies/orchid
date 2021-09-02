@@ -25,6 +25,7 @@ boost += any
 boost += array
 boost += asio
 boost += assert
+boost += atomic
 boost += beast
 boost += bind
 boost += concept_check
@@ -88,3 +89,7 @@ cflags += -I$(pwd)/outcome/include
 
 cflags += -I$(pwd)/boost/libs/asio/include/boost
 cflags += -DBOOST_ASIO_DISABLE_CONNECTEX
+#cflags += -DBOOST_ASIO_NO_DEPRECATED
+
+# XXX: this is because I am still using an old version of libc++
+cflags += -DBOOST_FILESYSTEM_NO_CXX20_ATOMIC_REF

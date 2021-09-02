@@ -6,11 +6,10 @@ git submodule foreach 'git fetch -v && git remote set-head origin -a'
 declare -A head
 
 function tag() {
-    head[$1]=$(cd "$1" && git tag -l --short=version:refname | grep -P '^'"$2"'$' | tail -n 1)
+    head[$1]=$(cd "$1" && git tag -l --sort=version:refname | grep -P '^'"$2"'$' | tail -n 1)
     echo "${head[$1]}"
 }
 
-tag min-webrtc/abseil-cpp '[0-9].*'
 tag p2p/boost 'boost-[0-9.]*'
 tag min-webrtc/openssl 'OpenSSL_[0-9_]*[a-z]'
 tag p2p/sqlite 'version-[0-9.]*'
@@ -18,7 +17,7 @@ tag p2p/sqlite 'version-[0-9.]*'
 head[env/libcxx]=origin/release_90
 head[env/libcxxabi]=origin/release_90
 
-head[app-shared/flutter]=2.0.4
+head[app-shared/flutter]=2.2.3
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
 # fmt is stuck by soralog before 841aad95b42704ea77e3eb05a2cbb075dc5b1137

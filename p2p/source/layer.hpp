@@ -23,7 +23,7 @@
 #ifndef ORCHID_LAYER_HPP
 #define ORCHID_LAYER_HPP
 
-#include <boost/asio/ssl/rfc2818_verification.hpp>
+#include <boost/asio/ssl/host_name_verification.hpp>
 #include <boost/beast/ssl/ssl_stream.hpp>
 
 #include "adapter.hpp"
@@ -47,7 +47,7 @@ auto Layer(Base &base, const Locator &locator, const std::function<bool (const s
             asio::ssl::context context(asio::ssl::context::sslv23_client);
 
             if (!verify)
-                context.set_verify_callback(asio::ssl::rfc2818_verification(locator.origin_.host_));
+                context.set_verify_callback(asio::ssl::host_name_verification(locator.origin_.host_));
             else {
                 context.set_verify_mode(asio::ssl::verify_peer);
 

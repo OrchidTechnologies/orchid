@@ -238,7 +238,7 @@ void LwipSocket::SetError(int error) {
   error_ = error;
 }
 
-AsyncSocket::ConnState LwipSocket::GetState() const {
+Socket::ConnState LwipSocket::GetState() const {
   return state_;
 }
 
@@ -365,7 +365,7 @@ int LwipSocket::Listen(int backlog) {
   return err;
 }
 
-AsyncSocket* LwipSocket::Accept(SocketAddress* out_addr) {
+Socket* LwipSocket::Accept(SocketAddress* out_addr) {
   // Always re-subscribe DE_ACCEPT to make sure new incoming connections will
   // trigger an event even if DoAccept returns an error here.
   EnableEvents(DE_ACCEPT);
@@ -717,16 +717,6 @@ void LwipSocketServer::WakeUp() {
 }
 
 Socket* LwipSocketServer::CreateSocket(int family, int type) {
-  LwipSocket* socket = new LwipSocket(this);
-  if (socket->Create(family, type)) {
-    return socket;
-  } else {
-    delete socket;
-    return nullptr;
-  }
-}
-
-AsyncSocket* LwipSocketServer::CreateAsyncSocket(int family, int type) {
   SocketDispatcher* dispatcher = new SocketDispatcher(this);
   if (dispatcher->Create(family, type)) {
     return dispatcher;
@@ -736,7 +726,7 @@ AsyncSocket* LwipSocketServer::CreateAsyncSocket(int family, int type) {
   }
 }
 
-AsyncSocket* LwipSocketServer::WrapSocket(SOCKET s) {
+Socket* LwipSocketServer::WrapSocket(SOCKET s) {
   SocketDispatcher* dispatcher = new SocketDispatcher(s, this);
   if (dispatcher->Initialize()) {
     return dispatcher;

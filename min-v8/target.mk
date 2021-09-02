@@ -222,7 +222,7 @@ header += $(filter %.h %.inc,$(tqsrc))
 
 
 cflags += $(vflags)
-cflags += -I$(pwd/v8)/include
+cflags += -iquote$(pwd/v8)/include
 cflags += -I$(pwd/v8)/src
 cflags += -I$(pwd)/extra
 
@@ -237,9 +237,6 @@ cflags += -mno-ms-bitfields
 
 # https://bugs.chromium.org/p/chromium/issues/detail?id=1016945
 cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment
-
-# XXX: v8's compile is ridiculously non-deterministic?! this seems to fix it
-cflags/$(pwd/v8)/src/heap/ += -include src/heap/cppgc/heap.h
 
 archive += $(pwd/v8)
 linked += $(pwd/v8).a

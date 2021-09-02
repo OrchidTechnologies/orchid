@@ -58,10 +58,9 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
 
   // SocketFactory:
   Socket* CreateSocket(int family, int type) override;
-  AsyncSocket* CreateAsyncSocket(int family, int type) override;
 
   // Internal Factory for Accept (virtual so it can be overwritten in tests).
-  virtual AsyncSocket* WrapSocket(SOCKET s);
+  virtual Socket* WrapSocket(SOCKET s);
 
   // SocketServer:
   bool Wait(int cms, bool process_io) override;
@@ -89,7 +88,7 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   bool fWait_;
 };
 
-class LwipSocket : public AsyncSocket, public sigslot::has_slots<> {
+class LwipSocket : public Socket, public sigslot::has_slots<> {
  public:
   LwipSocket(LwipSocketServer* ss, SOCKET s = INVALID_SOCKET);
   ~LwipSocket() override;
@@ -123,7 +122,7 @@ class LwipSocket : public AsyncSocket, public sigslot::has_slots<> {
                int64_t* timestamp) override;
 
   int Listen(int backlog) override;
-  AsyncSocket* Accept(SocketAddress* out_addr) override;
+  Socket* Accept(SocketAddress* out_addr) override;
 
   int Close() override;
 
