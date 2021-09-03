@@ -690,6 +690,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
         Options<>(args);
         std::cout << Timestamp() << std::endl;
 
+    } else if (command == "transaction") {
+        const auto [transaction] = Options<Bytes32>(args);
+        std::cout << co_await (*chain_)("eth_getTransactionByHash", {transaction}) << std::endl;
+
     } else if (command == "transfer") {
         const auto [token, recipient, amount, data] = Options<Address, Address, uint256_t, Bytes>(args);
         static Selector<bool, Address, uint256_t> transfer("transfer");
