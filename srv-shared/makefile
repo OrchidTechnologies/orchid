@@ -25,7 +25,9 @@ args += --chain 30,BTC,https://public-node.rsk.co/
 args += --chain 56,BNB,https://bsc-dataseed.binance.org/
 args += --chain 100,DAI,https://rpc.xdaichain.com/
 args += --chain 137,MATIC,https://rpc-mainnet.maticvigil.com/
-args += --chain 250,FTM,https://rpcapi.fantom.network/
+args += --chain 200,DAI,https://arbitrum.xdaichain.com/
+args += --chain 250,FTM,https://rpc.ftm.tools/
+args += --chain 42161,ETH,https://arb1.arbitrum.io/rpc
 args += --chain 43114,AVAX,https://api.avax.network/ext/bc/C/rpc
 args += --chain 1313161554,ETH,https://rpc.mainnet.aurora.dev:8545/
 

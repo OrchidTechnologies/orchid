@@ -186,9 +186,36 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
         const uint256_t r(value["r"].asString());
         const uint256_t s(value["s"].asString());
 
-        const auto expected(hash(chain, v, r, s));
-        orc_assert_(hash_ == expected, value << ' ' << expected);
-        orc_assert(from_ == from(chain, v, r, s));
+        // XXX: https://github.com/OffchainLabs/arb-os/blob/develop/doc/DataFormats.md
+        if (const auto &arbitrum = value["arbType"])
+            switch (To<unsigned>(arbitrum.asString())) {
+                case 0x3: switch (To<unsigned>(value["arbSubType"].asString())) {
+                    case 0x1: {
+                        orc_assert(hash_ == Number<uint256_t>(value["l1SequenceNumber"].asString()));
+                    } break;
+
+                    case 0x4: goto normal;
+                    default: orc_assert(false);
+                } break;
+
+                case 0x9: {
+                    orc_assert(bid_ == 0);
+                    orc_assert(gas_ == 0);
+
+                    orc_assert(v == 0);
+                    orc_assert(r == 0);
+                    orc_assert(s == 0);
+
+                    orc_assert(hash_ == HashK(Tie(chain, uint256_t(value["l1SequenceNumber"].asString()))));
+                } break;
+
+                default: orc_assert(false);
+            }
+        else normal: {
+            const auto expected(hash(chain, v, r, s));
+            orc_assert_(hash_ == expected, value << ' ' << expected);
+            orc_assert(from_ == from(chain, v, r, s));
+        }
     } else {
         if (false);
         else if (chain == 137)
@@ -196,7 +223,11 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
 
         orc_assert(tip_ == 0);
         orc_assert(bid_ == 0);
-        orc_assert(gas_ == 0);
+
+        if (chain == 250)
+            orc_assert(gas_ == 10000000000);
+        else
+            orc_assert(gas_ == 0);
 
         orc_assert(target_);
         const auto target(target_->num());
@@ -205,9 +236,15 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
             orc_assert(target == 0x1000008);
         else if (chain == 137)
             orc_assert(target == 0x0);
+        else if (chain == 250) {
+            static const uint256_t expected("0xd100a01e00000000000000000000000000000000");
+            orc_assert(target == expected);
+        }
 
         orc_assert(amount_ == 0);
-        orc_assert(data_.size() == 0);
+
+        if (chain != 250)
+            orc_assert(data_.size() == 0);
 
         // XXX: I feel like I should be able to verify more here :/
     }
