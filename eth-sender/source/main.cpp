@@ -328,7 +328,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
     else
         executor_ = co_await Option<decltype(executor_)>::_(std::move(executor));
 
-    const auto block([&]() -> task<Block> {
+    const auto block([&]() -> cppcoro::shared_task<Block> {
         const auto height(co_await chain_->Height());
         const auto block(co_await chain_->Header(height));
         co_return block;
