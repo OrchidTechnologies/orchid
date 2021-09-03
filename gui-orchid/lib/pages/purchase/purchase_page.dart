@@ -229,7 +229,7 @@ class _PurchasePageState extends State<PurchasePage> {
       text: s.purchasedCreditAccountsConnectExclusively +
           '  ' +
           s.allPurchasedAccountsUseThe,
-      styles: {
+      tags: {
         'link1': linkStyle.link(OrchidUrls.preferredProviders),
         'link2': linkStyle.link(OrchidUrls.xdaiChain),
       },
@@ -266,10 +266,10 @@ class _PurchasePageState extends State<PurchasePage> {
           (OrchidPlatform.isApple
               ? "."
               : " or use our decentralized <link>account management</link> system."),
-      styles: {
+      tags: {
         'link': linkStyle
-            .link(OrchidUrls.accountOrchid)
-            .copyWith(fontStyle: FontStyle.italic),
+            .copyWith(fontStyle: FontStyle.italic)
+            .link(OrchidUrls.accountOrchid),
       },
     );
 

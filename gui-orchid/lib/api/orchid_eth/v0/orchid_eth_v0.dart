@@ -261,7 +261,7 @@ class OrchidEthereumV0 {
 
     // json null params should not be quoted
     postBody = postBody.replaceAll('"null"', 'null');
-    log("jsonRPC: postbody = $postBody");
+    log("jsonRPC to $url: postbody = $postBody");
 
     // do the post
     var response = await http.post(
@@ -274,7 +274,7 @@ class OrchidEthereumV0 {
     );
 
     if (response.statusCode != 200) {
-      log("jsonRPC: error response: ${response.body}");
+      log("jsonRPC: error response from $url: ${response.body}");
       throw Exception("Error status code: ${response.statusCode}");
     }
     var body = json.decode(response.body);

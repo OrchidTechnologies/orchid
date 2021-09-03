@@ -28,16 +28,14 @@ class AppDialogs {
           title: Text(title, style: AppText.dialogTitle),
           content: body ?? Text(bodyText, style: AppText.dialogBody),
           actions: <Widget>[
-            linkSettings
-                ? FlatButton(
-                    child: Text(s.settingsButtonTitle,
-                        style: AppText.dialogButton),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.pushNamed(context, '/settings');
-                    },
-                  )
-                : null,
+            if (linkSettings)
+              FlatButton(
+                child: Text(s.settingsButtonTitle, style: AppText.dialogButton),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pushNamed(context, '/settings');
+                },
+              ),
             if (showActions)
               FlatButton(
                 child: Text(s.ok, style: AppText.dialogButton),
