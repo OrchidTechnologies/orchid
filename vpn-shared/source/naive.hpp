@@ -20,16 +20,32 @@
 /* }}} */
 
 
-#ifndef ORCHID_PORT_HPP
-#define ORCHID_PORT_HPP
+#ifndef ORCHID_NAIVE_HPP
+#define ORCHID_NAIVE_HPP
 
-#include "socket.hpp"
+#include "base.hpp"
 
 namespace orc {
 
-static constexpr Host Resolver_(10,7,0,2);
-static constexpr Host Host_(10,7,0,3);
+class Naive :
+    public Base
+{
+  private:
+    Naive(U<rtc::NetworkManager> manager);
+  public:
+    Naive(const class Host &host);
+    Naive();
+
+    class Host Host() override;
+
+    rtc::Thread &Thread() override;
+    rtc::BasicPacketSocketFactory &Factory() override;
+
+    task<void> Associate(BufferSunk &sunk, const Socket &endpoint) override;
+    task<Socket> Unlid(Sunk<BufferSewer, Opening> &sunk) override;
+    task<U<Stream>> Connect(const Socket &endpoint) override;
+};
 
 }
 
-#endif//ORCHID_PORT_HPP
+#endif//ORCHID_NAIVE_HPP

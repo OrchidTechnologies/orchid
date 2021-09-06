@@ -26,6 +26,7 @@
 #include <netinet/in.h>
 #endif
 
+#include "interface.hpp"
 #include "protect.hpp"
 #include "syscall.hpp"
 
@@ -42,7 +43,20 @@ extern "C" int orchid_bind(SOCKET socket, const struct sockaddr *address, sockle
 #endif
 }
 
+pthread_key_t protect_;
+
+// NOLINTNEXTLINE (fuchsia-statically-constructed-objects)
+namespace { struct Setup {
+    Setup() { orc_assert(pthread_key_create(&protect_, nullptr) == 0); }
+} setup_; }
+
 extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, socklen_t length) {
+    if (pthread_getspecific(protect_) != nullptr) {
+        // XXX: this reset is hopefully temporary?
+        orc_assert(pthread_setspecific(protect_, nullptr) == 0);
+        goto connect;
+    }
+{
     union {
         sockaddr sa;
         sockaddr_in in;
@@ -67,10 +81,8 @@ extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, soc
     } }()) {
         return Protect(socket, &hooked_connect, address, length);
     }
-
-#ifndef _WIN32
+}
   connect:
-#endif
     return hooked_connect(socket, address, length);
 }
 

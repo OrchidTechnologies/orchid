@@ -27,6 +27,7 @@
 
 #include "capture.hpp"
 #include "family.hpp"
+#include "local.hpp"
 #include "port.hpp"
 #include "sync.hpp"
 #include "transport.hpp"
@@ -59,6 +60,10 @@ static inline std::string cfs(NSString *data) {
     else return {};
 }
 
+static inline NSString *cfs(const std::string &data) {
+    return [NSString stringWithUTF8String:data.c_str()];
+}
+
 @interface OrchidPacketTunnelProvider : NEPacketTunnelProvider {
     U<BufferSink<Capture>> capture_;
 }
@@ -79,15 +84,13 @@ static inline std::string cfs(NSString *data) {
 
     auto config(cfs((NSString *) [options objectForKey:@"config"]));
 
-    auto local(Host_);
-
     auto settings([NEPacketTunnelNetworkSettings.alloc initWithTunnelRemoteAddress:@"127.0.0.1"]);
     settings.MTU = @1100;
 
-    settings.IPv4Settings = [NEIPv4Settings.alloc initWithAddresses:@[[NSString stringWithUTF8String:local.operator std::string().c_str()]] subnetMasks:@[@"255.255.255.0"]];
+    settings.IPv4Settings = [NEIPv4Settings.alloc initWithAddresses:@[cfs(Host_.operator std::string())] subnetMasks:@[@"255.255.255.0"]];
     settings.IPv4Settings.includedRoutes = @[NEIPv4Route.defaultRoute];
 
-    settings.DNSSettings = [NEDNSSettings.alloc initWithServers:@[@"1.0.0.1"]];
+    settings.DNSSettings = [NEDNSSettings.alloc initWithServers:@[cfs(Resolver_.operator std::string())]];
 
     [self setTunnelNetworkSettings:settings completionHandler:^(NSError *_Nullable error) { try {
         orc_assert_(error == nil, [[error localizedDescription] UTF8String]);
@@ -100,7 +103,7 @@ static inline std::string cfs(NSString *data) {
         orc_assert(file != -1);
 
         // XXX: seriously consider if using Covered here is sane
-        auto capture(std::make_unique<Covered<BufferSink<Capture>>>(local));
+        auto capture(std::make_unique<Covered<BufferSink<Capture>>>(Break<Local>(), Host_));
         try {
             auto &family(capture->Wire<BufferSink<Family>>());
             auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket, SyncConnection>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL), file));

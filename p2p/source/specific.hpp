@@ -20,16 +20,33 @@
 /* }}} */
 
 
-#ifndef ORCHID_PORT_HPP
-#define ORCHID_PORT_HPP
+#ifndef ORCHID_SPECIFIC_HPP
+#define ORCHID_SPECIFIC_HPP
 
-#include "socket.hpp"
+#include <pthread.h>
+
+#include "error.hpp"
 
 namespace orc {
 
-static constexpr Host Resolver_(10,7,0,2);
-static constexpr Host Host_(10,7,0,3);
+class Specific {
+  private:
+    pthread_key_t key_;
+    void *value_;
+
+  public:
+    Specific(pthread_key_t key, const void *value) :
+        key_(key),
+        value_(pthread_getspecific(key_))
+    {
+        orc_insist(pthread_setspecific(key_, value) == 0);
+    }
+
+    ~Specific() {
+        orc_insist(pthread_setspecific(key_, value_) == 0);
+    }
+};
 
 }
 
-#endif//ORCHID_PORT_HPP
+#endif//ORCHID_SPECIFIC_HPP

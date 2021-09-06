@@ -314,6 +314,7 @@ class Region :
     }
 
     Subset subset(size_t offset, size_t length) const;
+    Subset subset(size_t offset) const;
 
     template <typename Type_>
     Type_ num() const {
@@ -455,6 +456,11 @@ inline Subset Region::subset(size_t offset, size_t length) const {
     orc_insist(offset <= size());
     orc_insist(size() - offset >= length);
     return {data() + offset, length};
+}
+
+inline Subset Region::subset(size_t offset) const {
+    orc_assert(offset <= size());
+    return subset(offset, size() - offset);
 }
 
 template <size_t Size_>

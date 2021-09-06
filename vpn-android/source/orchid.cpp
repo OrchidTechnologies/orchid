@@ -12,6 +12,7 @@
 
 #include "capture.hpp"
 #include "file.hpp"
+#include "local.hpp"
 #include "port.hpp"
 #include "transport.hpp"
 
@@ -39,7 +40,7 @@ Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint fi
     std::string config = files_dir + std::string("/orchid.cfg");
     Log() << config << std::endl;
 
-    auto capture(Break<BufferSink<Capture>>(local));
+    auto capture(Break<BufferSink<Capture>>(Break<Local>(), local));
     auto connection(std::make_unique<File<asio::posix::stream_descriptor>>(Context(), file));
     auto &inverted(capture->Wire<Inverted>(std::move(connection)));
 

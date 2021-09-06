@@ -20,16 +20,39 @@
 /* }}} */
 
 
-#ifndef ORCHID_PORT_HPP
-#define ORCHID_PORT_HPP
+#ifndef ORCHID_QUERY_HPP
+#define ORCHID_QUERY_HPP
 
-#include "socket.hpp"
+#include <string>
+
+#include <dns.h>
 
 namespace orc {
 
-static constexpr Host Resolver_(10,7,0,2);
-static constexpr Host Host_(10,7,0,3);
+class Query {
+  private:
+    dns_decoded_t data_[DNS_DECODEBUF_4K];
+    size_t size_ = sizeof(data_);
+
+  public:
+    Query(const Span<const uint8_t> &data) {
+        orc_assert(dns_decode(data_, &size_, reinterpret_cast<const dns_packet_t *>(data.data()), data.size()) == RCODE_OKAY);
+    }
+
+    const dns_query_t *operator ->() const {
+        return reinterpret_cast<const dns_query_t *>(data_);
+    }
+
+    std::string name() const {
+        const auto query(operator ->());
+        // https://stackoverflow.com/questions/32031349/what-does-qd-stand-for-in-dns-rfc1035
+        orc_assert(query->qdcount == 1);
+        std::string value(query->questions[0].name);
+        value.pop_back();
+        return value;
+    }
+};
 
 }
 
-#endif//ORCHID_PORT_HPP
+#endif//ORCHID_QUERY_HPP

@@ -83,7 +83,7 @@ class Association :
         co_return writ;
     }
 
-    virtual task<void> Open(const Socket &endpoint) { orc_ahead orc_block({ try {
+    task<void> Open(const Socket &endpoint) { orc_ahead orc_block({ try {
         co_await association_.async_connect(endpoint, Adapt());
         association_.non_blocking(true);
     } catch (const asio::system_error &error) {
@@ -112,7 +112,7 @@ class Connection :
   public:
     using Association::Association;
 
-    task<void> Open(const Socket &endpoint) override { try {
+    task<void> Open(const Socket &endpoint) { try {
         association_.open(endpoint.Host().v4() ? asio::ip::tcp::v4() : asio::ip::tcp::v6());
 
         // XXX: consider setting keepalive timeout separately for connection than from actual data

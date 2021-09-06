@@ -73,6 +73,7 @@ class Capture :
     public Sunken<Pump<Buffer>>
 {
   private:
+    const S<Base> base_;
     const Host local_;
 
     Nest up_;
@@ -95,13 +96,15 @@ class Capture :
     void Stop(const std::string &error) noexcept override;
 
   public:
-    Capture(const Host &local);
+    Capture(S<Base> base, const Host &local);
     ~Capture() override;
 
     void Land(const Buffer &data, bool analyze);
 
+  private:
     void Start(S<Base> base);
     BufferSunk &Start();
+  public:
     void Start(const std::string &path);
 
     task<void> Shut() noexcept override;

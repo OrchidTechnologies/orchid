@@ -32,6 +32,7 @@
 #include "capture.hpp"
 #include "error.hpp"
 #include "execute.hpp"
+#include "local.hpp"
 #include "log.hpp"
 #include "port.hpp"
 #include "protect.hpp"
@@ -73,7 +74,7 @@ int Main(int argc, const char *const argv[]) {
     const Host network(local.operator uint32_t() & ~0xffu);
     const Host gateway(network.operator uint32_t() | 0x01);
 
-    const auto capture(Break<BufferSink<Capture>>(local));
+    const auto capture(Break<BufferSink<Capture>>(Break<Local>(), local));
 
     Tunnel(*capture, "", [&](const std::string &device) {
         static const unsigned mtu(1100);

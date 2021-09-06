@@ -57,7 +57,7 @@ public class OrchidVpnService extends VpnService {
         Builder builder = new Builder();
         builder.addAddress("10.7.0.3", 32);
         builder.addRoute("0.0.0.0", 0);
-        builder.addDnsServer("1.0.0.1");
+        builder.addDnsServer("10.7.0.2");
         builder.setSession("Orchid");
         builder.setMtu(1100);
         Log.i(TAG, "builder:" + builder);

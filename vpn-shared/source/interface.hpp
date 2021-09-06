@@ -20,16 +20,15 @@
 /* }}} */
 
 
-#ifndef ORCHID_PORT_HPP
-#define ORCHID_PORT_HPP
+#ifndef ORCHID_INTERFACE_HPP
+#define ORCHID_INTERFACE_HPP
 
-#include "socket.hpp"
+#include <pthread.h>
 
 namespace orc {
 
-static constexpr Host Resolver_(10,7,0,2);
-static constexpr Host Host_(10,7,0,3);
+extern pthread_key_t protect_;
 
 }
 
-#endif//ORCHID_PORT_HPP
+#endif//ORCHID_INTERFACE_HPP

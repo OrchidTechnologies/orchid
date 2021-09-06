@@ -27,8 +27,6 @@
 
 #include <openvpn/addr/ipv4.hpp>
 
-#include <dns.h>
-
 #include "acceptor.hpp"
 #include "base.hpp"
 #include "boring.hpp"
@@ -41,11 +39,12 @@
 #include "forge.hpp"
 #include "heap.hpp"
 #include "load.hpp"
-#include "local.hpp"
 #include "monitor.hpp"
+#include "naive.hpp"
 #include "network.hpp"
 #include "oracle.hpp"
 #include "port.hpp"
+#include "query.hpp"
 #include "retry.hpp"
 #include "remote.hpp"
 #include "syscall.hpp"
@@ -146,30 +145,12 @@ class Nameless :
     }
 
     void get_DNS_answers(const Span<const uint8_t> &span) {
-        dns_decoded_t decoded[DNS_DECODEBUF_4K];
-        size_t decodesize = sizeof(decoded);
-
-        // From the author:
-        // And while passing in a char * declared buffer to dns_decode() may appear to
-        // work, it only works on *YOUR* system; it may not work on other systems.
-        dns_rcode rc = dns_decode(decoded, &decodesize, reinterpret_cast<const dns_packet_t *>(span.data()), span.size());
-
-        if (rc != RCODE_OKAY) {
-            return;
-        }
-
-        dns_query_t *result = reinterpret_cast<dns_query_t *>(decoded);
-        std::string hostname = "";
-        for (size_t i = 0; i != result->qdcount; ++i) {
-            hostname = result->questions[i].name;
-            hostname.pop_back();
-            break;
-        }
-        if (!hostname.empty()) {
-            for (size_t i = 0; i != result->ancount; ++i) {
+        const Query query(span);
+        if (const auto hostname = query.name(); !hostname.empty()) {
+            for (size_t i = 0; i != query->ancount; ++i) {
                 // TODO: IPv6
-                if (result->answers[i].generic.type == RR_A) {
-                    auto ip = asio::ip::address_v4(boost::endian::native_to_big(result->answers[i].a.address));
+                if (query->answers[i].generic.type == RR_A) {
+                    auto ip = asio::ip::address_v4(boost::endian::native_to_big(query->answers[i].a.address));
                     if (Verbose)
                         Log() << "DNS " << hostname << " " << ip << std::endl;
                     dns_log_[ip] = hostname;
@@ -232,7 +213,37 @@ class Nameless :
 
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-    if (internal_) up_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
+    if (!Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
+        if (destination != Socket(Resolver_, 53))
+            return false;
+        up_.Hatch([&]() noexcept { return [=, data = Beam(data)]() mutable -> task<void> {
+            const Query query(data.span());
+
+            const auto resolver([&]() {
+                const auto name(query.name());
+                const auto dot(name.rfind('.'));
+                const auto tld(name.substr(dot == std::string::npos ? 0 : dot + 1));
+
+                if (false);
+                else if (tld == "crypto")
+                    return "resolver.unstoppable.io";
+                    //return "query.hdns.io";
+                else
+                    return "1.0.0.1";
+                    //return "cloudflare-dns.com"
+            }());
+
+            static const auto naive(Break<Naive>());
+
+            // the Unstoppable Domains resolver seriously is caching the query ID?!?
+            Land(Datagram(destination, source, Tie(uint16_t(query->id), Subset((
+                co_await naive->Fetch("POST", {{"https", resolver, "443"}, "/dns-query"}, {
+                    {"content-type", "application/dns-message"},
+                }, data.str())
+            ).ok()).subset(2))), true);
+        }; }, __FUNCTION__);
+        return true;
+    }) && internal_) up_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
         if (co_await internal_->Send(data) && analyzer_ != nullptr)
             analyzer_->Analyze(data.span());
     }; }, __FUNCTION__);
@@ -252,8 +263,9 @@ void Capture::Land(const Buffer &data, bool analyze) {
     }; }, __FUNCTION__);
 }
 
-Capture::Capture(const Host &local) :
+Capture::Capture(S<Base> base, const Host &local) :
     Valve(typeid(*this).name()),
+    base_(std::move(base)),
     local_(local),
     up_(32)
 {
@@ -747,12 +759,10 @@ void Capture::Start(const std::string &path) {
     if (!analysis.empty())
         analyzer_ = std::make_unique<Nameless>(boost::filesystem::absolute(analysis, group).string());
 
-    S<Base> local(Break<Local>());
-
     const auto hops(unsigned(heap.eval<double>("hops.length")));
     if (hops == 0) {
         locked_()->connected_ = true;
-        return Start(std::move(local));
+        return Start(base_);
     }
 
 #if 0
@@ -761,24 +771,24 @@ void Capture::Start(const std::string &path) {
     auto &sunk(*remote);
 #else
     S<Remote> remote;
-    const auto host(local->Host());
+    const auto host(base_->Host());
     auto &sunk(Start());
 #endif
 
-    auto code([this, heap = std::move(heap), hops, local = std::move(local), host, group](BufferSunk &sunk) mutable -> task<void> {
+    auto code([this, heap = std::move(heap), hops, host, group](BufferSunk &sunk) mutable -> task<void> {
         locked_()->connected_ = false;
 
         const Locator locator(heap.eval<std::string>("rpc"));
         const auto directory(Address(heap.eval<std::string>("eth_directory")));
         const auto location(Address(heap.eval<std::string>("eth_location")));
 
-        const auto chain(co_await Chain::New({locator, local}, {}, 1));
+        const auto chain(co_await Chain::New({locator, base_}, {}, 1));
         const auto network(Break<Network>(chain, directory, location));
 
         const unsigned milliseconds(5*60*1000);
-        const auto [oracle, oxt] = *co_await Parallel(Oracle(milliseconds, chain), Token::OXT(5*60*1000, chain));
+        const auto [oracle, oxt] = *co_await Parallel(Oracle(milliseconds, chain), Token::OXT(milliseconds, chain));
 
-        auto base(local);
+        auto base(base_);
 
         for (unsigned i(0); i != hops - 1; ++i) {
             auto remote(Break<BufferSink<Remote>>());

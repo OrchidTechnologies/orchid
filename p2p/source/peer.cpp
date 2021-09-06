@@ -35,10 +35,10 @@ namespace orc {
 
 // XXX: should this task really be delegated to WebRTC?
 // NOLINTNEXTLINE (fuchsia-statically-constructed-objects)
-struct SetupSSL {
-    SetupSSL() { rtc::InitializeSSL(); }
-    ~SetupSSL() { rtc::CleanupSSL(); }
-} setup_;
+namespace { struct Setup {
+    Setup() { rtc::InitializeSSL(); }
+    ~Setup() { rtc::CleanupSSL(); }
+} setup_; }
 
 #ifndef _WIN32
 struct Logger :
