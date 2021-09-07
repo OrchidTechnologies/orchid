@@ -217,7 +217,10 @@ void Capture::Land(const Buffer &data) {
         if (destination != Socket(Resolver_, 53))
             return false;
         up_.Hatch([&]() noexcept { return [=, data = Beam(data)]() mutable -> task<void> {
-            const Query query(data.span());
+            const auto span(data.span());
+            if (analyzer_ != nullptr)
+                analyzer_->Analyze(span);
+            const Query query(span);
 
             const auto resolver([&]() {
                 const auto name(query.name());
