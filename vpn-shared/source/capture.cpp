@@ -213,7 +213,7 @@ class Nameless :
 
 void Capture::Land(const Buffer &data) {
     //Log() << "\e[35;1mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
-    if (!Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
+    orc_ignore({ if (Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Socket(Resolver_, 53))
             return false;
         up_.Hatch([&]() noexcept { return [=, data = Beam(data)]() mutable -> task<void> {
@@ -246,7 +246,9 @@ void Capture::Land(const Buffer &data) {
             ).ok()).subset(2))), true);
         }; }, __FUNCTION__);
         return true;
-    }) && internal_) up_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
+    })) return; });
+
+    if (internal_) up_.Hatch([&]() noexcept { return [this, data = Beam(data)]() mutable -> task<void> {
         if (co_await internal_->Send(data) && analyzer_ != nullptr)
             analyzer_->Analyze(data.span());
     }; }, __FUNCTION__);
