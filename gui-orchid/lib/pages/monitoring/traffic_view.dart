@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
-import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/monitoring/restart_manager.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -9,13 +9,18 @@ import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/app_dialogs.dart';
-import 'package:orchid/common/orchid_scroll.dart';
+import 'package:orchid/orchid/orchid_scroll.dart';
 import 'package:collection/collection.dart';
+import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/common/wrapped_switch.dart';
+import 'package:orchid/orchid/orchid_action_button.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_gradients.dart';
+import 'package:orchid/orchid/orchid_text.dart';
+import 'package:rxdart/rxdart.dart';
 
 import '../../common/app_colors.dart';
-import '../../common/app_gradients.dart';
 import '../../common/app_text.dart';
 import 'clear_traffic_action_button.dart';
 import 'traffic_empty_view.dart';
@@ -37,20 +42,24 @@ class TrafficView extends StatefulWidget {
   _TrafficViewState createState() => _TrafficViewState();
 
   static Color colorForProtocol(String protocol) {
-    const opacity = 0.2;
+    final yellow = Color(0xffFFF282);
+    final teal = Color(0xff6EFAC8);
+    final purpleDark = Color(0xffB8B3DD);
+    final purpleBright = Color(0xffFF6F97);
+
     if (protocol == null) {
       return Colors.white;
     }
     if (protocol.contains("DNS")) {
-      return Colors.grey.withOpacity(opacity);
+      return purpleDark;
     }
     if (protocol.contains("TLS")) {
-      return Colors.lightGreen.withOpacity(opacity);
+      return teal;
     }
     if (protocol.contains("HTTP")) {
-      return Colors.red.withOpacity(opacity);
+      return purpleBright;
     }
-    return Colors.yellow.withOpacity(opacity);
+    return yellow;
   }
 }
 
@@ -67,7 +76,7 @@ class _TrafficViewState extends State<TrafficView>
   // Scrolling state
   final int _scrollToTopDurationMs = 700;
   ScrollPhysics _scrollPhysics = OrchidScrollPhysics();
-  double _renderedRowHeight = 60;
+  double _renderedRowHeight = 54;
   bool _updatesPaused = false;
   DateTime _lastScroll;
   ValueNotifier<bool> _newContent = ValueNotifier(false);
@@ -77,11 +86,10 @@ class _TrafficViewState extends State<TrafficView>
   // TODO: Determine what changed and fix this.
   var _scrollController = ScrollController();
 
-  // WrappedSwitchController monitoringEnabledController = WrappedSwitchController();
-
   @override
   void initState() {
     super.initState();
+    ScreenOrientation.all();
 
     // Update on search text
     _searchTextController.addListener(() {
@@ -95,11 +103,9 @@ class _TrafficViewState extends State<TrafficView>
     });
 
     // Update periodically
-    if (!OrchidAPI.mockAPI) {
-      _pollTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-        _performQuery();
-      });
-    }
+    _pollTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      _performQuery();
+    });
 
     // Update first view
     _performQuery();
@@ -122,104 +128,140 @@ class _TrafficViewState extends State<TrafficView>
   Widget build(BuildContext context) {
     return TitledPage(
       title: s.traffic,
+      constrainWidth: false,
       decoration: BoxDecoration(),
       actions: [
         ClearTrafficActionButton(controller: widget.clearTrafficController),
       ],
-      child: buildPage(),
+      child: buildContent(),
     );
   }
 
-  Widget buildPage() {
-    return Container(
-      decoration: BoxDecoration(gradient: AppGradients.verticalGrayGradient1),
-      child: SafeArea(
-        child: Column(
-          children: <Widget>[
-            OrientationBuilder(builder: (BuildContext context, Orientation _) {
-              var orientation = MediaQuery.of(context).orientation;
-              return Visibility(
-                visible: orientation == Orientation.portrait,
-                child: _buildEnableMontoringSwitch(),
-              );
-            }),
-            Expanded(
+  Widget buildContent() {
+    return Stack(
+      children: [
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Visibility(
+              visible: _uiInitialized(),
+              replacement: Container(),
               child: Visibility(
-                visible: _uiInitialized(),
-                replacement: Container(),
-                child: Visibility(
-                  visible: _showEmptyView(),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 0.0),
-                    child: TrafficEmptyView(),
-                  ),
-                  replacement: Column(
-                    children: <Widget>[
-                      _buildSearchView(),
-                      _buildNewContentIndicator(),
-                      _buildResultListView()
-                    ],
-                  ),
+                visible: _showEmptyView(),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 0.0),
+                  child: TrafficEmptyView(),
+                ),
+                replacement: Column(
+                  children: <Widget>[
+                    _buildSearchView(),
+                    _buildNewContentIndicator(),
+                    Expanded(
+                        child: Container(
+                      foregroundDecoration: BoxDecoration(
+                        gradient: OrchidGradients.fadeOutBottomGradient,
+                      ),
+                      child: _buildResultListView(),
+                    ))
+                  ],
                 ),
               ),
             ),
-          ],
+          ),
         ),
-      ),
+        SafeArea(
+            child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 40),
+            child: _buildVisibleAnalyzeButton(),
+          ),
+        )),
+      ],
     );
   }
 
-  // Build the monitoring switch. This switch does not reflect current state of the
+  Widget _buildVisibleAnalyzeButton() {
+    return OrientationBuilder(builder: (BuildContext context, Orientation _) {
+      var orientation = MediaQuery.of(context).orientation;
+      return Visibility(
+        visible: orientation == Orientation.portrait,
+        child: _buildMonitorButton(),
+      );
+    });
+  }
+
+  // Build the analyze toggle button. This switch does not reflect current state of the
   // VPN but only the user preference that monitoring be enabled.
-  Widget _buildEnableMontoringSwitch() {
-    return Container(
-      height: 48,
-      color: Color(0xFFEDEFF6),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(s.analyze, style: AppText.headerStyle.copyWith(fontSize: 20)),
-            StreamBuilder<bool>(
-                stream: UserPreferences().monitoringEnabled.stream(),
-                builder: (context, snapshot) {
-                  if (snapshot.data == null) {
-                    return Container();
-                  }
-                  var monitoringEnabled = snapshot.data;
-                  return CupertinoSwitch(
-                    value: monitoringEnabled,
-                    onChanged: _confirmMonitoringSwitchChange,
-                    activeColor: Colors.deepPurple,
-                  );
-                }),
-          ],
-        ),
-      ),
-    );
+  Widget _buildMonitorButton() {
+    return StreamBuilder<bool>(
+        stream: OrchidRestartManager().restarting.stream,
+        builder: (context, snapshot) {
+          var restarting = snapshot.data ?? false;
+          return StreamBuilder<bool>(
+              stream: UserPreferences().monitoringEnabled.stream(),
+              builder: (context, snapshot) {
+                if (snapshot.data == null) {
+                  return Container();
+                }
+                var currentMonitoringEnabled = snapshot.data;
+                // Toggle the value
+                var desiredMonitoringEnabled = !currentMonitoringEnabled;
+                var text = restarting
+                    ? "(RESTARTING)"
+                    : (currentMonitoringEnabled
+                        ? "STOP ANALYSIS"
+                        : "START ANALYSIS");
+                return OrchidActionButton(
+                    enabled: !restarting,
+                    text: text,
+                    onPressed: () {
+                      _confirmMonitoringSwitchChange(desiredMonitoringEnabled);
+                    });
+              });
+        });
   }
 
   Widget _buildSearchView() {
     return Container(
-      padding: EdgeInsets.only(left: 8.0, bottom: 12.0),
+      padding: EdgeInsets.only(bottom: 12.0, top: 12.0),
       child: TextFormField(
         autocorrect: false,
         smartQuotesType: SmartQuotesType.disabled,
         smartDashesType: SmartDashesType.disabled,
         controller: _searchTextController,
+        cursorColor: Colors.white,
+        style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: s.search,
-          hintStyle: TextStyle(color: AppColors.neutral_5),
+          // fillColor: Colors.black,
+          // filled: true,
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(width: 1, color: Colors.white)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(width: 2, color: Color(0xffFC7EFF))),
+          // hintText: s.search,
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 6.0),
+            child: Icon(Icons.search_outlined,
+                // todo: want to change the color on focus
+                // color: FocusScope.of(context).hasFocus ? Color(0xff766D86) : Colors.white),
+                color: Colors.white),
+          ),
+          // hintStyle: TextStyle(color: AppColors.neutral_5),
           suffixIcon: _searchTextController.text.isEmpty
               ? null
-              : IconButton(
-                  icon: Icon(Icons.clear),
-                  onPressed: () {
-                    invalidateResults();
-                    _searchTextController.clear();
-                    FocusScope.of(context).requestFocus(FocusNode());
-                  }),
+              : Padding(
+                  padding: const EdgeInsets.only(right: 4.0),
+                  child: IconButton(
+                      icon: Icon(Icons.clear, color: Colors.white),
+                      onPressed: () {
+                        invalidateResults();
+                        _searchTextController.clear();
+                        FocusScope.of(context).requestFocus(FocusNode());
+                      }),
+                ),
         ),
         textAlign: TextAlign.left,
       ),
@@ -227,90 +269,84 @@ class _TrafficViewState extends State<TrafficView>
   }
 
   Widget _buildResultListView() {
-    return Flexible(
-      child: NotificationListener<ScrollNotification>(
-        onNotification: onScrollNotification,
-        child: ListView.separated(
-            separatorBuilder: (BuildContext context, int index) =>
-                Divider(height: 0),
-            key: PageStorageKey('traffic list view'),
+    return NotificationListener<ScrollNotification>(
+      onNotification: onScrollNotification,
+      child: ListView.separated(
+          separatorBuilder: (BuildContext context, int index) =>
+              Divider(height: 8),
+          key: PageStorageKey('traffic list view'),
 
-            // TODO: We used to be able to set this to primary, which allowed
-            // TODO: us to tap in the header to scroll to top.  But the primary
-            // TODO: scroll controller now seems to be null here.
-            // TODO: Determine what changed and fix this.
-            //primary: true,
-            controller: _scrollController,
-            //
-            physics: _scrollPhysics,
-            itemCount: _resultList?.length ?? 0,
-            itemBuilder: (BuildContext context, int index) {
-              FlowEntry flow = _resultList[index];
-              var hostname = (flow.hostname == null || flow.hostname.isEmpty)
-                  ? flow.dst_addr
-                  : flow.hostname;
-              var date = DateFormat("MM/dd/yyyy HH:mm:ss.SSS")
-                  .format(flow.start.toLocal());
-              return Theme(
-                data: ThemeData(accentColor: AppColors.purple_3),
-                child: Container(
-                  height: _renderedRowHeight,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: TrafficView.colorForProtocol(flow.protocol),
-                  ),
-                  child: IntrinsicHeight(
-                    child: ListTile(
-                      key: PageStorageKey<int>(flow.rowId), // unique key
-                      title: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          SizedBox(height: 4),
-                          Row(
-                            children: <Widget>[
-                              Expanded(
-                                flex: 10,
-                                child: Text(
-                                    "$hostname:${flow.dst_port != 0 ? flow.dst_port : ""}",
-                                    // Note: I'd prefer ellipses but they brake soft wrap control.
-                                    // Note: (Watch for the case of "-" dashes in domain names.)
-                                    overflow: TextOverflow.fade,
-                                    softWrap: false,
-                                    style: AppText.textLabelStyle
-                                        .copyWith(fontWeight: FontWeight.bold)),
-                              ),
-                              Spacer(),
-                              Text("${flow.protocol}",
-                                  textAlign: TextAlign.right,
-                                  style: AppText.textLabelStyle.copyWith(
-                                      fontSize: 14.0,
-                                      color: AppColors.neutral_3)),
-                              SizedBox(width: 8)
-                            ],
-                          ),
-                          SizedBox(height: 4),
-                          Text("$date",
-                              style: AppText.logStyle.copyWith(fontSize: 12.0)),
-                        ],
-                      ),
-                      trailing: Icon(Icons.chevron_right),
-                      onTap: () {
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (BuildContext context) {
-                          return TrafficViewDetail(flow);
-                        }));
-                      },
-                    ),
-                  ),
-                ),
-              );
-            }),
+          // TODO: We used to be able to set this to primary, which allowed
+          // TODO: us to tap in the header to scroll to top.  But the primary
+          // TODO: scroll controller now seems to be null here.
+          // TODO: Determine what changed and fix this.
+          //primary: true,
+          controller: _scrollController,
+          //
+          physics: _scrollPhysics,
+          itemCount: _resultList?.length ?? 0,
+          itemBuilder: (BuildContext context, int index) {
+            FlowEntry flow = _resultList[index];
+            return _buildListTile(flow);
+          }),
+    );
+  }
+
+  Widget _buildListTile(FlowEntry flow) {
+    var hostname = (flow.hostname == null || flow.hostname.isEmpty)
+        ? flow.dst_addr
+        : flow.hostname;
+    var date =
+        DateFormat("MM/dd/yyyy HH:mm:ss.SSS").format(flow.start.toLocal());
+
+    // Note: Setting the background color on the container vs. the ListTile
+    // Note: changes the clipping behavior. (bug?)
+    return Container(
+      height: _renderedRowHeight,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: TrafficView.colorForProtocol(flow.protocol),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        // shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+        // tileColor: TrafficView.colorForProtocol(flow.protocol),
+        key: PageStorageKey<int>(flow.rowId),
+        onTap: () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (BuildContext context) {
+            return TrafficViewDetail(flow);
+          }));
+        },
+        title: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                SizedBox(height: 8),
+                Text("$hostname:${flow.dst_port != 0 ? flow.dst_port : ""}",
+                    // Note: I'd prefer ellipses but they brake soft wrap control.
+                    // Note: (Watch for the case of "-" dashes in domain names.)
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
+                    style: OrchidText.body2.black),
+                SizedBox(height: 4),
+                Text("$date", style: OrchidText.caption.black),
+              ],
+            ),
+            Spacer(),
+            Text("${flow.protocol}",
+                textAlign: TextAlign.right, style: OrchidText.body1.black),
+            SizedBox(width: 8)
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildNewContentIndicator() {
-    var color = AppColors.neutral_2;
+    var textColor = Colors.black;
+    var upArrow = Icon(Icons.arrow_upward, color: textColor, size: 16);
     return ValueListenableBuilder<bool>(
         valueListenable: _newContent,
         builder: (context, newContent, child) {
@@ -322,30 +358,19 @@ class _TrafficViewState extends State<TrafficView>
             firstChild: GestureDetector(
               onTap: _scrollToNewContent,
               child: Container(
-                  decoration: BoxDecoration(
-                    //border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.5) )),
-                    color: Colors.blueGrey.withOpacity(0.3),
-                  ),
+                  color: OrchidColors.purpleCaption,
                   alignment: Alignment.center,
                   height: 32,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Icon(
-                        Icons.arrow_upward,
-                        color: color.withOpacity(0.5),
-                        size: 16,
-                      ),
+                      upArrow,
                       SizedBox(width: 12),
                       Text(s.newContent,
                           style: AppText.textLabelStyle
-                              .copyWith(color: color, fontSize: 14.0)),
+                              .copyWith(color: textColor, fontSize: 14.0)),
                       SizedBox(width: 12),
-                      Icon(
-                        Icons.arrow_upward,
-                        color: color.withOpacity(0.5),
-                        size: 16,
-                      ),
+                      upArrow,
                     ],
                   )),
             ),
@@ -493,6 +518,7 @@ class _TrafficViewState extends State<TrafficView>
   // Currently unused
   void dispose() {
     super.dispose();
+    ScreenOrientation.reset();
     if (_pollTimer != null) {
       _pollTimer.cancel();
     }

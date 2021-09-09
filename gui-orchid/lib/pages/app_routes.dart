@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/pages/help/help_feedback_page.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/help/open_source_page.dart';
 import 'package:orchid/pages/help/privacy_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
@@ -34,8 +34,10 @@ class AppRoutes {
   static const String onboarding_walkthrough = "/onboarding/walkthrough";
   static const String onboarding_vpn_permission = "/onboarding/vpn_permission";
   static const String onboarding_link_wallet = "/onboarding/link_wallet";
-  static const String onboarding_link_wallet_success = "/onboarding/link_wallet/success";
-  static const String onboarding_vpn_credentials = "/onboarding/vpn_credentials";
+  static const String onboarding_link_wallet_success =
+      "/onboarding/link_wallet/success";
+  static const String onboarding_vpn_credentials =
+      "/onboarding/vpn_credentials";
   static const String keygen = "/settings/keygen";
   static const String keys = "/settings/keys";
   static const String manage_config = "/settings/manage_config";
@@ -53,7 +55,6 @@ class AppRoutes {
     privacy: (context) => PrivacyPage(),
     open_source: (context) => OpenSourcePage(),
     legal: (context) => LegalPage(),
-    feedback: (context) => HelpFeedbackPage(),
     onboarding_walkthrough: (context) => WalkthroughPages(),
     onboarding_vpn_permission: (context) => OnboardingVPNPermissionPage(),
     keygen: (context) => KeyGenPage(),
@@ -64,4 +65,12 @@ class AppRoutes {
     manage_config: (context) => ManageConfigPage(),
     identity: (context) => AccountManagerPage()
   };
+
+  static Future<void> pushAccountManager(BuildContext context) async {
+    if (await UserPreferences().guiV0.get()) {
+      return await Navigator.pushNamed(context, AppRoutes.circuit);
+    } else {
+      return await Navigator.pushNamed(context, AppRoutes.identity);
+    }
+  }
 }

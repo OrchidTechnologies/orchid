@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'app_colors.dart';
 import 'app_text.dart';
 
@@ -27,17 +28,17 @@ class ConfigText extends StatelessWidget {
           smartQuotesType: SmartQuotesType.disabled,
           smartDashesType: SmartDashesType.disabled,
           keyboardType: TextInputType.multiline,
-          style: AppText.logStyle.copyWith(color: AppColors.grey_2),
+          style: OrchidText.caption,
           controller: textController,
           maxLines: 99999,
           decoration: InputDecoration(
             hintText: hintText,
+            hintStyle: OrchidText.caption,
             border: InputBorder.none,
             labelStyle: AppText.textLabelStyle,
           ),
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(4.0)),
           border: Border.all(width: 2.0, color: AppColors.neutral_5),
         ),
@@ -60,7 +61,7 @@ class ConfigLabel extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Text(text + ":",
             style: AppText.textLabelStyle
-                .copyWith(fontSize: 20)));
+                .copyWith(fontSize: 20).white));
   }
 }
 

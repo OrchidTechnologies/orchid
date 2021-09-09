@@ -2,11 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
-import 'package:orchid/api/orchid_platform.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/scan_paste_dialog.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/titled_page_base.dart';
@@ -81,7 +78,7 @@ class _AddHopPageState extends State<AddHopPage> {
                             fontWeight: FontWeight.normal,
                             height: 1.12,
                             letterSpacing: -0.24,
-                            color: Color(0xff504960))),
+                            color: Colors.white)),
                     pady(24),
 
                     /*
@@ -168,22 +165,25 @@ class _AddHopPageState extends State<AddHopPage> {
       String svgName,
       VoidCallback onTap,
       Widget trailing}) {
-    return ListTile(
-        contentPadding: EdgeInsets.only(left: 0, right: 8, top: 8, bottom: 8),
-        leading: svgName != null
-            ? SvgPicture.asset(svgName, width: 24, height: 24)
-            : Image.asset(imageName, width: 24, height: 24),
-        trailing:
-            trailing ?? Icon(Icons.chevron_right, color: Colors.deepPurple),
-        title: Text(text,
-            textAlign: TextAlign.left,
-            style: const TextStyle(
-                color: const Color(0xff3a3149),
-                fontWeight: FontWeight.w400,
-                fontFamily: 'SFProText',
-                fontStyle: FontStyle.normal,
-                fontSize: 18.0)),
-        onTap: onTap);
+    var color = OrchidColors.purple_ffb88dfc;
+    return Container(
+      child: ListTile(
+          contentPadding: EdgeInsets.only(left: 0, right: 8, top: 8, bottom: 8),
+          leading: svgName != null
+              ? SvgPicture.asset(svgName, width: 24, height: 24, color: Colors.white)
+              : Image.asset(imageName, width: 24, height: 24, color: Colors.white),
+          trailing:
+              trailing ?? Icon(Icons.chevron_right, color: Colors.white),
+          title: Text(text,
+              textAlign: TextAlign.left,
+              style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: 'SFProText',
+                  fontStyle: FontStyle.normal,
+                  fontSize: 18.0)),
+          onTap: onTap),
+    );
   }
 
   // Push a hop editor and then await the CircuitHop result.
@@ -240,7 +240,7 @@ class _AddHopPageState extends State<AddHopPage> {
   }
 
   Divider _divider() =>
-      Divider(color: Colors.black.withOpacity(0.3), height: 1.0);
+      Divider(color: Colors.white.withOpacity(0.5), height: 1.0);
 
   S get s {
     return S.of(context);

@@ -14,6 +14,14 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 abstract class AccountDetail {
   Account get account;
 
+  // The resolved signer from the Account
+  EthereumAddress signer;
+
+  // The funder from the account
+  EthereumAddress get funder {
+    return account.funder;
+  }
+
   LotteryPot get lotteryPot;
 
   MarketConditions get marketConditions;
@@ -28,14 +36,21 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
 
   final Duration pollingPeriod;
 
+  // The resolved signer for the signer ui in Account
+  EthereumAddress signer;
+
   EthereumAddress get funder {
     return account.funder;
   }
 
   AccountDetailPoller({
     @required this.account,
+    // Optionally pass the resolved signer
+    EthereumAddress resolvedSigner,
     this.pollingPeriod = const Duration(seconds: 15),
-  });
+  }) {
+    this.signer = resolvedSigner;
+  }
 
   Timer _balanceTimer;
   bool _balancePollInProgress = false;
@@ -67,7 +82,9 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   }
 
   Future<void> _pollBalanceAndAccountDetails() async {
-    var resolvedSigner = await account.signerAddress;
+    if (signer == null) {
+      signer = await account.signerAddress;
+    }
 
     //log("polling account details: signer = $resolvedSigner, funder = $funder");
     if (_balancePollInProgress) {
@@ -80,7 +97,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       try {
         //log("Detail poller fetch pot, eth=$eth, funder=$funder, signer=$resolvedSigner");
         _pot = await eth
-            .getLotteryPot(funder, resolvedSigner)
+            .getLotteryPot(funder, signer)
             .timeout(Duration(seconds: 30));
       } catch (err) {
         log('Error fetching lottery pot 1: $err');
@@ -103,7 +120,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       try {
         if (account.version == 0) {
           _transactions = await OrchidEthereumV0()
-              .getUpdateTransactions(funder: funder, signer: resolvedSigner);
+              .getUpdateTransactions(funder: funder, signer: signer);
         } else {
           // _transactions = await OrchidEthereumV1()
           //     .getUpdateTransactions(funder: funder, signer: resolvedSigner);

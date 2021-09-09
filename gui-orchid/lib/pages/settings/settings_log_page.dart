@@ -56,7 +56,6 @@ class _SettingsLogPage extends State<SettingsLogPage> {
     });
   }
 
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -76,9 +75,9 @@ class _SettingsLogPage extends State<SettingsLogPage> {
 
   @override
   Widget buildPage(BuildContext context) {
-    var privacyText =
-        s.thisDebugLogIsNonpersistentAndClearedWhenQuittingThe+"  "
-        +s.itMayContainSecretOrPersonallyIdentifyingInformation;
+    var privacyText = s.thisDebugLogIsNonpersistentAndClearedWhenQuittingThe +
+        "  " +
+        s.itMayContainSecretOrPersonallyIdentifyingInformation;
 
     return SafeArea(
       child: Center(
@@ -87,11 +86,13 @@ class _SettingsLogPage extends State<SettingsLogPage> {
           children: <Widget>[
             // The logging control switch
             Container(
-              color: AppColors.white,
               height: 56,
+              // decoration: BoxDecoration(
+              //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
+              //   border: Border.all(width: 2.0, color: Colors.white.withOpacity(0.3)),
+              // ),
               child: PageTile(
                 title: s.loggingEnabled,
-                //imageName: 'assets/images/assignment.png',
                 onTap: () {},
                 trailing: Switch(
                   activeColor: AppColors.purple_3,
@@ -104,9 +105,12 @@ class _SettingsLogPage extends State<SettingsLogPage> {
               ),
             ),
 
-            Container(
-              height: 1,
-              color: AppColors.grey_1.withAlpha((0.12 * 255).round()),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                height: 0.5,
+                color: Colors.grey.withOpacity(0.5),
+              ),
             ),
 
             // Privacy description
@@ -114,7 +118,7 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                 padding:
                     EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 0),
                 child: AppText.body(
-                  color: Color(0xff524862),
+                  color: Colors.white,
                   textAlign: TextAlign.left,
                   text: privacyText,
                 )),
@@ -132,14 +136,13 @@ class _SettingsLogPage extends State<SettingsLogPage> {
                       _logText,
                       softWrap: true,
                       textAlign: TextAlign.left,
-                      style: AppText.logStyle.copyWith(fontSize: 10),
+                      style: AppText.logStyle.copyWith(fontSize: 10, color: Colors.white),
                     ),
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.black,
                     borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                    border:
-                        Border.all(width: 2.0, color: AppColors.neutral_5),
+                    border: Border.all(width: 2.0, color: AppColors.neutral_5),
                   ),
                 ),
               ),
@@ -195,8 +198,8 @@ class _SettingsLogPage extends State<SettingsLogPage> {
     AppDialogs.showConfirmationDialog(
         context: context,
         bodyText: s.clearAllLogData,
-        cancelText: s.cancel,
-        actionText: s.delete,
+        cancelText: s.cancel.toUpperCase(),
+        actionText: s.delete.toUpperCase(),
         commitAction: () {
           _performDelete();
         });

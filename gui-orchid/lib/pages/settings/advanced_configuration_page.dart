@@ -5,9 +5,10 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_buttons.dart';
-import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_action_button.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:jsparser/jsparser.dart';
@@ -65,19 +66,22 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
                     padding: const EdgeInsets.all(0),
                     child: RoundTitledRaisedImageButton(
                         title: s.copy,
-                        icon: Icon(Icons.copy, color: Colors.white, size: 20),
+                        icon: Icon(Icons.copy, color: Colors.black, size: 20),
+                        padding: 16,
                         onPressed: _onCopy)),
                 Padding(
                     padding: const EdgeInsets.all(0),
                     child: RoundTitledRaisedImageButton(
                         title: s.paste,
-                        icon: Icon(Icons.paste, color: Colors.white, size: 20),
+                        icon: Icon(Icons.paste, color: Colors.black, size: 20),
+                        padding: 16,
                         onPressed: _onPaste)),
                 Padding(
                     padding: const EdgeInsets.only(left: 0, right: 0),
                     child: RoundTitledRaisedImageButton(
                         title: s.clear,
-                        icon: Icon(Icons.clear, color: Colors.white, size: 20),
+                        icon: Icon(Icons.clear, color: Colors.black, size: 20),
+                        padding: 16,
                         onPressed: _onClear)),
               ],
             ),
@@ -85,7 +89,7 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(
-                    left: 16, right: 16, top: 8, bottom: 24),
+                    left: 16, right: 16, top: 24, bottom: 24),
                 child: Container(
                   padding:
                       EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -96,7 +100,7 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
                     smartQuotesType: SmartQuotesType.disabled,
                     smartDashesType: SmartDashesType.disabled,
                     keyboardType: TextInputType.multiline,
-                    style: AppText.logStyle.copyWith(color: AppColors.grey_2),
+                    style: AppText.logStyle.copyWith(color: Colors.white),
                     controller: _configFileTextController,
                     maxLines: 99999,
                     decoration: InputDecoration(
@@ -105,8 +109,8 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
                     ),
                   )),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                    color: Colors.black,
+                    borderRadius: BorderRadius.all(Radius.circular(16.0)),
                     border: Border.all(width: 2.0, color: AppColors.neutral_5),
                   ),
                 ),
@@ -122,16 +126,18 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          RoundedRectButton(
-                              text: s.saveButtonTitle,
-                              onPressed: _readyToSave.value ? _onSave : null),
+                          OrchidActionButton(
+                            text: s.saveButtonTitle,
+                            onPressed: _onSave,
+                            enabled: _readyToSave.value,
+                          )
                         ],
                       );
                     }),
               ),
             ),
 
-            SizedBox(height: 24)
+            SizedBox(height: 40)
           ],
         ),
       ),

@@ -1,10 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:jdenticon_dart/jdenticon_dart.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
@@ -13,14 +12,14 @@ import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/alert_badge.dart';
+import 'package:orchid/orchid/orchid_action_button.dart';
+import 'package:orchid/orchid/orchid_circular_identicon.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:orchid/common/scan_paste_dialog.dart';
-import 'package:orchid/common/account_chart.dart';
-import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
@@ -29,13 +28,12 @@ import 'package:orchid/util/listenable_builder.dart';
 import 'package:orchid/util/strings.dart';
 import 'package:styled_text/styled_text.dart';
 
-import '../../common/app_colors.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
+import 'account_card.dart';
 import 'account_detail_poller.dart';
-import 'account_model.dart';
+import 'account_view_model.dart';
 import 'account_store.dart';
-import 'account_view.dart';
 import 'export_identity_dialog.dart';
 
 class AccountManagerPage extends StatefulWidget {
@@ -56,6 +54,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   var _accountStore = AccountStore();
 
   Map<Account, AccountDetailPoller> _accountDetailMap = {};
+
+  // bool _preserveSort = false;
 
   @override
   void initState() {
@@ -99,36 +99,53 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         listenable: _accountStore,
         builder: (context, snapshot) {
           return TitledPage(
-            title: '',
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
+            title: "Accounts",
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Theme(
+                    data: Theme.of(context).copyWith(
+                      cardColor: OrchidColors.dark_background,
+                      highlightColor: OrchidColors.purple_bright,
+                    ),
+                    child: _buildIdentitySelectorMenu()),
+              )
+            ],
+            child: Stack(
+              children: [
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
                         _buildIdentityHeader(),
-                        Align(
-                            alignment: Alignment.centerRight,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: _buildIdentitySelectorMenu(),
-                            )),
+                        pady(16),
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(left: 28.0, right: 28.0),
+                          child: PurchaseStatus(),
+                        ),
+                        pady(8),
+                        Divider(height: 1),
+                        Expanded(child: _buildAccountList()),
                       ],
                     ),
-                    pady(16),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                      child: PurchaseStatus(),
-                    ),
-                    pady(8),
-                    Divider(height: 1),
-                    Expanded(child: _buildAccountList()),
-                  ],
+                  ),
                 ),
-              ),
+
+                // The add funds
+                if (OrchidPlatform.hasPurchase)
+                  SafeArea(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 40),
+                        child: _buildAddFundsButton(),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           );
         });
@@ -136,7 +153,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   Widget _buildIdentitySelectorMenu() {
     return PopupMenuButton<IdentitySelectorMenuItem>(
-      icon: Icon(Icons.settings, color: Colors.grey),
+      icon: SvgPicture.asset('assets/svg/settings_gear.svg'),
       initialValue: _accountStore.activeIdentity != null
           ? IdentitySelectorMenuItem(identity: _accountStore.activeIdentity)
           : null,
@@ -150,11 +167,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             warnOnly: true);
       },
       itemBuilder: (BuildContext context) {
+        var style = OrchidText.body1;
         var items = _accountStore.identities.map((StoredEthereumKey identity) {
           var item = IdentitySelectorMenuItem(identity: identity);
           return PopupMenuItem<IdentitySelectorMenuItem>(
             value: item,
-            child: Text(item.formatIdentity()),
+            child: Text(item.formatIdentity(), style: style),
           );
         }).toList();
 
@@ -163,17 +181,17 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             [
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value: IdentitySelectorMenuItem(action: _newIdentity),
-                  child: Text(s.newWord)),
+                  child: Text(s.newWord, style: style)),
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value: IdentitySelectorMenuItem(action: _importIdentity),
-                  child: Text(s.import)),
+                  child: Text(s.import, style: style)),
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value: IdentitySelectorMenuItem(action: _exportIdentity),
-                  child: Text(s.export)),
+                  child: Text(s.export, style: style)),
               PopupMenuItem<IdentitySelectorMenuItem>(
                   value:
                       IdentitySelectorMenuItem(action: _confirmDeleteIdentity),
-                  child: Text(s.delete))
+                  child: Text(s.delete, style: style))
             ];
       },
     );
@@ -212,8 +230,10 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     }
     var config = 'account={ secret: "${identity.formatSecretFixed()}" }';
     var title = s.exportThisOrchidKey;
-    var bodyStyle = AppText.dialogBody.copyWith(fontSize: 15);
-    var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
+    // var bodyStyle = AppText.dialogBody.copyWith(fontSize: 15);
+    var bodyStyle = OrchidText.body2;
+    // var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
+    var linkStyle = OrchidText.body2.copyWith(color: Colors.deepPurple);
 
     var body = StyledText(
       style: bodyStyle,
@@ -272,9 +292,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       context: context,
       title: s.deleteThisOrchidKey,
       body: body,
-      cancelText: s.cancel,
+      cancelText: s.cancel.toUpperCase(),
       //cancelColor: bodyStyle.color,
-      actionText: s.delete,
+      actionText: s.delete.toUpperCase(),
       // Localize all caps version
       actionColor: Colors.red,
       commitAction: () {
@@ -290,20 +310,24 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Column _buildIdentityHeader() {
     return Column(
       children: [
-        Text(s.orchidAddress, style: AppText.dialogTitle),
+        pady(12),
         if (_accountStore.activeIdentity != null)
-          OrchidIdenticon(
-              value: _accountStore.activeIdentity.address.toString()),
+          OrchidCircularIdenticon(
+              address: _accountStore.activeIdentity.address),
+        pady(24),
+        Text("Orchid Identity", style: OrchidText.body2),
+        pady(8),
         if (_accountStore.activeIdentity != null)
           Container(
             width:
-                AppSize(context).widerThan(AppSize.iphone_12_max) ? null : 250,
+                AppSize(context).widerThan(AppSize.iphone_12_max) ? null : 238,
             child: Center(
               child: TapToCopyText(
                 _accountStore.activeIdentity.address.toString(),
                 key: ValueKey(_accountStore.activeIdentity.address.toString()),
                 padding: EdgeInsets.zero,
-                style: AppText.dialogTitle,
+                style: OrchidText.caption
+                    .copyWith(color: OrchidColors.purple_ffb88dfc),
                 onTap: (String text) async {
                   await TapToCopyText.copyTextToClipboard(text);
                   _showOrchidAccountAddressWarning();
@@ -311,7 +335,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               ),
             ),
           )
-      ]..spaced(8),
+      ],
     );
   }
 
@@ -347,12 +371,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Widget _buildAccountList() {
     var signerKey = _accountStore.activeIdentity;
     var activeAccount = _accountStore.activeAccount;
-
-    var accounts = _accountStore.accounts
+    List<AccountViewModel> accounts = _accountStore.accounts
         // accounts may be for identity selection only, remove those
         .where((a) => a.funder != null)
         .map((Account account) {
-      return AccountModel(
+      return AccountViewModel(
           chain: Chains.chainFor(account.chainId),
           signerKey: signerKey,
           funder: account.funder,
@@ -360,28 +383,21 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           detail: _accountDetail(account));
     }).toList();
 
-    // Sort
-    accounts.sort((AccountModel a, AccountModel b) {
-      // put active at the top (descending)
-      return a.active ? -1 : 1;
+    // Sort by efficiency descending
+    accounts.sort((AccountViewModel a, AccountViewModel b) {
+      return -((a.detail?.marketConditions?.efficiency ?? 0)
+          .compareTo((b.detail?.marketConditions?.efficiency ?? 0)));
     });
 
+    log("XXX: build account list: $accounts");
+
     Widget footer() {
-      if (!(OrchidPlatform.isApple || OrchidPlatform.isAndroid)) {
-        return Container();
-      }
       return Padding(
         padding: const EdgeInsets.only(top: 16),
         child: Align(
             child: Column(
           children: [
-            Text(s.pullToRefresh,
-                style: AppText.noteStyle.copyWith(fontStyle: FontStyle.italic)),
-            pady(16),
-            Container(
-              width: 190,
-              child: _buildAddFundsButton(),
-            ),
+            Text(s.pullToRefresh, style: OrchidText.caption),
           ],
         )),
       );
@@ -393,7 +409,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           )
         : ListView.separated(
             separatorBuilder: (BuildContext context, int index) =>
-                Divider(height: 1),
+                Container(height: 24),
             key: PageStorageKey('account list view'),
             primary: true,
             itemCount: accounts.length + 1,
@@ -402,18 +418,15 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                 return footer();
               }
               var account = accounts[index];
-              return Theme(
-                data: ThemeData(accentColor: AppColors.purple_3),
-                child: Container(
-                  alignment: Alignment.center,
-                  child: IntrinsicHeight(
-                    child: _buildAccountTile(account, index),
-                  ),
-                ),
+              return Container(
+                alignment: Alignment.center,
+                child: _buildAccountCard(account, index),
               );
             });
 
     return RefreshIndicator(
+      color: Colors.white,
+      backgroundColor: OrchidColors.purple_ffb88dfc,
       displacement: 0,
       onRefresh: () async {
         // Refresh the account details
@@ -428,78 +441,16 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
-  ListTile _buildAccountTile(AccountModel accountModel, int index) {
-    var efficiency = accountModel.detail.marketConditions?.efficiency;
-    var showBadge = efficiency != null
-        ? efficiency < MarketConditions.minEfficiency
-        : false;
-
-    var style = TextStyle(fontSize: 15);
-    return ListTile(
-      tileColor: accountModel.active ? Colors.green.shade50 : null,
-      onTap: () {
-        _showAccount(accountModel);
+  Widget _buildAccountCard(AccountViewModel accountModel, int index) {
+    return AccountCard(
+      key: Key(accountModel.identityUid),
+      accountDetail: accountModel.detail,
+      active: accountModel.active,
+      onCheckButton: () {
+        if (!accountModel.active) {
+          _setActiveAccount(accountModel);
+        }
       },
-      key: Key(index.toString()),
-      title: Row(
-        children: [
-          Container(width: 24, height: 24, child: accountModel.chain.icon),
-          padx(4),
-          Container(
-              width: 18,
-              height: 18,
-              child: FittedBox(
-                child: accountModel.detail.marketConditions != null
-                    ? AccountChart.circularEfficiencyChart(
-                        accountModel.detail.marketConditions?.efficiency)
-                    : Container(),
-              )),
-          padx(8),
-          Flexible(
-            flex: 1,
-            child: Text(
-              accountModel.funder.toString(),
-              style: AppText.logStyle.copyWith(fontSize: style.fontSize),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          padx(12),
-          Flexible(
-            flex: 3,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                children: [
-                  LabeledCurrencyValue(
-                      label: s.balance + ':',
-                      style: style,
-                      value: accountModel.balance),
-                  padx(8),
-                  LabeledCurrencyValue(
-                      label: s.deposit + ':',
-                      style: style,
-                      value: accountModel.deposit),
-                ],
-              ),
-            ),
-          )
-        ],
-      ),
-      subtitle: accountModel.active
-          ? Padding(
-              padding: const EdgeInsets.only(left: 24.0, top: 2),
-              child: Row(
-                children: [
-                  SizedAlertBadge(visible: showBadge),
-                  padx(4),
-                  Text(
-                    s.active,
-                    textAlign: TextAlign.left,
-                  ),
-                ],
-              ),
-            )
-          : null,
     );
   }
 
@@ -509,26 +460,18 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         builder: (context, snapshot) {
           var tx = snapshot.data;
           var enabled = _accountStore.activeIdentity != null && tx == null;
-          return RoundedRectButton(
-            text: s.addCredit,
-            icon: Icon(
-              Icons.add,
-              color: Colors.white,
-            ),
-            onPressed: enabled ? _addFunds : null,
+          return OrchidActionButton(
+            enabled: enabled,
+            text: "ADD FUNDS",
+            onPressed: _addFunds,
           );
         });
   }
 
-  void _setActiveAccount(AccountModel account) {
+  void _setActiveAccount(AccountViewModel account) {
+    // _preserveSort = true;
     _accountStore.setActiveAccount(account.detail.account); // a bit convoluted
     ConfigChangeDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
-  }
-
-  void _showAccount(AccountModel account) async {
-    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
-      return AccountView(account: account, setActiveAccount: _setActiveAccount);
-    }));
   }
 
   void _addFunds() async {
@@ -583,24 +526,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   S get s {
     return S.of(context);
-  }
-}
-
-class OrchidIdenticon extends StatelessWidget {
-  final String value;
-  final double size;
-
-  const OrchidIdenticon({
-    Key key,
-    @required this.value,
-    this.size = 64,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    String svg = Jdenticon.toSvg(value);
-    return SvgPicture.string(svg,
-        fit: BoxFit.contain, height: size, width: size);
   }
 }
 

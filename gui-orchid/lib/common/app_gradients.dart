@@ -3,6 +3,7 @@ import 'package:orchid/common/app_colors.dart';
 
 import 'gradients.dart';
 
+@deprecated
 class AppGradients {
   static const Gradient verticalGrayGradient1 =
       VerticalLinearGradient(colors: [AppColors.grey_7, AppColors.grey_6]);

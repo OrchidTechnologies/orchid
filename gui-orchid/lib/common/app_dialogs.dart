@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/common/app_text.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 
 class AppDialogs {
   /// Show a styled Orchid app dialog with title, body, OK button, and optional link to settings.
@@ -18,6 +20,7 @@ class AppDialogs {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: OrchidColors.dark_background,
           // actionsPadding: EdgeInsets.zero,
           // buttonPadding: EdgeInsets.zero,
           // titlePadding: EdgeInsets.zero,
@@ -38,7 +41,9 @@ class AppDialogs {
               ),
             if (showActions)
               FlatButton(
-                child: Text(s.ok, style: AppText.dialogButton),
+                child: Text(s.ok,
+                    style:
+                        OrchidText.button.copyWith(color: OrchidColors.purple_bright)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -67,19 +72,32 @@ class AppDialogs {
         return AlertDialog(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(8.0))),
+          backgroundColor: OrchidColors.blueHighlight,
           title: title != null
-              ? Text(title,
-                  style:
-                      AppText.dialogTitle.copyWith(color: AppColors.neutral_1))
+              ? Text(
+                  title,
+                  style: OrchidText.subtitle.black,
+                )
               : null,
           content: body ??
-              Text(bodyText ?? s.confirmThisAction + "?",
-                  style:
-                      AppText.dialogBody.copyWith(color: AppColors.neutral_2)),
+              Text(
+                bodyText ?? s.confirmThisAction + "?",
+                style: OrchidText.body2.black,
+              ),
           actions: <Widget>[
-            FlatButton(
-              child: Text(cancelText ?? s.cancelButtonTitle,
-                  style: AppText.dialogButton.copyWith(color: cancelColor)),
+            // CANCEL
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+                side: BorderSide(color: OrchidColors.dark_background, width: 2),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 6, right: 6, top: 6, bottom: 6),
+                child: Text(
+                  cancelText ?? s.cancelButtonTitle,
+                  style: OrchidText.button.black,
+                ),
+              ),
               onPressed: () {
                 if (cancelAction != null) {
                   cancelAction();
@@ -87,9 +105,19 @@ class AppDialogs {
                 Navigator.of(context).pop(false);
               },
             ),
-            FlatButton(
-              child: Text(actionText ?? S.of(context).ok,
-                  style: AppText.dialogButton.copyWith(color: actionColor)),
+            // ACTION
+            TextButton(
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+                backgroundColor: OrchidColors.dark_background,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12, right: 12, top: 6, bottom: 6),
+                child: Text(
+                  actionText ?? S.of(context).ok,
+                  style: OrchidText.button,
+                ),
+              ),
               onPressed: () {
                 if (commitAction != null) {
                   commitAction();

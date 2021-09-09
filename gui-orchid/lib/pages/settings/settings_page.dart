@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_api.dart';
@@ -5,15 +7,15 @@ import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
-import 'package:orchid/common/app_text_field.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/titled_page_base.dart';
 
-import '../../common/app_colors.dart';
 import '../app_routes.dart';
 import '../../common/app_sizes.dart';
 
@@ -65,150 +67,172 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget build(BuildContext context) {
     var screenWidth = MediaQuery.of(context).size.width;
+    var buttonStyle = OrchidText.button
+        .copyWith(color: Colors.black, fontSize: 14, height: 1.5);
 
+    var activeThumbColor = Color(0xFFFC7EFF);
+    var activeTrackColor = Color(0x61FC7EFF);
+    var inactiveThumbColor = Color(0x99FFFFFF);
+    var inactiveTrackColor = Color(0x61FFFFFF);
+
+    final height = 56.0;
     return TitledPage(
       title: s.settings,
       decoration: BoxDecoration(),
-      child: Padding(
-        padding: EdgeInsets.all(
-            AppSize(context).tallerThan(AppSize.iphone_12_max) ? 128 : 0),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                // Accounts
-                _item(PageTile(
-                  title: s.deletedHops,
-                  onTap: () async {
-                    await Navigator.pushNamed(context, AppRoutes.accounts);
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              // Accounts
+              _divided(PageTile(
+                title: s.deletedHops,
+                onTap: () async {
+                  await Navigator.pushNamed(context, AppRoutes.accounts);
+                },
+              )),
+
+              // Default curator
+              _divided(PageTile(
+                height: height,
+                title: s.defaultCurator,
+                trailing: Container(
+                    width: min(275, screenWidth * 0.5),
+                    child: OrchidTextField(
+                      controller: _defaultCurator,
+                      margin: EdgeInsets.zero,
+                      padding: EdgeInsets.zero,
+                    )),
+              )),
+
+              // Balance query
+              _divided(PageTile(
+                height: height,
+                title: s.queryBalances,
+                trailing: Switch(
+                  activeColor: activeThumbColor,
+                  activeTrackColor: activeTrackColor,
+
+                  // TODO: Why aren't these working?
+                  inactiveThumbColor: inactiveThumbColor,
+                  inactiveTrackColor: inactiveTrackColor,
+
+                  value: _queryBalances,
+                  onChanged: (bool value) {
+                    UserPreferences().setQueryBalances(value);
+                    setState(() {
+                      _queryBalances = value;
+                    });
                   },
-                )),
+                ),
+              )),
 
-                // Default curator
-                _item(PageTile(
-                  title: s.defaultCurator,
-                  //imageName: "assets/images/assignment.png",
-                  trailing: Container(
-                      width: screenWidth * 0.5,
-                      child: AppTextField(
-                          controller: _defaultCurator,
-                          margin: EdgeInsets.zero)),
-                )),
+              // Advanced Configuration
+              _divided(PageTile(
+                height: height,
+                title: s.advancedConfiguration,
+                onTap: () async {
+                  await Navigator.pushNamed(context, AppRoutes.configuration);
+                  advancedConfigChanged(); // update anything that may have changed via config
+                },
+              )),
 
-                // Balance query
-                _item(PageTile(
-                  title: s.queryBalances,
-                  //imageName: "assets/images/assignment.png",
-                  trailing: Switch(
-                    activeColor: AppColors.purple_3,
-                    value: _queryBalances,
-                    onChanged: (bool value) {
-                      UserPreferences().setQueryBalances(value);
-                      setState(() {
-                        _queryBalances = value;
-                      });
+              // Manage Data
+              _divided(PageTile.route(
+                  // height: height,
+                  title: s.configurationManagement,
+                  routeName: '/settings/manage_config',
+                  context: context)),
+
+              // Logging
+              if (_showLogging || _tester)
+                _divided(PageTile.route(
+                    // height: height,
+                    title: s.logging,
+                    routeName: '/settings/log',
+                    context: context)),
+
+              // V1 UI opt-out
+              _divided(Column(
+                children: [
+                  PageTile(
+                    height: height,
+                    title: s.enableMultihopUi,
+                    trailing: Switch(
+                      activeColor: activeThumbColor,
+                      activeTrackColor: activeTrackColor,
+                      inactiveThumbColor: inactiveThumbColor,
+                      inactiveTrackColor: inactiveTrackColor,
+                      value: _guiV0,
+                      onChanged: (bool value) async {
+                        await UserPreferences().guiV0.set(value);
+                        OrchidAPI().updateConfiguration();
+                        ConfigChangeDialogs.showConfigurationChangeSuccess(
+                            context,
+                            warnOnly: true);
+                        setState(() {
+                          _guiV0 = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16, right: 24, top: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.warning, color: Color(0xffF88B9F)),
+                        padx(12),
+                        Expanded(
+                          child: Text(
+                              s.ifYouWantToUseMultihopOpenvpnAndWireguardYoull,
+                              style: OrchidText.caption),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )),
+
+              if (_tester)
+                _divided(PageTile(
+                  title: "(TEST) Reset First Launch",
+                  trailing: RaisedButton(
+                    child: Text(
+                      s.reset.toUpperCase(),
+                      style: buttonStyle,
+                    ),
+                    onPressed: () {
+                      UserPreferences()
+                          .releaseVersion
+                          .set(ReleaseVersion.firstLaunch());
                     },
                   ),
                 )),
 
-                // Advanced Configuration
-                _item(PageTile(
-                  title: s.advancedConfiguration,
-                  onTap: () async {
-                    await Navigator.pushNamed(context, AppRoutes.configuration);
-                    advancedConfigChanged(); // update anything that may have changed via config
-                  },
+              if (_tester)
+                _divided(PageTile(
+                  title: "(TEST) Reset V1 Account Data",
+                  trailing: RaisedButton(
+                    child: Text(s.reset.toUpperCase(), style: buttonStyle),
+                    onPressed: () {
+                      UserPreferences().activeAccounts.set([]);
+                      UserPreferences().cachedDiscoveredAccounts.set({});
+                    },
+                  ),
                 )),
-
-                // Manage Data
-                _item(PageTile.route(
-                    title: s.configurationManagement,
-                    routeName: '/settings/manage_config',
-                    context: context)),
-
-                // Logging
-                if (_showLogging || _tester)
-                  _item(PageTile.route(
-                      title: s.logging,
-                      routeName: '/settings/log',
-                      context: context)),
-
-                // V1 UI opt-out
-                _item(Column(
-                  children: [
-                    PageTile(
-                      title: s.enableMultihopUi,
-                      trailing: Switch(
-                        activeColor: AppColors.purple_3,
-                        value: _guiV0,
-                        onChanged: (bool value) async {
-                          await UserPreferences().guiV0.set(value);
-                          OrchidAPI().updateConfiguration();
-                          ConfigChangeDialogs.showConfigurationChangeSuccess(context,
-                              warnOnly: true);
-                          setState(() {
-                            _guiV0 = value;
-                          });
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(left: 16, right: 24, top: 0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.warning, color: Colors.deepPurple),
-                          padx(12),
-                          Expanded(
-                            child: Text(
-                                s.ifYouWantToUseMultihopOpenvpnAndWireguardYoull,
-                                style: TextStyle(fontSize: 14)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                )),
-
-                if (_tester)
-                  _item(PageTile(
-                    title: "(TEST) Reset First Launch",
-                    trailing: RaisedButton(
-                      child: Text(s.reset),
-                      onPressed: () {
-                        UserPreferences()
-                            .releaseVersion
-                            .set(ReleaseVersion.firstLaunch());
-                      },
-                    ),
-                  )),
-
-                if (_tester)
-                  _item(PageTile(
-                    title: "(TEST) Reset V1 Account Data",
-                    trailing: RaisedButton(
-                      child: Text(s.reset),
-                      onPressed: () {
-                        UserPreferences().activeAccounts.set([]);
-                        UserPreferences().cachedDiscoveredAccounts.set({});
-                      },
-                    ),
-                  )),
-              ],
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _item(Widget child) {
+  Widget _divided(Widget child) {
     return Column(
       children: [
         pady(8),
-        Divider(),
+        Divider(color: Color(0xffE9E7E7)),
         child,
       ],
     );

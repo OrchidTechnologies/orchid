@@ -26,7 +26,7 @@ void main() async {
   }
   if (OrchidPlatform.isMacOS) {
     print("main: Setting window size");
-    setWindowFrame(Rect.fromLTWH(100, 100, 360, 640));
+    setWindowFrame(Rect.fromLTWH(100, 100, 414, 890));
     setWindowMinSize(Size(216, 250));
   }
   runApp(OrchidApp());

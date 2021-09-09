@@ -3,14 +3,13 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/common/link_text.dart';
-import 'package:styled_text/styled_text.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+@deprecated
 class AppText {
   static TextStyle headerStyle = TextStyle(
     letterSpacing: 0.0,
     //height: 1.32,
-    color: AppColors.text_header_purple,
+    color: Colors.white,
     fontWeight: FontWeight.w500,
     fontFamily: "Roboto",
     fontStyle: FontStyle.normal,
@@ -20,7 +19,7 @@ class AppText {
   static Text header(
       {text: String,
       textAlign: TextAlign.center,
-      color: AppColors.text_header_purple,
+      color: Colors.white,
       fontWeight: FontWeight.w500,
       fontFamily: "Roboto",
       fontStyle: FontStyle.normal,
@@ -61,7 +60,7 @@ class AppText {
   static Text body(
       {text: "",
       textAlign: TextAlign.center,
-      color: AppColors.neutral_2,
+      color: Colors.white,
       letterSpacing: 0.0,
       lineHeight: 1.32,
       fontWeight: FontWeight.w400,
@@ -81,7 +80,7 @@ class AppText {
   }
 
   static TextStyle textHintStyle = TextStyle(
-      color: AppColors.neutral_1,
+      color: Colors.white,
       letterSpacing: 0.15,
       fontWeight: FontWeight.w400,
       fontFamily: "Roboto",
@@ -120,7 +119,7 @@ class AppText {
       fontWeight: FontWeight.w400, fontSize: 17, color: Colors.deepPurple);
 
   static TextStyle dialogTitle = const TextStyle(
-      color: const Color(0xff3a3149),
+      color: Colors.white,
       fontWeight: FontWeight.w400,
       fontFamily: "Roboto",
       fontStyle: FontStyle.normal,
@@ -150,7 +149,7 @@ class AppText {
 
   static TextStyle noteStyle = const TextStyle(
       letterSpacing: 0.4,
-      color: AppColors.purple_1,
+      color: Colors.white,
       fontWeight: FontWeight.w400,
       fontFamily: "Roboto",
       fontStyle: FontStyle.normal,
@@ -197,25 +196,3 @@ class AppText {
   }
 }
 
-// Extension using the style_text package.
-// Create a tappable link using our default link style.
-class LinkTextStyle extends StyledTextActionTag {
-  static LinkTextStyle link(String url, {style: TextStyle}) {
-    return LinkTextStyle(
-        style: style ?? AppText.linkStyle,
-        onTap: (text, attributes) {
-          return launch(url, forceSafariVC: false);
-        });
-  }
-
-  LinkTextStyle({
-    TextStyle style,
-    StyledTextTagActionCallback onTap,
-  }) : super(onTap, style: style);
-}
-
-extension LinkTextStyleExtensions on TextStyle {
-  LinkTextStyle link(String url) {
-    return LinkTextStyle.link(url, style: this);
-  }
-}

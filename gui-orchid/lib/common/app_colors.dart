@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+@deprecated
 class AppColors {
 
-  // TODO: Migrate usages of these directly to the Zeplin exports below
   static const white = grey_7;
   static const purple = purple_2;
   static const dark_purple = purple_1;

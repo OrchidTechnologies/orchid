@@ -7,6 +7,8 @@ import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/app_text.dart';
 import 'package:orchid/common/scan_paste_account.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 
 // Used from the AccountManagerPage and AdHopPage:
 // Dialog that contains the two button scan/paste control.
@@ -39,7 +41,10 @@ class ScanOrPasteDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     S s = S.of(context);
     double screenWidth = MediaQuery.of(context).size.width;
-    bool pasteOnly = OrchidPlatform.isMacOS;
+    bool pasteOnly = OrchidPlatform.isMacOS ||
+        OrchidPlatform.isWeb ||
+        OrchidPlatform.isWindows ||
+        OrchidPlatform.isLinux;
 
     var titleTextV0 = pasteOnly ? s.pasteAccount : s.scanOrPasteAccount;
     var bodyTextV0 = pasteOnly
@@ -51,6 +56,7 @@ class ScanOrPasteDialog extends StatelessWidget {
         : s.scanOrPasteAnOrchidKeyFromTheClipboardTo;
 
     return AlertDialog(
+      backgroundColor: OrchidColors.dark_background,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(20.0))),
       content: StreamBuilder<bool>(
@@ -73,9 +79,7 @@ class ScanOrPasteDialog extends StatelessWidget {
                         children: <Widget>[
                           RichText(
                               text: TextSpan(
-                                  text: titleText,
-                                  style: AppText.dialogTitle
-                                      .copyWith(fontWeight: FontWeight.bold))),
+                                  text: titleText, style: OrchidText.title)),
                           _buildCloseButton(context)
                         ],
                       ),
@@ -85,10 +89,10 @@ class ScanOrPasteDialog extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: RichText(
                           text: TextSpan(children: [
-                        TextSpan(
-                            text: bodyText + ' ',
-                            style: AppText.dialogBody.copyWith(fontSize: 15)),
-                        AppText.buildLearnMoreLinkTextSpan(context),
+                        TextSpan(text: bodyText + ' ', style: OrchidText.body2),
+                        OrchidText.buildLearnMoreLinkTextSpan(
+                            context: context,
+                            color: OrchidColors.purple_bright),
                       ])),
                     ),
                     pady(16),
@@ -102,6 +106,7 @@ class ScanOrPasteDialog extends StatelessWidget {
                           Navigator.of(context).pop();
                         },
                         v0Only: v0Only,
+                        pasteOnly: pasteOnly,
                       ),
                     ),
                     pady(16),
@@ -117,7 +122,7 @@ class ScanOrPasteDialog extends StatelessWidget {
     return Container(
       width: 40,
       child: FlatButton(
-        child: Icon(Icons.close),
+        child: Icon(Icons.close, color: Colors.white),
         onPressed: () {
           Navigator.of(context).pop();
         },

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
 
@@ -51,6 +52,7 @@ class _ExportIdentityDialogState extends State<ExportIdentityDialog> {
             child: Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.7),
                 border: Border.all(
                   width: 1,
                   color: Colors.black.withOpacity(0.3),
@@ -67,13 +69,19 @@ class _ExportIdentityDialogState extends State<ExportIdentityDialog> {
                   pady(8),
                   Container(
                     width: 180,
-                    height: 20,
+                    height: 30,
                     child: _showCopiedText
-                        ? Center(child: Text(s.copied))
+                        ? Center(
+                            child: Text(
+                            s.copied,
+                            style: OrchidText.button
+                                .copyWith(color: Colors.deepPurple),
+                          ))
                         : Center(
                             child: Text(
                               s.copy,
-                              style: TextStyle(color: Colors.deepPurple),
+                              style: OrchidText.button
+                                  .copyWith(color: Colors.deepPurple),
                             ),
                           ),
                   ),

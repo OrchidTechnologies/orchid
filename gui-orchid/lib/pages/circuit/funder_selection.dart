@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/app_text_field.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text_field.dart';
 
 typedef FunderSelectionCallback = void Function(FunderSelectionItem key);
 
@@ -76,12 +77,14 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
     return Container(
       padding: EdgeInsets.only(left: 16, right: 16),
       decoration:
-          widget.enabled ? AppTextField.textFieldEnabledDecoration : null,
+          widget.enabled ? OrchidTextField.textFieldEnabledDecoration : null,
       child: IgnorePointer(
         ignoring: !widget.enabled,
         child: Container(
           child: DropdownButton<FunderSelectionItem>(
-            hint: Text(s.chooseAddress),
+            // dropdownColor: OrchidColors.purpleCaption,
+            dropdownColor: OrchidTextField.textFieldEnabledDecoration.color,
+            hint: Text(s.chooseAddress, style: TextStyle(color: Colors.white)),
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
             //underline: !widget.enabled ? Container() : null,
@@ -108,8 +111,11 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
       items.addAll(_funderAddresses.map((funder) {
         return new DropdownMenuItem<FunderSelectionItem>(
           value: FunderSelectionItem(funder: funder),
-          child: Text(funder.toString(prefix: true),
-              overflow: TextOverflow.ellipsis, style: TextStyle()),
+          child: Text(
+            funder.toString(prefix: true),
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Colors.white),
+          ),
         );
       }).toList());
     }
@@ -119,8 +125,10 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
       DropdownMenuItem<FunderSelectionItem>(
         value:
             FunderSelectionItem(option: FunderSelectionDropdown.pasteKeyOption),
-        child:
-            Text(FunderSelectionDropdown.pasteKeyOption.displayName(context)),
+        child: Text(
+          FunderSelectionDropdown.pasteKeyOption.displayName(context),
+          style: TextStyle(color: Colors.white),
+        ),
       ),
     ]);
 

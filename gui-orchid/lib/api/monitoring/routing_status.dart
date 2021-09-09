@@ -35,6 +35,11 @@ class OrchidRoutingStatus {
     return _shared;
   }
 
+  /// Set the state back to false and trigger a refresh.
+  void invalidate() {
+    _update(null);
+  }
+
   void _update(_) async {
     String socketPath = (await OrchidAPI().groupContainerPath()) + '/' + socketName;
     var client = HttpUnixClient(socketPath);

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/qrcode_scan.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -11,6 +10,9 @@ import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:flutter/services.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/orchid/orchid_text_field.dart';
 import 'app_colors.dart';
 
 typedef ImportAccountCompletion = void Function(
@@ -21,12 +23,14 @@ class ScanOrPasteOrchidAccount extends StatefulWidget {
   final ImportAccountCompletion onImportAccount;
   final double spacing;
   final bool v0Only;
+  final bool pasteOnly;
 
   const ScanOrPasteOrchidAccount(
       {Key key,
       @required this.onImportAccount,
       this.spacing,
-      this.v0Only = false})
+      this.v0Only = false,
+      @required this.pasteOnly})
       : super(key: key);
 
   @override
@@ -35,35 +39,76 @@ class ScanOrPasteOrchidAccount extends StatefulWidget {
 }
 
 class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
+  var _pasteField = TextEditingController();
+  bool _pastedCodeValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pasteField.addListener(_validatePastedCode);
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     var showIcons = screenWidth >= AppSize.iphone_xs.width;
-    bool pasteOnly = OrchidPlatform.isMacOS;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          _buildPasteButton(showIcons),
-          if (!pasteOnly) ...[
-            padx(widget.spacing ?? 24),
+          if (!widget.pasteOnly) ...[
             _buildScanButton(showIcons),
+            pady(32),
           ],
+          _buildPasteField(showIcons),
         ],
       ),
     );
   }
 
-  TitleIconButton _buildPasteButton(bool showIcons) {
-    return TitleIconButton(
-        text: s.paste,
-        trailing: showIcons
-            ? Icon(Icons.content_paste, color: AppColors.teal_3)
-            : SizedBox(),
-        textColor: AppColors.teal_3,
-        backgroundColor: Colors.white,
-        onPressed: _pasteCode);
+  Widget _buildPasteField(bool showIcons) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 200,
+          child: OrchidTextField(
+              hintText: '0x...',
+              margin: EdgeInsets.zero,
+              padding: EdgeInsets.zero,
+              controller: _pasteField,
+              trailing: Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: TextButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: Text(s.paste, style: OrchidText.button.purpleBright),
+                    onPressed: _pasteCode),
+              )),
+        ),
+        padx(16),
+        SizedBox(
+          width: 50,
+          height: 52,
+          child: TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: OrchidColors.purple_bright,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(8.0))),
+              // side: BorderSide(width: 2, color: Colors.white),
+            ),
+            child: Text(
+              "Ok",
+              style: TextStyle().black,
+            ),
+            onPressed: _pastedCodeValid ? _parsePastedCode : null,
+          ),
+        ),
+      ],
+    );
   }
 
   TitleIconButton _buildScanButton(bool showIcons) {
@@ -97,11 +142,34 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
     }
   }
 
+  // Note: Clipboard.getData() is not yet supported for web on Firefox.
+  // https://github.com/flutter/flutter/issues/48581
   void _pasteCode() async {
-    ParseOrchidAccountResult parseAccountResult;
     try {
       ClipboardData data = await Clipboard.getData('text/plain');
-      String text = data.text;
+      setState(() {
+        _pasteField.text = data.text;
+      });
+    } catch (err) {
+      print("Can't get clipboard: $err");
+    }
+  }
+
+  void _validatePastedCode() async {
+    try {
+      await _parse(_pasteField.text);
+      _pastedCodeValid = true;
+    } catch (err) {
+      _pastedCodeValid = false;
+    }
+    log("XXX: pasted code valid = $_pastedCodeValid");
+    setState(() {});
+  }
+
+  void _parsePastedCode() async {
+    ParseOrchidAccountResult parseAccountResult;
+    try {
+      String text = _pasteField.text;
       try {
         parseAccountResult = await _parse(text);
       } catch (err) {

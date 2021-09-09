@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
@@ -15,13 +16,16 @@ import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
-import 'package:orchid/common/gradients.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/loading.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_gradients.dart';
+import 'package:orchid/orchid/orchid_panel.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
@@ -76,10 +80,9 @@ class _PurchasePageState extends State<PurchasePage> {
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      decoration: BoxDecoration(color: Colors.transparent),
       title: s.buyCredits,
       child: buildPage(context),
-      lightTheme: true,
+      lightTheme: false,
       cancellable: widget.cancellable,
     );
   }
@@ -103,8 +106,8 @@ class _PurchasePageState extends State<PurchasePage> {
                       _buildTopText(),
                       pady(16),
                       _buildPacList(),
-                      pady(32),
-                      _buildPreferredProviderText()
+                      pady(24),
+                      _buildBottomText()
                     ],
                   ),
                 ),
@@ -143,7 +146,7 @@ class _PurchasePageState extends State<PurchasePage> {
                     children: [
                       Text(
                         text,
-                        style: TextStyle(color: Colors.black, fontSize: 14.0),
+                        style: TextStyle(color: Colors.white, fontSize: 14.0),
                       ),
                       pady(8),
                       LinkText(
@@ -176,78 +179,68 @@ class _PurchasePageState extends State<PurchasePage> {
             ))));
   }
 
-  var checkRowStyle = const TextStyle(
-      color: Color(0xFF3A3149),
+  var checkRowStyle = TextStyle(
+      color: Colors.white.withOpacity(0.8),
       fontSize: 15.0,
       height: 20.0 / 15.0,
       letterSpacing: -0.24);
 
   Widget _buildTopText() {
-    const titleStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 22.0,
-      fontWeight: FontWeight.bold,
-      letterSpacing: 0.3,
-      fontFamily: 'SFProText-Semibold',
-    );
-
+    final titleStyle = OrchidText.medium_24_050;
     var payPerUse = s.payPerUseVpnService;
     var price = _bandwidthPrice != null
         ? "\$" + formatCurrency(_bandwidthPrice.value)
         : "...";
-    var currentAvgVPNPrice = s.currentAvgVpnPriceIsPricePerGb(price);
+    var currentAvgVPNPrice = s.averagePriceIsUSDPerGb(price);
     var notASub = s.notASubscriptionCreditsDontExpire;
     var shareAccountWith = s.shareAccountWithUnlimitedDevices;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
         Text(payPerUse, style: titleStyle),
-        pady(16),
-        _buildCheckRow(currentAvgVPNPrice),
+        pady(27),
+        _buildIconRow(
+            SvgPicture.asset('assets/svg/price.svg'), currentAvgVPNPrice),
         pady(8),
-        _buildCheckRow(notASub),
+        _buildIconRow(SvgPicture.asset('assets/svg/access_time.svg'), notASub),
         pady(8),
-        _buildCheckRow(shareAccountWith),
+        _buildIconRow(
+            SvgPicture.asset('assets/svg/share.svg'), shareAccountWith),
         pady(12),
       ],
     );
   }
 
-  Widget _buildPreferredProviderText() {
-    var bodyStyle = TextStyle(
-      // color: Colors.black,
-      fontSize: 15,
-      fontStyle: FontStyle.italic,
+  Row _buildIconRow(Widget icon, String text) {
+    return Row(
+      children: [
+        icon,
+        padx(16),
+        Flexible(
+            child: RichText(
+                text: TextSpan(
+                    text: text,
+                    style: OrchidText.regular_14.copyWith(height: 1.4)),
+                maxLines: 2)),
+      ],
     );
-    var linkStyle = AppText.linkStyle.copyWith(
-      fontSize: 15.0,
-      fontStyle: FontStyle.italic,
-    );
+  }
+
+  Widget _buildBottomText() {
+    final bodyStyle = OrchidText.caption
+        .copyWith(fontSize: 12, fontWeight: FontWeight.w400, height: 18 / 12);
+    final linkStyle = OrchidText.caption
+        .copyWith(fontSize: 12, fontWeight: FontWeight.w600, height: 18 / 12);
     return StyledText(
       style: bodyStyle,
-      text: s.purchasedCreditAccountsConnectExclusively +
-          '  ' +
-          s.allPurchasedAccountsUseThe,
+      text: "Orchid accounts include 24/7 customer support, unlimited devices and are backed by the <link2>xDai cryptocurrency</link2>." +
+          ' ' +
+          "Purchased accounts connect exclusively to our <link1>preferred providers</link1>. Refund policy covered by app stores.",
       tags: {
         'link1': linkStyle.link(OrchidUrls.preferredProviders),
         'link2': linkStyle.link(OrchidUrls.xdaiChain),
       },
-    );
-  }
-
-  Row _buildCheckRow(String text) {
-    return _buildCheckRowRich(TextSpan(text: text, style: checkRowStyle));
-  }
-
-  Row _buildCheckRowRich(TextSpan text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("✓"),
-        padx(16),
-        Flexible(child: RichText(text: text, maxLines: 2)),
-      ],
     );
   }
 
@@ -258,7 +251,7 @@ class _PurchasePageState extends State<PurchasePage> {
       // fontStyle: FontStyle.italic,
     );
     var unavailableText = StyledText(
-      style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
+      style: OrchidText.body1.copyWith(color: OrchidColors.purple_bright),
       newLineAsBreaks: true,
       text: "Orchid is unable to display in-app purchases at this time." +
           "  Please confirm that this device supports and is configured " +
@@ -310,77 +303,88 @@ class _PurchasePageState extends State<PurchasePage> {
 
     return [
       _buildPurchaseCardView(
-          pac: pac1,
-          title: s.tryOutOrchid,
-          subtitle: _buildPurchaseDescriptionText(
-            text: "- " + s.goodForBrowsingAndLightActivity,
-          ),
-          gradBegin: 0,
-          gradEnd: 2),
+        pac: pac1,
+        title: "12GB (approximately)",
+        subtitle: _buildPurchaseDescriptionText(
+          text: s.goodForBrowsingAndLightActivity,
+        ),
+      ),
       pady(24),
-      _buildPurchaseCardView(
-          pac: pac2,
-          title: s.average,
-          subtitle: _buildPurchaseDescriptionText(
-            text: "- " +
-                s.goodForAnIndividual +
-                "\n" +
-                "- " +
-                s.shortToMediumTermUsage,
-          ),
-          gradBegin: -2,
-          gradEnd: 1),
+      _buildHighlightedPurchaseCardView(
+        pac: pac2,
+        title: "60GB (approximately)",
+        subtitle: _buildPurchaseDescriptionText(
+          text:
+              "Ideal size for medium-term, individual usage that includes browsing and light streaming.",
+        ),
+        highlightText: "Most Popular!",
+      ),
       pady(24),
       _buildPurchaseCardView(
         pac: pac3,
-        title: s.heavy,
+        title: "240GB (approximately)",
         subtitle: _buildPurchaseDescriptionText(
-          text: "- " +
-              s.goodForBandwidthheavyUsesSharing +
-              "\n" +
-              "- " +
-              s.longerTermUsage,
-        ),
-        gradBegin: -1,
-        gradEnd: -1,
+            text: "Bandwidth-heavy, long-term usage or shared accounts."),
       ),
     ];
   }
 
-  Widget _buildPurchaseCardView(
-      {PAC pac,
-      String title,
-      TextSpan subtitle,
-      double gradBegin = 0.0,
-      double gradEnd = 1.0}) {
+  Widget _buildHighlightedPurchaseCardView({
+    PAC pac,
+    String title,
+    TextSpan subtitle,
+    String highlightText,
+  }) {
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14.0),
+          child: _buildPurchaseCardView(
+            pac: pac,
+            title: title,
+            subtitle: subtitle,
+            highlight: true,
+            bottomPad: 28,
+          ),
+        ),
+        Container(
+            width: 150,
+            height: 28,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: OrchidGradients.pinkBlueGradientTLBR,
+            ),
+            child: Center(
+                child: Text("Most Popular!",
+                    style: OrchidText.body1.black
+                        .copyWith(letterSpacing: 0.02, height: 1.7))))
+      ],
+    );
+  }
+
+  Widget _buildPurchaseCardView({
+    PAC pac,
+    String title,
+    TextSpan subtitle,
+    bool highlight = false,
+    double bottomPad = 16,
+  }) {
     const titleStyle = TextStyle(
-        color: Colors.white,
-        fontSize: 17.0,
-        fontWeight: FontWeight.w600,
-        height: 20.0 / 17.0);
+      color: Colors.white,
+      fontSize: 17.0,
+      fontWeight: FontWeight.w700,
+    );
+
     const valueStyle = TextStyle(
-        color: Colors.white,
-        fontSize: 18.0,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.38,
-        fontFamily: 'SFProText-Regular',
-        height: 25.0 / 20.0);
-    const valueSubtitleStyle = TextStyle(
-        color: Colors.white,
-        fontSize: 13.0,
-        fontWeight: FontWeight.normal,
-        fontFamily: 'SFProText-Regular',
-        height: 16.0 / 12.0);
+      color: Colors.white,
+      fontSize: 18.0,
+      fontWeight: FontWeight.w800,
+      letterSpacing: 0.38,
+      fontFamily: 'SFProText-Regular',
+    );
 
     var enabled = pac.localPrice != null && _storeUp == true;
-
-    Gradient grad = VerticalLinearGradient(
-        begin: Alignment(0.0, gradBegin),
-        end: Alignment(0.0, gradEnd),
-        colors: [
-          enabled ? Color(0xff4e71c2) : Colors.grey,
-          enabled ? Color(0xff258993) : Colors.grey
-        ]);
 
     return TextButton(
       onPressed: enabled
@@ -388,14 +392,11 @@ class _PurchasePageState extends State<PurchasePage> {
               _confirmPurchase(pac: pac);
             }
           : null,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.0),
-          gradient: grad,
-        ),
+      child: OrchidPanel(
+        highlight: highlight,
         child: Padding(
           padding:
-              const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 16),
+              EdgeInsets.only(left: 20, right: 20, top: 16, bottom: bottomPad),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -446,7 +447,6 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
-  // TODO:
   TextSpan _buildPurchaseDescriptionText({String text}) {
     const subtitleStyle = TextStyle(
       color: Colors.white,
@@ -462,8 +462,8 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Future<void> _confirmPurchase({PAC pac}) async {
-    var style1 = AppText.dialogBody.copyWith(fontSize: 16);
-    var valueStyle = AppText.valueStyle;
+    var style1 = OrchidText.medium_18_025.black;
+    var valueStyle = OrchidText.button.black;
 
     var credits = pac.localPrice;
     var fee = pac.localPrice * 0.3;
@@ -474,8 +474,9 @@ class _PurchasePageState extends State<PurchasePage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
+            backgroundColor: OrchidColors.purpleCaption,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8.0))),
+                borderRadius: BorderRadius.all(Radius.circular(12.0))),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -505,9 +506,10 @@ class _PurchasePageState extends State<PurchasePage> {
                               style: style1,
                               textAlign: TextAlign.right,
                             ),
+                            pady(4),
                             Text(
                               "Total",
-                              style: style1,
+                              style: style1.bold,
                               textAlign: TextAlign.left,
                             ),
                           ],
@@ -535,9 +537,10 @@ class _PurchasePageState extends State<PurchasePage> {
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),
+                          pady(4),
                           Text(
                             pac.formatCurrency(total),
-                            style: valueStyle,
+                            style: valueStyle.bold,
                             textAlign: TextAlign.right,
                           )
                         ],
@@ -550,7 +553,7 @@ class _PurchasePageState extends State<PurchasePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     RoundedRectButton(
-                      text: "Buy",
+                      text: "BUY",
                       onPressed: () {
                         Navigator.of(context).pop(true);
                         _purchase(purchase: pac);

@@ -2,13 +2,14 @@ import 'package:badges/badges.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-// Fixed size alert badge that can be hidden without changing size.
+/// A sized alert badge that can be hidden without changing size.
+/// Note that Badge can wrap a child directly without affecting the size.
 class SizedAlertBadge extends StatelessWidget {
   final bool visible;
   final double size;
   final double insets;
   final bool maintainSize;
-  Color badgeColor;
+  final Color badgeColor;
 
   SizedAlertBadge({
     Key key,
@@ -16,10 +17,9 @@ class SizedAlertBadge extends StatelessWidget {
     this.size = 26,
     this.insets = 6,
     this.maintainSize = true,
-    this.badgeColor,
-  }) : super(key: key) {
-    this.badgeColor = badgeColor ?? Colors.red.shade900;
-  }
+    Color badgeColor,
+  })  : this.badgeColor = badgeColor ?? Colors.red.shade900,
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -45,4 +45,3 @@ class SizedAlertBadge extends StatelessWidget {
     );
   }
 }
-

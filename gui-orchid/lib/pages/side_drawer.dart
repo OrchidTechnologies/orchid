@@ -1,13 +1,15 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_colors.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_gradients.dart';
+import 'package:orchid/orchid/orchid_panel.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import '../common/tap_copy_text.dart';
 import 'app_routes.dart';
-import '../common/app_text.dart';
 
 /// The application side drawer
 class SideDrawer extends StatefulWidget {
@@ -31,18 +33,16 @@ class _SideDrawerState extends State<SideDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      child: Container(
-        decoration: BoxDecoration(
-            color: AppColors.dark_purple,
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.drawer_gradient_start,
-                  AppColors.drawer_gradient_end
-                ])),
-        child: buildContent(context),
+    return SizedBox(
+      width: 350,
+      child: Drawer(
+        child: Container(
+          decoration: BoxDecoration(
+              color: AppColors.dark_purple,
+              gradient: OrchidGradients.blackGradientBackground,
+              border: Border.all(color: OrchidColors.purple_ff8c61e1)),
+          child: buildContent(context),
+        ),
       ),
     );
   }
@@ -53,8 +53,17 @@ class _SideDrawerState extends State<SideDrawer> {
         // top logo
         Theme(
           data: ThemeData(dividerColor: Colors.transparent),
-          child: DrawerHeader(
-            child: Image(image: AssetImage('assets/images/logo.png')),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 40.0, bottom: 24),
+            child: DrawerHeader(
+              padding: EdgeInsets.zero,
+              margin: EdgeInsets.zero,
+              child: SvgPicture.asset(
+                'assets/svg/orchid_logo_side.svg',
+                width: 100,
+                height: 112,
+              ),
+            ),
           ),
         ),
 
@@ -63,63 +72,53 @@ class _SideDrawerState extends State<SideDrawer> {
             padding: EdgeInsets.zero,
             children: <Widget>[
               SideDrawerTile(
-                  title: s.help,
-                  icon: Icons.help_outline,
-                  showDetail: true,
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/help/overview');
-                  }),
-              divider(),
-              SideDrawerTile(
-                  title: s.privacyPolicy,
-                  imageName: 'assets/images/fileDocumentOutline.png',
+                  title: S.of(context).trafficMonitor,
+                  svgName: 'assets/svg/traffic.svg',
                   showDetail: true,
                   hoffset: 4.0,
                   onPressed: () {
-                    Navigator.pushNamed(context, AppRoutes.privacy);
+                    Navigator.pushNamed(context, AppRoutes.traffic);
                   }),
-              divider(),
               SideDrawerTile(
-                  title: s.openSourceLicenses,
-                  imageName: 'assets/images/fileDocumentBoxMultipleOutline.png',
+                  title: "Accounts",
+                  svgName: 'assets/svg/payments.svg',
                   showDetail: true,
                   hoffset: 4.0,
                   onPressed: () {
-                    Navigator.pushNamed(context, AppRoutes.open_source);
+                    AppRoutes.pushAccountManager(context);
                   }),
-
-              divider(),
               SideDrawerTile(
                   title: s.settings,
-                  imageName: 'assets/images/settings.png',
+                  svgName: 'assets/svg/settings_gear.svg',
                   showDetail: true,
-                  hoffset: 4.0,
+                  hoffset: 2.0,
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.settings);
                   }),
-
-              divider(),
               SideDrawerTile(
-                  title: S.of(context).trafficMonitor,
-                  imageName: 'assets/images/swapVert.png',
+                  title: s.help,
+                  icon: Icons.help_outline,
                   showDetail: true,
-                  hoffset: 4.0,
+                  hoffset: 1.0,
                   onPressed: () {
-                    //Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.traffic);
+                    Navigator.pushNamed(context, '/help/overview');
                   }),
-
-              /*
-              divider(),
               SideDrawerTile(
-                  title: s.advanced,
-                  imageName: 'assets/images/settings.png',
+                  title: s.privacyPolicy,
+                  svgName: 'assets/svg/privacy.svg',
                   showDetail: true,
-                  hoffset: 4.0,
+                  hoffset: 2.0,
                   onPressed: () {
-                    Navigator.pushNamed(context, AppRoutes.configuration);
+                    Navigator.pushNamed(context, AppRoutes.privacy);
                   }),
-               */
+              SideDrawerTile(
+                  title: s.openSourceLicenses,
+                  svgName: 'assets/svg/document.svg',
+                  showDetail: true,
+                  hoffset: 3.0,
+                  onPressed: () {
+                    Navigator.pushNamed(context, AppRoutes.open_source);
+                  }),
             ],
           ),
         ),
@@ -130,10 +129,10 @@ class _SideDrawerState extends State<SideDrawer> {
             children: <Widget>[
               divider(),
               SizedBox(height: 16),
-              TapToCopyText(s.version+": " + (_version ?? "<"+s.noVersion+">"),
+              TapToCopyText(
+                  s.version + ": " + (_version ?? "<" + s.noVersion + ">"),
                   key: ValueKey(_version),
-                  style:
-                      AppText.noteStyle.copyWith(color: AppColors.neutral_4)),
+                  style: OrchidText.caption),
             ],
           ),
         )
@@ -156,107 +155,54 @@ class _SideDrawerState extends State<SideDrawer> {
 class SideDrawerTile extends StatelessWidget {
   final String title;
   final String imageName;
+  final String svgName;
   final IconData icon;
   final VoidCallback onPressed;
   final bool showDetail;
   final double hoffset;
 
-  SideDrawerTile(
-      {@required this.title,
-      this.imageName,
-      this.icon,
-      @required this.onPressed,
-      this.showDetail = false,
-      this.hoffset = 0})
-      : super() {
-    assert(imageName != null || icon != null);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    Widget leading = imageName != null
-        ? Image(
-            height: 24,
-            width: 24,
-            fit: BoxFit.contain,
-            alignment: Alignment.center,
-            color: Colors.white,
-            image: AssetImage(imageName))
-        : Icon(icon, color: Colors.white, size: 32);
-    return ListTile(
-        contentPadding: EdgeInsets.only(left: 20, right: 20),
-        leading: Padding(
-          padding: EdgeInsets.only(left: hoffset),
-          child: leading,
-        ),
-        trailing: showDetail
-            ? Icon(Icons.chevron_right, color: AppColors.white)
-            : null,
-        title: Text(title,
-            textAlign: TextAlign.left, style: AppText.sideDrawerTitleStyle),
-        onTap: onPressed);
-  }
-}
-
-class BalanceSideDrawerTile extends StatefulWidget {
-  final String title;
-  final String imageName;
-  final VoidCallback onPressed;
-
-  const BalanceSideDrawerTile({
+  SideDrawerTile({
     @required this.title,
-    @required this.imageName,
+    this.imageName,
+    this.svgName,
+    this.icon,
     @required this.onPressed,
-  }) : super();
-
-  @override
-  _BalanceSideDrawerTileState createState() => _BalanceSideDrawerTileState();
-}
-
-class _BalanceSideDrawerTileState extends State<BalanceSideDrawerTile> {
-  /// The user's balance in OXT or null if unavailable.
-  OXT _balance;
-  StreamSubscription _balanceListener;
-
-  @override
-  void initState() {
-    super.initState();
+    this.showDetail = false,
+    this.hoffset = 0,
+  }) : super() {
+    assert(imageName != null || icon != null || svgName != null);
   }
 
   @override
   Widget build(BuildContext context) {
-    S s = S.of(context);
-    return ListTile(
-        contentPadding: EdgeInsets.only(left: 20, right: 20),
-        leading: Image(
-            height: 32,
-            width: 32,
-            fit: BoxFit.fill,
-            alignment: Alignment.center,
-            color: Colors.white,
-            image: AssetImage(widget.imageName)),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(widget.title,
-                textAlign: TextAlign.left, style: AppText.sideDrawerTitleStyle),
-            Text(
-                _balance == null
-                    ? "("+s.setup+")"
-                    : "${_balance.floatValue.toStringAsFixed(2)} "+s.oxt,
-                textAlign: TextAlign.left,
-                style: AppText.sideDrawerTitleStyle
-                    .copyWith(fontSize: 12, height: 1.2)),
-          ],
-        ),
-        //trailing: Icon(Icons.chevron_right, color: AppColors.white),
-        onTap: widget.onPressed);
+    Widget leading = svgName != null
+        ? SvgPicture.asset(svgName, width: 20, height: 20)
+        : (imageName != null
+            ? Image(
+                height: 20,
+                width: 20,
+                fit: BoxFit.contain,
+                alignment: Alignment.center,
+                color: Colors.white,
+                image: AssetImage(imageName))
+            : Icon(icon, color: Colors.white, size: 24));
+    return Padding(
+      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+      child: OrchidPanel(
+        child: ListTile(
+            contentPadding: EdgeInsets.only(left: 16, right: 16),
+            horizontalTitleGap: 4,
+            leading: Padding(
+              padding: EdgeInsets.only(left: hoffset),
+              child: leading,
+            ),
+            trailing: showDetail
+                ? Icon(Icons.chevron_right, color: AppColors.white)
+                : null,
+            title: Text(title,
+                textAlign: TextAlign.left, style: OrchidText.subtitle.copyWith(height: 1.5)),
+            onTap: onPressed),
+      ),
+    );
   }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _balanceListener.cancel();
-  }
-
 }

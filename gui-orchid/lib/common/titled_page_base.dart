@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/common/app_gradients.dart';
+import 'package:orchid/orchid/orchid_gradients.dart';
+import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/pages/orchid_app.dart';
 
 /// A second level page reached through navigation.
 /// These pages have a title with a back button.
@@ -11,50 +13,50 @@ class TitledPage extends StatelessWidget {
   final VoidCallback backAction;
   final bool cancellable;
   final BoxDecoration decoration;
+  final bool constrainWidth;
 
   TitledPage({
-    @required this.title,
+    this.title = '',
     @required this.child,
-    this.lightTheme = true,
+    this.lightTheme = false,
     this.actions = const [],
     this.backAction,
     this.cancellable = false,
     this.decoration,
+    this.constrainWidth = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-          leading: _buildBackButton(context),
-          actions: actions,
-          title: Text(
-            this.title,
-            style: TextStyle(color: _foregroundColor()),
-          ),
-          titleSpacing: 0,
-          backgroundColor: _backgroundColor(),
-          brightness: Brightness.light, // status bar
-          elevation: 0.0),
-      body: Container(
-        child: child,
-        decoration: decoration ?? BoxDecoration(gradient: AppGradients.basicGradient),
-      ),
+    return Container(
+      decoration:
+          BoxDecoration(gradient: OrchidGradients.blackGradientBackground),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+            leading: _buildBackButton(context),
+            actions: actions,
+            title: Text(this.title,
+                textAlign: TextAlign.center,
+                style: OrchidText.title
+                    .copyWith(color: _foregroundColor(), height: 2.0)),
+            titleSpacing: 0,
+            backgroundColor: Colors.transparent,
+            brightness: Brightness.dark,
+            // status bar
+            elevation: 0.0),
+        body: constrainWidth ? OrchidAppNoTabs.constrainMaxSize(child) : child,
 
-      // Note: Setting this to false is a workaround for:
-      // https://github.com/flutter/flutter/issues/23926
-      // however that breaks the automated keyboard accommodation.
-      resizeToAvoidBottomInset: true,
+        // Note: Setting this to false is a workaround for:
+        // https://github.com/flutter/flutter/issues/23926
+        // however that breaks the automated keyboard accommodation.
+        resizeToAvoidBottomInset: true,
+      ),
     );
   }
 
   Color _foregroundColor() {
     return lightTheme ? Colors.black : Colors.white;
-  }
-
-  Color _backgroundColor() {
-    return lightTheme ? Colors.white : Colors.deepPurple;
   }
 
   Widget _buildBackButton(BuildContext context) {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import '../../common/app_colors.dart';
-import '../../common/app_text.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 
 class TrafficEmptyView extends StatelessWidget {
   @override
@@ -29,34 +29,34 @@ class TrafficEmptyView extends StatelessWidget {
                               key: ValueKey<String>(
                                   'welcome:$monitoring:$orientation'),
                               children: <Widget>[
-                                Spacer(flex: 2),
-                                AppText.header(
-                                    text: monitoring
-                                        ? s.analyzingYourConnections
-                                        : s.analyzeYourConnections,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 24.0),
-                                SizedBox(height: 20),
-                                AppText.body(
-                                    text: !monitoring
-                                        ? s.networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets +
-                                            '  ' +
-                                            s.networkAnalysisRequiresVpnPermissionsButDoesNotByItself +
-                                            '  ' +
-                                            s.toGetTheBenefitsOfNetworkPrivacyYouMustConfigure +
-                                            s.turningOnThisFeatureWillIncreaseTheBatteryUsageOf
-                                        : s.nothingToDisplayYet,
-                                    fontSize: 15.0,
-                                    color: AppColors.neutral_1),
                                 Spacer(flex: 1),
                                 Visibility(
                                   visible: orientation == Orientation.portrait,
-                                  child: Image.asset(
-                                    'assets/images/analysisBunny.png',
-                                    height: 330,
-                                  ),
+                                  child: SvgPicture.asset(
+                                      'assets/svg/inspector_icon.svg'),
                                 ),
-                                Spacer(flex: 2),
+                                Spacer(flex: 1),
+                                Text(
+                                    monitoring
+                                        ? s.analyzingYourConnections
+                                        : s.analyzeYourConnections,
+                                    textAlign: TextAlign.center,
+                                    style: OrchidText.medium_24_050),
+                                SizedBox(height: 20),
+                                Text(
+                                  !monitoring
+                                      ? s.networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets +
+                                          '  ' +
+                                          s.networkAnalysisRequiresVpnPermissionsButDoesNotByItself +
+                                          '  ' +
+                                          s.toGetTheBenefitsOfNetworkPrivacyYouMustConfigure +
+                                          '\n\n' +
+                                          s.turningOnThisFeatureWillIncreaseTheBatteryUsageOf
+                                      : s.nothingToDisplayYet,
+                                  textAlign: TextAlign.center,
+                                  style: OrchidText.body1.copyWith(height: 1.5),
+                                ),
+                                Spacer(flex: 4),
                               ],
                             ),
                           );

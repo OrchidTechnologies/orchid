@@ -1,0 +1,19 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="filter0_d" x="6" y="5" width="12" height="12" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="4"/>
+      <feGaussianBlur stdDeviation="2"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+    </filter>
+  </defs>
+  <g filter="url(#filter0_d)">
+    <circle cx="12" cy="7" r="2" fill="#FF6F97"/>
+  </g>
+  <circle cx="12" cy="17" r="2" fill="#6EFAC8"/>
+  <circle cx="12" cy="12" r="2" fill="#FFF282"/>
+  <path d="M5.71784 4.40047C5.83743 3.68955 6.33991 3.09851 7.02768 2.88249C10.6767 1.73632 13.1699 1.67553 16.8319 2.88314C17.4866 3.09905 17.9637 3.6594 18.0886 4.33742C18.4131 6.09909 19 9.63697 19 12.1797C19 14.6464 18.4477 18.0496 18.1184 19.8592C17.9792 20.6242 17.3958 21.227 16.6354 21.3897C13.1043 22.1453 10.6876 22.2478 7.15522 21.4225C6.39799 21.2455 5.83291 20.6183 5.71087 19.8503C4.7502 13.8047 4.77368 10.0135 5.71784 4.40047Z" stroke="white" stroke-width="2"/>
+</svg>

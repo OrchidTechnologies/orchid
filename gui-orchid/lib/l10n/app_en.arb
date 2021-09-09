@@ -199,12 +199,6 @@
     "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "See your active account balance and bandwidth cost on the home screen.",
     "seeOrchidcomForHelp": "See orchid.com for help.",
     "payPerUseVpnService": "Pay Per Use VPN Service",
-    "currentAvgVpnPriceIsPricePerGb": "Current avg. VPN price is {price} per GB",
-    "@currentAvgVpnPriceIsPricePerGb": {
-        "placeholders": {
-            "price": {}
-        }
-    },
     "notASubscriptionCreditsDontExpire": "Not a subscription, credits don't expire",
     "shareAccountWithUnlimitedDevices": "Share account with unlimited devices",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "The Orchid Store is temporarily unavailable.  Please check back in a few minutes.",
@@ -294,5 +288,11 @@
     "vpnConnectedButNotRouting": "(VPN connected but not routing)",
     "restarting": "Restarting",
     "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "Changing monitoring status requires restarting the VPN, which may briefly interrupt privacy protection.",
-    "confirmRestart": "Confirm Restart"
+    "confirmRestart": "Confirm Restart",
+    "averagePriceIsUSDPerGb": "Average price is {price} USD per GB",
+    "@averagePriceIsUSDPerGb": {
+        "placeholders": {
+            "price": {}
+        }
+    }
 }

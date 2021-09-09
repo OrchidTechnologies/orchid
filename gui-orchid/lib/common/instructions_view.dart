@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'app_text.dart';
 
 /// Instructional text with vertically arranged image, title, and body.
@@ -24,7 +25,7 @@ class InstructionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var textColor = Color(0xff504960);
+    var textColor = OrchidColors.purple_ffb88dfc;
     return OrientationBuilder(
       builder: (BuildContext context, Orientation builderOrientation) {
         // Orientation builder provides the parent widget orientation, not

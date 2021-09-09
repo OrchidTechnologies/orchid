@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/common/app_text.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'app_colors.dart';
 
 class PlainTextBox extends StatelessWidget {
@@ -16,7 +17,7 @@ class PlainTextBox extends StatelessWidget {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.only(
-            left: 8, right: 8, top: 16, bottom: 32),
+            left: 8, right: 8, top: 8, bottom: 32),
         child: Container(
           child: Scrollbar(
             child: SingleChildScrollView(
@@ -26,16 +27,14 @@ class PlainTextBox extends StatelessWidget {
                 child: Text(
                   _text,
                   textAlign: TextAlign.left,
-                  style: AppText.logStyle.copyWith(fontSize: 10),
+                  style: AppText.logStyle.copyWith(fontSize: 10).white,
                 ),
               ),
             ),
           ),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.all(Radius.circular(4.0)),
-            border:
-            Border.all(width: 2.0, color: AppColors.neutral_5),
+            borderRadius: BorderRadius.all(Radius.circular(16.0)),
+            border: Border.all(width: 1.0, color: AppColors.neutral_5),
           ),
         ),
       ),

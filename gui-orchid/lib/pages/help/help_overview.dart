@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:html/dom.dart' as dom;
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpOverviewPage extends StatefulWidget {
@@ -57,10 +58,8 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
   Widget html(String html) {
     return Html(
       data: html,
-      defaultTextStyle: TextStyle(fontSize: 16.0),
-      linkStyle: const TextStyle(
-        color: Colors.deepPurple,
-      ),
+      defaultTextStyle: OrchidText.body2,
+      linkStyle: OrchidText.body2.copyWith(color: Colors.purple),
       onLinkTap: (url) {
         launch(url, forceSafariVC: false);
       },
@@ -69,8 +68,8 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
       customTextStyle: (dom.Node node, TextStyle baseStyle) {
         if (node is dom.Element) {
           switch (node.localName) {
-            case "h2":
-              return baseStyle.merge(TextStyle(fontSize: 20));
+            case "h1": return baseStyle.merge(OrchidText.title.copyWith(fontSize: 24));
+            case "h2": return baseStyle.merge(OrchidText.title);
           }
         }
         return baseStyle;

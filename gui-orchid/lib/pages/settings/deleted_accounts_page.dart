@@ -6,6 +6,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/circuit/circuit_page.dart';
 import 'package:orchid/pages/circuit/hop_editor.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
@@ -45,10 +46,8 @@ class _AccountsPageState extends State<AccountsPage> {
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      decoration: BoxDecoration(color: Colors.transparent),
       title: s.deletedHops,
       child: SafeArea(child: buildPage(context)),
-      lightTheme: true,
     );
   }
 
@@ -60,7 +59,7 @@ class _AccountsPageState extends State<AccountsPage> {
         child: Text(
           s.noRecentlyDeletedHops,
           textAlign: TextAlign.center,
-          style: TextStyle(fontStyle: FontStyle.italic),
+          style: OrchidText.body2,
         ),
       ));
     } else {
@@ -83,6 +82,7 @@ class _AccountsPageState extends State<AccountsPage> {
     return ListView(children: list);
   }
 
+  /*
   Widget titleTile(String text) {
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 20),
@@ -92,6 +92,7 @@ class _AccountsPageState extends State<AccountsPage> {
       ),
     );
   }
+   */
 
   Dismissible _buildInactiveHopTile(UniqueHop uniqueHop) {
     return Dismissible(
@@ -290,7 +291,7 @@ class _AccountsPageState extends State<AccountsPage> {
               s.twoReturnToTheManageProfileScreenClickNewHop +
               "\n\n" +
               s.toPermanentlyDeleteAHopFromTheListBelowSwipe,
-          style: TextStyle(fontStyle: FontStyle.italic)),
+      style: OrchidText.body2),
     );
   }
 }

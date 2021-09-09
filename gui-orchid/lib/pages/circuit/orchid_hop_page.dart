@@ -9,15 +9,12 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/pricing/orchid_pricing_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/scan_paste_account.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/app_buttons.dart';
-import 'package:orchid/common/app_text_field.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/instructions_view.dart';
@@ -25,6 +22,7 @@ import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/util/units.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -32,7 +30,6 @@ import 'package:styled_text/styled_text.dart';
 import '../../common/app_colors.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
-import '../app_routes.dart';
 import 'curator_page.dart';
 import 'funder_selection.dart';
 import 'hop_editor.dart';
@@ -166,7 +163,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildCreateModeContent() {
-    var bodyStyle = TextStyle(fontSize: 16, color: Color(0xff504960));
+    var bodyStyle = TextStyle(fontSize: 16, color: Colors.white);
     // var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
 
     var text = StyledText(
@@ -236,7 +233,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       children: <Widget>[
         Text(title,
             style: AppText.dialogTitle
-                .copyWith(color: Colors.black, fontSize: 22)),
+                .copyWith(color: Colors.white, fontSize: 22)),
         pady(8),
         IntrinsicHeight(
           child: Row(
@@ -354,12 +351,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(s.orchidIdentitySignerKey + ':',
-            style: AppText.textLabelStyle.copyWith(
-                fontSize: 16,
-                color: _keyRefValid()
-                    ? AppColors.neutral_1
-                    : AppColors.neutral_3)),
+        Text(
+          s.orchidIdentitySignerKey + ':',
+          style: AppText.textLabelStyle.copyWith(
+              fontSize: 16,
+              color: _keyRefValid() ? AppColors.white : Colors.grey),
+        ),
         pady(8),
         Row(
           children: <Widget>[
@@ -397,7 +394,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   // Build the import key field
   Widget _buildImportKey() {
-    return AppTextField(
+    return OrchidTextField(
         hintText: '0x...',
         margin: EdgeInsets.zero,
         controller: _importKeyField,
@@ -416,9 +413,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         Text(s.funderAccount + ':',
             style: AppText.textLabelStyle.copyWith(
                 fontSize: 16,
-                color: _funderValid()
-                    ? AppColors.neutral_1
-                    : AppColors.neutral_3)),
+                color: _funderValid() ? AppColors.white : AppColors.neutral_3)),
         pady(widget.readOnly() ? 4 : 8),
 
         Row(
@@ -475,7 +470,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                     : AppColors.neutral_3)),
         pady(widget.readOnly() ? 4 : 8),
          */
-        AppTextField(
+        OrchidTextField(
             hintText: '0x...',
             margin: EdgeInsets.zero,
             controller: _pastedFunderField,
@@ -517,7 +512,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildAccountBalance() {
-    const color = Color(0xff3a3149);
+    const color = Colors.white;
     const valueStyle = TextStyle(
         color: color,
         fontSize: 15.0,
@@ -541,7 +536,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         // Balance
         Text(s.amount + ':',
             style: AppText.textLabelStyle
-                .copyWith(fontSize: 20, color: AppColors.neutral_1)),
+                .copyWith(fontSize: 20, color: AppColors.white)),
         pady(4),
         Padding(
           padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
@@ -552,7 +547,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         // Deposit
         Text(s.deposit + ':',
             style: AppText.textLabelStyle
-                .copyWith(fontSize: 20, color: AppColors.neutral_1)),
+                .copyWith(fontSize: 20, color: AppColors.white)),
         pady(4),
         Padding(
           padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
@@ -567,7 +562,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Row(
       children: <Widget>[
         Expanded(
-            child: AppTextField(
+            child: OrchidTextField(
           controller: _curatorField,
           padding: EdgeInsets.zero,
           readOnly: true,

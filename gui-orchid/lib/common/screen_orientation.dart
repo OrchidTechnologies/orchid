@@ -4,7 +4,7 @@ class ScreenOrientation {
 
   /// Reset to the app default
   static Future<void> reset() {
-    return all();
+    return portrait();
   }
 
   /// Allow all screen orientations

@@ -6,6 +6,8 @@ import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:sqflite/sqflite.dart';
+import 'monitoring/analysis_db.dart';
 import 'monitoring/restart_manager.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
@@ -66,7 +68,7 @@ class MockOrchidAPI implements OrchidAPI {
           // Mock orchid routing if routing is enabled.
           UserPreferences().routingEnabled.get().then((routing) {
             if (routing) {
-              Future.delayed(Duration(seconds: 1), (){
+              Future.delayed(Duration(seconds: 1), () {
                 applyRoutingStatus(OrchidVPNRoutingState.OrchidConnected);
               });
             }
@@ -81,6 +83,60 @@ class MockOrchidAPI implements OrchidAPI {
 
     // vpn configuration / permission status
     vpnPermissionStatus.add(false);
+
+    // fake monitoring traffic data
+    UserPreferences().monitoringEnabled.stream().listen((monitoring) {
+      if (monitoring) {
+        insertMockTrafficData();
+      }
+    });
+  }
+
+  static Future<Database> initInMemoryAnalysisDb() async {
+    log("mock: initInMemoryAnalysisDb");
+    var db = await openDatabase(':memory', readOnly: false);
+    // should match capture.cpp
+    var createTable = 'create table "flow" ('
+        '"id" integer primary key autoincrement,'
+        '"start" real,'
+        '"layer4" integer,'
+        '"src_addr" integer,'
+        '"src_port" integer,'
+        '"dst_addr" integer,'
+        '"dst_port" integer,'
+        '"protocol" string,'
+        '"hostname" text'
+        ')';
+    try {
+      await db.execute(createTable);
+    } catch (err) {
+      log("mock: create table error in mock db: $err");
+    }
+    return db;
+  }
+
+  Future<void> insertMockTrafficData() async {
+    log("mock: insertMockTrafficData");
+    var db = await AnalysisDb().getDb();
+    var inserts = """
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365221146,1,168230915,0,134744072,0,'ICMP',NULL);
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365607905,17,168230915,63400,134744072,53,'DNS',NULL);
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3656754512,6,168230915,62133,-1395063294,443,'TCP','googleads.g.doubleclick.net');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3657346875,6,168230915,64825,1823570364,5228,'TCP','mtalk.google.com');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365790799,6,168230915,62160,301799886,443,'TCP','mesu.apple.com');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365795197,6,168230915,62162,-1377888904,443,'TCP','configuration.apple.com');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365807072,6,168230915,62170,-1645211101,443,'TCP','www.facebook.com');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365855324,6,168230915,62186,1666514438,443,'TCP','www.orchid.com');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3722021645,17,168230915,60095,-268435462,1900,'HTTP/1.1','239.255.255.250:1900');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3722152663,6,168230915,62248,-1395062454,443,'TCP','youtubei.googleapis.com');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3722716896,6,168230915,49653,-1379745172,993,'TCP','imap.gmail.com');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3774122684,6,168230915,62258,1666514598,443,'TCP','slack.com');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3774122684,6,168230915,62258,1666514598,443,'TLS','slack.com');
+    """;
+    var statements = inserts.trim().split('\n');
+    for (var statement in statements) {
+      await db.rawInsert(statement);
+    }
   }
 
   /// The Flutter application uses this method to indicate to the native channel code
@@ -120,7 +176,7 @@ class MockOrchidAPI implements OrchidAPI {
   /// Note: successfully.
   @override
   Future<void> setVPNExtensionEnabled(bool enabled) async {
-    const fakeDelay = 4000;
+    const fakeDelay = 3000;
     log("mock: setVPNExtensionEnabled = $enabled, vpnConnectionStatus = ${vpnExtensionStatus.value}");
     switch (vpnExtensionStatus.value) {
       case OrchidVPNExtensionState.Invalid:
@@ -178,7 +234,7 @@ class MockOrchidAPI implements OrchidAPI {
   }
 
   Future<String> groupContainerPath() async {
-    return '/Users/pat/Desktop/table_flutter';
+    return 'mock-no-container';
   }
 
   /// The build version

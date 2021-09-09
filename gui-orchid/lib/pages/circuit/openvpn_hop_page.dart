@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/app_text_field.dart';
 import 'package:orchid/common/config_text.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/instructions_view.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/orchid/orchid_text_field.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
 import 'hop_editor.dart';
@@ -77,7 +78,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                         pady(64),
                       _buildUserName(),
                       _buildPassword(),
-                      pady(16),
+                      pady(20),
                       // OVPN Config
                       ConfigLabel(text: s.config),
                       ConfigText(
@@ -114,9 +115,9 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
       children: <Widget>[
         pady(16),
         Text(s.password + ":",
-            style: AppText.textLabelStyle.copyWith(fontSize: 20)),
+            style: AppText.textLabelStyle.copyWith(fontSize: 20).white),
         pady(8),
-        AppTextField(
+        OrchidTextField(
             hintText: s.password,
             margin: EdgeInsets.zero,
             controller: _userPassword)
@@ -130,9 +131,9 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
       children: <Widget>[
         pady(16),
         Text(s.username + ":",
-            style: AppText.textLabelStyle.copyWith(fontSize: 20)),
+            style: AppText.textLabelStyle.copyWith(fontSize: 20).white),
         pady(8),
-        AppTextField(
+        OrchidTextField(
             hintText: s.username,
             margin: EdgeInsets.zero,
             controller: _userName)

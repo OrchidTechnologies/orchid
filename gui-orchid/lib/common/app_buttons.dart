@@ -3,12 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/common/app_text.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 
 import 'formatting.dart';
 
 /// A rounded rectangle text button.
 class RoundedRectButton extends StatelessWidget {
   final String text;
+  final TextStyle style;
   final VoidCallback onPressed;
   final Color backgroundColor;
   final Color textColor;
@@ -23,6 +26,7 @@ class RoundedRectButton extends StatelessWidget {
     this.textColor,
     this.icon,
     this.elevation,
+    this.style,
   }) : super(key: key);
 
   @override
@@ -30,19 +34,17 @@ class RoundedRectButton extends StatelessWidget {
     return RaisedButton(
       elevation: elevation,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16))),
+          borderRadius: BorderRadius.all(Radius.circular(24))),
       child: FittedBox(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             icon ?? Container(),
             icon != null ? padx(14) : Container(),
-            AppText.body(
-                textAlign: TextAlign.left,
-                text: text,
-                color: textColor ?? AppColors.text_light,
-                letterSpacing: 1.25,
-                lineHeight: 1.14),
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 8, left: 24, right: 24),
+              child: Text(text, style: style ?? OrchidText.button),
+            ),
             if (icon != null) padx(8)
           ],
         ),
@@ -55,18 +57,19 @@ class RoundedRectButton extends StatelessWidget {
 
 /// A round image button with a separate text subtitle positioned below it.
 class RoundTitledRaisedImageButton extends StatelessWidget {
+  final String title;
+  final String imageName;
+  final Icon icon;
+  final VoidCallback onPressed;
+  final double padding;
+
   const RoundTitledRaisedImageButton({
     Key key,
     @required this.title,
     this.imageName,
     @required this.onPressed,
-    this.icon,
+    this.icon, this.padding = 0,
   }) : super(key: key);
-
-  final String title;
-  final String imageName;
-  final Icon icon;
-  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -74,13 +77,13 @@ class RoundTitledRaisedImageButton extends StatelessWidget {
       children: <Widget>[
         RaisedButton(
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          padding: EdgeInsets.all(0),
-          color: AppColors.purple_3,
+          padding: EdgeInsets.all(padding),
+          color: OrchidColors.purple_ffb88dfc,
           child: Column(
             children: <Widget>[
               icon ??
                   Image.asset(imageName,
-                      color: AppColors.white, width: 40, height: 40),
+                      color: Colors.black, width: 40, height: 40),
             ],
           ),
           onPressed: onPressed,
@@ -92,7 +95,7 @@ class RoundTitledRaisedImageButton extends StatelessWidget {
           style: TextStyle(
               //height: 1.333,
               fontSize: 13,
-              color: AppColors.purple_3),
+              color: OrchidColors.purple_ffb88dfc),
         )
       ],
     );
@@ -174,8 +177,8 @@ class SaveActionButton extends StatelessWidget {
           style: AppText.actionButtonStyle.copyWith(
               // TODO: We need to get the TitledPage to publish colors on the context (theme)
               color: isValid
-                  ? AppColors.purple_3
-                  : AppColors.purple_3.withOpacity(0.4)),
+                  ? OrchidColors.purple_ffb88dfc
+                  : OrchidColors.purple_ffb88dfc.withOpacity(0.3)),
         ),
         onPressed: isValid ? onPressed : null);
   }
@@ -215,7 +218,7 @@ class TitleIconButton extends StatelessWidget {
               style: BorderStyle.solid),
           borderRadius: BorderRadius.circular(24)),
       child: Padding(
-        padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 8),
+        padding: const EdgeInsets.only(left: 12, right: 12, top: 8, bottom: 8),
         child: Row(
           children: <Widget>[
             AppText.body(
@@ -257,4 +260,3 @@ class CopyTextButton extends StatelessWidget {
     );
   }
 }
-

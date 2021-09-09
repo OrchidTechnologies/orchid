@@ -5,6 +5,7 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/pages/settings/import_export_config.dart';
 
 import '../../common/app_text.dart';
@@ -27,7 +28,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
 
   Widget build(BuildContext context) {
     var instructionsStyle = AppText.listItem.copyWith(
-        color: Colors.black54, fontStyle: FontStyle.italic, fontSize: 14);
+        color: Colors.white, fontStyle: FontStyle.italic, fontSize: 14);
     return TitledPage(
       title: s.manageConfiguration,
       child: Column(
@@ -43,13 +44,19 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
           PageTile(
             title: s.exportHopsConfiguration,
             trailing: RaisedButton(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Icon(Icons.save),
-                  padx(8),
-                  Text(s.export),
-                ],
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(24))),
+              color: OrchidColors.purple_bright,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Icon(Icons.save, color: Colors.black),
+                    padx(8),
+                    Text(s.export, style: TextStyle(color: Colors.black),),
+                  ],
+                ),
               ),
               onPressed: _doExport,
             ),
@@ -65,13 +72,19 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
           PageTile(
             title: s.importHopsConfiguration,
             trailing: RaisedButton(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Icon(Icons.input),
-                  padx(8),
-                  Text(s.import),
-                ],
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(24))),
+              color: OrchidColors.purple_bright,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Icon(Icons.input, color: Colors.black),
+                    padx(8),
+                    Text(s.import, style: TextStyle(color: Colors.black),),
+                  ],
+                ),
               ),
               onPressed: _doImport,
             ),

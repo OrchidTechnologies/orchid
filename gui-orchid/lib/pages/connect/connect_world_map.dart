@@ -1,10 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:orchid/common/images.dart';
+import 'package:orchid/util/images.dart';
 import 'package:orchid/util/location.dart';
 import 'package:orchid/common/path_dash.dart';
 import 'package:orchid/common/path_trim.dart';
-import 'package:orchid/common/paths.dart';
+import 'package:orchid/util/paths.dart';
 import '../../common/app_colors.dart';
 import 'dart:ui' as ui;
 

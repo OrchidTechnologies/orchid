@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/app_text_field.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text_field.dart';
 
 typedef KeySelectionCallback = void Function(KeySelectionItem key);
 
@@ -16,7 +17,8 @@ class KeySelectionDropdown extends StatefulWidget {
       KeySelectionMenuOption(displayStringGenerator: (context) {
     return S.of(context).generateNewKey;
   });
-  static final importKeyOption = KeySelectionMenuOption(displayStringGenerator: (context) {
+  static final importKeyOption =
+      KeySelectionMenuOption(displayStringGenerator: (context) {
     return S.of(context).importKey;
   });
 
@@ -58,12 +60,13 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
     return Container(
       padding: EdgeInsets.only(left: 16, right: 16),
       decoration:
-          widget.enabled ? AppTextField.textFieldEnabledDecoration : null,
+          widget.enabled ? OrchidTextField.textFieldEnabledDecoration : null,
       child: IgnorePointer(
         ignoring: !widget.enabled,
         child: Container(
           child: DropdownButton<KeySelectionItem>(
-            hint: Text(s.chooseKey),
+            dropdownColor: OrchidTextField.textFieldEnabledDecoration.color,
+            hint: Text(s.chooseKey, style: TextStyle(color: Colors.white)),
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
             //underline: !widget.enabled ? Container() : null,
@@ -106,8 +109,11 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
         var address = key.get().addressString;
         return new DropdownMenuItem<KeySelectionItem>(
           value: KeySelectionItem(keyRef: key.ref()),
-          child: Text(address,
-              overflow: TextOverflow.ellipsis, style: TextStyle()),
+          child: Text(
+            address,
+            overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.white)
+          ),
         );
       }).toList());
     }

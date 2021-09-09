@@ -28,11 +28,16 @@ class AccountChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return buildAccountChart(context, lotteryPot, efficiency, transactions, alert);
+    return buildAccountChart(
+        context, lotteryPot, efficiency, transactions, alert);
   }
 
-  static Widget buildAccountChart(BuildContext context, LotteryPot lotteryPot,
-      double efficiency, List<OrchidUpdateTransactionV0> transactions, bool alert) {
+  static Widget buildAccountChart(
+      BuildContext context,
+      LotteryPot lotteryPot,
+      double efficiency,
+      List<OrchidUpdateTransactionV0> transactions,
+      bool alert) {
     if (efficiency == null) {
       return LoadingIndicator();
     }
@@ -44,7 +49,7 @@ class AccountChart extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         circularEfficiencyChart(efficiency),
-        pady(4),
+        pady(8),
         Text(
           S.of(context).efficiency +
               ": " +
@@ -52,7 +57,7 @@ class AccountChart extends StatelessWidget {
           style: alert
               ? TextStyle(
                   color: Colors.red.shade900, fontWeight: FontWeight.w600)
-              : null,
+              : TextStyle(color: Colors.white),
         ),
         pady(16),
         // Show the tickets available / used line
@@ -84,15 +89,20 @@ class AccountChart extends StatelessWidget {
   // This consists of "dashed" segments indicating the number of tickets available
   // at the last high-water mark with a subset colored to indicate currently available.
   static Widget buildTicketsAvailableLineChart(
-      AccountBalanceChartTicketModel chartModel) {
+      AccountBalanceChartTicketModel chartModel,
+      {Color color = Colors.deepPurple}) {
     var totalCount = chartModel.availableTicketsHighWatermarkMax;
     var currentCount = chartModel.availableTicketsCurrentMax;
 
     double margin = totalCount < 10 ? 8 : 2;
+    if (totalCount > 20) {
+      margin = 0;
+    }
     var colorFor =
-        (int i) => i < currentCount ? Colors.deepPurple : Colors.grey;
+        (int i) => i < currentCount ? color : Color(0xff766D86);
     return Padding(
-      padding: const EdgeInsets.only(left: 8, right: 8),
+      // padding: const EdgeInsets.only(left: 8, right: 8),
+      padding: EdgeInsets.zero,
       child: Row(
           children: List.generate(
         totalCount,
@@ -109,8 +119,8 @@ class AccountChart extends StatelessWidget {
 }
 
 class AccountBalanceChartTicketModel {
-  LotteryPot pot;
-  List<OrchidUpdateTransactionV0> transactions;
+  final LotteryPot pot;
+  final List<OrchidUpdateTransactionV0> transactions;
 
   AccountBalanceChartTicketModel(this.pot, this.transactions);
 

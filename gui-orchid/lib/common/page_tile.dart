@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/common/app_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 
 /// A list tile containing an optional image, trailing component, title,
 /// and a tap gesture callback.
@@ -10,7 +10,8 @@ class PageTile extends StatelessWidget {
   Widget trailing;
   Widget leading;
   GestureTapCallback onTap;
-  Color color;
+  Color backgroundColor;
+  final Color textColor;
   double height;
 
   PageTile({
@@ -20,15 +21,17 @@ class PageTile extends StatelessWidget {
     this.onTap,
     this.leading,
     this.trailing,
-    this.color = Colors.transparent,
+    this.backgroundColor = Colors.transparent,
     this.height,
+    this.textColor,
   });
 
   PageTile.route(
       {this.title,
       this.imageName,
       @required BuildContext context,
-      @required String routeName}) {
+      @required String routeName,
+      this.textColor}) {
     this.onTap = () {
       Navigator.pushNamed(context, routeName);
     };
@@ -37,19 +40,20 @@ class PageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+        alignment: Alignment.center,
         height: height ?? 50,
-        color: color,
+        color: backgroundColor,
         child: ListTile(
-            title: Text(title),
+            title:
+                Text(title, style: OrchidText.body2.copyWith(color: textColor)),
             subtitle: body,
             leading: leading ??
                 (imageName != null
-                    ? Image(
-                        color: AppColors.purple, image: AssetImage(imageName))
+                    ? Image(color: Colors.white, image: AssetImage(imageName))
                     : null),
             trailing: trailing != null
                 ? trailing
-                : Icon(Icons.chevron_right, color: AppColors.purple),
+                : Icon(Icons.chevron_right, color: Colors.white),
             onTap: onTap));
   }
 }

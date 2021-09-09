@@ -5,6 +5,8 @@ import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_text.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 
 class Release {
   // Increment to display new release info
@@ -22,39 +24,44 @@ class Release {
 
   // Build a release message
   static Widget message(BuildContext context) {
-    var bodyStyle =
-        AppText.dialogBody.copyWith(fontSize: 14, color: Colors.black);
-    var headingStyle = bodyStyle.copyWith(fontWeight: FontWeight.bold);
+    // var bodyStyle = AppText.dialogBody.copyWith(fontSize: 14, color: Colors.black);
+    var bodyStyle = OrchidText.body1;
+
+    // var headingStyle = bodyStyle.copyWith(fontWeight: FontWeight.bold);
+    var headingStyle = OrchidText.subtitle.copyWith(color: OrchidColors.purple_bright);
 
     var s = S.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (OrchidPlatform.isApple) ...[
-          Text(s.orchidIsOnXdai, style: headingStyle),
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: 400),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (OrchidPlatform.isApple) ...[
+            Text(s.orchidIsOnXdai, style: headingStyle),
+            pady(8),
+            Text(
+              s.youCanNowPurchaseOrchidCreditsOnXdaiStartUsing,
+              style: bodyStyle,
+            ),
+            pady(16),
+            Text(s.xdaiAccountsForPastPurchases, style: headingStyle),
+            pady(8),
+            Text(
+              s.forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave,
+              style: bodyStyle,
+            ),
+            pady(16),
+          ],
+          Text(s.newInterface, style: headingStyle),
           pady(8),
           Text(
-            s.youCanNowPurchaseOrchidCreditsOnXdaiStartUsing,
+            s.accountsAreNowOrganizedUnderTheOrchidAddressTheyAre +" " +
+            s.seeYourActiveAccountBalanceAndBandwidthCostOnThe,
             style: bodyStyle,
           ),
-          pady(16),
-          Text(s.xdaiAccountsForPastPurchases, style: headingStyle),
-          pady(8),
-          Text(
-            s.forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave,
-            style: bodyStyle,
-          ),
-          pady(16),
         ],
-        Text(s.newInterface, style: headingStyle),
-        pady(8),
-        Text(
-          s.accountsAreNowOrganizedUnderTheOrchidAddressTheyAre +" " +
-          s.seeYourActiveAccountBalanceAndBandwidthCostOnThe,
-          style: bodyStyle,
-        ),
-      ],
+      ),
     );
   }
 }

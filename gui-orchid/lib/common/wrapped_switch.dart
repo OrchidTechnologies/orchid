@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 
 typedef WrappedSwitchCallback = void Function(bool status);
 

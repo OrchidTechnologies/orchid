@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sqflite/sqflite.dart';
@@ -20,27 +21,36 @@ class AnalysisDb {
     return _shared;
   }
 
-  Future<Database> _getDb() async {
+  Future<Database> getDb() async {
     if (_db != null && _db.isOpen) {
       return _db;
     }
     try {
-      String dbPath = (await OrchidAPI().groupContainerPath()) + '/analysis.db';
-      _db = await openDatabase(dbPath, readOnly: false);
+      if (OrchidAPI.mockAPI) {
+        _db = await MockOrchidAPI.initInMemoryAnalysisDb();
+      } else {
+        String dbPath =
+            (await OrchidAPI().groupContainerPath()) + '/analysis.db';
+        _db = await openDatabase(dbPath, readOnly: false);
+      }
     } catch (err) {
       debugPrint("Error opening analysis db: $err");
       return null;
     }
-    await _db.execute("PRAGMA journal_mode = wal");
-    await _db.execute("PRAGMA secure_delete = on");
-    await _db.execute("PRAGMA synchronous = full");
+    try {
+      await _db.execute("PRAGMA journal_mode = wal");
+      await _db.execute("PRAGMA secure_delete = on");
+      await _db.execute("PRAGMA synchronous = full");
+    } catch (err) {
+      log("analysis db: error in pragma: $err");
+    }
     return _db;
   }
 
   Future<List<FlowEntry>> query({String filterText}) async {
     var db;
     try {
-      db = await _getDb();
+      db = await getDb();
       if (db == null) {
         return [];
       }
@@ -71,7 +81,7 @@ class AnalysisDb {
   }
 
   Future<void> clear() async {
-    Database db = await _getDb();
+    Database db = await getDb();
     await db.rawDelete('DELETE FROM flow');
     _notifyUpdate();
     return null;

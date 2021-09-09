@@ -17,6 +17,7 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 
 import '../../common/app_gradients.dart';
@@ -180,7 +181,6 @@ class CircuitPageState extends State<CircuitPage>
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      lightTheme: true,
       title: S.of(context).manageProfile,
       decoration: BoxDecoration(),
       child: _buildBody(),
@@ -198,7 +198,6 @@ class CircuitPageState extends State<CircuitPage>
           _userInteraction();
         },
         child: Container(
-          decoration: BoxDecoration(gradient: AppGradients.basicGradient),
           // hidden until hops loaded
           child: Visibility(
               //visible: _hops != null,
@@ -409,10 +408,10 @@ class CircuitPageState extends State<CircuitPage>
   Widget _buildNewHopTile() {
     return HopTile(
         title: s.newHop,
-        image: Image.asset('assets/images/addCircleOutline.png'),
+        image: Image.asset('assets/images/addCircleOutline.png', color: Colors.white),
         trailing: SizedBox(width: 40),
         // match leading
-        textColor: Colors.deepPurple,
+        textColor: Colors.white,
         borderColor: Color(0xffb88dfc),
         dottedBorder: true,
         showDragHandle: false,
@@ -426,8 +425,7 @@ class CircuitPageState extends State<CircuitPage>
         alignment: Alignment.bottomCenter,
         child: LinkText(
           s.viewDeletedHops,
-          style: AppText.linkStyle
-              .copyWith(fontSize: 13, fontStyle: FontStyle.italic),
+          style: OrchidText.caption.linkStyle,
           onTapped: () {
             Navigator.pushNamed(context, '/settings/accounts');
           },
@@ -472,11 +470,7 @@ class CircuitPageState extends State<CircuitPage>
           Icon(Icons.fiber_manual_record, color: color, size: 18),
           padx(5),
           Text(text,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 12,
-                color: Color(0xff504960),
-              )),
+              style: TextStyle( fontWeight: FontWeight.w500, fontSize: 12, color: Colors.white, )),
         ],
       ),
     );

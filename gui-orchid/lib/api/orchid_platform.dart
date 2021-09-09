@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'orchid_log_api.dart';
@@ -87,6 +88,10 @@ class OrchidPlatform {
     }
   }
 
+  static bool get isWeb{
+    return kIsWeb;
+  }
+
   static bool get isApple {
     return isIOS || isMacOS;
   }
@@ -105,6 +110,9 @@ class OrchidPlatform {
 
   static String get operatingSystem {
     try {
+      if (kIsWeb) {
+        return 'web';
+      }
       return Platform.operatingSystem;
     } catch (err) {
       log("exception fetching osname: $err");

@@ -4,8 +4,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../common/app_colors.dart';
 
 class WelcomePanel extends StatefulWidget {
   const WelcomePanel({
@@ -20,18 +21,6 @@ class _WelcomePanelState extends State<WelcomePanel>
     with TickerProviderStateMixin {
   bool _collapsed = false;
 
-  var bodyTextColor = AppColors.neutral_1;
-
-  TextStyle get bodyStyle {
-    return TextStyle(fontSize: 12, height: 16 / 12, color: bodyTextColor);
-  }
-
-  get titleStyle {
-    return bodyStyle.copyWith(
-      fontWeight: FontWeight.bold,
-    );
-  }
-
   @override
   void initState() {
     super.initState();
@@ -43,10 +32,10 @@ class _WelcomePanelState extends State<WelcomePanel>
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 30, right: 30, bottom: 16),
+      padding: const EdgeInsets.only(left: 0, right: 0, bottom: 0),
       child: ClipRRect(
         clipBehavior: Clip.antiAlias,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         child: AnimatedSize(
             alignment: Alignment.topCenter,
             vsync: this,
@@ -75,7 +64,10 @@ class _WelcomePanelState extends State<WelcomePanel>
       children: [
         _buildTitleRow(titleText, alert: true),
         if (!_collapsed) ...[
-          _buildBodyText(bodyText),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 60),
+            child: _buildBodyText(bodyText),
+          ),
           pady(16),
           if (OrchidPlatform.hasPurchase)
             _buildBuyButton()
@@ -100,59 +92,70 @@ class _WelcomePanelState extends State<WelcomePanel>
       children: [
         _buildTitleRow(titleText, alert: true),
         if (!_collapsed) ...[
-          _buildBodyText(bodyText),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 60),
+            child: _buildBodyText(bodyText),
+          ),
           pady(16),
-          _buildBuyButton(),
+          Center(child: _buildBuyButton()),
           if (isAndroid) pady(16),
-          if (isAndroid) _buildUseCryptoWalletButton(lightColor: true),
+          if (isAndroid)
+            Center(child: _buildUseCryptoWalletButton(lightColor: true)),
           pady(16),
-          _buildUseAnotherAccountButton(),
+          Center(child: _buildUseAnotherAccountButton()),
           pady(24),
-        ],
+        ] else
+          pady(8),
       ],
     );
     return _buildCollapsiblePanel(content: content);
   }
 
-  Padding _buildBodyText(String bodyText) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Text(bodyText, style: bodyStyle),
-    );
+  Widget _buildBodyText(String bodyText) {
+    var bodyStyle = OrchidText.body2.black;
+    return SizedBox(width: 294, child: Text(bodyText, style: bodyStyle));
   }
 
   Widget _buildBuyButton() {
-    var text = s.buyCredits;
+    var text = s.buyCredits.toUpperCase();
     var action = _purchaseOrchidAccount;
     return _buildButton(text: text, onPressed: action);
   }
 
   Widget _buildUseAnotherAccountButton() {
-    var text = s.useAnotherAccount;
+    var text = s.useAnotherAccount.toUpperCase();
     var action = _importOrchidAccount;
     return _buildButton(text: text, lightColor: true, onPressed: action);
   }
 
   Widget _buildUseCryptoWalletButton({bool lightColor = false}) {
-    var text = s.useCryptoWallet;
+    var text = s.useCryptoWallet.toUpperCase();
     var action = _openDapp;
     return _buildButton(text: text, lightColor: lightColor, onPressed: action);
   }
 
   // title row with alert symbol
-  Padding _buildTitleRow(String titleText, {bool alert}) {
+  Widget _buildTitleRow(String titleText, {bool alert}) {
+    var titleStyle = OrchidText.subtitle.black;
     return Padding(
-      padding: EdgeInsets.only(top: 16, bottom: 8, left: 22, right: 22),
-      child: Row(
-        children: <Widget>[
-          Row(
-            children: [
-              if (alert) Icon(Icons.error, color: AppColors.teal_3, size: 20),
-              if (alert) padx(9),
-              RichText(text: TextSpan(text: titleText, style: titleStyle)),
-            ],
-          ),
-        ],
+      padding: EdgeInsets.only(top: 24, bottom: 8, left: 24, right: 24),
+      child: FittedBox(
+        alignment: Alignment.centerLeft,
+        fit: BoxFit.scaleDown,
+        child: Row(
+          children: [
+            if (alert)
+              Transform.translate(
+                offset: Offset(0, -2),
+                child: Icon(Icons.error,
+                    color: OrchidColors.dark_ff3a3149, size: 20),
+              ),
+            if (alert) padx(16),
+            RichText(
+              text: TextSpan(text: titleText, style: titleStyle),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -162,18 +165,23 @@ class _WelcomePanelState extends State<WelcomePanel>
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        // border: Border.all(color: Colors.white),
+        color: OrchidColors.blueHighlight,
         // Needed during the animated collapse - cliprrect doesn't mask during?
         borderRadius: _collapsed
             ? BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20))
+                bottomLeft: Radius.circular(8), bottomRight: Radius.circular(8))
             : null,
       ),
       child: Stack(
         children: [
           content,
-          Align(alignment: Alignment.topRight, child: _buildToggleButton()),
+          Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: _buildToggleButton(),
+              )),
         ],
       ),
     );
@@ -181,12 +189,10 @@ class _WelcomePanelState extends State<WelcomePanel>
 
   Widget _buildToggleButton() {
     return Container(
-      // color: Colors.green,
-      // width: 28,
       child: TextButton(
         child: Icon(
           _collapsed ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-          color: bodyTextColor,
+          color: OrchidColors.dark_ff3a3149,
         ),
         onPressed: () {
           setState(() {
@@ -199,27 +205,31 @@ class _WelcomePanelState extends State<WelcomePanel>
 
   Widget _buildButton({
     @required String text,
-    VoidCallback onPressed,
     bool lightColor = false,
+    VoidCallback onPressed,
   }) {
-    Color bgColor = lightColor ? Colors.white : AppColors.teal_3;
-    Color borderColor = AppColors.teal_3;
-    Color textColor = lightColor ? AppColors.teal_3 : Colors.white;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: FlatButton(
-        color: bgColor,
-        onPressed: onPressed,
-        shape: RoundedRectangleBorder(
-            side: BorderSide(
-                color: borderColor, width: 1, style: BorderStyle.solid),
-            borderRadius: BorderRadius.all(Radius.circular(24))),
-        child: Text(text,
-            style: TextStyle(
-              fontWeight: FontWeight.w400,
-              fontSize: 14.0,
-              color: textColor,
-            )),
+    Color backgroundColor =
+        lightColor ? Colors.transparent : OrchidColors.dark_background;
+    Color borderColor = OrchidColors.dark_ff3a3149;
+    Color textColor = lightColor ? Colors.black : Colors.white;
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: SizedBox(
+        width: 294,
+        height: 52,
+        child: TextButton(
+          style: TextButton.styleFrom(
+              backgroundColor: backgroundColor,
+              shape: RoundedRectangleBorder(
+                  side: BorderSide(
+                      color: borderColor, width: 2, style: BorderStyle.solid),
+                  borderRadius: BorderRadius.all(Radius.circular(16)))),
+          onPressed: onPressed,
+          child: Text(
+            text,
+            style: OrchidText.button.copyWith(color: textColor),
+          ),
+        ),
       ),
     );
   }

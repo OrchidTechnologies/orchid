@@ -109,13 +109,15 @@ class RealOrchidAPI implements OrchidAPI {
       switch (vpnState) {
         case OrchidVPNExtensionState.Invalid:
         case OrchidVPNExtensionState.NotConnected:
+          // Trigger a refresh of the app level status which should now report down.
+          OrchidRoutingStatus().invalidate();
           return OrchidVPNRoutingState.VPNNotConnected;
           break;
         case OrchidVPNExtensionState.Connecting:
           return OrchidVPNRoutingState.VPNConnecting;
           break;
         case OrchidVPNExtensionState.Connected:
-          // This differentiates the vpn running state from the orchid routing state
+          // This differentiates the vpn running state from the app level orchid routing state
           return (orchidConnected
               ? OrchidVPNRoutingState.OrchidConnected
               : OrchidVPNRoutingState.VPNConnected);
@@ -129,11 +131,11 @@ class RealOrchidAPI implements OrchidAPI {
     });
   }
 
+  // Determine if the change in connection state is relevant to routing.
+  // (as opposed to e.g. a change in state for traffic monitoring)
   static applyRoutingStatus(OrchidVPNRoutingState state) async {
     var vpnRoutingStatus = OrchidAPI().vpnRoutingStatus;
 
-    // Determine if the change in connection state is relevant to routing.
-    // (as opposed to e.g. a change in state for traffic monitoring)
     var routingEnabled = await UserPreferences().routingEnabled.get();
     switch (state) {
       case OrchidVPNRoutingState.VPNNotConnected:

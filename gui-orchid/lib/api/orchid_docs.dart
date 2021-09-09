@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'orchid_platform.dart';
+
 class OrchidDocs {
   static Future<String> openSourceLicenses() async {
     return await rootBundle.loadString('assets/docs/open_source.txt');
@@ -44,7 +46,7 @@ class OrchidDocs {
       dotAll: true,
     );
     return html.replaceAllMapped(exp, (match) {
-      String platform = Platform.operatingSystem.toLowerCase();
+      String platform = OrchidPlatform.operatingSystem.toLowerCase();
       String targetPlatforms = match.group(1)?.toLowerCase();
       if (targetPlatforms != null &&
           targetPlatforms.split(RegExp(r' *, *')).contains(platform)) {

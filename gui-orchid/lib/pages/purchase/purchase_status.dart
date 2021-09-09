@@ -10,7 +10,8 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/common/tap_copy_text.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import '../../common/app_text.dart';
 import '../../util/streams.dart';
 
@@ -62,7 +63,11 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
       firstChild:
           // Container(width: double.infinity, height: 0, color: Colors.green),
           Container(height: 0),
-      secondChild: _buildStatusContainer(),
+      secondChild: Padding(
+        // extra padding that only exists when the status is showing
+        padding: const EdgeInsets.only(bottom: 12.0),
+        child: _buildStatusContainer(),
+      ),
     );
   }
 
@@ -73,7 +78,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
           width: double.infinity,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(12)),
-            color: Colors.deepPurple.withOpacity(0.1),
+            color: OrchidColors.dark_background,
           ),
           padding: EdgeInsets.all(16),
           child: _buildStatus(),
@@ -146,7 +151,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
       children: <Widget>[
         Text(
           _userActionRetryable ? s.pacPurchaseWaiting : s.purchaseError,
-          style: TextStyle(fontSize: 16),
+          style: OrchidText.body2,
         ),
         pady(16),
         if (_userActionRetryable)
@@ -157,6 +162,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
                 style: TextStyle(color: Colors.white),
               ),
               onPressed: _retryPurchase),
+        pady(8),
         _showHelpExpanded ? _buildHelpExpanded() : _buildHelp()
       ],
     );
@@ -186,7 +192,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
       children: <Widget>[
         pady(8),
         LinkText(s.getHelpResolvingIssue,
-            style: AppText.linkStyle, onTapped: _expandHelp),
+            style: OrchidText.body1.linkStyle, onTapped: _expandHelp),
       ],
     );
   }

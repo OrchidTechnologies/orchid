@@ -11,16 +11,18 @@ import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/util/listenable_builder.dart';
 
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
-import 'account_model.dart';
+import 'account_card.dart';
+import 'account_view_model.dart';
 import 'account_detail_poller.dart';
 
 class AccountView extends StatefulWidget {
-  final AccountModel account;
-  final Function(AccountModel account) setActiveAccount;
+  final AccountViewModel account;
+  final Function(AccountViewModel account) setActiveAccount;
 
   const AccountView(
       {Key key, @required this.account, @required this.setActiveAccount})
@@ -55,7 +57,9 @@ class _AccountViewState extends State<AccountView> {
               child: Column(
                 children: <Widget>[
                   Container(
-                    color: _active ? Colors.green.shade50 : null,
+                    color: _active
+                        ? OrchidColors.purple_ff8c61e1.withOpacity(0.5)
+                        : null,
                     child: Column(
                       children: [
                         pady(16),
@@ -108,7 +112,10 @@ class _AccountViewState extends State<AccountView> {
               Divider(),
               pady(24),
               if (_showAccountChart())
-                Container(width: 250, child: _buildAccountChart()),
+                Container(
+                  width: 250,
+                  child: _buildAccountChart(),
+                ),
               // if (_showAccountChart()) pady(24),
               // _buildAddFundsButton(),
               pady(32),
@@ -127,7 +134,7 @@ class _AccountViewState extends State<AccountView> {
   Column _buildBalance() {
     var style1 = TextStyle(
       fontSize: 17,
-      color: _alert ? Colors.red.shade900 : null,
+      color: _alert ? Colors.red.shade900 : Colors.white,
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,7 +171,7 @@ class _AccountViewState extends State<AccountView> {
 
   Widget _buildLowEfficiencyText() {
     var bodyStyle = TextStyle(
-      // color: Colors.black,
+      color: Colors.white,
       fontSize: 15,
       height: 1.3,
       // fontStyle: FontStyle.italic,
@@ -229,13 +236,17 @@ class _AccountViewState extends State<AccountView> {
 
   Widget _buildHeader() {
     var account = widget.account;
+    var tokenType = widget.account.balance?.type;
+    var icon = tokenType != null
+        ? AccountCard.iconForTokenType(tokenType)
+        : Container();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         children: [
           Text(account.chain.name, style: AppText.dialogTitle),
           Container(
-            child: widget.account.chain.icon,
+            child: FittedBox(child: icon), // scaling the icon a bit here
             width: 64,
             height: 64,
           ),

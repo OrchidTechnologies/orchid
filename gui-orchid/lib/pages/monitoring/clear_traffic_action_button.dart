@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_dialogs.dart';
@@ -28,15 +29,13 @@ class ClearTrafficActionButton extends StatelessWidget {
             visible: visible,
             child: Opacity(
               opacity: enabled ? 1.0 : 0.3,
-              child: FlatButton(
-                color: AppColors.white,
-                child: Text(s.clear,
-                    style: AppText.actionButtonStyle
-                        .copyWith(color: AppColors.purple_3)),
+              child: TextButton(
+                child: SvgPicture.asset('assets/svg/delete_icon.svg',
+                    width: 24, height: 24),
                 onPressed: enabled
                     ? () {
-                  _confirmDelete(context);
-                }
+                        _confirmDelete(context);
+                      }
                     : null,
               ),
             ),
@@ -48,10 +47,10 @@ class ClearTrafficActionButton extends StatelessWidget {
     S s = S.of(context);
     AppDialogs.showConfirmationDialog(
         context: context,
-        title: s.deleteAllData + "?",
-        bodyText: s.thisWillDeleteRecorded,
-        cancelText: s.cancelButtonTitle,
-        actionText: s.okButtonTitle,
+        title: "Clear all analysis data?",
+        bodyText: "This action will clear all previously analyzed traffic connection data.",
+        cancelText: s.cancelButtonTitle.toUpperCase(),
+        actionText: "CLEAR ALL",
         commitAction: () async {
           await AnalysisDb().clear();
         });

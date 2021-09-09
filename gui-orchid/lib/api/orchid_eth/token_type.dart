@@ -11,21 +11,23 @@ class Chains {
 
   // ignore: non_constant_identifier_names
   static Chain Ethereum = Chain(
-      chainId: ETH_CHAINID,
-      name: "Ethereum",
-      nativeCurrency: TokenTypes.ETH,
-      providerUrl: OrchidEthereumV0.defaultEthereumProviderUrl,
-      icon: SvgPicture.asset('assets/svg/ethereum.svg'));
+    chainId: ETH_CHAINID,
+    name: "Ethereum",
+    nativeCurrency: TokenTypes.ETH,
+    providerUrl: OrchidEthereumV0.defaultEthereumProviderUrl,
+    icon: SvgPicture.asset('assets/svg/ethereum.svg'),
+  );
 
   // ignore: non_constant_identifier_names
   static const int XDAI_CHAINID = 100;
   static Chain xDAI = Chain(
-      chainId: XDAI_CHAINID,
-      name: "xDAI",
-      nativeCurrency: TokenTypes.XDAI,
-      // providerUrl: 'https://dai.poa.network',
-      providerUrl: 'https://rpc.xdaichain.com/',
-      icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'));
+    chainId: XDAI_CHAINID,
+    name: "xDAI",
+    nativeCurrency: TokenTypes.XDAI,
+    // providerUrl: 'https://dai.poa.network',
+    providerUrl: 'https://rpc.xdaichain.com/',
+    icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+  );
 
   // TODO: Embed the chain.info db here as we do in the dapp.
   // Get the chain for chainId
