@@ -71,6 +71,9 @@ class OrchidText {
 
   static TextStyle medium_24_050 = regular_24_050.medium;
 
+  static TextStyle linkStyle =
+      body2.copyWith(decoration: TextDecoration.underline).purpleBright;
+
   static LinkTextSpan buildLearnMoreLinkTextSpan(
       {BuildContext context, Color color}) {
     return LinkTextSpan(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
@@ -10,11 +11,10 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/pages/settings/advanced_configuration_page.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:rxdart/rxdart.dart';
-
-import '../../common/app_colors.dart';
-import '../../common/app_text.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 enum ImportExportMode { Import, Export }
 
@@ -50,8 +50,14 @@ class ImportExportConfig extends StatefulWidget {
             validator: validator,
             onImport: onImport);
 
-  ImportExportConfig.export({@required String title, @required String config})
-      : this(title: title, mode: ImportExportMode.Export, config: config);
+  ImportExportConfig.export({
+    @required String title,
+    @required String config,
+  }) : this(
+          title: title,
+          mode: ImportExportMode.Export,
+          config: config,
+        );
 
   @override
   _ImportExportConfigState createState() => _ImportExportConfigState();
@@ -109,31 +115,10 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(
-                    left: 16, right: 16, top: 24, bottom: 24),
-                child: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: SingleChildScrollView(
-                      child: TextFormField(
-                    readOnly: widget.mode == ImportExportMode.Export,
-                    autocorrect: false,
-                    autofocus: false,
-                    smartQuotesType: SmartQuotesType.disabled,
-                    smartDashesType: SmartDashesType.disabled,
-                    keyboardType: TextInputType.multiline,
-                    style: AppText.logStyle.copyWith(color: AppColors.grey_2),
-                    controller: _configFileTextController,
-                    maxLines: 99999,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      labelStyle: AppText.textLabelStyle,
-                    ),
-                  )),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                    border: Border.all(width: 2.0, color: AppColors.neutral_5),
-                  ),
+                    left: 16, right: 16, top: 16, bottom: 24),
+                child: OrchidConfigTextBox(
+                  textController: _configFileTextController,
+                  readOnly: widget.mode == ImportExportMode.Export,
                 ),
               ),
             ),
@@ -152,8 +137,9 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
                       builder: (context, snapshot) {
                         return RoundedRectButton(
                             text: widget.mode == ImportExportMode.Import
-                                ? "IMPORT"
-                                : "COPY",
+                                ? s.import.toUpperCase()
+                                : s.copy.toUpperCase(),
+                            textColor: Colors.black,
                             onPressed: _actionEnabled.value ? _doAction : null);
                       }),
                 ),
@@ -170,13 +156,12 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
   Widget _buildQRImportExportButton() {
     return FlatButton(
         child: Container(
-            decoration: BoxDecoration(
-                //borderRadius: BorderRadius.all(Radius.circular(4)),
-                border: Border.all(width: 1, color: Colors.black54)),
-            child: Image.asset(
-              "assets/images/qrcode.png",
-              height: 50,
-            )),
+          decoration: BoxDecoration(
+              border: Border.all(width: 1, color: Colors.black54)),
+          child: widget.mode == ImportExportMode.Export
+              ? SvgPicture.asset("assets/svg/qr_scan.svg")
+              : SvgPicture.asset("assets/svg/scan.svg"),
+        ),
         onPressed: _doQRCodeAction);
   }
 
@@ -227,17 +212,22 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
   void _exportQR() {
     AppDialogs.showAppDialog(
         context: context,
-        title: "My Orchid Config:",
+        title: "My Orchid Config" + ':',
         body: Container(
           width: 250,
           height: 250,
           child: Center(
             child: QrImage(
               data: _configFileTextController.text = widget.config,
+              backgroundColor: Colors.white,
               version: QrVersions.auto,
               size: 250.0,
             ),
           ),
         ));
+  }
+
+  S get s {
+    return S.of(context);
   }
 }

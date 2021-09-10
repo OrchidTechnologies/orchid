@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:html/dom.dart' as dom;
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -59,7 +60,7 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
     return Html(
       data: html,
       defaultTextStyle: OrchidText.body2,
-      linkStyle: OrchidText.body2.copyWith(color: Colors.purple),
+      linkStyle: OrchidText.body2.copyWith(color: OrchidColors.purple_bright),
       onLinkTap: (url) {
         launch(url, forceSafariVC: false);
       },

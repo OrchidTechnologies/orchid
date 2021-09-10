@@ -18,7 +18,7 @@ class UserPreferences {
   }
 
   UserPreferences._internal() {
-    debugPrint("constructed user prefs API");
+    debugPrint("Constructed user prefs API");
   }
 
   static Future<SharedPreferences> sharedPreferences() {

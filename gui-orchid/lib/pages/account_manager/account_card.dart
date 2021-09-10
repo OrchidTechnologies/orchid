@@ -366,10 +366,10 @@ class _AccountCardState extends State<AccountCard>
                 ? Padding(
                     padding: const EdgeInsets.only(left: 5, bottom: 5),
                     child: SvgPicture.asset('assets/svg/toggle_checked.svg',
-                        width: 24, height: 24, fit: BoxFit.none),
+                        width: 25, height: 25, fit: BoxFit.scaleDown),
                   )
                 : SvgPicture.asset('assets/svg/toggle_unchecked.svg',
-                    width: 20, height: 20, fit: BoxFit.none)),
+                    width: 20, height: 20, fit: BoxFit.scaleDown)),
           ),
         ),
       ),

@@ -340,10 +340,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   Future<void> _showOrchidAccountAddressWarning() async {
-    var linkStyle = AppText.linkStyle; //.copyWith(fontSize: 15);
     var title = s.copiedOrchidIdentity;
     var body = StyledText(
-      style: AppText.dialogBody,
+      style: OrchidText.body2,
       newLineAsBreaks: true,
       text: "<alarm/> <bold>" +
           s.thisIsNotAWalletAddress +
@@ -356,9 +355,10 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           s.learnMoreAboutYourLinkorchidIdentitylink,
       tags: {
         'bold': StyledTextTag(
-            style: AppText.dialogBody.copyWith(fontWeight: FontWeight.bold)),
-        'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),
-        'alarm': StyledTextIconTag(Icons.warning_amber_rounded)
+          style: OrchidText.body2.purpleBright.bold,
+        ),
+        'link': OrchidText.linkStyle.link(OrchidUrls.partsOfOrchidAccount),
+        'alarm': StyledTextIconTag(Icons.warning_amber_rounded, color: OrchidColors.purple_bright)
       },
     );
     return AppDialogs.showAppDialog(

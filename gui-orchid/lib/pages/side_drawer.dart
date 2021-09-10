@@ -38,9 +38,10 @@ class _SideDrawerState extends State<SideDrawer> {
       child: Drawer(
         child: Container(
           decoration: BoxDecoration(
-              color: AppColors.dark_purple,
-              gradient: OrchidGradients.blackGradientBackground,
-              border: Border.all(color: OrchidColors.purple_ff8c61e1)),
+            gradient: OrchidGradients.blackGradientBackground,
+            border:
+                Border(right: BorderSide(color: OrchidColors.purple_ff8c61e1)),
+          ),
           child: buildContent(context),
         ),
       ),
@@ -200,7 +201,8 @@ class SideDrawerTile extends StatelessWidget {
                 ? Icon(Icons.chevron_right, color: AppColors.white)
                 : null,
             title: Text(title,
-                textAlign: TextAlign.left, style: OrchidText.subtitle.copyWith(height: 1.5)),
+                textAlign: TextAlign.left,
+                style: OrchidText.subtitle.copyWith(height: 1.5)),
             onTap: onPressed),
       ),
     );

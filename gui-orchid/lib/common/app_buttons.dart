@@ -42,14 +42,19 @@ class RoundedRectButton extends StatelessWidget {
             icon ?? Container(),
             icon != null ? padx(14) : Container(),
             Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 8, left: 24, right: 24),
-              child: Text(text, style: style ?? OrchidText.button),
+              padding:
+                  const EdgeInsets.only(top: 8, bottom: 8, left: 24, right: 24),
+              child: Text(text,
+                  style: style ??
+                      OrchidText.button.copyWith(
+                          color: textColor ?? OrchidText.button.color)),
             ),
             if (icon != null) padx(8)
           ],
         ),
       ),
-      color: backgroundColor ?? AppColors.purple_3,
+      color: backgroundColor ?? OrchidColors.purple_bright,
+      disabledColor: Colors.grey,
       onPressed: onPressed,
     );
   }
@@ -68,7 +73,8 @@ class RoundTitledRaisedImageButton extends StatelessWidget {
     @required this.title,
     this.imageName,
     @required this.onPressed,
-    this.icon, this.padding = 0,
+    this.icon,
+    this.padding = 0,
   }) : super(key: key);
 
   @override

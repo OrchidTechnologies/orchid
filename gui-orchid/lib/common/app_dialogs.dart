@@ -28,8 +28,8 @@ class AppDialogs {
           // insetPadding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(16.0))),
-          title: Text(title, style: AppText.dialogTitle),
-          content: body ?? Text(bodyText, style: AppText.dialogBody),
+          title: Text(title, style: OrchidText.title),
+          content: body ?? Text(bodyText, style: OrchidText.body2),
           actions: <Widget>[
             if (linkSettings)
               FlatButton(

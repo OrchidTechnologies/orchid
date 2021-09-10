@@ -90,30 +90,8 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
               child: Padding(
                 padding: const EdgeInsets.only(
                     left: 16, right: 16, top: 24, bottom: 24),
-                child: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: SingleChildScrollView(
-                      child: TextFormField(
-                    autocorrect: false,
-                    autofocus: false,
-                    smartQuotesType: SmartQuotesType.disabled,
-                    smartDashesType: SmartDashesType.disabled,
-                    keyboardType: TextInputType.multiline,
-                    style: AppText.logStyle.copyWith(color: Colors.white),
-                    controller: _configFileTextController,
-                    maxLines: 99999,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      labelStyle: AppText.textLabelStyle,
-                    ),
-                  )),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                    border: Border.all(width: 2.0, color: AppColors.neutral_5),
-                  ),
-                ),
+                child: OrchidConfigTextBox(
+                    textController: _configFileTextController),
               ),
             ),
 
@@ -194,5 +172,51 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
 
   S get s {
     return S.of(context);
+  }
+}
+
+class OrchidConfigTextBox extends StatelessWidget {
+  final TextEditingController _textController;
+  final bool readOnly;
+
+  const OrchidConfigTextBox({
+    Key key,
+    @required TextEditingController textController,
+    this.readOnly = false,
+  })  : _textController = textController,
+        super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: SingleChildScrollView(
+          child: Theme(
+        data: Theme.of(context).copyWith(
+            textSelectionTheme: TextSelectionThemeData(
+          selectionColor: OrchidColors.purple_ff8c61e1,
+          cursorColor: OrchidColors.purple_bright,
+        )),
+        child: TextFormField(
+          readOnly: readOnly,
+          autocorrect: false,
+          autofocus: false,
+          smartQuotesType: SmartQuotesType.disabled,
+          smartDashesType: SmartDashesType.disabled,
+          keyboardType: TextInputType.multiline,
+          style: AppText.logStyle.copyWith(color: Colors.white),
+          controller: _textController,
+          maxLines: 99999,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+          ),
+        ),
+      )),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+        border: Border.all(width: 2.0, color: AppColors.neutral_5),
+      ),
+    );
   }
 }

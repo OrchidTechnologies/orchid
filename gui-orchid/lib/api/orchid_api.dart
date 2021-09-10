@@ -9,7 +9,7 @@ import 'orchid_log_api.dart';
 /// Orchid App Channel API
 ///
 abstract class OrchidAPI {
-  static bool mockAPI = false;
+  static bool mockAPI = const bool.hasEnvironment('mock');
   static OrchidAPI _apiSingleton;
   static OrchidAPI _mockAPISingleton;
 

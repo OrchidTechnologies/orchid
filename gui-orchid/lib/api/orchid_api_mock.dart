@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'package:async/async.dart';
-import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_types.dart';
@@ -23,7 +21,7 @@ class MockOrchidAPI implements OrchidAPI {
   }
 
   MockOrchidAPI._internal() {
-    debugPrint("constructed mock API");
+    log("Constructed Mock API");
     _initChannel();
   }
 
