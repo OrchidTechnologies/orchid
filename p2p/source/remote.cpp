@@ -492,7 +492,7 @@ err_t Remote::Initialize(netif *interface) {
 
 void Remote::Land(const Buffer &data) {
     //Log() << "Remote >>> " << this << " " << data << std::endl;
-    orc_ignore({ orc_assert(tcpip_inpkt(Buffers(data).Tear(), &interface_, interface_.input) == ERR_OK); });
+    orc_ignore({ orc_lwipcall(tcpip_inpkt, (Buffers(data).Tear(), &interface_, interface_.input)); });
 }
 
 void Remote::Stop(const std::string &error) noexcept {
@@ -516,7 +516,7 @@ Remote::Remote(const class Host &host) :
     ip4_addr_t address(host_);
     ip4_addr_t netmask; IP4_ADDR(&netmask, 255,255,255,0);
 
-    orc_assert(netifapi_netif_add(&interface_, &address, &netmask, &gateway, this, &Initialize, &ip_input) == ERR_OK);
+    orc_lwipcall(netifapi_netif_add, (&interface_, &address, &netmask, &gateway, this, &Initialize, &ip_input));
 }
 
 static uint8_t quad_(3);
