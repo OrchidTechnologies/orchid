@@ -379,7 +379,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "block") {
         const auto [height] = Options<uint64_t>(args);
-        co_await chain_->Header(height);
+        std::cout << co_await (*chain_)("eth_getBlockByNumber", {height, true}) << std::endl;
 
     } else if (command == "bsc:transfer") {
         const auto [segwit, amount] = Options<std::string, uint256_t>(args);
@@ -635,11 +635,13 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
     } else if (command == "receipt") {
         const auto [transaction] = Options<Bytes32>(args);
-        for (;;)
-            if (const auto receipt{co_await (*chain_)[transaction]}) {
-                std::cout << receipt->contract_ << std::endl;
-                break;
-            } else co_await Sleep(1000);
+        for (;;) {
+            const auto receipt(co_await (*chain_)("eth_getTransactionReceipt", {transaction}));
+            if (receipt.isNull())
+                continue;
+            std::cout << receipt << std::endl;
+            break;
+        }
 
     } else if (command == "recover") {
         const auto [signature, message] = Options<Signature, Bytes>(args);
