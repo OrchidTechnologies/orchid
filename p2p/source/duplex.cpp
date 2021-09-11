@@ -69,6 +69,8 @@ class Duplex_ final :
 
     task<void> Open(const Locator &locator) override {
         co_await inner_.async_handshake(locator.origin_.host_, locator.path_, Adapt());
+        // XXX: this needs to be configurable :/
+        inner_.text(true);
     }
 
     void Shut() noexcept override {
