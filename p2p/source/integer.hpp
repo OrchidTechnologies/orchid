@@ -46,18 +46,20 @@ inline bool operator ==(const std::from_chars_result &lhs, const std::from_chars
 }
 
 template <typename Type_>
-std::enable_if_t<std::is_integral_v<Type_>, Type_> To(const std::string_view &value) {
+std::enable_if_t<std::is_integral_v<Type_>, Type_> To(const std::string_view &value, int base = 0) {
     auto start(value.data());
     const auto size(value.size());
     const auto end(start + size);
-    const auto base([&]() -> int {
+    const auto detected([&]() -> int {
+        if (base != 0)
+            return base;
         if (size < 2 || start[0] != '0' || start[1] != 'x')
             return 10;
         start += 2;
         return 16;
     }());
     Type_ number;
-    orc_assert_((std::from_chars(start, end, number, base) == std::from_chars_result{end, std::errc()}), value << " is not a number");
+    orc_assert_((std::from_chars(start, end, number, detected) == std::from_chars_result{end, std::errc()}), value << " is not a number");
     return number;
 }
 
