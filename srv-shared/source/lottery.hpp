@@ -28,22 +28,41 @@
 
 #include "float.hpp"
 #include "integer.hpp"
+#include "locked.hpp"
 #include "signed.hpp"
 #include "ticket.hpp"
 #include "valve.hpp"
 
 namespace orc {
 
-typedef std::tuple<Address, Address> Pot;
+struct Pot {
+    uint256_t amount_ = 0;
+    uint256_t escrow_ = 0;
+    uint256_t warned_ = 0;
+
+    uint256_t usable() const {
+        return std::min((escrow_ < warned_ ? 0 : escrow_ - warned_) / 2, amount_);
+    }
+};
+
+std::ostream &operator <<(std::ostream &out, const Pot &pot);
 
 class Lottery :
     public Valve
 {
   protected:
-    // XXX: locking
-    std::map<Pot, std::optional<std::pair<uint128_t, uint64_t>>> cache_;
+    struct Locked_ {
+        std::map<Bytes32, std::pair<Pot, uint64_t>> pots_;
+    }; Locked<Locked_> locked_;
 
-    virtual task<uint128_t> Check_(const Address &signer, const Address &funder, const Address &recipient) = 0;
+    Bytes32 Hash(const Address &signer, const Address &funder) {
+        // XXX: this only makes sense for lottery1, but it works
+        return HashK(Tie(Address(0), funder, signer));
+    }
+
+    virtual task<uint64_t> Height() = 0;
+    virtual task<Pot> Read(uint64_t height, const Address &signer, const Address &funder, const Address &recipient) = 0;
+    virtual task<void> Scan(uint64_t begin, uint64_t end) = 0;
 
   public:
     Lottery(const char *type) :
@@ -51,7 +70,9 @@ class Lottery :
     {
     }
 
-    task<uint128_t> Check(const Address &signer, const Address &funder, const Address &recipient);
+    void Open();
+
+    task<uint256_t> Check(const Address &signer, const Address &funder, const Address &recipient);
 };
 
 inline uint256_t Convert(const Float &balance) {

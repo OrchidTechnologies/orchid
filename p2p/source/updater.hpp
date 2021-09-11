@@ -38,7 +38,13 @@ class Updater :
     unsigned milliseconds_;
     Code_ code_;
 
+    task<void> Update() override {
+        auto value(co_await code_());
+        std::swap(*this->value_(), value);
+    }
+
     Event ready_;
+    bool stopped_ = false;
 
   public:
     Updater(unsigned milliseconds, Code_ &&code, const char *name) :
@@ -51,7 +57,7 @@ class Updater :
                 co_await Update();
             }());
 
-            for (;;) {
+            while (!stopped_) {
                 co_await Sleep(milliseconds_);
                 orc_ignore({ co_await Update(); });
             }
@@ -60,16 +66,12 @@ class Updater :
         }, name);
     }
 
-    task<void> Update() override {
-        auto value(co_await code_());
-        std::swap(*this->value_(), value);
-    }
-
     Task<void> Open() override {
         co_await *ready_;
     }
 
     Task<void> Shut() noexcept override {
+        stopped_ = true;
         co_await Valve::Shut();
     }
 };

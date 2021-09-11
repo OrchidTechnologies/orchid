@@ -147,13 +147,21 @@ inline Json::Value Parse(const std::string &data) { orc_block({
     return result;
 }, "parsing " << data); }
 
-inline std::string UnparseB(const boost::json::object &data) {
+inline std::string UnparseB(const boost::json::value &data) {
     return boost::json::serialize(data);
 }
 
 inline boost::json::value ParseB(const std::string &data) { orc_block({
     return boost::json::parse(data);
 }, "parsing " << data); }
+
+inline boost::json::value Reparse(const Json::Value &data) {
+    return ParseB(Unparse(data));
+}
+
+inline Json::Value Reparse(const boost::json::value &data) {
+    return Parse(UnparseB(data));
+}
 
 template <typename Type_>
 struct Element;

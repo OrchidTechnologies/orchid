@@ -33,6 +33,8 @@ class Updated {
   protected:
     Locked<Type_> value_;
 
+    virtual task<void> Update() = 0;
+
   public:
     Updated() = default;
 
@@ -45,7 +47,6 @@ class Updated {
         return *value_();
     }
 
-    virtual task<void> Update() = 0;
     virtual Task<void> Open() = 0;
 };
 

@@ -26,6 +26,7 @@
 #include "error.hpp"
 #include "nested.hpp"
 #include "notation.hpp"
+#include "sequence.hpp"
 
 namespace orc {
 
@@ -370,6 +371,30 @@ task<Address> Chain::Resolve(const Argument &height, const std::string &name) co
 
     static const Selector<Address, Bytes32> addr_("addr");
     co_return co_await addr_.Call(*this, height, resolver, 90000, node);
+}
+
+cppcoro::async_generator<Entry> Chain::Logs(uint64_t begin, uint64_t end, Address contract) {
+    if (true) {
+        const auto entries((co_await Call("eth_getLogs", {Multi{
+            {"fromBlock", begin},
+            {"toBlock", end - 1},
+            {"address", contract},
+            {"topics", {}},
+        }})).as_array());
+
+        for (const auto &i : entries) {
+            const auto &entry(i.as_object());
+            co_yield Entry{
+                To<uint64_t>(Str(entry.at("blockNumber"))),
+                Bless(Str(entry.at("data"))),
+                Map([&](const auto &topic) -> Bytes32 {
+                    return Bless<Bytes32>(Str(topic));
+                }, entry.at("topics").as_array()),
+            };
+        }
+    } else {
+        // XXX: implement receipt scraper fallback for RSK :(
+    }
 }
 
 }

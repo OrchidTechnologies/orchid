@@ -21,16 +21,46 @@
 
 
 #include "lottery.hpp"
+#include "sleep.hpp"
 #include "time.hpp"
 
 namespace orc {
 
-task<uint128_t> Lottery::Check(const Address &signer, const Address &funder, const Address &recipient) {
-    auto &usable(cache_[{signer, funder}]);
-    const auto now(Timestamp());
-    if (!usable || usable->second < now)
-        usable = std::make_pair(co_await Check_(signer, funder, recipient), now + 60);
-    co_return usable->first;
+std::ostream &operator <<(std::ostream &out, const Pot &pot) {
+    return out << std::dec << "Pot{.amount_=" << pot.amount_ << ", .escrow_=" << pot.escrow_ << ", .warned_=" << pot.warned_ << "}";
+}
+
+void Lottery::Open() {
+    Spawn([=]() mutable noexcept -> task<void> {
+        for (auto height(co_await Height());;) try {
+            co_await Sleep(10*1000);
+            auto next(co_await Height());
+            if (next <= height)
+                continue;
+            co_await Scan(height + 1, next + 1);
+            height = next;
+        } orc_catch()
+    }, __FUNCTION__);
+}
+
+task<uint256_t> Lottery::Check(const Address &signer, const Address &funder, const Address &recipient) {
+    const auto hash(Hash(signer, funder));
+
+    { const auto locked(locked_());
+        const auto i(locked->pots_.find(hash));
+        if (i != locked->pots_.end())
+            co_return i->second.first.usable();
+    }
+
+    const auto height(co_await Height());
+    const auto pot(co_await Read(height, signer, funder, recipient));
+
+    { const auto locked(locked_());
+        auto &i(locked->pots_[hash]);
+        if (i.second < height)
+            i = {pot, height};
+        co_return i.first.usable();
+    }
 }
 
 }

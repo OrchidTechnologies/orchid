@@ -50,13 +50,14 @@ class Lottery1 :
     const Address contract_;
 
   protected:
-    task<uint128_t> Check_(const Address &signer, const Address &funder, const Address &recipient) override;
+    task<uint64_t> Height() override;
+    task<Pot> Read(uint64_t height, const Address &signer, const Address &funder, const Address &recipient) override;
+    task<void> Scan(uint64_t begin, uint64_t end) override;
 
   public:
     Lottery1(Market market, Address contract);
     ~Lottery1() override = default;
 
-    void Open(S<Base> base, Locator locator);
     task<void> Shut() noexcept override;
 
     const Address &Contract() const {

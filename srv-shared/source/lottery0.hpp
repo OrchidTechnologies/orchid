@@ -52,7 +52,9 @@ class Lottery0 :
     const Address contract_;
 
   protected:
-    task<uint128_t> Check_(const Address &signer, const Address &funder, const Address &recipient) override;
+    task<uint64_t> Height() override;
+    task<Pot> Read(uint64_t height, const Address &signer, const Address &funder, const Address &recipient) override;
+    task<void> Scan(uint64_t begin, uint64_t end) override;
 
   public:
     Lottery0(Token token, Address contract);

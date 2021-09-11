@@ -404,6 +404,13 @@ struct Coded<std::tuple<Args_...>, void> {
         return value;
     }
 
+    static std::tuple<Args_...> Decode(const Beam &data) {
+        Window window(data);
+        const auto value(Decode(window));
+        window.Stop();
+        return value;
+    }
+
     static void Encode(Builder &builder, const std::tuple<Args_...> &data) {
         size_t offset(0);
         Tupled_::Head(offset, data);

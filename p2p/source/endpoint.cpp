@@ -43,7 +43,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
     }, body)).ok()));
 
     if (false)
-        Log() << "JSON/RPC " << body << " " << Unparse(data) << std::endl;
+        Log() << "JSON/RPC " << locator_ << " " << body << " " << Unparse(data) << std::endl;
 
     orc_assert(data["jsonrpc"] == "2.0");
 
@@ -52,7 +52,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
         orc_throw(Unparse(error));
 
     const auto id(data["id"]);
-    orc_assert(!id.isNull());
+    orc_assert_(!id.isNull(), "missing id in " << data);
     orc_assert(id == "0");
     co_return data["result"];
 }, "calling " << method << " on " << locator_); }

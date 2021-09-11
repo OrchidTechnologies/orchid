@@ -286,6 +286,8 @@ int Main(int argc, const char *const argv[]) {
             }, std::move(contract));
         }());
 
+        lottery0->Open();
+
         std::map<uint256_t, S<Lottery1>> lotteries1;
 
         const Address contract(args["lottery1"].as<std::string>());
@@ -298,7 +300,9 @@ int Main(int argc, const char *const argv[]) {
             auto market$(co_await Market::New(milliseconds, chain, base, std::move(locator), std::move(currency)));
             const auto bid((*market$.bid_)());
             Log() << market$.currency_.name_ << " $" << (Float(bid) * market$.currency_.dollars_() * 100000) << " @" << std::dec << bid << std::endl;
-            lotteries1.try_emplace(std::move(chain), Break<Lottery1>(std::move(market$), contract));
+            auto lottery1(Break<Lottery1>(std::move(market$), contract));
+            lottery1->Open();
+            lotteries1.try_emplace(std::move(chain), std::move(lottery1));
         }
 
         auto croupier(Make<Croupier>(recipient, std::move(executor), std::move(lottery0), std::move(lotteries1)));

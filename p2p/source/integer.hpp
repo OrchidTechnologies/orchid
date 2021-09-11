@@ -41,6 +41,8 @@ using uint_t = boost::multiprecision::number<boost::multiprecision::backends::cp
 using boost::multiprecision::uint128_t;
 using boost::multiprecision::uint256_t;
 
+static const uint128_t Max128((uint256_t(1) << 128) - 1);
+
 inline bool operator ==(const std::from_chars_result &lhs, const std::from_chars_result &rhs) {
     return lhs.ptr == rhs.ptr && lhs.ec == rhs.ec;
 }

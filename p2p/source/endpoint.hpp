@@ -52,6 +52,10 @@ class Endpoint {
     }
 
     task<Json::Value> operator ()(const std::string &method, Argument args) const;
+
+    task<boost::json::value> Call(const std::string &method, Argument args) const {
+        co_return Reparse(co_await operator ()(method, std::move(args)));
+    }
 };
 
 }

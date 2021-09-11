@@ -30,6 +30,58 @@
 
 namespace orc {
 
+task<uint64_t> Lottery1::Height() {
+    co_return co_await market_.chain_->Height();
+}
+
+task<Pot> Lottery1::Read(uint64_t height, const Address &signer, const Address &funder, const Address &recipient) {
+    static Selector<std::tuple<uint256_t, uint256_t>, Address, Address, Address> read_("read");
+    auto [escrow_balance, unlock_warned] = co_await read_.Call(*market_.chain_, height, contract_, 90000, {}, funder, signer);
+    // XXX: check loop for merchant
+    co_return Pot{uint128_t(escrow_balance), escrow_balance >> 128, uint128_t(unlock_warned)};
+}
+
+task<void> Lottery1::Scan(uint64_t begin, uint64_t end) {
+    static const auto Create_(HashK("Create(address,address,address)"));
+    static const auto Update_(HashK("Update(bytes32,uint256)"));
+    static const auto Delete_(HashK("Delete(bytes32,uint256)"));
+
+    for co_await (const auto &entry : market_.chain_->Logs(begin, end, contract_))
+        if (const auto &selector = entry.topics_.at(0); false) {
+        } else if (selector == Create_) {
+            orc_assert(entry.topics_.size() == 4);
+            orc_assert(entry.data_.size() == 0);
+            const Address token(entry.topics_[1].num<uint256_t>());
+            orc_assert(token == Address(0));
+            const Address funder(entry.topics_[2].num<uint256_t>());
+            const Address signer(entry.topics_[3].num<uint256_t>());
+            const auto locked(locked_());
+            auto &pot(locked->pots_[Hash(signer, funder)]);
+            pot.second = entry.block_;
+        } else if (selector == Update_) {
+            orc_assert(entry.topics_.size() == 2);
+            const auto &hash(entry.topics_[1]);
+            const auto [escrow, amount] = Take<uint128_t, uint128_t>(entry.data_);
+            const auto locked(locked_());
+            auto &pot(locked->pots_[hash]);
+            if (pot.second == 0)
+                continue;
+            pot.second = entry.block_;
+            pot.first.amount_ = amount;
+            pot.first.escrow_ = escrow;
+        } else if (selector == Delete_) {
+            orc_assert(entry.topics_.size() == 2);
+            const auto &hash(entry.topics_[1]);
+            const auto [marked, unlock, warned] = Take<uint64_t, uint64_t, uint128_t>(entry.data_);
+            const auto locked(locked_());
+            auto &pot(locked->pots_[hash]);
+            if (pot.second == 0)
+                continue;
+            pot.second = entry.block_;
+            pot.first.warned_ = warned;
+        }
+}
+
 Lottery1::Lottery1(Market market, Address contract) :
     Lottery(typeid(*this).name()),
 
@@ -48,20 +100,6 @@ std::pair<Float, uint256_t> Lottery1::Credit(const uint256_t &now, const uint256
     // XXX in fact I am not correctly modelling this problem at all anymore
     const auto bid((*market_.bid_)());
     return {(Float(amount) * market_.currency_.dollars_() - Float(gas * bid) * market_.currency_.dollars_()) * (Float(ratio) + 1) / Two128, bid};
-}
-
-task<uint128_t> Lottery1::Check_(const Address &signer, const Address &funder, const Address &recipient) {
-    static Selector<std::tuple<uint256_t, uint256_t>, Address, Address, Address> read_("read");
-    auto [escrow_balance, unlock_warned] = co_await read_.Call(*market_.chain_, "latest", contract_, 90000, {}, funder, signer);
-
-    // XXX: check loop for merchant
-
-    const uint128_t escrow(escrow_balance >> 128);
-    const uint128_t balance(escrow_balance);
-    const uint128_t unlock(unlock_warned >> 128);
-    const uint128_t warned(unlock_warned);
-
-    co_return escrow < warned ? 0 : std::min((escrow - warned) / 2, balance);
 }
 
 }

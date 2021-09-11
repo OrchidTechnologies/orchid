@@ -23,6 +23,8 @@
 #ifndef ORCHID_CHAIN_HPP
 #define ORCHID_CHAIN_HPP
 
+#include <cppcoro/async_generator.hpp>
+
 #include "base.hpp"
 #include "crypto.hpp"
 #include "endpoint.hpp"
@@ -107,6 +109,12 @@ struct Flags {
     std::optional<uint256_t> bid_;
 };
 
+struct Entry {
+    uint64_t block_;
+    Bytes data_;
+    std::vector<Bytes32> topics_;
+};
+
 class Chain :
     public Valve,
     public Endpoint
@@ -183,6 +191,8 @@ class Chain :
     task<std::optional<Receipt>> operator [](const Bytes32 &transaction) const;
 
     task<Address> Resolve(const Argument &height, const std::string &name) const;
+
+    cppcoro::async_generator<Entry> Logs(uint64_t begin, uint64_t end, Address contract);
 
     task<Beam> Code(const Block &block, const Address &contract) const {
         // XXX: verify hash
