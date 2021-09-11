@@ -78,7 +78,7 @@ struct Global {
 }; Locked<Global> global_;
 
 struct Report {
-    std::string stakee_;
+    Address stakee_;
     std::optional<Float> cost_;
     Float speed_;
     Host host_;
@@ -123,7 +123,7 @@ task<Report> TestOpenVPN(const S<Base> &base, std::string ovpn) {
         remote.Open();
         const auto [speed, size] = co_await Measure(remote);
         const auto host(co_await Find(remote));
-        co_return Report{"", std::nullopt, speed, host, {}, ""};
+        co_return Report{{}, std::nullopt, speed, host, {}, ""};
     });
 }
 
@@ -134,7 +134,7 @@ task<Report> TestWireGuard(const S<Base> &base, std::string config) {
         remote.Open();
         const auto host(co_await Find(remote));
         const auto [speed, size] = co_await Measure(remote);
-        co_return Report{"", std::nullopt, speed, host, {}, ""};
+        co_return Report{{}, std::nullopt, speed, host, {}, ""};
     });
 }
 
@@ -170,7 +170,7 @@ task<Report> TestOrchid(const S<Base> &base, std::string name, const S<Network> 
         const auto recipient(client.Recipient());
         const auto version(co_await Version(*base, provider.locator_));
         const auto cost((spent - balance) / minimum * (1024 * 1024 * 1024));
-        co_return Report{provider.address_.str(), cost, speed, host, recipient, version};
+        co_return Report{provider.address_, cost, speed, host, recipient, version};
     });
 }
 
@@ -515,14 +515,10 @@ int Main(int argc, const char *const argv[]) {
 
         Pile<Float, uint256_t> costs;
         for (const auto &[name, provider] : state->providers_)
-            if (const auto report = std::get_if<1>(&provider)) {
-                if (!report->cost_ || *report->cost_ == 0)
-                    continue;
-                const auto stake(state->stakes_.find(report->stakee_));
-                if (stake != state->stakes_.end())
-                    costs(*report->cost_, stake->second.amount_);
-            }
-
+            if (const auto report = std::get_if<1>(&provider))
+                if (report->cost_ && *report->cost_ != 0)
+                    if (const auto stake(state->stakes_.find(report->stakee_)); stake != state->stakes_.end())
+                        costs(*report->cost_, stake->second.amount_);
         return costs.med();
     });
 
