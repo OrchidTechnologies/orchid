@@ -80,6 +80,38 @@ namespace po = boost::program_options;
 
 int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params);
 
+task<bool> Symmetric(const S<Base> &base) {
+    const auto offer(co_await Description(base, {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"}));
+    std::cout << std::endl;
+    std::cout << Filter(false, offer) << std::endl;
+
+    webrtc::JsepSessionDescription jsep(webrtc::SdpType::kOffer);
+    webrtc::SdpParseError error;
+    orc_assert(webrtc::SdpDeserialize(offer, &jsep, &error));
+
+    auto description(jsep.description());
+    orc_assert(description != nullptr);
+
+    std::map<Socket, Socket> reflexive;
+
+    for (size_t i(0); ; ++i) {
+        const auto ices(jsep.candidates(i));
+        if (ices == nullptr)
+            break;
+        for (size_t i(0), e(ices->count()); i != e; ++i) {
+            const auto ice(ices->at(i));
+            orc_assert(ice != nullptr);
+            const auto &candidate(ice->candidate());
+            if (candidate.type() != "stun")
+                continue;
+            if (!reflexive.emplace(candidate.related_address(), candidate.address()).second)
+                co_return true;
+        }
+    }
+
+    co_return false;
+}
+
 int Main(int argc, const char *const argv[]) {
     std::vector<std::string> chains;
 
@@ -222,39 +254,7 @@ int Main(int argc, const char *const argv[]) {
 
 
     S<Base> base(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
-
-
-    {
-        const auto offer(Wait(Description(base, {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"})));
-        std::cout << std::endl;
-        std::cout << Filter(false, offer) << std::endl;
-
-        webrtc::JsepSessionDescription jsep(webrtc::SdpType::kOffer);
-        webrtc::SdpParseError error;
-        orc_assert(webrtc::SdpDeserialize(offer, &jsep, &error));
-
-        auto description(jsep.description());
-        orc_assert(description != nullptr);
-
-        std::map<Socket, Socket> reflexive;
-
-        for (size_t i(0); ; ++i) {
-            const auto ices(jsep.candidates(i));
-            if (ices == nullptr)
-                break;
-            for (size_t i(0), e(ices->count()); i != e; ++i) {
-                const auto ice(ices->at(i));
-                orc_assert(ice != nullptr);
-                const auto &candidate(ice->candidate());
-                if (candidate.type() != "stun")
-                    continue;
-                if (!reflexive.emplace(candidate.related_address(), candidate.address()).second) {
-                    std::cerr << "server must not use symmetric NAT" << std::endl;
-                    return 1;
-                }
-            }
-        }
-    }
+    orc_assert_(!Wait(Symmetric(base)), "server must not use symmetric NAT");
 
 
     auto cashier([&]() -> S<Cashier> {
@@ -350,6 +350,8 @@ int Main(int argc, const char *const argv[]) {
         Egress::Wire(egress, *remote);
         remote->Open();
         co_await remote->Resolve("one.one.one.one", "443");
+        if (co_await Symmetric(remote))
+            Log() << "egress should not use symmetric NAT" << std::endl;
     }());
 
 
