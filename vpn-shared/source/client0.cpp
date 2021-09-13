@@ -63,8 +63,6 @@ task<void> Client0::Submit(const Float &amount) {
 };
 
 void Client0::Invoice(const Bytes32 &id, const Buffer &data) {
-    Client::Invoice(id, data);
-
     const auto [command, window] = Take<uint32_t, Window>(data);
     if (command != Invoice0_)
         return;
@@ -83,6 +81,9 @@ void Client0::Invoice(const Bytes32 &id, const Buffer &data) {
             locked->ring_ = Ring(recipient);
         }
     }
+
+    // XXX: this just needs to be re-designed from scratch
+    Client::Invoice(id, data);
 }
 
 Client0::Client0(BufferDrain &drain, S<Updated<Prices>> oracle, Token token, const Address &lottery, const Secret &secret, const Address &funder, const Address &seller, Bytes hoarded, const uint128_t &face) :

@@ -51,8 +51,6 @@ task<void> Client1::Submit(const Float &amount) {
 }
 
 void Client1::Invoice(const Bytes32 &id, const Buffer &data) {
-    Client::Invoice(id, data);
-
     const auto [command, window] = Take<uint32_t, Window>(data);
     if (command != Invoice0_)
         return;
@@ -67,6 +65,9 @@ void Client1::Invoice(const Bytes32 &id, const Buffer &data) {
         locked->commit_ = commit;
         locked->recipient_ = recipient;
     }
+
+    // XXX: this just needs to be re-designed from scratch
+    Client::Invoice(id, data);
 }
 
 Client1::Client1(BufferDrain &drain, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder, const uint128_t &face) :
