@@ -236,19 +236,17 @@ class _ConnectPageState extends State<ConnectPage>
         ),
 
         // The connect button
-        SafeArea(
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: EdgeInsets.only(bottom: _showWelcomePane ? 80 : 40.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildStatusMessageLine(),
-                  pady(20),
-                  _buildConnectButton(),
-                ],
-              ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: _showWelcomePane ? 80 : 40.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildStatusMessageLine(),
+                pady(20),
+                _buildConnectButton(),
+              ],
             ),
           ),
         ),
