@@ -212,7 +212,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       padding: const EdgeInsets.only(left: 24, top: 24, bottom: 24, right: 16),
       child: Column(
         children: <Widget>[
-          if (AppSize(context).tallerThan(AppSize.iphone_12_max)) pady(64),
+          if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max)) pady(64),
           _buildSection(
               title: s.account, child: _buildAccountDetails(), onDetail: null),
           pady(16),

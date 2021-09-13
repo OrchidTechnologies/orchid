@@ -26,6 +26,7 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
+import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/streams.dart';
 import 'package:orchid/util/units.dart';
 
@@ -253,11 +254,9 @@ class _ConnectPageState extends State<ConnectPage>
 
         // The welcome panel
         if (_showWelcomePane)
-          SafeArea(
-            child: Container(
-              alignment: Alignment.bottomCenter,
-              child: WelcomePanel(),
-            ),
+          Container(
+            alignment: Alignment.bottomCenter,
+            child: WelcomePanel(),
           )
       ],
     );

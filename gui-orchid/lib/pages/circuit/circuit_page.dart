@@ -228,7 +228,7 @@ class CircuitPageState extends State<CircuitPage>
               firstChild: _buildEnableVPNInstruction(),
               secondChild: pady(16),
             ),
-            if (AppSize(context).tallerThan(AppSize.iphone_12_max)) pady(64),
+            if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max)) pady(64),
             AnimatedBuilder(
                 animation: Listenable.merge(
                     [_connectAnimController, _bunnyDuckAnimation]),
