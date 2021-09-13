@@ -64,6 +64,7 @@
 #include "node.hpp"
 #include "remote.hpp"
 #include "scope.hpp"
+#include "sequence.hpp"
 #include "server.hpp"
 #include "site.hpp"
 #include "store.hpp"
@@ -292,18 +293,18 @@ int Main(int argc, const char *const argv[]) {
 
         const Address contract(args["lottery1"].as<std::string>());
 
-        for (const auto &market : chains) {
+        *co_await Parallel(Map([&](const auto &market) -> task<void> {
             auto [chain, currency, locator] = [&]() {
                 const auto [chain, currency, locator] = Split<3>(market, {','});
                 return std::make_tuple(uint256_t(chain.operator std::string()), currency.operator std::string(), Locator(locator.operator std::string()));
             }();
             auto market$(co_await Market::New(milliseconds, chain, base, std::move(locator), std::move(currency)));
             const auto bid((*market$.bid_)());
-            Log() << market$.currency_.name_ << " $" << (Float(bid) * market$.currency_.dollars_() * 100000) << " @" << std::dec << bid << std::endl;
+            Log() << std::dec << chain << ":" << market$.currency_.name_ << " $" << (Float(bid) * market$.currency_.dollars_() * 100000) << " @" << std::dec << bid << std::endl;
             auto lottery1(Break<Lottery1>(std::move(market$), contract));
             lottery1->Open();
             lotteries1.try_emplace(std::move(chain), std::move(lottery1));
-        }
+        }, chains));
 
         auto croupier(Make<Croupier>(recipient, std::move(executor), std::move(lottery0), std::move(lotteries1)));
         co_return std::move(croupier);
