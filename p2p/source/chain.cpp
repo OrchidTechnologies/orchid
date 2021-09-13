@@ -287,7 +287,7 @@ Account::Account(const Block &block, const Json::Value &value) :
         orc_assert(leaf.buf().size() == 0);
         orc_assert(nonce_ == 0);
         orc_assert(balance_ == 0);
-        orc_assert(storage_ == EmptyVector);
+        orc_assert_(storage_ == EmptyVector, "storage == " << storage_);
         orc_assert(code_ == EmptyScalar);
     } else {
         switch (leaf.size()) {
