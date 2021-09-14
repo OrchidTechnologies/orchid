@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/monitoring/restart_manager.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
@@ -13,6 +14,7 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
+import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_detail_poller.dart';
@@ -218,22 +220,27 @@ class _ConnectPageState extends State<ConnectPage>
   Widget build(BuildContext context) {
     return Stack(
       children: <Widget>[
-        Align(
-          alignment: Alignment.topCenter,
-          child: AnimatedBuilder(
-              animation: _logoController.listenable,
-              builder: (BuildContext context, Widget child) {
-                return NeonOrchidLogo(
-                  light: _logoController.value,
-                  offset: _logoController.offset,
-                );
-                // return NeonOrchidLogo(light: 1.0);
-              }),
-        ),
+        if (!isReallyShort)
+          Align(
+            alignment: Alignment.topCenter,
+            child: AnimatedBuilder(
+                animation: _logoController.listenable,
+                builder: (BuildContext context, Widget child) {
+                  return NeonOrchidLogo(
+                    light: _logoController.value,
+                    offset: _logoController.offset,
+                  );
+                  // return NeonOrchidLogo(light: 1.0);
+                }),
+          ),
 
         // The page content including the button title, button, and route info when connected.
         SafeArea(
-          child: _buildPageContent(),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20),
+            // padding: EdgeInsets.zero,
+            child: _buildPageContent(),
+          ),
         ),
 
         // The connect button
@@ -303,10 +310,9 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// The page content including the button title, button, and route info when connected.
   Widget _buildPageContent() {
-    // var tall = AppSize(context).tallerThan(AppSize.iphone_se);
     return Column(
       children: <Widget>[
-        Spacer(flex: 3),
+        if (!isReallyShort) Spacer(flex: isShort ? 2 : 3),
         _buildManageAccountsCard(),
         pady(24),
         _buildStatusPanel(),
@@ -322,13 +328,17 @@ class _ConnectPageState extends State<ConnectPage>
           await AppRoutes.pushAccountManager(context);
           _updateStats(null);
         },
-        child: ManageAccountsCard(accountDetail: _activeAccount));
+        child: ManageAccountsCard(
+          accountDetail: _activeAccount,
+          minHeight: isShort,
+        ));
   }
 
   // only shows for v1
   Widget _buildStatusPanel() {
     return ConnectStatusPanel(
       key: Key(_activeAccount?.account?.identityUid ?? ""),
+      minHeight: isShort,
       bandwidthPrice: _bandwidthPrice,
       circuitHops: _circuitHops,
       bandwidthAvailableGB: _bandwidthAvailableGB,
@@ -499,6 +509,14 @@ class _ConnectPageState extends State<ConnectPage>
       _activeAccount = null;
     }
     setState(() {});
+  }
+
+  bool get isShort {
+    return AppSize(context).shorterThan(Size(0, 700));
+  }
+
+  bool get isReallyShort {
+    return AppSize(context).shorterThan(Size(0, 590));
   }
 
   @override
