@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'app_text.dart';
 
 /// Instructional text with vertically arranged image, title, and body.
@@ -8,6 +9,7 @@ import 'app_text.dart';
 class InstructionsView extends StatelessWidget {
   final Image image;
   final String title;
+  final Color titleColor;
   final String body;
   final bool hideInLandscape;
   final List<Widget> children;
@@ -21,6 +23,7 @@ class InstructionsView extends StatelessWidget {
     this.hideInLandscape = true,
     this.children = const <Widget>[],
     this.bodyFontSize,
+    this.titleColor,
   }) : super(key: key);
 
   @override
@@ -38,21 +41,15 @@ class InstructionsView extends StatelessWidget {
                   children: <Widget>[
                         image ?? Container(),
                         SizedBox(height: 20),
-                        AppText.header(
-                            text: title,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                            fontSize: 18.0),
+                        Text(title, style: OrchidText.title.copyWith(color: titleColor ?? textColor)),
                         SizedBox(height: 20),
                         ConstrainedBox(
                           constraints: BoxConstraints(maxWidth: 450),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 45),
-                            child: body != null ? AppText.body(
-                                text: body,
-                                fontWeight: FontWeight.w500,
-                                fontSize: bodyFontSize ?? 11.0,
-                                color: textColor) : Container(),
+                            child: body != null ?
+                                Text(body, style: OrchidText.body1.copyWith(color: textColor))
+                                : Container(),
                           ),
                         ),
                       ] +

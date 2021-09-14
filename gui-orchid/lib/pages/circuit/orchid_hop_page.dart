@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:badges/badges.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +21,7 @@ import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/util/units.dart';
@@ -163,7 +163,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildCreateModeContent() {
-    var bodyStyle = TextStyle(fontSize: 16, color: Colors.white);
+    // var bodyStyle = TextStyle(fontSize: 16, color: Colors.white);
+    var bodyStyle = OrchidText.body2;
     // var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
 
     var text = StyledText(
@@ -186,12 +187,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           InstructionsView(
             image: Image.asset('assets/images/group12.png'),
             title: s.selectAnOrchidAccount,
+            titleColor: Colors.white,
           ),
           text,
           pady(16),
           LinkText(
             s.takeMeToTheAccountManager,
-            style: AppText.linkStyle.copyWith(fontStyle: FontStyle.italic),
+            style: OrchidText.body1.linkStyle,
             onTapped: () {
               Navigator.of(context).push(new MaterialPageRoute(
                   builder: (context) => AccountManagerPage()));
@@ -353,9 +355,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       children: <Widget>[
         Text(
           s.orchidIdentitySignerKey + ':',
-          style: AppText.textLabelStyle.copyWith(
-              fontSize: 16,
-              color: _keyRefValid() ? AppColors.white : Colors.grey),
+          style: OrchidText.button
+              .copyWith(color: _keyRefValid() ? Colors.white : Colors.grey),
         ),
         pady(8),
         Row(
@@ -401,7 +402,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         trailing: FlatButton(
             color: Colors.transparent,
             padding: EdgeInsets.zero,
-            child: Text(s.paste, style: AppText.pasteButtonStyle),
+            child: Text(s.paste, style: OrchidText.button.purpleBright),
             onPressed: _onPasteImportedKey));
   }
 
@@ -411,9 +412,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(s.funderAccount + ':',
-            style: AppText.textLabelStyle.copyWith(
-                fontSize: 16,
-                color: _funderValid() ? AppColors.white : AppColors.neutral_3)),
+            style: OrchidText.button.copyWith(
+                color: _funderValid() ? Colors.white : AppColors.neutral_3)),
         pady(widget.readOnly() ? 4 : 8),
 
         Row(
@@ -449,7 +449,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               _selectedFunderItem?.option ==
                   FunderSelectionDropdown.pasteKeyOption,
           child: Padding(
-            padding: const EdgeInsets.only(top: 16),
+            padding: const EdgeInsets.only(top: 24),
             child: _buildPasteFunderField(),
           ),
         )
@@ -461,15 +461,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        /*
-        Text("Funder Account" ':',
-            style: AppText.textLabelStyle.copyWith(
-                fontSize: 16,
-                color: _funderValid()
-                    ? AppColors.neutral_1
-                    : AppColors.neutral_3)),
-        pady(widget.readOnly() ? 4 : 8),
-         */
         OrchidTextField(
             hintText: '0x...',
             margin: EdgeInsets.zero,
@@ -480,7 +471,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                 ? FlatButton(
                     color: Colors.transparent,
                     padding: EdgeInsets.zero,
-                    child: Text(s.paste, style: AppText.pasteButtonStyle),
+                    child: Text(s.paste, style: OrchidText.button.purpleBright),
                     onPressed: _onPasteFunderAddress)
                 : null)
       ],

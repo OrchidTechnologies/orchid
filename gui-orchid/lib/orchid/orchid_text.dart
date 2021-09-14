@@ -94,6 +94,11 @@ extension TextStyleExtensions on TextStyle {
     return this.copyWith(color: Colors.white);
   }
 
+  // mainly for debugging
+  TextStyle get orange {
+    return this.copyWith(color: Colors.orange);
+  }
+
   TextStyle get medium {
     return this.copyWith(fontWeight: FontWeight.w500);
   }
