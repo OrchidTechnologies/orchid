@@ -293,7 +293,7 @@ int Main(int argc, const char *const argv[]) {
 
         const Address contract(args["lottery1"].as<std::string>());
 
-        *co_await Parallel(Map([&](const auto &market) -> task<void> {
+        *co_await Parallel(Map([&](const std::string &market) -> task<void> {
             auto [chain, currency, locator] = [&]() {
                 const auto [chain, currency, locator] = Split<3>(market, {','});
                 return std::make_tuple(uint256_t(chain.operator std::string()), currency.operator std::string(), Locator(locator.operator std::string()));
