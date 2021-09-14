@@ -1,11 +1,18 @@
 #!/bin/bash
 set -e
 
+which sudo &>/dev/null || function sudo() {
+    [[ "$1" == -EH ]]
+    shift
+    "$@"
+}
+
 export DEBIAN_FRONTEND=noninteractive
+sudo -EH apt-get update
 
 sudo -EH apt-get -y install \
-    bc cpio rpm rsync vim-common \
-    capnproto tcl zstd \
+    bc curl git-core rsync tcl vim-common \
+    capnproto cpio rpm unzip zstd \
     clang clang-tidy lld \
     libc++-dev libc++abi-dev \
     g++-multilib gcc-multilib \

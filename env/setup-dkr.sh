@@ -3,9 +3,9 @@ set -e
 set -o pipefail
 cd "$(dirname "$0")/.."
 
-export DEBIAN_FRONTEND=noninteractive
-apt-get update
-apt-get -y install curl git-core software-properties-common sudo unzip
+env/setup-lnx.sh
+
+apt-get -y install software-properties-common
 
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9
 apt-add-repository "deb http://repos.azul.com/azure-only/zulu/apt stable main"
@@ -18,7 +18,4 @@ unzip -d /usr/local/lib/android/sdk android-sdk.zip
 rm -f android-sdk.zip
 echo y | /usr/local/lib/android/sdk/tools/bin/sdkmanager "build-tools;30.0.2" "ndk;22.1.7171670" >/dev/null
 
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain=stable --profile=minimal
-
-env/setup-lnx.sh
 "$@"
