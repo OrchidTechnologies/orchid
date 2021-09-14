@@ -5,9 +5,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/side_drawer.dart';
+import 'package:orchid/util/on_off.dart';
 import 'connect/connect_page.dart';
 
 // Provide the MaterialApp wrapper and localization context.
@@ -46,7 +48,7 @@ class OrchidAppNoTabs extends StatefulWidget {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 450, maxHeight: 900),
+          constraints: BoxConstraints(maxWidth: 450, maxHeight: AppSize.iphone_12_pro_max.height),
           child: child),
     );
   }

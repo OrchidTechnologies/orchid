@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 /// Sometimes useful for comparing or debugging visual effects
@@ -40,5 +41,37 @@ class _OnOffState extends State<OnOff> {
   void dispose() {
     timer.cancel();
     super.dispose();
+  }
+}
+
+Widget orange(Widget child) {
+  return Orange(child: child);
+}
+
+class Orange extends StatelessWidget {
+  final Widget child;
+
+  const Orange({Key key, this.child}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.orange,
+      child: child,
+    );
+  }
+}
+
+class Green extends StatelessWidget {
+  final Widget child;
+
+  const Green({Key key, this.child}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.green,
+      child: child,
+    );
   }
 }

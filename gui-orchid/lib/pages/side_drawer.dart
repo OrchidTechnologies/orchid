@@ -8,6 +8,7 @@ import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/on_off.dart';
 import '../common/tap_copy_text.dart';
 import 'app_routes.dart';
 
@@ -190,20 +191,22 @@ class SideDrawerTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
       child: OrchidPanel(
-        child: ListTile(
-            contentPadding: EdgeInsets.only(left: 16, right: 16),
-            horizontalTitleGap: 4,
-            leading: Padding(
-              padding: EdgeInsets.only(left: hoffset),
-              child: leading,
-            ),
-            trailing: showDetail
-                ? Icon(Icons.chevron_right, color: AppColors.white)
-                : null,
-            title: Text(title,
-                textAlign: TextAlign.left,
-                style: OrchidText.subtitle.copyWith(height: 1.5)),
-            onTap: onPressed),
+        child: Container(
+          child: ListTile(
+              contentPadding: EdgeInsets.only(left: 16, right: 16),
+              horizontalTitleGap: 0,
+              leading: Padding(
+                padding: EdgeInsets.only(left: hoffset),
+                child: leading,
+              ),
+              trailing: showDetail
+                  ? Icon(Icons.chevron_right, color: AppColors.white)
+                  : null,
+              title: Text(title,
+                  textAlign: TextAlign.left,
+                  style: OrchidText.subtitle.copyWith(height: 1.5)),
+              onTap: onPressed),
+        ),
       ),
     );
   }

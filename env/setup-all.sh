@@ -1,3 +1,3 @@
 #!/bin/bash
 set -e
-~/.cargo/bin/rustup update
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain=stable --profile=minimal

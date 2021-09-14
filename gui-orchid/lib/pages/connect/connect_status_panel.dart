@@ -12,19 +12,20 @@ class ConnectStatusPanel extends StatelessWidget {
   final USD bandwidthPrice;
   final double bandwidthAvailableGB;
   final int circuitHops;
+  final bool minHeight;
 
   const ConnectStatusPanel({
     Key key,
     @required this.bandwidthPrice,
     @required this.bandwidthAvailableGB,
     @required this.circuitHops,
+    this.minHeight = false,
   }) : super(key: key);
 
   Widget build(BuildContext context) {
     return FittedBox(
       child: SizedBox(
         width: 312,
-        height: 126,
         child: Row(
           children: [
             _buildGBPanel(context),
@@ -74,13 +75,14 @@ class ConnectStatusPanel extends StatelessWidget {
   Widget _buildPanel({Widget icon, String text, String subtext}) {
     return SizedBox(
       width: 88,
-      height: 126,
+      height: minHeight ? 74 : 40.0 + 12.0 + 74.0,
       child: OrchidPanel(
           child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(width: 40, height: 40, child: Center(child: icon)),
-          pady(12),
+          if (!minHeight)
+            Container(width: 40, height: 40, child: Center(child: icon)),
+          if (minHeight) pady(8) else pady(12),
           Text(text, style: OrchidText.body2),
           pady(4),
           Text(subtext,

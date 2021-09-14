@@ -99,7 +99,7 @@ class ScanOrPasteDialog extends StatelessWidget {
                     FittedBox(
                       child: ScanOrPasteOrchidAccount(
                         spacing:
-                            screenWidth < AppSize.iphone_12_max.width ? 8 : 16,
+                            screenWidth < AppSize.iphone_12_pro_max.width ? 8 : 16,
                         onImportAccount:
                             (ParseOrchidAccountResult result) async {
                           onImportAccount(result);

@@ -91,6 +91,7 @@ class _WelcomePanelState extends State<WelcomePanel>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildTitleRow(titleText, alert: true),
+        if (_collapsed) pady(16),
         if (!_collapsed) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 60),
@@ -165,7 +166,6 @@ class _WelcomePanelState extends State<WelcomePanel>
   }) {
     return Container(
       decoration: BoxDecoration(
-        // border: Border.all(color: Colors.white),
         color: OrchidColors.blueHighlight,
         // Needed during the animated collapse - cliprrect doesn't mask during?
         borderRadius: _collapsed
@@ -179,7 +179,7 @@ class _WelcomePanelState extends State<WelcomePanel>
           Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: const EdgeInsets.only(top: 16.0),
+                padding: const EdgeInsets.only(top: 6.0),
                 child: _buildToggleButton(),
               )),
         ],

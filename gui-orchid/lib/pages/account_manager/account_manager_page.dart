@@ -320,7 +320,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         if (_accountStore.activeIdentity != null)
           Container(
             width:
-                AppSize(context).widerThan(AppSize.iphone_12_max) ? null : 238,
+                AppSize(context).widerThan(AppSize.iphone_12_pro_max) ? null : 238,
             child: Center(
               child: TapToCopyText(
                 _accountStore.activeIdentity.address.toString(),

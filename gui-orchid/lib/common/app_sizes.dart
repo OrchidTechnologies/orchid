@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 // TODO: Move to util
 class AppSize {
+  static const Size small_android = Size(360, 640);
   static const Size iphone_se = Size(320, 568);
   static const Size iphone_xs = Size(375, 812); // Original X and Xs
-  static const Size iphone_12_max = Size(428, 926);
+  static const Size iphone_12_pro_max = Size(428, 926);
 
   Size size;
 

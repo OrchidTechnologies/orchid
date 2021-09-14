@@ -13,16 +13,18 @@ import '../../orchid/orchid_text.dart';
 /// Active account info and "manage accounts" button used on the connect page.
 class ManageAccountsCard extends StatelessWidget {
   final AccountDetail accountDetail;
+  final bool minHeight;
 
   const ManageAccountsCard({
     Key key,
     this.accountDetail,
+    this.minHeight = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 180,
+      height: minHeight? 174 : 180,
       child: Stack(
         children: [
           Align(
@@ -40,6 +42,7 @@ class ManageAccountsCard extends StatelessWidget {
             alignment: Alignment.topCenter,
             child: OrchidCircularIdenticon(
               address: accountDetail?.signer,
+              size: minHeight ? 48 : 60,
             ),
           ),
         ],
