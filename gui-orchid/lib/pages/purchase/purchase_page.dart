@@ -100,7 +100,8 @@ class _PurchasePageState extends State<PurchasePage> {
                   constraints: BoxConstraints(maxWidth: 500),
                   child: Column(
                     children: <Widget>[
-                      if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max))
+                      if (AppSize(context)
+                          .tallerThan(AppSize.iphone_12_pro_max))
                         pady(64),
                       pady(12),
                       _buildTopText(),
@@ -234,9 +235,10 @@ class _PurchasePageState extends State<PurchasePage> {
         .copyWith(fontSize: 12, fontWeight: FontWeight.w600, height: 18 / 12);
     return StyledText(
       style: bodyStyle,
-      text: "Orchid accounts include 24/7 customer support, unlimited devices and are backed by the <link2>xDai cryptocurrency</link2>." +
+      text: s.orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre +
           ' ' +
-          "Purchased accounts connect exclusively to our <link1>preferred providers</link1>. Refund policy covered by app stores.",
+          s.purchasedAccountsConnectExclusivelyToOur +
+          s.refundPolicyCoveredByAppStores,
       tags: {
         'link1': linkStyle.link(OrchidUrls.preferredProviders),
         'link2': linkStyle.link(OrchidUrls.xdaiChain),
@@ -245,20 +247,17 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Widget _buildPacList() {
-    var linkStyle = AppText.linkStyle.copyWith(
-      fontSize: 15.0,
-      // height: 1.3,
-      // fontStyle: FontStyle.italic,
-    );
+    // var linkStyle = AppText.linkStyle.copyWith(fontSize: 15.0);
+    var linkStyle = OrchidText.linkStyle;
     var unavailableText = StyledText(
       style: OrchidText.body1.copyWith(color: OrchidColors.purple_bright),
       newLineAsBreaks: true,
-      text: "Orchid is unable to display in-app purchases at this time." +
-          "  Please confirm that this device supports and is configured " +
-          "for in-app purchases" +
+      text: s.orchidIsUnableToDisplayInappPurchasesAtThisTime +
+          '  ' +
           (OrchidPlatform.isApple
-              ? "."
-              : " or use our decentralized <link>account management</link> system."),
+              // Duplication here is to allow for better localization
+              ? s.pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor
+              : s.pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized),
       tags: {
         'link': linkStyle
             .copyWith(fontStyle: FontStyle.italic)
@@ -304,7 +303,7 @@ class _PurchasePageState extends State<PurchasePage> {
     return [
       _buildPurchaseCardView(
         pac: pac1,
-        title: "12GB (approximately)",
+        title: s.gbApproximately12,
         subtitle: _buildPurchaseDescriptionText(
           text: s.goodForBrowsingAndLightActivity,
         ),
@@ -312,19 +311,19 @@ class _PurchasePageState extends State<PurchasePage> {
       pady(24),
       _buildHighlightedPurchaseCardView(
         pac: pac2,
-        title: "60GB (approximately)",
+        title: s.gbApproximately60,
         subtitle: _buildPurchaseDescriptionText(
           text:
-              "Ideal size for medium-term, individual usage that includes browsing and light streaming.",
+              s.idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd,
         ),
-        highlightText: "Most Popular!",
+        highlightText: s.mostPopular,
       ),
       pady(24),
       _buildPurchaseCardView(
         pac: pac3,
-        title: "240GB (approximately)",
+        title: s.gbApproximately240,
         subtitle: _buildPurchaseDescriptionText(
-            text: "Bandwidth-heavy, long-term usage or shared accounts."),
+            text: s.bandwidthheavyLongtermUsageOrSharedAccounts),
       ),
     ];
   }
@@ -508,7 +507,7 @@ class _PurchasePageState extends State<PurchasePage> {
                             ),
                             pady(4),
                             Text(
-                              "Total",
+                              s.total,
                               style: style1.bold,
                               textAlign: TextAlign.left,
                             ),
@@ -553,7 +552,7 @@ class _PurchasePageState extends State<PurchasePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     RoundedRectButton(
-                      text: "BUY",
+                      text: s.buy,
                       onPressed: () {
                         Navigator.of(context).pop(true);
                         _purchase(purchase: pac);

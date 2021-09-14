@@ -108,7 +108,6 @@ class _AccountCardState extends State<AccountCard>
   }
 
   Widget _buildCardContent(BuildContext context) {
-    S s = S.of(context);
     final efficiency = widget.accountDetail?.marketConditions?.efficiency;
     final tokenType = widget.accountDetail?.lotteryPot?.balance?.type;
     return Stack(
@@ -174,7 +173,7 @@ class _AccountCardState extends State<AccountCard>
 
   Widget _buildInfoColumn() {
     final text = widget.accountDetail?.signer == null
-        ? "No account selected"
+        ? s.noAccountSelected
         : widget.accountDetail.signer.toString();
     final textWidth =
         expanded ? 250.0 : (widget.accountDetail == null ? null : 120.0);
@@ -199,8 +198,7 @@ class _AccountCardState extends State<AccountCard>
           ),
           pady(expanded ? 12 : 4),
           Text(
-            widget.active ? s.active : "Inactive",
-            //key: Key(widget.active.toString()),
+            widget.active ? s.active : s.inactive,
             style: OrchidText.caption.copyWith(
               color: widget.active ? activeColor : inactiveColor,
             ),
@@ -298,7 +296,7 @@ class _AccountCardState extends State<AccountCard>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Tickets", style: OrchidText.body2),
+                Text(s.tickets, style: OrchidText.body2),
                 _buildGlowingTicketsChart(chartModel, efficiency)
               ],
             ),

@@ -208,10 +208,10 @@ class _TrafficViewState extends State<TrafficView>
                 // Toggle the value
                 var desiredMonitoringEnabled = !currentMonitoringEnabled;
                 var text = restarting
-                    ? "(RESTARTING)"
+                    ? "(${s.restarting})"
                     : (currentMonitoringEnabled
-                        ? "STOP ANALYSIS"
-                        : "START ANALYSIS");
+                        ? s.stopAnalysis
+                        : s.startAnalysis);
                 return OrchidActionButton(
                     enabled: !restarting,
                     text: text,

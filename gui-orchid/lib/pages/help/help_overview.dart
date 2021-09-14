@@ -69,8 +69,8 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
       customTextStyle: (dom.Node node, TextStyle baseStyle) {
         if (node is dom.Element) {
           switch (node.localName) {
-            case "h1": return baseStyle.merge(OrchidText.title.copyWith(fontSize: 24).copyWith(height: 1.0));
-            case "h2": return baseStyle.merge(OrchidText.title.copyWith(height: 1.0));
+            case 'h1': return baseStyle.merge(OrchidText.title.copyWith(fontSize: 24).copyWith(height: 1.0));
+            case 'h2': return baseStyle.merge(OrchidText.title.copyWith(height: 1.0));
           }
         }
         return baseStyle;

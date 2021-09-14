@@ -212,7 +212,7 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
   void _exportQR() {
     AppDialogs.showAppDialog(
         context: context,
-        title: "My Orchid Config" + ':',
+        title: s.myOrchidConfig + ':',
         body: Container(
           width: 250,
           height: 250,

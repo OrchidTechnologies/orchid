@@ -48,7 +48,7 @@ class ConnectStatusPanel extends StatelessWidget {
         text: bandwidthAvailableGB != null
             ? bandwidthAvailableGB.toStringAsFixed(1)
             : "...",
-        subtext: "GB");
+        subtext: s.gb);
   }
 
   Widget _buildUSDPanel(BuildContext context) {
@@ -60,7 +60,7 @@ class ConnectStatusPanel extends StatelessWidget {
         icon: SvgPicture.asset('assets/svg/dollars_icon.svg',
             width: 40, height: 40, color: Colors.white),
         text: price,
-        subtext: "USD/GB");
+        subtext: s.usdgb);
   }
 
   Widget _buildHopsPanel(BuildContext context) {
@@ -68,8 +68,8 @@ class ConnectStatusPanel extends StatelessWidget {
     return _buildPanel(
         icon: SvgPicture.asset('assets/svg/hops_icon.svg',
             width: 40, height: 25, color: Colors.white),
-        text: circuitHops == null ? '' : "$circuitHops Hop", // No pluralization
-        subtext: "Circuit");
+        text: circuitHops == null ? '' : "$circuitHops" + ' ' + s.hop, // No pluralization
+        subtext: s.circuit);
   }
 
   Widget _buildPanel({Widget icon, String text, String subtext}) {

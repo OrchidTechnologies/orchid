@@ -47,10 +47,10 @@ class ClearTrafficActionButton extends StatelessWidget {
     S s = S.of(context);
     AppDialogs.showConfirmationDialog(
         context: context,
-        title: "Clear all analysis data?",
-        bodyText: "This action will clear all previously analyzed traffic connection data.",
+        title: s.clearAllAnalysisData,
+        bodyText: s.thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData,
         cancelText: s.cancelButtonTitle.toUpperCase(),
-        actionText: "CLEAR ALL",
+        actionText: s.clearAll,
         commitAction: () async {
           await AnalysisDb().clear();
         });
