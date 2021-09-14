@@ -40,9 +40,10 @@ Pool::Pool() :
                 if (end_ == nullptr)
                     return;
                 if (begin_ == nullptr)
-                    continue;
+                    break;
                 work = begin_;
                 begin_ = work->next_;
+                work->next_ = nullptr;
                 if (end_ == &work->next_)
                     end_ = &begin_; }
             work->code_.resume();
