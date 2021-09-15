@@ -2,11 +2,11 @@
     "@@locale": "pt",
     "newHop": "Novo Hop",
     "@newHop": {
-      "description": "New network hop"
+        "description": "New network hop"
     },
     "orchidHop": "Salto Orchid",
     "@orchidHop": {
-      "description": "Orchid network hop"
+        "description": "Orchid network hop"
     },
     "orchidDisabled": "Orchid desativada",
     "trafficMonitoringOnly": "Apenas monitoração de tráfego",
@@ -14,9 +14,9 @@
     "orchidDisconnecting": "Orchid a terminar ligação",
     "numHopsConfigured": "{num, plural, zero{Sem Hop configurados} one{Um hop configurado} two{Dois hops configurados} other{{num} hops configurados}}",
     "@numHopsConfigured": {
-      "placeholders": {
-        "num": {}
-      }
+        "placeholders": {
+            "num": {}
+        }
     },
     "delete": "Remover",
     "turnOnToActivate": "Ligue a Orchid para ativar seus hops e proteger seu tráfego",
@@ -24,11 +24,11 @@
     "openVPN": "OpenVPN",
     "hops": "Saltos",
     "@hops": {
-      "description": "Network hops"
+        "description": "Network hops"
     },
     "traffic": "Tráfego",
     "@traffic": {
-      "description": "Network traffic"
+        "description": "Network traffic"
     },
     "curation": "Curadoria",
     "signerKey": "Chave do signatário",
@@ -122,10 +122,10 @@
     "seeTheOptions": "Ver opções",
     "scanOrPasteAccount": "Digitalize ou cole a conta",
     "@gb": {
-      "description": "Gigabytes"
+        "description": "Gigabytes"
     },
     "@ofTraffic": {
-      "description": "GB of traffic"
+        "description": "GB of traffic"
     },
     "scanOrPasteYourExistingAccountBelowToAddIt": "Digitalize ou cole sua conta existente abaixo para adicioná-la como um hop.",
     "linkAnOrchidAccount": "Conectar conta Orchid",
@@ -187,9 +187,9 @@
     "payPerUseVpnService": "Serviço de VPN pago por uso",
     "currentAvgVpnPriceIsPricePerGb": "O preço médio atual da VPN é {price} por GB",
     "@currentAvgVpnPriceIsPricePerGb": {
-      "placeholders": {
-        "price": {}
-      }
+        "placeholders": {
+            "price": {}
+        }
     },
     "notASubscriptionCreditsDontExpire": "Sem subscrição, créditos que não vencem",
     "shareAccountWithUnlimitedDevices": "Partilhe a sua conta com dispositivos ilimitados",
@@ -202,9 +202,9 @@
     "efficiency": "Eficiência",
     "minTicketsAvailableTickets": "Mín de tickets disponíveis: {tickets}",
     "@minTicketsAvailableTickets": {
-      "placeholders": {
-        "tickets": {}
-      }
+        "placeholders": {
+            "tickets": {}
+        }
     },
     "transactionSentToBlockchain": "Transação enviada para a blockchain",
     "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "A sua compra foi concluída encontra-se agora a ser processada pela blockchain xDai, o que pode levar até um minuto, algumas vezes mais. Puxe para baixo para atualizar, sua conta com o saldo atualizado será exibida abaixo.",
@@ -274,5 +274,36 @@
     "useCryptoWallet": "Usar carteira cripto",
     "vpnConnectedButNotRouting": "(VPN conectado, mas sem roteamento)",
     "yourAccountIsEmpty": "Sua conta está vazia!",
-    "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "A Sua identidade Orchid identifica-o com exclusividade na rede."
+    "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "A Sua identidade Orchid identifica-o com exclusividade na rede.",
+    "accounts": "Contas",
+    "addFunds": "Adicionar Fundos",
+    "averagePriceIsUSDPerGb": "O preço médio é {price} USD por GB",
+    "bandwidthheavyLongtermUsageOrSharedAccounts": "Grande largura de banda, uso de longo prazo ou contas compartilhadas.",
+    "buy": "Comprar",
+    "circuit": "O circuito",
+    "clearAll": "Limpar tudo",
+    "clearAllAnalysisData": "Limpar todos os dados de análise?",
+    "gb": "GB",
+    "gbApproximately12": "12 GB (aproximadamente)",
+    "gbApproximately240": "240 GB (aproximadamente)",
+    "gbApproximately60": "60 GB (aproximadamente)",
+    "hop": "Saltar",
+    "idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "Tamanho ideal para uso individual de médio prazo, que inclui navegação e streaming de luz.",
+    "inactive": "Inativo",
+    "mostPopular": "Mais popular!",
+    "myOrchidConfig": "My Orchid Config",
+    "noAccountSelected": "Nenhuma conta selecionada",
+    "orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "As contas Orchid incluem suporte ao cliente 24 horas por dia, 7 dias por semana, dispositivos ilimitados e são apoiadas pela <link2>criptomoeda xDai</link2>.",
+    "orchidIdentity": "Identidade Orquídea",
+    "orchidIsUnableToDisplayInappPurchasesAtThisTime": "O Orchid não consegue exibir as compras dentro do aplicativo no momento.",
+    "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "Confirme se este dispositivo é compatível e está configurado para compras no aplicativo.",
+    "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "Confirme se este dispositivo oferece suporte e está configurado para compras no aplicativo ou use nosso sistema descentralizado de <link>gerenciamento de contas</link> .",
+    "purchasedAccountsConnectExclusivelyToOur": "As contas adquiridas se conectam exclusivamente aos nossos <link1>provedores preferenciais</link1>.",
+    "refundPolicyCoveredByAppStores": "Política de reembolso coberta por lojas de aplicativos.",
+    "startAnalysis": "INICIAR ANÁLISE",
+    "stopAnalysis": "PARAR ANÁLISE",
+    "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "Esta ação irá limpar todos os dados de conexão de tráfego analisados anteriormente.",
+    "tickets": "Bilhetes",
+    "total": "Total",
+    "usdgb": "USD / GB"
 }
