@@ -185,12 +185,6 @@
     "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "होम स्क्रीन पर अपने सक्रिय खाते की शेष राशि और बैंडविड्थ दाम देखें।",
     "seeOrchidcomForHelp": "मदद के लिए orchid.com देखें।",
     "payPerUseVpnService": "उपयोग के अनुसार भुगतान करें वीपीएन सेवा",
-    "currentAvgVpnPriceIsPricePerGb": "वर्तमान औसत। वीपीएन दाम {price} प्रति जीबी है",
-    "@currentAvgVpnPriceIsPricePerGb": {
-        "placeholders": {
-            "price": {}
-        }
-    },
     "notASubscriptionCreditsDontExpire": "सदस्यता नहीं है, क्रेडिट कभी समाप्त नहीं होते",
     "shareAccountWithUnlimitedDevices": "खाते को असंख्य उपकरणों के साथ साझा करें",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "ऑर्किड स्टोर अस्थायी रूप से उपलब्ध नहीं है। चंद मिनटों के बाद दुबारा कोशिश करें।",
@@ -305,5 +299,7 @@
     "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "यह क्रिया पहले से विश्लेषण किए गए सभी ट्रैफ़िक कनेक्शन डेटा को साफ़ कर देगी।",
     "tickets": "टिकट",
     "total": "संपूर्ण",
-    "usdgb": "यूएसडी/जीबी"
+    "usdgb": "यूएसडी/जीबी",
+    "pausingAllTraffic": "समस्त ट्रैफ़िक रोक रहा है...",
+    "queryingEthereumForARandom": "एक यादृच्छिक प्रदाता के लिए इथेरियम को क्वेरी करना ..."
 }

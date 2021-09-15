@@ -72,7 +72,7 @@ class OrchidText {
   static TextStyle medium_24_050 = regular_24_050.medium;
 
   static TextStyle linkStyle =
-      body2.copyWith(decoration: TextDecoration.underline).purpleBright;
+      body2.copyWith(decoration: TextDecoration.underline).tappable;
 
   static LinkTextSpan buildLearnMoreLinkTextSpan(
       {BuildContext context, Color color}) {
@@ -159,6 +159,9 @@ extension TextExtensions on Text {
 extension OrchidTextStyleExtensions on TextStyle {
   TextStyle get purpleBright {
     return this.copyWith(color: OrchidColors.purple_bright);
+  }
+  TextStyle get tappable {
+    return purpleBright;
   }
 
   TextStyle get linkStyle {

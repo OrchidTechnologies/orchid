@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/titled_page_base.dart';
@@ -64,34 +65,19 @@ class _AddHopPageState extends State<AddHopPage> {
                   children: <Widget>[
                     if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max))
                       pady(64),
-                    pady(40),
+                    pady(32),
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
                       child: Image.asset('assets/images/approach.png',
                           height: 100),
                     ),
+                    pady(32),
+                    Text(
+                      s.orchidIsUniqueAsItSupportsMultipleVPN,
+                      textAlign: TextAlign.left,
+                      style: OrchidText.body2,
+                    ),
                     pady(24),
-                    Text(s.orchidIsUniqueAsItSupportsMultipleVPN,
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.normal,
-                            height: 1.12,
-                            letterSpacing: -0.24,
-                            color: Colors.white)),
-                    pady(24),
-
-                    /*
-                    // PAC Purchase
-                    if (_showPACs) _divider(),
-                    if (_showPACs)
-                      _buildHopChoice(
-                          text: s.buyOrchidAccount,
-                          onTap: () {
-                            _addHopFromPACPurchase();
-                          },
-                          svgName: 'assets/svg/attach_money.svg'),
-                     */
 
                     // Link Account
                     /*
@@ -118,13 +104,13 @@ class _AddHopPageState extends State<AddHopPage> {
 
                     // Account Chooser
                     // if (!OrchidPlatform.isApple) ...[
-                      _divider(),
-                      _buildHopChoice(
-                          text: s.useAnOrchidAccount,
-                          onTap: () {
-                            _addHopType(HopProtocol.Orchid);
-                          },
-                          imageName: 'assets/images/logo_small_purple.png'),
+                    _divider(),
+                    _buildHopChoice(
+                        text: s.useAnOrchidAccount,
+                        onTap: () {
+                          _addHopType(HopProtocol.Orchid);
+                        },
+                        imageName: 'assets/images/logo_small_purple.png'),
                     // ],
 
                     // OVPN Subscription
@@ -165,23 +151,20 @@ class _AddHopPageState extends State<AddHopPage> {
       String svgName,
       VoidCallback onTap,
       Widget trailing}) {
-    var color = OrchidColors.purple_ffb88dfc;
     return Container(
       child: ListTile(
           contentPadding: EdgeInsets.only(left: 0, right: 8, top: 8, bottom: 8),
           leading: svgName != null
-              ? SvgPicture.asset(svgName, width: 24, height: 24, color: Colors.white)
-              : Image.asset(imageName, width: 24, height: 24, color: Colors.white),
-          trailing:
-              trailing ?? Icon(Icons.chevron_right, color: Colors.white),
-          title: Text(text,
-              textAlign: TextAlign.left,
-              style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: 'SFProText',
-                  fontStyle: FontStyle.normal,
-                  fontSize: 18.0)),
+              ? SvgPicture.asset(svgName,
+                  width: 24, height: 24, color: Colors.white)
+              : Image.asset(imageName,
+                  width: 24, height: 24, color: Colors.white),
+          trailing: trailing ?? Icon(Icons.chevron_right, color: Colors.white),
+          title: Text(
+            text,
+            textAlign: TextAlign.left,
+            style: OrchidText.button.tappable.copyWith(fontSize: 19, height: 1.7),
+          ),
           onTap: onTap),
     );
   }

@@ -25,6 +25,7 @@ import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
+import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/strings.dart';
 import 'package:styled_text/styled_text.dart';
 
@@ -115,7 +116,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
                         _buildIdentityHeader(),
-                        pady(16),
+                        pady(8),
                         Padding(
                           padding:
                               const EdgeInsets.only(left: 28.0, right: 28.0),
@@ -318,7 +319,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               address: _accountStore.activeIdentity.address),
         pady(24),
         Text(s.orchidIdentity, style: OrchidText.body2),
-        pady(8),
         if (_accountStore.activeIdentity != null)
           Container(
             width: AppSize(context).widerThan(AppSize.iphone_12_pro_max)
@@ -328,16 +328,16 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               child: TapToCopyText(
                 _accountStore.activeIdentity.address.toString(),
                 key: ValueKey(_accountStore.activeIdentity.address.toString()),
-                padding: EdgeInsets.zero,
+                padding: EdgeInsets.only(top: 8, bottom: 8),
                 style: OrchidText.caption
-                    .copyWith(color: OrchidColors.purple_ffb88dfc),
+                    .copyWith(color: OrchidColors.tappable),
                 onTap: (String text) async {
                   await TapToCopyText.copyTextToClipboard(text);
                   _showOrchidAccountAddressWarning();
                 },
               ),
             ),
-          )
+          ) else pady(16)
       ],
     );
   }

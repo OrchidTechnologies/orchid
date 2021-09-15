@@ -72,7 +72,7 @@ class AppDialogs {
         return AlertDialog(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(8.0))),
-          backgroundColor: OrchidColors.blueHighlight,
+          backgroundColor: OrchidColors.highlight,
           title: title != null
               ? Text(
                   title,
@@ -92,7 +92,7 @@ class AppDialogs {
                 side: BorderSide(color: OrchidColors.dark_background, width: 2),
               ),
               child: Padding(
-                padding: const EdgeInsets.only(left: 6, right: 6, top: 6, bottom: 6),
+                padding: const EdgeInsets.all(6),
                 child: Text(
                   cancelText ?? s.cancelButtonTitle,
                   style: OrchidText.button.black,
@@ -106,13 +106,13 @@ class AppDialogs {
               },
             ),
             // ACTION
-            TextButton(
-              style: TextButton.styleFrom(
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
                 backgroundColor: OrchidColors.dark_background,
               ),
               child: Padding(
-                padding: const EdgeInsets.only(left: 12, right: 12, top: 6, bottom: 6),
+                padding: const EdgeInsets.all(6),
                 child: Text(
                   actionText ?? S.of(context).ok,
                   style: OrchidText.button,

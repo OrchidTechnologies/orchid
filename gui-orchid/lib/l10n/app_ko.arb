@@ -185,12 +185,6 @@
     "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "홈 화면에서 현재 계정 잔액 및 대역폭 비용을 확인하세요.",
     "seeOrchidcomForHelp": "orchid.com에서 자세한 정보를 확인하세요.",
     "payPerUseVpnService": "사용량 기준 결제 방식 VPN 서비스",
-    "currentAvgVpnPriceIsPricePerGb": "현재 평균 VPN 가격은 GB당 {price}입니다",
-    "@currentAvgVpnPriceIsPricePerGb": {
-        "placeholders": {
-            "price": {}
-        }
-    },
     "notASubscriptionCreditsDontExpire": "정기구독이 없으며, 크레딧이 만료되지 않습니다",
     "shareAccountWithUnlimitedDevices": "제한 없이 다른 기기와 계정을 공유할 수 있습니다",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Orchid 스토어가 일시적으로 이용불가 합니다. 잠시 후에 다시 확인해 주세요.",
@@ -305,5 +299,7 @@
     "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "이 작업은 이전에 분석된 모든 트래픽 연결 데이터를 지웁니다.",
     "tickets": "티켓",
     "total": "합계",
-    "usdgb": "USD/GB"
+    "usdgb": "USD/GB",
+    "pausingAllTraffic": "모든 트래픽을 일시중지하는 중...",
+    "queryingEthereumForARandom": "임의의 공급자에 대해 이더리움 쿼리 중..."
 }

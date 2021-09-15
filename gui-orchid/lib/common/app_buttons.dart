@@ -177,16 +177,17 @@ class SaveActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     S s = S.of(context);
-    return FlatButton(
-        child: Text(
-          s.save,
-          style: AppText.actionButtonStyle.copyWith(
-              // TODO: We need to get the TitledPage to publish colors on the context (theme)
-              color: isValid
-                  ? OrchidColors.purple_ffb88dfc
-                  : OrchidColors.purple_ffb88dfc.withOpacity(0.3)),
-        ),
-        onPressed: isValid ? onPressed : null);
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: TextButton(
+          child: Text(
+            s.save,
+            style: OrchidText.title.copyWith(
+                color: isValid ? OrchidColors.active : OrchidColors.inactive,
+                height: 2.0),
+          ),
+          onPressed: isValid ? onPressed : null),
+    );
   }
 }
 

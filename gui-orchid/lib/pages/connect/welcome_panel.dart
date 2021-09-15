@@ -166,7 +166,7 @@ class _WelcomePanelState extends State<WelcomePanel>
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: OrchidColors.blueHighlight,
+        color: OrchidColors.highlight,
         // Needed during the animated collapse - cliprrect doesn't mask during?
         borderRadius: _collapsed
             ? BorderRadius.only(

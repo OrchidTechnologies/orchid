@@ -21,6 +21,7 @@ import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
@@ -356,7 +357,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         Text(
           s.orchidIdentitySignerKey + ':',
           style: OrchidText.button
-              .copyWith(color: _keyRefValid() ? Colors.white : Colors.grey),
+              .copyWith(color: _keyRefValid() ? OrchidColors.valid: OrchidColors.invalid),
         ),
         pady(8),
         Row(
@@ -413,7 +414,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       children: <Widget>[
         Text(s.funderAccount + ':',
             style: OrchidText.button.copyWith(
-                color: _funderValid() ? Colors.white : AppColors.neutral_3)),
+                color: _funderValid() ? OrchidColors.valid : OrchidColors.invalid)),
         pady(widget.readOnly() ? 4 : 8),
 
         Row(
@@ -428,18 +429,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                       _selectedFunderItem ?? _initialSelectedFunderItem,
                   onSelection: _onFunderSelected),
             ),
-
-            /*
-            // Copy key button
-            Visibility(
-              visible: widget.readOnly(),
-              child: RoundedRectButton(
-                  backgroundColor: Colors.deepPurple,
-                  textColor: Colors.white,
-                  text: s.copy,
-                  onPressed: _onCopyButton),
-            ),
-             */
           ],
         ),
 

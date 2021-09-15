@@ -185,12 +185,6 @@
     "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Consultez le solde de votre compte actif et le coût de la bande passante sur l'écran d'accueil.",
     "seeOrchidcomForHelp": "Consultez orchid.com pour obtenir de l’aide.",
     "payPerUseVpnService": "Service VPN payant à l'utilisation",
-    "currentAvgVpnPriceIsPricePerGb": "Le prix moy. actuel du VPN est de {price} par Go",
-    "@currentAvgVpnPriceIsPricePerGb": {
-        "placeholders": {
-            "price": {}
-        }
-    },
     "notASubscriptionCreditsDontExpire": "Aucun abonnement, les crédits n’expirent pas",
     "shareAccountWithUnlimitedDevices": "Partagez un compte avec un nombre illimité d'appareils",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "La Boutique Orchid est temporairement indisponible. Merci de revenir dans quelques minutes.",
@@ -305,5 +299,7 @@
     "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "Cette action effacera toutes les données de connexion de trafic précédemment analysées.",
     "tickets": "Des billets",
     "total": "Total",
-    "usdgb": "USD/Go"
+    "usdgb": "USD/Go",
+    "pausingAllTraffic": "Suspendre tout le trafic...",
+    "queryingEthereumForARandom": "Interrogation d'Ethereum pour un fournisseur aléatoire..."
 }

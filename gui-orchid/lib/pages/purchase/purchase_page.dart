@@ -231,13 +231,14 @@ class _PurchasePageState extends State<PurchasePage> {
   Widget _buildBottomText() {
     final bodyStyle = OrchidText.caption
         .copyWith(fontSize: 12, fontWeight: FontWeight.w400, height: 18 / 12);
-    final linkStyle = OrchidText.caption
-        .copyWith(fontSize: 12, fontWeight: FontWeight.w600, height: 18 / 12);
+    final linkStyle = OrchidText.linkStyle.copyWith(fontSize: 12);
+
     return StyledText(
       style: bodyStyle,
       text: s.orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre +
           ' ' +
           s.purchasedAccountsConnectExclusivelyToOur +
+          ' ' +
           s.refundPolicyCoveredByAppStores,
       tags: {
         'link1': linkStyle.link(OrchidUrls.preferredProviders),
@@ -250,7 +251,7 @@ class _PurchasePageState extends State<PurchasePage> {
     // var linkStyle = AppText.linkStyle.copyWith(fontSize: 15.0);
     var linkStyle = OrchidText.linkStyle;
     var unavailableText = StyledText(
-      style: OrchidText.body1.copyWith(color: OrchidColors.purple_bright),
+      style: OrchidText.body1.copyWith(color: OrchidColors.highlight),
       newLineAsBreaks: true,
       text: s.orchidIsUnableToDisplayInappPurchasesAtThisTime +
           '  ' +
@@ -461,8 +462,8 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Future<void> _confirmPurchase({PAC pac}) async {
-    var style1 = OrchidText.medium_18_025.black;
-    var valueStyle = OrchidText.button.black;
+    var style1 = OrchidText.medium_18_025.copyWith(height: 1.6); // heights should match
+    var valueStyle = OrchidText.button.copyWith(height: 1.6);
 
     var credits = pac.localPrice;
     var fee = pac.localPrice * 0.3;
@@ -473,7 +474,7 @@ class _PurchasePageState extends State<PurchasePage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            backgroundColor: OrchidColors.purpleCaption,
+            backgroundColor: OrchidColors.dark_background,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(12.0))),
             content: Column(
@@ -505,7 +506,7 @@ class _PurchasePageState extends State<PurchasePage> {
                               style: style1,
                               textAlign: TextAlign.right,
                             ),
-                            pady(4),
+                            pady(16),
                             Text(
                               s.total,
                               style: style1.bold,
@@ -536,7 +537,7 @@ class _PurchasePageState extends State<PurchasePage> {
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),
-                          pady(4),
+                          pady(16),
                           Text(
                             pac.formatCurrency(total),
                             style: valueStyle.bold,
@@ -553,6 +554,7 @@ class _PurchasePageState extends State<PurchasePage> {
                   children: [
                     RoundedRectButton(
                       text: s.buy,
+                      textColor: Colors.black,
                       onPressed: () {
                         Navigator.of(context).pop(true);
                         _purchase(purchase: pac);

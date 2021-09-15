@@ -251,7 +251,7 @@ class _ConnectPageState extends State<ConnectPage>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildStatusMessageLine(),
+                SizedBox(width: 300, child: _buildStatusMessageLine()),
                 pady(20),
                 _buildConnectButton(),
               ],
@@ -379,7 +379,7 @@ class _ConnectPageState extends State<ConnectPage>
         }
         break;
       case OrchidVPNRoutingState.VPNConnected:
-        message = s.connectingToARandomOrchidProvider;
+        message = s.pausingAllTraffic + '\n' + s.queryingEthereumForARandom;
         break;
       case OrchidVPNRoutingState.OrchidConnected:
         if (_monitoringEnabled) {
@@ -393,7 +393,11 @@ class _ConnectPageState extends State<ConnectPage>
       message = s.restarting + ': ' + message;
     }
 
-    return Text(message, style: OrchidText.caption);
+    return Text(
+      message,
+      style: OrchidText.caption,
+      textAlign: TextAlign.center,
+    );
   }
 
   /// Called upon a change to Orchid connection state

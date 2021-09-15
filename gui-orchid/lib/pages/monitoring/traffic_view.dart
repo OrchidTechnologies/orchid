@@ -359,7 +359,7 @@ class _TrafficViewState extends State<TrafficView>
             firstChild: GestureDetector(
               onTap: _scrollToNewContent,
               child: Container(
-                  color: OrchidColors.purpleCaption,
+                  color: OrchidColors.tappable,
                   alignment: Alignment.center,
                   height: 32,
                   child: Row(
@@ -367,9 +367,10 @@ class _TrafficViewState extends State<TrafficView>
                     children: <Widget>[
                       upArrow,
                       SizedBox(width: 12),
-                      Text(s.newContent,
-                          style: AppText.textLabelStyle
-                              .copyWith(color: textColor, fontSize: 14.0)),
+                      Text(
+                        s.newContent,
+                        style: OrchidText.body1.black.copyWith(height: 2.0),
+                      ),
                       SizedBox(width: 12),
                       upArrow,
                     ],

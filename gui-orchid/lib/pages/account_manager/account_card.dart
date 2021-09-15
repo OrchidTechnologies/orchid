@@ -184,6 +184,7 @@ class _AccountCardState extends State<AccountCard>
     final activeColor = Color(0xff6efac8);
     final inactiveColor = Color(0xfff88b9f);
     return SingleChildScrollView(
+      physics: NeverScrollableScrollPhysics(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -227,7 +228,8 @@ class _AccountCardState extends State<AccountCard>
                       ),
               ),
             ),
-          if (expanded) ...[pady(24), _buildExpandedDetail()]
+          if (expanded) ...[pady(24), _buildExpandedDetail()],
+          pady(1)
         ],
       ),
     );

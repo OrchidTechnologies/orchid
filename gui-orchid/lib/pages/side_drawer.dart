@@ -127,6 +127,7 @@ class _SideDrawerState extends State<SideDrawer> {
 
         // Version info at the bottom
         SafeArea(
+          top: false,
           child: Column(
             children: <Widget>[
               divider(),
@@ -191,6 +192,7 @@ class SideDrawerTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
       child: OrchidPanel(
+        edgeGradient: OrchidGradients.orchidPanelEdgeGradient.rotated(0.8),
         child: Container(
           child: ListTile(
               contentPadding: EdgeInsets.only(left: 16, right: 16),

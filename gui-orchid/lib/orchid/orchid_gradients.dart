@@ -33,7 +33,7 @@ class OrchidGradients {
         Color(0xFF39C4DA),
       ]);
 
-  static final orchidPanelGradient = LinearGradient(
+  static final orchidPanelEdgeGradient = LinearGradient(
     begin: Alignment(-0.25, -1.0),
     end: Alignment(0.25, 1.0),
     colors: [Colors.white.withOpacity(0.2), Colors.transparent],

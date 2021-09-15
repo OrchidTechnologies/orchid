@@ -304,5 +304,7 @@
     "idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "Ideal size for medium-term, individual usage that includes browsing and light streaming.",
     "mostPopular": "Most Popular!",
     "bandwidthheavyLongtermUsageOrSharedAccounts": "Bandwidth-heavy, long-term usage or shared accounts.",
-    "total": "Total"
+    "total": "Total",
+    "pausingAllTraffic": "Pausing all traffic...",
+    "queryingEthereumForARandom": "Querying Ethereum for a random provider..."
 }

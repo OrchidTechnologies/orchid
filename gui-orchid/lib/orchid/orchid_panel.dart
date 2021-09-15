@@ -53,7 +53,7 @@ class OrchidPanel extends StatelessWidget {
             radius: 16,
             gradient: highlight
                 ? highlightGradient(highlightAnimation)
-                : (edgeGradient ?? OrchidGradients.orchidPanelGradient),
+                : (edgeGradient ?? OrchidGradients.orchidPanelEdgeGradient),
             child: Container(
               decoration: BoxDecoration(
                 color: fill,

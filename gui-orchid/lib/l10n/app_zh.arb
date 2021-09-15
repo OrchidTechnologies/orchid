@@ -185,12 +185,6 @@
     "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "请在主页界面上查看您的活动帐户余额和带宽费用。",
     "seeOrchidcomForHelp": "请登录 orchid.com 查看帮助。",
     "payPerUseVpnService": "按使用付费 VPN 服务",
-    "currentAvgVpnPriceIsPricePerGb": "当前平均 VPN 价格为每 GB {price}",
-    "@currentAvgVpnPriceIsPricePerGb": {
-        "placeholders": {
-            "price": {}
-        }
-    },
     "notASubscriptionCreditsDontExpire": "无需订阅，且积分不会过期",
     "shareAccountWithUnlimitedDevices": "可以在无限数量的设备上共享帐户",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Orchid Store 暂时不可用。请于几分钟后查看。",
@@ -305,5 +299,7 @@
     "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "此操作将清除所有先前分析的流量连接数据。",
     "tickets": "门票",
     "total": "总",
-    "usdgb": "美元/英镑"
+    "usdgb": "美元/英镑",
+    "pausingAllTraffic": "暂停所有交通...",
+    "queryingEthereumForARandom": "查询以太坊以获取随机提供者..."
 }

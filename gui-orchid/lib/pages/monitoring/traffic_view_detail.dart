@@ -29,6 +29,7 @@ class _TrafficViewDetailState extends State<TrafficViewDetail> {
         : flow.hostname;
     var date =
         DateFormat("MM/dd/yyyy HH:mm:ss.SSS").format(flow.start.toLocal());
+    var protocolColor = TrafficView.colorForProtocol(flow.protocol);
     return TitledPage(
         title: s.connectionDetail,
         constrainWidth: false,
@@ -41,7 +42,7 @@ class _TrafficViewDetailState extends State<TrafficViewDetail> {
                 Container(
                   padding: EdgeInsets.all(8.0),
                   decoration: BoxDecoration(
-                    color: TrafficView.colorForProtocol(flow.protocol),
+                    color: protocolColor,
                   ),
                   child: Text(
                     "${flow.protocol}",
@@ -55,7 +56,7 @@ class _TrafficViewDetailState extends State<TrafficViewDetail> {
                   // Note: (Watch for the case of "-" dashes in domain names.)
                   overflow: TextOverflow.fade,
                   softWrap: false,
-                  style: OrchidText.highlight.copyWith(color: OrchidColors.purple_ffb88dfc),
+                  style: OrchidText.highlight.copyWith(color: protocolColor),
                 ),
                 SizedBox(height: 8),
                 Text(s.time + ": $date", style: protocolStyle),

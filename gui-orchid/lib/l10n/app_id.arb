@@ -185,12 +185,6 @@
     "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Lihat saldo aktif dan biaya bandwidth di layar beranda.",
     "seeOrchidcomForHelp": "Buka orchid.com untuk bantuan.",
     "payPerUseVpnService": "Layanan VPN bayar sesuai penggunaan",
-    "currentAvgVpnPriceIsPricePerGb": "Harga VPN rata-rata saat ini yaitu {price} per GB",
-    "@currentAvgVpnPriceIsPricePerGb": {
-        "placeholders": {
-            "price": {}
-        }
-    },
     "notASubscriptionCreditsDontExpire": "Bukan langganan, kredit tidak kedaluwarsa",
     "shareAccountWithUnlimitedDevices": "Berbagi akun dengan perangkat tanpa batas",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Toko Orchid tidak tersedia untuk sementara waktu. Silakan periksa kembali dalam beberapa menit.",
@@ -305,5 +299,7 @@
     "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "Tindakan ini akan menghapus semua data koneksi lalu lintas yang dianalisis sebelumnya.",
     "tickets": "Tiket",
     "total": "Total",
-    "usdgb": "USD/GB"
+    "usdgb": "USD/GB",
+    "pausingAllTraffic": "Menjeda semua lalu lintas...",
+    "queryingEthereumForARandom": "Meminta Ethereum untuk penyedia acak..."
 }

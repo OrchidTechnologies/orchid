@@ -185,12 +185,6 @@
     "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "ホーム画面でアクティブなアカウントの残高と帯域幅のコストを確認します。",
     "seeOrchidcomForHelp": "ヘルプについてはorchid.comを参照してください。",
     "payPerUseVpnService": "使用ごとのお支払いのVPNサービス",
-    "currentAvgVpnPriceIsPricePerGb": "現在のVPNの平均価格はGBあたり {price} です",
-    "@currentAvgVpnPriceIsPricePerGb": {
-        "placeholders": {
-            "price": {}
-        }
-    },
     "notASubscriptionCreditsDontExpire": "サブスクリプションはありません。クレジットに有効期限はありません。",
     "shareAccountWithUnlimitedDevices": "無制限のデバイスでアカウントを共有できます",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Orchidストアは一時的にご利用いただけません。数分後に再度ご確認ください。",
@@ -305,5 +299,7 @@
     "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "このアクションにより、以前に分析されたすべてのトラフィック接続データがクリアされます。",
     "tickets": "切符売場",
     "total": "合計",
-    "usdgb": "USD / GB"
+    "usdgb": "USD / GB",
+    "pausingAllTraffic": "すべてのトラフィックを一時停止しています...",
+    "queryingEthereumForARandom": "イーサリアムにランダムプロバイダーを照会しています..."
 }

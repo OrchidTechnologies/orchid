@@ -185,12 +185,6 @@
     "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Ana ekranda, etkin hesap bakiyenizi ve bant genişliğinizi görün.",
     "seeOrchidcomForHelp": "Yardım için orchid.com adresine gidin.",
     "payPerUseVpnService": "Kullandıkça Ödemeli VPN Hizmeti",
-    "currentAvgVpnPriceIsPricePerGb": "Mevcut ortalama VPN ücreti GB başına {price}",
-    "@currentAvgVpnPriceIsPricePerGb": {
-        "placeholders": {
-            "price": {}
-        }
-    },
     "notASubscriptionCreditsDontExpire": "Abonelik değildir, kredilerin süresi dolmaz",
     "shareAccountWithUnlimitedDevices": "Hesabı sınırsız cihazla paylaşın",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Orchid Mağazası geçici olarak kullanılamıyor. Lütfen birkaç dakika içinde tekrar kontrol edin.",
@@ -305,5 +299,7 @@
     "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "Bu eylem, önceden analiz edilen tüm trafik bağlantı verilerini temizleyecektir.",
     "tickets": "Biletler",
     "total": "Genel Toplam",
-    "usdgb": "USD/GB"
+    "usdgb": "USD/GB",
+    "pausingAllTraffic": "Tüm trafik duraklatılıyor...",
+    "queryingEthereumForARandom": "Rastgele bir sağlayıcı için Ethereum sorgulanıyor..."
 }

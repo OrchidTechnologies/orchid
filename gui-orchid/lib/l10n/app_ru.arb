@@ -185,12 +185,6 @@
     "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Просматривайте текущий баланс на счете и стоимость пользования VPN на домашней странице.",
     "seeOrchidcomForHelp": "Подробнее на orchid.com.",
     "payPerUseVpnService": "VPN с платой по факту использования",
-    "currentAvgVpnPriceIsPricePerGb": "Текущая средняя цена за VPN — {price} за ГБ",
-    "@currentAvgVpnPriceIsPricePerGb": {
-        "placeholders": {
-            "price": {}
-        }
-    },
     "notASubscriptionCreditsDontExpire": "Это не подписка — ваши кредиты не сгорают",
     "shareAccountWithUnlimitedDevices": "Пользуйтесь аккаунтом с неограниченного количества устройств",
     "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Магазин Orchid Store временно недоступен. Попробуйте зайти через пару минут.",
@@ -305,5 +299,7 @@
     "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "Это действие удалит все ранее проанализированные данные о трафике.",
     "tickets": "Билеты",
     "total": "Всего",
-    "usdgb": "Долл. США / ГБ"
+    "usdgb": "Долл. США / ГБ",
+    "pausingAllTraffic": "Приостановка всего трафика ...",
+    "queryingEthereumForARandom": "Запрос Ethereum для случайного провайдера ..."
 }
