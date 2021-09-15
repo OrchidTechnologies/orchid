@@ -9,6 +9,9 @@ class OrchidColors {
   static const purple_ffa29ec0 = Color(0xffa29ec0);
   static const purpleCaption = purple_ffa29ec0;
 
+  static const purple_ff52319c = Color(0xff52319c);
+  static const purple_menu = purple_ff52319c;
+
   static const blue_ff6cedff = Color(0xff6cedff);
   static const blueHighlight = blue_ff6cedff;
 

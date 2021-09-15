@@ -103,12 +103,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
-                child: Theme(
-                    data: Theme.of(context).copyWith(
-                      cardColor: OrchidColors.dark_background,
-                      highlightColor: OrchidColors.purple_bright,
-                    ),
-                    child: _buildIdentitySelectorMenu()),
+                child: _buildIdentitySelectorMenu(),
               )
             ],
             child: Stack(
@@ -129,7 +124,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                         pady(8),
                         Divider(height: 1),
                         Expanded(child: _buildAccountList()),
-                        pady(128) // overscroll
                       ],
                     ),
                   ),
@@ -153,48 +147,55 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   Widget _buildIdentitySelectorMenu() {
-    return PopupMenuButton<IdentitySelectorMenuItem>(
-      icon: SvgPicture.asset('assets/svg/settings_gear.svg'),
-      initialValue: _accountStore.activeIdentity != null
-          ? IdentitySelectorMenuItem(identity: _accountStore.activeIdentity)
-          : null,
-      onSelected: (IdentitySelectorMenuItem item) async {
-        if (item.isIdentity) {
-          _accountStore.setActiveIdentity(item.identity);
-        } else {
-          item.action();
-        }
-        ConfigChangeDialogs.showConfigurationChangeSuccess(context,
-            warnOnly: true);
-      },
-      itemBuilder: (BuildContext context) {
-        var style = OrchidText.body1;
-        var items = _accountStore.identities.map((StoredEthereumKey identity) {
-          var item = IdentitySelectorMenuItem(identity: identity);
-          return PopupMenuItem<IdentitySelectorMenuItem>(
-            value: item,
-            child: Text(item.formatIdentity(), style: style),
-          );
-        }).toList();
+    return Theme(
+      data: Theme.of(context).copyWith(
+        cardColor: OrchidColors.dark_background,
+        highlightColor: OrchidColors.purple_menu,
+      ),
+      child: PopupMenuButton<IdentitySelectorMenuItem>(
+        icon: SvgPicture.asset('assets/svg/settings_gear.svg'),
+        initialValue: _accountStore.activeIdentity != null
+            ? IdentitySelectorMenuItem(identity: _accountStore.activeIdentity)
+            : null,
+        onSelected: (IdentitySelectorMenuItem item) async {
+          if (item.isIdentity) {
+            _accountStore.setActiveIdentity(item.identity);
+          } else {
+            item.action();
+          }
+          ConfigChangeDialogs.showConfigurationChangeSuccess(context,
+              warnOnly: true);
+        },
+        itemBuilder: (BuildContext context) {
+          var style = OrchidText.body1;
+          var items =
+              _accountStore.identities.map((StoredEthereumKey identity) {
+            var item = IdentitySelectorMenuItem(identity: identity);
+            return PopupMenuItem<IdentitySelectorMenuItem>(
+              value: item,
+              child: Text(item.formatIdentity(), style: style),
+            );
+          }).toList();
 
-        // Add the import, export actions
-        return items +
-            [
-              PopupMenuItem<IdentitySelectorMenuItem>(
-                  value: IdentitySelectorMenuItem(action: _newIdentity),
-                  child: Text(s.newWord, style: style)),
-              PopupMenuItem<IdentitySelectorMenuItem>(
-                  value: IdentitySelectorMenuItem(action: _importIdentity),
-                  child: Text(s.import, style: style)),
-              PopupMenuItem<IdentitySelectorMenuItem>(
-                  value: IdentitySelectorMenuItem(action: _exportIdentity),
-                  child: Text(s.export, style: style)),
-              PopupMenuItem<IdentitySelectorMenuItem>(
-                  value:
-                      IdentitySelectorMenuItem(action: _confirmDeleteIdentity),
-                  child: Text(s.delete, style: style))
-            ];
-      },
+          // Add the import, export actions
+          return items +
+              [
+                PopupMenuItem<IdentitySelectorMenuItem>(
+                    value: IdentitySelectorMenuItem(action: _newIdentity),
+                    child: Text(s.newWord, style: style)),
+                PopupMenuItem<IdentitySelectorMenuItem>(
+                    value: IdentitySelectorMenuItem(action: _importIdentity),
+                    child: Text(s.import, style: style)),
+                PopupMenuItem<IdentitySelectorMenuItem>(
+                    value: IdentitySelectorMenuItem(action: _exportIdentity),
+                    child: Text(s.export, style: style)),
+                PopupMenuItem<IdentitySelectorMenuItem>(
+                    value: IdentitySelectorMenuItem(
+                        action: _confirmDeleteIdentity),
+                    child: Text(s.delete, style: style))
+              ];
+        },
+      ),
     );
   }
 
@@ -320,8 +321,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         pady(8),
         if (_accountStore.activeIdentity != null)
           Container(
-            width:
-                AppSize(context).widerThan(AppSize.iphone_12_pro_max) ? null : 238,
+            width: AppSize(context).widerThan(AppSize.iphone_12_pro_max)
+                ? null
+                : 238,
             child: Center(
               child: TapToCopyText(
                 _accountStore.activeIdentity.address.toString(),
@@ -359,7 +361,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           style: OrchidText.body2.purpleBright.bold,
         ),
         'link': OrchidText.linkStyle.link(OrchidUrls.partsOfOrchidAccount),
-        'alarm': StyledTextIconTag(Icons.warning_amber_rounded, color: OrchidColors.purple_bright)
+        'alarm': StyledTextIconTag(Icons.warning_amber_rounded,
+            color: OrchidColors.purple_bright)
       },
     );
     return AppDialogs.showAppDialog(
@@ -394,7 +397,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
     Widget footer() {
       return Padding(
-        padding: const EdgeInsets.only(top: 16),
+        padding: const EdgeInsets.only(top: 16, bottom: 128),
         child: Align(
             child: Column(
           children: [
