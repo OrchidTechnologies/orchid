@@ -208,10 +208,10 @@ class _TrafficViewState extends State<TrafficView>
                 // Toggle the value
                 var desiredMonitoringEnabled = !currentMonitoringEnabled;
                 var text = restarting
-                    ? "(RESTARTING)"
+                    ? "(${s.restarting})"
                     : (currentMonitoringEnabled
-                        ? "STOP ANALYSIS"
-                        : "START ANALYSIS");
+                        ? s.stopAnalysis
+                        : s.startAnalysis);
                 return OrchidActionButton(
                     enabled: !restarting,
                     text: text,
@@ -320,19 +320,20 @@ class _TrafficViewState extends State<TrafficView>
         },
         title: Row(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                SizedBox(height: 8),
-                Text("$hostname:${flow.dst_port != 0 ? flow.dst_port : ""}",
-                    // Note: I'd prefer ellipses but they brake soft wrap control.
-                    // Note: (Watch for the case of "-" dashes in domain names.)
-                    overflow: TextOverflow.fade,
-                    softWrap: false,
-                    style: OrchidText.body2.black),
-                SizedBox(height: 4),
-                Text("$date", style: OrchidText.caption.black),
-              ],
+            Expanded(
+              flex: 10,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(height: 8),
+                  Text("$hostname:${flow.dst_port != 0 ? flow.dst_port : ""}",
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      style: OrchidText.body2.black),
+                  SizedBox(height: 4),
+                  Text("$date", style: OrchidText.caption.black),
+                ],
+              ),
             ),
             Spacer(),
             Text("${flow.protocol}",

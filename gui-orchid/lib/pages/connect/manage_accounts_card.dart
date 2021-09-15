@@ -9,6 +9,7 @@ import '../account_manager/account_detail_poller.dart';
 import '../../orchid/orchid_circular_identicon.dart';
 import '../../orchid/orchid_panel.dart';
 import '../../orchid/orchid_text.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 /// Active account info and "manage accounts" button used on the connect page.
 class ManageAccountsCard extends StatelessWidget {
@@ -36,7 +37,7 @@ class ManageAccountsCard extends StatelessWidget {
                       child: Center(
                           child: Padding(
                     padding: const EdgeInsets.only(top: 17.0),
-                    child: _buildCardContent(),
+                    child: _buildCardContent(context),
                   ))))),
           Align(
             alignment: Alignment.topCenter,
@@ -50,9 +51,10 @@ class ManageAccountsCard extends StatelessWidget {
     );
   }
 
-  Column _buildCardContent() {
+  Column _buildCardContent(BuildContext context) {
+    S s = S.of(context);
     final text = accountDetail == null
-        ? "No account selected"
+        ? s.noAccountSelected
         : accountDetail.signer.toString();
     final textWidth = accountDetail == null ? null : 120.0;
     final balanceText = accountDetail == null
@@ -105,7 +107,7 @@ class ManageAccountsCard extends StatelessWidget {
           child: SizedBox(
             height: 16,
             child: Text(
-              "MANAGE ACCOUNTS",
+              s.manageAccounts.toUpperCase(),
               style: OrchidText.button
                   .copyWith(color: OrchidColors.purple_ffb88dfc, height: 1.0),
             ),

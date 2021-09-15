@@ -99,7 +99,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         listenable: _accountStore,
         builder: (context, snapshot) {
           return TitledPage(
-            title: "Accounts",
+            title: s.accounts,
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
@@ -315,7 +315,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           OrchidCircularIdenticon(
               address: _accountStore.activeIdentity.address),
         pady(24),
-        Text("Orchid Identity", style: OrchidText.body2),
+        Text(s.orchidIdentity, style: OrchidText.body2),
         pady(8),
         if (_accountStore.activeIdentity != null)
           Container(
@@ -462,7 +462,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           var enabled = _accountStore.activeIdentity != null && tx == null;
           return OrchidActionButton(
             enabled: enabled,
-            text: "ADD FUNDS",
+            text: s.addFunds,
             onPressed: _addFunds,
           );
         });

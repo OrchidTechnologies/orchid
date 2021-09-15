@@ -101,7 +101,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
               // side: BorderSide(width: 2, color: Colors.white),
             ),
             child: Text(
-              "Ok",
+              s.ok,
               style: TextStyle().black,
             ),
             onPressed: _pastedCodeValid ? _parsePastedCode : null,

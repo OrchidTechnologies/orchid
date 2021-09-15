@@ -294,5 +294,35 @@
         "placeholders": {
             "price": {}
         }
-    }
+    },
+  "myOrchidConfig": "My Orchid Config",
+    "noAccountSelected": "No account selected",
+  "inactive": "Inactive",
+    "tickets": "Tickets",
+  "accounts": "Accounts",
+    "orchidIdentity": "Orchid Identity",
+    "addFunds": "ADD FUNDS",
+    "gb": "GB",
+    "usdgb": "USD/GB",
+    "hop": "Hop",
+  "circuit": "Circuit",
+    "clearAllAnalysisData": "Clear all analysis data?",
+    "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "This action will clear all previously analyzed traffic connection data.",
+    "clearAll": "CLEAR ALL",
+    "stopAnalysis": "STOP ANALYSIS",
+    "startAnalysis": "START ANALYSIS",
+    "orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "Orchid accounts include 24/7 customer support, unlimited devices and are backed by the <link2>xDai cryptocurrency</link2>.",
+    "purchasedAccountsConnectExclusivelyToOur": "Purchased accounts connect exclusively to our <link1>preferred providers</link1>.",
+    "refundPolicyCoveredByAppStores": "Refund policy covered by app stores.",
+    "orchidIsUnableToDisplayInappPurchasesAtThisTime": "Orchid is unable to display in-app purchases at this time.",
+    "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "Please confirm that this device supports and is configured for in-app purchases.",
+    "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "Please confirm that this device supports and is configured for in-app purchases or use our decentralized <link>account management</link> system.",
+    "buy": "BUY",
+    "gbApproximately12": "12GB (approximately)",
+    "gbApproximately60": "60GB (approximately)",
+    "gbApproximately240": "240GB (approximately)",
+    "idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "Ideal size for medium-term, individual usage that includes browsing and light streaming.",
+    "mostPopular": "Most Popular!",
+    "bandwidthheavyLongtermUsageOrSharedAccounts": "Bandwidth-heavy, long-term usage or shared accounts.",
+    "total": "Total"
 }

@@ -82,7 +82,7 @@ class _SideDrawerState extends State<SideDrawer> {
                     Navigator.pushNamed(context, AppRoutes.traffic);
                   }),
               SideDrawerTile(
-                  title: "Accounts",
+                  title: s.accounts,
                   svgName: 'assets/svg/payments.svg',
                   showDetail: true,
                   hoffset: 4.0,

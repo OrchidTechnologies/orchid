@@ -3,6 +3,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 
 typedef KeySelectionCallback = void Function(KeySelectionItem key);
@@ -66,10 +67,9 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
         child: Container(
           child: DropdownButton<KeySelectionItem>(
             dropdownColor: OrchidTextField.textFieldEnabledDecoration.color,
-            hint: Text(s.chooseKey, style: TextStyle(color: Colors.white)),
+            hint: Text(s.chooseKey).button(),
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
-            //underline: !widget.enabled ? Container() : null,
             underline: Container(),
             // suppress the underline
             value: _selectedItem,
@@ -112,7 +112,8 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
           child: Text(
             address,
             overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Colors.white)
+              // style: TextStyle(color: Colors.white)
+              style: OrchidText.button,
           ),
         );
       }).toList());

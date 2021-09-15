@@ -272,7 +272,7 @@ class _ConnectPageState extends State<ConnectPage>
   Widget _buildConnectButton() {
     String text;
     if (_restarting) {
-      text = "Restarting";
+      text = s.restarting;
     } else {
       switch (_routingState) {
         case OrchidVPNRoutingState.VPNDisconnecting:

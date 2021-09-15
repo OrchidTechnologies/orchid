@@ -3,6 +3,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 
 typedef FunderSelectionCallback = void Function(FunderSelectionItem key);
@@ -82,9 +83,8 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
         ignoring: !widget.enabled,
         child: Container(
           child: DropdownButton<FunderSelectionItem>(
-            // dropdownColor: OrchidColors.purpleCaption,
             dropdownColor: OrchidTextField.textFieldEnabledDecoration.color,
-            hint: Text(s.chooseAddress, style: TextStyle(color: Colors.white)),
+            hint: Text(s.chooseAddress, style: OrchidText.button),
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
             //underline: !widget.enabled ? Container() : null,
@@ -114,7 +114,7 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
           child: Text(
             funder.toString(prefix: true),
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.white),
+            style: OrchidText.button,
           ),
         );
       }).toList());
@@ -127,7 +127,7 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
             FunderSelectionItem(option: FunderSelectionDropdown.pasteKeyOption),
         child: Text(
           FunderSelectionDropdown.pasteKeyOption.displayName(context),
-          style: TextStyle(color: Colors.white),
+          style: OrchidText.button,
         ),
       ),
     ]);
