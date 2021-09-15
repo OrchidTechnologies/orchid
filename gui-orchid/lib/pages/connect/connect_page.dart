@@ -406,10 +406,8 @@ class _ConnectPageState extends State<ConnectPage>
         break;
       case OrchidVPNRoutingState.VPNConnecting:
       case OrchidVPNRoutingState.VPNConnected:
-        _logoController.pulseHalf();
-        break;
       case OrchidVPNRoutingState.VPNDisconnecting:
-        _logoController.half();
+        _logoController.pulseHalf();
         break;
       case OrchidVPNRoutingState.OrchidConnected:
         _logoController.full();
