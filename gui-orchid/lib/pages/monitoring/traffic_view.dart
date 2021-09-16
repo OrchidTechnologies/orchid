@@ -274,6 +274,7 @@ class _TrafficViewState extends State<TrafficView>
       child: ListView.separated(
           separatorBuilder: (BuildContext context, int index) =>
               Divider(height: 8),
+          padding: EdgeInsets.only(bottom: 125),
           key: PageStorageKey('traffic list view'),
 
           // TODO: We used to be able to set this to primary, which allowed
