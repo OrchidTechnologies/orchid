@@ -4,10 +4,13 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_gradients.dart';
+import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/util/on_off.dart';
 import '../../common/app_sizes.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';
@@ -104,7 +107,7 @@ class _AddHopPageState extends State<AddHopPage> {
 
                     // Account Chooser
                     // if (!OrchidPlatform.isApple) ...[
-                    _divider(),
+                    pady(24),
                     _buildHopChoice(
                         text: s.useAnOrchidAccount,
                         onTap: () {
@@ -114,7 +117,7 @@ class _AddHopPageState extends State<AddHopPage> {
                     // ],
 
                     // OVPN Subscription
-                    _divider(),
+                    pady(24),
                     _buildHopChoice(
                         text: s.enterOpenvpnConfig,
                         onTap: () {
@@ -123,8 +126,8 @@ class _AddHopPageState extends State<AddHopPage> {
                         svgName: 'assets/svg/openvpn.svg'),
 
                     // WireGuard
+                    pady(24),
                     if (_showWireGuard) ...[
-                      _divider(),
                       _buildHopChoice(
                           text: s.enterWireguardConfig,
                           onTap: () {
@@ -133,7 +136,6 @@ class _AddHopPageState extends State<AddHopPage> {
                           svgName: 'assets/svg/wireguard.svg'),
                     ],
 
-                    _divider(),
                     pady(96),
                   ],
                 ),
@@ -151,21 +153,32 @@ class _AddHopPageState extends State<AddHopPage> {
       String svgName,
       VoidCallback onTap,
       Widget trailing}) {
-    return Container(
-      child: ListTile(
-          contentPadding: EdgeInsets.only(left: 0, right: 8, top: 8, bottom: 8),
-          leading: svgName != null
-              ? SvgPicture.asset(svgName,
-                  width: 24, height: 24, color: Colors.white)
-              : Image.asset(imageName,
-                  width: 24, height: 24, color: Colors.white),
-          trailing: trailing ?? Icon(Icons.chevron_right, color: Colors.white),
-          title: Text(
-            text,
-            textAlign: TextAlign.left,
-            style: OrchidText.button.tappable.copyWith(fontSize: 19, height: 1.7),
-          ),
-          onTap: onTap),
+    return GestureDetector(
+      onTap: onTap,
+      child: OrchidPanel(
+        edgeGradient: OrchidGradients.orchidPanelEdgeGradientMoreVertical,
+        child: Padding(
+          padding:
+              const EdgeInsets.only(top: 16, bottom: 16, left: 16, right: 16),
+          child: Row(children: [
+            (svgName != null
+                ? SvgPicture.asset(svgName,
+                    width: 24, height: 24, color: Colors.white)
+                : Image.asset(imageName,
+                    width: 24, height: 24, color: Colors.white)),
+            padx(16),
+            Expanded(
+              child: Text(
+                text,
+                textAlign: TextAlign.left,
+                style: OrchidText.button
+                    .copyWith(fontSize: 19, height: 1.7),
+              ),
+            ),
+            trailing ?? Icon(Icons.chevron_right, color: Colors.white),
+          ]),
+        ),
+      ),
     );
   }
 

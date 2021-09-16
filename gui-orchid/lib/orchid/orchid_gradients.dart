@@ -39,6 +39,9 @@ class OrchidGradients {
     colors: [Colors.white.withOpacity(0.2), Colors.transparent],
   );
 
+  static final orchidPanelEdgeGradientMoreVertical =
+      OrchidGradients.orchidPanelEdgeGradient.rotated(0.8);
+
   static final verticalTransparentGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,

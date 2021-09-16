@@ -7,7 +7,6 @@ import 'package:styled_text/styled_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // This is replacing AppText
-// We can give these names as we discover them.
 // normal = w400 = regular
 // medium = w500
 class OrchidText {
