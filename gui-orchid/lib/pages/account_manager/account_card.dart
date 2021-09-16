@@ -11,6 +11,7 @@ import 'package:orchid/common/gradient_border.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
+import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/units.dart';
 import '../account_manager/account_detail_poller.dart';
 import '../../orchid/orchid_panel.dart';
@@ -63,7 +64,7 @@ class _AccountCardState extends State<AccountCard>
 
   @override
   Widget build(BuildContext context) {
-    var height = expanded ? 408.0 : 116.0;
+    var height = expanded ? 360.0 : 116.0;
     var width = 334.0;
     var checkExtraHeight = 12.0;
     var checkExtraWidth = 16.0;
@@ -113,26 +114,24 @@ class _AccountCardState extends State<AccountCard>
     return Stack(
       fit: StackFit.expand,
       children: [
-        // token icon
-        AnimatedAlign(
-          duration: Duration(
-              milliseconds: (expandDuration.inMilliseconds * 0.5).round()),
-          alignment: expanded ? Alignment.topCenter : Alignment.centerLeft,
-          child: Padding(
-            padding: EdgeInsets.only(
-                left: expanded ? 0 : 24.0, top: expanded ? 24 : 0),
-            child: _buildTokenIcon(tokenType),
+        // info column
+        Padding(
+          padding: EdgeInsets.only(top: 28),
+          child: Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              // token icon
+              Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 24.0, top: 10),
+                  child: _buildTokenIcon(tokenType),
+                ),
+              ),
+              _buildInfoColumn(),
+            ],
           ),
         ),
-
-        // info column
-        AnimatedAlign(
-            duration: expandDuration,
-            alignment: expanded ? Alignment.topCenter : Alignment.center,
-            child: Padding(
-              padding: EdgeInsets.only(top: expanded ? 108 : 8),
-              child: _buildInfoColumn(),
-            )),
 
         // efficiency meter
         if (!expanded)
@@ -160,7 +159,7 @@ class _AccountCardState extends State<AccountCard>
   }
 
   Widget _buildTokenIcon(TokenType tokenType) {
-    var size = expanded ? 60.0 : 40.0;
+    var size = 40.0;
     return AnimatedSwitcher(
       duration: Duration(milliseconds: 500),
       child: SizedBox(
@@ -176,7 +175,7 @@ class _AccountCardState extends State<AccountCard>
         ? s.noAccountSelected
         : widget.accountDetail.signer.toString();
     final textWidth =
-        expanded ? 250.0 : (widget.accountDetail == null ? null : 120.0);
+        expanded ? 120.0 : (widget.accountDetail == null ? null : 120.0);
     final balanceText = _balanceText();
     var showBadge =
         (widget.accountDetail?.marketConditions?.efficiency ?? 1.0) <
@@ -188,6 +187,7 @@ class _AccountCardState extends State<AccountCard>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // signer
           Container(
             height: 20,
             width: textWidth,
@@ -197,7 +197,8 @@ class _AccountCardState extends State<AccountCard>
               style: OrchidText.body2,
             ),
           ),
-          pady(expanded ? 12 : 4),
+          pady(4),
+          // active / inactive label
           Text(
             widget.active ? s.active : s.inactive,
             style: OrchidText.caption.copyWith(
@@ -205,31 +206,48 @@ class _AccountCardState extends State<AccountCard>
             ),
           ),
           pady(8),
-          if (!expanded)
-            AnimatedSwitcher(
-              duration: Duration(milliseconds: 500),
-              child: SizedBox(
-                key: Key(balanceText ?? ''),
-                height: 24,
-                child: balanceText != null
-                    ? Badge(
-                        showBadge: showBadge,
-                        elevation: 0,
-                        badgeContent: Text('!', style: OrchidText.caption),
-                        padding: EdgeInsets.only(
-                            left: 8, right: 8, bottom: 5, top: 8),
-                        toAnimate: false,
-                        position: BadgePosition.topEnd(top: -5, end: -30),
-                        child: Text(balanceText, style: OrchidText.highlight),
-                      )
-                    : Align(
-                        alignment: Alignment.bottomCenter,
-                        child: _buildLoading(),
-                      ),
-              ),
+          // balance
+          AnimatedSwitcher(
+            duration: Duration(milliseconds: 500),
+            child: SizedBox(
+              key: Key(balanceText ?? ''),
+              height: 24,
+              child: balanceText != null
+                  ? Badge(
+                      showBadge: showBadge,
+                      elevation: 0,
+                      badgeContent: Text('!', style: OrchidText.caption),
+                      padding:
+                          EdgeInsets.only(left: 8, right: 8, bottom: 5, top: 8),
+                      toAnimate: false,
+                      position: BadgePosition.topEnd(top: -5, end: -30),
+                      child: Text(balanceText, style: OrchidText.highlight),
+                    )
+                  : Align(
+                      alignment: Alignment.bottomCenter,
+                      child: _buildLoading(),
+                    ),
             ),
-          if (expanded) ...[pady(24), _buildExpandedDetail()],
-          pady(1)
+          ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 600),
+            reverseDuration: const Duration(milliseconds: 200),
+            child: expanded
+                ? Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 32.0, right: 32, top: 8, bottom: 24),
+                        child: Divider(
+                            color: Colors.white.withOpacity(0.4),
+                            thickness: 0.5),
+                      ),
+                      _buildExpandedDetail(),
+                    ],
+                  )
+                : Container(),
+          ),
+          pady(1),
         ],
       ),
     );
@@ -260,7 +278,7 @@ class _AccountCardState extends State<AccountCard>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(s.balance, style: OrchidText.body2),
-              Text(_balanceText(), style: OrchidText.body2),
+              Text(_balanceText() ?? '', style: OrchidText.body2),
             ],
           ),
           pady(16),
