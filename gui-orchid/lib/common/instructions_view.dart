@@ -28,7 +28,7 @@ class InstructionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var textColor = OrchidColors.purple_ffb88dfc;
+    var textColor = Colors.white;
     return OrientationBuilder(
       builder: (BuildContext context, Orientation builderOrientation) {
         // Orientation builder provides the parent widget orientation, not
@@ -41,14 +41,14 @@ class InstructionsView extends StatelessWidget {
                   children: <Widget>[
                         image ?? Container(),
                         SizedBox(height: 20),
-                        Text(title, style: OrchidText.title.copyWith(color: titleColor ?? textColor)),
+                        Text(title, style: OrchidText.subtitle.copyWith(color: titleColor ?? textColor)),
                         SizedBox(height: 20),
                         ConstrainedBox(
                           constraints: BoxConstraints(maxWidth: 450),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 45),
                             child: body != null ?
-                                Text(body, style: OrchidText.body1.copyWith(color: textColor))
+                                Text(body, style: OrchidText.body2.copyWith(color: textColor))
                                 : Container(),
                           ),
                         ),
