@@ -100,6 +100,7 @@ class _ConnectPageState extends State<ConnectPage>
     } else {
       await _updateStatsV1();
     }
+    setState(() {});
   }
 
   // Update stats and alerts
