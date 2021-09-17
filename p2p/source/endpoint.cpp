@@ -29,9 +29,9 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
         Json::Value root;
         root["jsonrpc"] = "2.0";
         root["method"] = method;
-        // xDAI eth_gasPrice used to have a bug that required the id be an integer;
-        // but now, Cloudflare has a bug that requires the id be a non-empty string
-        root["id"] = "0";
+        // xDAI eth_gasPrice used to have a bug that required the id be an integer
+        // Cloudflare's endpoints are now refusing false-y ids (at least 0 and "")
+        root["id"] = 1;
         root["params"] = std::move(args);
         return root;
     }()));
@@ -53,7 +53,7 @@ task<Json::Value> Endpoint::operator ()(const std::string &method, Argument args
 
     const auto id(data["id"]);
     orc_assert_(!id.isNull(), "missing id in " << data);
-    orc_assert(id == "0");
+    orc_assert(id == 1);
     co_return data["result"];
 }, "calling " << method << " on " << locator_); }
 
