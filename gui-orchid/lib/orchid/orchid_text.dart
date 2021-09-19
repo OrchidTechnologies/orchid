@@ -171,27 +171,27 @@ extension OrchidTextStyleExtensions on TextStyle {
 }
 
 extension OrchidTextExtensions on Text {
-  Text title() {
+  Text get title {
     return this.copyWith(this.data, style: OrchidText.title);
   }
 
-  Text button() {
+  Text get button {
     return this.copyWith(this.data, style: OrchidText.button);
   }
 
-  Text highlight() {
+  Text get highlight {
     return this.copyWith(this.data, style: OrchidText.highlight);
   }
 
-  Text body1() {
+  Text get body1 {
     return this.copyWith(this.data, style: OrchidText.body1);
   }
 
-  Text body2() {
+  Text get body2 {
     return this.copyWith(this.data, style: OrchidText.body2);
   }
 
-  Text caption() {
+  Text get caption {
     return this.copyWith(this.data, style: OrchidText.caption);
   }
 }

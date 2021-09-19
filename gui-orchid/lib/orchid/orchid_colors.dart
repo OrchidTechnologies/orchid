@@ -22,10 +22,12 @@ class OrchidColors {
   static const ffaca3bc = Color(0xffACA3BC);
   static const inactive = ffaca3bc;
   static const invalid = inactive;
+  static const disabled = inactive;
 
   static const ffb58ef9 = Color(0xffB58EF9);
   static const active = ffb58ef9;
   static const valid = active;
+  static const enabled = active;
 
   // For debugging convenience
   static const orange = Colors.orange;

@@ -67,7 +67,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
         child: Container(
           child: DropdownButton<KeySelectionItem>(
             dropdownColor: OrchidTextField.textFieldEnabledDecoration.color,
-            hint: Text(s.chooseKey).button(),
+            hint: Text(s.chooseKey).button,
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
             underline: Container(),

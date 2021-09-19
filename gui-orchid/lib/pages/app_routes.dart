@@ -9,7 +9,7 @@ import 'package:orchid/pages/settings/keygen_page.dart';
 import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/pages/settings/manage_config_page.dart';
 import 'package:orchid/pages/settings/deleted_accounts_page.dart';
-import 'package:orchid/pages/settings/settings_log_page.dart';
+import 'package:orchid/pages/settings/logging_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
 import 'account_manager/account_manager_page.dart';
 import 'circuit/circuit_page.dart';
@@ -49,7 +49,7 @@ class AppRoutes {
 
   static final Map<String, WidgetBuilder> routes = {
     settings: (context) => SettingsPage(),
-    settings_log: (context) => SettingsLogPage(),
+    settings_log: (context) => LoggingPage(),
     configuration: (context) => AdvancedConfigurationPage(),
     help_overview: (context) => HelpOverviewPage(),
     privacy: (context) => PrivacyPage(),
