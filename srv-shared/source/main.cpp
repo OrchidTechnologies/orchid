@@ -118,29 +118,38 @@ int Main(int argc, const char *const argv[]) {
 
     po::variables_map args;
 
-    po::options_description group("general command line");
+    po::options_description group("general command line (the usual)");
     group.add_options()
-        ("help", "produce help message")
-        ("version", "dump version (intense)")
+        ("help", "produce (probably this) help message")
+        ("version", "dump version (intense, with patches)")
+    ;
+
+    po::options_description internal("lottery contracts (developers)");
+    internal.add_options()
+        ("lottery0", po::value<std::string>()->default_value("0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"))
+        ("lottery1", po::value<std::string>()->default_value("0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82"))
     ;
 
     po::options_description options;
 
-    { po::options_description group("lottery contracts");
+    { po::options_description group("bandwidth pricing (optional)");
     group.add_options()
-        ("lottery0", po::value<std::string>()->default_value("0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"))
-        ("ethereum", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
-        ("lottery1", po::value<std::string>()->default_value("0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82"))
+        ("currency", po::value<std::string>()->default_value("USD"), "currency used for price conversions")
+        ("price", po::value<std::string>()->default_value("0.00"), "price of bandwidth in currency / GB")
+    ; options.add(group); }
+
+    { po::options_description group("evm json/rpc server (required)");
+    group.add_options()
         ("chain", po::value<std::vector<std::string>>(&chains), "like 1,ETH,https://cloudflare-eth.com/")
     ; options.add(group); }
 
-    { po::options_description group("payment addresses");
+    { po::options_description group("payment addresses (if charging)");
     group.add_options()
-        ("executor", po::value<std::string>(), "address to use for making transactions")
+        ("executor", po::value<std::string>(), "raw (hex) private key of gas account")
         ("recipient", po::value<std::string>(), "deposit address for client payments")
     ; options.add(group); }
 
-    { po::options_description group("webrtc signaling");
+    { po::options_description group("webrtc signaling (basic stuff)");
     group.add_options()
         ("host", po::value<std::string>(), "external hostname for this server")
         ("bind", po::value<std::string>()->default_value("0.0.0.0"), "ip address for server to bind to")
@@ -151,13 +160,7 @@ int Main(int argc, const char *const argv[]) {
         ("stun", po::value<std::string>()->default_value("stun.l.google.com:19302"), "stun server url to use for discovery")
     ; options.add(group); }
 
-    { po::options_description group("bandwidth pricing");
-    group.add_options()
-        ("currency", po::value<std::string>()->default_value("USD"), "currency used for price conversions")
-        ("price", po::value<std::string>()->default_value("0.03"), "price of bandwidth in currency / GB")
-    ; options.add(group); }
-
-    { po::options_description group("packet egress");
+    { po::options_description group("packet egress (exactly one)");
     group.add_options()
 #ifdef __linux__
         ("tunnel", po::value<std::string>(), "/dev/net/tun interface (Linux-only)")
@@ -171,6 +174,7 @@ int Main(int argc, const char *const argv[]) {
     po::store(po::command_line_parser(argc, argv).options(po::options_description()
         .add(group)
         .add(options)
+        .add(internal)
     ).positional(positional).style(po::command_line_style::default_style
         ^ po::command_line_style::allow_guessing
     ).run(), args);
@@ -178,6 +182,7 @@ int Main(int argc, const char *const argv[]) {
     if (auto path = getenv("ORCHID_CONFIG"))
         po::store(po::parse_config_file(path, po::options_description()
             .add(options)
+            .add(internal)
         ), args);
 
     po::notify(args);
@@ -215,8 +220,8 @@ int Main(int argc, const char *const argv[]) {
             auto certificate(pem.certificate());
 
             // XXX: generate .p12 file (for Nathan)
-            std::cerr << key << std::endl;
-            std::cerr << certificate << std::endl;
+            std::cout << key << std::endl;
+            std::cout << certificate << std::endl;
 
             return Store(std::move(key), std::move(certificate));
         }
@@ -249,9 +254,10 @@ int Main(int argc, const char *const argv[]) {
     tls += Object(std::regex_replace(fingerprint->algorithm, re, "").c_str());
     tls += Subset(fingerprint->digest.data(), fingerprint->digest.size());
 
-    std::cerr << "url = " << url << std::endl;
-    std::cerr << "tls = " << tls << std::endl;
-    std::cerr << "gpg = " << gpg << std::endl;
+    std::cout << "url = " << url << std::endl;
+    std::cout << "tls = " << tls << std::endl;
+    std::cout << "gpg = " << gpg << std::endl;
+    std::cout << std::endl;
 
 
     S<Base> base(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
@@ -265,46 +271,50 @@ int Main(int argc, const char *const argv[]) {
 
 
     auto croupier(Wait([&]() -> task<S<Croupier>> {
-        orc_assert(args["currency"].as<std::string>() == "USD");
+        orc_assert_(args["currency"].as<std::string>() == "USD", "--currency currently must be USD (sorry)");
 
-        orc_assert_(args.count("executor") != 0, "must specify --executor unless --price is 0");
+        if (cashier == nullptr) co_return nullptr;
+        orc_assert_(args.count("executor") != 0, "must specify --executor unless --price is 0 (see --help)");
         auto executor(Make<SecretExecutor>(Bless(args["executor"].as<std::string>())));
         const auto recipient(args.count("recipient") == 0 ? Address(*executor) : Address(args["recipient"].as<std::string>()));
 
         const unsigned milliseconds(5*60*1000);
 
+        const auto markets(*co_await Parallel(Map([&](const std::string &market) -> task<Market> {
+            const auto [chain, currency, locator] = Split<3>(market, {','});
+            co_return co_await Market::New(milliseconds, uint256_t(chain.operator std::string()), base, locator.operator std::string(), currency.operator std::string());
+        }, chains)));
+
+        for (const auto &market : markets) {
+            const auto bid((*market.bid_)());
+            Log() << std::dec << market.chain_->operator const uint256_t &() << ":" << market.currency_.name_ << " $" << (Float(bid) * market.currency_.dollars_() * 100000) << " @" << std::dec << bid << std::endl;
+        }
+
         auto lottery0(co_await [&]() -> task<S<Lottery0>> {
-            auto chain(co_await Chain::New({args["ethereum"].as<std::string>(), base}, {}));
-            Address contract(args["lottery0"].as<std::string>());
+            for (const auto &market : markets)
+                if (*market.chain_ == 1) {
+                    const Address contract(args["lottery0"].as<std::string>());
+                    static Selector<Address> what_("what");
 
-            static Selector<Address> what_("what");
-            auto token(co_await what_.Call(*chain, "latest", contract, 90000));
+                    auto lottery0(Break<Lottery0>(Token{market,
+                        co_await what_.Call(*market.chain_, "latest", contract, 90000),
+                        co_await Binance(milliseconds, base, "OXT")
+                    }, contract));
 
-            co_return Break<Lottery0>(Token{
-                co_await Market::New(milliseconds, std::move(chain), co_await Binance(milliseconds, base, "ETH")),
-                std::move(token),
-                co_await Binance(milliseconds, base, "OXT")
-            }, std::move(contract));
+                    lottery0->Open();
+                    co_return lottery0;
+                }
+            orc_assert_(false, "must provide --chain 1,ETH,https://... (see --help)");
         }());
-
-        lottery0->Open();
-
-        std::map<uint256_t, S<Lottery1>> lotteries1;
 
         const Address contract(args["lottery1"].as<std::string>());
 
-        *co_await Parallel(Map([&](const std::string &market) -> task<void> {
-            auto [chain, currency, locator] = [&]() {
-                const auto [chain, currency, locator] = Split<3>(market, {','});
-                return std::make_tuple(uint256_t(chain.operator std::string()), currency.operator std::string(), Locator(locator.operator std::string()));
-            }();
-            auto market$(co_await Market::New(milliseconds, chain, base, std::move(locator), std::move(currency)));
-            const auto bid((*market$.bid_)());
-            Log() << std::dec << chain << ":" << market$.currency_.name_ << " $" << (Float(bid) * market$.currency_.dollars_() * 100000) << " @" << std::dec << bid << std::endl;
-            auto lottery1(Break<Lottery1>(std::move(market$), contract));
+        std::map<uint256_t, S<Lottery1>> lotteries1;
+        for (const auto &market : markets) {
+            auto lottery1(Break<Lottery1>(market, contract));
             lottery1->Open();
-            lotteries1.try_emplace(std::move(chain), std::move(lottery1));
-        }, chains));
+            lotteries1.try_emplace(*market.chain_, std::move(lottery1));
+        }
 
         auto croupier(Make<Croupier>(recipient, std::move(executor), std::move(lottery0), std::move(lotteries1)));
         co_return std::move(croupier);
@@ -344,7 +354,7 @@ int Main(int argc, const char *const argv[]) {
         auto egress(Break<BufferSink<Egress>>(0));
         Wait(Guard(*egress, base, 0, file));
         return egress;
-    } else orc_assert_(false, "must provide an egress option"); }());
+    } else orc_assert_(false, "must provide an egress option (see --help)"); }());
 
     Wait([&]() -> task<void> {
         auto remote(Break<BufferSink<Remote>>());

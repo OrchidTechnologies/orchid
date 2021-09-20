@@ -18,9 +18,7 @@
 # }}}
 
 
-args := --price 0 --currency USD
-
-args += --ethereum https://cloudflare-eth.com/
+args := 
 args += --chain 1,ETH,https://cloudflare-eth.com/
 #args += --chain 30,BTC,https://public-node.rsk.co/
 args += --chain 56,BNB,https://bsc-dataseed.binance.org/
