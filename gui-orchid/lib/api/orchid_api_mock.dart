@@ -1,8 +1,13 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/pages/account_manager/account_store.dart';
+import 'package:orchid/pages/app_routes.dart';
+import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:sqflite/sqflite.dart';
 import 'monitoring/analysis_db.dart';
@@ -113,18 +118,24 @@ class MockOrchidAPI implements OrchidAPI {
     return db;
   }
 
+  static bool insertedMockTrafficData = false;
+
   Future<void> insertMockTrafficData() async {
+    if (insertedMockTrafficData) {
+      return;
+    }
+    insertedMockTrafficData = true;
     log("mock: insertMockTrafficData");
     var db = await AnalysisDb().getDb();
     var inserts = """
-INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3656754512,6,168230915,62133,-1395063294,443,'TCP','test.really.long.item.foo.g.blah.gee.gah.net');
+-- INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3656754512,6,168230915,62133,-1395063294,443,'TCP','test.really.long.item.foo.g.blah.gee.gah.net');
 INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365221146,1,168230915,0,134744072,0,'ICMP',NULL);
-INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365607905,17,168230915,63400,134744072,53,'DNS',NULL);
 INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3656754512,6,168230915,62133,-1395063294,443,'TCP','googleads.g.doubleclick.net');
 INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3657346875,6,168230915,64825,1823570364,5228,'TCP','mtalk.google.com');
-INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365790799,6,168230915,62160,301799886,443,'TCP','mesu.apple.com');
-INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365795197,6,168230915,62162,-1377888904,443,'TCP','configuration.apple.com');
-INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365807072,6,168230915,62170,-1645211101,443,'TCP','www.facebook.com');
+-- INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365790799,6,168230915,62160,301799886,443,'TCP','mesu.apple.com');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365607905,17,168230915,63400,134744072,53,'DNS',NULL);
+-- INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365795197,6,168230915,62162,-1377888904,443,'TCP','configuration.apple.com');
+INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.355807072,6,168230915,62170,-1645211101,443,'TCP','www.facebook.com');
 INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.365855324,6,168230915,62186,1666514438,443,'TCP','www.orchid.com');
 INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3722021645,17,168230915,60095,-268435462,1900,'HTTP/1.1','239.255.255.250:1900');
 INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3722152663,6,168230915,62248,-1395062454,443,'TCP','youtubei.googleapis.com');
@@ -133,8 +144,12 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
 INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostname) VALUES (2458712.3774122684,6,168230915,62258,1666514598,443,'TLS','slack.com');
     """;
     var statements = inserts.trim().split('\n');
+    // The :memory: db persists across reboots if not closed?
+    await db.rawDelete('delete from flow');
     for (var statement in statements) {
-      await db.rawInsert(statement);
+      if (!statement.startsWith('--')) {
+        await db.rawInsert(statement);
+      }
     }
   }
 
@@ -144,6 +159,71 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
     // Monitor user preferences and start or stop the VPN extension.
     await OrchidRestartManager().initVPNControlListener();
     return null;
+  }
+
+  static bool hidePrices = const bool.fromEnvironment('hide_prices');
+
+  /// Check for startup args. e.g. for screenshot rigging.
+  static void checkStartupCommandArgs(BuildContext context) async {
+    log("Check command args");
+    // Allow setting the account for screenshots
+    // Must use 'const' here:  https://github.com/flutter/flutter/issues/55870
+    const identity = String.fromEnvironment('identity', defaultValue: null);
+    if (identity != null) {
+      try {
+        setDefaultIdentityFromString(identity);
+      } catch (err) {
+        log("Error setting default identity from string: $err");
+      }
+    }
+    const connected = bool.fromEnvironment('connected', defaultValue: null);
+    if (connected != null) {
+      fakeVPNDelay = 0;
+      UserPreferences().routingEnabled.set(connected);
+    }
+
+    const showScreen = String.fromEnvironment('screen');
+    if (showScreen == 'accounts') {
+      await Navigator.pushNamed(context, AppRoutes.identity);
+    } else if (showScreen == 'purchase') {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              fullscreenDialog: true,
+              builder: (BuildContext context) {
+                return PurchasePage(
+                    signerKey: null,
+                    cancellable: true,
+                    completion: () {
+                      log("purchase complete");
+                    });
+              }));
+    } else if (showScreen == 'traffic') {
+      await UserPreferences().monitoringEnabled.set(true);
+      await Navigator.pushNamed(context, AppRoutes.traffic);
+    }
+  }
+
+  /// Import an identity and set it as the default.
+  static void setDefaultIdentityFromString(String config) async {
+    log("xxx: set default identity from string: $config");
+    var existingKeys = await UserPreferences().getKeys();
+    var result =
+        OrchidAccountConfigV1.parseOrchidIdentity(config, existingKeys);
+    if (result.isNew) {
+      await UserPreferences().addKey(result.signer);
+    }
+
+    // Do wait for account discovery
+    var accountStore = AccountStore();
+    // Set it as the active identity and pick the first account found
+    await accountStore.setActiveIdentity(result.signer);
+    await accountStore.load();
+    try {
+      await accountStore.setActiveAccount(accountStore.accounts.first);
+    } catch (err) {
+      log("set default identity: unable to find account: $err");
+    }
   }
 
   /// Get the logging API.
@@ -170,12 +250,13 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
 
   Timer _connectFuture;
 
+  static int fakeVPNDelay = 3000;
+
   /// Set the desired connection state: true for connected, false to disconnect.
   /// Note: This mock shows the connecting state for N seconds and then connects
   /// Note: successfully.
   @override
   Future<void> setVPNExtensionEnabled(bool enabled) async {
-    const fakeDelay = 3000;
     log("mock: setVPNExtensionEnabled = $enabled, vpnConnectionStatus = ${vpnExtensionStatus.value}");
     switch (vpnExtensionStatus.value) {
       case OrchidVPNExtensionState.Invalid:
@@ -190,7 +271,7 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
         if (enabled) {
           _setConnectionState(OrchidVPNExtensionState.Connecting);
 
-          _connectFuture = Timer(Duration(milliseconds: fakeDelay), () {
+          _connectFuture = Timer(Duration(milliseconds: fakeVPNDelay), () {
             _setConnectionState(OrchidVPNExtensionState.Connected);
           });
         } else {
@@ -209,7 +290,7 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
           return;
         } else {
           _setConnectionState(OrchidVPNExtensionState.Disconnecting);
-          _connectFuture = Timer(Duration(milliseconds: fakeDelay), () {
+          _connectFuture = Timer(Duration(milliseconds: fakeVPNDelay), () {
             _setConnectionState(OrchidVPNExtensionState.NotConnected);
           });
         }

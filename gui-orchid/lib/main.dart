@@ -18,8 +18,10 @@ void main() async {
   if (OrchidPlatform.isApple || OrchidPlatform.isAndroid) {
     OrchidPurchaseAPI().initStoreListener();
   }
-  var languageOverride = (await OrchidUserConfig().getUserConfigJS())
-      .evalStringDefault("lang", null);
+  var languageOverride =
+      (const String.fromEnvironment('language', defaultValue: null)) ??
+          (await OrchidUserConfig().getUserConfigJS())
+              .evalStringDefault("lang", null);
   if (languageOverride != null &&
       OrchidPlatform.hasLanguage(languageOverride)) {
     OrchidPlatform.languageOverride = languageOverride;
@@ -29,5 +31,6 @@ void main() async {
     setWindowFrame(Rect.fromLTWH(100, 100, 414, 890));
     setWindowMinSize(Size(216, 250));
   }
+
   runApp(OrchidApp());
 }

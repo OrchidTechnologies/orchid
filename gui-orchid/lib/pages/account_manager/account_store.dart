@@ -82,11 +82,11 @@ class AccountStore extends ChangeNotifier {
     activeAccounts = accounts;
     await UserPreferences().activeAccounts.set(accounts);
 
-    _accountsChanged();
+    return _accountsChanged();
   }
 
   /// Set an active identity
-  void setActiveIdentity(StoredEthereumKey identity) async {
+  Future<void> setActiveIdentity(StoredEthereumKey identity) async {
     // Look for an existing designated active account for this identity
     List<Account> accounts = await UserPreferences().activeAccounts.get();
     Account toActivate = accounts.firstWhere(
@@ -94,12 +94,12 @@ class AccountStore extends ChangeNotifier {
       orElse: () => null,
     );
     // Activate the found account or simply activate the identity
-    setActiveAccount(toActivate ?? Account(identityUid: identity.uid));
+    return setActiveAccount(toActivate ?? Account(identityUid: identity.uid));
   }
 
   // Called when the list of identities or active accounts is changed to
   // update the account store internal state and publish changes throughout the UI.
-  void _accountsChanged() async {
+  Future<void> _accountsChanged() async {
     // Update the account list but don't wait for any new account discovery.
     // (Falling through to publish the important change in active account selection)
     await load(waitForDiscovered: false);
@@ -166,6 +166,7 @@ class AccountStore extends ChangeNotifier {
         discoveredAccounts = await OrchidEthereumV1()
             .discoverAccounts(chain: Chains.xDAI, signer: activeIdentity);
         notifyListeners();
+        log("account_store: After discovering v1 accounts: discovered = $discoveredAccounts");
 
         // Discover accounts for the active identity on V0 Ethereum.
         discoveredAccounts +=
@@ -175,7 +176,7 @@ class AccountStore extends ChangeNotifier {
         // Cache any newly discovered accounts
         if (discoveredAccounts.isNotEmpty) {
           log("account_store: Saving discovered accounts: $discoveredAccounts");
-          UserPreferences().addCachedDiscoveredAccounts(discoveredAccounts);
+          await UserPreferences().addCachedDiscoveredAccounts(discoveredAccounts);
         }
       }
     } catch (err) {

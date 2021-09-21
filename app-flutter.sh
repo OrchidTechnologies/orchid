@@ -13,6 +13,7 @@ ln -s gui/pubspec.yaml
 ln -s gui/lib
 ln -s gui/l10n.yaml
 ln -s gui/assets
+ln -s gui/screenshots
 
 ln -s shared/flutter-desktop-embedding
 

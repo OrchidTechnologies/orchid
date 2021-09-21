@@ -139,7 +139,7 @@ class UserPreferences {
     print("setKeys: storing keys: ${jsonEncode(keys)}");
     try {
       var value = jsonEncode(keys);
-      return writeStringForKey(UserPreferenceKey.Keys, value);
+      return await writeStringForKey(UserPreferenceKey.Keys, value);
     } catch (err) {
       log("Error storing keys!: $err");
       return false;
