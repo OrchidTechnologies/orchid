@@ -60,10 +60,10 @@ class ParseOrchidIdentityResult {
 /// This class supports migration to the V1 gui by encapsulating either
 /// an imported V0 account or V1 identity.
 class ParseOrchidAccountResult {
-  final ParseOrchidIdentityResult identity;
-  final ParseOrchidAccountResultV0 account;
+  final ParseOrchidIdentityResult identityV1;
+  final ParseOrchidAccountResultV0 accountV0;
 
-  ParseOrchidAccountResult({this.identity, this.account});
+  ParseOrchidAccountResult({this.identityV1, this.accountV0});
 
   static Future<ParseOrchidAccountResult> parse(
     String config, {
@@ -75,7 +75,7 @@ class ParseOrchidAccountResult {
     // Try to parse as a V0 account
     try {
       return ParseOrchidAccountResult(
-          account:
+          accountV0:
               OrchidAccountConfigV0.parseOrchidAccount(config, existingKeys));
     } catch (err) {
       if (v0Only) {
@@ -86,7 +86,7 @@ class ParseOrchidAccountResult {
     // Try to parse as a V1 identity (which may be a subset of a V0 account)
     try {
       return ParseOrchidAccountResult(
-          identity:
+          identityV1:
               OrchidAccountConfigV1.parseOrchidIdentity(config, existingKeys));
     } catch (err) {
       // fall through to raw key test
@@ -94,11 +94,11 @@ class ParseOrchidAccountResult {
 
     // Try to parse as a raw hex key
     return ParseOrchidAccountResult(
-        identity: OrchidAccountConfigV1.parseRawKey(config, existingKeys));
+        identityV1: OrchidAccountConfigV1.parseRawKey(config, existingKeys));
   }
 
   @override
   String toString() {
-    return 'ParseOrchidAccountResult{identity: $identity, account: $account}';
+    return 'ParseOrchidAccountResult{identity: $identityV1, account: $accountV0}';
   }
 }

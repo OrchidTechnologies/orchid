@@ -370,7 +370,7 @@ class _ConnectPageState extends State<ConnectPage>
         switch (_vpnState) {
           case OrchidVPNExtensionState.Invalid:
           case OrchidVPNExtensionState.NotConnected:
-            message = s.pushToConnect;
+            message = _hasConfiguredCircuit ? s.pushToConnect : '';
             break;
           case OrchidVPNExtensionState.Connecting:
             message = s.startingVpn;

@@ -25,7 +25,6 @@ import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
-import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/strings.dart';
 import 'package:styled_text/styled_text.dart';
 
@@ -204,18 +203,18 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     ScanOrPasteDialog.show(
       context: context,
       onImportAccount: (ParseOrchidAccountResult result) async {
-        if (result.identity != null) {
-          if (result.identity.isNew) {
-            await UserPreferences().addKey(result.identity.signer);
-            await _accountStore.load();
+        if (result.identityV1 != null) {
+          if (result.identityV1.isNew) {
+            await UserPreferences().addKey(result.identityV1.signer);
+            await _accountStore.load(waitForDiscovered: false);
           }
-          _accountStore.setActiveIdentity(result.identity.signer);
+          _accountStore.setActiveIdentity(result.identityV1.signer);
         } else {
-          if (result.account.newKeys.isNotEmpty) {
-            await UserPreferences().addKeys(result.account.newKeys);
-            await _accountStore.load();
+          if (result.accountV0.newKeys.isNotEmpty) {
+            await UserPreferences().addKeys(result.accountV0.newKeys);
+            await _accountStore.load(waitForDiscovered: false);
           }
-          _accountStore.setActiveIdentity(result.account.account.signer);
+          _accountStore.setActiveIdentity(result.accountV0.account.signer);
         }
       },
     );

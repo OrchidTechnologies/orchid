@@ -106,11 +106,22 @@ class UserPreferences {
     return writeStringForKey(UserPreferenceKey.UserConfig, value);
   }
 
+  ///
+  /// Begin: Keys
+  ///
+
   /// Return the user's keys or [] empty array if uninitialized.
-  // Note: A format change or bug that causes a decoding error here would be bad.
-  // Note: When we move these keys to secure storage the issues will change
-  // Note: so we will rely on this for now.
-  Future<List<StoredEthereumKey>> getKeys() async {
+  ObservablePreference<List<StoredEthereumKey>> keys = ObservablePreference(
+      key: UserPreferenceKey.Keys,
+      loadValue: (key) async {
+        return _getKeys();
+      },
+      storeValue: (key, keys) {
+        return _setKeys(keys);
+      });
+
+  /// Return the user's keys or [] empty array if uninitialized.
+  static Future<List<StoredEthereumKey>> _getKeys() async {
     String value = (await SharedPreferences.getInstance())
         .getString(UserPreferenceKey.Keys.toString());
     if (value == null) {
@@ -135,7 +146,7 @@ class UserPreferences {
     }
   }
 
-  Future<bool> setKeys(List<StoredEthereumKey> keys) async {
+  static Future<bool> _setKeys(List<StoredEthereumKey> keys) async {
     print("setKeys: storing keys: ${jsonEncode(keys)}");
     try {
       var value = jsonEncode(keys);
@@ -144,6 +155,18 @@ class UserPreferences {
       log("Error storing keys!: $err");
       return false;
     }
+  }
+
+  /// Return the user's keys or [] empty array if uninitialized.
+  @deprecated
+  Future<List<StoredEthereumKey>> getKeys() async {
+    return keys.get();
+  }
+
+  @deprecated
+  Future<bool> setKeys(List<StoredEthereumKey> newKeys) async {
+    await keys.set(newKeys);
+    return true;
   }
 
   /// Add a key to the user's keystore.
@@ -171,6 +194,10 @@ class UserPreferences {
     var keys = ((await UserPreferences().getKeys()) ?? []) + newKeys;
     return UserPreferences().setKeys(keys);
   }
+
+  ///
+  /// End: Keys
+  ///
 
   Future<String> getDefaultCurator() async {
     return (await SharedPreferences.getInstance())
