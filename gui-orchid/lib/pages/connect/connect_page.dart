@@ -123,7 +123,7 @@ class _ConnectPageState extends State<ConnectPage>
     } catch (err) {
       log("error getting bandwidth price: $err");
     }
-    if (_activeAccount != null) {
+    if (_activeAccount?.lotteryPot?.balance != null) {
       try {
         var tokenToUsd = await OrchidPricing()
             .tokenToUsdRate(_activeAccount.lotteryPot.balance.type);
