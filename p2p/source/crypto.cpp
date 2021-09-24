@@ -256,7 +256,7 @@ Key Recover(const Brick<32> &data, const Signature &signature) {
     return key;
 }
 
-Beam Object(int nid) {
+Beam Abstract(int nid) {
     const auto object(OBJ_nid2obj(nid));
     const auto size(i2d_ASN1_OBJECT(object, nullptr));
     Beam data(size);
@@ -266,10 +266,10 @@ Beam Object(int nid) {
     return data;
 }
 
-Beam Object(const char *ln) {
+Beam Abstract(const char *ln) {
     const auto nid(OBJ_ln2nid(ln));
     orc_assert(nid != NID_undef);
-    return Object(nid);
+    return Abstract(nid);
 }
 
 size_t Length(Window &window) {

@@ -31,6 +31,10 @@
 
 namespace orc {
 
+typedef boost::json::value Any;
+typedef boost::json::object Object;
+typedef boost::json::array Array;
+
 class Argument final {
   private:
     mutable Json::Value value_;
@@ -147,19 +151,19 @@ inline Json::Value Parse(const std::string &data) { orc_block({
     return result;
 }, "parsing " << data); }
 
-inline std::string UnparseB(const boost::json::value &data) {
+inline std::string UnparseB(const Any &data) {
     return boost::json::serialize(data);
 }
 
-inline boost::json::value ParseB(const std::string &data) { orc_block({
+inline Any ParseB(const std::string &data) { orc_block({
     return boost::json::parse(data);
 }, "parsing " << data); }
 
-inline boost::json::value Reparse(const Json::Value &data) {
+inline Any Reparse(const Json::Value &data) {
     return ParseB(Unparse(data));
 }
 
-inline Json::Value Reparse(const boost::json::value &data) {
+inline Json::Value Reparse(const Any &data) {
     return Parse(UnparseB(data));
 }
 
@@ -198,12 +202,12 @@ inline std::string Str(const boost::string_view &value) {
     return std::string(value); }
 inline std::string Str(const boost::json::string &value) {
     return Str(value.operator boost::string_view()); }
-inline std::string Str(const boost::json::value &value) {
+inline std::string Str(const Any &value) {
     return Str(value.as_string()); }
 
 // XXX: this is dangerous and needs Fit
 template <typename Type_>
-Type_ Num(const boost::json::value &value) {
+Type_ Num(const Any &value) {
     switch (value.kind()) {
         case boost::json::kind::int64:
             return Type_(value.get_int64());
