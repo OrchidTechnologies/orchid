@@ -138,33 +138,33 @@ class Argument final {
 
 typedef std::map<std::string, Argument> Multi;
 
-inline std::string Unparse(Argument &&data) {
+inline std::string UnparseO(Argument &&data) {
     Json::StreamWriterBuilder builder;
     builder["indentation"] = "";
     return Json::writeString(builder, std::move(data));
 }
 
-inline Json::Value Parse(const std::string &data) { orc_block({
+inline Json::Value ParseO(const std::string &data) { orc_block({
     Json::Value result;
     Json::Reader reader;
     orc_assert(reader.parse(data, result, false));
     return result;
 }, "parsing " << data); }
 
-inline std::string UnparseB(const Any &data) {
+inline std::string Unparse(const Any &data) {
     return boost::json::serialize(data);
 }
 
-inline Any ParseB(const std::string &data) { orc_block({
+inline Any Parse(const std::string &data) { orc_block({
     return boost::json::parse(data);
 }, "parsing " << data); }
 
 inline Any Reparse(const Json::Value &data) {
-    return ParseB(Unparse(data));
+    return Parse(UnparseO(data));
 }
 
 inline Json::Value Reparse(const Any &data) {
-    return Parse(UnparseB(data));
+    return ParseO(Unparse(data));
 }
 
 template <typename Type_>
@@ -186,7 +186,7 @@ orc_element(UInt)
 
 template <typename... Elements_, size_t... Indices_>
 std::tuple<Elements_...> Parse(const std::string &data, std::index_sequence<Indices_...>) {
-    const auto array(Parse(data));
+    const auto array(ParseO(data));
     return std::make_tuple<Elements_...>(Element<Elements_>::Get(array, Indices_)...);
 }
 

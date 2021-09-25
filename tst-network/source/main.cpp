@@ -102,7 +102,7 @@ task<Measurement> Measure(Base &base) {
 
 task<Host> Find(Base &base) {
     // XXX: use STUN to do this instead of a Cydia endpoint
-    co_return Parse((co_await base.Fetch("GET", {{"https", "cydia.saurik.com", "443"}, "/debug.json"}, {}, {})).ok())["host"].asString();
+    co_return Str(Parse((co_await base.Fetch("GET", {{"https", "cydia.saurik.com", "443"}, "/debug.json"}, {}, {})).ok()).at("host"));
 }
 
 task<std::string> Version(Base &base, const Locator &url) { try {
@@ -535,8 +535,8 @@ int Main(int argc, const char *const argv[]) {
     site(http::verb::post, "/chainlink/1", [&](Request request) -> task<Response> {
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"},
-        }, Unparse(Multi{
-            {"jobRunID", Parse(request.body())["id"].asString()},
+        }, UnparseO(Multi{
+            {"jobRunID", Str(Parse(request.body()).at("id"))},
             {"data", Multi{{"price", median().str()}}},
         }));
     });

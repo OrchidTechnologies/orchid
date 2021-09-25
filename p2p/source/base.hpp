@@ -57,8 +57,8 @@ class Base :
   private:
     const U<rtc::NetworkManager> manager_;
 
-    static cppcoro::shared_task<Json::Value> Resolve_(Base &base, const std::string &host);
-    Cache<cppcoro::shared_task<Json::Value>, Base &, std::string, &Resolve_> cache_;
+    static cppcoro::shared_task<Any> Resolve_(Base &base, const std::string &host);
+    Cache<cppcoro::shared_task<Any>, Base &, std::string, &Resolve_> cache_;
 
     std::multimap<Origin, U<Fetcher>> fetchers_;
 

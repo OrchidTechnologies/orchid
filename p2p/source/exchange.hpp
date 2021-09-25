@@ -70,11 +70,11 @@ class Exchange {
     }
 
     task<Object> call(const std::string &method, const std::string &path, const std::string &body = {}) const {
-        co_return ParseB((co_await operator ()(method, path, body)).ok()).as_object();
+        co_return Parse((co_await operator ()(method, path, body)).ok()).as_object();
     }
 
     task<Any> kill(const std::string &path, const std::string &body = {}) const {
-        co_return ParseB((co_await operator ()("DELETE", path, body)).ok());
+        co_return Parse((co_await operator ()("DELETE", path, body)).ok());
     }
 
     cppcoro::async_generator<Object> list(std::string method, std::map<std::string, std::string> args) const {
@@ -101,7 +101,7 @@ class Exchange {
             auto response(co_await operator()("GET", path, {}));
             orc_assert_(response.result() == http::status::ok, response.body());
 
-            auto body(ParseB(response.body()));
+            auto body(Parse(response.body()));
             for (auto &value : body.as_array())
                 co_yield std::move(value.as_object());
 

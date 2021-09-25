@@ -51,11 +51,11 @@ class Endpoint {
         return base_;
     }
 
-    task<Json::Value> operator ()(const std::string &method, Argument args) const;
-
-    task<Any> Call(const std::string &method, Argument args) const {
-        co_return Reparse(co_await operator ()(method, std::move(args)));
+    task<Json::Value> operator ()(const std::string &method, Argument args) const {
+        co_return Reparse(co_await Call(method, std::move(args)));
     }
+
+    task<Any> Call(const std::string &method, Argument args) const;
 };
 
 }

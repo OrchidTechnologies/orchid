@@ -545,7 +545,7 @@ class Netstring :
 };
 
 void Worker::Land(Pipe<Buffer> *pipe, const Buffer &data) {
-    auto result(ParseB(data.str()).as_object());
+    auto result(Parse(data.str()).as_object());
     const auto id(result.find("id"));
     if (id != result.end()) {
         const auto locked(locked_());
@@ -624,7 +624,7 @@ task<Object> Worker::Call(const std::string &method, Object internal, Object dat
         return transfer.first;
     }());
 
-    co_await send_->Send(Subset(UnparseB(request)));
+    co_await send_->Send(Subset(Unparse(request)));
     const auto result(co_await *transfer->second);
     locked_()->transfers_.erase(transfer);
 
@@ -651,7 +651,7 @@ boost::json::array MapJ(Type_ &&values, Code_ code) {
 }
 
 int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params) {
-    Capabilities supported(Capabilities(ParseB(Tables_).as_object(), {}), {
+    Capabilities supported(Capabilities(Parse(Tables_).as_object(), {}), {
         Codec(Kind::Audio, "audio/opus", 48000, 2, {}),
         Codec(Kind::Video, "video/VP8", 90000, 0, {{"x-google-start-bitrate", 1000}}),
     });
@@ -677,7 +677,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
     site(http::verb::get, "/ms/capabilities", [&](Request request) -> task<Response> {
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB(supported.Json(true)));
+        }, Unparse(supported.Json(true)));
     });
 
     site(http::verb::get, "/ms/transport", [&](Request request) -> task<Response> {
@@ -708,7 +708,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
         // id, dtlsParameters, iceCandidates, iceParameters
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB(result));
+        }, Unparse(result));
     });
 
     site(http::verb::post, "/ms/connect/(.*)"_ctre, [&](Matches1 matches, Request request) -> task<Response> {
@@ -717,11 +717,11 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
         co_await worker->Call("transport.connect", {
             {"routerId", router.str()},
             {"transportId", transport.str()},
-        }, {{"dtlsParameters", ParseB(request.body())}});
+        }, {{"dtlsParameters", Parse(request.body())}});
 
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB({}));
+        }, Unparse({}));
     });
 
     site(http::verb::post, "/ms/produce/(.*)"_ctre, [&](Matches1 matches, Request request) -> task<Response> {
@@ -731,7 +731,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
         const auto transportation(transportations.find(transport));
         orc_assert(transportation != transportations.end());
 
-        const auto body(ParseB(request.body()).as_object());
+        const auto body(Parse(request.body()).as_object());
         const auto kind(ToKind(Str(body.at("kind"))));
         const auto &parameters(body.at("rtpParameters").as_object());
         const auto mid(Str(parameters.at("mid")));
@@ -775,7 +775,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
 
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB({{"id", producer.str()}}));
+        }, Unparse({{"id", producer.str()}}));
     });
 
     site(http::verb::post, "/ms/consume/(.*)/(.*)"_ctre, [&](Matches2 matches, Request request) -> task<Response> {
@@ -786,7 +786,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
         const auto production(productions.find(producer));
         orc_assert(production != productions.end());
 
-        Capabilities supported(ParseB(request.body()).as_object(), std::nullopt);
+        Capabilities supported(Parse(request.body()).as_object(), std::nullopt);
         Parameters consuming(production->second.consumable_, supported);
         auto dumped(consuming.Json(Str(++mid)));
 
@@ -807,7 +807,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
 
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB({
+        }, Unparse({
             {"id", consumer.str()},
             {"kind", Str(production->second.kind_)},
             {"rtpParameters", std::move(dumped)},
@@ -830,7 +830,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
 
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB({}));
+        }, Unparse({}));
     });
 
     site(http::verb::get, "/test/(.*)"_ctre, [&](Matches1 matches, Request request) -> task<Response> {
