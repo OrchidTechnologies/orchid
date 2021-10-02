@@ -18,7 +18,6 @@ import 'app_colors.dart';
 typedef ImportAccountCompletion = void Function(
     ParseOrchidAccountResult result);
 
-// Used from the LegacyWelcomeDialog and AddHopPage->ScanOrPasteDialog
 class ScanOrPasteOrchidAccount extends StatefulWidget {
   final ImportAccountCompletion onImportAccount;
   final double spacing;
@@ -95,7 +94,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
           height: 52,
           child: TextButton(
             style: TextButton.styleFrom(
-              backgroundColor: OrchidColors.purple_bright,
+              backgroundColor: _pastedCodeValid ? OrchidColors.enabled: OrchidColors.disabled,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(8.0))),
               // side: BorderSide(width: 2, color: Colors.white),

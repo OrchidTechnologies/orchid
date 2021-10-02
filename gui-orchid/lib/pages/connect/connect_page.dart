@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/monitoring/restart_manager.dart';
+import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -91,6 +93,12 @@ class _ConnectPageState extends State<ConnectPage>
     _releaseVersionCheck();
 
     _logoController = NeonOrchidLogoController(vsync: this);
+
+    // Note: There seems to be a bug in SharedPreferences where accessing it
+    // Note: too early during startup causes problems for this setup.
+    Future.delayed(Duration(seconds: 0)).then((_) {
+      MockOrchidAPI.checkStartupCommandArgs(context);
+    });
   }
 
   /// Update alerts, badging, and status information.
@@ -115,7 +123,7 @@ class _ConnectPageState extends State<ConnectPage>
     } catch (err) {
       log("error getting bandwidth price: $err");
     }
-    if (_activeAccount != null) {
+    if (_activeAccount?.lotteryPot?.balance != null) {
       try {
         var tokenToUsd = await OrchidPricing()
             .tokenToUsdRate(_activeAccount.lotteryPot.balance.type);
@@ -362,7 +370,7 @@ class _ConnectPageState extends State<ConnectPage>
         switch (_vpnState) {
           case OrchidVPNExtensionState.Invalid:
           case OrchidVPNExtensionState.NotConnected:
-            message = s.pushToConnect;
+            message = _hasConfiguredCircuit ? s.pushToConnect : '';
             break;
           case OrchidVPNExtensionState.Connecting:
             message = s.startingVpn;
@@ -439,7 +447,8 @@ class _ConnectPageState extends State<ConnectPage>
     }
 
     log("new version check.");
-    if (version.isOlderThan(Release.current)) {
+    var releaseNotes = const bool.fromEnvironment('release_notes', defaultValue: null);
+    if (releaseNotes ?? version.isOlderThan(Release.current)) {
       await _doNewReleaseActivities();
     }
 
@@ -485,6 +494,7 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   Future _circuitConfigurationChanged() async {
+    log("xxx: connect page: circuit configuration changed");
     var prefs = UserPreferences();
     if (await prefs.guiV0.get()) {
       _circuitHops = (await prefs.getCircuit()).hops.length;
@@ -492,6 +502,7 @@ class _ConnectPageState extends State<ConnectPage>
       var accountStore = await AccountStore(discoverAccounts: false).load();
       // Currently assumes single hop for V1
       _circuitHops = accountStore.activeAccount != null ? 1 : null;
+      log("xxx: connect page: active account = ${accountStore.activeAccount}");
     }
     setState(() {});
   }

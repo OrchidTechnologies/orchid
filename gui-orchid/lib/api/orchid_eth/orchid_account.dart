@@ -24,6 +24,10 @@ class Account {
     this.funder,
   });
 
+  bool get isV0 {
+    return version == 0;
+  }
+
   /// Stream the current active account, ignoring identities with no selection.
   static Stream<Account> get activeAccountStream {
     return UserPreferences().activeAccounts.stream().map((accounts) {

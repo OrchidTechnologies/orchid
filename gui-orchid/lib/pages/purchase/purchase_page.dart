@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
@@ -189,7 +190,7 @@ class _PurchasePageState extends State<PurchasePage> {
   Widget _buildTopText() {
     final titleStyle = OrchidText.medium_24_050;
     var payPerUse = s.payPerUseVpnService;
-    var price = _bandwidthPrice != null
+    var price = (_bandwidthPrice != null && !MockOrchidAPI.hidePrices)
         ? "\$" + formatCurrency(_bandwidthPrice.value)
         : "...";
     var currentAvgVPNPrice = s.averagePriceIsUSDPerGb(price);
@@ -314,8 +315,7 @@ class _PurchasePageState extends State<PurchasePage> {
         pac: pac2,
         title: s.gbApproximately60,
         subtitle: _buildPurchaseDescriptionText(
-          text:
-              s.idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd,
+          text: s.idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd,
         ),
         highlightText: s.mostPopular,
       ),
@@ -385,6 +385,8 @@ class _PurchasePageState extends State<PurchasePage> {
     );
 
     var enabled = pac.localPrice != null && _storeUp == true;
+    var price =
+        (MockOrchidAPI.hidePrices ? null : pac.localDisplayPrice) ?? '...';
 
     return TextButton(
       onPressed: enabled
@@ -421,7 +423,7 @@ class _PurchasePageState extends State<PurchasePage> {
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Column(children: [
-                      Text("${pac.localDisplayPrice ?? '...'}",
+                      Text(price,
                           style:
                               valueStyle.copyWith(fontWeight: FontWeight.bold)),
                       pady(2),
@@ -462,7 +464,8 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Future<void> _confirmPurchase({PAC pac}) async {
-    var style1 = OrchidText.medium_18_025.copyWith(height: 1.6); // heights should match
+    var style1 =
+        OrchidText.medium_18_025.copyWith(height: 1.6); // heights should match
     var valueStyle = OrchidText.button.copyWith(height: 1.6);
 
     var credits = pac.localPrice;

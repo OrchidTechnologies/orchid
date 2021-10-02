@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
@@ -53,7 +54,7 @@ class ConnectStatusPanel extends StatelessWidget {
 
   Widget _buildUSDPanel(BuildContext context) {
     var s = S.of(context);
-    var price = bandwidthPrice != null
+    var price = (bandwidthPrice != null && !MockOrchidAPI.hidePrices)
         ? '\$' + formatCurrency(bandwidthPrice.value)
         : "...";
     return _buildPanel(

@@ -45,12 +45,22 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
   }
 
   void initStateAsync() async {
-    this._keys = await UserPreferences().getKeys();
 
     // If an initial key selection is provided use it
     if (widget.initialSelection != null) {
       this._selectedItem = widget.initialSelection;
     }
+
+    // Monitor keys
+    UserPreferences().keys.stream().listen((keys) {
+      setState(() {
+        this._keys = keys;
+        if (!_keys.contains(_selectedItem)) {
+          _selectedItem = null;
+         widget.onSelection(null);
+        }
+      });
+    });
 
     // Update all state
     setState(() {});

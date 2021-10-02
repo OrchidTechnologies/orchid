@@ -13,6 +13,7 @@ class FunderSelectionDropdown extends StatefulWidget {
   final FunderSelectionItem initialSelection;
   bool enabled;
   final StoredEthereumKeyRef signer;
+  final bool v0Only;
 
   // Fixed options
   static final pasteKeyOption =
@@ -26,6 +27,7 @@ class FunderSelectionDropdown extends StatefulWidget {
     @required this.onSelection,
     this.initialSelection,
     this.enabled = false,
+    this.v0Only = true,
   }) : super(key: key) {
     if (signer == null) {
       enabled = false;
@@ -53,6 +55,7 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
     var cached = await UserPreferences().cachedDiscoveredAccounts.get();
     _funderAddresses = cached
         .where((account) => account.identityUid == _signer.uid)
+        .where((account) => !widget.v0Only || account.isV0)
         .map((account) => account.funder)
         .toList();
 
@@ -87,7 +90,6 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
             hint: Text(s.chooseAddress, style: OrchidText.button),
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
-            //underline: !widget.enabled ? Container() : null,
             underline: Container(),
             // suppress the underline
             value: _selectedItem,
