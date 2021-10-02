@@ -42,7 +42,7 @@ android {
     }
 
     signingConfigs {
-        release {
+        orchid {
             keyAlias orcAlias
             keyPassword orcPassword
             storeFile file(orcStore)
@@ -51,8 +51,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.orchid
+        }
+
         release {
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.orchid
         }
     }
 
