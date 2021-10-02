@@ -104,6 +104,13 @@ $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature): $(output)
 	$(call codesign,$(bundle)$(contents)/PlugIns/$(name).VPN.appex,$<,$@)
 
 ifneq ($(provision),)
+ifeq ($(identity),)
+identity := $(shell $(unlock) comm -12 <(env/certificates.sh $(word 1,$(keychain)) | sort) <(env/identity.sh $(provision)app.provisionprofile | sort))
+endif
+ifeq ($(teamid),)
+teamid := $(shell env/teamid.sh $(provision)app.provisionprofile)
+endif
+
 $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)$(signature): $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/embedded.provisionprofile
 $(bundle)$(contents)/PlugIns/$(name).VPN.appex$(contents)/embedded.provisionprofile: $(provision)vpn.provisionprofile
 	cp -f $< $@
