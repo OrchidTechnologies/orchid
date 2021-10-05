@@ -5,7 +5,8 @@ import net.orchid.Orchid.BuildConfig;
 import android.os.Bundle
 import android.util.Log
 
-import io.flutter.app.FlutterActivity
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 import io.flutter.view.FlutterMain
@@ -20,12 +21,10 @@ const val VPN_SERVICE_REQUEST = 1
 class MainActivity(): FlutterActivity() {
     lateinit var feedback: MethodChannel
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        FlutterMain.startInitialization(this)
-        super.onCreate(savedInstanceState)
-        GeneratedPluginRegistrant.registerWith(this)
+    override fun configureFlutterEngine(engine: FlutterEngine) {
+        GeneratedPluginRegistrant.registerWith(engine)
         
-        feedback = MethodChannel(flutterView, "orchid.com/feedback")
+        feedback = MethodChannel(engine.getDartExecutor().getBinaryMessenger(), "orchid.com/feedback")
         feedback.setMethodCallHandler { call, result ->
             Log.d("Orchid", call.method)
             when (call.method) {
