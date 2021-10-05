@@ -8,9 +8,14 @@ class OrchidHop extends CircuitHop {
   // default or on a per-hop basis.
   static const String appDefaultCurator = "partners.orch1d.eth";
 
-  final String curator; // URI
-  final EthereumAddress funder;
+  // Curator URI
+  final String curator;
+
+  // Stored signer key uid
   final StoredEthereumKeyRef keyRef;
+
+  // Funder address
+  final EthereumAddress funder;
 
   // Helper method to resolve the signer address from the keystore.
   EthereumAddress getSigner(List<StoredEthereumKey> keys) {

@@ -97,7 +97,7 @@ class _OnboardingVPNPermissionPageState
 
   // Note that the user has viewed this screen and move on.
   void _complete(bool result) async {
-    await UserPreferences().setPromptedForVPNPermission(true);
+    // await UserPreferences().setPromptedForVPNPermission(true);
     if (widget.onComplete != null) {
       return widget.onComplete(result);
     }

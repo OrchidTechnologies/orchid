@@ -31,7 +31,6 @@ import 'model/orchid_hop.dart';
 
 // The V0 multi-hop config page.
 class CircuitPage extends StatefulWidget {
-
   // Note: This performs a behavior like the iOSContacts App create flow for the
   // Note: add hop action, revealing the already pushed hop editor upon completing
   // Note: the add flow.
@@ -85,7 +84,6 @@ class CircuitPageState extends State<CircuitPage>
   Timer _checkBalancesTimer;
 
   void initStateAsync() async {
-
     //vpnSwitchInstructionsViewed = await UserPreferences().getVPNSwitchInstructionsViewed();
 
     OrchidAPI().circuitConfigurationChanged.listen((_) {
@@ -228,7 +226,8 @@ class CircuitPageState extends State<CircuitPage>
               firstChild: _buildEnableVPNInstruction(),
               secondChild: pady(16),
             ),
-            if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max)) pady(64),
+            if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max))
+              pady(64),
             AnimatedBuilder(
                 animation: Listenable.merge(
                     [_connectAnimController, _bunnyDuckAnimation]),
@@ -408,7 +407,8 @@ class CircuitPageState extends State<CircuitPage>
   Widget _buildNewHopTile() {
     return HopTile(
         title: s.newHop,
-        image: Image.asset('assets/images/addCircleOutline.png', color: Colors.white),
+        image: Image.asset('assets/images/addCircleOutline.png',
+            color: Colors.white),
         trailing: SizedBox(width: 40),
         // match leading
         textColor: Colors.white,
@@ -470,7 +470,11 @@ class CircuitPageState extends State<CircuitPage>
           Icon(Icons.fiber_manual_record, color: color, size: 18),
           padx(5),
           Text(text,
-              style: TextStyle( fontWeight: FontWeight.w500, fontSize: 12, color: Colors.white, )),
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+                color: Colors.white,
+              )),
         ],
       ),
     );
@@ -534,10 +538,10 @@ class CircuitPageState extends State<CircuitPage>
         break;
       case HopProtocol.OpenVPN:
         svgName = 'assets/svg/openvpn.svg';
-    break;
-    case HopProtocol.WireGuard:
+        break;
+      case HopProtocol.WireGuard:
         svgName = 'assets/svg/wireguard.svg';
-    break;
+        break;
     }
     var title = uniqueHop.hop.displayName(context);
     return Padding(
@@ -585,8 +589,7 @@ class CircuitPageState extends State<CircuitPage>
   ///
 
   void _addHop() async {
-    CircuitUtils.addHop(context,
-        onComplete: _addHopComplete, showCallouts: _hops.isEmpty);
+    CircuitUtils.addHop(context, onComplete: _addHopComplete);
   }
 
   // Local page state updates after hop addition.
@@ -617,7 +620,8 @@ class CircuitPageState extends State<CircuitPage>
     }
     try {
       _dialogInProgress = true;
-      await ConfigChangeDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
+      await ConfigChangeDialogs.showConfigurationChangeSuccess(context,
+          warnOnly: true);
     } finally {
       _dialogInProgress = false;
     }
@@ -766,8 +770,7 @@ typedef HopCompletion = void Function(UniqueHop);
 
 class CircuitUtils {
   // Show the add hop flow and save the result if completed successfully.
-  static void addHop(BuildContext context,
-      {HopCompletion onComplete, bool showCallouts = false}) async {
+  static void addHop(BuildContext context, {HopCompletion onComplete}) async {
     // Create a nested navigation context for the flow. Performing a pop() from
     // this outer context at any point will properly remove the entire flow
     // (possibly multiple screens) with one appropriate animation.
@@ -776,8 +779,7 @@ class CircuitUtils {
         var addFlowCompletion = (CircuitHop result) {
           Navigator.pop(context, result);
         };
-        var editor = AddHopPage(
-            onAddFlowComplete: addFlowCompletion, showCallouts: showCallouts);
+        var editor = AddHopPage(onAddFlowComplete: addFlowCompletion);
         var route = MaterialPageRoute<CircuitHop>(
             builder: (context) => editor, settings: settings);
         return route;

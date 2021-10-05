@@ -6,7 +6,6 @@ import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:orchid/pages/settings/advanced_configuration_page.dart';
 import 'package:orchid/pages/settings/keygen_page.dart';
-import 'package:orchid/pages/keys/keys_page.dart';
 import 'package:orchid/pages/settings/manage_config_page.dart';
 import 'package:orchid/pages/settings/deleted_accounts_page.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
@@ -38,8 +37,6 @@ class AppRoutes {
       "/onboarding/link_wallet/success";
   static const String onboarding_vpn_credentials =
       "/onboarding/vpn_credentials";
-  static const String keygen = "/settings/keygen";
-  static const String keys = "/settings/keys";
   static const String manage_config = "/settings/manage_config";
   static const String circuit = "/circuit";
   static const String identity = "/identity";
@@ -57,8 +54,6 @@ class AppRoutes {
     legal: (context) => LegalPage(),
     onboarding_walkthrough: (context) => WalkthroughPages(),
     onboarding_vpn_permission: (context) => OnboardingVPNPermissionPage(),
-    keygen: (context) => KeyGenPage(),
-    keys: (context) => KeysPage(),
     circuit: (context) => CircuitPage(),
     traffic: (context) => TrafficView(),
     accounts: (context) => AccountsPage(),

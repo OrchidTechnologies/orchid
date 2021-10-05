@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
 import 'package:orchid/common/screen_orientation.dart';
@@ -54,7 +55,10 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
                   children: <Widget>[
                     Icon(Icons.save, color: Colors.black),
                     padx(8),
-                    Text(s.export, style: TextStyle(color: Colors.black),),
+                    Text(
+                      s.export,
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ],
                 ),
               ),
@@ -82,7 +86,10 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
                   children: <Widget>[
                     Icon(Icons.input, color: Colors.black),
                     padx(8),
-                    Text(s.import, style: TextStyle(color: Colors.black),),
+                    Text(
+                      s.import,
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ],
                 ),
               ),
@@ -109,11 +116,15 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
   }
 
   void _doExport() async {
-    String hopsConfig = await OrchidVPNConfigV0.generateConfig();
+    var config = '// V0 circuit\n' + (await OrchidVPNConfigV0.generateConfig());
+    var keys = (await UserPreferences().keys.get())
+        .map((storedKey) => storedKey.private)
+        .toList();
+    config += '\n\n// All keys\nkeys=' + keys.toString();
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
       return ImportExportConfig.export(
         title: s.exportHopsConfiguration,
-        config: hopsConfig,
+        config: config,
       );
     }));
   }

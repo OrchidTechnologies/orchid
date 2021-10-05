@@ -39,21 +39,6 @@ class UserPreferences {
     return await shared.setString(key.toString(), value);
   }
 
-  /// Was the user prompted for the necessary permissions to install the VPN
-  /// extension as part of onboarding
-  Future<bool> getPromptedForVPNPermission() async {
-    return (await SharedPreferences.getInstance())
-            .getBool(UserPreferenceKey.PromptedForVPNPermission.toString()) ??
-        false;
-  }
-
-  /// Was the user prompted for the necessary permissions to install the VPN
-  /// extension as part of onboarding
-  Future<bool> setPromptedForVPNPermission(bool value) async {
-    return (await SharedPreferences.getInstance())
-        .setBool(UserPreferenceKey.PromptedForVPNPermission.toString(), value);
-  }
-
   // Set the circuit / hops configuration
   Future<bool> setCircuit(Circuit circuit) async {
     String value = jsonEncode(circuit);
@@ -163,36 +148,31 @@ class UserPreferences {
     return keys.get();
   }
 
-  @deprecated
-  Future<bool> setKeys(List<StoredEthereumKey> newKeys) async {
-    await keys.set(newKeys);
-    return true;
-  }
-
   /// Add a key to the user's keystore.
   // Note: Minimizes exposure to the full setKeys()
-  Future<bool> addKey(StoredEthereumKey key) async {
-    var keys = ((await UserPreferences().getKeys()) ?? []) + [key];
-    return UserPreferences().setKeys(keys);
+  Future<void> addKey(StoredEthereumKey key) async {
+    var allKeys = ((await keys.get()) ?? []) + [key];
+    return await keys.set(allKeys);
   }
 
   /// Remove a key from the user's keystore.
   Future<bool> removeKey(StoredEthereumKeyRef keyRef) async {
-    var keys = ((await UserPreferences().getKeys()) ?? []);
+    var keysList = ((await keys.get()) ?? []);
     try {
-      keys.removeWhere((key) => key.uid == keyRef.keyUid);
+      keysList.removeWhere((key) => key.uid == keyRef.keyUid);
     } catch (err) {
       log("account: error removing key: $keyRef");
       return false;
     }
-    return UserPreferences().setKeys(keys);
+    await keys.set(keysList);
+    return true;
   }
 
   /// Add a list of keys to the user's keystore.
   // Note: Minimizes exposure to the full setKeys()
-  Future<bool> addKeys(List<StoredEthereumKey> newKeys) async {
-    var keys = ((await UserPreferences().getKeys()) ?? []) + newKeys;
-    return UserPreferences().setKeys(keys);
+  Future<void> addKeys(List<StoredEthereumKey> newKeys) async {
+    var allKeys = ((await keys.get()) ?? []) + newKeys;
+    return await keys.set(allKeys);
   }
 
   ///
@@ -298,22 +278,15 @@ class UserPreferences {
       UserPreferenceKey.MonitoringEnabled,
       defaultValue: false);
 
-  /// This is a synthetic preference that indicates that the user has set
-  /// the monitoring preference enabled and the routing preference disabled.
-// Future<bool> monitorOnly() async {
-//   return (await monitoringEnabled.value) && (!await routingEnabled.value);
-// }
 }
 
 enum UserPreferenceKey {
-  PromptedForVPNPermission,
   Circuit,
   RecentlyDeletedHops,
   UserConfig,
   Keys,
   DefaultCurator,
   QueryBalances,
-  DesiredVPNState,
   PacTransaction,
   ActiveAccounts,
   CachedDiscoveredAccounts,

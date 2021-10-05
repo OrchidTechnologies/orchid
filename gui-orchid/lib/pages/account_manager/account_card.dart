@@ -8,10 +8,10 @@ import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/gradient_border.dart';
+import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
-import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/units.dart';
 import '../account_manager/account_detail_poller.dart';
 import '../../orchid/orchid_panel.dart';
@@ -171,9 +171,9 @@ class _AccountCardState extends State<AccountCard>
   }
 
   Widget _buildInfoColumn() {
-    final text = widget.accountDetail?.signer == null
+    final text = widget.accountDetail?.funder == null
         ? s.noAccountSelected
-        : widget.accountDetail.signer.toString();
+        : widget.accountDetail.funder.toString();
     final textWidth =
         expanded ? 120.0 : (widget.accountDetail == null ? null : 120.0);
     final balanceText = _balanceText();
@@ -191,8 +191,9 @@ class _AccountCardState extends State<AccountCard>
           Container(
             height: 20,
             width: textWidth,
-            child: Text(
+        child: TapToCopyText(
               text,
+              padding: EdgeInsets.zero,
               overflow: TextOverflow.ellipsis,
               style: OrchidText.body2,
             ),

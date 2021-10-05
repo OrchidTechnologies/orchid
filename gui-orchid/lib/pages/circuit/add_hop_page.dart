@@ -19,9 +19,8 @@ typedef AddFlowCompletion = void Function(CircuitHop result);
 
 class AddHopPage extends StatefulWidget {
   final AddFlowCompletion onAddFlowComplete;
-  final bool showCallouts;
 
-  const AddHopPage({Key key, this.onAddFlowComplete, this.showCallouts})
+  const AddHopPage({Key key, this.onAddFlowComplete})
       : super(key: key);
 
   @override

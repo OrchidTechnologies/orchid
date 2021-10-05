@@ -20,7 +20,7 @@ class AppOnboarding {
   }
 
   Future<void> reset() async {
-    await UserPreferences().setPromptedForVPNPermission(false);
+    // await UserPreferences().setPromptedForVPNPermission(false);
     //await OrchidAPI().clearWallet();
     OrchidAPI().vpnPermissionStatus.add(false);
   }

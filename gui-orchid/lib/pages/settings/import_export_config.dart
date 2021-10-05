@@ -23,7 +23,6 @@ typedef ImportResult = void Function(String config);
 
 /// A page presenting a full screen editable text box for importing or
 /// exporting configuration.
-// TODO: Update the advanced ConfigurationPage to use this widget.
 class ImportExportConfig extends StatefulWidget {
   final ImportExportMode mode;
   final String title;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
@@ -51,11 +52,11 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
       this._selectedItem = widget.initialSelection;
     }
 
-    // Monitor keys
-    UserPreferences().keys.stream().listen((keys) {
+    // Monitor changes to keys
+    (await UserPreferences().keys.streamAsync()).listen((keys) {
       setState(() {
         this._keys = keys;
-        if (!_keys.contains(_selectedItem)) {
+        if (!_keys.contains(_selectedItem.keyRef.getFrom(keys))) {
           _selectedItem = null;
          widget.onSelection(null);
         }
