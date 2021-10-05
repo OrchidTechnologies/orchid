@@ -1,4 +1,5 @@
-/android
+/android/app
+/android/local.settings
 /.dart_tool
 /.flutter-plugins
 /.flutter-plugins-dependencies
