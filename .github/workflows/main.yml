@@ -50,7 +50,7 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: make iOS .ipa
-      run: debug=ldid make -j3 -C app-ios precache='--no-android'
+      run: debug=ldid make -kj3 -C app-ios precache='--no-android'
 
 
   build-and-app:
@@ -77,7 +77,7 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: make Android .apk
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 make -j3 -C app-android precache='--no-ios'
+      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 make -kj3 -C app-android precache='--no-ios'
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-apk
@@ -130,7 +130,7 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: make macOS .app
-      run: debug=ldid make -j3 -C app-macos precache='--no-android --no-ios --macos'
+      run: debug=ldid make -kj3 -C app-macos precache='--no-android --no-ios --macos'
 
 
   build-mac-snd:
@@ -245,9 +245,9 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: setup plugins
-      run: debug=crossndk make -j3 -C app-windows ./env/dotdot/gui-orchid/.flutter-plugins
+      run: debug=crossndk make -kj3 -C app-windows ./env/dotdot/gui-orchid/.flutter-plugins
     - name: make Windows app
-      run: make -j3 -C app-windows target=win precache='--no-android --no-ios --windows -a'
+      run: make -kj3 -C app-windows target=win precache='--no-android --no-ios --windows -a'
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-win
@@ -335,9 +335,9 @@ jobs:
       run: env/submodule.sh --jobs 3
 
     - name: setup plugins
-      run: debug=crossndk make -j3 -C app-linux ./env/dotdot/gui-orchid/.flutter-plugins
+      run: debug=crossndk make -kj3 -C app-linux ./env/dotdot/gui-orchid/.flutter-plugins
     - name: make Linux app
-      run: debug=crossndk make -j3 -C app-linux precache='--no-android --no-ios --linux'
+      run: debug=crossndk make -kj3 -C app-linux precache='--no-android --no-ios --linux'
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-lnx
