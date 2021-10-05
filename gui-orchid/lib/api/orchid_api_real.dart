@@ -134,18 +134,18 @@ class RealOrchidAPI implements OrchidAPI {
   // Determine if the change in connection state is relevant to routing.
   // (as opposed to e.g. a change in state for traffic monitoring)
   static applyRoutingStatus(OrchidVPNRoutingState state) async {
-    var vpnRoutingStatus = OrchidAPI().vpnRoutingStatus;
-
+    var publishStatus = OrchidAPI().vpnRoutingStatus;
     var routingEnabled = await UserPreferences().routingEnabled.get();
+    
     switch (state) {
       case OrchidVPNRoutingState.VPNNotConnected:
-        vpnRoutingStatus.add(state);
+        publishStatus.add(state);
         break;
       case OrchidVPNRoutingState.VPNConnecting:
       case OrchidVPNRoutingState.VPNConnected:
       case OrchidVPNRoutingState.OrchidConnected:
         if (routingEnabled) {
-          vpnRoutingStatus.add(state);
+          publishStatus.add(state);
         }
         break;
       case OrchidVPNRoutingState.VPNDisconnecting:
@@ -153,9 +153,9 @@ class RealOrchidAPI implements OrchidAPI {
         // whether the disconnect is due to shutting down routing or monitoring.
         // Disambiguate using the current state of the routing status.
         var residualRoutingStatus =
-            vpnRoutingStatus.value != OrchidVPNRoutingState.VPNNotConnected;
+            publishStatus.value != OrchidVPNRoutingState.VPNNotConnected;
         if (!routingEnabled && residualRoutingStatus) {
-          vpnRoutingStatus.add(state);
+          publishStatus.add(state);
         }
         break;
     }
@@ -178,6 +178,7 @@ class RealOrchidAPI implements OrchidAPI {
 
   @override
   Future<void> setVPNExtensionEnabled(bool enabled) async {
+    log("api: setVPNExtensionEnabled: $enabled");
     if (enabled) {
       await updateConfiguration();
       await _platform.invokeMethod('connect');
@@ -254,7 +255,7 @@ class RealOrchidAPI implements OrchidAPI {
     try {
       generatedConfig = await generateManagedConfig();
     } catch (err, stack) {
-      OrchidAPI().logger().write("Error rendering config: $err\n$stack");
+      log("Error rendering config: $err\n$stack");
       generatedConfig = " ";
     }
 

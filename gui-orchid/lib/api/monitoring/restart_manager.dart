@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 
@@ -31,12 +32,14 @@ class OrchidRestartManager {
   }
 
   StreamSubscription<bool> _enableVPNListener;
+  bool _initialized = false;
 
   /// Monitor user preferences and start or stop the VPN extension.
   initVPNControlListener() async {
     if (_enableVPNListener != null) {
       return;
     }
+    // Listen for changes in monitoring preferences
     _enableVPNListener = CombineLatestStream.combine2(
       await UserPreferences().routingEnabled.streamAsync(),
       await UserPreferences().monitoringEnabled.streamAsync(),
@@ -44,14 +47,49 @@ class OrchidRestartManager {
         log("restart_manager: enable vpn listener: routing=$routing, monitoring=$monitoring");
         return routing || monitoring;
       },
-    ).listen((enable) async {
+    ).distinct().listen((desiredRunning) async {
       await OrchidAPI().updateConfiguration();
-      if (enable) {
-        _startOrRestart();
+
+      // On startup check the state of the world
+      if (_initialized) {
+        _onPreferenceChange(desiredRunning);
       } else {
-        _stop();
+        _onStartup(desiredRunning);
+        _initialized = true;
       }
     });
+  }
+
+  // On startup we will assume that the config is as we left it and only
+  // reassert if we should be running or stopped (never restart).
+  Future<void> _onStartup(bool desiredRunning) async {
+    log("restart_manager: on startup: desired running = $desiredRunning");
+    var api = OrchidAPI();
+    switch (api.vpnExtensionStatus.value) {
+      case OrchidVPNExtensionState.Invalid:
+        // should probably re-check here
+      case OrchidVPNExtensionState.Disconnecting:
+      case OrchidVPNExtensionState.NotConnected:
+        // stopping or stopped
+        if (desiredRunning) { _start(); }
+        break;
+      case OrchidVPNExtensionState.Connecting:
+      case OrchidVPNExtensionState.Connected:
+        // starting or started
+      if (!desiredRunning) { _stop(); }
+      break;
+    }
+  }
+
+  // On preference change we assume that the config has changed and we should
+  // start, restart, or stop as necessary.
+  Future<void> _onPreferenceChange(bool desiredRunning) async {
+    log("restart_manager: on preference change: desired running = $desiredRunning");
+    if (desiredRunning) {
+      _startOrRestart();
+    } else {
+      _stop();
+    }
   }
 
   Future<void> _startOrRestart() async {

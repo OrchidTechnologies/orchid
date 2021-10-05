@@ -18,13 +18,15 @@ class ObservablePreference<T> {
   Future<T> Function(UserPreferenceKey key) loadValue;
   Future Function(UserPreferenceKey key, T value) storeValue;
 
-  /// Note: This method triggers an async initialization, but does not
-  /// guarantee that the value will be ready when the stream is fetched.
+  /// Subscribe to the value stream *without* waiting for the value to be
+  /// initialized.  The first values sent by the stream may be the uninititialized
+  /// value, followed by the initialized value.
   Stream<T> stream() {
     ensureInitialized();
     return _subject.asBroadcastStream();
   }
 
+  /// Subscribe to the value stream after waiting for the value to be initialized.
   Future<Stream<T>> streamAsync() async {
     await ensureInitialized();
     return _subject.asBroadcastStream();
