@@ -90,7 +90,7 @@ class _AddHopPageState extends State<AddHopPage> {
                               builder: (BuildContext context) {
                                 return ScanOrPasteDialog(
                                   onImportAccount:
-                                      (ParseOrchidAccountResult result) async {
+                                      (ParseOrchidIdentityResult result) async {
                                     var hop = await OrchidVPNConfigV0
                                         .importAccountAsHop(result.account);
                                     widget.onAddFlowComplete(hop);
@@ -231,9 +231,6 @@ class _AddHopPageState extends State<AddHopPage> {
       Navigator.pop(context, hop);
     }
   }
-
-  Divider _divider() =>
-      Divider(color: Colors.white.withOpacity(0.5), height: 1.0);
 
   S get s {
     return S.of(context);

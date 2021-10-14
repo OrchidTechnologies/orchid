@@ -90,6 +90,14 @@ class _SideDrawerState extends State<SideDrawer> {
                     AppRoutes.pushAccountManager(context);
                   }),
               SideDrawerTile(
+                  title: s.circuit,
+                  svgName: 'assets/svg/hops_icon.svg',
+                  showDetail: true,
+                  hoffset: 2.5,
+                  onPressed: () {
+                    Navigator.pushNamed(context, AppRoutes.circuit);
+                  }),
+              SideDrawerTile(
                   title: s.settings,
                   svgName: 'assets/svg/settings_gear.svg',
                   showDetail: true,
@@ -179,7 +187,7 @@ class SideDrawerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget leading = svgName != null
-        ? SvgPicture.asset(svgName, width: 20, height: 20)
+        ? SizedBox(width: 20, height: 20, child: SvgPicture.asset(svgName))
         : (imageName != null
             ? Image(
                 height: 20,

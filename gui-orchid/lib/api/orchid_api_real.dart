@@ -5,7 +5,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:rxdart/rxdart.dart';
-import 'configuration/orchid_vpn_config/orchid_vpn_config.dart';
+import 'configuration/orchid_vpn_config/orchid_vpn_config_generate.dart';
 import 'monitoring/routing_status.dart';
 import 'orchid_budget_api.dart';
 import 'orchid_eth/v0/orchid_eth_v0.dart';
@@ -230,7 +230,7 @@ class RealOrchidAPI implements OrchidAPI {
   static Future<String> generateManagedConfig() async {
     // Circuit configuration
     var managedConfig = (await UserPreferences().routingEnabled.get())
-        ? await OrchidVPNConfig.generateConfig()
+        ? await OrchidVPNConfigGenerate.generateConfig()
         : "";
 
     // Inject the default (main net Ethereum) RPC provider

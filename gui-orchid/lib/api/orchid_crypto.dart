@@ -179,7 +179,7 @@ class StoredEthereumKey {
   }
 
   StoredEthereumKeyRef ref() {
-    return StoredEthereumKeyRef.from(uid);
+    return StoredEthereumKeyRef(uid);
   }
 
   StoredEthereumKey.fromJson(Map<String, dynamic> json)
@@ -239,7 +239,7 @@ class StoredEthereumKey {
 class StoredEthereumKeyRef {
   String keyUid;
 
-  StoredEthereumKeyRef.from(String keyUid) {
+  StoredEthereumKeyRef(String keyUid) {
     if (keyUid == null) {
       throw Exception("null key");
     }
@@ -248,7 +248,7 @@ class StoredEthereumKeyRef {
 
   // Resolve the reference
   Future<StoredEthereumKey> get() async {
-    var keys = await UserPreferences().getKeys();
+    var keys = await UserPreferences().keys.get();
     try {
       return getFrom(keys);
     } catch (err) {

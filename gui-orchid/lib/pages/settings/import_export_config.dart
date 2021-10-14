@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_import.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/common/qrcode_scan.dart';

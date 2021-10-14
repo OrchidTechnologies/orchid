@@ -6,6 +6,8 @@ import '../token_type.dart';
 import 'orchid_contract_v1.dart';
 import 'orchid_eth_v1.dart';
 
+// Market conditions for V1 contracts where payment is in the ETH-like native
+// token that is also used for gas.
 class MarketConditionsV1 implements MarketConditions {
   final Token maxFaceValue;
   final double efficiency;

@@ -32,12 +32,13 @@ class _TestState extends State<_Test> {
     var signer = "0x45cC0D06CA2052Ef93b5B7adfeC2Af7690731110";
     var funder = "0x7dFae1C74a946FCb50e7376Ff40fe2Aa3A2F9B2b";
     account = AccountDetailPoller(
-        account: Account(
-          identityUid: null,
-          chainId: Chains.XDAI_CHAINID,
-          funder: EthereumAddress.from(funder),
-        ),
-        resolvedSigner: EthereumAddress.from(signer));
+      account: Account(
+        identityUid: null,
+        chainId: Chains.XDAI_CHAINID,
+        funder: EthereumAddress.from(funder),
+        resolvedSignerAddress: EthereumAddress.from(signer),
+      ),
+    );
     await account.refresh();
     setState(() {});
   }
@@ -54,8 +55,8 @@ class _TestState extends State<_Test> {
             children: [
               AccountCard(
                 accountDetail: account,
-                active: active1,
-                onCheckButton: () {
+                selected: active1,
+                onSelected: () {
                   setState(() {
                     active1 = !active1;
                   });
@@ -64,8 +65,8 @@ class _TestState extends State<_Test> {
               SizedBox(height: 50),
               AccountCard(
                 accountDetail: account,
-                active: active2,
-                onCheckButton: () {
+                selected: active2,
+                onSelected: () {
                   setState(() {
                     active2 = !active2;
                   });

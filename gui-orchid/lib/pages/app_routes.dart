@@ -39,7 +39,7 @@ class AppRoutes {
       "/onboarding/vpn_credentials";
   static const String manage_config = "/settings/manage_config";
   static const String circuit = "/circuit";
-  static const String identity = "/identity";
+  static const String account_manager = "/identity";
   static const String traffic = "/traffic";
   static const String accounts = "/settings/accounts";
   static const String home = "/";
@@ -58,14 +58,10 @@ class AppRoutes {
     traffic: (context) => TrafficView(),
     accounts: (context) => AccountsPage(),
     manage_config: (context) => ManageConfigPage(),
-    identity: (context) => AccountManagerPage()
+    account_manager: (context) => AccountManagerPage()
   };
 
   static Future<void> pushAccountManager(BuildContext context) async {
-    if (await UserPreferences().guiV0.get()) {
-      return await Navigator.pushNamed(context, AppRoutes.circuit);
-    } else {
-      return await Navigator.pushNamed(context, AppRoutes.identity);
-    }
+    return await Navigator.pushNamed(context, AppRoutes.account_manager);
   }
 }

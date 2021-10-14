@@ -9,6 +9,11 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 
+// TODO: A major aspect of this class is to maintain the notion of an
+// TODO: "active account" (implying the "active identity"). We no longer use
+// TODO: this for circuit building and it currently only serves to remember
+// TODO: the last identity viewed in the UI on the account manager.
+// TODO: We should probably simplify this to being only about account discovery.
 /// An observable list of identities and active accounts on those identities.
 class AccountStore extends ChangeNotifier {
   /// If true the account store attempts to find all accounts for the user's
@@ -28,6 +33,8 @@ class AccountStore extends ChangeNotifier {
     return StoredEthereumKey.find(identities, selectedAccount?.identityUid);
   }
 
+  // TODO: Currently maintained only for use in migration to new circuit builder
+  // TODO: and for holding the last viewed identity.
   /// Accounts designated by the user as active.
   /// The first account in this list designates the active identity.
   List<Account> activeAccounts = [];
@@ -44,15 +51,19 @@ class AccountStore extends ChangeNotifier {
   List<Account> get accounts {
     // Cached
     Set<Account> set = Set.from(cachedDiscoveredAccounts);
+
+    // TODO: needed?
     // Discovered
     set.addAll(discoveredAccounts);
+
     // Stored active
-    if (activeAccount != null) {
-      set.add(activeAccount);
-    }
+    // if (activeAccount != null) {
+    //   set.add(activeAccount);
+    // }
     return set.toList();
   }
 
+  /*
   /// The active account
   Account get activeAccount {
     if (activeAccounts.isEmpty || activeAccounts.first.isIdentityPlaceholder) {
@@ -60,11 +71,13 @@ class AccountStore extends ChangeNotifier {
     }
     return activeAccounts.first;
   }
+   */
 
+  /*
   /// Set the active account for the given chain and identity: (signer, chain -> funder)
   /// chainId and funder may be null to indicate an identity preference without
   /// a current account selection.
-  Future<void> setActiveAccount(Account account) async {
+  Future<void> _setActiveAccount(Account account) async {
     if (account == activeAccount) {
       return;
     }
@@ -84,9 +97,22 @@ class AccountStore extends ChangeNotifier {
 
     return _accountsChanged();
   }
+   */
+
+  Future<void> setActiveIdentityByAccount(Account _account) async {
+    var account = Account(identityUid: _account.identityUid);
+    await UserPreferences().activeAccounts.set([account]);
+    activeAccounts = [account]; // todo
+    return await _accountsChanged();
+  }
 
   /// Set an active identity
   Future<void> setActiveIdentity(StoredEthereumKey identity) async {
+    // return _setActiveAccount(toActivate ?? Account(identityUid: identity.uid));
+    var account = Account(identityUid: identity.uid);
+    return setActiveIdentityByAccount(account);
+
+    /*
     // Look for an existing designated active account for this identity
     List<Account> accounts = await UserPreferences().activeAccounts.get();
     Account toActivate = accounts.firstWhere(
@@ -94,7 +120,8 @@ class AccountStore extends ChangeNotifier {
       orElse: () => null,
     );
     // Activate the found account or simply activate the identity
-    return setActiveAccount(toActivate ?? Account(identityUid: identity.uid));
+    return _setActiveAccount(toActivate ?? Account(identityUid: identity.uid));
+     */
   }
 
   // Called when the list of identities or active accounts is changed to
@@ -130,6 +157,8 @@ class AccountStore extends ChangeNotifier {
     // Load available identities
     identities = await UserPreferences().getKeys();
 
+    // TODO: Currently maintained only for use in migration to new circuit builder
+    // TODO: and for holding the last viewed identity.
     // Load active accounts
     activeAccounts = await UserPreferences().activeAccounts.get();
 
@@ -176,7 +205,8 @@ class AccountStore extends ChangeNotifier {
         // Cache any newly discovered accounts
         if (discoveredAccounts.isNotEmpty) {
           log("account_store: Saving discovered accounts: $discoveredAccounts");
-          await UserPreferences().addCachedDiscoveredAccounts(discoveredAccounts);
+          await UserPreferences()
+              .addCachedDiscoveredAccounts(discoveredAccounts);
         }
       }
     } catch (err) {
@@ -195,15 +225,15 @@ class AccountStore extends ChangeNotifier {
     activeAccounts.removeWhere((a) => a.identityUid == identity.uid);
     await UserPreferences().activeAccounts.set(activeAccounts);
 
-    // If there are remaining accounts in the active accounts list the next
-    // (most recently active) one will become active.
     _accountsChanged();
   }
 
   Future<void> addIdentity(StoredEthereumKey identity) async {
     await UserPreferences().addKey(identity);
-    identities = await UserPreferences().getKeys();
-    setActiveIdentity(identity);
+    identities = await UserPreferences().keys.get();
+
+    // setActiveIdentity(identity);
+    _accountsChanged();
   }
 
   @override

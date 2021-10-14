@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_api_real.dart';
 import 'package:orchid/api/orchid_types.dart';
@@ -166,8 +166,11 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
   /// Check for startup args. e.g. for screenshot rigging.
   static void checkStartupCommandArgs(BuildContext context) async {
     log("Check command args");
+
+    // TODO: This should be updated to import a circuit config.
     // Allow setting the account for screenshots
     // Must use 'const' here:  https://github.com/flutter/flutter/issues/55870
+    /*
     const identity = String.fromEnvironment('identity', defaultValue: null);
     if (identity != null) {
       try {
@@ -176,15 +179,19 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
         log("Error setting default identity from string: $err");
       }
     }
+     */
+
+    // Set connected status
     const connected = bool.fromEnvironment('connected', defaultValue: null);
     if (connected != null) {
       fakeVPNDelay = 0;
       UserPreferences().routingEnabled.set(connected);
     }
 
+    // Push to named screen
     const showScreen = String.fromEnvironment('screen');
     if (showScreen == 'accounts') {
-      await Navigator.pushNamed(context, AppRoutes.identity);
+      await Navigator.pushNamed(context, AppRoutes.account_manager);
     } else if (showScreen == 'purchase') {
       Navigator.push(
           context,
@@ -204,12 +211,13 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
     }
   }
 
+  /*
   /// Import an identity and set it as the default.
   static void setDefaultIdentityFromString(String config) async {
     log("xxx: set default identity from string: $config");
     var existingKeys = await UserPreferences().getKeys();
     var result =
-        OrchidAccountConfigV1.parseOrchidIdentity(config, existingKeys);
+        OrchidAccountImport.parseOrchidIdentity(config, existingKeys);
     if (result.isNew) {
       await UserPreferences().addKey(result.signer);
     }
@@ -225,6 +233,7 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
       log("set default identity: unable to find account: $err");
     }
   }
+   */
 
   /// Get the logging API.
   @override

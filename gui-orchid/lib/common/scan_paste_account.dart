@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/qrcode_scan.dart';
@@ -16,19 +16,17 @@ import 'package:orchid/orchid/orchid_text_field.dart';
 import 'app_colors.dart';
 
 typedef ImportAccountCompletion = void Function(
-    ParseOrchidAccountResult result);
+    ParseOrchidIdentityResult result);
 
 class ScanOrPasteOrchidAccount extends StatefulWidget {
   final ImportAccountCompletion onImportAccount;
   final double spacing;
-  final bool v0Only;
   final bool pasteOnly;
 
   const ScanOrPasteOrchidAccount(
       {Key key,
       @required this.onImportAccount,
       this.spacing,
-      this.v0Only = false,
       @required this.pasteOnly})
       : super(key: key);
 
@@ -94,7 +92,9 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
           height: 52,
           child: TextButton(
             style: TextButton.styleFrom(
-              backgroundColor: _pastedCodeValid ? OrchidColors.enabled: OrchidColors.disabled,
+              backgroundColor: _pastedCodeValid
+                  ? OrchidColors.enabled
+                  : OrchidColors.disabled,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(8.0))),
               // side: BorderSide(width: 2, color: Colors.white),
@@ -123,7 +123,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   }
 
   void _scanCode() async {
-    ParseOrchidAccountResult parseAccountResult;
+    ParseOrchidIdentityResult parseAccountResult;
     try {
       String text = await QRCode.scan();
       if (text == null) {
@@ -166,7 +166,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
   }
 
   void _parsePastedCode() async {
-    ParseOrchidAccountResult parseAccountResult;
+    ParseOrchidIdentityResult parseAccountResult;
     try {
       String text = _pasteField.text;
       try {
@@ -198,8 +198,8 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
         bodyText: s.theCodeYouPastedDoesNot);
   }
 
-  Future<ParseOrchidAccountResult> _parse(String text) async {
-    return await ParseOrchidAccountResult.parse(text, v0Only: widget.v0Only);
+  Future<ParseOrchidIdentityResult> _parse(String text) async {
+    return await ParseOrchidIdentityResult.parse(text);
   }
 
   S get s {

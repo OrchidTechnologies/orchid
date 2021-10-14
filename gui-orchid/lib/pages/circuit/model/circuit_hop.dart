@@ -9,8 +9,7 @@ enum HopProtocol { Orchid, OpenVPN, WireGuard }
 class CircuitHop {
   HopProtocol protocol;
 
-  CircuitHop(this.protocol) {
-  }
+  CircuitHop(this.protocol);
 
   CircuitHop.fromJson(Map<String, dynamic> json)
       : this.protocol = stringToProtocol(json['protocol']);
@@ -46,6 +45,8 @@ class CircuitHop {
   }
 }
 
+// TODO: As part of the first data migration we will add a uuid allowing us
+// TODO: to get rid of this.
 /// A Hop with a locally unique identifier used for display purposes.
 /// Note: If we can guarantee uniqueness of a hash later we can drop this.
 class UniqueHop {

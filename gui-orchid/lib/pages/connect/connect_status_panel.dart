@@ -9,6 +9,8 @@ import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/units.dart';
 
+import '../app_routes.dart';
+
 class ConnectStatusPanel extends StatelessWidget {
   final USD bandwidthPrice;
   final double bandwidthAvailableGB;
@@ -48,7 +50,7 @@ class ConnectStatusPanel extends StatelessWidget {
             width: 40, height: 35, color: Colors.white),
         text: bandwidthAvailableGB != null
             ? bandwidthAvailableGB.toStringAsFixed(1)
-            : "...",
+            : '...',
         subtext: s.gb);
   }
 
@@ -56,7 +58,7 @@ class ConnectStatusPanel extends StatelessWidget {
     var s = S.of(context);
     var price = (bandwidthPrice != null && !MockOrchidAPI.hidePrices)
         ? '\$' + formatCurrency(bandwidthPrice.value)
-        : "...";
+        : '...';
     return _buildPanel(
         icon: SvgPicture.asset('assets/svg/dollars_icon.svg',
             width: 40, height: 40, color: Colors.white),
@@ -66,11 +68,17 @@ class ConnectStatusPanel extends StatelessWidget {
 
   Widget _buildHopsPanel(BuildContext context) {
     var s = S.of(context);
-    return _buildPanel(
-        icon: SvgPicture.asset('assets/svg/hops_icon.svg',
-            width: 40, height: 25, color: Colors.white),
-        text: circuitHops == null ? '' : "$circuitHops" + ' ' + s.hop, // No pluralization
-        subtext: s.circuit);
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, AppRoutes.circuit);
+      },
+      child: _buildPanel(
+          icon: SvgPicture.asset('assets/svg/hops_icon.svg',
+              width: 40, height: 25, color: Colors.white),
+          text: circuitHops == null ? '' : "$circuitHops" + ' ' + s.hop,
+          // No pluralization
+          subtext: s.circuit),
+    );
   }
 
   Widget _buildPanel({Widget icon, String text, String subtext}) {

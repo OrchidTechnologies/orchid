@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/orchid_eth/orchid_eth.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/pricing/orchid_pricing_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
@@ -60,15 +63,14 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
 class _OrchidHopPageState extends State<OrchidHopPage> {
   var _pastedFunderField = TextEditingController();
   var _curatorField = TextEditingController();
-  var _importKeyField = TextEditingController();
   KeySelectionItem _initialSelectedKeyItem;
   KeySelectionItem _selectedKeyItem;
   FunderSelectionItem _initialSelectedFunderItem;
   FunderSelectionItem _selectedFunderItem;
 
   bool _showBalance = false;
-  OXTLotteryPot _lotteryPot; // initially null
-  MarketConditionsV0 _marketConditions;
+  LotteryPot _lotteryPot; // initially null
+  MarketConditions _marketConditions;
   List<OrchidUpdateTransactionV0> _transactions;
   DateTime _lotteryPotLastUpdate;
   Timer _balanceTimer;
@@ -99,15 +101,15 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       _initialSelectedKeyItem =
           hop?.keyRef != null ? KeySelectionItem(keyRef: hop.keyRef) : null;
 
-      _initialSelectedFunderItem =
-          hop?.funder != null ? FunderSelectionItem(funder: hop.funder) : null;
+      _initialSelectedFunderItem = hop?.funder != null
+          ? FunderSelectionItem(funderAccount: hop.account)
+          : null;
 
       _selectedKeyItem = _initialSelectedKeyItem;
     });
 
     if (widget.editable()) {
       _pastedFunderField.addListener(_textFieldChanged);
-      _importKeyField.addListener(_textFieldChanged);
     }
 
     // init balance and account details polling
@@ -201,7 +203,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             },
           ),
           pady(24),
-          divider(),
+          _divider(),
           pady(24),
           _buildAccountDetails(),
           pady(96),
@@ -219,7 +221,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           _buildSection(
               title: s.account, child: _buildAccountDetails(), onDetail: null),
           pady(16),
-          divider(),
+          _divider(),
           pady(24),
           _buildSection(
               title: s.curation,
@@ -249,7 +251,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                   //width: 60,
                   //color: Colors.red,
                   child: FlatButton(
-                      child: Icon(Icons.chevron_right), onPressed: onDetail),
+                      child: Icon(Icons.chevron_right, color: Colors.white,), onPressed: onDetail),
                 ),
               )
             ],
@@ -260,6 +262,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildAccountDetails() {
+    bool v0 = _hop()?.account?.isV0 ?? false;
     return Row(
       children: [
         Flexible(
@@ -284,13 +287,14 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               if (_selectedKeyItem != null) _buildSelectFunderField(),
 
               // Market Stats
-              if (widget.mode == HopEditorMode.View) ...[
+              // TODO: This only works for V0
+              if (v0 && widget.mode == HopEditorMode.View)
                 Padding(
                   padding: const EdgeInsets.only(top: 8, bottom: 16),
                   child: _buildMarketStatsLink(),
                 ),
-              ],
 
+              // Share button
               if (widget.readOnly())
                 Padding(
                   padding: const EdgeInsets.only(top: 8, bottom: 8),
@@ -302,14 +306,16 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                   ),
                 ),
 
-              if (widget.readOnly() && _transactions != null) ...[
+              // Transactions list
+              // TODO: This only works for V0
+              if (v0 && widget.readOnly() && _transactions != null) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: divider(),
+                  child: _divider(),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: _buildTransactionList(),
+                  child: _buildTransactionListV0(),
                 )
               ]
             ],
@@ -319,7 +325,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
-  Widget _buildTransactionList() {
+  Widget _buildTransactionListV0() {
     const String bullet = "• ";
     var txRows = _transactions.map((utx) {
       return Row(
@@ -356,8 +362,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       children: <Widget>[
         Text(
           s.orchidIdentitySignerKey + ':',
-          style: OrchidText.button
-              .copyWith(color: _keyRefValid() ? OrchidColors.valid: OrchidColors.invalid),
+          style: OrchidText.button.copyWith(
+              color:
+                  _keyRefValid() ? OrchidColors.valid : OrchidColors.invalid),
         ),
         pady(8),
         Row(
@@ -380,31 +387,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             ),
           ],
         ),
-
-        // Show the import key field if the user has selected the option
-        Visibility(
-          visible: widget.editable() &&
-              _selectedKeyItem?.option == KeySelectionDropdown.importKeyOption,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: _buildImportKey(),
-          ),
-        )
       ],
     );
-  }
-
-  // Build the import key field
-  Widget _buildImportKey() {
-    return OrchidTextField(
-        hintText: '0x...',
-        margin: EdgeInsets.zero,
-        controller: _importKeyField,
-        trailing: FlatButton(
-            color: Colors.transparent,
-            padding: EdgeInsets.zero,
-            child: Text(s.paste, style: OrchidText.button.purpleBright),
-            onPressed: _onPasteImportedKey));
   }
 
   /// Select a funder account address for the selected signer identity
@@ -414,7 +398,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       children: <Widget>[
         Text(s.funderAccount + ':',
             style: OrchidText.button.copyWith(
-                color: _funderValid() ? OrchidColors.valid : OrchidColors.invalid)),
+                color: _funderValid()
+                    ? OrchidColors.valid
+                    : OrchidColors.invalid)),
         pady(widget.readOnly() ? 4 : 8),
 
         Row(
@@ -472,11 +458,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     _pastedFunderField.text = data.text;
   }
 
-  void _onPasteImportedKey() async {
-    ClipboardData data = await Clipboard.getData('text/plain');
-    _importKeyField.text = data.text;
-  }
-
   Widget _buildAccountBalanceAndChart() {
     return Row(
       children: [
@@ -501,14 +482,16 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         fontFamily: 'SFProText-Regular',
         height: 20.0 / 15.0);
 
-    var balanceText = _lotteryPot?.balance != null
-        ? NumberFormat('#0.0###').format(_lotteryPot?.balance?.floatValue) +
-            " ${s.oxt}"
-        : "...";
-    var depositText = _lotteryPot?.deposit != null
-        ? NumberFormat('#0.0###').format(_lotteryPot?.deposit?.floatValue) +
-            " ${s.oxt}"
-        : '...';
+    // var balanceText = _lotteryPot?.balance != null
+    //     ? NumberFormat('#0.0###').format(_lotteryPot?.balance?.floatValue) +
+    //         " ${s.oxt}"
+    //     : "...";
+    // var depositText = _lotteryPot?.deposit != null
+    //     ? NumberFormat('#0.0###').format(_lotteryPot?.deposit?.floatValue) +
+    //         " ${s.oxt}"
+    //     : '...';
+    var balanceText = _lotteryPot?.balance?.formatCurrency() ?? '...';
+    var depositText = _lotteryPot?.deposit?.formatCurrency() ?? '...';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -557,13 +540,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       alignment: Alignment.centerLeft,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onTap: _showMarketStats,
+        onTap: _showMarketStatsV0,
         child: Row(
           children: [
             LinkText(
               s.marketStats,
               style: AppText.linkStyle.copyWith(fontSize: 13),
-              onTapped: _showMarketStats,
+              onTapped: _showMarketStatsV0,
             ),
             padx(8),
             Badge(
@@ -580,7 +563,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
-  Future<void> _showMarketStats() async {
+  Future<void> _showMarketStatsV0() async {
     if (_lotteryPot == null) {
       return;
     }
@@ -589,20 +572,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
     GWEI gasPrice = await OrchidEthereumV0().getGasPrice();
     bool gasPriceHigh = gasPrice.value >= 50.0; // TODO
-    /*
-    // data
-    if (_lotteryPot == null || pricing == null || gasPrice == null) {
-      return;
-    }
-
-    // calculation
-    ETH gasCostToRedeem =
-        (gasPrice * OrchidPricingAPI.gasCostToRedeemTicket).toEth();
-    OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
-    OXT maxFaceValue = OXT.min(_lotteryPot.balance, _lotteryPot.deposit / 2.0);
-    bool balanceLimited =
-        _lotteryPot.balance.value < _lotteryPot.deposit.value / 2.0;
-     */
 
     // formatting
     var ethPriceText =
@@ -732,22 +701,33 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     }
   }
 
+  // Note: Called whenever setState() is invoked. We should probably make this explicit.
   void _updateHop() {
     if (!widget.editable()) {
       return;
     }
     EthereumAddress funder;
+    int chainId;
+    int version;
     try {
-      funder = _selectedFunderItem?.funder != null
-          ? _selectedFunderItem.funder
-          : EthereumAddress.from(_pastedFunderField.text);
+      var account = _selectedFunderItem?.account;
+      funder = account?.funder ?? EthereumAddress.from(_pastedFunderField.text);
+      chainId = account?.chainId;
+      version = account?.version;
     } catch (err) {
       funder = null; // don't update it
     }
     // The selected key ref may be null here in the case of the generate
     // or import options.  In those cases the key will be filled in upon save.
-    widget.editableHop.update(OrchidHop.from(widget.editableHop.value?.hop,
-        funder: funder, keyRef: _selectedKeyItem?.keyRef));
+    widget.editableHop.update(
+      OrchidHop.from(
+        widget.editableHop.value?.hop,
+        keyRef: _selectedKeyItem?.keyRef,
+        funder: funder,
+        chainId: chainId,
+        version: version,
+      ),
+    );
   }
 
   /// Copy the wallet address to the clipboard
@@ -766,7 +746,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return widget.editableHop.value?.hop;
   }
 
-  Widget divider() {
+  Widget _divider() {
     return Divider(
       color: Colors.black.withOpacity(0.5),
       height: 1.0,
@@ -787,41 +767,43 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     }
     _balancePollInProgress = true;
     try {
-      // funder and signer from the stored hop
-      EthereumAddress funder = _hop()?.funder;
-      StoredEthereumKey signerKey = await _hop()?.keyRef?.get();
-      EthereumAddress signer =
-          EthereumAddress.from(signerKey.get().addressString);
+      Account account = _hop()?.account;
+      if (account == null) {
+        throw Exception("No account to poll");
+      }
 
       // Fetch the pot balance
-      OXTLotteryPot pot;
-      MarketConditionsV0 marketConditions;
-      List<OrchidUpdateTransactionV0> transactions;
+      LotteryPot pot;
       try {
-        pot = await OrchidEthereumV0.getLotteryPot(funder, signer)
-            .timeout(Duration(seconds: 60));
+        pot = await account.getLotteryPot().timeout(Duration(seconds: 60));
       } catch (err) {
         log('Error fetching lottery pot: $err');
         return;
       }
+
+      MarketConditions marketConditions;
       try {
-        marketConditions = await MarketConditionsV0.forPot(pot);
+        marketConditions = await account.getMarketConditionsFor(pot);
       } catch (err, stack) {
         log('Error fetching market conditions: $err\n$stack');
         return;
       }
-      var ticketValue = await MarketConditionsV0.getMaxTicketValueV0(pot);
+
+      // TODO: transactions only work for V0
+      List<OrchidUpdateTransactionV0> transactions;
       try {
-        transactions = await OrchidEthereumV0()
-            .getUpdateTransactions(funder: funder, signer: signer);
+        transactions = await OrchidEthereumV0().getUpdateTransactions(
+            funder: account.funder, signer: await account.signerAddress);
       } catch (err) {
         log('Error fetching account update transactions: $err');
       }
+
       if (mounted) {
         setState(() {
           _lotteryPot = pot;
           _marketConditions = marketConditions;
-          _showMarketStatsAlert = ticketValue.lteZero();
+          _showMarketStatsAlert =
+              MarketConditions.isBelowMinEfficiency(marketConditions);
           _transactions = transactions;
         });
       }

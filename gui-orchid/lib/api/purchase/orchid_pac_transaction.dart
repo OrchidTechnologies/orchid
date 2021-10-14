@@ -264,7 +264,7 @@ class PacSubmitSellerTransaction extends PacTransaction {
       {PacTransaction parent})
       : super.fromJsonBase(json, parent: parent) {
     txParams = EthereumTransactionParams.fromJson(json['txParams']);
-    signerKey = StoredEthereumKeyRef.from(json['signerKeyUid']);
+    signerKey = StoredEthereumKeyRef(json['signerKeyUid']);
     escrow = BigInt.parse(json['escrow']);
   }
 

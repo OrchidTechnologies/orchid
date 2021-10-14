@@ -169,7 +169,6 @@ class UserPreferences {
   }
 
   /// Add a list of keys to the user's keystore.
-  // Note: Minimizes exposure to the full setKeys()
   Future<void> addKeys(List<StoredEthereumKey> newKeys) async {
     var allKeys = ((await keys.get()) ?? []) + newKeys;
     return await keys.set(allKeys);
@@ -218,6 +217,7 @@ class UserPreferences {
         return writeStringForKey(key, value);
       });
 
+  // TODO: Currently maintained only for use in migration to new circuit builder.
   /// A list of account information indicating the active identity (signer key)
   /// and the active account (funder and chainid) for that identity.
   /// The order of this list is significant in that the first account designates
@@ -242,10 +242,6 @@ class UserPreferences {
   ObservablePreference<Set<Account>> cachedDiscoveredAccounts =
       ObservableAccountSetPreference(
           UserPreferenceKey.CachedDiscoveredAccounts);
-
-  // Defaults false
-  ObservableBoolPreference guiV0 =
-      ObservableBoolPreference(UserPreferenceKey.GuiV0);
 
   /// An incrementing internal UI app release version used to track first launch
   /// and new release launch messaging.  See [Release]
@@ -290,7 +286,6 @@ enum UserPreferenceKey {
   PacTransaction,
   ActiveAccounts,
   CachedDiscoveredAccounts,
-  GuiV0,
   ReleaseVersion,
   RoutingEnabled,
   MonitoringEnabled,

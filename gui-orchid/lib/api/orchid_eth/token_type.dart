@@ -15,7 +15,7 @@ class Chains {
     name: "Ethereum",
     nativeCurrency: TokenTypes.ETH,
     providerUrl: OrchidEthereumV0.defaultEthereumProviderUrl,
-    icon: SvgPicture.asset('assets/svg/ethereum.svg'),
+    icon: SvgPicture.asset('assets/svg/orchid_icon.svg'),
   );
 
   // ignore: non_constant_identifier_names

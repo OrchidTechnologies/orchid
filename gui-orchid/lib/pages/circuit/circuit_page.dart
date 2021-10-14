@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
@@ -17,7 +19,10 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/pages/account_manager/account_card.dart';
+import 'package:orchid/pages/account_manager/account_detail_store.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 
 import '../../common/app_gradients.dart';
@@ -49,78 +54,43 @@ class CircuitPageState extends State<CircuitPage>
   List<StreamSubscription> _rxSubs = [];
   List<UniqueHop> _hops;
 
+  // // TODO: REMOVE!
   // Master timeline for connect animation
   AnimationController _masterConnectAnimController;
 
+  // // TODO: REMOVE!
   // The duck into hole animation
   AnimationController _bunnyDuckAnimController;
 
+  // // TODO: REMOVE!
   // Animations driven by the master timelines
-  Animation<double> _connectAnimController;
-  Animation<double> _bunnyExitAnim;
   Animation<double> _bunnyDuckAnimation;
-  Animation<double> _bunnyEnterAnim;
-  Animation<double> _holeTransformAnim;
-  Animation<Color> _hopColorTween;
 
+  // TODO: REMOVE!
   // Anim params
-  int _fadeAnimTime = 200;
   int _connectAnimTime = 1200;
   DateTime _lastInteractionTime;
   Timer _bunnyDuckTimer;
 
-  //bool vpnSwitchInstructionsViewed = false;
   bool _dialogInProgress = false; // ?
+
+  AccountDetailStore _accountDetailStore;
 
   @override
   void initState() {
     super.initState();
+    _accountDetailStore =
+        AccountDetailStore(onAccountDetailChanged: _accountDetailChanged);
     // Test Localization
     //S.load(Locale('zh', 'CN'));
     initStateAsync();
     initAnimations();
   }
 
-  Timer _checkBalancesTimer;
-
   void initStateAsync() async {
-    //vpnSwitchInstructionsViewed = await UserPreferences().getVPNSwitchInstructionsViewed();
-
     OrchidAPI().circuitConfigurationChanged.listen((_) {
       _updateCircuit();
     });
-
-    //_checkFirstLaunch();
-    _checkBalancesTimer =
-        Timer.periodic(Duration(seconds: 30), _checkHopAlerts);
-    _checkHopAlerts(null);
-  }
-
-  static Map<int, bool> _showHopAlert = Map();
-
-  /// Check each Orchid Hop's lottery pot for alert conditions.
-  void _checkHopAlerts(timer) async {
-    if (_hops == null) {
-      return;
-    }
-    // Check for hops that cannot write tickets.
-    List<StoredEthereumKey> keys = await UserPreferences().getKeys();
-    for (var uniqueHop in _hops) {
-      CircuitHop hop = uniqueHop.hop;
-      if (hop is OrchidHop) {
-        try {
-          var pot = await OrchidEthereumV0.getLotteryPot(
-              hop.funder, hop.getSigner(keys));
-          var ticketValue = await MarketConditionsV0.getMaxTicketValueV0(pot);
-          _showHopAlert[uniqueHop.contentHash] = ticketValue.lteZero();
-        } catch (err, stack) {
-          log("Error checking ticket value: $err\n$stack");
-        }
-      }
-    }
-    if (mounted) {
-      setState(() {});
-    }
   }
 
   void _updateCircuit() async {
@@ -138,7 +108,6 @@ class CircuitPageState extends State<CircuitPage>
       _connectionStateChanged(OrchidAPI().vpnRoutingStatus.value,
           animated: false);
     }
-    _checkHopAlerts(null); // refresh alert status
   }
 
   void initAnimations() {
@@ -148,27 +117,8 @@ class CircuitPageState extends State<CircuitPage>
     _bunnyDuckAnimController =
         AnimationController(duration: Duration(milliseconds: 300), vsync: this);
 
-    _connectAnimController = CurvedAnimation(
-        parent: _masterConnectAnimController, curve: Interval(0, 1.0));
-
-    _bunnyExitAnim = CurvedAnimation(
-        parent: _connectAnimController,
-        curve: Interval(0, 0.4, curve: Curves.easeInOutExpo));
-
     _bunnyDuckAnimation = CurvedAnimation(
         parent: _bunnyDuckAnimController, curve: Curves.easeOut);
-
-    _holeTransformAnim = CurvedAnimation(
-        parent: _connectAnimController,
-        curve: Interval(0.4, 0.5, curve: Curves.easeIn));
-
-    _bunnyEnterAnim = CurvedAnimation(
-        parent: _connectAnimController,
-        curve: Interval(0.6, 1.0, curve: Curves.easeInOutExpo));
-
-    _hopColorTween =
-        ColorTween(begin: Color(0xffa29ec0), end: Color(0xff8c61e1))
-            .animate(_connectAnimController);
 
     _bunnyDuckTimer = Timer.periodic(Duration(seconds: 1), _checkBunny);
 
@@ -179,7 +129,7 @@ class CircuitPageState extends State<CircuitPage>
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      title: S.of(context).manageProfile,
+      title: "Circuit Builder",
       decoration: BoxDecoration(),
       child: _buildBody(),
     );
@@ -187,7 +137,7 @@ class CircuitPageState extends State<CircuitPage>
 
   Widget _buildBody() {
     return NotificationListener(
-      onNotification: (notif) {
+      onNotification: (_) {
         _userInteraction();
         return false;
       },
@@ -195,22 +145,9 @@ class CircuitPageState extends State<CircuitPage>
         onTapDown: (_) {
           _userInteraction();
         },
-        child: Container(
-          // hidden until hops loaded
-          child: Visibility(
-              //visible: _hops != null,
-              visible: true,
-              replacement: Container(),
-              child: _buildHopList()),
-        ),
+        child: _buildHopList(),
       ),
     );
-  }
-
-  bool _showEnableVPNInstruction() {
-    return false;
-    //Note: this instruction follows the switch, not the connected status
-    //return !vpnSwitchInstructionsViewed && _hasHops() && !_switchOn;
   }
 
   Widget _buildHopList() {
@@ -218,24 +155,8 @@ class CircuitPageState extends State<CircuitPage>
     return AppReorderableListView(
         header: Column(
           children: <Widget>[
-            AnimatedCrossFade(
-              duration: Duration(milliseconds: _fadeAnimTime),
-              crossFadeState: _showEnableVPNInstruction()
-                  ? CrossFadeState.showFirst
-                  : CrossFadeState.showSecond,
-              firstChild: _buildEnableVPNInstruction(),
-              secondChild: pady(16),
-            ),
-            if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max))
-              pady(64),
-            AnimatedBuilder(
-                animation: Listenable.merge(
-                    [_connectAnimController, _bunnyDuckAnimation]),
-                builder: (BuildContext context, Widget child) {
-                  return _buildStartTile();
-                }),
             _buildStatusTile(),
-            HopTile.buildFlowDivider(),
+            pady(40),
           ],
         ),
         children: (_hops ?? []).map((uniqueHop) {
@@ -244,178 +165,29 @@ class CircuitPageState extends State<CircuitPage>
         footer: Column(
           children: <Widget>[
             _buildNewHopTile(),
-            //if (!_hasHops()) _buildFirstHopInstruction(),
             if (!_hasHops()) pady(16),
-            HopTile.buildFlowDivider(
-                padding: EdgeInsets.only(top: _hasHops() ? 16 : 2, bottom: 10)),
-            AnimatedBuilder(
-                animation: _connectAnimController,
-                builder: (BuildContext context, Widget child) {
-                  return _buildEndTile();
-                }),
             _buildDeletedHopsLink(),
-            pady(32)
           ],
         ),
         onReorder: _onReorder);
   }
 
-  // The starting (top) tile in the hop flow
-  Widget _buildStartTile() {
-    var bunnyWidth = 47.0;
-    var bunnyHeight = 75.0;
-    var clipOvalWidth = 130.0;
-    var holeOutlineStrokeWidth = 1.4;
-
-    // depth into the hole
-    var bunnyOffset =
-        _bunnyExitAnim.value * bunnyHeight + _bunnyDuckAnimation.value * 4.0;
-
-    return
-        // Top level container with the hole and clipped bunny image
-        Container(
-      height: bunnyHeight + holeOutlineStrokeWidth,
-      width: clipOvalWidth,
-      child: Stack(
-        children: <Widget>[
-          // hole
-          Opacity(
-            opacity: 1.0 - _holeTransformAnim.value,
-            child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Transform(
-                    alignment: Alignment.bottomCenter,
-                    transform: Matrix4.identity()
-                      ..scale(1.0 - _holeTransformAnim.value,
-                          1.0 + _holeTransformAnim.value),
-                    child: Image.asset('assets/images/layer35.png'))),
-          ),
-          // logo
-          Opacity(
-            opacity: _holeTransformAnim.value,
-            child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Transform(
-                    alignment: Alignment.bottomCenter,
-                    transform: Matrix4.identity()
-                      ..scale(1.0, _holeTransformAnim.value),
-                    child: Image.asset('assets/images/logo_purple.png'))),
-          ),
-
-          // positioned oval clipped bunny
-          Positioned(
-              // clipping oval should sit on the top of the hole outline
-              bottom: holeOutlineStrokeWidth,
-              child: _buildOvalClippedBunny(
-                bunnyHeight: bunnyHeight,
-                bunnyWidth: bunnyWidth,
-                clipOvalWidth: clipOvalWidth,
-                bunnyOffset: bunnyOffset,
-              )),
-        ],
-      ),
-    );
-  }
-
-  // The ending (bottom) tile with the island and clipped bunny image
-  Widget _buildEndTile() {
-    var bunnyWidth = 30.0;
-    var bunnyHeight = 48.0;
-    var clipOvalWidth = 83.0;
-
-    // depth into the hole
-    var bunnyOffset = (1.0 - _bunnyEnterAnim.value) * bunnyHeight;
-    var containerWidth = 375.0;
-
-    return Stack(
-      alignment: Alignment.center,
-      children: <Widget>[
-        // Set the overall size of the layout, leaving space for the background
-        Container(width: containerWidth, height: 200),
-
-        // connected animation
-        _buildBackgroundAnimation(),
-
-        // island
-        Image.asset('assets/images/island.png'),
-        Opacity(
-            opacity: _connectAnimController.value,
-            child: Image.asset('assets/images/vignetteHomeHeroSm.png')),
-
-        // positioned bunny
-        Positioned(
-            // clipping oval should sit on the top of the hole outline
-            top: 70.0,
-            left: containerWidth / 2 - clipOvalWidth / 2 + 5,
-            child: _buildOvalClippedBunny(
-              bunnyHeight: bunnyHeight,
-              bunnyWidth: bunnyWidth,
-              clipOvalWidth: clipOvalWidth,
-              bunnyOffset: bunnyOffset,
-            )),
-      ],
-    );
-  }
-
-  // Note: I tried a number of things here to position this relative to screen
-  // Note: width but nothing was very satisfying. This animation really should
-  // Note: probably be aligned with the island but stacked under the whole layout
-  // Note: with a transparent gradient extending under the other screen items.
-  // Note: Going with a fixed layout for now.
-  Widget _buildBackgroundAnimation() {
-    return Positioned(
-      top: -38,
-      child: Container(
-        width: 375,
-        height: 350,
-        child: Opacity(
-          opacity: _connectAnimController.value,
-          child: FlareActor(
-            'assets/flare/Connection_screens.flr',
-            color: Colors.deepPurple.withOpacity(0.4),
-            fit: BoxFit.fitHeight,
-            animation: 'connectedLoop',
-          ),
-        ),
-      ),
-    );
-  }
-
-  // A transparent oval clipping container for the bunny with specified offset
-  ClipOval _buildOvalClippedBunny(
-      {double bunnyHeight,
-      double bunnyWidth,
-      double clipOvalWidth,
-      double bunnyOffset}) {
-    return ClipOval(
-      child: Container(
-          width: clipOvalWidth, // width of the hole
-          height: bunnyHeight,
-          //color: Colors.grey.withOpacity(0.3), // show clipping oval
-          child: Stack(
-            children: <Widget>[
-              Positioned(
-                  bottom: -bunnyOffset,
-                  left: clipOvalWidth / 2 - bunnyWidth / 2 + 5,
-                  child: Image.asset('assets/images/bunnypeek.png',
-                      height: bunnyHeight)),
-            ],
+  Widget _buildNewHopTile() {
+    return GestureDetector(
+      onTap: _addHop,
+      child: DottedBorder(
+          color: Color(0xffb88dfc),
+          strokeWidth: 2.0,
+          dashPattern: [8, 10],
+          radius: Radius.circular(10),
+          borderType: BorderType.RRect,
+          child: Container(
+            width: 328,
+            height: 72,
+            child: Center(
+                child: Text("ADD NEW HOP", style: OrchidText.button.tappable)),
           )),
     );
-  }
-
-  Widget _buildNewHopTile() {
-    return HopTile(
-        title: s.newHop,
-        image: Image.asset('assets/images/addCircleOutline.png',
-            color: Colors.white),
-        trailing: SizedBox(width: 40),
-        // match leading
-        textColor: Colors.white,
-        borderColor: Color(0xffb88dfc),
-        dottedBorder: true,
-        showDragHandle: false,
-        onTap: _addHop);
   }
 
   Widget _buildDeletedHopsLink() {
@@ -463,7 +235,7 @@ class CircuitPageState extends State<CircuitPage>
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 16.0, right: 16),
+      padding: const EdgeInsets.only(right: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -480,15 +252,19 @@ class CircuitPageState extends State<CircuitPage>
     );
   }
 
-  Dismissible _buildDismissableHopTile(UniqueHop uniqueHop) {
-    return Dismissible(
+  Widget _buildDismissableHopTile(UniqueHop uniqueHop) {
+    return Padding(
       key: Key(uniqueHop.key.toString()),
-      background: buildDismissableBackground(context),
-      confirmDismiss: _confirmDeleteHop,
-      onDismissed: (direction) {
-        _deleteHop(uniqueHop);
-      },
-      child: _buildHopTile(uniqueHop),
+      padding: const EdgeInsets.only(bottom: 28.0),
+      child: Dismissible(
+        key: Key(uniqueHop.key.toString()),
+        background: buildDismissableBackground(context),
+        confirmDismiss: _confirmDeleteHop,
+        onDismissed: (direction) {
+          _deleteHop(uniqueHop);
+        },
+        child: _buildTappableHopTile(uniqueHop),
+      ),
     );
   }
 
@@ -507,18 +283,75 @@ class CircuitPageState extends State<CircuitPage>
     );
   }
 
-  Widget _buildHopTile(UniqueHop uniqueHop) {
-    return buildHopTile(
-      context: context,
+  Widget _buildTappableHopTile(UniqueHop uniqueHop) {
+    return GestureDetector(
       onTap: () {
         _viewHop(uniqueHop);
       },
-      uniqueHop: uniqueHop,
-      bgColor: _hopColorTween.value,
-      showAlertBadge: _showHopAlert[uniqueHop.contentHash] ?? false,
+      // Don't allow the cards to expand, etc.
+      child: AbsorbPointer(
+        child: _buildHopTile(uniqueHop),
+      ),
     );
   }
 
+  Widget _buildHopTile(UniqueHop uniqueHop) {
+    switch (uniqueHop.hop.protocol) {
+      case HopProtocol.Orchid:
+        var hop = uniqueHop.hop as OrchidHop;
+        var accountDetail = _accountDetailStore.get(hop.account);
+        return AccountCard(
+          accountDetail: accountDetail,
+          minHeight: true,
+        );
+        break;
+      case HopProtocol.OpenVPN:
+      case HopProtocol.WireGuard:
+        return _buildOtherHopTile(uniqueHop);
+        break;
+    }
+    throw Exception();
+  }
+
+  // Note: We should integrate this into AccountCard
+  Widget _buildOtherHopTile(UniqueHop hop) {
+    Widget icon = Container();
+    Widget text = Container();
+    switch (hop.hop.protocol) {
+      case HopProtocol.Orchid:
+        break;
+      case HopProtocol.OpenVPN:
+        icon =
+            SvgPicture.asset('assets/svg/openvpn.svg', width: 38, height: 38);
+        text = Text(s.openVPNHop).title;
+        break;
+      case HopProtocol.WireGuard:
+        icon =
+            SvgPicture.asset('assets/svg/wireguard.svg', width: 40, height: 40);
+        text = Text(s.wireguardHop).title;
+        break;
+    }
+    // Match account card for now
+    return SizedBox(
+      width: 334,
+      height: 74,
+      child: OrchidPanel(
+          child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SizedBox(width: 40, child: icon),
+            text,
+            SizedBox(width: 40)
+          ],
+        ),
+      )),
+    );
+  }
+
+  // switch deleted hops to use new tiles
+  @deprecated
   static Widget buildHopTile({
     @required BuildContext context,
     @required UniqueHop uniqueHop,
@@ -526,9 +359,6 @@ class CircuitPageState extends State<CircuitPage>
     Color bgColor,
     bool showAlertBadge,
   }) {
-    //bool isFirstHop = uniqueHop.key == _hops.first.key;
-    //bool hasMultipleHops = _hops.length > 1;
-    //bool isLastHop = uniqueHop.key == _hops.last.key;
     Color color = Colors.white;
     Image image;
     String svgName;
@@ -544,44 +374,17 @@ class CircuitPageState extends State<CircuitPage>
         break;
     }
     var title = uniqueHop.hop.displayName(context);
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12),
-      child: HopTile(
-        showAlertBadge: showAlertBadge,
-        textColor: color,
-        color: bgColor ?? Colors.white,
-        image: image,
-        svgName: svgName,
-        onTap: onTap,
-        key: Key(uniqueHop.key.toString()),
-        title: title,
-        showTopDivider: false,
-      ),
+    return HopTile(
+      showAlertBadge: showAlertBadge,
+      textColor: color,
+      color: bgColor ?? Colors.white,
+      image: image,
+      svgName: svgName,
+      onTap: onTap,
+      key: Key(uniqueHop.key.toString()),
+      title: title,
+      showTopDivider: false,
     );
-  }
-
-  Container _buildEnableVPNInstruction() {
-    return Container(
-        padding: EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 16),
-        child: SafeArea(
-          bottom: false,
-          left: false,
-          top: false,
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(s.turnOnToActivate,
-                    textAlign: TextAlign.right,
-                    style: AppText.hopsInstructionsCallout),
-              ),
-              Padding(
-                // attempt to align the arrow with switch in the header and text vertically
-                padding: const EdgeInsets.only(left: 16, right: 6, bottom: 16),
-                child: Image.asset('assets/images/drawnArrow3.png', height: 48),
-              ),
-            ],
-          ),
-        ));
   }
 
   ///
@@ -748,18 +551,23 @@ class CircuitPageState extends State<CircuitPage>
     }
   }
 
+  void _accountDetailChanged() {
+    if (mounted) {
+      setState(() {}); // Trigger a UI refresh
+    }
+  }
+
   S get s {
     return S.of(context);
   }
 
   @override
   void dispose() {
+    _accountDetailStore.dispose();
     _rxSubs.forEach((sub) {
       sub.cancel();
     });
     _bunnyDuckTimer.cancel();
-    //widget.switchController.onChange = null;
-    _checkBalancesTimer.cancel();
     _masterConnectAnimController.dispose();
     _bunnyDuckAnimController.dispose();
     super.dispose();
@@ -825,7 +633,12 @@ class CircuitUtils {
   }
 
   static void saveCircuit(Circuit circuit) async {
-    UserPreferences().setCircuit(circuit);
+    try {
+      log("XXX: Saving circuit: ${circuit.hops.map((e) => e.toJson())}");
+      UserPreferences().setCircuit(circuit);
+    } catch (err, stack) {
+      log("Error saving circuit: $err, $stack");
+    }
     OrchidAPI().updateConfiguration();
     OrchidAPI().circuitConfigurationChanged.add(null);
   }

@@ -99,7 +99,7 @@ class OrchidEthereumV1 {
 
   static Future<LotteryPot> getLotteryPot(
       {chain: Chain, funder: EthereumAddress, signer: EthereumAddress}) async {
-    print("fetch pot for: $funder, $signer, chain = $chain");
+    print("fetch pot V1 for: $funder, $signer, chain = $chain");
 
     var address = AbiEncode.address;
     // construct the abi encoded eth_call

@@ -60,7 +60,7 @@ class OrchidEthereumV0 {
   */
   static Future<OXTLotteryPot> getLotteryPot(
       EthereumAddress funder, EthereumAddress signer) async {
-    print("fetch pot for: $funder, $signer, url = ${await url}");
+    print("fetch pot V0 for: $funder, $signer, url = ${await url}");
 
     // construct the abi encoded eth_call
     var params = [

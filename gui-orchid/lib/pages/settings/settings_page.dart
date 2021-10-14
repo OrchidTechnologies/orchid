@@ -31,7 +31,6 @@ class _SettingsPageState extends State<SettingsPage> {
   // TODO: These switches should work directly with ObservablePreference
   bool _queryBalances = false;
   bool _showLogging = false;
-  bool _guiV0 = false;
   bool _tester = false;
 
   @override
@@ -46,7 +45,6 @@ class _SettingsPageState extends State<SettingsPage> {
     _queryBalances = await UserPreferences().getQueryBalances();
     _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
         OrchidHop.appDefaultCurator;
-    _guiV0 = await UserPreferences().guiV0.get();
 
     advancedConfigChanged();
     setState(() {});
@@ -152,48 +150,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     routeName: '/settings/log',
                     context: context)),
 
-              // V1 UI opt-out
-              _divided(Column(
-                children: [
-                  PageTile(
-                    height: height,
-                    title: s.enableMultihopUi,
-                    trailing: Switch(
-                      activeColor: activeThumbColor,
-                      activeTrackColor: activeTrackColor,
-                      inactiveThumbColor: inactiveThumbColor,
-                      inactiveTrackColor: inactiveTrackColor,
-                      value: _guiV0,
-                      onChanged: (bool value) async {
-                        await UserPreferences().guiV0.set(value);
-                        OrchidAPI().updateConfiguration();
-                        ConfigChangeDialogs.showConfigurationChangeSuccess(
-                            context,
-                            warnOnly: true);
-                        setState(() {
-                          _guiV0 = value;
-                        });
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 24, top: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.warning, color: Color(0xffF88B9F)),
-                        padx(12),
-                        Expanded(
-                          child: Text(
-                              s.ifYouWantToUseMultihopOpenvpnAndWireguardYoull,
-                              style: OrchidText.caption),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              )),
-
               if (_tester)
                 _divided(PageTile(
                   title: "(TEST) Reset First Launch",
@@ -210,6 +166,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 )),
 
+              /*
               if (_tester)
                 _divided(PageTile(
                   title: "(TEST) Reset V1 Account Data",
@@ -221,6 +178,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   ),
                 )),
+               */
             ],
           ),
         ),

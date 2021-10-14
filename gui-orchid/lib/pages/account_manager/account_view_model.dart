@@ -5,7 +5,7 @@ import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/pages/account_manager/account_detail_poller.dart';
 
 /// The view model for the account
-// TODO: There is duplication in the account detail. Consider cleanup.
+// Note: There is duplication in the account detail. Consider cleanup.
 class AccountViewModel {
   final StoredEthereumKey signerKey;
   final EthereumAddress funder;
@@ -21,12 +21,13 @@ class AccountViewModel {
     return signerKey.address;
   }
 
-  AccountViewModel(
-      {@required this.signerKey,
-      @required this.funder,
-      @required this.chain,
-      @required this.detail,
-      this.active = false});
+  AccountViewModel({
+    @required this.signerKey,
+    @required this.funder,
+    @required this.chain,
+    @required this.detail,
+    this.active,
+  });
 
   Token get balance {
     return detail.lotteryPot?.balance;

@@ -5,11 +5,9 @@ class WireGuardHop extends CircuitHop {
 
   WireGuardHop({this.config}) : super(HopProtocol.WireGuard);
 
-  factory WireGuardHop.fromJson(Map<String, dynamic> json) {
-    return WireGuardHop(
-      config: json['config'],
-    );
-  }
+  WireGuardHop.fromJson(Map<String, dynamic> json)
+      : this.config = json['config'],
+        super(HopProtocol.WireGuard);
 
   Map<String, dynamic> toJson() => {
         'protocol': CircuitHop.protocolToString(protocol),

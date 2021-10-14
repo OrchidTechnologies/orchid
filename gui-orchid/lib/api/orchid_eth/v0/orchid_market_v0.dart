@@ -16,11 +16,15 @@ class MarketConditions {
 
   MarketConditions(this.maxFaceValue, this.efficiency, this.limitedByBalance);
 
+  static bool isBelowMinEfficiency(MarketConditions conditions) {
+    return (conditions.efficiency ?? 0) < minEfficiency;
+  }
+
   static double minEfficiency = 0.2;
 }
 
+// Market conditions for the V0 contract where payment is in OXT with gas in ETH.
 class MarketConditionsV0 implements MarketConditions {
-
   final ETH ethGasCostToRedeem;
   final OXT oxtCostToRedeem;
   final OXT maxFaceValue;

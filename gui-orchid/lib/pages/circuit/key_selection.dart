@@ -56,7 +56,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
     (await UserPreferences().keys.streamAsync()).listen((keys) {
       setState(() {
         this._keys = keys;
-        if (!_keys.contains(_selectedItem.keyRef.getFrom(keys))) {
+        if (_selectedItem != null && !_keys.contains(_selectedItem.keyRef.getFrom(keys))) {
           _selectedItem = null;
          widget.onSelection(null);
         }

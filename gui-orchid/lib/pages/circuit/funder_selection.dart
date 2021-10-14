@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 
@@ -11,9 +11,8 @@ typedef FunderSelectionCallback = void Function(FunderSelectionItem key);
 class FunderSelectionDropdown extends StatefulWidget {
   final FunderSelectionCallback onSelection;
   final FunderSelectionItem initialSelection;
-  bool enabled;
+  final bool enabled;
   final StoredEthereumKeyRef signer;
-  final bool v0Only;
 
   // Fixed options
   static final pasteKeyOption =
@@ -26,13 +25,9 @@ class FunderSelectionDropdown extends StatefulWidget {
     @required this.signer,
     @required this.onSelection,
     this.initialSelection,
-    this.enabled = false,
-    this.v0Only = true,
-  }) : super(key: key) {
-    if (signer == null) {
-      enabled = false;
-    }
-  }
+    bool enabled = false,
+  })  : this.enabled = signer == null ? false : enabled,
+        super(key: key);
 
   @override
   _FunderSelectionDropdownState createState() =>
@@ -41,7 +36,7 @@ class FunderSelectionDropdown extends StatefulWidget {
 
 class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
   StoredEthereumKey _signer;
-  List<EthereumAddress> _funderAddresses = [];
+  List<Account> _funderAccounts = [];
   FunderSelectionItem _selectedItem;
 
   @override
@@ -53,18 +48,15 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
   void initStateAsync() async {
     _signer = await widget.signer.get();
     var cached = await UserPreferences().cachedDiscoveredAccounts.get();
-    _funderAddresses = cached
-        .where((account) => account.identityUid == _signer.uid)
-        .where((account) => !widget.v0Only || account.isV0)
-        .map((account) => account.funder)
-        .toList();
+    _funderAccounts =
+        cached.where((account) => account.identityUid == _signer.uid).toList();
 
     // If the cached accounts list does not include the selected funder add it.
     // This can happen if the user pasted a prospective account that hasn't been
     // funded yet.
-    if (widget.initialSelection?.funder != null &&
-        !_funderAddresses.contains(widget.initialSelection?.funder)) {
-      _funderAddresses.add(widget.initialSelection.funder);
+    if (widget.initialSelection?.account != null &&
+        !_funderAccounts.contains(widget.initialSelection?.account)) {
+      _funderAccounts.add(widget.initialSelection.account);
     }
 
     // If an initial key selection is provided use it
@@ -109,14 +101,24 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
   List<DropdownMenuItem<FunderSelectionItem>> _getDropdownItems() {
     List<DropdownMenuItem<FunderSelectionItem>> items = [];
 
-    if (_funderAddresses != null) {
-      items.addAll(_funderAddresses.map((funder) {
+    if (_funderAccounts != null) {
+      items.addAll(_funderAccounts.map((account) {
         return new DropdownMenuItem<FunderSelectionItem>(
-          value: FunderSelectionItem(funder: funder),
-          child: Text(
-            funder.toString(prefix: true),
-            overflow: TextOverflow.ellipsis,
-            style: OrchidText.button,
+          value: FunderSelectionItem(funderAccount: account),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 4, right: 8),
+                child: SizedBox(width: 24, height: 24, child: account.chain.icon),
+              ),
+              Flexible(
+                child: Text(
+                  account.funder.toString(prefix: true),
+                  overflow: TextOverflow.ellipsis,
+                  style: OrchidText.button,
+                ),
+              ),
+            ],
           ),
         );
       }).toList());
@@ -154,23 +156,28 @@ class FunderSelectionMenuOption {
 }
 
 /// An item in the key selection drop down list.
-/// Holds either a key or a key selection option.
+/// Holds either an account (representing the funder) or a selection option.
 class FunderSelectionItem {
-  EthereumAddress funder;
+  Account account;
   FunderSelectionMenuOption option;
 
-  FunderSelectionItem(
-      {EthereumAddress funder, FunderSelectionMenuOption option}) {
-    assert(funder == null || option == null);
-    this.funder = funder;
+  FunderSelectionItem({
+    Account funderAccount,
+    FunderSelectionMenuOption option,
+  }) {
+    assert(funderAccount == null || option == null);
+    this.account = funderAccount;
     this.option = option;
   }
 
   bool operator ==(o) =>
-      o is FunderSelectionItem && o.option == option && o.funder == funder;
+      o is FunderSelectionItem && o.option == option && o.account == account;
+
+  @override
+  int get hashCode => super.hashCode;
 
   @override
   String toString() {
-    return 'FunderSelectionItem{keyRef: $funder, option: $option}';
+    return 'FunderSelectionItem{keyRef: $account, option: $option}';
   }
 }

@@ -8,12 +8,11 @@ class OpenVPNHop extends CircuitHop {
   OpenVPNHop({this.userName, this.userPassword, this.ovpnConfig})
       : super(HopProtocol.OpenVPN);
 
-  factory OpenVPNHop.fromJson(Map<String, dynamic> json) {
-    return OpenVPNHop(
-        userName: json['username'],
-        userPassword: json['password'],
-        ovpnConfig: json['ovpnfile']);
-  }
+  OpenVPNHop.fromJson(Map<String, dynamic> json)
+      : this.userName = json['username'],
+        this.userPassword = json['password'],
+        this.ovpnConfig = json['ovpnfile'],
+        super(HopProtocol.OpenVPN);
 
   Map<String, dynamic> toJson() => {
         'protocol': CircuitHop.protocolToString(protocol),

@@ -1,49 +1,134 @@
+import 'dart:math';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/pages/account_manager/account_detail_store.dart';
+import 'package:orchid/pages/circuit/model/circuit.dart';
+import 'package:orchid/pages/circuit/model/circuit_hop.dart';
+import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/util/units.dart';
-import '../account_manager/account_detail_poller.dart';
 import '../../orchid/orchid_circular_identicon.dart';
 import '../../orchid/orchid_panel.dart';
 import '../../orchid/orchid_text.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/util/collections.dart';
 
-/// Active account info and "manage accounts" button used on the connect page.
-class ManageAccountsCard extends StatelessWidget {
-  final AccountDetail accountDetail;
+/// Displays the account info for each hop in the Circuit and offers
+/// the "manage accounts" button used on the connect page.
+class ManageAccountsCard extends StatefulWidget {
+  final Circuit circuit;
+
+  // When true shrinks the identicon a bit and adjusts the overall height for it.
+  // (This is a small adjustment used when the screen is short.)
   final bool minHeight;
+
+  final VoidCallback onManageAccountsPressed;
+
+  // Invoked once on init and when the selection is changed.
+  final Function(CircuitHop hop) onSelectHop;
 
   const ManageAccountsCard({
     Key key,
-    this.accountDetail,
+    this.circuit,
     this.minHeight = false,
+    this.onManageAccountsPressed,
+    this.onSelectHop,
   }) : super(key: key);
+
+  @override
+  _ManageAccountsCardState createState() => _ManageAccountsCardState();
+}
+
+class _ManageAccountsCardState extends State<ManageAccountsCard>
+    with TickerProviderStateMixin {
+  AccountDetailStore _accountDetailStore;
+
+  // The selected hop account index
+  int _selectedIndex = 0;
+
+  void _setSelectedIndex(int i) {
+    setState(() {
+      _selectedIndex = i;
+    });
+    if (widget.onSelectHop != null) {
+      widget.onSelectHop(_selectedHop);
+    }
+  }
+
+  CircuitHop get _selectedHop {
+    return widget.circuit.hops[_selectedIndex];
+  }
+
+  int get _hopCount {
+    return widget.circuit.hops.length;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _accountDetailStore =
+        AccountDetailStore(onAccountDetailChanged: _accountDetailChanged);
+
+    // Invoke the callback once
+    // if (widget.onSelectHop != null) {
+    //   widget.onSelectHop(_selectedHop);
+    // }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: minHeight? 174 : 180,
-      child: Stack(
+      height: widget.minHeight ? 174 : 180,
+      child: widget.circuit == null
+          ? Container()
+          : Stack(
+              children: [
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: _buildCardBody(),
+                ),
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: _buildCardTop(),
+                ),
+                if (_hopCount > 1)
+                  Align(
+                    alignment: Alignment.center,
+                    child: _buildHopSelectorButtons(),
+                  ),
+              ],
+            ),
+    );
+  }
+
+  Padding _buildHopSelectorButtons() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 28.0, right: 5),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Align(
-              alignment: Alignment.bottomCenter,
-              child: SizedBox(
-                  width: 312,
-                  height: 150,
-                  child: OrchidPanel(
-                      child: Center(
-                          child: Padding(
-                    padding: const EdgeInsets.only(top: 17.0),
-                    child: _buildCardContent(context),
-                  ))))),
-          Align(
-            alignment: Alignment.topCenter,
-            child: OrchidCircularIdenticon(
-              address: accountDetail?.signer,
-              size: minHeight ? 48 : 60,
+          TextButton(
+            onPressed: () {
+              _setSelectedIndex(max(_selectedIndex - 1, 0));
+            },
+            child: Icon(
+              Icons.chevron_left,
+              color: Colors.white,
+            ),
+          ),
+          padx(212),
+          TextButton(
+            onPressed: () {
+              _setSelectedIndex(
+                  min(_selectedIndex + 1, widget.circuit.hops.length - 1));
+            },
+            child: Icon(
+              Icons.chevron_right,
+              color: Colors.white,
             ),
           ),
         ],
@@ -51,18 +136,135 @@ class ManageAccountsCard extends StatelessWidget {
     );
   }
 
-  Column _buildCardContent(BuildContext context) {
-    S s = S.of(context);
-    final text = accountDetail == null
-        ? s.noAccountSelected
-        : accountDetail.signer.toString();
-    final textWidth = accountDetail == null ? null : 120.0;
-    final balanceText = accountDetail == null
+  Widget _buildCardTop() {
+    // map the hops to icons
+    var icons = widget.circuit.hops
+        .mapIndexed((hop, i) {
+          final selected = i == _selectedIndex;
+          final afterSelected = i - 1 == _selectedIndex;
+
+          final baseSize = widget.minHeight ? 48.0 : 60.0;
+          var icon = _buildTappableIconForHop(hop, i, selected, baseSize);
+
+          // Position using padding and animate the size change.
+          final spacing = 40.0;
+          final leftPad = max(
+              0.0, i * spacing + (selected ? -4 : 0) + (afterSelected ? 4 : 0));
+          final topPad = (selected ? 0.0 : 5.0);
+          final shrink = 0.8;
+          final size = selected ? baseSize : baseSize * shrink;
+          return Padding(
+            key: Key(i.toString()),
+            padding: EdgeInsets.only(left: leftPad, top: topPad),
+            child: AnimatedContainer(
+                width: size,
+                height: size,
+                duration: Duration(milliseconds: 200),
+                curve: Curves.easeOutSine,
+                child: FittedBox(fit: BoxFit.contain, child: icon)),
+          );
+        })
+        .toList()
+        .reversed
+        .toList();
+
+    // Move selected to the front (note that the list is reversed for the stack)
+    icons.add(icons.removeAt(widget.circuit.hops.length - _selectedIndex - 1));
+
+    return Stack(children: icons);
+  }
+
+  Widget _buildTappableIconForHop(
+      CircuitHop hop, int index, bool selected, double baseSize) {
+    return GestureDetector(
+      onTap: () {
+        _setSelectedIndex(index);
+      },
+      child: _buildIconForHop(hop, selected, baseSize),
+    );
+  }
+
+  Widget _buildIconForHop(CircuitHop hop, bool selected, double baseSize) {
+    final fade = 0.5;
+    switch (hop.protocol) {
+      case HopProtocol.Orchid:
+        var _hop = hop as OrchidHop;
+        var account = _accountDetailStore.get(_hop.account);
+        return OrchidCircularIdenticon(
+          address: account.signerAddress,
+          fade: selected ? 1.0 : fade,
+        );
+        break;
+      case HopProtocol.OpenVPN:
+        return OrchidCircularIdenticon(
+          image: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SvgPicture.asset('assets/svg/openvpn.svg'),
+          ),
+          fade: selected ? 1.0 : fade,
+        );
+        break;
+      case HopProtocol.WireGuard:
+        return OrchidCircularIdenticon(
+          image: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SvgPicture.asset('assets/svg/wireguard.svg'),
+          ),
+          fade: selected ? 1.0 : fade,
+        );
+        break;
+    }
+    throw Exception();
+  }
+
+  SizedBox _buildCardBody() {
+    return SizedBox(
+        width: 312,
+        height: 150,
+        child: OrchidPanel(
+            child: Center(
+                child: Padding(
+          padding: const EdgeInsets.only(top: 17.0),
+          child: _selectedHop != null
+              ? _buildCardContentForHop(_selectedHop)
+              : Container(),
+        ))));
+  }
+
+  Widget _buildCardContentForHop(CircuitHop hop) {
+    switch (hop.protocol) {
+      case HopProtocol.Orchid:
+        return _buildOrchidHopCardContent(hop as OrchidHop);
+        break;
+      case HopProtocol.OpenVPN:
+        // Note: duplicated in manage accounts card
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 17.0),
+          child: Text(s.openVPNHop).title,
+        );
+      case HopProtocol.WireGuard:
+      // Note: duplicated in manage accounts card
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 17.0),
+          child: Text(s.wireguardHop).title,
+        );
+        break;
+    }
+    throw Exception();
+  }
+
+  Widget _buildOrchidHopCardContent(OrchidHop orchidHop) {
+    final _selectedAccount = _accountDetailStore.get(orchidHop.account);
+    final signerAddress = _selectedAccount?.signerAddress;
+    final text =
+        signerAddress == null ? s.noAccountSelected : signerAddress.toString();
+    final textWidth = signerAddress == null ? null : 120.0;
+    final balanceText = signerAddress == null
         ? formatCurrency(0.0, digits: 2)
-        : (accountDetail.lotteryPot?.balance?.formatCurrency(digits: 2) ??
+        : (_selectedAccount.lotteryPot?.balance?.formatCurrency(digits: 2) ??
             "...");
-    final efficiency = accountDetail?.marketConditions?.efficiency;
-    var showBadge = (accountDetail?.marketConditions?.efficiency ?? 1.0) <
+    final efficiency = _selectedAccount?.marketConditions?.efficiency;
+    var showBadge = (_selectedAccount?.marketConditions?.efficiency ?? 1.0) <
         MarketConditions.minEfficiency;
 
     return Column(
@@ -97,23 +299,44 @@ class ManageAccountsCard extends StatelessWidget {
           ],
         ),
         SizedBox(height: 16),
-        Badge(
-          showBadge: showBadge,
-          elevation: 0,
-          badgeContent: Text('!', style: OrchidText.caption),
-          padding: EdgeInsets.only(left: 8, right: 8, bottom: 4, top: 8),
-          toAnimate: false,
-          position: BadgePosition.topEnd(top: -8, end: -34),
-          child: SizedBox(
-            height: 16,
-            child: Text(
-              s.manageAccounts.toUpperCase(),
-              style: OrchidText.button
-                  .copyWith(color: OrchidColors.purple_ffb88dfc, height: 1.0),
-            ),
-          ),
-        ),
+        _buildManageAccountsButton(context, showBadge),
       ],
     );
+  }
+
+  Widget _buildManageAccountsButton(BuildContext context, bool showBadge) {
+    return GestureDetector(
+      onTap: widget.onManageAccountsPressed,
+      child: Badge(
+        showBadge: showBadge,
+        elevation: 0,
+        badgeContent: Text('!', style: OrchidText.caption),
+        padding: EdgeInsets.only(left: 8, right: 8, bottom: 4, top: 8),
+        toAnimate: false,
+        position: BadgePosition.topEnd(top: -8, end: -34),
+        child: SizedBox(
+          height: 16,
+          child: Text(
+            s.manageAccounts.toUpperCase(),
+            style: OrchidText.button
+                .copyWith(color: OrchidColors.purple_ffb88dfc, height: 1.0),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _accountDetailChanged() {
+    setState(() {}); // Trigger a UI refresh
+  }
+
+  S get s {
+    return S.of(context);
+  }
+
+  @override
+  void dispose() {
+    _accountDetailStore.dispose();
+    super.dispose();
   }
 }

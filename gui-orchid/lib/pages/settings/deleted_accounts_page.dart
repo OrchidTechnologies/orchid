@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -67,7 +66,10 @@ class _AccountsPageState extends State<AccountsPage> {
       list.add(_buildInstructions());
       list.add(pady(32));
       list.addAll((_recentlyDeleted ?? []).map((hop) {
-        return Center(child: _buildInactiveHopTile(hop));
+        return Center(child: Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: _buildInactiveHopTile(hop),
+        ));
       }).toList());
       if (_orphanedPacAccounts.isNotEmpty)
         list.add(Center(
@@ -76,7 +78,10 @@ class _AccountsPageState extends State<AccountsPage> {
           child: Text(s.deletedPacs),
         )));
       list.addAll((_orphanedPacAccounts ?? []).map((oa) {
-        return Center(child: _buildOrphanedAccountHopTile(oa));
+        return Center(child: Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: _buildOrphanedAccountHopTile(oa),
+        ));
       }).toList());
     }
     return ListView(children: list);
@@ -107,7 +112,7 @@ class _AccountsPageState extends State<AccountsPage> {
   }
 
   Dismissible _buildOrphanedAccountHopTile(OrphanedKeyAccount account) {
-    OrchidHop hop = OrchidHop(
+    OrchidHop hop = OrchidHop.v0(
         funder: account.funder,
         curator: account.curator,
         keyRef: account.keyRef);
@@ -220,6 +225,7 @@ class _AccountsPageState extends State<AccountsPage> {
         OrchidHop.appDefaultCurator;
 
     // Determine which of these were PACs
+    // TODO: for xdai this will be the seller contract address
     var orchidPacFunder =
         EthereumAddress.from('0x6dd46c5f9f19ab8790f6249322f58028a3185087');
     _orphanedPacAccounts = [];
@@ -246,7 +252,7 @@ class _AccountsPageState extends State<AccountsPage> {
 
   Future<List<StoredEthereumKey>> getOrphanedKeys() async {
     // Get the active hop keys
-    List<String> activeKeyUuids = await OrchidVPNConfigV0.getInUseKeyUids();
+    List<String> activeKeyUuids = await OrchidHop.getInUseKeyUids();
 
    // Get recently deleted hop list keys
     List<String> deletedKeyUuids = getRecentlyDeletedHopKeys();

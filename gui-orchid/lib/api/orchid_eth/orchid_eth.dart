@@ -3,6 +3,7 @@ import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 
 import '../orchid_budget_api.dart';
 import '../orchid_crypto.dart';

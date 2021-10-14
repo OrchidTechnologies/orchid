@@ -18,17 +18,32 @@ import '../../orchid/orchid_panel.dart';
 import '../../orchid/orchid_text.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-/// Active account info and "manage accounts" button used on the connect page.
+/// The account cards used on the account manager
 class AccountCard extends StatefulWidget {
   final AccountDetail accountDetail;
+
+  // If non-null show the selected circle and checkmark for selection
+  final bool selected;
+
+  // If non-null designates the active / inactive status line.
   final bool active;
-  final VoidCallback onCheckButton;
+
+  // Callback for selection when selected is non-null.
+  final VoidCallback onSelected;
+
+  final bool initiallyExpanded;
+
+  /// Produces a shorter card
+  final bool minHeight;
 
   const AccountCard({
     Key key,
     this.accountDetail,
-    this.active = false,
-    this.onCheckButton,
+    this.active,
+    this.selected,
+    this.onSelected,
+    this.initiallyExpanded = false,
+    this.minHeight = false,
   }) : super(key: key);
 
   @override
@@ -51,22 +66,31 @@ class AccountCard extends StatefulWidget {
 
 class _AccountCardState extends State<AccountCard>
     with TickerProviderStateMixin {
-  bool expanded = false;
+  bool expanded;
   var expandDuration = const Duration(milliseconds: 330);
   AnimationController _gradientAnim;
+
+  bool get _hasSelection {
+    return widget.selected != null;
+  }
 
   @override
   void initState() {
     super.initState();
+    this.expanded = widget.initiallyExpanded;
     _gradientAnim =
         AnimationController(duration: Duration(seconds: 1), vsync: this);
   }
 
+  bool get short {
+    return widget.minHeight;
+  }
+
   @override
   Widget build(BuildContext context) {
-    var height = expanded ? 360.0 : 116.0;
+    var height = short ? (expanded ? 360.0 : 74.0) : (expanded ? 360.0 : 116.0);
     var width = 334.0;
-    var checkExtraHeight = 12.0;
+    var checkExtraHeight = _hasSelection ? 12.0 : 0.0;
     var checkExtraWidth = 16.0;
     return GestureDetector(
       onTap: () {
@@ -75,8 +99,8 @@ class _AccountCardState extends State<AccountCard>
         });
       },
       child: Padding(
+        // balance the selection button right
         padding: EdgeInsets.only(left: checkExtraWidth),
-        // balance the button right
         child: AnimatedContainer(
             duration: expandDuration,
             height: height + checkExtraHeight, // padding for check button
@@ -92,16 +116,18 @@ class _AccountCardState extends State<AccountCard>
                         animation: _gradientAnim,
                         builder: (context, snapshot) {
                           return OrchidPanel(
-                              key: Key(widget.active.toString()),
-                              highlight: widget.active,
+                              key: Key(widget.selected?.toString() ?? ''),
+                              highlight: widget.selected ?? false,
                               highlightAnimation: _gradientAnim.value,
                               child: _buildCardContent(context));
                         }),
                   ),
                 ),
-                Align(
-                    alignment: Alignment.bottomRight,
-                    child: _buildToggleButton(checked: widget.active))
+                // checkmark selection button
+                if (_hasSelection)
+                  Align(
+                      alignment: Alignment.bottomRight,
+                      child: _buildToggleButton(checked: widget.selected))
               ],
             )),
       ),
@@ -116,15 +142,15 @@ class _AccountCardState extends State<AccountCard>
       children: [
         // info column
         Padding(
-          padding: EdgeInsets.only(top: 28),
+          padding: EdgeInsets.only(top: short ? 18 : 28),
           child: Stack(
             alignment: Alignment.topCenter,
             children: [
-              // token icon
+              // Token icon (aligned from top because this stays in the header when expanded)
               Align(
                 alignment: Alignment.topLeft,
                 child: Padding(
-                  padding: EdgeInsets.only(left: 24.0, top: 10),
+                  padding: EdgeInsets.only(left: 24.0, top: short ? 0 : 10),
                   child: _buildTokenIcon(tokenType),
                 ),
               ),
@@ -191,22 +217,25 @@ class _AccountCardState extends State<AccountCard>
           Container(
             height: 20,
             width: textWidth,
-        child: TapToCopyText(
+            child: TapToCopyText(
               text,
               padding: EdgeInsets.zero,
               overflow: TextOverflow.ellipsis,
               style: OrchidText.body2,
             ),
           ),
-          pady(4),
           // active / inactive label
-          Text(
-            widget.active ? s.active : s.inactive,
-            style: OrchidText.caption.copyWith(
-              color: widget.active ? activeColor : inactiveColor,
+          if (!short && widget.active != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                widget.active ? s.active : s.inactive,
+                style: OrchidText.caption.copyWith(
+                  color: widget.active ? activeColor : inactiveColor,
+                ),
+              ),
             ),
-          ),
-          pady(8),
+          if (!short) pady(8),
           // balance
           AnimatedSwitcher(
             duration: Duration(milliseconds: 500),
@@ -364,8 +393,8 @@ class _AccountCardState extends State<AccountCard>
       onTap: () {
         _gradientAnim.reset();
         _gradientAnim.forward();
-        if (widget.onCheckButton != null) {
-          widget.onCheckButton();
+        if (widget.onSelected != null) {
+          widget.onSelected();
         }
       },
       child: GradientBorder(

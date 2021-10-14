@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_generate.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_import.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
@@ -116,7 +117,8 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
   }
 
   void _doExport() async {
-    var config = '// V0 circuit\n' + (await OrchidVPNConfigV0.generateConfig());
+    var config = '// Circuit\n' +
+        (await OrchidVPNConfigGenerate.generateConfig(forExport: true));
     var keys = (await UserPreferences().keys.get())
         .map((storedKey) => storedKey.private)
         .toList();
@@ -140,7 +142,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
   }
 
   void _importConfig(String config) async {
-    await OrchidVPNConfigV0.importConfig(config);
+    await OrchidVPNConfigImport.importConfig(config);
     Navigator.pop(context);
   }
 

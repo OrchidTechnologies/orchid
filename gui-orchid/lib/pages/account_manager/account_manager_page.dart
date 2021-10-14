@@ -1,8 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_v0.dart';
+import 'package:orchid/api/configuration/orchid_vpn_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -16,12 +15,14 @@ import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/pages/account_manager/account_detail_store.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:orchid/common/scan_paste_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
@@ -31,7 +32,6 @@ import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
 import 'account_card.dart';
-import 'account_detail_poller.dart';
 import 'account_view_model.dart';
 import 'account_store.dart';
 import 'export_identity_dialog.dart';
@@ -39,11 +39,13 @@ import 'export_identity_dialog.dart';
 class AccountManagerPage extends StatefulWidget {
   final bool openToImport;
   final bool openToPurchase;
+  final Account openToAccount;
 
   const AccountManagerPage({
     Key key,
     this.openToImport = false,
     this.openToPurchase = false,
+    this.openToAccount,
   }) : super(key: key);
 
   @override
@@ -53,17 +55,34 @@ class AccountManagerPage extends StatefulWidget {
 class _AccountManagerPageState extends State<AccountManagerPage> {
   var _accountStore = AccountStore();
 
-  Map<Account, AccountDetailPoller> _accountDetailMap = {};
-
-  // bool _preserveSort = false;
+  AccountDetailStore _accountDetailStore;
 
   @override
   void initState() {
     super.initState();
+    _accountDetailStore =
+        AccountDetailStore(onAccountDetailChanged: _accountDetailChanged);
     initStateAsync();
   }
 
   void initStateAsync() async {
+    // Load account info
+    _accountStore.addListener(_accountsUpdated);
+    await _accountStore.load(waitForDiscovered: false);
+
+    // Open to import, purchase, identity
+    await _doOpenOptions();
+
+    await _accountStore.load(waitForDiscovered: true);
+  }
+
+  Future<void> _doOpenOptions() async {
+    // Open to the supplied account
+    if (widget.openToAccount != null) {
+      log("XXX: open to account: ${widget.openToAccount}");
+      _accountStore.setActiveIdentityByAccount(widget.openToAccount);
+    }
+
     // Open the import dialog after the UI has rendered.
     if (widget.openToImport) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _importIdentity());
@@ -79,19 +98,22 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         }
       });
     }
-
-    // Load account info
-    _accountStore.addListener(_accountsUpdated);
-    await _accountStore.load();
   }
 
   void _accountsUpdated() async {
+    // TODO: default circuit from account if needed
+    //_defaultActiveAccountIfNeeded();
+  }
+
+  /*
+  void _defaultActiveAccountIfNeeded() async {
     if (_accountStore.activeAccount == null &&
         _accountStore.accounts.isNotEmpty) {
       log("account_manager: setting default active account: ${_accountStore.accounts.first}");
-      _accountStore.setActiveAccount(_accountStore.accounts.first);
+      await _accountStore.setActiveAccount(_accountStore.accounts.first);
     }
   }
+   */
 
   @override
   Widget build(BuildContext context) {
@@ -202,19 +224,13 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   void _importIdentity() {
     ScanOrPasteDialog.show(
       context: context,
-      onImportAccount: (ParseOrchidAccountResult result) async {
-        if (result.identityV1 != null) {
-          if (result.identityV1.isNew) {
-            await UserPreferences().addKey(result.identityV1.signer);
+      onImportAccount: (ParseOrchidIdentityResult result) async {
+        if (result != null) {
+          if (result.isNew) {
+            await UserPreferences().addKey(result.signer);
             await _accountStore.load(waitForDiscovered: false);
           }
-          _accountStore.setActiveIdentity(result.identityV1.signer);
-        } else {
-          if (result.accountV0.newKeys.isNotEmpty) {
-            await UserPreferences().addKeys(result.accountV0.newKeys);
-            await _accountStore.load(waitForDiscovered: false);
-          }
-          _accountStore.setActiveIdentity(result.accountV0.account.signer);
+          _accountStore.setActiveIdentity(result.signer);
         }
       },
     );
@@ -263,7 +279,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       return;
     }
 
-    List<String> activeKeyUids = await OrchidVPNConfigV0.getInUseKeyUids();
+    List<String> activeKeyUids = await OrchidHop.getInUseKeyUids();
 
     if (activeKeyUids.contains(identity.uid)) {
       await AppDialogs.showAppDialog(
@@ -328,15 +344,17 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                 _accountStore.activeIdentity.address.toString(),
                 key: ValueKey(_accountStore.activeIdentity.address.toString()),
                 padding: EdgeInsets.only(top: 8, bottom: 8),
-                style: OrchidText.caption
-                    .copyWith(color: OrchidColors.tappable),
+                style:
+                    OrchidText.caption.copyWith(color: OrchidColors.tappable),
                 onTap: (String text) async {
                   await TapToCopyText.copyTextToClipboard(text);
                   _showOrchidAccountAddressWarning();
                 },
               ),
             ),
-          ) else pady(16)
+          )
+        else
+          pady(16)
       ],
     );
   }
@@ -373,7 +391,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   Widget _buildAccountList() {
     var signerKey = _accountStore.activeIdentity;
-    var activeAccount = _accountStore.activeAccount;
     List<AccountViewModel> accounts = _accountStore.accounts
         // accounts may be for identity selection only, remove those
         .where((a) => a.funder != null)
@@ -382,8 +399,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           chain: Chains.chainFor(account.chainId),
           signerKey: signerKey,
           funder: account.funder,
-          active: account == activeAccount,
-          detail: _accountDetail(account));
+          // TODO:
+          // active: account == activeAccount,
+          detail: _accountDetailStore.get(account));
     }).toList();
 
     // Sort by efficiency descending
@@ -391,8 +409,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       return -((a.detail?.marketConditions?.efficiency ?? 0)
           .compareTo((b.detail?.marketConditions?.efficiency ?? 0)));
     });
-
-    log("XXX: build account list: $accounts");
 
     Widget footer() {
       return Padding(
@@ -406,7 +422,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       );
     }
 
-    var child = accounts.isEmpty
+    var accountListView = accounts.isEmpty
         ? ListView(
             children: [pady(8), footer()],
           )
@@ -422,6 +438,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               }
               var account = accounts[index];
               return Container(
+                key: Key(account.toString()),
                 alignment: Alignment.center,
                 child: _buildAccountCard(account, index),
               );
@@ -433,27 +450,28 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       displacement: 0,
       onRefresh: () async {
         // Refresh the account details
-        _accountDetailMap.forEach((key, value) {
-          value.refresh();
-        });
+        _accountDetailStore.refresh();
 
         // Look for new accounts
         return _accountStore.load(); // Return the load future
       },
-      child: child,
+      child: accountListView,
     );
   }
 
   Widget _buildAccountCard(AccountViewModel accountModel, int index) {
     return AccountCard(
-      key: Key(accountModel.identityUid),
+      key: Key(accountModel.toString()),
       accountDetail: accountModel.detail,
       active: accountModel.active,
-      onCheckButton: () {
-        if (!accountModel.active) {
-          _setActiveAccount(accountModel);
-        }
-      },
+      initiallyExpanded: widget.openToAccount != null &&
+          accountModel.detail.account == widget.openToAccount,
+      //selected: accountModel.active,
+      // onSelected: () {
+      //   if (!accountModel.active) {
+      //     _setActiveAccount(accountModel);
+      //   }
+      // },
     );
   }
 
@@ -471,11 +489,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         });
   }
 
+  /*
   void _setActiveAccount(AccountViewModel account) {
-    // _preserveSort = true;
     _accountStore.setActiveAccount(account.detail.account); // a bit convoluted
     ConfigChangeDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
   }
+   */
 
   void _addFunds() async {
     var signerKey = _accountStore.activeIdentity;
@@ -497,32 +516,13 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
-  // Return a cached or new account detail poller for the account.
-  AccountDetailPoller _accountDetail(Account account) {
-    var poller = _accountDetailMap[account];
-    if (poller == null) {
-      poller = AccountDetailPoller(account: account);
-      poller.addListener(_accountDetailChanged);
-      poller.startPolling();
-      _accountDetailMap[account] = poller;
-    }
-    return poller;
-  }
-
   void _accountDetailChanged() {
     setState(() {}); // Trigger a UI refresh
   }
 
-  void _disposeAccountDetailMap() {
-    _accountDetailMap.forEach((key, value) {
-      value.removeListener(_accountDetailChanged);
-      value.dispose();
-    });
-  }
-
   @override
   void dispose() {
-    _disposeAccountDetailMap();
+    _accountDetailStore.dispose();
     _accountStore.removeListener(_accountsUpdated);
     super.dispose();
   }

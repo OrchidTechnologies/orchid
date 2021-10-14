@@ -3,7 +3,6 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/app_text.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
