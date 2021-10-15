@@ -22,44 +22,48 @@ import 'package:orchid/util/collections.dart';
 class ManageAccountsCard extends StatefulWidget {
   final Circuit circuit;
 
+  final int initiallySelectedIndex;
+
   // When true shrinks the identicon a bit and adjusts the overall height for it.
   // (This is a small adjustment used when the screen is short.)
   final bool minHeight;
 
   final VoidCallback onManageAccountsPressed;
 
-  // Invoked once on init and when the selection is changed.
-  final Function(CircuitHop hop) onSelectHop;
+  final Function(int selectedIndex) onSelectIndex;
 
   const ManageAccountsCard({
     Key key,
     this.circuit,
+    this.initiallySelectedIndex = 0,
     this.minHeight = false,
     this.onManageAccountsPressed,
-    this.onSelectHop,
+    this.onSelectIndex,
   }) : super(key: key);
 
   @override
   _ManageAccountsCardState createState() => _ManageAccountsCardState();
 }
 
-class _ManageAccountsCardState extends State<ManageAccountsCard>
-    with TickerProviderStateMixin {
+class _ManageAccountsCardState extends State<ManageAccountsCard> {
   AccountDetailStore _accountDetailStore;
 
   // The selected hop account index
-  int _selectedIndex = 0;
+  int _selectedIndex;
 
   void _setSelectedIndex(int i) {
     setState(() {
       _selectedIndex = i;
     });
-    if (widget.onSelectHop != null) {
-      widget.onSelectHop(_selectedHop);
+    if (widget.onSelectIndex != null) {
+      widget.onSelectIndex(i);
     }
   }
 
   CircuitHop get _selectedHop {
+    if (_hopCount <= _selectedIndex) {
+      return null;
+    }
     return widget.circuit.hops[_selectedIndex];
   }
 
@@ -70,13 +74,9 @@ class _ManageAccountsCardState extends State<ManageAccountsCard>
   @override
   void initState() {
     super.initState();
+    this._selectedIndex = widget.initiallySelectedIndex;
     _accountDetailStore =
         AccountDetailStore(onAccountDetailChanged: _accountDetailChanged);
-
-    // Invoke the callback once
-    // if (widget.onSelectHop != null) {
-    //   widget.onSelectHop(_selectedHop);
-    // }
   }
 
   @override
@@ -137,6 +137,9 @@ class _ManageAccountsCardState extends State<ManageAccountsCard>
   }
 
   Widget _buildCardTop() {
+    if (_hopCount == 0) {
+      return OrchidCircularIdenticon(address: null);
+    }
     // map the hops to icons
     var icons = widget.circuit.hops
         .mapIndexed((hop, i) {
@@ -169,7 +172,7 @@ class _ManageAccountsCardState extends State<ManageAccountsCard>
         .toList();
 
     // Move selected to the front (note that the list is reversed for the stack)
-    icons.add(icons.removeAt(widget.circuit.hops.length - _selectedIndex - 1));
+    icons.add(icons.removeAt(_hopCount - _selectedIndex - 1));
 
     return Stack(children: icons);
   }
@@ -227,7 +230,7 @@ class _ManageAccountsCardState extends State<ManageAccountsCard>
           padding: const EdgeInsets.only(top: 17.0),
           child: _selectedHop != null
               ? _buildCardContentForHop(_selectedHop)
-              : Container(),
+              : _buildOrchidHopCardContent(null),
         ))));
   }
 
@@ -243,7 +246,7 @@ class _ManageAccountsCardState extends State<ManageAccountsCard>
           child: Text(s.openVPNHop).title,
         );
       case HopProtocol.WireGuard:
-      // Note: duplicated in manage accounts card
+        // Note: duplicated in manage accounts card
         return Padding(
           padding: const EdgeInsets.only(bottom: 17.0),
           child: Text(s.wireguardHop).title,
@@ -254,7 +257,8 @@ class _ManageAccountsCardState extends State<ManageAccountsCard>
   }
 
   Widget _buildOrchidHopCardContent(OrchidHop orchidHop) {
-    final _selectedAccount = _accountDetailStore.get(orchidHop.account);
+    final _selectedAccount =
+        orchidHop != null ? _accountDetailStore.get(orchidHop.account) : null;
     final signerAddress = _selectedAccount?.signerAddress;
     final text =
         signerAddress == null ? s.noAccountSelected : signerAddress.toString();

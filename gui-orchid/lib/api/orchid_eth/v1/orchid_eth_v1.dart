@@ -85,7 +85,7 @@ class OrchidEthereumV1 {
   }
 
   Future<List<Account>> discoverAccounts(
-      {chain: Chain, signer: StoredEthereumKey}) async {
+      {Chain chain, StoredEthereumKey signer}) async {
     List<OrchidCreateEvent> createEvents =
         await getCreateEvents(chain, signer.address);
     return createEvents.map((event) {
@@ -98,7 +98,7 @@ class OrchidEthereumV1 {
   }
 
   static Future<LotteryPot> getLotteryPot(
-      {chain: Chain, funder: EthereumAddress, signer: EthereumAddress}) async {
+      {Chain chain, EthereumAddress funder, EthereumAddress signer}) async {
     print("fetch pot V1 for: $funder, $signer, chain = $chain");
 
     var address = AbiEncode.address;
@@ -106,11 +106,10 @@ class OrchidEthereumV1 {
     var params = [
       {
         "to": "${await OrchidContractV1.lotteryContractAddressV1}",
-        "data":
-            "0x${OrchidContractV1.readMethodHash}"
-                "${address(EthereumAddress.zero)}"
-                "${address(funder)}"
-                "${address(signer)}"
+        "data": "0x${OrchidContractV1.readMethodHash}"
+            "${address(EthereumAddress.zero)}"
+            "${address(funder)}"
+            "${address(signer)}"
       },
       "latest"
     ];
@@ -149,7 +148,8 @@ class OrchidEthereumV1 {
       "latest"
     ];
 
-    String result = await ethCall(url: Chains.Ethereum.providerUrl, params: params);
+    String result =
+        await ethCall(url: Chains.Ethereum.providerUrl, params: params);
     if (!result.startsWith("0x")) {
       print("Error result: $result");
       throw Exception();

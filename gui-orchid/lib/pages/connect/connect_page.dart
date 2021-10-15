@@ -6,7 +6,6 @@ import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_types.dart';
@@ -18,7 +17,6 @@ import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_detail_poller.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
-import 'package:orchid/pages/account_manager/account_store.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/connect/manage_accounts_card.dart';
@@ -63,24 +61,32 @@ class _ConnectPageState extends State<ConnectPage>
   // Circuit configuration
   Circuit _circuit;
 
-  // The circuit hop count or null if no circuit
-  int get _circuitHops {
-    return _circuit?.hops?.length ?? null;
-  }
+  // Key that increments on changes to the circuit
+  int _circuitKey = 0;
 
-  // A circuit is configured
   bool get _hasCircuit {
     return _circuit != null;
   }
 
-  bool get _circuitHasHops{
-    return _hasCircuit && _circuit.hops.length > 0;
+  int get _circuitHops {
+    return _circuit?.hops?.length ?? 0;
   }
 
+  bool get _circuitHasHops{
+    return _circuitHops > 0;
+  }
+
+  // _hasCircuit here waits for the UI to load
   bool get _showWelcomePane => _hasCircuit && !_circuitHasHops;
 
-  // The hop selected on the manage accounts card or null if no circuit.
-  CircuitHop _selectedHop;
+  // The hop selected on the manage accounts card
+  int _selectedIndex = 0;
+
+  // The selected hop or null
+  CircuitHop get _selectedHop {
+    if (!_circuitHasHops) { return null; }
+    return _circuit.hops[_selectedIndex];
+  }
 
   // The account associated with the selected hop or null.
   Account get _selectedAccount {
@@ -306,13 +312,13 @@ class _ConnectPageState extends State<ConnectPage>
 
   Widget _buildManageAccountsCard() {
     return ManageAccountsCard(
+      key: Key(_circuitKey.toString()),
       circuit: _circuit,
       minHeight: isShort,
-      onSelectHop: (hop) {
+      onSelectIndex: (index) {
         setState(() {
-          log("XXX: selected hop = $hop");
-          // TODO: messy
-          _selectedHop = hop;
+          log("XXX: selected index = $index");
+          _selectedIndex = index;
           _selectedAccountChanged(_selectedAccount);
         });
       },
@@ -515,13 +521,11 @@ class _ConnectPageState extends State<ConnectPage>
     log("xxx: connect page: circuit configuration changed");
     var prefs = UserPreferences();
     _circuit = await prefs.getCircuit();
+    _selectedIndex = 0;
 
-    // TODO: invert this and drive the card selection from here!
-    // Match the account card's selection of the first hop
-    if (_selectedHop == null) {
-      _selectedHop = _circuitHasHops ? _circuit.hops.first : null;
-    }
-
+    // Update the card... need a key
+    _circuitKey += 1;
+    
     _selectedAccountChanged(_selectedAccount);
     setState(() {});
   }

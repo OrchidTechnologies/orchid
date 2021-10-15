@@ -32,8 +32,8 @@ import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
 import 'account_card.dart';
-import 'account_view_model.dart';
 import 'account_store.dart';
+import 'account_view_model.dart';
 import 'export_identity_dialog.dart';
 
 class AccountManagerPage extends StatefulWidget {
@@ -53,8 +53,10 @@ class AccountManagerPage extends StatefulWidget {
 }
 
 class _AccountManagerPageState extends State<AccountManagerPage> {
-  var _accountStore = AccountStore();
+  List<StoredEthereumKey> _identities;
+  StoredEthereumKey _selectedIdentity;
 
+  AccountStore _accountStore;
   AccountDetailStore _accountDetailStore;
 
   @override
@@ -66,21 +68,32 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void initStateAsync() async {
-    // Load account info
-    _accountStore.addListener(_accountsUpdated);
-    await _accountStore.load(waitForDiscovered: false);
+    _identities = await UserPreferences().keys.get();
+    _setSelectedIdentity(_identities.isNotEmpty ? _identities.first : null);
 
     // Open to import, purchase, identity
     await _doOpenOptions();
+  }
 
-    await _accountStore.load(waitForDiscovered: true);
+  void _setSelectedIdentity(StoredEthereumKey identity) async {
+    _selectedIdentity = identity;
+
+    // Switch account stores
+    if (_accountStore != null) {
+      _accountStore.removeListener(_accountsUpdated);
+    }
+    _accountStore = AccountStore(identity: identity.ref());
+    _accountStore.addListener(_accountsUpdated);
+    _accountStore.load(waitForDiscovered: false);
+
+    setState(() {});
   }
 
   Future<void> _doOpenOptions() async {
     // Open to the supplied account
     if (widget.openToAccount != null) {
       log("XXX: open to account: ${widget.openToAccount}");
-      _accountStore.setActiveIdentityByAccount(widget.openToAccount);
+      _setSelectedIdentity(await widget.openToAccount.signerKey);
     }
 
     // Open the import dialog after the UI has rendered.
@@ -88,21 +101,18 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _importIdentity());
     }
 
-    // Open the purchase dialog after the account info has loaded.
-    VoidCallback doAddFunds = _addFunds;
+    // Open the purchase dialog (once) after the account info has loaded.
     if (widget.openToPurchase) {
+      await _accountStore.load(waitForDiscovered: false);
       _accountStore.addListener(() async {
-        if (_accountStore.activeIdentity != null && doAddFunds != null) {
-          await doAddFunds();
-          doAddFunds = null;
-        }
+      await _addFunds();
       });
     }
   }
 
   void _accountsUpdated() async {
-    // TODO: default circuit from account if needed
-    //_defaultActiveAccountIfNeeded();
+    // update the UI
+    setState(() {});
   }
 
   /*
@@ -117,6 +127,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_accountStore == null) {
+      return Container();
+    }
     return ListenableBuilder(
         listenable: _accountStore,
         builder: (context, snapshot) {
@@ -176,12 +189,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       ),
       child: PopupMenuButton<IdentitySelectorMenuItem>(
         icon: SvgPicture.asset('assets/svg/settings_gear.svg'),
-        initialValue: _accountStore.activeIdentity != null
-            ? IdentitySelectorMenuItem(identity: _accountStore.activeIdentity)
+        initialValue: _selectedIdentity != null
+            ? IdentitySelectorMenuItem(identity: _selectedIdentity)
             : null,
         onSelected: (IdentitySelectorMenuItem item) async {
           if (item.isIdentity) {
-            _accountStore.setActiveIdentity(item.identity);
+            _setSelectedIdentity(item.identity);
           } else {
             item.action();
           }
@@ -191,7 +204,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         itemBuilder: (BuildContext context) {
           var style = OrchidText.body1;
           var items =
-              _accountStore.identities.map((StoredEthereumKey identity) {
+              _identities.map((StoredEthereumKey identity) {
             var item = IdentitySelectorMenuItem(identity: identity);
             return PopupMenuItem<IdentitySelectorMenuItem>(
               value: item,
@@ -230,19 +243,27 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             await UserPreferences().addKey(result.signer);
             await _accountStore.load(waitForDiscovered: false);
           }
-          _accountStore.setActiveIdentity(result.signer);
+          _setSelectedIdentity(result.signer);
         }
       },
     );
   }
 
   void _newIdentity() async {
-    var key = StoredEthereumKey.generate();
-    await _accountStore.addIdentity(key);
+    var identity = StoredEthereumKey.generate();
+    await UserPreferences().addKey(identity);
+    _identities = await UserPreferences().keys.get();
+    _setSelectedIdentity(identity);
+  }
+
+  void _deleteIdentity(StoredEthereumKey identity) async {
+    await UserPreferences().removeKey(identity.ref());
+    _identities = await UserPreferences().keys.get();
+    _setSelectedIdentity(_identities.isNotEmpty ? _identities.first : null);
   }
 
   void _exportIdentity() async {
-    var identity = _accountStore.activeIdentity;
+    var identity = _selectedIdentity;
     if (identity == null) {
       return;
     }
@@ -274,7 +295,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   // Delete the active identity after in-use check and user confirmation.
   void _confirmDeleteIdentity() async {
-    var identity = _accountStore.activeIdentity;
+    var identity = _selectedIdentity;
     if (identity == null) {
       return;
     }
@@ -321,28 +342,24 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
-  void _deleteIdentity(StoredEthereumKey identity) async {
-    await _accountStore.deleteIdentity(identity);
-  }
-
   Column _buildIdentityHeader() {
     return Column(
       children: [
         pady(12),
-        if (_accountStore.activeIdentity != null)
+        if (_selectedIdentity != null)
           OrchidCircularIdenticon(
-              address: _accountStore.activeIdentity.address),
+              address: _selectedIdentity.address),
         pady(24),
         Text(s.orchidIdentity, style: OrchidText.body2),
-        if (_accountStore.activeIdentity != null)
+        if (_selectedIdentity != null)
           Container(
             width: AppSize(context).widerThan(AppSize.iphone_12_pro_max)
                 ? null
                 : 238,
             child: Center(
               child: TapToCopyText(
-                _accountStore.activeIdentity.address.toString(),
-                key: ValueKey(_accountStore.activeIdentity.address.toString()),
+                _selectedIdentity.address.toString(),
+                key: ValueKey(_selectedIdentity.address.toString()),
                 padding: EdgeInsets.only(top: 8, bottom: 8),
                 style:
                     OrchidText.caption.copyWith(color: OrchidColors.tappable),
@@ -390,7 +407,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   Widget _buildAccountList() {
-    var signerKey = _accountStore.activeIdentity;
+    var signerKey = _selectedIdentity;
     List<AccountViewModel> accounts = _accountStore.accounts
         // accounts may be for identity selection only, remove those
         .where((a) => a.funder != null)
@@ -480,7 +497,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         stream: PacTransaction.shared.stream(),
         builder: (context, snapshot) {
           var tx = snapshot.data;
-          var enabled = _accountStore.activeIdentity != null && tx == null;
+          var enabled = _selectedIdentity != null && tx == null;
           return OrchidActionButton(
             enabled: enabled,
             text: s.addFunds,
@@ -489,19 +506,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         });
   }
 
-  /*
-  void _setActiveAccount(AccountViewModel account) {
-    _accountStore.setActiveAccount(account.detail.account); // a bit convoluted
-    ConfigChangeDialogs.showConfigurationChangeSuccess(context, warnOnly: true);
-  }
-   */
-
-  void _addFunds() async {
-    var signerKey = _accountStore.activeIdentity;
+  Future<void> _addFunds() async {
+    var signerKey = _selectedIdentity;
     if (signerKey == null) {
       throw Exception("iap: no signer!");
     }
-    Navigator.push(
+    return Navigator.push(
       context,
       MaterialPageRoute(
           fullscreenDialog: true,
@@ -522,8 +532,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   @override
   void dispose() {
-    _accountDetailStore.dispose();
     _accountStore.removeListener(_accountsUpdated);
+    _accountDetailStore.dispose();
     super.dispose();
   }
 
