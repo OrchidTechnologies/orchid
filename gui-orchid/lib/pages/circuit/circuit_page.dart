@@ -54,24 +54,6 @@ class CircuitPageState extends State<CircuitPage>
   List<StreamSubscription> _rxSubs = [];
   List<UniqueHop> _hops;
 
-  // // TODO: REMOVE!
-  // Master timeline for connect animation
-  AnimationController _masterConnectAnimController;
-
-  // // TODO: REMOVE!
-  // The duck into hole animation
-  AnimationController _bunnyDuckAnimController;
-
-  // // TODO: REMOVE!
-  // Animations driven by the master timelines
-  Animation<double> _bunnyDuckAnimation;
-
-  // TODO: REMOVE!
-  // Anim params
-  int _connectAnimTime = 1200;
-  DateTime _lastInteractionTime;
-  Timer _bunnyDuckTimer;
-
   bool _dialogInProgress = false; // ?
 
   AccountDetailStore _accountDetailStore;
@@ -81,16 +63,15 @@ class CircuitPageState extends State<CircuitPage>
     super.initState();
     _accountDetailStore =
         AccountDetailStore(onAccountDetailChanged: _accountDetailChanged);
-    // Test Localization
-    //S.load(Locale('zh', 'CN'));
     initStateAsync();
-    initAnimations();
   }
 
   void initStateAsync() async {
     OrchidAPI().circuitConfigurationChanged.listen((_) {
       _updateCircuit();
     });
+    // Update the UI on connection status changes
+    _rxSubs.add(OrchidAPI().vpnRoutingStatus.listen(_connectionStateChanged));
   }
 
   void _updateCircuit() async {
@@ -110,22 +91,6 @@ class CircuitPageState extends State<CircuitPage>
     }
   }
 
-  void initAnimations() {
-    _masterConnectAnimController = AnimationController(
-        duration: Duration(milliseconds: _connectAnimTime), vsync: this);
-
-    _bunnyDuckAnimController =
-        AnimationController(duration: Duration(milliseconds: 300), vsync: this);
-
-    _bunnyDuckAnimation = CurvedAnimation(
-        parent: _bunnyDuckAnimController, curve: Curves.easeOut);
-
-    _bunnyDuckTimer = Timer.periodic(Duration(seconds: 1), _checkBunny);
-
-    // Update the UI on connection status changes
-    _rxSubs.add(OrchidAPI().vpnRoutingStatus.listen(_connectionStateChanged));
-  }
-
   @override
   Widget build(BuildContext context) {
     return TitledPage(
@@ -136,18 +101,7 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildBody() {
-    return NotificationListener(
-      onNotification: (_) {
-        _userInteraction();
-        return false;
-      },
-      child: GestureDetector(
-        onTapDown: (_) {
-          _userInteraction();
-        },
-        child: _buildHopList(),
-      ),
-    );
+    return _buildHopList();
   }
 
   Widget _buildHopList() {
@@ -505,24 +459,6 @@ class CircuitPageState extends State<CircuitPage>
   /// Called upon a change to Orchid connection state
   void _connectionStateChanged(OrchidVPNRoutingState state,
       {bool animated = true}) {
-    // We can't determine which animations may need to be run until hops are loaded.
-    // Initialization will call us at least once after that.
-    if (_hops == null) {
-      return;
-    }
-
-    // Run animations based on which direction we are going.
-    bool shouldShowConnected = _connected();
-    bool showingConnected =
-        _masterConnectAnimController.status == AnimationStatus.completed ||
-            _masterConnectAnimController.status == AnimationStatus.forward;
-
-    if (shouldShowConnected && !showingConnected && _hasHops()) {
-      _masterConnectAnimController.forward(from: animated ? 0.0 : 1.0);
-    }
-    if (!shouldShowConnected && showingConnected) {
-      _masterConnectAnimController.reverse(from: animated ? 1.0 : 0.0);
-    }
     if (mounted) {
       setState(() {});
     }
@@ -534,21 +470,6 @@ class CircuitPageState extends State<CircuitPage>
 
   bool _hasHops() {
     return _hops != null && _hops.length > 0;
-  }
-
-  void _userInteraction() {
-    if (_bunnyDuckAnimation.value == 0) {
-      _bunnyDuckAnimController.forward();
-    }
-    _lastInteractionTime = DateTime.now();
-  }
-
-  void _checkBunny(Timer timer) {
-    var bunnyHideTime = Duration(seconds: 3);
-    if (_bunnyDuckAnimation.value == 1.0 &&
-        DateTime.now().difference(_lastInteractionTime) > bunnyHideTime) {
-      _bunnyDuckAnimController.reverse();
-    }
   }
 
   void _accountDetailChanged() {
@@ -567,9 +488,6 @@ class CircuitPageState extends State<CircuitPage>
     _rxSubs.forEach((sub) {
       sub.cancel();
     });
-    _bunnyDuckTimer.cancel();
-    _masterConnectAnimController.dispose();
-    _bunnyDuckAnimController.dispose();
     super.dispose();
   }
 }
