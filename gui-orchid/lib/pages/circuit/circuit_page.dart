@@ -18,6 +18,7 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_card.dart';
 import 'package:orchid/pages/account_manager/account_detail_store.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
+import 'package:orchid/util/on_off.dart';
 import 'add_hop_page.dart';
 import 'hop_editor.dart';
 import 'hop_tile.dart';
@@ -95,7 +96,7 @@ class CircuitPageState extends State<CircuitPage>
   Widget _buildBody() {
     return Column(
       children: [
-        _buildHopList(),
+        Flexible(child: _buildHopList()),
         Padding(
           padding: const EdgeInsets.only(bottom: 40.0),
           child: _buildFooter(),
@@ -105,11 +106,12 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildHopList() {
+    // Wrap the children for the reorderable list view
     var children = (_hops ?? []).mapIndexed((uniqueHop, i) {
       return ReorderableDelayedDragStartListener(
         key: Key(uniqueHop.key.toString()),
         index: i,
-        child: Center(child: _buildDismissableHopTile(uniqueHop)),
+        child: Center(child: _buildDismissableHopTile(uniqueHop, i)),
       );
     }).toList();
 
@@ -118,6 +120,7 @@ class CircuitPageState extends State<CircuitPage>
       child: ReorderableListView(
           // Sizes to the min height in the body column
           shrinkWrap: true,
+          physics: ClampingScrollPhysics(),
           // Turn off drag handles and specify long press to reorder using the
           // drag start listener below
           buildDefaultDragHandles: false,
@@ -125,7 +128,7 @@ class CircuitPageState extends State<CircuitPage>
           header: Column(
             children: <Widget>[
               _buildStatusTile(),
-              pady(40),
+              pady(64),
             ],
           ),
           children: children,
@@ -136,6 +139,7 @@ class CircuitPageState extends State<CircuitPage>
   Widget _buildFooter() {
     return Column(
       children: <Widget>[
+        pady(8),
         _buildNewHopTile(),
         if (!_hasHops()) pady(16),
         _buildDeletedHopsLink(),
@@ -223,18 +227,7 @@ class CircuitPageState extends State<CircuitPage>
     );
   }
 
-  Widget _buildDismissableHopTile(UniqueHop uniqueHop) {
-    /*
-    return Padding(
-      key: Key(uniqueHop.key.toString()),
-      padding: const EdgeInsets.only(bottom: 28.0),
-      child: Container(
-          key: Key(uniqueHop.key.toString()),
-          width: 350,
-          height: 75,
-          color: Colors.green),
-    );
-     */
+  Widget _buildDismissableHopTile(UniqueHop uniqueHop, int index) {
     return Padding(
       key: Key(uniqueHop.key.toString()),
       padding: const EdgeInsets.only(bottom: 28.0),
@@ -245,7 +238,7 @@ class CircuitPageState extends State<CircuitPage>
         onDismissed: (direction) {
           _deleteHop(uniqueHop);
         },
-        child: _buildTappableHopTile(uniqueHop),
+        child: _buildTappableHopTile(uniqueHop, index),
       ),
     );
   }
@@ -265,15 +258,39 @@ class CircuitPageState extends State<CircuitPage>
     );
   }
 
-  Widget _buildTappableHopTile(UniqueHop uniqueHop) {
+  Widget _buildTappableHopTile(UniqueHop uniqueHop, int index) {
     return GestureDetector(
       onTap: () {
         _viewHop(uniqueHop);
       },
       // Don't allow the cards to expand, etc.
       child: AbsorbPointer(
-        child: _buildHopTile(uniqueHop),
+        child: _buildAnnotatedHopTile(uniqueHop, index),
       ),
+    );
+  }
+
+  /// Add the e.g. entry, exit descriptions
+  Widget _buildAnnotatedHopTile(UniqueHop uniqueHop, int index) {
+    int count = _hops.length;
+    var title = "Hop";
+    if (count > 1 && index == 0) {
+      title = "Entry Hop";
+    } else
+    if (count > 1 && index == _hops.length - 1) {
+      title = "Exit Hop";
+    }
+    return Column(
+      children: [
+        Row(
+          children: [
+            padx(24),
+            Text(title).body1,
+          ],
+        ),
+        pady(8),
+        _buildHopTile(uniqueHop),
+      ],
     );
   }
 

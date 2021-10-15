@@ -107,7 +107,7 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
 
   Padding _buildHopSelectorButtons() {
     return Padding(
-      padding: const EdgeInsets.only(top: 28.0, right: 5),
+      padding: const EdgeInsets.only(top: 28.0),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
