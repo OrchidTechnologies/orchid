@@ -91,7 +91,7 @@ class _AccountCardState extends State<AccountCard>
     var height = short ? (expanded ? 360.0 : 74.0) : (expanded ? 360.0 : 116.0);
     var width = 334.0;
     var checkExtraHeight = _hasSelection ? 12.0 : 0.0;
-    var checkExtraWidth = 16.0;
+    var checkExtraWidth = _hasSelection ? 16.0 : 0.0;
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -111,7 +111,7 @@ class _AccountCardState extends State<AccountCard>
                   alignment: Alignment.topLeft,
                   child: Padding(
                     padding:
-                        EdgeInsets.only(right: 16, bottom: checkExtraHeight),
+                        EdgeInsets.only(right: checkExtraWidth, bottom: checkExtraHeight),
                     child: AnimatedBuilder(
                         animation: _gradientAnim,
                         builder: (context, snapshot) {

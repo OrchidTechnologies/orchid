@@ -470,7 +470,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         _accountDetailStore.refresh();
 
         // Look for new accounts
-        return _accountStore.load(); // Return the load future
+        return _accountStore.refresh(); // Return the load future
       },
       child: accountListView,
     );

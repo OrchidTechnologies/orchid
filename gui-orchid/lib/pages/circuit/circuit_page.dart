@@ -1,20 +1,14 @@
 import 'dart:async';
 import 'package:dotted_border/dotted_border.dart';
-import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/app_sizes.dart';
-import 'package:orchid/common/app_reorderable_list.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
@@ -24,17 +18,15 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_card.dart';
 import 'package:orchid/pages/account_manager/account_detail_store.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
-
-import '../../common/app_gradients.dart';
-import '../../common/app_text.dart';
 import 'add_hop_page.dart';
 import 'hop_editor.dart';
 import 'hop_tile.dart';
 import 'model/circuit.dart';
 import 'model/circuit_hop.dart';
 import 'model/orchid_hop.dart';
+import 'package:orchid/util/collections.dart';
 
-// The V0 multi-hop config page.
+/// The multi-hop circuit builder page.
 class CircuitPage extends StatefulWidget {
   // Note: This performs a behavior like the iOSContacts App create flow for the
   // Note: add hop action, revealing the already pushed hop editor upon completing
@@ -101,29 +93,54 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildBody() {
-    return _buildHopList();
+    return Column(
+      children: [
+        _buildHopList(),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 40.0),
+          child: _buildFooter(),
+        ),
+      ],
+    );
   }
 
   Widget _buildHopList() {
-    // Note: this view needs to be full screen vertical in order to scroll off-edge properly.
-    return AppReorderableListView(
-        header: Column(
-          children: <Widget>[
-            _buildStatusTile(),
-            pady(40),
-          ],
-        ),
-        children: (_hops ?? []).map((uniqueHop) {
-          return _buildDismissableHopTile(uniqueHop);
-        }).toList(),
-        footer: Column(
-          children: <Widget>[
-            _buildNewHopTile(),
-            if (!_hasHops()) pady(16),
-            _buildDeletedHopsLink(),
-          ],
-        ),
-        onReorder: _onReorder);
+    var children = (_hops ?? []).mapIndexed((uniqueHop, i) {
+      return ReorderableDelayedDragStartListener(
+        key: Key(uniqueHop.key.toString()),
+        index: i,
+        child: Center(child: _buildDismissableHopTile(uniqueHop)),
+      );
+    }).toList();
+
+    return Theme(
+      data: ThemeData(canvasColor: Colors.transparent),
+      child: ReorderableListView(
+          // Sizes to the min height in the body column
+          shrinkWrap: true,
+          // Turn off drag handles and specify long press to reorder using the
+          // drag start listener below
+          buildDefaultDragHandles: false,
+          padding: EdgeInsets.symmetric(horizontal: 32),
+          header: Column(
+            children: <Widget>[
+              _buildStatusTile(),
+              pady(40),
+            ],
+          ),
+          children: children,
+          onReorder: _onReorder),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Column(
+      children: <Widget>[
+        _buildNewHopTile(),
+        if (!_hasHops()) pady(16),
+        _buildDeletedHopsLink(),
+      ],
+    );
   }
 
   Widget _buildNewHopTile() {
@@ -207,6 +224,17 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildDismissableHopTile(UniqueHop uniqueHop) {
+    /*
+    return Padding(
+      key: Key(uniqueHop.key.toString()),
+      padding: const EdgeInsets.only(bottom: 28.0),
+      child: Container(
+          key: Key(uniqueHop.key.toString()),
+          width: 350,
+          height: 75,
+          color: Colors.green),
+    );
+     */
     return Padding(
       key: Key(uniqueHop.key.toString()),
       padding: const EdgeInsets.only(bottom: 28.0),
@@ -438,9 +466,6 @@ class CircuitPageState extends State<CircuitPage>
   /// Begin - VPN Connection Status Logic
   ///
 
-  // Note: By design the switch on this page does not track or respond to the
-  // Note: connection state after initialization.  See `monitoring_page.dart`
-  // Note: for a version of the switch that does attempt to track the connection.
   bool _connected() {
     var state = OrchidAPI().vpnRoutingStatus.value;
     switch (state) {
@@ -550,14 +575,15 @@ class CircuitUtils {
     saveCircuit(circuit);
   }
 
-  static void saveCircuit(Circuit circuit) async {
+  /// Save the circuit and update published config and configuration listeners
+  static Future<void> saveCircuit(Circuit circuit) async {
     try {
       log("XXX: Saving circuit: ${circuit.hops.map((e) => e.toJson())}");
       UserPreferences().setCircuit(circuit);
     } catch (err, stack) {
       log("Error saving circuit: $err, $stack");
     }
-    OrchidAPI().updateConfiguration();
+    await OrchidAPI().updateConfiguration();
     OrchidAPI().circuitConfigurationChanged.add(null);
   }
 }

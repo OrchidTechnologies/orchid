@@ -17,6 +17,7 @@ import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_detail_poller.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
+import 'package:orchid/pages/circuit/circuit_page.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/connect/manage_accounts_card.dart';
@@ -469,31 +470,13 @@ class _ConnectPageState extends State<ConnectPage>
         // Create a one hop circuit from this account
         var orchidHop = OrchidHop.fromAccount(activeAccount);
         var circuit = Circuit([orchidHop]);
-        await UserPreferences().setCircuit(circuit);
-        UserPreferences().activeAccounts.set([]); // destructive
-        OrchidAPI().circuitConfigurationChanged.add(null);
+        CircuitUtils.saveCircuit(circuit);
+
+        // Clear the legacy active accounts (one time migration)
+        UserPreferences().activeAccounts.set([]);
       }
     }
   }
-
-  /*
-  // If this is an existing user with a 1-hop config migrate it to
-  // the active account in V1.
-  Future<void> _migrate1HopToActiveAccount() async {
-    var circuit = await UserPreferences().getCircuit();
-    if (circuit.hops.length == 1 && circuit.hops[0] is OrchidHop) {
-      log("first launch: User has a 1-hop Orchid config, migrating.");
-      var hop = circuit.hops[0] as OrchidHop;
-      var account = Account(
-          identityUid: hop.keyRef.keyUid,
-          version: 0,
-          chainId: Chains.Ethereum.chainId,
-          funder: hop.funder);
-      // Store the active account and publish the new config
-      AccountStore().setActiveAccount(account);
-    }
-  }
-   */
 
   Future<void> _createFirstIdentity() async {
     log("first launch: Do first launch activities.");

@@ -58,6 +58,10 @@ class AccountStore extends ChangeNotifier {
     return this;
   }
 
+  Future<AccountStore> refresh() async {
+    return load(waitForDiscovered: true);
+  }
+
   // Load the locally persisted and cached account information.
   // This method can be awaited without potential long delays for network activity.
   Future<AccountStore> _loadCached() async {

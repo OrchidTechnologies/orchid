@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/pages/circuit/circuit_page.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
@@ -103,9 +104,8 @@ class OrchidVPNConfigImport {
     }
 
     // Save the imported circuit.
-    await UserPreferences().setCircuit(parsedCircuit.circuit);
+    await CircuitUtils.saveCircuit(parsedCircuit.circuit);
     print("Import saved ${parsedCircuit.circuit.hops.length} hop circuit.");
-    OrchidAPI().circuitConfigurationChanged.add(null);
     return true;
   }
 
