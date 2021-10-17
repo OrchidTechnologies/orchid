@@ -27,7 +27,6 @@
 #include <flutter/flutter_view_controller.h>
 
 #include "flutter_window.h"
-#include "run_loop.h"
 #include "utils.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE hPrevInstance, _In_ wchar_t *lpCmdLine, _In_ int nShowCmd) {
@@ -40,17 +39,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE hPrevInstance,
     // plugins.
     ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
-    RunLoop run_loop;
-
     flutter::DartProject project(L"data");
-    FlutterWindow window(&run_loop, project);
+    project.set_dart_entrypoint_arguments(GetCommandLineArguments());
+
+    FlutterWindow window(project);
     Win32Window::Point origin(10, 10);
     Win32Window::Size size(360, 640);
     if (!window.CreateAndShow(L"orchid", origin, size))
         return EXIT_FAILURE;
     window.SetQuitOnClose(true);
 
-    run_loop.Run();
+    ::MSG msg;
+    while (::GetMessage(&msg, nullptr, 0, 0) != 0) {
+        ::TranslateMessage(&msg);
+        ::DispatchMessage(&msg);
+    }
 
     ::CoUninitialize();
     return EXIT_SUCCESS;

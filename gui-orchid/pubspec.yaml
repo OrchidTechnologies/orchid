@@ -45,7 +45,7 @@ dependencies:
   qr_flutter: 4.0.0
   rxdart: 0.25.0
   shared_preferences: 2.0.5
-  styled_text: 3.0.2
+  styled_text: 3.0.4
   sqflite: 2.0.0+3
   url_launcher: 6.0.3
   uuid: 2.2.2 # XXX: web3dart

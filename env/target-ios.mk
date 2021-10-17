@@ -31,7 +31,7 @@ more := -miphoneos-version-min=11.0
 include $(pwd)/target-apl.mk
 
 support := iPhoneOS
-xcframework := ios-armv7_arm64
+xcframework := ios-arm64_armv7
 
 contents := 
 resources := 

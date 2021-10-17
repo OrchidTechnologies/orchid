@@ -56,7 +56,7 @@ cflags += -I$(pwd/gui)/$(assemble)/flutter/ephemeral{/cpp_client_wrapper/include
 cflags += $(patsubst %,-I%,$(wildcard $(pwd/gui)/$(assemble)/flutter/ephemeral/.plugin_symlinks/*/$(assemble)/include))
 cflags += -DFLUTTER_PLUGIN_IMPL
 
-template := $(pwd/flutter)/packages/flutter_tools/templates/app/$(assemble).tmpl
+template := $(pwd/flutter)/packages/flutter_tools/templates/app_shared/$(assemble).tmpl
 
 $(output)/package/data/icudtl.dat: $(pwd/flutter)/bin/cache/artifacts/engine/$(platform)/icudtl.dat
 	@mkdir -p $(dir $@)
