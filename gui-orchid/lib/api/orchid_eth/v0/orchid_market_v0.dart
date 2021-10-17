@@ -7,7 +7,6 @@ import 'package:orchid/util/units.dart';
 import '../../pricing/orchid_pricing_v0.dart';
 import '../token_type.dart';
 import 'orchid_contract_v0.dart';
-import 'orchid_eth_v0.dart';
 
 class MarketConditions {
   final Token maxFaceValue;

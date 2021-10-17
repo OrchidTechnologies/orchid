@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -9,7 +10,6 @@ import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/side_drawer.dart';
-import 'package:orchid/util/on_off.dart';
 import 'connect/connect_page.dart';
 
 // Provide the MaterialApp wrapper and localization context.
@@ -36,6 +36,7 @@ class OrchidApp extends StatelessWidget {
       home: OrchidAppNoTabs(),
       debugShowCheckedModeBanner: false,
       routes: AppRoutes.routes,
+      scrollBehavior: DragScrollBehavior(),
     );
   }
 }
@@ -48,7 +49,8 @@ class OrchidAppNoTabs extends StatefulWidget {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 450, maxHeight: AppSize.iphone_12_pro_max.height),
+          constraints: BoxConstraints(
+              maxWidth: 450, maxHeight: AppSize.iphone_12_pro_max.height),
           child: child),
     );
   }
@@ -105,5 +107,14 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   Widget _body() {
     return OrchidAppNoTabs.constrainMaxSize(ConnectPage());
   }
+}
 
+// The default scroll behavior on desktop (with a mouse) does not support dragging.
+class DragScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+      };
 }
