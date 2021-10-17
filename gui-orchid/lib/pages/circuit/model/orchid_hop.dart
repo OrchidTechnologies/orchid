@@ -121,17 +121,6 @@ class OrchidHop extends CircuitHop {
     return activeKeyUids;
   }
 
-  // TODO: Remove in favor of "show account in account manager"
-  // ...
-  // TODO: migrate this to use the orchid_vpn_config code
-  // TODO: Remove or update for V1 accounts (rendering the correct protocol, chainid, etc.
-  @deprecated
-  Future<String> accountConfigString() async {
-    var funder = this.funder.toString();
-    var secret = (await this.keyRef.get()).private.toRadixString(16);
-    return 'account={ protocol: "orchid", funder: "$funder", secret: "$secret" }';
-  }
-
   @override
   String toString() {
     return 'OrchidHop{curator: $curator, keyRef: $keyRef, funder: $funder, version: $version, chainId: $chainId, resolvedSignerAddress: $resolvedSignerAddress}';

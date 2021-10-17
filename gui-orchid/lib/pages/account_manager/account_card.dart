@@ -117,7 +117,7 @@ class _AccountCardState extends State<AccountCard>
                         builder: (context, snapshot) {
                           return OrchidPanel(
                               key: Key(widget.selected?.toString() ?? ''),
-                              highlight: widget.selected ?? false,
+                              highlight: widget.active ?? false,
                               highlightAnimation: _gradientAnim.value,
                               child: _buildCardContent(context));
                         }),

@@ -174,7 +174,10 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
     // Move selected to the front (note that the list is reversed for the stack)
     icons.add(icons.removeAt(_hopCount - _selectedIndex - 1));
 
-    return Stack(children: icons);
+    return Container(
+      width: 300,
+      child: FittedBox(fit: BoxFit.scaleDown, child: Stack(children: icons)),
+    );
   }
 
   Widget _buildTappableIconForHop(

@@ -39,15 +39,33 @@ class UserPreferences {
     return await shared.setString(key.toString(), value);
   }
 
+  ///
+  /// Begin: Circuit
+  ///
+
+  ObservablePreference<Circuit> circuit = ObservablePreference(
+      key: UserPreferenceKey.Circuit,
+      loadValue: (key) async {
+        return _getCircuit();
+      },
+      storeValue: (key, circuit) {
+        return _setCircuit(circuit);
+      });
+
+  @deprecated
+  Future<Circuit> getCircuit() async {
+    return _getCircuit();
+  }
+
   // Set the circuit / hops configuration
-  Future<bool> setCircuit(Circuit circuit) async {
+  static Future<bool> _setCircuit(Circuit circuit) async {
     String value = jsonEncode(circuit);
     return writeStringForKey(UserPreferenceKey.Circuit, value);
   }
 
   // Get the circuit / hops configuration
   // This default to an empty [] circuit if uninitialized.
-  Future<Circuit> getCircuit() async {
+  static Future<Circuit> _getCircuit() async {
     String value = (await SharedPreferences.getInstance())
         .getString(UserPreferenceKey.Circuit.toString());
     if (value == null) {
@@ -55,6 +73,10 @@ class UserPreferences {
     }
     return Circuit.fromJson(jsonDecode(value));
   }
+
+  ///
+  /// End: Circuit
+  ///
 
   // Add a single hop to the recently deleted list
   void addRecentlyDeletedHop(CircuitHop hop) async {

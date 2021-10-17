@@ -6,10 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
-import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/api/pricing/orchid_pricing_v0.dart';
@@ -30,7 +28,6 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/util/units.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_colors.dart';
 import '../../common/app_sizes.dart';
@@ -303,7 +300,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      _buildShareAccountButton(),
+                      _buildShowAccountButton(),
                     ],
                   ),
                 ),
@@ -853,46 +850,18 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     }
   }
 
-  Widget _buildShareAccountButton() {
+  Widget _buildShowAccountButton() {
     return TitleIconButton(
-        text: s.shareOrchidAccount,
+        text: "Show in Account Manager",
         spacing: 24,
         trailing: Image.asset('assets/images/scan.png', color: Colors.white),
         textColor: Colors.white,
         backgroundColor: Colors.deepPurple,
-        onPressed: _exportAccount);
-  }
-
-  void _exportAccount() async {
-    var config = await _hop?.accountConfigString();
-    var title = S.of(context).myOrchidAccount + ':';
-    showExportAccountDialog(context: context, title: title, config: config);
-  }
-
-  static Future<void> showExportAccountDialog({
-    BuildContext context,
-    String title,
-    String config,
-  }) async {
-    return AppDialogs.showAppDialog(
-        context: context,
-        title: title,
-        body: Container(
-          width: 250,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: QrImage(
-                  data: config,
-                  version: QrVersions.auto,
-                  size: 250.0,
-                ),
-              ),
-              CopyTextButton(copyText: config)
-            ],
-          ),
-        ));
+        onPressed: () {
+          if (_account != null) {
+            AccountManagerPage.showAccount(context, _account);
+          }
+        });
   }
 
   S get s {

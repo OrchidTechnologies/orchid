@@ -597,7 +597,7 @@ class CircuitUtils {
   static Future<void> saveCircuit(Circuit circuit) async {
     try {
       log("XXX: Saving circuit: ${circuit.hops.map((e) => e.toJson())}");
-      UserPreferences().setCircuit(circuit);
+      UserPreferences().circuit.set(circuit);
     } catch (err, stack) {
       log("Error saving circuit: $err, $stack");
     }

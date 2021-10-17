@@ -22,6 +22,8 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/pages/circuit/model/circuit.dart';
+import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
@@ -47,6 +49,13 @@ class AccountManagerPage extends StatefulWidget {
     this.openToPurchase = false,
     this.openToAccount,
   }) : super(key: key);
+
+  static Future<void> showAccount(BuildContext context, Account account) {
+    return Navigator.push(context,
+        MaterialPageRoute(builder: (BuildContext context) {
+      return AccountManagerPage(openToAccount: account);
+    }));
+  }
 
   @override
   _AccountManagerPageState createState() => _AccountManagerPageState();
@@ -105,7 +114,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     if (widget.openToPurchase) {
       await _accountStore.load(waitForDiscovered: false);
       _accountStore.addListener(() async {
-      await _addFunds();
+        await _addFunds();
       });
     }
   }
@@ -114,16 +123,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     // update the UI
     setState(() {});
   }
-
-  /*
-  void _defaultActiveAccountIfNeeded() async {
-    if (_accountStore.activeAccount == null &&
-        _accountStore.accounts.isNotEmpty) {
-      log("account_manager: setting default active account: ${_accountStore.accounts.first}");
-      await _accountStore.setActiveAccount(_accountStore.accounts.first);
-    }
-  }
-   */
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +157,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                         ),
                         pady(8),
                         Divider(height: 1),
-                        Expanded(child: _buildAccountList()),
+                        Expanded(child: _buildAccountListAnnotatedActive()),
                       ],
                     ),
                   ),
@@ -203,8 +202,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         },
         itemBuilder: (BuildContext context) {
           var style = OrchidText.body1;
-          var items =
-              _identities.map((StoredEthereumKey identity) {
+          var items = _identities.map((StoredEthereumKey identity) {
             var item = IdentitySelectorMenuItem(identity: identity);
             return PopupMenuItem<IdentitySelectorMenuItem>(
               value: item,
@@ -347,8 +345,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       children: [
         pady(12),
         if (_selectedIdentity != null)
-          OrchidCircularIdenticon(
-              address: _selectedIdentity.address),
+          OrchidCircularIdenticon(address: _selectedIdentity.address),
         pady(24),
         Text(s.orchidIdentity, style: OrchidText.body2),
         if (_selectedIdentity != null)
@@ -406,7 +403,20 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
-  Widget _buildAccountList() {
+  Widget _buildAccountListAnnotatedActive() {
+    return StreamBuilder<Circuit>(
+        stream: UserPreferences().circuit.stream(),
+        builder: (context, snapshot) {
+          var circuit = snapshot.data;
+          Set<Account> activeAccounts = (circuit?.hops ?? [])
+              .whereType<OrchidHop>()
+              .map((hop) => hop.account)
+              .toSet();
+          return _buildAccountList(activeAccounts);
+        });
+  }
+
+  Widget _buildAccountList(Set<Account> activeAccounts) {
     var signerKey = _selectedIdentity;
     List<AccountViewModel> accounts = _accountStore.accounts
         // accounts may be for identity selection only, remove those
@@ -416,8 +426,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           chain: Chains.chainFor(account.chainId),
           signerKey: signerKey,
           funder: account.funder,
-          // TODO:
-          // active: account == activeAccount,
+          active: activeAccounts.contains(account),
           detail: _accountDetailStore.get(account));
     }).toList();
 
@@ -483,12 +492,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       active: accountModel.active,
       initiallyExpanded: widget.openToAccount != null &&
           accountModel.detail.account == widget.openToAccount,
-      //selected: accountModel.active,
-      // onSelected: () {
-      //   if (!accountModel.active) {
-      //     _setActiveAccount(accountModel);
-      //   }
-      // },
     );
   }
 

@@ -325,10 +325,7 @@ class _ConnectPageState extends State<ConnectPage>
       },
       onManageAccountsPressed: () async {
         log("XXX: manage accounts pressed, selectedAccount = $_selectedAccount");
-        Navigator.push(context,
-            MaterialPageRoute(builder: (BuildContext context) {
-          return AccountManagerPage(openToAccount: _selectedAccount);
-        }));
+        await AccountManagerPage.showAccount(context, _selectedAccount);
         _updateStats(null);
       },
     );
