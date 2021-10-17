@@ -42,7 +42,7 @@ android {
     }
 
     signingConfigs {
-        release {
+        orchid {
             keyAlias orcAlias
             keyPassword orcPassword
             storeFile file(orcStore)
@@ -51,8 +51,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.orchid
+        }
+
         release {
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.orchid
         }
     }
 
@@ -105,6 +109,10 @@ plugins.plugins.android.each { dependency ->
         }
         plugin.dependencies {
             compileOnly flutter
+
+            // https://github.com/flutter/flutter/issues/56686
+            // WakelockPlugin.kt: Unresolved reference: NonNull
+            implementation "androidx.annotation:annotation:1.0.0"
         }
     }
 }
