@@ -74,7 +74,7 @@ class _SideDrawerState extends State<SideDrawer> {
             padding: EdgeInsets.zero,
             children: <Widget>[
               SideDrawerTile(
-                  title: S.of(context).trafficMonitor,
+                  title: "Traffic Analysis",
                   svgName: 'assets/svg/traffic.svg',
                   showDetail: true,
                   hoffset: 4.0,
@@ -82,7 +82,7 @@ class _SideDrawerState extends State<SideDrawer> {
                     Navigator.pushNamed(context, AppRoutes.traffic);
                   }),
               SideDrawerTile(
-                  title: s.accounts,
+                  title: "Account Manager",
                   svgName: 'assets/svg/payments.svg',
                   showDetail: true,
                   hoffset: 4.0,
@@ -90,7 +90,7 @@ class _SideDrawerState extends State<SideDrawer> {
                     AppRoutes.pushAccountManager(context);
                   }),
               SideDrawerTile(
-                  title: s.circuit,
+                  title: "Circuit Builder",
                   svgName: 'assets/svg/hops_icon.svg',
                   showDetail: true,
                   hoffset: 2.5,

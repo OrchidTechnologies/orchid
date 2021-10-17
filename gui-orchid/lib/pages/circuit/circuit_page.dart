@@ -96,6 +96,7 @@ class CircuitPageState extends State<CircuitPage>
   Widget _buildBody() {
     return Column(
       children: [
+        // Flexible is needed for scrolling and shrink behavior
         Flexible(child: _buildHopList()),
         Padding(
           padding: const EdgeInsets.only(bottom: 40.0),

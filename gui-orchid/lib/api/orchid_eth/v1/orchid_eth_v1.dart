@@ -21,8 +21,9 @@ class OrchidEthereumV1 {
     return _shared;
   }
 
-  DateTime _lastGasPriceTime;
-  Token _lastGasPrice;
+  // TODO: This must cache per-chain
+  // DateTime _lastGasPriceTime;
+  // Token _lastGasPrice;
 
   Future<Token> getGasPrice(Chain chain) async {
     TokenType tokenType = chain.nativeCurrency;
@@ -34,12 +35,14 @@ class OrchidEthereumV1 {
       return tokenType.fromDouble(overrideValue);
     }
 
+    /*
     // Cache for a period of time
     if (_lastGasPrice != null &&
         DateTime.now().difference(_lastGasPriceTime) < Duration(minutes: 5)) {
       print("returning cached gas price");
       return _lastGasPrice;
     }
+     */
 
     print("fetching gas price");
     String result =
@@ -47,9 +50,12 @@ class OrchidEthereumV1 {
     if (result.startsWith('0x')) {
       result = result.substring(2);
     }
-    _lastGasPrice = tokenType.fromInt(BigInt.parse(result, radix: 16));
-    _lastGasPriceTime = DateTime.now();
-    return _lastGasPrice;
+
+    // _lastGasPrice = tokenType.fromInt(BigInt.parse(result, radix: 16));
+    // _lastGasPriceTime = DateTime.now();
+    // return _lastGasPrice;
+
+    return tokenType.fromInt(BigInt.parse(result, radix: 16));
   }
 
   /*

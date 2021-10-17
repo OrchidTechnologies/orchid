@@ -6,11 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/orchid_eth.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
-import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/api/pricing/orchid_pricing_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -40,7 +41,6 @@ import 'hop_editor.dart';
 import 'key_selection.dart';
 import 'model/circuit_hop.dart';
 import 'model/orchid_hop.dart';
-import 'package:intl/intl.dart';
 
 /// Create / edit / view an Orchid Hop
 class OrchidHopPage extends HopEditor<OrchidHop> {
@@ -87,22 +87,21 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   void initStateAsync() async {
     // If the hop is empty initialize it to defaults now.
-    if (_hop() == null) {
-      widget.editableHop.update(OrchidHop.from(_hop(),
+    if (_hop == null) {
+      widget.editableHop.update(OrchidHop.from(_hop,
           curator: await UserPreferences().getDefaultCurator() ??
               OrchidHop.appDefaultCurator));
     }
 
     // Init the UI from the supplied hop
     setState(() {
-      OrchidHop hop = _hop();
-      _curatorField.text = hop?.curator;
+      _curatorField.text = _hop?.curator;
 
       _initialSelectedKeyItem =
-          hop?.keyRef != null ? KeySelectionItem(keyRef: hop.keyRef) : null;
+          _hop?.keyRef != null ? KeySelectionItem(keyRef: _hop.keyRef) : null;
 
-      _initialSelectedFunderItem = hop?.funder != null
-          ? FunderSelectionItem(funderAccount: hop.account)
+      _initialSelectedFunderItem = _hop?.funder != null
+          ? FunderSelectionItem(funderAccount: _hop.account)
           : null;
 
       _selectedKeyItem = _initialSelectedKeyItem;
@@ -251,7 +250,11 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                   //width: 60,
                   //color: Colors.red,
                   child: FlatButton(
-                      child: Icon(Icons.chevron_right, color: Colors.white,), onPressed: onDetail),
+                      child: Icon(
+                        Icons.chevron_right,
+                        color: Colors.white,
+                      ),
+                      onPressed: onDetail),
                 ),
               )
             ],
@@ -262,7 +265,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildAccountDetails() {
-    bool v0 = _hop()?.account?.isV0 ?? false;
+    bool v0 = _account?.isV0 ?? false;
     return Row(
       children: [
         Flexible(
@@ -287,8 +290,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               if (_selectedKeyItem != null) _buildSelectFunderField(),
 
               // Market Stats
-              // TODO: This only works for V0
-              if (v0 && widget.mode == HopEditorMode.View)
+              if (widget.mode == HopEditorMode.View)
                 Padding(
                   padding: const EdgeInsets.only(top: 8, bottom: 16),
                   child: _buildMarketStatsLink(),
@@ -540,13 +542,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       alignment: Alignment.centerLeft,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onTap: _showMarketStatsV0,
+        onTap: _showMarketStats,
         child: Row(
           children: [
             LinkText(
-              s.marketStats,
-              style: AppText.linkStyle.copyWith(fontSize: 13),
-              onTapped: _showMarketStatsV0,
+              s.marketStats.toUpperCase() + '  >',
+              style: OrchidText.button.tappable,
+              onTapped: _showMarketStats,
             ),
             padx(8),
             Badge(
@@ -563,40 +565,56 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
-  Future<void> _showMarketStatsV0() async {
-    if (_lotteryPot == null) {
+  Future<void> _showMarketStats() async {
+    if (_lotteryPot == null || _marketConditions == null) {
       return;
     }
 
-    var marketConditions = await MarketConditionsV0.forPot(_lotteryPot);
-    PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
-    GWEI gasPrice = await OrchidEthereumV0().getGasPrice();
-    bool gasPriceHigh = gasPrice.value >= 50.0; // TODO
+    var gasPrice = await _account.chain.gasPrice;
 
-    // formatting
-    var ethPriceText =
-        formatCurrency(1.0 / pricing?.ethToUsdRate, suffix: 'USD');
-    var oxtPriceText =
-        formatCurrency(1.0 / pricing?.oxtToUsdRate, suffix: 'USD');
-    var gasPriceText = formatCurrency(gasPrice.value, suffix: 'GWEI');
-    String maxFaceValueText = formatCurrency(
-        marketConditions.maxFaceValue?.floatValue,
-        suffix: 'OXT');
-    String costToRedeemText = formatCurrency(
-        marketConditions.oxtCostToRedeem.floatValue,
-        suffix: 'OXT');
-    bool ticketUnderwater = marketConditions.oxtCostToRedeem.floatValue >=
-        marketConditions.maxFaceValue.floatValue;
+    // We used to do this :)
+    // bool gasPriceHigh = gasPrice.value >= 50.0;
+    bool gasPriceHigh = false;
 
-    String limitedByText = marketConditions.limitedByBalance
+    List<Widget> tokenPrices;
+    if (_account.isV0) {
+      PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
+      var ethPriceText =
+          formatCurrency(1.0 / pricing?.ethToUsdRate, suffix: 'USD');
+      var oxtPriceText =
+          formatCurrency(1.0 / pricing?.oxtToUsdRate, suffix: 'USD');
+      tokenPrices = [
+        Text(s.ethPrice + " " + ethPriceText).body2,
+        Text(s.oxtPrice + " " + oxtPriceText).body2,
+      ];
+    } else {
+      var tokenType = _account.chain.nativeCurrency;
+      var tokenPrice = await OrchidPricing().tokenToUsdRate(tokenType);
+      var priceText = formatCurrency(tokenPrice, suffix: 'USD');
+      tokenPrices = [
+        Text(tokenType.symbol + ' ' + "Price" + ': ' + priceText).body2,
+      ];
+    }
+
+    // Show gas prices as "GWEI" regardless of token type.
+    var gasPriceGwei = gasPrice.multiplyDouble(1e9);
+    var gasPriceText = formatCurrency(gasPriceGwei.floatValue, suffix: 'GWEI');
+
+    String maxFaceValueText = _marketConditions.maxFaceValue.formatCurrency();
+    String costToRedeemText = _marketConditions.costToRedeem.formatCurrency();
+
+    bool ticketUnderwater = _marketConditions.costToRedeem.floatValue >=
+        _marketConditions.maxFaceValue.floatValue;
+
+    String limitedByText = _marketConditions.limitedByBalance
         ? s.yourMaxTicketValueIsCurrentlyLimitedByYourBalance +
-            " ${formatCurrency(_lotteryPot.balance.floatValue, suffix: 'OXT')}.  " +
+            " ${_lotteryPot.balance.formatCurrency()}.  " +
             s.considerAddingOxtToYourAccountBalance
         : s.yourMaxTicketValueIsCurrentlyLimitedByYourDeposit +
-            " ${formatCurrency(_lotteryPot.deposit.floatValue, suffix: 'OXT')}.  " +
+            " ${_lotteryPot.deposit.formatCurrency()}.  " +
             s.considerAddingOxtToYourDepositOrMovingFundsFrom;
 
-    String limitedByTitleText = marketConditions.limitedByBalance
+    String limitedByTitleText = _marketConditions.limitedByBalance
         ? s.balanceTooLow
         : s.depositSizeTooSmall;
 
@@ -607,35 +625,39 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(s.prices, style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(s.prices).title,
               pady(4),
-              Text(s.ethPrice + " " + ethPriceText),
-              Text(s.oxtPrice + " " + oxtPriceText),
+              ...tokenPrices,
               Text(s.gasPrice + " " + gasPriceText,
-                  style: gasPriceHigh ? TextStyle(color: Colors.red) : null),
-
+                      style: gasPriceHigh
+                          ? OrchidText.body1.copyWith(color: Colors.red)
+                          : OrchidText.body1)
+                  .body2,
               pady(16),
-              Text(s.ticketValue,
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(s.ticketValue).title,
               pady(4),
 
-              Text(s.maxFaceValue + " " + maxFaceValueText),
+              Text(s.maxFaceValue + " " + maxFaceValueText).body2,
 
               Text(s.costToRedeem + " " + costToRedeemText,
-                  style:
-                      ticketUnderwater ? TextStyle(color: Colors.red) : null),
+                  style: ticketUnderwater
+                      ? OrchidText.body2.copyWith(color: Colors.red)
+                      : OrchidText.body2),
 
               // Problem description
               if (ticketUnderwater) ...[
                 pady(16),
-                Text(limitedByTitleText,
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(limitedByTitleText).body1,
                 pady(8),
+
+                // Text(limitedByText, style: TextStyle(fontStyle: FontStyle.italic)),
                 Text(limitedByText,
-                    style: TextStyle(fontStyle: FontStyle.italic)),
+                    style:
+                        OrchidText.body1.copyWith(fontStyle: FontStyle.italic)),
+
                 pady(16),
                 LinkText(s.viewTheDocsForHelpOnThisIssue,
-                    style: AppText.linkStyle.copyWith(fontSize: 15),
+                    style: OrchidText.linkStyle,
                     url:
                         'https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small')
               ]
@@ -647,7 +669,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         builder: (context) =>
             CuratorEditorPage(editableHop: widget.editableHop));
     await Navigator.push(context, route);
-    _curatorField.text = _hop()?.curator;
+    _curatorField.text = _hop?.curator;
   }
 
   void _onKeySelected(KeySelectionItem key) {
@@ -742,8 +764,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     widget.onAddFlowComplete(widget.editableHop.value.hop);
   }
 
-  OrchidHop _hop() {
+  OrchidHop get _hop {
     return widget.editableHop.value?.hop;
+  }
+
+  Account get _account {
+    return _hop?.account;
   }
 
   Widget _divider() {
@@ -761,13 +787,14 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     _balanceTimer?.cancel();
   }
 
+  // TODO: Use AccountDetailPoller?
   void _pollBalanceAndAccountDetails() async {
     if (_balancePollInProgress) {
       return;
     }
     _balancePollInProgress = true;
     try {
-      Account account = _hop()?.account;
+      Account account = _hop?.account;
       if (account == null) {
         throw Exception("No account to poll");
       }
@@ -837,7 +864,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   void _exportAccount() async {
-    var config = await _hop().accountConfigString();
+    var config = await _hop?.accountConfigString();
     var title = S.of(context).myOrchidAccount + ':';
     showExportAccountDialog(context: context, title: title, config: config);
   }

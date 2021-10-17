@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/orchid_eth.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -64,10 +63,6 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   // TODO:
   List<OrchidUpdateTransactionV0> transactions;
 
-  OrchidEthereum get eth {
-    return OrchidEthereum(account.chain);
-  }
-
   /// Start periodic polling
   Future<void> startPolling() async {
     _balanceTimer = Timer.periodic(pollingPeriod, (_) {
@@ -96,9 +91,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       LotteryPot _pot;
       try {
         //log("Detail poller fetch pot, eth=$eth, funder=$funder, signer=$resolvedSigner");
-        _pot = await eth
-            .getLotteryPot(funder, signerAddress)
-            .timeout(Duration(seconds: 30));
+        _pot = await account.getLotteryPot().timeout(Duration(seconds: 30));
       } catch (err) {
         log('Error fetching lottery pot 1: $err');
         return;
@@ -108,14 +101,16 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
 
       MarketConditions _marketConditions;
       try {
-        _marketConditions =
-            await eth.getMarketConditions(_pot).timeout(Duration(seconds: 60));
+        _marketConditions = await account
+            .getMarketConditionsFor(_pot)
+            .timeout(Duration(seconds: 60));
       } catch (err, stack) {
         log('Error fetching market conditions: $err\n$stack');
         //return;
       }
       marketConditions = _marketConditions;
 
+      // TODO: Complete for V1 and move to Accounts
       List<OrchidUpdateTransactionV0> _transactions;
       try {
         if (account.version == 0) {
@@ -130,12 +125,14 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       }
       transactions = _transactions;
 
-      showMarketStatsAlert = (await eth.getMarketConditions(_pot)).efficiency <
-          MarketConditions.minEfficiency;
+      if (marketConditions != null) {
+        showMarketStatsAlert =
+            marketConditions.efficiency < MarketConditions.minEfficiency;
+      }
 
       this.notifyListeners();
     } catch (err, stack) {
-      log("Can't fetch balance: $err\n$stack");
+      log("Can't fetch market stats: $err\n$stack");
 
       // Allow a stale balance for a period of time.
       if (_lotteryPotLastUpdate != null &&

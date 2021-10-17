@@ -2,6 +2,7 @@ import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'v0/orchid_eth_v0.dart';
 
@@ -58,6 +59,10 @@ class Chain {
     @required this.providerUrl,
     this.icon,
   });
+
+  Future<Token> get gasPrice {
+    return OrchidEthereumV1().getGasPrice(this);
+  }
 
   @override
   bool operator ==(Object other) =>

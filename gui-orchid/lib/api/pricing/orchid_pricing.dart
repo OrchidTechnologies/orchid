@@ -17,7 +17,7 @@ class OrchidPricing {
 
   Map<TokenType, _CachedRate> _cache = Map();
 
-  /// Return the rate USD/Token: TokenType * Rate = USD
+  /// Return the price (USD/Token): tokens * Rate = USD
   Future<double> tokenToUsdRate(TokenType tokenType) async {
     var cached = _cache[tokenType];
     if (cached != null && cached.newerThan(cacheDuration)) {
@@ -55,7 +55,7 @@ abstract class ExchangeRateSource {
 
   const ExchangeRateSource({this.symbolOverride});
 
-  /// Return the rate USD/Token: Tokens * Rate = USD
+  /// Return the price (USD/Token): tokens * Rate = USD
   Future<double> tokenToUsdRate(TokenType tokenType);
 
   Future<double> _invert(double rate) async {

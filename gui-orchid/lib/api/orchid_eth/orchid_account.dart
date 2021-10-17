@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 
 import '../orchid_budget_api.dart';
-import 'orchid_eth.dart';
 
 /// The base model for accounts including signer, chain, and funder.
 class Account {
@@ -32,22 +34,20 @@ class Account {
     this.resolvedSignerAddress,
   });
 
-  /*
-  Account.v0(StoredEthereumKeyRef keyRef,
-      this.funder,)
-      : this.identityUid = keyRef.keyUid,
-        this.version = 0,
-        this.chainId = null;
-   */
-
+  /// This account uses the V0 OXT contract
   bool get isV0 {
     return version == 0;
   }
 
   Future<LotteryPot> getLotteryPot() async {
     var signer = await this.signerAddress;
-    var eth = OrchidEthereum(chain);
-    return eth.getLotteryPot(funder, signer);
+
+    if (isV0) {
+      return OrchidEthereumV0.getLotteryPot(funder, signer);
+    } else {
+      return OrchidEthereumV1.getLotteryPot(
+          chain: chain, funder: funder, signer: signer);
+    }
   }
 
   Future<MarketConditions> getMarketConditions() async {
@@ -55,7 +55,11 @@ class Account {
   }
 
   Future<MarketConditions> getMarketConditionsFor(LotteryPot pot) async {
-    return OrchidEthereum(chain).getMarketConditions(pot);
+    if (isV0) {
+      return MarketConditionsV0.forPotV0(pot);
+    } else {
+      return MarketConditionsV1.forPot(pot);
+    }
   }
 
   StoredEthereumKeyRef get signerKeyRef {

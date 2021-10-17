@@ -95,39 +95,6 @@ class OrchidEthereumV0 {
         balance: balance, deposit: deposit, unlock: unlock, verifier: verifier);
   }
 
-  DateTime _lastGasPriceTime;
-  GWEI _lastGasPriceLegacy; // TODO: Remove
-
-  /// Get the current median gas price.
-  /// curl $url --data '{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":0}'
-  /// {"jsonrpc":"2.0","id":0,"result":"0x2cb417800"}
-  /// This method is cached for a period of time and safe to call repeatedly.
-  /// TODO: Migrate to Token-abstracted version and remove
-  Future<GWEI> getGasPrice() async {
-    // Allow override via config for testing
-    var jsConfig = await OrchidUserConfig().getUserConfigJS();
-    double overrideValue = jsConfig.evalDoubleDefault('gasPrice', null);
-    if (overrideValue != null) {
-      return GWEI(overrideValue);
-    }
-
-    // Cache for a period of time
-    if (_lastGasPriceLegacy != null &&
-        DateTime.now().difference(_lastGasPriceTime) < Duration(minutes: 5)) {
-      print("returning cached gas price");
-      return _lastGasPriceLegacy;
-    }
-
-    print("fetching gas price");
-    String result = await jsonRpc(method: "eth_gasPrice");
-    if (result.startsWith('0x')) {
-      result = result.substring(2);
-    }
-    _lastGasPriceLegacy = GWEI.fromWei(BigInt.parse(result, radix: 16));
-    _lastGasPriceTime = DateTime.now();
-    return _lastGasPriceLegacy;
-  }
-
   /// Get Orchid transactions associated with Update events that affect the balance.
   /// Transactions are returned in date order.
   Future<List<OrchidUpdateTransactionV0>> getUpdateTransactions({

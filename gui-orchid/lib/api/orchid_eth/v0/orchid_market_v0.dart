@@ -11,10 +11,16 @@ import 'orchid_eth_v0.dart';
 
 class MarketConditions {
   final Token maxFaceValue;
+  final Token costToRedeem;
   final double efficiency;
   final bool limitedByBalance;
 
-  MarketConditions(this.maxFaceValue, this.efficiency, this.limitedByBalance);
+  MarketConditions(
+    this.maxFaceValue,
+    this.costToRedeem,
+    this.efficiency,
+    this.limitedByBalance,
+  );
 
   static bool isBelowMinEfficiency(MarketConditions conditions) {
     return (conditions.efficiency ?? 0) < minEfficiency;
@@ -26,25 +32,26 @@ class MarketConditions {
 // Market conditions for the V0 contract where payment is in OXT with gas in ETH.
 class MarketConditionsV0 implements MarketConditions {
   final ETH ethGasCostToRedeem;
-  final OXT oxtCostToRedeem;
+  final OXT costToRedeem;
   final OXT maxFaceValue;
   final double efficiency;
   final bool limitedByBalance;
 
-  MarketConditionsV0(this.ethGasCostToRedeem, this.oxtCostToRedeem,
+  MarketConditionsV0(this.ethGasCostToRedeem, this.costToRedeem,
       this.maxFaceValue, this.efficiency, this.limitedByBalance);
 
   static String efficiencyAsPercString(double efficiency) {
     return (efficiency * 100.0).toStringAsFixed(2) + "%";
   }
 
-  static Future<MarketConditionsV0> forPot(OXTLotteryPot pot) async {
-    return forBalance(pot.balance, pot.deposit);
+  static Future<MarketConditionsV0> forPotV0(OXTLotteryPot pot) async {
+    return forBalanceV0(pot.balance, pot.deposit);
   }
 
-  static Future<MarketConditionsV0> forBalance(OXT balance, OXT escrow) async {
+  static Future<MarketConditionsV0> forBalanceV0(
+      OXT balance, OXT escrow) async {
     log("fetch market conditions");
-    var costToRedeem = await getCostToRedeemTicket();
+    var costToRedeem = await getCostToRedeemTicketV0();
     var limitedByBalance = balance.floatValue <= (escrow / 2.0).floatValue;
     OXT maxFaceValue = OXTLotteryPot.maxTicketFaceValueFor(balance, escrow);
 
@@ -65,9 +72,9 @@ class MarketConditionsV0 implements MarketConditions {
         limitedByBalance);
   }
 
-  static Future<CostToRedeemV0> getCostToRedeemTicket() async {
+  static Future<CostToRedeemV0> getCostToRedeemTicketV0() async {
     PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
-    GWEI gasPrice = await OrchidEthereumV0().getGasPrice();
+    GWEI gasPrice = GWEI.fromWei((await Chains.Ethereum.gasPrice).intValue);
     ETH gasCostToRedeem =
         (gasPrice * OrchidContractV0.gasCostToRedeemTicketV0).toEth();
     OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
@@ -80,7 +87,7 @@ class MarketConditionsV0 implements MarketConditions {
   /// Returns the net value in OXT, which may be zero or negative if the ticket
   /// would be unprofitable to redeem.
   static Future<OXT> getMaxTicketValueV0(OXTLotteryPot pot) async {
-    CostToRedeemV0 costToRedeem = await getCostToRedeemTicket();
+    CostToRedeemV0 costToRedeem = await getCostToRedeemTicketV0();
     var oxtCostToRedeem = costToRedeem.oxtCostToRedeem;
     OXT maxTicketFaceValue = pot.maxTicketFaceValue;
     return maxTicketFaceValue - oxtCostToRedeem;

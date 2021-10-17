@@ -10,10 +10,16 @@ import 'orchid_eth_v1.dart';
 // token that is also used for gas.
 class MarketConditionsV1 implements MarketConditions {
   final Token maxFaceValue;
+  final Token costToRedeem;
   final double efficiency;
   final bool limitedByBalance;
 
-  MarketConditionsV1(this.maxFaceValue, this.efficiency, this.limitedByBalance);
+  MarketConditionsV1(
+    this.maxFaceValue,
+    this.costToRedeem,
+    this.efficiency,
+    this.limitedByBalance,
+  );
 
   static Future<MarketConditions> forPot(LotteryPot pot) async {
     return forBalance(pot.balance, pot.deposit);
@@ -37,7 +43,8 @@ class MarketConditionsV1 implements MarketConditions {
             .toDouble();
 
     //log("market conditions for: $balance, $escrow, costToRedeem = $costToRedeem, maxFaceValue=$maxFaceValue");
-    return new MarketConditionsV1(maxFaceValue, efficiency, limitedByBalance);
+    return new MarketConditionsV1(
+        maxFaceValue, costToRedeem, efficiency, limitedByBalance);
   }
 
   static Future<Token> getCostToRedeemTicket(Chain chain) async {
