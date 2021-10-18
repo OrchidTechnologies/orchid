@@ -360,7 +360,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          s.orchidIdentitySignerKey + ':',
+          s.orchidIdentity + ':',
           style: OrchidText.button.copyWith(
               color:
                   _keyRefValid() ? OrchidColors.valid : OrchidColors.invalid),
@@ -395,7 +395,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(s.funderAccount + ':',
+        Text("Orchid Account" + ':',
             style: OrchidText.button.copyWith(
                 color: _funderValid()
                     ? OrchidColors.valid

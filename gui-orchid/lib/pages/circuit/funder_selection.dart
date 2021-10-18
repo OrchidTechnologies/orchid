@@ -79,7 +79,7 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
         child: Container(
           child: DropdownButton<FunderSelectionItem>(
             dropdownColor: OrchidTextField.textFieldEnabledDecoration.color,
-            hint: Text(s.chooseAddress, style: OrchidText.button),
+            hint: Text("Choose Account", style: OrchidText.button),
             isExpanded: true,
             icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
             underline: Container(),
