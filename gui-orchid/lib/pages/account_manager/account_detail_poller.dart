@@ -72,11 +72,16 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   }
 
   /// Load data once
-  Future<void> refresh() async {
+  Future<void> pollOnce() async {
     return _pollBalanceAndAccountDetails();
   }
 
-  Future<void> _pollBalanceAndAccountDetails() async {
+  /// Load data updating caches
+  Future<void> refresh() async {
+    return _pollBalanceAndAccountDetails(refresh: true);
+  }
+
+  Future<void> _pollBalanceAndAccountDetails({bool refresh = false}) async {
     if (signerAddress == null) {
       signerAddress = await account.signerAddress;
     }
@@ -91,7 +96,9 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       LotteryPot _pot;
       try {
         //log("Detail poller fetch pot, eth=$eth, funder=$funder, signer=$resolvedSigner");
-        _pot = await account.getLotteryPot().timeout(Duration(seconds: 30));
+        _pot = await account
+            .getLotteryPot(refresh: refresh)
+            .timeout(Duration(seconds: 30));
       } catch (err) {
         log('Error fetching lottery pot 1: $err');
         return;
@@ -111,6 +118,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       marketConditions = _marketConditions;
 
       // TODO: Complete for V1 and move to Accounts
+      // TODO: Implement caching if appropriate
       List<OrchidUpdateTransactionV0> _transactions;
       try {
         if (account.version == 0) {

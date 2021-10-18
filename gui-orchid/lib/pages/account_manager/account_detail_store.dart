@@ -14,6 +14,7 @@ class AccountDetailStore {
 
   AccountDetailStore({this.onAccountDetailChanged});
 
+  /// Load data updating caches
   Future<void> refresh() async {
     _accountDetailMap.forEach((key, value) async {
       await value.refresh();

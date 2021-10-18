@@ -465,7 +465,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           child: AccountChart(
               lotteryPot: _lotteryPot,
               efficiency: _marketConditions?.efficiency,
-              transactions: _transactions),
+              // TODO: transactions and ticket count only show for v0
+              transactions: _account.isV0 ? _transactions : null),
         )
       ],
     );
@@ -567,7 +568,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       return;
     }
 
-    var gasPrice = await _account.chain.gasPrice;
+    var gasPrice = await _account.chain.getGasPrice();
 
     // We used to do this :)
     // bool gasPriceHigh = gasPrice.value >= 50.0;
@@ -804,6 +805,11 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         log('Error fetching lottery pot: $err');
         return;
       }
+      if (mounted) {
+        setState(() {
+          _lotteryPot = pot;
+        });
+      }
 
       MarketConditions marketConditions;
       try {
@@ -812,25 +818,30 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         log('Error fetching market conditions: $err\n$stack');
         return;
       }
-
-      // TODO: transactions only work for V0
-      List<OrchidUpdateTransactionV0> transactions;
-      try {
-        transactions = await OrchidEthereumV0().getUpdateTransactions(
-            funder: account.funder, signer: await account.signerAddress);
-      } catch (err) {
-        log('Error fetching account update transactions: $err');
-      }
-
       if (mounted) {
         setState(() {
-          _lotteryPot = pot;
           _marketConditions = marketConditions;
           _showMarketStatsAlert =
               MarketConditions.isBelowMinEfficiency(marketConditions);
+        });
+      }
+
+      // TODO: transactions and ticket count only work for V0
+      List<OrchidUpdateTransactionV0> transactions = [];
+      if (_account?.isV0 ?? false) {
+        try {
+          transactions = await OrchidEthereumV0().getUpdateTransactions(
+              funder: account.funder, signer: await account.signerAddress);
+        } catch (err) {
+          log('Error fetching account update transactions: $err');
+        }
+      }
+      if (mounted) {
+        setState(() {
           _transactions = transactions;
         });
       }
+
       _lotteryPotLastUpdate = DateTime.now();
     } catch (err, stack) {
       log("Can't fetch balance: $err, $stack");

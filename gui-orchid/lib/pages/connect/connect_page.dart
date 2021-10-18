@@ -130,7 +130,7 @@ class _ConnectPageState extends State<ConnectPage>
   /// Update alerts, badging, and status information.
   Future<void> _updateStats(timer) async {
     try {
-      await _selectedAccountPoller?.refresh();
+      await _selectedAccountPoller?.pollOnce();
     } catch (err) {
       log("eror refreshing account details: $err");
     }
@@ -519,7 +519,7 @@ class _ConnectPageState extends State<ConnectPage>
     if (account != null) {
       _selectedAccountPoller = AccountDetailPoller(account: account);
       try {
-        await _selectedAccountPoller.refresh(); // poll once
+        await _selectedAccountPoller.pollOnce(); // poll once
       } catch (err) {
         log("Error: $err");
       }

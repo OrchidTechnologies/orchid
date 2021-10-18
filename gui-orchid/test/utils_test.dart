@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
+import 'package:orchid/util/cacheable.dart';
 import 'package:orchid/util/enums.dart';
 import 'package:orchid/util/json.dart';
 import 'package:orchid/util/strings.dart';
@@ -74,7 +74,7 @@ void main() {
       var usdToTokenRate = 1.0;
       var totalUsdValue = USD(40);
       var totalTokenValue =
-      currency.fromDouble(totalUsdValue.value * usdToTokenRate);
+          currency.fromDouble(totalUsdValue.value * usdToTokenRate);
       print("totalTokenValue = " + totalTokenValue.toString());
       print("totalUsdValue = $totalUsdValue, "
           "usdToTokenRate = $usdToTokenRate, "
@@ -82,7 +82,8 @@ void main() {
     });
 
     test('trim long values in nested json', () async {
-      var receipt = 'MIIT0wYJKoZIhvcNAQcCoIITxDCCE8ACAQExCzAJBgUrDgMCGgUAMIIDdAYJKoZIhvcNAQcBoIIDZQSCA2ExggNdMAoCAQgCAQEEAhYAMAoCARQCAQEEAgwAMAsCAQECAQEEAwIBADALAgELAgEBBAMCAQAwCwIBDwIBAQQDAgEAMAsCARACAQEEAwIBADALAgEZAgEBBAMCAQMwDAIBCgIBAQQEFgI0KzAMAgEOAgEBBAQCAgDPMA0CAQ0CAQEEBQIDAfz9MA0CARMCAQEEBQwDMS4wMA4CAQkCAQEEBgIEUDI1MzAYAgEEAgECBBCcYZTNCNSnk8yiOD6j3CIqMBoCAQMCAQEEEgwQNDcuNTUyMjIzLjk5MDAxNDAbAgEAAgEBBBM,';
+      var receipt =
+          'MIIT0wYJKoZIhvcNAQcCoIITxDCCE8ACAQExCzAJBgUrDgMCGgUAMIIDdAYJKoZIhvcNAQcBoIIDZQSCA2ExggNdMAoCAQgCAQEEAhYAMAoCARQCAQEEAgwAMAsCAQECAQEEAwIBADALAgELAgEBBAMCAQAwCwIBDwIBAQQDAgEAMAsCARACAQEEAwIBADALAgEZAgEBBAMCAQMwDAIBCgIBAQQEFgI0KzAMAgEOAgEBBAQCAgDPMA0CAQ0CAQEEBQIDAfz9MA0CARMCAQEEBQwDMS4wMA4CAQkCAQEEBgIEUDI1MzAYAgEEAgECBBCcYZTNCNSnk8yiOD6j3CIqMBoCAQMCAQEEEgwQNDcuNTUyMjIzLjk5MDAxNDAbAgEAAgEBBBM,';
       var json = {
         'name': "Kate",
         'foo': {
@@ -99,6 +100,19 @@ void main() {
     test('strings', () async {
       expect("foobar".prefix(3, elide: "..."), equals("foo..."));
       expect("foobar".suffix(3), equals("bar"));
+    });
+
+    test('cache', () async {
+      var func = (TokenType key) async {
+        return 42;
+      };
+      Cache<TokenType, int> cache = Cache(duration: Duration(seconds: 2));
+      await cache.get(key: TokenTypes.ETH, producer: func);
+      await cache.get(key: TokenTypes.ETH, producer: func);
+      await cache.get(key: TokenTypes.ETH, producer: func);
+      await Future.delayed(Duration(seconds: 2));
+      await cache.get(key: TokenTypes.ETH, producer: func);
+      await cache.get(key: TokenTypes.ETH, producer: func);
     });
 
     //

@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
 import 'loading.dart';
@@ -65,11 +66,11 @@ class AccountChart extends StatelessWidget {
           Column(
             children: [
               buildTicketsAvailableLineChart(chartModel),
-              pady(8),
+              pady(16),
               Text(
                 S.of(context).minTicketsAvailableTickets(
                     chartModel.availableTicketsCurrentMax),
-              ),
+              ).caption,
             ],
           ),
       ],
@@ -98,8 +99,7 @@ class AccountChart extends StatelessWidget {
     if (totalCount > 20) {
       margin = 0;
     }
-    var colorFor =
-        (int i) => i < currentCount ? color : Color(0xff766D86);
+    var colorFor = (int i) => i < currentCount ? color : Color(0xff766D86);
     return Padding(
       // padding: const EdgeInsets.only(left: 8, right: 8),
       padding: EdgeInsets.zero,

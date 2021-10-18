@@ -2,12 +2,13 @@ import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/util/cacheable.dart';
 
 /// Token Exchange rates
 class OrchidPricing {
   static OrchidPricing _shared = OrchidPricing._init();
 
-  static Duration cacheDuration = Duration(seconds: 30);
+  Cache<TokenType, double> cache = Cache(duration: Duration(seconds: 30), name: "pricing");
 
   OrchidPricing._init();
 
@@ -15,19 +16,13 @@ class OrchidPricing {
     return _shared;
   }
 
-  Map<TokenType, _CachedRate> _cache = Map();
-
   /// Return the price (USD/Token): tokens * Rate = USD
   Future<double> tokenToUsdRate(TokenType tokenType) async {
-    var cached = _cache[tokenType];
-    if (cached != null && cached.newerThan(cacheDuration)) {
-      log("pricing: returning cached rate for: $tokenType");
-      return cached.rate;
-    }
-
-    var rate = await tokenType.exchangeRateSource.tokenToUsdRate(tokenType);
-    _cache[tokenType] = _CachedRate(rate);
-    return rate;
+    return cache.get(
+        key: tokenType,
+        producer: (tokenType) {
+          return tokenType.exchangeRateSource.tokenToUsdRate(tokenType);
+        });
   }
 
   Future<double> usdToTokenRate(TokenType tokenType) async {
@@ -36,17 +31,6 @@ class OrchidPricing {
       throw Exception("invalid rate: $rate");
     }
     return 1.0 / rate;
-  }
-}
-
-class _CachedRate {
-  DateTime time = DateTime.now();
-  double rate;
-
-  _CachedRate(this.rate);
-
-  bool newerThan(Duration duration) {
-    return DateTime.now().difference(time) < duration;
   }
 }
 
