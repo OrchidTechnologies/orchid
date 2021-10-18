@@ -465,8 +465,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           child: AccountChart(
               lotteryPot: _lotteryPot,
               efficiency: _marketConditions?.efficiency,
-              // TODO: transactions and ticket count only show for v0
-              transactions: _account.isV0 ? _transactions : null),
+              transactions: _transactions),
         )
       ],
     );
