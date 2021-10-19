@@ -25,13 +25,19 @@
 
 #include "error.hpp"
 
-// XXX: this is *ridiculous*, but lambdas break structured binding :/
+// XXX: orc_syscall happens to only be used on Windows for WinSock ;P
+#ifdef _WIN32
+#define orc_errno WSAGetLastError()
+#else
+#define orc_errno errno
+#endif
 
+// XXX: this is *ridiculous*, but lambdas break structured binding :/
 #define orc_syscall(expr, ...) ({ decltype(expr) _value; for (;;) { \
     _value = (expr); \
     if ((long) _value != -1) \
         break; \
-    int error(errno); \
+    int error(orc_errno); \
     if (error == EINTR) \
         continue; \
     _value = 0; \
