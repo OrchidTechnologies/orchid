@@ -18,7 +18,7 @@ allprojects {
     }
 }
 
-rootProject.buildDir = 'build'
+rootProject.buildDir = "${orcOutput}/build"
 
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
@@ -69,8 +69,8 @@ android {
         main {
             java.srcDirs += [orcInterface + "/android/app/src/main/java"]
             res.srcDirs += [orcInterface + "/res"]
-            assets.srcDirs += ['out-and/assets']
-            jniLibs.srcDirs = ['out-and/jnilibs']
+            assets.srcDirs += [orcOutput + "/assets"]
+            jniLibs.srcDirs = [orcOutput + "/jnilibs"]
         }
     }
 

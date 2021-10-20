@@ -41,7 +41,7 @@ upload: $(output)/$(name).apk
 $(call include,vpn/target.mk)
 $(call include,shared/target-and.mk)
 
-apk := build/outputs/apk/$(mode)/app-android-$(if $(filter noaot,$(debug)),debug,release).apk
+apk := $(output)/build/outputs/apk/$(mode)/app-android-$(if $(filter noaot,$(debug)),debug,release).apk
 
 include env/output.mk
 
@@ -78,7 +78,7 @@ endif
 
 $(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle $(word 1,$(keystore)).keystore src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json $(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar
 	@./gradlew -Pandroid.debug.obsoleteApi=true assemble$(if $(filter noaot,$(debug)),Debug,Release) --console verbose --warning-mode all \
-	    -PorcUnique='$(domain).$(name)' -PorcName='$(name)' \
+	    -PorcUnique='$(domain).$(name)' -PorcName='$(name)' -PorcOutput='$(output)' \
 	    -PorcStore='$(word 1,$(keystore)).keystore' -PorcAlias='$(word 2,$(keystore))' -PorcPassword='$(word 3,$(keystore))' \
 	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
 	    -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/$(flutter/$(machine))$(engine)/flutter.jar -PorcInterface='$(pwd/gui)'
