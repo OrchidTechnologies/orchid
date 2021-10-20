@@ -22,6 +22,7 @@ public class OrchidVpnService extends VpnService {
     private static final String TAG = "OrchidVpnService";
     private static OrchidVpnService vpnService;
 
+    private boolean running = false;
     private int fd = -1;
 
     static boolean vpnProtect(int fd) {
@@ -33,13 +34,18 @@ public class OrchidVpnService extends VpnService {
         Log.d(TAG, "onStartCommand: intent:" + intent + " flags:" + flags + " startId:" + startId);
         if (intent != null && "disconnect".equals(intent.getAction())) {
             stopForeground(true);
-            stopSelf();
+            stopSelfResult(startId);
             // the Orchid stack crashes if the fd is closed, so exit instead
             //closeFd();
             System.exit(0);
             return START_NOT_STICKY;
+        } else {
+            if (!running) {
+                running = true;
+                connect();
+            }
+            return START_STICKY;
         }
-        return START_STICKY;
     }
 
     private static Application app() {
@@ -51,8 +57,7 @@ public class OrchidVpnService extends VpnService {
         return null;
     }
 
-    @Override
-    public void onCreate() {
+    public void connect() {
         Log.d(TAG, "onCreate");
         Builder builder = new Builder();
         builder.addAddress("10.7.0.3", 32);
