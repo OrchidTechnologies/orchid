@@ -23,7 +23,7 @@ static asio::io_context *executor_;
 S<BufferSink<Capture>> capture_;
 
 extern "C" JNIEXPORT void JNICALL
-Java_net_orchid_Orchid_OrchidNative_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
+Java_net_orchid_Orchid_OrchidVpnService_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
 {
     Log() << "runTunnel:" << file << std::endl;
 

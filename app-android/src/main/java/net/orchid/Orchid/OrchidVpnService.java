@@ -71,7 +71,7 @@ public class OrchidVpnService extends VpnService {
                 new Thread(new Runnable() { public void run() {
                     File f = app().getFilesDir();
                     Log.d(TAG, "OrchidNative starting");
-                    OrchidNative.runTunnel(fd, f.getAbsolutePath());
+                    runTunnel(fd, f.getAbsolutePath());
                     Log.d(TAG, "OrchidNative stopped");
                     stopSelfResult(1);
                 }}).start();
@@ -147,4 +147,9 @@ public class OrchidVpnService extends VpnService {
         startForeground(1, n);
     }
 
+    public static native void runTunnel(int fd, String dir);
+
+    static {
+        System.loadLibrary("orchid");
+    }
 }
