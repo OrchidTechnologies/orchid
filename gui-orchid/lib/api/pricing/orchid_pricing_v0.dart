@@ -18,6 +18,7 @@ class OrchidPricingAPIV0 {
 
   PricingV0 _lastPricing;
 
+  // TODO: Update to new caching
   /// Get a snapshot of current pricing data at the current time.
   /// This method may return null if no pricing data is available and the UI
   /// should handle this as a routine condition by hiding displayed conversions.

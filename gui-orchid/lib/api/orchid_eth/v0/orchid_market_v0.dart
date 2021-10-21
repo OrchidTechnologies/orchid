@@ -43,13 +43,17 @@ class MarketConditionsV0 implements MarketConditions {
     return (efficiency * 100.0).toStringAsFixed(2) + "%";
   }
 
+  // TODO: Add refresh option
   static Future<MarketConditionsV0> forPotV0(OXTLotteryPot pot) async {
+    // TODO: Add refresh option
     return forBalanceV0(pot.balance, pot.deposit);
   }
 
+  // TODO: Add refresh option
   static Future<MarketConditionsV0> forBalanceV0(
       OXT balance, OXT escrow) async {
     log("fetch market conditions");
+    // TODO: Add refresh option
     var costToRedeem = await getCostToRedeemTicketV0();
     var limitedByBalance = balance.floatValue <= (escrow / 2.0).floatValue;
     OXT maxFaceValue = OXTLotteryPot.maxTicketFaceValueFor(balance, escrow);
@@ -71,25 +75,15 @@ class MarketConditionsV0 implements MarketConditions {
         limitedByBalance);
   }
 
+  // TODO: Add refresh option
   static Future<CostToRedeemV0> getCostToRedeemTicketV0() async {
+    // TODO: Add refresh option
     PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
-    GWEI gasPrice = GWEI.fromWei((await Chains.Ethereum.gasPrice).intValue);
+    GWEI gasPrice = GWEI.fromWei((await Chains.Ethereum.getGasPrice()).intValue);
     ETH gasCostToRedeem =
         (gasPrice * OrchidContractV0.gasCostToRedeemTicketV0).toEth();
     OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
     return CostToRedeemV0(gasCostToRedeem, oxtCostToRedeem);
-  }
-
-  /// Calculate the current real world value of the largest ticket that can be
-  /// issued from this lottery pot, taking into account the amount of gas required
-  /// to redeem the ticket, current gas prices, and the OXT-ETH exchange rate.
-  /// Returns the net value in OXT, which may be zero or negative if the ticket
-  /// would be unprofitable to redeem.
-  static Future<OXT> getMaxTicketValueV0(OXTLotteryPot pot) async {
-    CostToRedeemV0 costToRedeem = await getCostToRedeemTicketV0();
-    var oxtCostToRedeem = costToRedeem.oxtCostToRedeem;
-    OXT maxTicketFaceValue = pot.maxTicketFaceValue;
-    return maxTicketFaceValue - oxtCostToRedeem;
   }
 }
 

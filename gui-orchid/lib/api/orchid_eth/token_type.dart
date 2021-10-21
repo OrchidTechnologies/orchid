@@ -60,8 +60,8 @@ class Chain {
     this.icon,
   });
 
-  Future<Token> get gasPrice {
-    return OrchidEthereumV1().getGasPrice(this);
+  Future<Token> getGasPrice({bool refresh = false}) {
+    return OrchidEthereumV1().getGasPrice(this, refresh: refresh);
   }
 
   @override

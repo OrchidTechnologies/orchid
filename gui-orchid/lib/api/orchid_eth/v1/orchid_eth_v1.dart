@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/util/cacheable.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
@@ -21,40 +23,30 @@ class OrchidEthereumV1 {
     return _shared;
   }
 
-  // TODO: This must cache per-chain
-  // DateTime _lastGasPriceTime;
-  // Token _lastGasPrice;
+  Cache<Chain, Token> cache =
+      Cache(duration: Duration(seconds: 15), name: "gas price");
 
-  Future<Token> getGasPrice(Chain chain) async {
-    TokenType tokenType = chain.nativeCurrency;
-
+  Future<Token> getGasPrice(Chain chain, {bool refresh = false}) async {
     // Allow override via config for testing
     var jsConfig = await OrchidUserConfig().getUserConfigJS();
     double overrideValue = jsConfig.evalDoubleDefault('gasPrice', null);
     if (overrideValue != null) {
+      TokenType tokenType = chain.nativeCurrency;
       return tokenType.fromDouble(overrideValue);
     }
 
-    /*
-    // Cache for a period of time
-    if (_lastGasPrice != null &&
-        DateTime.now().difference(_lastGasPriceTime) < Duration(minutes: 5)) {
-      print("returning cached gas price");
-      return _lastGasPrice;
-    }
-     */
+    return cache.get(key: chain, producer: _fetchGasPrice, refresh: refresh);
+  }
 
-    print("fetching gas price");
+  Future<Token> _fetchGasPrice(Chain chain) async {
+    log("Fetching gas price");
     String result =
         await jsonRPC(url: chain.providerUrl, method: "eth_gasPrice");
     if (result.startsWith('0x')) {
       result = result.substring(2);
     }
 
-    // _lastGasPrice = tokenType.fromInt(BigInt.parse(result, radix: 16));
-    // _lastGasPriceTime = DateTime.now();
-    // return _lastGasPrice;
-
+    TokenType tokenType = chain.nativeCurrency;
     return tokenType.fromInt(BigInt.parse(result, radix: 16));
   }
 

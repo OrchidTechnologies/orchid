@@ -6,6 +6,7 @@ import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/util/cacheable.dart';
 
 import '../orchid_budget_api.dart';
 
@@ -39,26 +40,36 @@ class Account {
     return version == 0;
   }
 
-  Future<LotteryPot> getLotteryPot() async {
-    var signer = await this.signerAddress;
+  static Cache<Account, LotteryPot> lotteryPotCache =
+      Cache(duration: Duration(seconds: 60), name: "lottery pot");
 
-    if (isV0) {
-      return OrchidEthereumV0.getLotteryPot(funder, signer);
+  // Use refresh to force an update to the cache
+  Future<LotteryPot> getLotteryPot({bool refresh = false}) async {
+    return lotteryPotCache.get(
+      key: this,
+      producer: (account) => _getLotteryPotFor(account),
+      refresh: refresh,
+    );
+  }
+
+  static Future<LotteryPot> _getLotteryPotFor(Account account) async {
+    var signer = await account.signerAddress;
+    if (account.isV0) {
+      return OrchidEthereumV0.getLotteryPot(account.funder, signer);
     } else {
       return OrchidEthereumV1.getLotteryPot(
-          chain: chain, funder: funder, signer: signer);
+          chain: account.chain, funder: account.funder, signer: signer);
     }
   }
 
-  Future<MarketConditions> getMarketConditions() async {
-    return getMarketConditionsFor(await getLotteryPot());
-  }
-
-  Future<MarketConditions> getMarketConditionsFor(LotteryPot pot) async {
+  // Note: Market conditions are not cached but the underlying prices are.
+  Future<MarketConditions> getMarketConditionsFor(LotteryPot pot,
+      {bool refresh = false}) async {
     if (isV0) {
+      // TODO: Add refresh option
       return MarketConditionsV0.forPotV0(pot);
     } else {
-      return MarketConditionsV1.forPot(pot);
+      return MarketConditionsV1.forPot(pot, refresh: refresh);
     }
   }
 

@@ -39,7 +39,7 @@ class _TestState extends State<_Test> {
         resolvedSignerAddress: EthereumAddress.from(signer),
       ),
     );
-    await account.refresh();
+    await account.pollOnce();
     setState(() {});
   }
 
