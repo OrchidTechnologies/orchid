@@ -32,7 +32,7 @@ class MainActivity(): FlutterActivity() {
             when (call.method) {
                 "ready" -> {
                     feedback.invokeMethod("providerStatus", true)
-                    feedback.invokeMethod("connectionStatus", if ((getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getRunningServices(Integer.MAX_VALUE).any { it.service.className == OrchidVpnService::class.simpleName }) "Connected" else "Disconnected")
+                    feedback.invokeMethod("connectionStatus", if ((getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getRunningServices(Integer.MAX_VALUE).any { it.service.className == OrchidVpnService::class.java.name }) "Connected" else "Disconnected")
                     result.success(null)
                 }
                 "group_path" -> {
