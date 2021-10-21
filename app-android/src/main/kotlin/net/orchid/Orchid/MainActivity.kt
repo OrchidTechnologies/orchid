@@ -2,6 +2,8 @@ package net.orchid.Orchid
 
 import net.orchid.Orchid.BuildConfig;
 
+import android.app.ActivityManager
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 
@@ -28,6 +30,11 @@ class MainActivity(): FlutterActivity() {
         feedback.setMethodCallHandler { call, result ->
             Log.d("Orchid", call.method)
             when (call.method) {
+                "ready" -> {
+                    feedback.invokeMethod("providerStatus", true)
+                    feedback.invokeMethod("connectionStatus", if ((getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getRunningServices(Integer.MAX_VALUE).any { it.service.className == OrchidVpnService::class.simpleName }) "Connected" else "Disconnected")
+                    result.success(null)
+                }
                 "group_path" -> {
                     result.success(getFilesDir().getAbsolutePath())
                 }
@@ -39,12 +46,15 @@ class MainActivity(): FlutterActivity() {
                         startService(getServiceIntent())
                         feedback.invokeMethod("connectionStatus", "Connected")
                     }
+                    result.success(null)
                 }
                 "disconnect" -> {
                     startService(getServiceIntent().setAction("disconnect"))
                     feedback.invokeMethod("connectionStatus", "Disconnected")
+                    result.success(null)
                 }
                 "reroute" -> {
+                    result.success(null)
                 }
                 "version" -> {
                     result.success("${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
@@ -67,13 +77,14 @@ class MainActivity(): FlutterActivity() {
                     Log.d("Orchid", "copy complete")
                     result.success("true"); // todo, validation
                 }
+                else -> {
+                    result.notImplemented()
+                }
             }
         }
 
         // TODO: Implement status check and "install" method of our feedback handler
         // TODO: to allow the UI to participate in permission prompting if desired.
-        // Indicate to the UI that the VPN permissions are granted.
-        feedback.invokeMethod("providerStatus", true)
 
         // we *could* hook feedback "connectionStatus" up to ConnectivityService:
         // NetworkAgentInfo [VPN () - 112] EVENT_NETWORK_INFO_CHANGED, going from CONNECTING to CONNECTED

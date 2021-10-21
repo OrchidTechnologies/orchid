@@ -269,13 +269,18 @@
         if (false) {
         } else if ([@"ready" isEqualToString:call.method]) {
             [weakSelf applicationReady];
+            result(nil);
         } else if ([@"connect" isEqualToString:call.method]) {
             [weakSelf startVPN];
+            result(nil);
         } else if ([@"disconnect" isEqualToString:call.method]) {
             [weakSelf stopVPN];
+            result(nil);
         } else if ([@"reroute" isEqualToString:call.method]) {
+            result(nil);
         } else if ([@"install" isEqualToString:call.method]) {
             [weakSelf initProvider: result];
+            result(nil);
         } else if ([@"group_path" isEqualToString:call.method]) {
             [weakSelf groupPath: result];
         } else if ([@"version" isEqualToString:call.method]) {
@@ -286,6 +291,8 @@
         } else if ([@"set_config" isEqualToString:call.method]) {
             NSString *text = call.arguments[@"text"];
             [weakSelf setConfig: text result: result];
+        } else {
+            result(FlutterMethodNotImplemented);
         }
     }];
 
