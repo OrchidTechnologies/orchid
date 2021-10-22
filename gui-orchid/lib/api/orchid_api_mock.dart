@@ -339,13 +339,14 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
   /// Set the Orchid Configuration file contents
   Future<bool> setConfiguration(String userConfig) async {
     var combinedConfig = await RealOrchidAPI.generateCombinedConfig(userConfig);
-    log("api fake: combinedConfig = $combinedConfig");
+    log("mock: combinedConfig = $combinedConfig");
     // Do nothing.  Fake save.
     return true;
   }
 
   /// Publish the latest configuration to the VPN.
   Future<bool> updateConfiguration() async {
+    log("mock: update configuration");
     return setConfiguration(await UserPreferences().getUserConfig());
   }
 

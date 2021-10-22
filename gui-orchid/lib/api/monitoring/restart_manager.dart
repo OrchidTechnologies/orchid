@@ -1,9 +1,6 @@
 import 'dart:async';
-
-import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_types.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-
 import 'package:rxdart/rxdart.dart';
 import '../orchid_api.dart';
 import '../orchid_log_api.dart';
@@ -41,21 +38,22 @@ class OrchidRestartManager {
     }
     // Listen for changes in monitoring preferences
     _enableVPNListener = CombineLatestStream.combine2(
-      await UserPreferences().routingEnabled.streamAsync(),
-      await UserPreferences().monitoringEnabled.streamAsync(),
+      // The initial values are both valid on startup and distinct
+      (await UserPreferences().routingEnabled.streamAsync()).distinct(),
+      (await UserPreferences().monitoringEnabled.streamAsync()).distinct(),
       (routing, monitoring) {
         log("restart_manager: enable vpn listener: routing=$routing, monitoring=$monitoring");
         return routing || monitoring;
       },
-    ).distinct().listen((desiredRunning) async {
+    ).listen((desiredRunning) async {
       await OrchidAPI().updateConfiguration();
 
       // On startup check the state of the world
-      if (_initialized) {
-        _onPreferenceChange(desiredRunning);
-      } else {
+      if (!_initialized) {
         _onStartup(desiredRunning);
         _initialized = true;
+      } else {
+        _onPreferenceChange(desiredRunning);
       }
     });
   }
@@ -67,17 +65,21 @@ class OrchidRestartManager {
     var api = OrchidAPI();
     switch (api.vpnExtensionStatus.value) {
       case OrchidVPNExtensionState.Invalid:
-        // should probably re-check here
+      // should probably re-check here
       case OrchidVPNExtensionState.Disconnecting:
       case OrchidVPNExtensionState.NotConnected:
         // stopping or stopped
-        if (desiredRunning) { _start(); }
+        if (desiredRunning) {
+          _start();
+        }
         break;
       case OrchidVPNExtensionState.Connecting:
       case OrchidVPNExtensionState.Connected:
         // starting or started
-      if (!desiredRunning) { _stop(); }
-      break;
+        if (!desiredRunning) {
+          _stop();
+        }
+        break;
     }
   }
 

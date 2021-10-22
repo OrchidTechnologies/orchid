@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:orchid/api/monitoring/restart_manager.dart';
 import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
@@ -16,8 +17,9 @@ import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_detail_poller.dart';
+import 'package:orchid/pages/account_manager/account_finder.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
-import 'package:orchid/pages/circuit/circuit_page.dart';
+import 'package:orchid/pages/circuit/circuit_utils.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/connect/manage_accounts_card.dart';
@@ -73,7 +75,7 @@ class _ConnectPageState extends State<ConnectPage>
     return _circuit?.hops?.length ?? 0;
   }
 
-  bool get _circuitHasHops{
+  bool get _circuitHasHops {
     return _circuitHops > 0;
   }
 
@@ -85,7 +87,9 @@ class _ConnectPageState extends State<ConnectPage>
 
   // The selected hop or null
   CircuitHop get _selectedHop {
-    if (!_circuitHasHops) { return null; }
+    if (!_circuitHasHops) {
+      return null;
+    }
     return _circuit.hops[_selectedIndex];
   }
 
@@ -117,6 +121,8 @@ class _ConnectPageState extends State<ConnectPage>
     _updateStats(null);
 
     _releaseVersionCheck();
+
+    _scanForAccountsIfNeeded();
 
     _logoController = NeonOrchidLogoController(vsync: this);
 
@@ -177,7 +183,7 @@ class _ConnectPageState extends State<ConnectPage>
 
     // Monitor routing preference
     UserPreferences().routingEnabled.stream().listen((enabled) {
-      log("routing enabled changed: $enabled");
+      log("connect: routing enabled changed: $enabled");
       setState(() {
         _routingEnabled = enabled;
       });
@@ -446,9 +452,43 @@ class _ConnectPageState extends State<ConnectPage>
     await UserPreferences().releaseVersion.set(Release.current);
   }
 
+  /// As part of new user onboarding we scan for accounts continually until
+  /// the first one is found and create a default route.
+  Future<void> _scanForAccountsIfNeeded() async {
+    // If the cache is empty we have never seen an account.
+    if ((await UserPreferences().cachedDiscoveredAccounts.get()).isNotEmpty) {
+      log("connect: Found cached accounts, not starting account finder.");
+      return;
+    }
+
+    log("connect: No accounts in cache, starting account finder.");
+    AccountFinder.shared = AccountFinder()
+        .withPollingInterval(Duration(seconds: 30))
+        .find((accounts) async {
+      var sorted = await Account.sortAccountsByEfficiency(accounts);
+      if (sorted.isNotEmpty) {
+        var created =
+            await CircuitUtils.defaultCircuitIfNeededFrom(sorted.first);
+        log("connect: default circuit: $created");
+        if (created) {
+          SchedulerBinding.instance.addPostFrameCallback(
+            (_) => AppDialogs.showAppDialog(
+              context: context,
+              title: "Account Found",
+              bodyText:
+                  "We found an account associated with your identities and created a "
+                  "single hop Orchid circuit for it.  You are now ready to use the VPN.",
+            ),
+          );
+        }
+      }
+    });
+    // As an optimization we listen for PAC purchases and increase the rate
+    // UserPreferences().pacTransaction.stream().listen((event) { });
+  }
+
   Future<void> _doFirstLaunchActivities() async {
     await _createFirstIdentity();
-    // await _migrate1HopToActiveAccount();
     await _migrateActiveAccountTo1Hop();
   }
 
@@ -459,19 +499,13 @@ class _ConnectPageState extends State<ConnectPage>
   // If this is an existing user with no multi-hop circuit and an active
   // account, migrate it to a 1-hop config.
   Future<void> _migrateActiveAccountTo1Hop() async {
-    var circuit = await UserPreferences().getCircuit();
-    if (circuit.hops.isEmpty) {
-      var activeAccount = await Account.activeAccountLegacy;
-      if (activeAccount != null) {
-        log("migration: User has no hops and a legacy active account: migrating.");
-        // Create a one hop circuit from this account
-        var orchidHop = OrchidHop.fromAccount(activeAccount);
-        var circuit = Circuit([orchidHop]);
-        CircuitUtils.saveCircuit(circuit);
+    var activeAccount = await Account.activeAccountLegacy;
+    if (activeAccount != null) {
+      log("migration: User has no hops and a legacy active account: migrating.");
+      await CircuitUtils.defaultCircuitIfNeededFrom(activeAccount);
 
-        // Clear the legacy active accounts (one time migration)
-        UserPreferences().activeAccounts.set([]);
-      }
+      // Clear the legacy active accounts (one time migration)
+      await UserPreferences().activeAccounts.set([]);
     }
   }
 
@@ -498,14 +532,13 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   Future _circuitConfigurationChanged() async {
-    log("xxx: connect page: circuit configuration changed");
     var prefs = UserPreferences();
-    _circuit = await prefs.getCircuit();
+    _circuit = await prefs.circuit.get();
     _selectedIndex = 0;
 
     // Update the card... need a key
     _circuitKey += 1;
-    
+
     _selectedAccountChanged(_selectedAccount);
     setState(() {});
   }
@@ -542,6 +575,7 @@ class _ConnectPageState extends State<ConnectPage>
   void dispose() {
     super.dispose();
     ScreenOrientation.reset();
+    AccountFinder.shared?.dispose();
     _updateStatsTimer.cancel();
     _subs.dispose();
   }

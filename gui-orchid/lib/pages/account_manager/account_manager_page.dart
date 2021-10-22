@@ -16,6 +16,7 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_detail_store.dart';
+import 'package:orchid/pages/circuit/circuit_utils.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:orchid/common/scan_paste_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
@@ -23,7 +24,6 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
-import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
@@ -34,6 +34,7 @@ import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
 import 'account_card.dart';
+import 'account_finder.dart';
 import 'account_store.dart';
 import 'account_view_model.dart';
 import 'export_identity_dialog.dart';
@@ -120,6 +121,13 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void _accountsUpdated() async {
+    // TODO: We don't want to keep randomly creating a circuit if the user has
+    // TODO: emptied the list themselves, do we?
+    // TODO: shortcut when we've already checked
+    // if (_accountStore.accounts.isNotEmpty) {
+    //   CircuitUtils.defaultCircuitIfNeededFrom(_accountStore.accounts.first);
+    // }
+
     // update the UI
     setState(() {});
   }
@@ -186,12 +194,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         cardColor: OrchidColors.dark_background,
         highlightColor: OrchidColors.purple_menu,
       ),
-      child: PopupMenuButton<IdentitySelectorMenuItem>(
+      child: PopupMenuButton<_IdentitySelectorMenuItem>(
         icon: SvgPicture.asset('assets/svg/settings_gear.svg'),
         initialValue: _selectedIdentity != null
-            ? IdentitySelectorMenuItem(identity: _selectedIdentity)
+            ? _IdentitySelectorMenuItem(identity: _selectedIdentity)
             : null,
-        onSelected: (IdentitySelectorMenuItem item) async {
+        onSelected: (_IdentitySelectorMenuItem item) async {
           if (item.isIdentity) {
             _setSelectedIdentity(item.identity);
           } else {
@@ -203,8 +211,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         itemBuilder: (BuildContext context) {
           var style = OrchidText.body1;
           var items = _identities.map((StoredEthereumKey identity) {
-            var item = IdentitySelectorMenuItem(identity: identity);
-            return PopupMenuItem<IdentitySelectorMenuItem>(
+            var item = _IdentitySelectorMenuItem(identity: identity);
+            return PopupMenuItem<_IdentitySelectorMenuItem>(
               value: item,
               child: Text(item.formatIdentity(), style: style),
             );
@@ -213,17 +221,17 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           // Add the import, export actions
           return items +
               [
-                PopupMenuItem<IdentitySelectorMenuItem>(
-                    value: IdentitySelectorMenuItem(action: _newIdentity),
+                PopupMenuItem<_IdentitySelectorMenuItem>(
+                    value: _IdentitySelectorMenuItem(action: _newIdentity),
                     child: Text(s.newWord, style: style)),
-                PopupMenuItem<IdentitySelectorMenuItem>(
-                    value: IdentitySelectorMenuItem(action: _importIdentity),
+                PopupMenuItem<_IdentitySelectorMenuItem>(
+                    value: _IdentitySelectorMenuItem(action: _importIdentity),
                     child: Text(s.import, style: style)),
-                PopupMenuItem<IdentitySelectorMenuItem>(
-                    value: IdentitySelectorMenuItem(action: _exportIdentity),
+                PopupMenuItem<_IdentitySelectorMenuItem>(
+                    value: _IdentitySelectorMenuItem(action: _exportIdentity),
                     child: Text(s.export, style: style)),
-                PopupMenuItem<IdentitySelectorMenuItem>(
-                    value: IdentitySelectorMenuItem(
+                PopupMenuItem<_IdentitySelectorMenuItem>(
+                    value: _IdentitySelectorMenuItem(
                         action: _confirmDeleteIdentity),
                     child: Text(s.delete, style: style))
               ];
@@ -242,6 +250,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             await _accountStore.load(waitForDiscovered: false);
           }
           _setSelectedIdentity(result.signer);
+
+          // Support onboarding by prodding the account finder if it exists
+          AccountFinder.shared?.refresh();
         }
       },
     );
@@ -545,14 +556,14 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 }
 
-class IdentitySelectorMenuItem {
+class _IdentitySelectorMenuItem {
   /// Either an identity...
   final StoredEthereumKey identity;
 
   /// ...or an action with label
   final Function() action;
 
-  IdentitySelectorMenuItem({this.identity, this.action});
+  _IdentitySelectorMenuItem({this.identity, this.action});
 
   bool get isIdentity {
     return identity != null;
@@ -565,7 +576,7 @@ class IdentitySelectorMenuItem {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is IdentitySelectorMenuItem &&
+      other is _IdentitySelectorMenuItem &&
           runtimeType == other.runtimeType &&
           identity == other.identity &&
           action == other.action;

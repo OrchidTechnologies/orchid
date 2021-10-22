@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/common/app_buttons.dart';
@@ -21,25 +20,21 @@ class EditableHop extends ValueNotifier<UniqueHop> {
   }
 
   /// Create a new editor instance for this editable hop
-  HopEditor editor(){
+  HopEditor editor() {
     HopEditor editor;
     switch (value.hop.protocol) {
       case HopProtocol.Orchid:
-        editor =
-            OrchidHopPage(editableHop: this, mode: HopEditorMode.View);
+        editor = OrchidHopPage(editableHop: this, mode: HopEditorMode.View);
         break;
       case HopProtocol.OpenVPN:
-        editor =
-            OpenVPNHopPage(editableHop: this, mode: HopEditorMode.Edit);
+        editor = OpenVPNHopPage(editableHop: this, mode: HopEditorMode.Edit);
         break;
       case HopProtocol.WireGuard:
-        editor = WireGuardHopPage(
-            editableHop: this, mode: HopEditorMode.Edit);
+        editor = WireGuardHopPage(editableHop: this, mode: HopEditorMode.Edit);
         break;
     }
     return editor;
   }
-
 }
 
 class HopEditor<T extends CircuitHop> extends StatefulWidget {
@@ -53,11 +48,11 @@ class HopEditor<T extends CircuitHop> extends StatefulWidget {
 
   HopEditor(
       {@required this.editableHop,
-        @required this.mode,
-        this.onAddFlowComplete});
+      @required this.mode,
+      this.onAddFlowComplete});
 
-  Widget buildSaveButton(BuildContext context,
-      AddFlowCompletion onAddFlowComplete,
+  Widget buildSaveButton(
+      BuildContext context, AddFlowCompletion onAddFlowComplete,
       {bool isValid = true}) {
     return SaveActionButton(
         isValid: isValid,
@@ -72,6 +67,10 @@ class HopEditor<T extends CircuitHop> extends StatefulWidget {
 
   bool readOnly() {
     return !editable();
+  }
+
+  bool get create {
+    return mode == HopEditorMode.Create;
   }
 
   @override

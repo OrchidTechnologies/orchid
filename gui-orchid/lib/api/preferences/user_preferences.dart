@@ -295,7 +295,6 @@ class UserPreferences {
   ObservableBoolPreference monitoringEnabled = ObservableBoolPreference(
       UserPreferenceKey.MonitoringEnabled,
       defaultValue: false);
-
 }
 
 enum UserPreferenceKey {

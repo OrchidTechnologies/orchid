@@ -2,14 +2,13 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
-import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
-import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
@@ -17,7 +16,6 @@ import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/titled_page_base.dart';
 
 import '../app_routes.dart';
-import '../../common/app_sizes.dart';
 
 /// The main settings page.
 class SettingsPage extends StatefulWidget {
@@ -152,7 +150,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
               if (_tester)
                 _divided(PageTile(
-                  title: "(TEST) Reset First Launch",
+                  title: "(TEST) Reset First Launch Dialog",
                   trailing: RaisedButton(
                     child: Text(
                       s.reset.toUpperCase(),
@@ -162,6 +160,21 @@ class _SettingsPageState extends State<SettingsPage> {
                       UserPreferences()
                           .releaseVersion
                           .set(ReleaseVersion.firstLaunch());
+                    },
+                  ),
+                )),
+
+              if (_tester)
+                _divided(PageTile(
+                  title: "(TEST) Clear cached accounts",
+                  trailing: RaisedButton(
+                    child: Text(
+                      s.clear.toUpperCase(),
+                      style: buttonStyle,
+                    ),
+                    onPressed: () {
+                      log("Clearing cached discovered accounts");
+                      UserPreferences().cachedDiscoveredAccounts.clear();
                     },
                   ),
                 )),

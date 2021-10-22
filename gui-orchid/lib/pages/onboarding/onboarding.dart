@@ -91,7 +91,7 @@ class AppOnboarding {
 
     if (route != null) {
       if (replace) {
-        await Navigator.pop(context);
+        Navigator.pop(context);
         Navigator.push(context, route);
         //Navigator.pushReplacement(context, route);
       } else {
@@ -99,7 +99,7 @@ class AppOnboarding {
       }
     } else {
       if (replace) {
-        await Navigator.pop(context);
+        Navigator.pop(context);
         Navigator.pushNamed(context, nextPage);
         //Navigator.pushReplacementNamed(context, nextPage);
       } else {

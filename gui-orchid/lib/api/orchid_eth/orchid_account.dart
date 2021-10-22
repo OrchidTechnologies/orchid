@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/cacheable.dart';
 
@@ -46,10 +47,7 @@ class Account {
   // Use refresh to force an update to the cache
   Future<LotteryPot> getLotteryPot({bool refresh = false}) async {
     return lotteryPotCache.get(
-      key: this,
-      producer: (account) => _getLotteryPotFor(account),
-      refresh: refresh,
-    );
+        key: this, producer: _getLotteryPotFor, refresh: refresh);
   }
 
   static Future<LotteryPot> _getLotteryPotFor(Account account) async {
@@ -62,6 +60,10 @@ class Account {
     }
   }
 
+  Future<MarketConditions> getMarketConditions() async {
+    return getMarketConditionsFor(await getLotteryPot());
+  }
+
   // Note: Market conditions are not cached but the underlying prices are.
   Future<MarketConditions> getMarketConditionsFor(LotteryPot pot,
       {bool refresh = false}) async {
@@ -71,6 +73,30 @@ class Account {
     } else {
       return MarketConditionsV1.forPot(pot, refresh: refresh);
     }
+  }
+
+  /// This method loads market conditions for each account and sorts them by efficiency.
+  static Future<List<Account>> sortAccountsByEfficiency(
+      Set<Account> accounts) async {
+    var accountMarketConditions = (await Future.wait(accounts.map((account) async {
+      try {
+        return _AccountMarketConditions(
+            account, await account.getMarketConditions());
+      } catch (err) {
+        log("sort accounts: error fetching market conditions: $err");
+        return null;
+      }
+    })))
+        .where((e) => e != null) // skip errors
+        .toList();
+
+    // Sort by efficiency descending
+    // Note: We have a similar sort in the account manager.
+    accountMarketConditions.sort((_AccountMarketConditions a, _AccountMarketConditions b) {
+      return -((a.marketConditions?.efficiency ?? 0)
+          .compareTo((b.marketConditions?.efficiency ?? 0)));
+    });
+    return accountMarketConditions.map((e) => e.account).toList();
   }
 
   StoredEthereumKeyRef get signerKeyRef {
@@ -153,4 +179,11 @@ class Account {
   String toString() {
     return 'Account{identityUid: $identityUid, chainId: $chainId, funder: $funder}';
   }
+}
+
+class _AccountMarketConditions {
+  final Account account;
+  final MarketConditions marketConditions;
+
+  _AccountMarketConditions(this.account, this.marketConditions);
 }

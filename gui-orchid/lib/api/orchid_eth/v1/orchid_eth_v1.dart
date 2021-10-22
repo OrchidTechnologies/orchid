@@ -23,9 +23,10 @@ class OrchidEthereumV1 {
     return _shared;
   }
 
-  Cache<Chain, Token> cache =
+  Cache<Chain, Token> _gasPriceCache =
       Cache(duration: Duration(seconds: 15), name: "gas price");
 
+  /// Get gas price cached
   Future<Token> getGasPrice(Chain chain, {bool refresh = false}) async {
     // Allow override via config for testing
     var jsConfig = await OrchidUserConfig().getUserConfigJS();
@@ -35,11 +36,12 @@ class OrchidEthereumV1 {
       return tokenType.fromDouble(overrideValue);
     }
 
-    return cache.get(key: chain, producer: _fetchGasPrice, refresh: refresh);
+    return _gasPriceCache.get(
+        key: chain, producer: _fetchGasPrice, refresh: refresh);
   }
 
   Future<Token> _fetchGasPrice(Chain chain) async {
-    log("Fetching gas price");
+    log("Fetching gas price for chain: $chain");
     String result =
         await jsonRPC(url: chain.providerUrl, method: "eth_gasPrice");
     if (result.startsWith('0x')) {
@@ -50,6 +52,7 @@ class OrchidEthereumV1 {
     return tokenType.fromInt(BigInt.parse(result, radix: 16));
   }
 
+  // TODO: We should persistently cache these by block number
   /*
     event Create(IERC20 indexed token, address indexed funder, address indexed signer);
     event Update(bytes32 indexed key, uint256 escrow_amount);
@@ -59,7 +62,7 @@ class OrchidEthereumV1 {
     Chain chain,
     EthereumAddress signer,
   ) async {
-    print("fetch update events for: $signer, url = ${chain.providerUrl}");
+    print("fetch create events for: $signer, url = ${chain.providerUrl}");
     var startBlock = 0; // per chain
     var params = [
       {
@@ -95,6 +98,7 @@ class OrchidEthereumV1 {
     }).toList();
   }
 
+  // Note: this method's results are cached by the Account API
   static Future<LotteryPot> getLotteryPot(
       {Chain chain, EthereumAddress funder, EthereumAddress signer}) async {
     print("fetch pot V1 for: $funder, $signer, chain = $chain");
@@ -134,9 +138,18 @@ class OrchidEthereumV1 {
     return LotteryPot(balance: balance, deposit: deposit, unlock: unlock);
   }
 
+  static SingleCache<USD> _bandwidthPriceCache =
+      SingleCache(duration: Duration(seconds: 60), name: "bandwidth price");
+
+  /// Get the Chainlink bandwidth price oracle value
+  static Future<USD> getBandwidthPrice({bool refresh = false}) async {
+    return _bandwidthPriceCache.get(
+        producer: _fetchBandwidthPrice, refresh: refresh);
+  }
+
   /// Get the Chainlink bandwidth price oracle value
   // curl $url -H 'Content-Type: application/json' --data '{"jsonrpc":"2.0","method":"eth_call","params":[{"to": "0x8bD3feF1abb94E6587fCC2C5Cb0931099D0893A0", "data": "0x50d25bcd"}, "latest"],"id":1}'
-  static Future<USD> getBandwidthPrice() async {
+  static Future<USD> _fetchBandwidthPrice() async {
     var contractAddress = '0x8bD3feF1abb94E6587fCC2C5Cb0931099D0893A0';
     var latestAnswerHash = '0x50d25bcd';
 

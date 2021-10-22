@@ -39,9 +39,6 @@ class OXTLotteryPot implements LotteryPot {
   }
 
   static OXT maxTicketFaceValueFor(OXT balance, OXT deposit) {
-    //print("ZZZ: Token.min(${balance.floatValue}, ${deposit / 2.0}) = ${Token.min(balance, deposit / 2.0)}");
-    print("PPP: Token.min, deposit fv / 2.0 = ${deposit.floatValue / 2.0}, deposit / 2.0 =  ${(deposit / 2.0).floatValue}");
-    print("PPP1: ${deposit.floatValue / 2.0}");
     return Token.min(balance, deposit / 2.0);
   }
 

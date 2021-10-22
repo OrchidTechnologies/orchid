@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/util/streams.dart';
 
 typedef KeySelectionCallback = void Function(KeySelectionItem key);
 
@@ -38,6 +41,7 @@ class KeySelectionDropdown extends StatefulWidget {
 class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
   List<StoredEthereumKey> _keys = [];
   KeySelectionItem _selectedItem;
+  List<StreamSubscription> _subs = [];
 
   @override
   void initState() {
@@ -46,7 +50,6 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
   }
 
   void initStateAsync() async {
-
     // If an initial key selection is provided use it
     if (widget.initialSelection != null) {
       this._selectedItem = widget.initialSelection;
@@ -56,12 +59,13 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
     (await UserPreferences().keys.streamAsync()).listen((keys) {
       setState(() {
         this._keys = keys;
-        if (_selectedItem != null && !_keys.contains(_selectedItem.keyRef.getFrom(keys))) {
+        if (_selectedItem != null &&
+            !_keys.contains(_selectedItem.keyRef.getFrom(keys))) {
           _selectedItem = null;
-         widget.onSelection(null);
+          widget.onSelection(null);
         }
       });
-    });
+    }).dispose(_subs);
 
     // Update all state
     setState(() {});
@@ -123,8 +127,8 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
           child: Text(
             address,
             overflow: TextOverflow.ellipsis,
-              // style: TextStyle(color: Colors.white)
-              style: OrchidText.button,
+            // style: TextStyle(color: Colors.white)
+            style: OrchidText.button,
           ),
         );
       }).toList());
@@ -135,6 +139,12 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
 
   S get s {
     return S.of(context);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _subs.dispose();
   }
 }
 

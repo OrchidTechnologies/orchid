@@ -6,6 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/pages/account_manager/account_finder.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/titled_page_base.dart';
@@ -20,16 +21,13 @@ typedef AddFlowCompletion = void Function(CircuitHop result);
 class AddHopPage extends StatefulWidget {
   final AddFlowCompletion onAddFlowComplete;
 
-  const AddHopPage({Key key, this.onAddFlowComplete})
-      : super(key: key);
+  const AddHopPage({Key key, this.onAddFlowComplete}) : super(key: key);
 
   @override
   _AddHopPageState createState() => _AddHopPageState();
 }
 
 class _AddHopPageState extends State<AddHopPage> {
-  // bool _showPACs = false;
-  bool _showWireGuard = false;
 
   @override
   void initState() {
@@ -38,9 +36,6 @@ class _AddHopPageState extends State<AddHopPage> {
   }
 
   void initStateAsync() async {
-    // _showPACs = (await OrchidPurchaseAPI().apiConfig()).enabled;
-    _showWireGuard = true;
-    setState(() {});
   }
 
   @override
@@ -124,14 +119,13 @@ class _AddHopPageState extends State<AddHopPage> {
 
                     // WireGuard
                     pady(24),
-                    if (_showWireGuard) ...[
-                      _buildHopChoice(
-                          text: s.enterWireguardConfig,
-                          onTap: () {
-                            _addHopType(HopProtocol.WireGuard);
-                          },
-                          svgName: 'assets/svg/wireguard.svg'),
-                    ],
+                    _buildHopChoice(
+                      text: s.enterWireguardConfig,
+                      onTap: () {
+                        _addHopType(HopProtocol.WireGuard);
+                      },
+                      svgName: 'assets/svg/wireguard.svg',
+                    ),
 
                     pady(96),
                   ],
@@ -168,8 +162,7 @@ class _AddHopPageState extends State<AddHopPage> {
               child: Text(
                 text,
                 textAlign: TextAlign.left,
-                style: OrchidText.button
-                    .copyWith(fontSize: 19, height: 1.7),
+                style: OrchidText.button.copyWith(fontSize: 19, height: 1.7),
               ),
             ),
             trailing ?? Icon(Icons.chevron_right, color: Colors.white),

@@ -41,7 +41,7 @@ class MemoryOrchidLogAPI extends OrchidLogAPI {
 
   // Note: All Dart code runs in a single Isolate by default so explicit
   // Note: locking or synchronization should not be needed here.
-  List<String> _buffer = List<String>();
+  List<String> _buffer = <String>[];
 
   /// Notify observers when the log file has updated.
   PublishSubject<void> logChanged = PublishSubject<void>();

@@ -8,7 +8,7 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 
-/// Manages and discovers accounts for an signer identity.
+/// Discovers on-chain and persistently caches accounts for a single signer identity.
 class AccountStore extends ChangeNotifier {
   /// Identity
   final StoredEthereumKeyRef identity;
@@ -19,7 +19,7 @@ class AccountStore extends ChangeNotifier {
   /// If false only previously discovered cached accounts are loaded.
   final bool discoverAccounts;
 
-  /// Accounts discovered on chain for the active identity
+  /// Accounts discovered on chain for the active identity (possibly including cached)
   List<Account> discoveredAccounts = [];
 
   /// Cached accounts previously discovered on chain for the active identity

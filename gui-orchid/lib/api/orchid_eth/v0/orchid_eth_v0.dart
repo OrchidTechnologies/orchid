@@ -178,7 +178,7 @@ class OrchidEthereumV0 {
   Future<List<OrchidCreateEventV0>> getCreateEvents(
     EthereumAddress signer,
   ) async {
-    print("fetch update events for: $signer, url = ${await url}");
+    print("fetch create events for: $signer, url = ${await url}");
     var params = [
       {
         "topics": [
@@ -229,6 +229,7 @@ class OrchidEthereumV0 {
     // json null params should not be quoted
     postBody = postBody.replaceAll('"null"', 'null');
     log("jsonRPC to $url: postbody = $postBody");
+    //debugPrintStack();
 
     // do the post
     var response = await http.post(

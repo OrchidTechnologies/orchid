@@ -3,9 +3,10 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 
 import 'account_detail_poller.dart';
 
-/// This class hosts a cache of account detail pollers that is populated as
-/// account detail is requested for accounts by the get method.
-/// It currently fires its callback when any of the pollers updates.
+/// Hosts a pool of account detail pollers that is populated on-demand as
+/// individual accounts are requested by the get method.
+/// The store listens to all of its cached pollers and fires its account detail
+/// changed callback when any them updates.
 class AccountDetailStore {
   final Map<Account, AccountDetailPoller> _accountDetailMap = {};
 

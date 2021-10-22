@@ -23,9 +23,11 @@ import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/pages/account_manager/account_finder.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
@@ -74,6 +76,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   bool _balancePollInProgress = false;
   bool _showMarketStatsAlert = false;
 
+  bool _updatingAccounts = false;
+
   @override
   void initState() {
     super.initState();
@@ -117,6 +121,17 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         _pollBalanceAndAccountDetails();
       });
       _pollBalanceAndAccountDetails(); // kick one off immediately
+    }
+
+    if (widget.create) {
+      setState(() {
+        _updatingAccounts = true;
+      });
+      AccountFinder().find((accounts) async {
+        setState(() {
+          _updatingAccounts = false;
+        });
+      });
     }
   }
 
@@ -199,10 +214,14 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             },
           ),
           pady(24),
-          _divider(),
-          pady(24),
           _buildAccountDetails(),
-          pady(96),
+          pady(24),
+          if (_updatingAccounts)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: _buildUpdatingAccounts(),
+            ),
+          pady(24),
         ],
       ),
     );
@@ -354,8 +373,25 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     ]);
   }
 
+  Widget _buildUpdatingAccounts() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+            width: 20,
+            height: 20,
+            child: OrchidCircularProgressIndicator(
+              value: null, // indeterminate animation
+            )),
+        padx(16),
+        Text("Updating Accounts",
+            style: OrchidText.caption.copyWith(height: 1.7)),
+      ],
+    );
+  }
+
   // Build the signer key entry dropdown selector
-  Column _buildSelectSignerField() {
+  Widget _buildSelectSignerField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -771,7 +807,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _divider() {
     return Divider(
-      color: Colors.black.withOpacity(0.5),
+      color: Colors.white.withOpacity(0.5),
       height: 1.0,
     );
   }

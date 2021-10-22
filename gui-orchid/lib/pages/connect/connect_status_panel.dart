@@ -82,7 +82,8 @@ class ConnectStatusPanel extends StatelessWidget {
   }
 
   Widget _buildPanel({Widget icon, String text, String subtext}) {
-    return SizedBox(
+    return Container(
+      //duration: Duration(milliseconds: 200),
       width: 88,
       height: minHeight ? 74 : 40.0 + 12.0 + 74.0,
       child: OrchidPanel(
@@ -90,7 +91,11 @@ class ConnectStatusPanel extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (!minHeight)
-            Container(width: 40, height: 40, child: Center(child: icon)),
+            Container(
+              width: 40,
+              height: 40,
+              child: Center(child: icon),
+            ),
           if (minHeight) pady(8) else pady(12),
           Text(text, style: OrchidText.body2),
           pady(4),

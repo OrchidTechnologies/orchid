@@ -3,11 +3,10 @@ import 'dart:convert';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/pages/circuit/circuit_page.dart';
+import 'package:orchid/pages/circuit/circuit_utils.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
-import '../../orchid_api.dart';
 import 'orchid_account_import.dart';
 
 /// Support for importing the JavaScript configuration file used by the Orchid VPN.

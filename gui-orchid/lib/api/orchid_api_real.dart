@@ -44,7 +44,7 @@ class RealOrchidAPI implements OrchidAPI {
   /// that the UI has finished launching and all listeners have been established.
   Future<void> applicationReady() async {
     log("api: Application ready.");
-    _platform.invokeMethod('ready');
+    await _platform.invokeMethod('ready');
 
     // Write the config file on startup
     await updateConfiguration();

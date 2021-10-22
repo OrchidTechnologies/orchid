@@ -48,6 +48,7 @@ class ObservableAccountListPreference
 }
 
 // Holds a set of accounts. Returns {} empty set initially.
+// Writes {} empty set on null;
 class ObservableAccountSetPreference
     extends ObservablePreference<Set<Account>> {
   ObservableAccountSetPreference(UserPreferenceKey key)
@@ -63,9 +64,9 @@ class ObservableAccountSetPreference
                 return {};
               }
             },
-            storeValue: (key, accounts) {
+            storeValue: (key, accounts) async {
               String value =
-                  ObservableAccountListPreference.toJson(accounts.toList());
+                  ObservableAccountListPreference.toJson((accounts ?? {}).toList());
               return UserPreferences.writeStringForKey(key, value);
             });
 }

@@ -59,7 +59,6 @@ class ObservablePreference<T> {
   }
 
   Future<void> clear() async {
-    log("iap: clearing pac tx");
     return set(null);
   }
 
