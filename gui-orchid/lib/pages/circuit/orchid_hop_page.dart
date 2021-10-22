@@ -195,11 +195,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30.0),
       child: Column(
-        // crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          pady(36),
+          pady(8),
           InstructionsView(
-            image: Image.asset('assets/images/group12.png'),
             title: s.selectAnOrchidAccount,
             titleColor: Colors.white,
           ),
@@ -431,7 +429,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text("Orchid Account" + ':',
+        Text(s.funderAccount + ':',
             style: OrchidText.button.copyWith(
                 color: _funderValid()
                     ? OrchidColors.valid

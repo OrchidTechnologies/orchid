@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'orchid_colors.dart';
+
 class OrchidCircularEfficiencyIndicators {
   // Reeturn the main color and glow color for the efficiency
   static Color colorForEfficiency(double efficiency) {
@@ -74,6 +76,17 @@ class OrchidCircularProgressIndicator extends StatelessWidget {
     this.glowColor = Colors.deepPurple,
     this.backgroundColor = const Color(0x66FFFFFF),
   }) : super(key: key);
+
+  static OrchidCircularProgressIndicator smallIndeterminate({double size = 20}) {
+    return OrchidCircularProgressIndicator(
+      size: size,
+      value: null,
+      color: OrchidColors.purple_bright,
+      glowColor: OrchidColors.purple_bright,
+      blur: 4.0,
+      stroke: 2.0,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

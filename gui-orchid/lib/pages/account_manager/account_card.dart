@@ -110,8 +110,8 @@ class _AccountCardState extends State<AccountCard>
                 Align(
                   alignment: Alignment.topLeft,
                   child: Padding(
-                    padding:
-                        EdgeInsets.only(right: checkExtraWidth, bottom: checkExtraHeight),
+                    padding: EdgeInsets.only(
+                        right: checkExtraWidth, bottom: checkExtraHeight),
                     child: AnimatedBuilder(
                         animation: _gradientAnim,
                         builder: (context, snapshot) {
@@ -295,9 +295,9 @@ class _AccountCardState extends State<AccountCard>
     var depositText = lotteryPot?.deposit?.formatCurrency(digits: 2) ?? "";
     final efficiency = widget.accountDetail?.marketConditions?.efficiency ?? 0;
     final chartModel =
-        lotteryPot != null && widget.accountDetail?.transactions != null
+        lotteryPot != null
             ? AccountBalanceChartTicketModel(
-                lotteryPot, widget.accountDetail.transactions)
+                lotteryPot, widget.accountDetail.transactions ?? [])
             : null;
 
     return Padding(

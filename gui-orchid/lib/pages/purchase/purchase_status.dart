@@ -10,6 +10,7 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import '../../common/app_text.dart';
@@ -118,28 +119,24 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         : _buildProgressIndicator();
   }
 
-  // TODO: This message is tailored for the full purchase for this release.
-  // TODO: In the future it will need to look at the transaction type.
   Widget _buildCompleted() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text(
           s.transactionSentToBlockchain,
-          style: TextStyle(fontSize: 16),
-        ),
+        ).body1,
         pady(8),
         Text(
           s.yourPurchaseIsCompleteAndIsNowBeingProcessedBy,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-        ),
+        ).caption,
         pady(16),
         TextButton(
             onPressed: _copyDebugInfo,
             child: Text(
               s.copyReceipt,
-              style: AppText.linkStyle,
+              style: OrchidText.linkStyle,
             )),
       ],
     );
@@ -156,10 +153,10 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         pady(16),
         if (_userActionRetryable)
           FlatButton(
-              color: Colors.deepPurple,
+              color: OrchidColors.purple_ff8c61e1,
               child: Text(
-                s.retry,
-                style: TextStyle(color: Colors.white),
+                s.retry.toUpperCase(),
+                style: OrchidText.button,
               ),
               onPressed: _retryPurchase),
         pady(8),
@@ -173,15 +170,11 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Container(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(),
-        ),
-        pady(12),
+        OrchidCircularProgressIndicator.smallIndeterminate(size: 22),
+        pady(16),
         Text(
           _statusMessage ?? "",
-          style: TextStyle(fontSize: 16),
+          style: OrchidText.body1,
         )
       ],
     );
@@ -202,16 +195,17 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
       children: <Widget>[
         pady(12),
         FlatButton(
-            color: AppText.linkStyle.color,
-            child: Text(s.copyDebugInfo, style: TextStyle(color: Colors.white)),
-            onPressed: _copyDebugInfo),
+          color: OrchidColors.purple_ff8c61e1,
+          child: Text(s.copyDebugInfo.toUpperCase()).button,
+          onPressed: _copyDebugInfo,
+        ),
         pady(12),
         LinkText(s.contactOrchid,
-            style: AppText.linkStyle, url: 'https://orchid.com/contact'),
+            style: OrchidText.linkStyle, url: 'https://orchid.com/contact'),
         pady(12),
         FlatButton(
             color: Colors.redAccent,
-            child: Text(s.remove, style: TextStyle(color: Colors.white)),
+            child: Text(s.remove.toUpperCase()).button,
             onPressed: _confirmDeleteTransaction),
       ],
     );
@@ -278,7 +272,8 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
         );
         break;
       case PacTransactionState.Error:
-        _show(s.purchaseError, waitingForUserAction: true, userActionRetryable: false);
+        _show(s.purchaseError,
+            waitingForUserAction: true, userActionRetryable: false);
         break;
       case PacTransactionState.Complete:
         log("iap: purchase status set complete");

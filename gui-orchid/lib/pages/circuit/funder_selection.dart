@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/util/streams.dart';
@@ -90,21 +91,26 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
       child: IgnorePointer(
         ignoring: !widget.enabled,
         child: Container(
-          child: DropdownButton<FunderSelectionItem>(
-            dropdownColor: OrchidTextField.textFieldEnabledDecoration.color,
-            hint: Text("Choose Account", style: OrchidText.button),
-            isExpanded: true,
-            icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
-            underline: Container(),
-            // suppress the underline
-            value: _selectedItem,
-            items: _getDropdownItems(),
-            onChanged: (FunderSelectionItem item) {
-              setState(() {
-                _selectedItem = item;
-              });
-              widget.onSelection(item);
-            },
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: OrchidColors.dark_background,
+              focusColor: OrchidColors.purple_menu,
+            ),
+            child: DropdownButton<FunderSelectionItem>(
+              hint: Text(s.chooseAddress, style: OrchidText.button),
+              isExpanded: true,
+              icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
+              underline: Container(),
+              // suppress the underline
+              value: _selectedItem,
+              items: _getDropdownItems(),
+              onChanged: (FunderSelectionItem item) {
+                setState(() {
+                  _selectedItem = item;
+                });
+                widget.onSelection(item);
+              },
+            ),
           ),
         ),
       ),

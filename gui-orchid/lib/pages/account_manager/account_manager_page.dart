@@ -33,6 +33,7 @@ import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
+import '../app_routes.dart';
 import 'account_card.dart';
 import 'account_finder.dart';
 import 'account_store.dart';
@@ -319,26 +320,28 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       return;
     }
 
-    var bodyStyle = AppText.dialogBody; //.copyWith(fontSize: 15);
-    var body = RichText(
-        text: TextSpan(children: [
-      TextSpan(
-        text: identity.address.toString().prefix(24) + '\n\n',
-        style: bodyStyle.copyWith(fontWeight: FontWeight.bold),
-      ),
-      TextSpan(
-        text: s.thisCannotBeUndone +
-            " " +
-            s.deletingThisOrchidKeyCanCauseFundsInTheAssociated +
-            " ",
-        style: bodyStyle,
-      ),
-      AppText.buildLearnMoreLinkTextSpan(context),
-    ]));
+    // TODO: Pull out all our commonly used tags into OrchidText
+    var body = StyledText(
+      style: OrchidText.body2.black,
+      newLineAsBreaks: true,
+      text:
+          "This cannot be undone. <bold>OpenVPN</bold> and <bold>WireGuard®</bold> account "
+          "information will be lost.  <bold>Orchid account</bold> information is saved. "
+          "To save your entire circuit, cancel this dialog and go to "
+          "<save>Settings → Configuration Management → Export</save> to save your circuit config.",
+      tags: {
+        'bold': StyledTextTag(
+          style: OrchidText.body2.black.bold,
+        ),
+        'save': StyledTextActionTag((text, attr) {
+          Navigator.pushNamed(context, AppRoutes.manage_config);
+        }, style: OrchidText.linkStyle),
+      },
+    );
 
     await AppDialogs.showConfirmationDialog(
       context: context,
-      title: s.deleteThisOrchidKey,
+      title: "Delete this Orchid Identity",
       body: body,
       cancelText: s.cancel.toUpperCase(),
       //cancelColor: bodyStyle.color,

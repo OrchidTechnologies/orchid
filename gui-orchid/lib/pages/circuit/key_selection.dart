@@ -1,10 +1,9 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
@@ -80,21 +79,26 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
       child: IgnorePointer(
         ignoring: !widget.enabled,
         child: Container(
-          child: DropdownButton<KeySelectionItem>(
-            dropdownColor: OrchidTextField.textFieldEnabledDecoration.color,
-            hint: Text("Choose Identity").button,
-            isExpanded: true,
-            icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
-            underline: Container(),
-            // suppress the underline
-            value: _selectedItem,
-            items: _getDropdownItems(),
-            onChanged: (KeySelectionItem item) {
-              setState(() {
-                _selectedItem = item;
-              });
-              widget.onSelection(item);
-            },
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: OrchidColors.dark_background,
+              focusColor: OrchidColors.purple_menu,
+            ),
+            child: DropdownButton<KeySelectionItem>(
+              hint: Text("Choose Identity").button,
+              isExpanded: true,
+              icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
+              underline: Container(),
+              // suppress the underline
+              value: _selectedItem,
+              items: _getDropdownItems(),
+              onChanged: (KeySelectionItem item) {
+                setState(() {
+                  _selectedItem = item;
+                });
+                widget.onSelection(item);
+              },
+            ),
           ),
         ),
       ),
@@ -121,16 +125,25 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
 
     if (_keys != null) {
       items.addAll(_keys.map((key) {
-        var address = key.get().addressString;
+        var address = key.get().address;
+        var identicon = OrchidCircularIdenticon(address: address, size: 24);
         return new DropdownMenuItem<KeySelectionItem>(
-          value: KeySelectionItem(keyRef: key.ref()),
-          child: Text(
-            address,
-            overflow: TextOverflow.ellipsis,
-            // style: TextStyle(color: Colors.white)
-            style: OrchidText.button,
-          ),
-        );
+            value: KeySelectionItem(keyRef: key.ref()),
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: identicon,
+                ),
+                Flexible(
+                  child: Text(
+                    address.toString(),
+                    overflow: TextOverflow.ellipsis,
+                    style: OrchidText.button,
+                  ),
+                ),
+              ],
+            ));
       }).toList());
     }
 

@@ -28,15 +28,13 @@ class AddHopPage extends StatefulWidget {
 }
 
 class _AddHopPageState extends State<AddHopPage> {
-
   @override
   void initState() {
     super.initState();
     initStateAsync();
   }
 
-  void initStateAsync() async {
-  }
+  void initStateAsync() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +45,6 @@ class _AddHopPageState extends State<AddHopPage> {
         widget.onAddFlowComplete(null);
       },
       decoration: BoxDecoration(),
-      // no gradient
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28.0),
@@ -60,12 +57,6 @@ class _AddHopPageState extends State<AddHopPage> {
                   children: <Widget>[
                     if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max))
                       pady(64),
-                    pady(32),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Image.asset('assets/images/approach.png',
-                          height: 100),
-                    ),
                     pady(32),
                     Text(
                       s.orchidIsUniqueAsItSupportsMultipleVPN,
