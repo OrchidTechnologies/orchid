@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/help/open_source_page.dart';
 import 'package:orchid/pages/help/privacy_page.dart';
 import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
 import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:orchid/pages/settings/advanced_configuration_page.dart';
-import 'package:orchid/pages/settings/keygen_page.dart';
 import 'package:orchid/pages/settings/manage_config_page.dart';
-import 'package:orchid/pages/settings/deleted_accounts_page.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
 import 'account_manager/account_manager_page.dart';
@@ -56,7 +53,6 @@ class AppRoutes {
     onboarding_vpn_permission: (context) => OnboardingVPNPermissionPage(),
     circuit: (context) => CircuitPage(),
     traffic: (context) => TrafficView(),
-    accounts: (context) => AccountsPage(),
     manage_config: (context) => ManageConfigPage(),
     account_manager: (context) => AccountManagerPage()
   };

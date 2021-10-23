@@ -78,30 +78,6 @@ class UserPreferences {
   /// End: Circuit
   ///
 
-  // Add a single hop to the recently deleted list
-  void addRecentlyDeletedHop(CircuitHop hop) async {
-    var hops = await getRecentlyDeleted();
-    hops.hops.add(hop);
-    await setRecentlyDeleted(hops);
-  }
-
-  // Store recently deleted hops
-  Future<bool> setRecentlyDeleted(Hops hops) async {
-    log("saving recently deleted hops: ${hops.hops}");
-    String value = jsonEncode(hops);
-    return writeStringForKey(UserPreferenceKey.RecentlyDeletedHops, value);
-  }
-
-  // Get a list of recently deleted hops.
-  Future<Hops> getRecentlyDeleted() async {
-    String value = (await SharedPreferences.getInstance())
-        .getString(UserPreferenceKey.RecentlyDeletedHops.toString());
-    if (value == null) {
-      return Hops([]);
-    }
-    return Hops.fromJson(jsonDecode(value));
-  }
-
   // Get the user editable configuration file text.
   Future<String> getUserConfig() async {
     return (await SharedPreferences.getInstance())

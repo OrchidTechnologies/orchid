@@ -80,13 +80,6 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // Accounts
-              _divided(PageTile(
-                title: s.deletedHops,
-                onTap: () async {
-                  await Navigator.pushNamed(context, AppRoutes.accounts);
-                },
-              )),
 
               // Default curator
               _divided(PageTile(

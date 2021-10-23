@@ -141,8 +141,6 @@ class CircuitPageState extends State<CircuitPage>
       children: <Widget>[
         pady(8),
         _buildNewHopTile(),
-        if (!_hasHops()) pady(16),
-        _buildDeletedHopsLink(),
       ],
     );
   }
@@ -162,22 +160,6 @@ class CircuitPageState extends State<CircuitPage>
             child: Center(
                 child: Text("ADD NEW HOP", style: OrchidText.button.tappable)),
           )),
-    );
-  }
-
-  Widget _buildDeletedHopsLink() {
-    return Container(
-      height: 45,
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: LinkText(
-          s.viewDeletedHops,
-          style: OrchidText.caption.linkStyle,
-          onTapped: () {
-            Navigator.pushNamed(context, '/settings/accounts');
-          },
-        ),
-      ),
     );
   }
 
@@ -349,43 +331,6 @@ class CircuitPageState extends State<CircuitPage>
     );
   }
 
-  // switch deleted hops to use new tiles
-  @deprecated
-  static Widget buildHopTile({
-    @required BuildContext context,
-    @required UniqueHop uniqueHop,
-    VoidCallback onTap,
-    Color bgColor,
-    bool showAlertBadge,
-  }) {
-    Color color = Colors.white;
-    Image image;
-    String svgName;
-    switch (uniqueHop.hop.protocol) {
-      case HopProtocol.Orchid:
-        image = Image.asset('assets/images/logo2.png', color: color);
-        break;
-      case HopProtocol.OpenVPN:
-        svgName = 'assets/svg/openvpn.svg';
-        break;
-      case HopProtocol.WireGuard:
-        svgName = 'assets/svg/wireguard.svg';
-        break;
-    }
-    var title = uniqueHop.hop.displayName(context);
-    return HopTile(
-      showAlertBadge: showAlertBadge,
-      textColor: color,
-      color: bgColor ?? Colors.white,
-      image: image,
-      svgName: svgName,
-      onTap: onTap,
-      key: Key(uniqueHop.key.toString()),
-      title: title,
-      showTopDivider: false,
-    );
-  }
-
   ///
   /// Begin - Add / view hop logic
   ///
@@ -463,8 +408,6 @@ class CircuitPageState extends State<CircuitPage>
     var removedHop = _hops.removeAt(index);
     setState(() {});
     _saveCircuit();
-    // _recycleHopIfAllowed(uniqueHop);
-    UserPreferences().addRecentlyDeletedHop(removedHop.hop);
   }
 
   // Callback for drag to reorder
