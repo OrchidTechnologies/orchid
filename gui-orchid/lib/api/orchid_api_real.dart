@@ -188,11 +188,6 @@ class RealOrchidAPI implements OrchidAPI {
   }
 
   @override
-  Future<void> reroute() async {
-    await _platform.invokeMethod('reroute');
-  }
-
-  @override
   OrchidBudgetAPI budget() {
     return OrchidBudgetAPI();
   }

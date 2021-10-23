@@ -279,8 +279,6 @@
         } else if ([@"disconnect" isEqualToString:call.method]) {
             [weakSelf stopVPN];
             result(nil);
-        } else if ([@"reroute" isEqualToString:call.method]) {
-            result(nil);
         } else if ([@"install" isEqualToString:call.method]) {
             [weakSelf initProvider: result];
         } else if ([@"group_path" isEqualToString:call.method]) {

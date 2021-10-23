@@ -306,10 +306,6 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
     }
   }
 
-  /// Choose a new, randomized, network route.
-  @override
-  Future<void> reroute() async {}
-
   void _setConnectionState(OrchidVPNExtensionState state) {
     logger().write('Connection state: $state');
     vpnExtensionStatus.add(state);

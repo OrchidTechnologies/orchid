@@ -53,9 +53,6 @@ class MainActivity(): FlutterActivity() {
                     feedback.invokeMethod("connectionStatus", "Disconnected")
                     result.success(null)
                 }
-                "reroute" -> {
-                    result.success(null)
-                }
                 "version" -> {
                     result.success("${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                 }

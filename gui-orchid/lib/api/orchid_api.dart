@@ -64,9 +64,6 @@ abstract class OrchidAPI {
   /// specified by its configuration file.
   Future<void> setVPNExtensionEnabled(bool enabled);
 
-  /// Choose a new, randomized, network route.
-  Future<void> reroute();
-
   /// API for funds and budgeting
   OrchidBudgetAPI budget();
 
