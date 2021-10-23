@@ -1,6 +1,8 @@
 import 'package:dartjsengine/dartjsengine.dart';
 import 'package:jsparser/jsparser.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+// dartjsengine depends uses jsparser
+// https://github.com/anuragvohraec/dartJSEngine
 
 class JSConfig {
   var jsEngine = JSEngine();

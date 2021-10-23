@@ -29,6 +29,11 @@ class Circuit {
   }
 
   Map<String, dynamic> toJson() => {'hops': hops};
+
+  @override
+  String toString() {
+    return 'Circuit{hops: $hops}';
+  }
 }
 
 class Hops {

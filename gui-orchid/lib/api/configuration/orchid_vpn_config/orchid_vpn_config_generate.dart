@@ -18,7 +18,7 @@ class OrchidVPNConfigGenerate {
   static Future<String> generateConfig({
     bool forExport = false,
   }) async {
-    Circuit circuit = await UserPreferences().getCircuit();
+    Circuit circuit = await UserPreferences().circuit.get();
     List<StoredEthereumKey> keys = await UserPreferences().keys.get();
     List<CircuitHop> hops = circuit?.hops ?? [];
 

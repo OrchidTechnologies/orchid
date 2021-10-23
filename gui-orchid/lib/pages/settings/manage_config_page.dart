@@ -120,7 +120,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
     var config = '// Circuit\n' +
         (await OrchidVPNConfigGenerate.generateConfig(forExport: true));
     var keys = (await UserPreferences().keys.get())
-        .map((storedKey) => storedKey.private)
+        .map((storedKey) => storedKey.formatSecretFixed())
         .toList();
     config += '\n\n// All keys\nkeys=' + keys.toString();
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {

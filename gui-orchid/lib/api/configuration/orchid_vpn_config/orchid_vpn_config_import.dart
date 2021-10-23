@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/circuit/circuit_utils.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
@@ -12,20 +13,44 @@ import 'orchid_account_import.dart';
 /// Support for importing the JavaScript configuration file used by the Orchid VPN.
 // Note: The parsing in this class should be simplified using the (real) JSConfig parser.
 class OrchidVPNConfigImport {
+  /// Parse JavaScript config text optionally containing a variable assignment expression
+  /// for `keys`.   Returns a list of new keys or an empty list.  e.g.
+  ///   keys = [1234..., 1234...];
+  static List<StoredEthereumKey> parseKeys(
+      String js, List<StoredEthereumKey> existingKeys) {
+    // Match a 'keys' variable assignment to a list of JS object literals:
+    js = OrchidAccountImport.removeNewlines(js);
+    RegExp exp = RegExp(r'\s*[Kk][Ee][Yy][Ss]\s*=\s*\[(.*)]\s*;?\s*');
+    var match = exp.firstMatch(js);
+    if (match == null) {
+      return [];
+    }
+    var secrets = match
+        .group(1)
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty);
 
-  /// Parse JavaScript text containing a variable assignment expression for the `hops`
+    var newKeys = <StoredEthereumKey>[];
+    secrets.forEach((secret) {
+      OrchidAccountImport.resolveImportedKey(secret, existingKeys, newKeys);
+    });
+    return newKeys;
+  }
+
+  /// Parse JavaScript config text containing a variable assignment expression for the `hops`
   /// configuration list and return the Circuit.  e.g.
   ///   hops = [{curator: "partners.orch1d.eth", protocol: "orchid", funder: "0x405bc10e04e3f487e9925ad5815e4406d78b769e", secret: "894643a2de07568a51f7fe59650365dea0e04376819ecff08e686face92ca16e"}];
-  /// TODO: For now we are transforming the JS object literal into JSON for parsing.
-  /// TODO: We should update this to use our JSConfig (real) JS parser.
-  static ParseCircuitResult parseCircuit(String js,
-      List<StoredEthereumKey> existingKeys) {
-    // Remove newlines, etc.
-    js = OrchidAccountImport.normalizeInputJSON(js);
+  static ParseCircuitResult parseCircuit(
+      String js, List<StoredEthereumKey> existingKeys) {
+    // Note: It would be ideal to use our JSConfig JS parser to pull out the hops
+    // here but ultimately we would want it in JSON to deserialize it and our
+    // current JS parser cannot perform that conversion or even give us the text.
 
     // Match a 'hops' variable assignment to a list of JS object literals:
     // hops = [{curator: "partners.orch1d.eth",...
-    RegExp exp = RegExp(r'\s*[Hh][Oo][Pp][Ss]\s*=\s*(\[.*\])\s*;?\s*');
+    js = OrchidAccountImport.removeNewlines(js);
+    RegExp exp = RegExp(r'\s*[Hh][Oo][Pp][Ss]\s*=\s*(\[.*?\])\s*;?\s*');
     var match = exp.firstMatch(js);
     var hopsString = match.group(1);
 
@@ -45,7 +70,8 @@ class OrchidVPNConfigImport {
     // Resolve chain and contract version.
     var tempKeys = <StoredEthereumKey>[];
     json['hops']
-        .where((hop) => hop['protocol'] == "orchid")
+        .where((hop) =>
+            ((hop['protocol'] ?? '') as String).contains(RegExp(r'orch[i1]d')))
         .forEach((hop) {
       _resolveImportedKeyFromJSON(hop, existingKeys, tempKeys);
       _resolveChainAndVersionFromJson(hop);
@@ -67,7 +93,7 @@ class OrchidVPNConfigImport {
       throw Exception("keyRef in parsed json");
     }
     StoredEthereumKey key =
-    OrchidAccountImport.resolveImportedKey(secret, existingKeys, newKeys);
+        OrchidAccountImport.resolveImportedKey(secret, existingKeys, newKeys);
     hop['keyRef'] = key.ref().toString();
   }
 
@@ -77,37 +103,44 @@ class OrchidVPNConfigImport {
   /// in the case of main net where a currency of "ETH" indicates version 0.
   static void _resolveChainAndVersionFromJson(dynamic hop) {
     // Get the chain
-    var chainId = hop['chainid'] ?? hop['chainId']; // accept either case
+    var chainId = hop['chainid'] ?? hop['chainId'] ?? 0; // accept either case
     hop['chainId'] = chainId; // convert to camel case
 
     // Infer the contract version
     var currency = hop['currency'];
-    if (chainId == Chains.ETH_CHAINID && currency.toString().toUpperCase() == "ETH") {
+    if (chainId == Chains.ETH_CHAINID &&
+        currency.toString().toUpperCase() == "ETH") {
       hop['version'] = 0;
     } else {
       hop['version'] = 1;
     }
   }
 
-
   /// Import a new configuration file, replacing any existing configuration.
   /// Existing signer keys are unaffected.
   static Future<bool> importConfig(String config) async {
-    var existingKeys = await UserPreferences().getKeys();
+    var existingKeys = await UserPreferences().keys.get();
     var parsedCircuit = parseCircuit(config, existingKeys);
 
-    // Save any newly imported keys
-    if (parsedCircuit.newKeys.length > 0) {
-      print("Import added ${parsedCircuit.newKeys.length} new keys.");
+    // Save any newly imported keys found in the circuit
+    if (parsedCircuit.newKeys.isNotEmpty) {
+      log("Import added ${parsedCircuit.newKeys.length} new keys.");
       await UserPreferences().addKeys(parsedCircuit.newKeys);
     }
 
     // Save the imported circuit.
     await CircuitUtils.saveCircuit(parsedCircuit.circuit);
-    print("Import saved ${parsedCircuit.circuit.hops.length} hop circuit.");
+    log("Import saved ${parsedCircuit.circuit.hops.length} hop circuit.");
+
+    // Parse optional keys list
+    var parsedKeys = parseKeys(config, existingKeys);
+    if (parsedKeys.isNotEmpty) {
+      log("Imported keys list added ${parsedKeys.length} new keys.");
+      await UserPreferences().addKeys(parsedKeys);
+    }
+
     return true;
   }
-
 } // OrchidVPNConfig
 
 typedef OrchidConfigValidator = bool Function(String config);
@@ -121,8 +154,7 @@ class OrchidVPNConfigValidationV0 {
       return false;
     }
     try {
-      var parsedCircuit =
-      OrchidVPNConfigImport.parseCircuit(config, [] /*no existing keys*/);
+      var parsedCircuit = OrchidVPNConfigImport.parseCircuit(config, [] /*no existing keys*/);
       var circuit = parsedCircuit.circuit;
       return _isValidCircuitForImport(circuit);
     } catch (err, s) {
