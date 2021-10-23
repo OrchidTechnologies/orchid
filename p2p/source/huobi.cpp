@@ -28,16 +28,15 @@
 namespace orc {
 
 task<Float> Huobi(Base &base, const std::string &pair, const Float &adjust) {
-    const auto result(Parse((co_await base.Fetch("GET", {{"https", "api.huobi.pro", "443"}, "/market/trade?symbol=" + pair}, {}, {})).ok()));
-    const auto status(result["status"].asString());
+    const auto result(Parse((co_await base.Fetch("GET", {{"https", "api.huobi.pro", "443"}, "/market/trade?symbol=" + pair}, {}, {})).ok()).as_object());
+    const auto status(Str(result.at("status")));
     if (false) {
     } else if (status == "ok") {
-        const auto &ticks(result["tick"]["data"]);
-        orc_assert(!ticks.empty());
-        co_return Float(ticks[0]["price"].asString()) / adjust;
+        const auto &ticks(result.at("tick").at("data").as_array());
+        co_return Float(Num<double>(ticks.at(0).at("price"))) / adjust;
     } else if (status == "error") {
-        const auto code(result["err-code"].asString());
-        const auto message(result["err-msg"].asString());
+        const auto code(Str(result.at("err-code")));
+        const auto message(Str(result.at("err-msg")));
         orc_throw(code << ": " << message);
     } else orc_assert(false);
 }

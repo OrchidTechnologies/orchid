@@ -116,7 +116,7 @@ struct Codec {
     {
     }
 
-    Codec(const boost::json::object &object, const std::optional<Kind> &kind) :
+    Codec(const Object &object, const std::optional<Kind> &kind) :
         kind_(kind ? *kind : ToKind(Str(object.at("kind")))),
         type_(Str(object.at("mimeType"))),
         rate_(Num<decltype(rate_)>(object.at("clockRate")))
@@ -148,8 +148,8 @@ struct Codec {
             payload_ = Num<uint8_t>(*payload);
     }
 
-    boost::json::object Json(bool preferred) const {
-        boost::json::object object;
+    Object Json(bool preferred) const {
+        Object object;
 
         if (preferred)
             object["kind"] = Str(kind_);
@@ -161,7 +161,7 @@ struct Codec {
             object["channels"] = channels_;
 
         if (!parameters_.empty()) {
-            boost::json::object parameters;
+            Object parameters;
             for (const auto &[name, value] : parameters_)
                 parameters[name] = value;
             object["parameters"] = std::move(parameters);
@@ -170,7 +170,7 @@ struct Codec {
         if (!feedbacks_.empty()) {
             boost::json::array feedbacks;
             for (const auto &[type, parameter] : feedbacks_) {
-                boost::json::object feedback({{"type", type}});
+                Object feedback({{"type", type}});
                 if (!parameter.empty())
                     feedback["parameter"] = parameter;
                 feedbacks.emplace_back(std::move(feedback));
@@ -222,7 +222,7 @@ struct Extension {
     bool encrypt_;
 
 
-    Extension(const boost::json::object &object, const std::optional<Kind> &kind) {
+    Extension(const Object &object, const std::optional<Kind> &kind) {
         if (kind)
             kind_ = *kind;
         else {
@@ -235,8 +235,8 @@ struct Extension {
         encrypt_ = object.at(kind ? "encrypt" : "preferredEncrypt").as_bool();
     }
 
-    boost::json::object Json(bool preferred) const {
-        boost::json::object object;
+    Object Json(bool preferred) const {
+        Object object;
 
         if (preferred) {
             object["kind"] = Str(kind_);
@@ -264,7 +264,7 @@ struct Capabilities {
     std::multiset<Extension> extensions_;
     std::set<Codec> codecs_;
 
-    Capabilities(const boost::json::object &object, const std::optional<Kind> &kind) {
+    Capabilities(const Object &object, const std::optional<Kind> &kind) {
         for (const auto &codec : object.at("codecs").as_array())
             codecs_.emplace(Codec(codec.as_object(), kind));
         for (const auto &extension : object.at("headerExtensions").as_array())
@@ -348,7 +348,7 @@ struct Capabilities {
         }
     }
 
-    boost::json::object Json(bool preferred) const {
+    Object Json(bool preferred) const {
         boost::json::array codecs;
         for (const auto &codec : codecs_)
             codecs.emplace_back(codec.Json(preferred));
@@ -368,9 +368,9 @@ struct Parameters :
     public Capabilities
 {
     boost::json::array encodings_;
-    boost::json::object rtcp_;
+    Object rtcp_;
 
-    Parameters(const boost::json::object &object, const std::optional<Kind> &kind, std::string &cname) :
+    Parameters(const Object &object, const std::optional<Kind> &kind, std::string &cname) :
         Capabilities(object, kind)
     {
         encodings_ = object.at("encodings").as_array();
@@ -423,7 +423,7 @@ struct Parameters :
             if (!rtx && codec.rtx())
                 rtx = true;
 
-        boost::json::object encoding;
+        Object encoding;
         encoding["ssrc"] = ++Ssrc_;
         if (rtx)
             encoding["rtx"] = {{"ssrc", ++Ssrc_}};
@@ -435,7 +435,7 @@ struct Parameters :
         encodings_.emplace_back(std::move(encoding));
     }
 
-    boost::json::object Json(std::optional<std::string> mid) const {
+    Object Json(std::optional<std::string> mid) const {
         auto object(Capabilities::Json(false));
         object["encodings"] = encodings_;
         object["rtcp"] = rtcp_;
@@ -461,7 +461,7 @@ struct Production {
         consumable_(kind_, provided, supported, payloads_)
     {
         for (const auto &value : provided.encodings_) {
-            boost::json::object encoding(value.as_object());
+            Object encoding(value.as_object());
 
             encoding.erase("rid");
             encoding.erase("rtx");
@@ -545,7 +545,7 @@ class Netstring :
 };
 
 void Worker::Land(Pipe<Buffer> *pipe, const Buffer &data) {
-    auto result(ParseB(data.str()).as_object());
+    auto result(Parse(data.str()).as_object());
     const auto id(result.find("id"));
     if (id != result.end()) {
         const auto locked(locked_());
@@ -608,8 +608,8 @@ task<void> Worker::Shut() noexcept {
     co_await Bonded::Shut();
 }
 
-task<boost::json::object> Worker::Call(const std::string &method, boost::json::object internal, boost::json::object data) {
-    boost::json::object request({
+task<Object> Worker::Call(const std::string &method, Object internal, Object data) {
+    Object request({
         {"method", method},
         {"internal", std::move(internal)},
         {"data", std::move(data)},
@@ -624,7 +624,7 @@ task<boost::json::object> Worker::Call(const std::string &method, boost::json::o
         return transfer.first;
     }());
 
-    co_await send_->Send(Subset(UnparseB(request)));
+    co_await send_->Send(Subset(Unparse(request)));
     const auto result(co_await *transfer->second);
     locked_()->transfers_.erase(transfer);
 
@@ -634,7 +634,7 @@ task<boost::json::object> Worker::Call(const std::string &method, boost::json::o
 
     const auto response(result.find("data"));
     if (response == result.end())
-        co_return boost::json::object({});
+        co_return Object({});
     co_return response->value().as_object();
 }
 
@@ -651,7 +651,7 @@ boost::json::array MapJ(Type_ &&values, Code_ code) {
 }
 
 int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params) {
-    Capabilities supported(Capabilities(ParseB(Tables_).as_object(), {}), {
+    Capabilities supported(Capabilities(Parse(Tables_).as_object(), {}), {
         Codec(Kind::Audio, "audio/opus", 48000, 2, {}),
         Codec(Kind::Video, "video/VP8", 90000, 0, {{"x-google-start-bitrate", 1000}}),
     });
@@ -677,7 +677,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
     site(http::verb::get, "/ms/capabilities", [&](Request request) -> task<Response> {
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB(supported.Json(true)));
+        }, Unparse(supported.Json(true)));
     });
 
     site(http::verb::get, "/ms/transport", [&](Request request) -> task<Response> {
@@ -708,7 +708,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
         // id, dtlsParameters, iceCandidates, iceParameters
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB(result));
+        }, Unparse(result));
     });
 
     site(http::verb::post, "/ms/connect/(.*)"_ctre, [&](Matches1 matches, Request request) -> task<Response> {
@@ -717,11 +717,11 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
         co_await worker->Call("transport.connect", {
             {"routerId", router.str()},
             {"transportId", transport.str()},
-        }, {{"dtlsParameters", ParseB(request.body())}});
+        }, {{"dtlsParameters", Parse(request.body())}});
 
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB({}));
+        }, Unparse({}));
     });
 
     site(http::verb::post, "/ms/produce/(.*)"_ctre, [&](Matches1 matches, Request request) -> task<Response> {
@@ -731,7 +731,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
         const auto transportation(transportations.find(transport));
         orc_assert(transportation != transportations.end());
 
-        const auto body(ParseB(request.body()).as_object());
+        const auto body(Parse(request.body()).as_object());
         const auto kind(ToKind(Str(body.at("kind"))));
         const auto &parameters(body.at("rtpParameters").as_object());
         const auto mid(Str(parameters.at("mid")));
@@ -739,18 +739,18 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
         Production production(kind, provided, supported);
 
 
-        boost::json::object data;
+        Object data;
 
         data["kind"] = Str(kind);
         data["rtpParameters"] = provided.Json(mid);
 
         data["rtpMapping"] = {
             {"codecs", MapJ(production.payloads_, [&](const auto &_) { auto &&[before, after] = _;
-                return boost::json::object({{"payloadType", before}, {"mappedPayloadType", after}});
+                return Object({{"payloadType", before}, {"mappedPayloadType", after}});
             })},
             {"encodings", MapJ(Zip(provided.encodings_, production.ssrcs_), [&](const auto &_) { auto &&[value, ssrc] = _;
                 const auto &object(value.as_object());
-                boost::json::object encoding;
+                Object encoding;
                 encoding["mappedSsrc"] = ssrc;
 		if (const auto value = object.if_contains("rid"))
                     encoding["rid"] = *value;
@@ -775,7 +775,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
 
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB({{"id", producer.str()}}));
+        }, Unparse({{"id", producer.str()}}));
     });
 
     site(http::verb::post, "/ms/consume/(.*)/(.*)"_ctre, [&](Matches2 matches, Request request) -> task<Response> {
@@ -786,7 +786,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
         const auto production(productions.find(producer));
         orc_assert(production != productions.end());
 
-        Capabilities supported(ParseB(request.body()).as_object(), std::nullopt);
+        Capabilities supported(Parse(request.body()).as_object(), std::nullopt);
         Parameters consuming(production->second.consumable_, supported);
         auto dumped(consuming.Json(Str(++mid)));
 
@@ -807,7 +807,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
 
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB({
+        }, Unparse({
             {"id", consumer.str()},
             {"kind", Str(production->second.kind_)},
             {"rtpParameters", std::move(dumped)},
@@ -830,7 +830,7 @@ int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &
 
         co_return Respond(request, http::status::ok, {
             {"content-type", "application/json"}, cors,
-        }, UnparseB({}));
+        }, Unparse({}));
     });
 
     site(http::verb::get, "/test/(.*)"_ctre, [&](Matches1 matches, Request request) -> task<Response> {

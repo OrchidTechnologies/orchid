@@ -401,6 +401,11 @@ class Subset final :
     const Segment segment_;
 
   public:
+    explicit Subset() :
+        segment_()
+    {
+    }
+
     Subset(const Segment &segment) :
         segment_(segment)
     {

@@ -138,13 +138,13 @@ task<Provider> Network::Select(const std::string &name, const Address &provider)
     const Beam fingerprint(window);
 
     static const std::map<Beam, std::string> algorithms_({
-        {Object(NID_md2), "md2"},
-        {Object(NID_md5), "md5"},
-        {Object(NID_sha1), "sha-1"},
-        {Object(NID_sha224), "sha-224"},
-        {Object(NID_sha256), "sha-256"},
-        {Object(NID_sha384), "sha-384"},
-        {Object(NID_sha512), "sha-512"},
+        {Abstract(NID_md2), "md2"},
+        {Abstract(NID_md5), "md5"},
+        {Abstract(NID_sha1), "sha-1"},
+        {Abstract(NID_sha224), "sha-224"},
+        {Abstract(NID_sha256), "sha-256"},
+        {Abstract(NID_sha384), "sha-384"},
+        {Abstract(NID_sha512), "sha-512"},
     });
 
     const auto algorithm(algorithms_.find(Window(tls).Take(tls.size() - fingerprint.size())));

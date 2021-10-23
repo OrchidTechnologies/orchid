@@ -31,6 +31,10 @@
 
 namespace orc {
 
+typedef boost::json::value Any;
+typedef boost::json::object Object;
+typedef boost::json::array Array;
+
 class Argument final {
   private:
     mutable Json::Value value_;
@@ -134,33 +138,33 @@ class Argument final {
 
 typedef std::map<std::string, Argument> Multi;
 
-inline std::string Unparse(Argument &&data) {
+inline std::string UnparseO(Argument &&data) {
     Json::StreamWriterBuilder builder;
     builder["indentation"] = "";
     return Json::writeString(builder, std::move(data));
 }
 
-inline Json::Value Parse(const std::string &data) { orc_block({
+inline Json::Value ParseO(const std::string &data) { orc_block({
     Json::Value result;
     Json::Reader reader;
     orc_assert(reader.parse(data, result, false));
     return result;
 }, "parsing " << data); }
 
-inline std::string UnparseB(const boost::json::value &data) {
+inline std::string Unparse(const Any &data) {
     return boost::json::serialize(data);
 }
 
-inline boost::json::value ParseB(const std::string &data) { orc_block({
+inline Any Parse(const std::string &data) { orc_block({
     return boost::json::parse(data);
 }, "parsing " << data); }
 
-inline boost::json::value Reparse(const Json::Value &data) {
-    return ParseB(Unparse(data));
+inline Any Reparse(const Json::Value &data) {
+    return Parse(UnparseO(data));
 }
 
-inline Json::Value Reparse(const boost::json::value &data) {
-    return Parse(UnparseB(data));
+inline Json::Value Reparse(const Any &data) {
+    return ParseO(Unparse(data));
 }
 
 template <typename Type_>
@@ -182,7 +186,7 @@ orc_element(UInt)
 
 template <typename... Elements_, size_t... Indices_>
 std::tuple<Elements_...> Parse(const std::string &data, std::index_sequence<Indices_...>) {
-    const auto array(Parse(data));
+    const auto array(ParseO(data));
     return std::make_tuple<Elements_...>(Element<Elements_>::Get(array, Indices_)...);
 }
 
@@ -198,12 +202,12 @@ inline std::string Str(const boost::string_view &value) {
     return std::string(value); }
 inline std::string Str(const boost::json::string &value) {
     return Str(value.operator boost::string_view()); }
-inline std::string Str(const boost::json::value &value) {
+inline std::string Str(const Any &value) {
     return Str(value.as_string()); }
 
 // XXX: this is dangerous and needs Fit
 template <typename Type_>
-Type_ Num(const boost::json::value &value) {
+Type_ Num(const Any &value) {
     switch (value.kind()) {
         case boost::json::kind::int64:
             return Type_(value.get_int64());

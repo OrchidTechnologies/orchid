@@ -25,7 +25,6 @@
 #include "notation.hpp"
 #include "parallel.hpp"
 #include "sleep.hpp"
-#include "structured.hpp"
 #include "updater.hpp"
 
 namespace orc {

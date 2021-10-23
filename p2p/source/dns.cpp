@@ -49,12 +49,12 @@ task<std::vector<asio::ip::tcp::endpoint>> Base::Resolve(const std::string &host
             results.emplace_back(endpoint);
     } else {
         const auto &result(co_await cache_(host));
-        const auto status(result["Status"].asUInt());
-        orc_assert_(status == 0, dns_rcode_text(static_cast<dns_rcode_t>(status)));
+        const auto status(static_cast<dns_rcode_t>(Num<uint16_t>(result.at("Status"))));
+        orc_assert_(status == RCODE_OKAY, dns_rcode_text(status));
 
-        for (const auto &answer : result["Answer"])
-            if (answer["type"].asUInt64() == 1) {
-                const auto endpoints(resolver.resolve(answer["data"].asString(), port));
+        for (const auto &answer : result.at("Answer").as_array())
+            if (static_cast<dns_type>(Num<uint16_t>(answer.at("type"))) == RR_A) {
+                const auto endpoints(resolver.resolve(Str(answer.at("data")), port));
                 for (const auto &endpoint : endpoints)
                     results.emplace_back(endpoint);
             }
@@ -63,7 +63,7 @@ task<std::vector<asio::ip::tcp::endpoint>> Base::Resolve(const std::string &host
     co_return std::move(results);
 }, "resolving " << host << ":" << port); }
 
-cppcoro::shared_task<Json::Value> Base::Resolve_(Base &base, const std::string &host) {
+cppcoro::shared_task<Any> Base::Resolve_(Base &base, const std::string &host) {
     co_return Parse((co_await base.Fetch("GET", {{"https", "1.0.0.1", "443"}, "/dns-query?type=A&name=" + host}, {
         {"accept", "application/dns-json"}
     }, {})).ok());

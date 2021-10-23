@@ -217,6 +217,9 @@ $(call patternize,$(tqsrc)): $(output)/$(pwd/v8)/torque $(patsubst %,$(pwd)/v8/%
 	$< -o $(dir $<)/torque-generated -v8-root $(pwd/v8) $(patsubst ./%,%,$(torque))
 	find $(dir $<)/torque-generated -type f -exec touch {} +
 
+archive += $(output)/$(pwd/v8)/torque-generated
+linked += $(output)/$(pwd/v8)/torque-generated.a
+
 source += $(filter %.cc,$(tqsrc))
 header += $(filter %.h %.inc,$(tqsrc))
 

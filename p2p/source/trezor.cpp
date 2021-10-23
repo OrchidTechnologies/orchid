@@ -47,10 +47,10 @@ TrezorSession::TrezorSession(S<Base> base, std::string session) :
 
 task<S<TrezorSession>> TrezorSession::New(S<Base> base) {
     const auto devices(Parse(co_await Trezor(base, "/enumerate")));
-    const auto device(devices[0]);
-    const auto previous(device["session"]);
-    const auto session(Parse(co_await Trezor(base, "/acquire/" + device["path"].asString() + "/" + (previous.isNull() ? "null" : previous.asString()))));
-    co_return Break<TrezorSession>(std::move(base), session["session"].asString());
+    const auto device(devices.at(0).as_object());
+    const auto previous(device.find("session"));
+    const auto session(Parse(co_await Trezor(base, "/acquire/" + Str(device.at("path")) + "/" + (previous == device.end() ? "null" : Str(previous->value())))).as_object());
+    co_return Break<TrezorSession>(std::move(base), Str(session.at("session")));
 }
 
 task<void> TrezorSession::Shut() noexcept {

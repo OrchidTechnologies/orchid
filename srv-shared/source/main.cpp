@@ -251,7 +251,7 @@ int Main(int argc, const char *const argv[]) {
 
     Builder tls;
     static const std::regex re("-");
-    tls += Object(std::regex_replace(fingerprint->algorithm, re, "").c_str());
+    tls += Abstract(std::regex_replace(fingerprint->algorithm, re, "").c_str());
     tls += Subset(fingerprint->digest.data(), fingerprint->digest.size());
 
     std::cout << "url = " << url << std::endl;

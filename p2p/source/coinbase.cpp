@@ -29,16 +29,16 @@ namespace orc {
 
 task<Float> Coinbase(Base &base, const std::string &pair, const Float &adjust) {
     const auto response(co_await base.Fetch("GET", {{"https", "api.coinbase.com", "443"}, "/v2/prices/" + pair + "/spot"}, {}, {}));
-    const auto result(Parse(response.body()));
+    const auto result(Parse(response.body()).as_object());
     if (response.result() == http::status::ok) {
-        const auto &data(result["data"]);
-        co_return Float(data["amount"].asString()) / adjust;
+        const auto &data(result.at("data").as_object());
+        co_return Float(Str(data.at("amount"))) / adjust;
     } else {
-        const auto &errors(result["errors"]);
+        const auto &errors(result.at("errors").as_array());
         orc_assert(errors.size() == 1);
-        const auto &error(errors[0]);
-        const auto id(error["id"].asString());
-        const auto message(error["message"].asString());
+        const auto &error(errors[0].as_object());
+        const auto id(Str(error.at("id")));
+        const auto message(Str(error.at("message")));
         orc_throw(response.result() << "/" << id << ": " << message);
     }
 }
