@@ -227,7 +227,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _buildViewOrEditModeContent() {
     return Padding(
-      padding: const EdgeInsets.only(left: 24, top: 24, bottom: 24, right: 16),
+      padding: const EdgeInsets.only(left: 24, top: 8, bottom: 24, right: 16),
       child: Column(
         children: <Widget>[
           if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max)) pady(64),
@@ -895,10 +895,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildShowAccountButton() {
-    return TitleIconButton(
+    return RoundedRectButton(
         text: "Show in Account Manager",
-        spacing: 24,
-        trailing: Image.asset('assets/images/scan.png', color: Colors.white),
         textColor: Colors.white,
         backgroundColor: Colors.deepPurple,
         onPressed: () {

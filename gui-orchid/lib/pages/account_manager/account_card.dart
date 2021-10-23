@@ -294,11 +294,10 @@ class _AccountCardState extends State<AccountCard>
     var lotteryPot = widget.accountDetail?.lotteryPot;
     var depositText = lotteryPot?.deposit?.formatCurrency(digits: 2) ?? "";
     final efficiency = widget.accountDetail?.marketConditions?.efficiency ?? 0;
-    final chartModel =
-        lotteryPot != null
-            ? AccountBalanceChartTicketModel(
-                lotteryPot, widget.accountDetail.transactions ?? [])
-            : null;
+    final chartModel = lotteryPot != null
+        ? AccountBalanceChartTicketModel(
+            lotteryPot, widget.accountDetail.transactions ?? [])
+        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40.0),
@@ -347,36 +346,13 @@ class _AccountCardState extends State<AccountCard>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(s.tickets, style: OrchidText.body2),
-                _buildGlowingTicketsChart(chartModel, efficiency)
+                AccountChart.buildTicketsAvailableLineChart(
+                    chartModel, efficiency)
               ],
             ),
         ],
       ),
     );
-  }
-
-  Widget _buildGlowingTicketsChart(
-      AccountBalanceChartTicketModel chartModel, double efficiency) {
-    final chart = _buildTicketsChart(chartModel, efficiency);
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // TODO: Why is this blur not working (to add the glow)?
-        // ImageFiltered(
-        //     imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16), child: chart),
-        chart,
-      ],
-    );
-  }
-
-  Widget _buildTicketsChart(
-      AccountBalanceChartTicketModel chartModel, double efficiency) {
-    return SizedBox(
-        width: 100,
-        height: 4,
-        child: AccountChart.buildTicketsAvailableLineChart(chartModel,
-            color: OrchidCircularEfficiencyIndicators.colorForEfficiency(
-                efficiency)));
   }
 
   SizedBox _buildLoading() {

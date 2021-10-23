@@ -89,6 +89,10 @@ extension TextStyleExtensions on TextStyle {
     return this.copyWith(color: Colors.black);
   }
 
+  TextStyle get red {
+    return this.copyWith(color: Colors.red);
+  }
+
   TextStyle get white {
     return this.copyWith(color: Colors.white);
   }
