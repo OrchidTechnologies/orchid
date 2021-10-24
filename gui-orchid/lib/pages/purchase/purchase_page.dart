@@ -19,6 +19,7 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/loading.dart';
+import 'package:orchid/common/scan_paste_dialog.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -27,6 +28,7 @@ import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
@@ -473,10 +475,28 @@ class _PurchasePageState extends State<PurchasePage> {
     var promo = fee;
     var total = credits;
 
+    // TODO: Rework this dialog to clean up formatting complexity and add
+    // TODO: a standard close button somehow.
     await showDialog<bool>(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Confirm Purchase").title,
+                Container(
+                  width: 20,
+                  child: FlatButton(
+                    padding: EdgeInsets.zero,
+                    child: Icon(Icons.close, color: Colors.white),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              ],
+            ),
             backgroundColor: OrchidColors.dark_background,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(12.0))),
@@ -484,36 +504,33 @@ class _PurchasePageState extends State<PurchasePage> {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                pady(8),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Flexible(
                       child: IntrinsicWidth(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            pady(8),
+                            pady(16),
                             Text(
                               "VPN Credits",
                               style: style1,
-                              textAlign: TextAlign.left,
-                            ),
+                            ).body2,
+                            pady(13),
                             Text(
-                              "- Tx Fee",
+                              "Tx Fee",
                               style: style1,
-                              textAlign: TextAlign.right,
-                            ),
+                            ).body2,
+                            pady(13),
                             Text(
-                              "- Promo",
+                              "Promotion",
                               style: style1,
-                              textAlign: TextAlign.right,
-                            ),
-                            pady(16),
+                            ).body2,
+                            pady(20),
                             Text(
-                              s.total,
-                              style: style1.bold,
-                              textAlign: TextAlign.left,
+                              s.total.toUpperCase(),
+                              style: OrchidText.button,
                             ),
                           ],
                         ),
@@ -531,12 +548,12 @@ class _PurchasePageState extends State<PurchasePage> {
                             textAlign: TextAlign.right,
                           ),
                           Text(
-                            '- ' + formatCurrency(fee),
+                            '+ ' + formatCurrency(fee),
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),
                           Text(
-                            '+ ' + formatCurrency(promo),
+                            '- ' + formatCurrency(promo),
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),

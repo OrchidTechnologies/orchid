@@ -34,7 +34,7 @@ class RoundedRectButton extends StatelessWidget {
     return RaisedButton(
       elevation: elevation,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(24))),
+          borderRadius: BorderRadius.all(Radius.circular(16))),
       child: FittedBox(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

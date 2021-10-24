@@ -61,7 +61,7 @@ class ScanOrPasteDialog extends StatelessWidget {
                     RichText(
                         text:
                             TextSpan(text: titleText, style: OrchidText.title)),
-                    _buildCloseButton(context)
+                    OrchidCloseButton(context: context)
                   ],
                 ),
               ),
@@ -94,8 +94,18 @@ class ScanOrPasteDialog extends StatelessWidget {
       ),
     );
   }
+}
 
-  Container _buildCloseButton(BuildContext context) {
+class OrchidCloseButton extends StatelessWidget {
+  const OrchidCloseButton({
+    Key key,
+    @required this.context,
+  }) : super(key: key);
+
+  final BuildContext context;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: 40,
       child: FlatButton(
