@@ -67,20 +67,28 @@ class _ConnectPageState extends State<ConnectPage>
   // Key that increments on changes to the circuit
   int _circuitKey = 0;
 
-  bool get _hasCircuit {
+  // True once the circuit configuration has been fetched
+  bool get _circuitLoaded {
     return _circuit != null;
   }
 
+  // Circuit hop count or zero when no circuit or not loaded
   int get _circuitHops {
     return _circuit?.hops?.length ?? 0;
   }
 
+  // There is a valid circuit and it has one or more hops
   bool get _circuitHasHops {
     return _circuitHops > 0;
   }
 
+  // There is a valid circuit configured
+  bool get _hasCircuit {
+    return _circuitHasHops;
+  }
+
   // _hasCircuit here waits for the UI to load
-  bool get _showWelcomePane => _hasCircuit && !_circuitHasHops;
+  bool get _showWelcomePane => _circuitLoaded && !_circuitHasHops;
 
   // The hop selected on the manage accounts card
   int _selectedIndex = 0;
@@ -242,7 +250,7 @@ class _ConnectPageState extends State<ConnectPage>
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: EdgeInsets.only(bottom: _showWelcomePane ? 80 : 40.0),
+            padding: EdgeInsets.only(bottom: _showWelcomePane ? 100 : 40.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -287,9 +295,8 @@ class _ConnectPageState extends State<ConnectPage>
       }
     }
     bool buttonEnabled =
-        ( // Enabled when there is a circuit (or overridden for traffic monitoring)
+        ( // Enabled when there is a circuit
                 _hasCircuit ||
-                    // TODO:
                     // Enabled if we are already connected (corner case of changed config while connected).
                     _routingState == OrchidVPNRoutingState.VPNConnecting ||
                     _routingState == OrchidVPNRoutingState.VPNConnected ||
