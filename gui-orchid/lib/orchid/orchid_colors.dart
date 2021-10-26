@@ -14,7 +14,7 @@ class OrchidColors {
   static const purple_menu = purple_ff52319c;
 
   static const blue_ff6cedff = Color(0xff6cedff);
-  static const highlight = blue_ff6cedff;
+  static const blue_highlight = blue_ff6cedff;
 
   static const dark_ff3a3149 = Color(0xff3A3149);
   static const dark_background = dark_ff3a3149;

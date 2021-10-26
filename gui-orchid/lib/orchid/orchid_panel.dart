@@ -38,7 +38,8 @@ class OrchidPanel extends StatelessWidget {
       colors: [Color(0xA0ffffff), Color(0x00ffffff)],
     );
 
-    return ClipRect(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         // Figma specifies a screen blend mode here but this blend mask does
         // not work over the backdrop filter, which can only apply to the

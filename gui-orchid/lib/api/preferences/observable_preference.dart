@@ -44,7 +44,9 @@ class ObservablePreference<T> {
 
   Future<T> set(T value) async {
     await storeValue(key, value);
-    _broadcast(value);
+    // If the value is null attempt to load it again allowing the store method
+    // to transform it if needed.
+    _broadcast(value ?? await loadValue(key));
     return value;
   }
 

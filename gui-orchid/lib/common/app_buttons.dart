@@ -136,30 +136,27 @@ class TextControlButton extends StatelessWidget {
 
 /// A flat Text button that is styled like a web link.
 class LinkStyleTextButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback onTapped;
   final String text;
   final TextAlign alignment;
-  final Color color;
+  final TextStyle style;
 
   LinkStyleTextButton(
     this.text, {
     this.alignment = TextAlign.center,
-    this.onPressed,
-    this.color = AppColors.grey_3,
+    this.onTapped,
+    this.style,
   });
 
   @override
   Widget build(BuildContext context) {
-    var textStyle = AppText.buttonStyle.copyWith(
-        color: color,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.25,
-        decoration: TextDecoration.underline);
-    var textChild = Text(text, textAlign: alignment, style: textStyle);
-
-    return FlatButton(
-      onPressed: onPressed,
-      child: textChild,
+    return TextButton(
+      onPressed: onTapped,
+      child: Text(
+        text,
+        textAlign: alignment,
+        style: style ?? OrchidText.linkStyle,
+      ),
     );
   }
 }

@@ -19,7 +19,6 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/loading.dart';
-import 'package:orchid/common/scan_paste_dialog.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/titled_page_base.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -28,7 +27,6 @@ import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
@@ -254,7 +252,7 @@ class _PurchasePageState extends State<PurchasePage> {
     // var linkStyle = AppText.linkStyle.copyWith(fontSize: 15.0);
     var linkStyle = OrchidText.linkStyle;
     var unavailableText = StyledText(
-      style: OrchidText.body1.copyWith(color: OrchidColors.highlight),
+      style: OrchidText.body1.copyWith(color: OrchidColors.blue_highlight),
       newLineAsBreaks: true,
       text: s.orchidIsUnableToDisplayInappPurchasesAtThisTime +
           '  ' +
@@ -277,7 +275,7 @@ class _PurchasePageState extends State<PurchasePage> {
     }
     return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: _fixedPacList()
+        children: _buildFixedPacList()
         /*
          _pacs.map(
             (pac) => Padding(
@@ -291,18 +289,16 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   // TODO: This assumes three pre-defined pac tiers rather than the list.
-  List<Widget> _fixedPacList() {
+  List<Widget> _buildFixedPacList() {
     if (_pacs.isEmpty || _pacs.length < 3) {
       log("iap: pacs not ready: $_pacs");
       return [];
     }
+
     // TODO: Hard-coded expected ids
-    var pacTier4 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4';
-    var pacTier10 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier10';
-    var pacTier11 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier11';
-    var pac1 = _pacs.firstWhere((pac) => pac.productId == pacTier4);
-    var pac2 = _pacs.firstWhere((pac) => pac.productId == pacTier10);
-    var pac3 = _pacs.firstWhere((pac) => pac.productId == pacTier11);
+    var pac1 = OrchidPurchaseAPI.pacForTier(_pacs, 4);
+    var pac2 = OrchidPurchaseAPI.pacForTier(_pacs, 10);
+    var pac3 = OrchidPurchaseAPI.pacForTier(_pacs, 11);
 
     return [
       _buildPurchaseCardView(
@@ -465,6 +461,9 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
+  // TODO: See the alternate impl in the welcome pane
+  // TODO: Rework this dialog to clean up formatting complexity and add
+  // TODO: a standard close button somehow.
   Future<void> _confirmPurchase({PAC pac}) async {
     var style1 =
         OrchidText.medium_18_025.copyWith(height: 1.6); // heights should match
@@ -475,8 +474,6 @@ class _PurchasePageState extends State<PurchasePage> {
     var promo = fee;
     var total = credits;
 
-    // TODO: Rework this dialog to clean up formatting complexity and add
-    // TODO: a standard close button somehow.
     await showDialog<bool>(
         context: context,
         builder: (BuildContext context) {
@@ -577,7 +574,7 @@ class _PurchasePageState extends State<PurchasePage> {
                       textColor: Colors.black,
                       onPressed: () {
                         Navigator.of(context).pop(true);
-                        _purchase(purchase: pac);
+                        _purchase(pac: pac);
                       },
                     ),
                   ],
@@ -588,39 +585,12 @@ class _PurchasePageState extends State<PurchasePage> {
         });
   }
 
-  Future<void> _purchase({PAC purchase}) async {
-    log("iap: calling purchase: $purchase");
-
-    // TODO: Hard coded for xDAI currently
-    var fundingTx = await OrchidPacSeller.defaultFundingTransactionParams(
-        signerKey: widget.signerKey,
-        chain: Chains.xDAI,
-        totalUsdValue: purchase.usdPriceExact);
-
-    var signer = widget.signerKey.address;
-    // Add the pending transaction(s) for this purchase
-    await PacPurchaseTransaction(
-            PacAddBalanceTransaction.pending(
-                signer: signer, productId: purchase.productId),
-            fundingTx)
-        .save();
-
-    // Initiate the in-app purchase
-    try {
-      await OrchidPurchaseAPI().purchase(purchase);
-    } catch (err) {
-      // TODO: Is this still possible?
-      if (err is SKError) {
-        var skerror = err;
-        if (skerror.code == IOSOrchidPurchaseAPI.SKErrorPaymentCancelled) {
-          log("iap: payment cancelled error, purchase page");
-        }
-      }
-      log("iap: Error in purchase call: $err");
-      await _iapPurchaseError(
-          rateLimitExceeded: err is PACPurchaseExceedsRateLimit);
-    }
-
+  Future<void> _purchase({PAC pac}) async {
+    await PurchaseUtils.purchase(
+      purchase: pac,
+      signerKey: widget.signerKey,
+      onError: _iapPurchaseError,
+    );
     Navigator.of(context).pop();
   }
 
@@ -715,4 +685,43 @@ class _PurchasePageState extends State<PurchasePage> {
     return true;
   }
    */
+}
+
+class PurchaseUtils {
+  static Future<void> purchase({
+    @required PAC purchase,
+    @required StoredEthereumKey signerKey,
+    Future<void> Function({bool rateLimitExceeded}) onError,
+  }) async {
+    log("iap: calling purchase: $purchase");
+
+    // TODO: Hard coded for xDAI currently
+    var fundingTx = await OrchidPacSeller.defaultFundingTransactionParams(
+        signerKey: signerKey,
+        chain: Chains.xDAI,
+        totalUsdValue: purchase.usdPriceExact);
+
+    var signer = signerKey.address;
+    // Add the pending transaction(s) for this purchase
+    await PacPurchaseTransaction(
+            PacAddBalanceTransaction.pending(
+                signer: signer, productId: purchase.productId),
+            fundingTx)
+        .save();
+
+    // Initiate the in-app purchase
+    try {
+      await OrchidPurchaseAPI().purchase(purchase);
+    } catch (err) {
+      // TODO: Is this still possible?
+      if (err is SKError) {
+        var skerror = err;
+        if (skerror.code == IOSOrchidPurchaseAPI.SKErrorPaymentCancelled) {
+          log("iap: payment cancelled error, purchase page");
+        }
+      }
+      log("iap: Error in purchase call: $err");
+      await onError(rateLimitExceeded: err is PACPurchaseExceedsRateLimit);
+    }
+  }
 }

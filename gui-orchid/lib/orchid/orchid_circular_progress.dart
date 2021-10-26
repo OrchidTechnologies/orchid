@@ -77,14 +77,14 @@ class OrchidCircularProgressIndicator extends StatelessWidget {
     this.backgroundColor = const Color(0x66FFFFFF),
   }) : super(key: key);
 
-  static OrchidCircularProgressIndicator smallIndeterminate({double size = 20}) {
+  static OrchidCircularProgressIndicator smallIndeterminate({double size = 20, double stroke = 2.0}) {
     return OrchidCircularProgressIndicator(
       size: size,
       value: null,
       color: OrchidColors.purple_bright,
       glowColor: OrchidColors.purple_bright,
       blur: 4.0,
-      stroke: 2.0,
+      stroke: stroke,
     );
   }
 

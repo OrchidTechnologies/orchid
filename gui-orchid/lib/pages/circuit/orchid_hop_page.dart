@@ -171,9 +171,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       case HopEditorMode.Edit:
       case HopEditorMode.View:
         return _buildViewOrEditModeContent();
-      default:
-        throw Error();
     }
+    throw Exception();
   }
 
   Widget _buildCreateModeContent() {

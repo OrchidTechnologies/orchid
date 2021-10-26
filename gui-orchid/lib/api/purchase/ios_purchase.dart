@@ -174,6 +174,7 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
 
   static Map<String, PAC> productsCached;
 
+  // Return a map of PAC by product id
   @override
   Future<Map<String, PAC>> requestProducts({bool refresh = false}) async {
     if (OrchidAPI.mockAPI) {

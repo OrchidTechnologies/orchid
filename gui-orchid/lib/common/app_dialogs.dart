@@ -72,7 +72,7 @@ class AppDialogs {
         return AlertDialog(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(8.0))),
-          backgroundColor: OrchidColors.highlight,
+          backgroundColor: OrchidColors.blue_highlight,
           title: title != null
               ? Text(
                   title,

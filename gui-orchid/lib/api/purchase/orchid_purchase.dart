@@ -65,9 +65,9 @@ abstract class OrchidPurchaseAPI {
     await OrchidPurchaseAPI.recoverTx();
   }
 
-
   Future<void> initStoreListenerImpl();
 
+  // Return a map of PAC by product id
   Future<Map<String, PAC>> requestProducts({bool refresh = false});
 
   /// Make the app store purchase. This method will throw
@@ -83,7 +83,8 @@ abstract class OrchidPurchaseAPI {
       Future.delayed(Duration(seconds: 2)).then((_) async {
         log("iap: mock purchase, advance with receipt");
         // The receipt may be overridden for testing with pac.receipt
-        OrchidPACServer().advancePACTransactionsWithReceipt("mock receipt", ReceiptType.ios);
+        OrchidPACServer()
+            .advancePACTransactionsWithReceipt("mock receipt", ReceiptType.ios);
       });
       return;
     }
@@ -194,6 +195,16 @@ abstract class OrchidPurchaseAPI {
       throw Exception("No price known for product id: $productId");
     }
     return price;
+  }
+
+  // TODO: Clean this up
+  static String pacTierDollarProductId =
+      OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4';
+
+  // TODO: Clean this up
+  static pacForTier(Iterable<PAC> pacs, int tier) {
+    var pacTier = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier$tier';
+    return pacs.firstWhere((pac) => pac.productId == pacTier);
   }
 
   static Map<String, PAC> mockPacs() {

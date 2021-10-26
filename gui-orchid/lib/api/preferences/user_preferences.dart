@@ -237,6 +237,7 @@ class UserPreferences {
   }
 
   /// A set of accounts previously discovered for user identities
+  /// Returns {} empty set initially.
   ObservablePreference<Set<Account>> cachedDiscoveredAccounts =
       ObservableAccountSetPreference(
           UserPreferenceKey.CachedDiscoveredAccounts);

@@ -436,9 +436,8 @@ class CircuitPageState extends State<CircuitPage>
         return false;
       case OrchidVPNRoutingState.OrchidConnected:
         return true;
-      default:
-        throw Exception();
     }
+    throw Exception();
   }
 
   /// Called upon a change to Orchid connection state

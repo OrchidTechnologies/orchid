@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_urls.dart';
+import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/link_text.dart';
 import 'orchid_colors.dart';
 import 'package:styled_text/styled_text.dart';
@@ -73,6 +74,7 @@ class OrchidText {
   static TextStyle linkStyle =
       body2.copyWith(decoration: TextDecoration.underline).tappable;
 
+  // ?? migrate to link items below
   static LinkTextSpan buildLearnMoreLinkTextSpan(
       {BuildContext context, Color color}) {
     return LinkTextSpan(
@@ -109,6 +111,14 @@ extension TextStyleExtensions on TextStyle {
   TextStyle get bold {
     return this.copyWith(fontWeight: FontWeight.bold);
   }
+
+  TextStyle height(double height) {
+    return this.copyWith(height: height);
+  }
+
+  TextStyle size(double size) {
+    return this.copyWith(fontSize: size);
+  }
 }
 
 /// styled_text package extensions
@@ -126,8 +136,7 @@ extension LinkTextStyleExtensions on TextStyle {
 
 // todo: move these to a generic util file
 extension TextExtensions on Text {
-  Text copyWith(
-    String data, {
+  Text copyWith({
     style,
     strutStyle,
     textAlign,
@@ -142,7 +151,7 @@ extension TextExtensions on Text {
     textHeightBehavior,
   }) {
     return Text(
-      data ?? this.data,
+      this.data,
       style: style ?? this.style,
       strutStyle: strutStyle ?? this.strutStyle,
       textAlign: textAlign ?? this.textAlign,
@@ -163,8 +172,13 @@ extension OrchidTextStyleExtensions on TextStyle {
   TextStyle get purpleBright {
     return this.copyWith(color: OrchidColors.purple_bright);
   }
+
   TextStyle get tappable {
     return purpleBright;
+  }
+
+  TextStyle get blueHightlight {
+    return this.copyWith(color: OrchidColors.blue_highlight);
   }
 
   TextStyle get linkStyle {
@@ -176,26 +190,55 @@ extension OrchidTextStyleExtensions on TextStyle {
 
 extension OrchidTextExtensions on Text {
   Text get title {
-    return this.copyWith(this.data, style: OrchidText.title);
+    return this.copyWith(style: OrchidText.title);
+  }
+
+  Text get subtitle {
+    return this.copyWith(style: OrchidText.subtitle);
   }
 
   Text get button {
-    return this.copyWith(this.data, style: OrchidText.button);
+    return this.copyWith(style: OrchidText.button);
   }
 
   Text get highlight {
-    return this.copyWith(this.data, style: OrchidText.highlight);
+    return this.copyWith(style: OrchidText.highlight);
   }
 
   Text get body1 {
-    return this.copyWith(this.data, style: OrchidText.body1);
+    return this.copyWith(style: OrchidText.body1);
   }
 
   Text get body2 {
-    return this.copyWith(this.data, style: OrchidText.body2);
+    return this.copyWith(style: OrchidText.body2);
   }
 
   Text get caption {
-    return this.copyWith(this.data, style: OrchidText.caption);
+    return this.copyWith(style: OrchidText.caption);
+  }
+
+  Text height(double height) {
+    return this.copyWith(style: this.style.copyWith(height: height));
+  }
+
+  Text get center {
+    return this.copyWith(textAlign: TextAlign.center);
+  }
+
+  Widget link({@required String url, TextStyle style}) {
+    return RichText(
+        text: LinkTextSpan(
+      text: this.data,
+      style: style ?? this.style,
+      url: url,
+    ));
+  }
+
+  Widget linkButton({@required VoidCallback onTapped, TextStyle style}) {
+    return LinkStyleTextButton(
+      this.data,
+      style: style ?? this.style,
+      onTapped: onTapped,
+    );
   }
 }
