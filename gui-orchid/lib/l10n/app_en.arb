@@ -11,7 +11,7 @@
     "trafficMonitoringOnly": "Traffic monitoring only",
     "orchidConnecting": "Orchid connecting",
     "orchidDisconnecting": "Orchid disconnecting",
-    "numHopsConfigured": "{num, plural, =0{No hops configured} =1{XXXOne hop configured} =2{Two hops configured} other{{num} hops configured}}",
+    "numHopsConfigured": "{num, plural, =0{No hops configured} =1{One hop configured} =2{Two hops configured} other{{num} hops configured}}",
     "@numHopsConfigured": {
         "type": "text",
         "placeholders": {
