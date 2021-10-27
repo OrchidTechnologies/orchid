@@ -135,7 +135,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
   Widget _buildTitleContent() {
     switch (_state) {
       case WelcomePanelState.welcome:
-        return Text("Welcome to Orchid!").title.height(2.0);
+        return Text(s.welcomeToOrchid).title.height(2.0);
         break;
       case WelcomePanelState.confirm:
       case WelcomePanelState.confirm_wait:
@@ -160,7 +160,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
                 ),
               ),
             ),
-            Text("Fund Your Account").title.height(2.0),
+            Text(s.fundYourAccount).title.height(2.0),
             Container(width: 48),
           ],
         );
@@ -172,7 +172,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(width: 60),
-            Text("Processing...").title.height(2.0),
+            Text(s.processing).title.height(2.0),
             Padding(
               padding: const EdgeInsets.only(right: 14),
               child: IconButton(
@@ -218,14 +218,14 @@ class _WelcomePanelState extends State<WelcomePanel> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
-                  "Subscription-free, pay as you go, decentralized, open source VPN service.")
+                  s.subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService)
               .body2
               .center,
         ),
         pady(40),
         OrchidActionButton(
           enabled: true,
-          text: "GET STARTED FOR \$1",
+          text: s.getStartedFor1,
           onPressed: () {
             setState(() {
               _state = WelcomePanelState.confirm;
@@ -234,12 +234,12 @@ class _WelcomePanelState extends State<WelcomePanel> {
         ),
         pady(16),
         _buildOutlineButton(
-            text: "IMPORT ACCOUNT",
+            text: s.importAccount,
             onPressed: () {
               _importAccount(context);
             }),
         pady(24),
-        Text("I'll do this later").linkButton(onTapped: _dismiss),
+        Text(s.illDoThisLater).linkButton(onTapped: _dismiss),
         pady(40),
       ],
     );
@@ -255,8 +255,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
           child: StyledText(
             textAlign: TextAlign.center,
             style: OrchidText.body2,
-            text:
-                "Connect automatically to one of the network’s <link1>preferred providers</link1> by purchasing VPN credits to fund your shareable, refillable Orchid account.",
+            text: s.connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By,
             tags: {
               'link1': OrchidText.linkStyle.link(OrchidUrls.preferredProviders),
             },
@@ -267,19 +266,18 @@ class _WelcomePanelState extends State<WelcomePanel> {
         pady(40),
         OrchidActionButton(
           enabled: _state == WelcomePanelState.confirm,
-          text: "CONFIRM PURCHASE",
+          text: s.confirmPurchase,
           onPressed: _doPurchase,
         ),
         pady(24),
-        Text("I'll do this later").linkButton(onTapped: _dismiss),
+        Text(s.illDoThisLater).linkButton(onTapped: _dismiss),
         pady(40),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: StyledText(
             textAlign: TextAlign.center,
             style: OrchidText.caption.copyWith(fontSize: 12),
-            text:
-                "Orchid accounts use VPN credits backed by the <link>xDAI cryptocurrency</link>, include 24/7 customer support, unlimited device sharing and are covered by app store refund policies.",
+            text: s.orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink,
             tags: {
               'link': OrchidText.linkStyle.size(12).link(OrchidUrls.xdaiChain),
             },
@@ -294,20 +292,18 @@ class _WelcomePanelState extends State<WelcomePanel> {
     String text;
     switch (_state) {
       case WelcomePanelState.processing_pac:
-        text = "Your purchase is in progress.";
+        text = s.yourPurchaseIsInProgress;
         break;
       case WelcomePanelState.processing_chain:
-        text =
-            "Your purchase is complete and is now being processed by the xDAI blockchain. This can take up to a minute - sometimes longer.";
+        text = s.yourPurchaseIsCompleteAndIsNowBeingProcessedBy;
         break;
       case WelcomePanelState.processing_timeout:
-        text =
-            "This purchase is taking longer than expected to process and may have encountered an error.";
+        text = s.thisPurchaseIsTakingLongerThanExpectedToProcessAnd;
         break;
       case WelcomePanelState.welcome:
       case WelcomePanelState.confirm:
       case WelcomePanelState.confirm_wait:
-        text = "...";
+        text = '...';
         break;
     }
 
@@ -336,7 +332,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
               size: 30, stroke: 4),
         if (!timeout) ...[
           pady(24),
-          Text("This may take a minute...").subtitle,
+          Text(s.thisMayTakeAMinute).subtitle,
         ],
         pady(24),
         Padding(
@@ -385,21 +381,21 @@ class _WelcomePanelState extends State<WelcomePanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("VPN Credits").body2,
+              Text(s.vpnCredits).body2,
               Text(formatCurrency(credits)).body2,
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Blockchain fee").body2,
+              Text(s.blockchainFee).body2,
               Text('+ ' + formatCurrency(fee)).body2,
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Promotion", style: OrchidText.body2.blueHightlight),
+              Text(s.promotion, style: OrchidText.body2.blueHightlight),
               Text('- ' + formatCurrency(promo),
                   style: OrchidText.body2.blueHightlight),
             ],

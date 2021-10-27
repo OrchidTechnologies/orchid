@@ -42,7 +42,7 @@ class Account {
   }
 
   static Cache<Account, LotteryPot> lotteryPotCache =
-      Cache(duration: Duration(seconds: 60), name: "lottery pot");
+      Cache(duration: Duration(seconds: 60), name: 'lottery pot');
 
   // Use refresh to force an update to the cache
   Future<LotteryPot> getLotteryPot({bool refresh = false}) async {

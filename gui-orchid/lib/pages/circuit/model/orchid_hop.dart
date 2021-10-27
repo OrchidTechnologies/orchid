@@ -10,7 +10,7 @@ import 'circuit_hop.dart';
 class OrchidHop extends CircuitHop {
   // The app default, which may be overridden by the user specified settings
   // default or on a per-hop basis.
-  static const String appDefaultCurator = "partners.orch1d.eth";
+  static const String appDefaultCurator = 'partners.orch1d.eth';
 
   /// Curator URI
   final String curator;

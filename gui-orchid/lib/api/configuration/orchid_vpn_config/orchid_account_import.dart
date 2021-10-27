@@ -74,8 +74,8 @@ class OrchidAccountImport {
   }
 
   static String removeNewlines(String text) {
-    text = text.replaceAll("\n", " ");
-    text = text.replaceAll("\r", " ");
+    text = text.replaceAll('\n', ' ');
+    text = text.replaceAll('\r', ' ');
     return text;
   }
 

@@ -60,7 +60,7 @@ class OrchidEthereumV0 {
   */
   static Future<OXTLotteryPot> getLotteryPot(
       EthereumAddress funder, EthereumAddress signer) async {
-    print("fetch pot V0 for: $funder, $signer, url = ${await url}");
+    log("fetch pot V0 for: $funder, $signer, url = ${await url}");
 
     // construct the abi encoded eth_call
     var params = [
@@ -75,7 +75,7 @@ class OrchidEthereumV0 {
 
     String result = await jsonRpc(method: "eth_call", params: params);
     if (!result.startsWith("0x")) {
-      print("Error result: $result");
+      log("Error result: $result");
       throw Exception();
     }
 
@@ -156,7 +156,7 @@ class OrchidEthereumV0 {
     EthereumAddress funder,
     EthereumAddress signer,
   ) async {
-    print("fetch update events for: $funder, $signer, url = ${await url}");
+    log("fetch update events for: $funder, $signer, url = ${await url}");
     var params = [
       {
         "topics": [
@@ -178,7 +178,7 @@ class OrchidEthereumV0 {
   Future<List<OrchidCreateEventV0>> getCreateEvents(
     EthereumAddress signer,
   ) async {
-    print("fetch create events for: $signer, url = ${await url}");
+    log("fetch create events for: $signer, url = ${await url}");
     var params = [
       {
         "topics": [

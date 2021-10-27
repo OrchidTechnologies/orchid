@@ -381,7 +381,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               value: null, // indeterminate animation
             )),
         padx(16),
-        Text("Updating Accounts",
+        Text(s.updatingAccounts,
             style: OrchidText.caption.copyWith(height: 1.7)),
       ],
     );
@@ -895,7 +895,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _buildShowAccountButton() {
     return RoundedRectButton(
-        text: "Show in Account Manager",
+        text: s.showInAccountManager,
         textColor: Colors.white,
         backgroundColor: Colors.deepPurple,
         onPressed: () {

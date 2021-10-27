@@ -324,11 +324,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     var body = StyledText(
       style: OrchidText.body2.black,
       newLineAsBreaks: true,
-      text:
-          "This cannot be undone. <bold>OpenVPN</bold> and <bold>WireGuard®</bold> account "
-          "information will be lost.  <bold>Orchid account</bold> information is saved. "
-          "To save your entire circuit, cancel this dialog and go to "
-          "<save>Settings → Configuration Management → Export</save> to save your circuit config.",
+      text: s
+          .thisCannotBeUndoneBoldopenvpnboldAndBoldwireguardboldAccountInformationWill,
       tags: {
         'bold': StyledTextTag(
           style: OrchidText.body2.black.bold,
@@ -341,7 +338,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
     await AppDialogs.showConfirmationDialog(
       context: context,
-      title: "Delete this Orchid Identity",
+      title: s.deleteThisOrchidIdentity,
       body: body,
       cancelText: s.cancel.toUpperCase(),
       //cancelColor: bodyStyle.color,

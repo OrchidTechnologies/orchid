@@ -86,7 +86,7 @@ class CircuitPageState extends State<CircuitPage>
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      title: "Circuit Builder",
+      title: s.circuitBuilder,
       decoration: BoxDecoration(),
       child: _buildBody(),
     );
@@ -158,7 +158,8 @@ class CircuitPageState extends State<CircuitPage>
             width: 328,
             height: 72,
             child: Center(
-                child: Text("ADD NEW HOP", style: OrchidText.button.tappable)),
+              child: Text(s.addNewHop, style: OrchidText.button.tappable),
+            ),
           )),
     );
   }
@@ -255,12 +256,11 @@ class CircuitPageState extends State<CircuitPage>
   /// Add the e.g. entry, exit descriptions
   Widget _buildAnnotatedHopTile(UniqueHop uniqueHop, int index) {
     int count = _hops.length;
-    var title = "Hop";
+    var title = s.hop;
     if (count > 1 && index == 0) {
-      title = "Entry Hop";
-    } else
-    if (count > 1 && index == _hops.length - 1) {
-      title = "Exit Hop";
+      title = s.entryHop;
+    } else if (count > 1 && index == _hops.length - 1) {
+      title = s.exitHop;
     }
     return Column(
       children: [
@@ -475,4 +475,3 @@ class CircuitPageState extends State<CircuitPage>
     super.dispose();
   }
 }
-

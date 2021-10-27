@@ -54,15 +54,15 @@ class OrchidVPNConfigGenerate {
   ) async {
     /*
       hops = [{
-        curator: "partners.orch1d.eth",
+        curator: 'partners.orch1d.eth',
         protocol = 'orchid' || 'orch1d',
-        funder: "0x6ddxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx85087",
-        secret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx7a5b63bca512952325",
+        funder: '0x6ddxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx85087',
+        secret: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx7a5b63bca512952325',
 
         // v1
         chainid = 56,
         currency = 'BNB',
-        rpc = "https://bsc-dataseed.binance.org/",
+        rpc = 'https://bsc-dataseed.binance.org/',
       }];
      */
     var v0 = hop.account.isV0;
@@ -120,7 +120,7 @@ class OrchidVPNConfigGenerate {
         } else {
           secret = null;
         }
-        return MapEntry("secret", secret);
+        return MapEntry('secret', secret);
       }
       return MapEntry(key, value);
     });

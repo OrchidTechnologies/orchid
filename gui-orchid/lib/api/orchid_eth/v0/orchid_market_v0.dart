@@ -40,7 +40,7 @@ class MarketConditionsV0 implements MarketConditions {
       this.maxFaceValue, this.efficiency, this.limitedByBalance);
 
   static String efficiencyAsPercString(double efficiency) {
-    return (efficiency * 100.0).toStringAsFixed(2) + "%";
+    return (efficiency * 100.0).toStringAsFixed(2) + '%';
   }
 
   // TODO: Add refresh option

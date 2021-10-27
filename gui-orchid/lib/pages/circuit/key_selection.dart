@@ -85,7 +85,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
               focusColor: OrchidColors.purple_menu,
             ),
             child: DropdownButton<KeySelectionItem>(
-              hint: Text("Choose Identity").button,
+              hint: Text(s.chooseIdentity).button,
               isExpanded: true,
               icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
               underline: Container(),

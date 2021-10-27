@@ -15,13 +15,11 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/screen_orientation.dart';
-import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_detail_poller.dart';
 import 'package:orchid/pages/account_manager/account_finder.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
-import 'package:orchid/pages/account_manager/account_store.dart';
 import 'package:orchid/pages/circuit/circuit_utils.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
@@ -34,7 +32,6 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
-import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/streams.dart';
 import 'package:orchid/util/units.dart';
 
@@ -375,8 +372,7 @@ class _ConnectPageState extends State<ConnectPage>
             children: [
               Icon(Icons.more_time_rounded, color: Colors.white),
               padx(8),
-              Text("Quick fund an account!", style: OrchidText.body1)
-                  .height(1.8),
+              Text(s.quickFundAnAccount, style: OrchidText.body1).height(1.8),
             ],
           ),
         ),
@@ -541,10 +537,9 @@ class _ConnectPageState extends State<ConnectPage>
           SchedulerBinding.instance.addPostFrameCallback(
             (_) => AppDialogs.showAppDialog(
               context: context,
-              title: "Account Found",
+              title: s.accountFound,
               bodyText:
-                  "We found an account associated with your identities and created a "
-                  "single hop Orchid circuit for it.  You are now ready to use the VPN.",
+                  s.weFoundAnAccountAssociatedWithYourIdentitiesAndCreated,
             ),
           );
         }
