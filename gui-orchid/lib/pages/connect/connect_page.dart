@@ -356,24 +356,26 @@ class _ConnectPageState extends State<ConnectPage>
 
   Widget _buildWelcomePaneMinimized() {
     return SizedBox(
-      width: 312,
+      width: 308,
       height: 56,
       child: OrchidPanel(
-        // edgeGradient: OrchidGradients.orchidPanelEdgeGradientMoreVertical,
         highlight: true,
-        child: TextButton(
-          onPressed: () {
-            setState(() {
-              _showWelcomePaneMinimized = false;
-            });
-          },
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.more_time_rounded, color: Colors.white),
-              padx(8),
-              Text(s.quickFundAnAccount, style: OrchidText.body1).height(1.8),
-            ],
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: TextButton(
+            onPressed: () {
+              setState(() {
+                _showWelcomePaneMinimized = false;
+              });
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.more_time_rounded, color: Colors.white),
+                padx(8),
+                Text(s.quickFundAnAccount, style: OrchidText.body1).height(1.8),
+              ],
+            ),
           ),
         ),
       ),
