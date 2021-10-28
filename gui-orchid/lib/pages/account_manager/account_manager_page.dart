@@ -92,10 +92,13 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     // Switch account stores
     if (_accountStore != null) {
       _accountStore.removeListener(_accountsUpdated);
+      _accountStore = null;
     }
-    _accountStore = AccountStore(identity: identity.ref());
-    _accountStore.addListener(_accountsUpdated);
-    _accountStore.load(waitForDiscovered: false);
+    if (identity != null) {
+      _accountStore = AccountStore(identity: identity.ref());
+      _accountStore.addListener(_accountsUpdated);
+      _accountStore.load(waitForDiscovered: false);
+    }
 
     setState(() {});
   }
@@ -135,58 +138,57 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_accountStore == null) {
-      return Container();
-    }
-    return ListenableBuilder(
-        listenable: _accountStore,
-        builder: (context, snapshot) {
-          return TitledPage(
-            title: s.accounts,
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: _buildIdentitySelectorMenu(),
-              )
-            ],
-            child: Stack(
-              children: [
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        _buildIdentityHeader(),
-                        pady(8),
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(left: 28.0, right: 28.0),
-                          child: PurchaseStatus(),
-                        ),
-                        pady(8),
-                        Divider(height: 1),
-                        Expanded(child: _buildAccountListAnnotatedActive()),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // The add funds
-                if (OrchidPlatform.hasPurchase)
-                  SafeArea(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
+    return TitledPage(
+      title: s.accounts,
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: _buildIdentitySelectorMenu(),
+        )
+      ],
+      child: _accountStore == null
+          ? Container(color: Colors.transparent)
+          : ListenableBuilder(
+              listenable: _accountStore,
+              builder: (context, snapshot) {
+                return Stack(
+                  children: [
+                    SafeArea(
                       child: Padding(
-                        padding: EdgeInsets.only(bottom: 40),
-                        child: _buildAddFundsButton(),
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            _buildIdentityHeader(),
+                            pady(8),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 28.0, right: 28.0),
+                              child: PurchaseStatus(),
+                            ),
+                            pady(8),
+                            Divider(height: 1),
+                            Expanded(child: _buildAccountListAnnotatedActive()),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          );
-        });
+
+                    // The add funds
+                    if (OrchidPlatform.hasPurchase)
+                      SafeArea(
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 40),
+                            child: _buildAddFundsButton(),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              }),
+    );
   }
 
   Widget _buildIdentitySelectorMenu() {
@@ -546,7 +548,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   @override
   void dispose() {
-    _accountStore.removeListener(_accountsUpdated);
+    if (_accountStore != null) {
+      _accountStore.removeListener(_accountsUpdated);
+    }
     _accountDetailStore.dispose();
     super.dispose();
   }
