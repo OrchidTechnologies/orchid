@@ -250,7 +250,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         if (result != null) {
           if (result.isNew) {
             await UserPreferences().addKey(result.signer);
-            await _accountStore.load(waitForDiscovered: false);
           }
           _setSelectedIdentity(result.signer);
 
