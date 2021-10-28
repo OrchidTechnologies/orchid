@@ -31,7 +31,6 @@ import 'package:orchid/pages/account_manager/account_finder.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
-import '../../common/app_colors.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
 import 'curator_page.dart';
@@ -176,12 +175,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildCreateModeContent() {
-    // var bodyStyle = TextStyle(fontSize: 16, color: Colors.white);
-    var bodyStyle = OrchidText.body2;
-    // var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
-
     var text = StyledText(
-      style: bodyStyle,
+      style: OrchidText.body2,
       newLineAsBreaks: true,
       text: s.chooseAnOrchidAccountToUseWithThisHop +
           '  ' +
@@ -248,9 +243,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   Widget _buildSection({String title, Widget child, VoidCallback onDetail}) {
     return Column(
       children: <Widget>[
-        Text(title,
-            style: AppText.dialogTitle
-                .copyWith(color: Colors.white, fontSize: 22)),
+        Text(title, style: OrchidText.title),
         pady(8),
         IntrinsicHeight(
           child: Row(
@@ -305,20 +298,23 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
               // Market Stats
               if (widget.mode == HopEditorMode.View)
                 Padding(
-                  padding: const EdgeInsets.only(top: 8, bottom: 16),
-                  child: _buildMarketStatsLink(),
+                  padding: const EdgeInsets.only(top: 16, bottom: 16),
+                  child: Center(
+                      child: SizedBox(
+                    width: 310,
+                    child: _buildMarketStatsButton(),
+                  )),
                 ),
 
               // Share button
               if (widget.readOnly())
                 Padding(
                   padding: const EdgeInsets.only(top: 8, bottom: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      _buildShowAccountButton(),
-                    ],
-                  ),
+                  child: Center(
+                      child: SizedBox(
+                    width: 310,
+                    child: _buildShowAccountButton(),
+                  )),
                 ),
 
               // Transactions list
@@ -394,7 +390,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       children: <Widget>[
         Text(
           s.orchidIdentity + ':',
-          style: OrchidText.button.copyWith(
+          style: OrchidText.title.copyWith(
               color:
                   _keyRefValid() ? OrchidColors.valid : OrchidColors.invalid),
         ),
@@ -412,9 +408,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             Visibility(
               visible: widget.readOnly(),
               child: RoundedRectButton(
-                  backgroundColor: Colors.deepPurple,
-                  textColor: Colors.white,
-                  text: s.copy,
+                  textColor: Colors.black,
+                  text: s.copy.toUpperCase(),
                   onPressed: _onCopyButton),
             ),
           ],
@@ -429,7 +424,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(s.funderAccount + ':',
-            style: OrchidText.button.copyWith(
+            style: OrchidText.title.copyWith(
                 color: _funderValid()
                     ? OrchidColors.valid
                     : OrchidColors.invalid)),
@@ -505,49 +500,25 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildAccountBalance() {
-    const color = Colors.white;
-    const valueStyle = TextStyle(
-        color: color,
-        fontSize: 15.0,
-        fontWeight: FontWeight.bold,
-        letterSpacing: -0.24,
-        fontFamily: 'SFProText-Regular',
-        height: 20.0 / 15.0);
-
-    // var balanceText = _lotteryPot?.balance != null
-    //     ? NumberFormat('#0.0###').format(_lotteryPot?.balance?.floatValue) +
-    //         " ${s.oxt}"
-    //     : "...";
-    // var depositText = _lotteryPot?.deposit != null
-    //     ? NumberFormat('#0.0###').format(_lotteryPot?.deposit?.floatValue) +
-    //         " ${s.oxt}"
-    //     : '...';
     var balanceText = _lotteryPot?.balance?.formatCurrency() ?? '...';
     var depositText = _lotteryPot?.deposit?.formatCurrency() ?? '...';
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         // Balance
-        Text(s.amount + ':',
-            style: AppText.textLabelStyle
-                .copyWith(fontSize: 20, color: AppColors.white)),
+        Text(s.balance + ':').title,
         pady(4),
         Padding(
           padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
-          child:
-              Text(balanceText, textAlign: TextAlign.left, style: valueStyle),
+          child: Text(balanceText, textAlign: TextAlign.left).subtitle,
         ),
         pady(16),
         // Deposit
-        Text(s.deposit + ':',
-            style: AppText.textLabelStyle
-                .copyWith(fontSize: 20, color: AppColors.white)),
+        Text(s.deposit + ':').title,
         pady(4),
         Padding(
           padding: EdgeInsets.only(top: 10, bottom: 8, left: 16),
-          child:
-              Text(depositText, textAlign: TextAlign.left, style: valueStyle),
+          child: Text(depositText, textAlign: TextAlign.left).subtitle,
         ),
       ],
     );
@@ -567,29 +538,22 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
-  Widget _buildMarketStatsLink() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: _showMarketStats,
-        child: Row(
-          children: [
-            LinkText(
-              s.marketStats.toUpperCase() + '  >',
-              style: OrchidText.button.tappable,
-              onTapped: _showMarketStats,
-            ),
-            padx(8),
-            Badge(
-              showBadge: _showMarketStatsAlert,
-              position: BadgePosition.topEnd(top: -6, end: -28),
-              badgeContent: Text('!',
-                  style: TextStyle(color: Colors.white, fontSize: 12)),
-              padding: EdgeInsets.all(8),
-              toAnimate: false,
-            )
-          ],
+  Widget _buildMarketStatsButton() {
+    return Badge(
+      // TODO: REMOVE!
+      showBadge: true || _showMarketStatsAlert,
+      position: BadgePosition.topEnd(top: 9, end: 55),
+      badgeContent:
+          Text('!', style: TextStyle(color: Colors.white, fontSize: 12)),
+      padding: EdgeInsets.all(8),
+      toAnimate: false,
+      child: SizedBox(
+        // fill the stack that Badge creates
+        width: double.infinity,
+        child: RoundedRectButton(
+          textColor: Colors.black,
+          text: s.marketStats.toUpperCase(),
+          onPressed: _showMarketStats,
         ),
       ),
     );
@@ -895,9 +859,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _buildShowAccountButton() {
     return RoundedRectButton(
-        text: s.showInAccountManager,
-        textColor: Colors.white,
-        backgroundColor: Colors.deepPurple,
+        text: s.showInAccountManager.toUpperCase(),
+        textColor: Colors.black,
         onPressed: () {
           if (_account != null) {
             AccountManagerPage.showAccount(context, _account);
