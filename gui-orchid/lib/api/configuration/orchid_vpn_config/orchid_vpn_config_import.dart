@@ -16,7 +16,7 @@ class OrchidVPNConfigImport {
   /// Parse JavaScript config text optionally containing a variable assignment expression
   /// for `keys`.   Returns a list of new keys or an empty list.  e.g.
   ///   keys = [1234..., 1234...];
-  static List<StoredEthereumKey> parseKeys(
+  static List<StoredEthereumKey> parseImportedKeysList(
       String js, List<StoredEthereumKey> existingKeys) {
     // Match a 'keys' variable assignment to a list of JS object literals:
     js = OrchidAccountImport.removeNewlines(js);
@@ -132,11 +132,13 @@ class OrchidVPNConfigImport {
     await CircuitUtils.saveCircuit(parsedCircuit.circuit);
     log("Import saved ${parsedCircuit.circuit.hops.length} hop circuit.");
 
-    // Parse optional keys list
-    var parsedKeys = parseKeys(config, existingKeys);
-    if (parsedKeys.isNotEmpty) {
-      log("Imported keys list added ${parsedKeys.length} new keys.");
-      await UserPreferences().addKeys(parsedKeys);
+    // Parse the optional imported keys list.
+    // First update the existing keys with any just imported above.
+    existingKeys = await UserPreferences().keys.get();
+    var newKeys = parseImportedKeysList(config, existingKeys);
+    if (newKeys.isNotEmpty) {
+      log("Imported keys list added ${newKeys.length} new keys.");
+      await UserPreferences().addKeys(newKeys);
     }
 
     return true;
@@ -154,7 +156,8 @@ class OrchidVPNConfigValidationV0 {
       return false;
     }
     try {
-      var parsedCircuit = OrchidVPNConfigImport.parseCircuit(config, [] /*no existing keys*/);
+      var parsedCircuit =
+          OrchidVPNConfigImport.parseCircuit(config, [] /*no existing keys*/);
       var circuit = parsedCircuit.circuit;
       return _isValidCircuitForImport(circuit);
     } catch (err, s) {
