@@ -4,15 +4,17 @@ import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/formatting.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/on_off.dart';
 
 class Release {
-  // Increment to display new release info
-  static ReleaseVersion current = ReleaseVersion(1);
+  /// This is a manually incremented release notes version.
+  /// The user will see combined release notes for all versions after any previously
+  /// viewed version number.
+  static ReleaseVersion current = ReleaseVersion(2);
 
-  // Build a title string
-  static Future<String> title(BuildContext context) async {
+  // Build a generic "what's new" title string showing the current version number
+  static Future<String> whatsNewTitle(BuildContext context) async {
     // e.g. "0.9.24 (48.299352.835478)";
     var version = await OrchidAPI().versionString();
     if (version.contains(' ')) {
@@ -21,46 +23,108 @@ class Release {
     return S.of(context).whatsNewInOrchid + ' $version?';
   }
 
-  // Build a release message
-  static Widget message(BuildContext context) {
-    // var bodyStyle = AppText.dialogBody.copyWith(fontSize: 14, color: Colors.black);
-    var bodyStyle = OrchidText.body1;
+  static Widget messagesSince(
+      BuildContext context, ReleaseVersion lastVersion) {
+    // Concatenate messages starting at the version after last viewed
+    List<Widget> children = [];
+    for (var i = lastVersion.version + 1; i <= current.version; i++) {
+      children.add(message(context, i));
+      if (i < current.version) {
+        children.add(Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
+          child: Divider(
+            color: Colors.white.withOpacity(0.3),
+          ),
+        ));
+      }
+    }
 
-    // var headingStyle = bodyStyle.copyWith(fontWeight: FontWeight.bold);
-    var headingStyle = OrchidText.subtitle.copyWith(color: OrchidColors.purple_bright);
-
-    var s = S.of(context);
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 400),
-      child: Column(
+      constraints: BoxConstraints(maxWidth: 400, maxHeight: 400),
+      child: SingleChildScrollView(
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: children),
+      ),
+    );
+  }
+
+  static Widget message(BuildContext context, int version) {
+    switch (version) {
+      case 1:
+        return version1(context);
+        break;
+      case 2:
+        return version2(context);
+        break;
+      default:
+        return Container();
+    }
+  }
+
+  // Build the release message for version 2
+  static Widget version2(BuildContext context) {
+    var s = S.of(context);
+    var headingStyle = OrchidText.subtitle.purpleBright;
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (OrchidPlatform.isApple) ...[
-            Text(s.orchidIsOnXdai, style: headingStyle),
-            pady(8),
-            Text(
-              s.youCanNowPurchaseOrchidCreditsOnXdaiStartUsing,
-              style: bodyStyle,
-            ),
-            pady(16),
-            Text(s.xdaiAccountsForPastPurchases, style: headingStyle),
-            pady(8),
-            Text(
-              s.forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave,
-              style: bodyStyle,
-            ),
-            pady(16),
-          ],
-          Text(s.newInterface, style: headingStyle),
+          Text(s.newCircuitBuilder, style: headingStyle),
           pady(8),
           Text(
-            s.accountsAreNowOrganizedUnderTheOrchidAddressTheyAre +" " +
-            s.seeYourActiveAccountBalanceAndBandwidthCostOnThe,
-            style: bodyStyle,
+            s.youCanNowPayForAMultihopOrchidCircuitWith,
+            style: OrchidText.body1,
           ),
+          pady(8),
+          Text(
+            s.manageYourConnectionFromTheCircuitBuilderInsteadOfThe,
+            style: OrchidText.body1,
+          ),
+          pady(16),
+          Text(s.quickStartFor1, style: headingStyle),
+          pady(8),
+          Text(
+            s.weAddedAMethodToPurchaseAnOrchidAccountAnd,
+            style: OrchidText.body1,
+          ),
+        ]);
+  }
+
+  // Build the release message for version 1
+  static Widget version1(BuildContext context) {
+    var headingStyle = OrchidText.subtitle.purpleBright;
+    var s = S.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (OrchidPlatform.isApple) ...[
+          Text(s.orchidIsOnXdai, style: headingStyle),
+          pady(8),
+          Text(
+            s.youCanNowPurchaseOrchidCreditsOnXdaiStartUsing,
+            style: OrchidText.body1,
+          ),
+          pady(16),
+          Text(s.xdaiAccountsForPastPurchases, style: headingStyle),
+          pady(8),
+          Text(
+            s.forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave,
+            style: OrchidText.body1,
+          ),
+          pady(16),
         ],
-      ),
+        Text(s.newInterface, style: headingStyle),
+        pady(8),
+        Text(
+          s.accountsAreNowOrganizedUnderTheOrchidAddressTheyAre +
+              " " +
+              s.seeYourActiveAccountBalanceAndBandwidthCostOnThe,
+          style: OrchidText.body1,
+        ),
+      ],
     );
   }
 }

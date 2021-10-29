@@ -1,6 +1,7 @@
 import 'package:dartjsengine/dartjsengine.dart';
 import 'package:jsparser/jsparser.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+
 // dartjsengine depends uses jsparser
 // https://github.com/anuragvohraec/dartJSEngine
 
@@ -64,16 +65,19 @@ class JSConfig {
     try {
       return evalInt(expression);
     } catch (err) {
+      log("evalIntDefault: $err");
       return defaultValue;
     }
   }
 
   int evalInt(String expression) {
     JsObject val = _eval(expression);
-    if (val?.valueOf is int) {
-      return val.valueOf;
+    try {
+      return int.parse(val.toString());
+    } catch (err) {
+      throw Exception(
+          "Expression not int: $val, type=${val.runtimeType}, $err");
     }
-    throw Exception("Expression not int: $val");
   }
 
   double evalDoubleDefault(String expression, double defaultValue) {

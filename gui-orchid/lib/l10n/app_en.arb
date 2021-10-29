@@ -296,5 +296,10 @@
     "circuitBuilder": "Circuit Builder",
     "exitHop": "Exit Hop",
     "entryHop": "Entry Hop",
-    "addNewHop": "ADD NEW HOP"
+    "addNewHop": "ADD NEW HOP",
+    "newCircuitBuilder": "New circuit builder!",
+    "youCanNowPayForAMultihopOrchidCircuitWith": "You can now pay for a multi-hop Orchid circuit with xDAI. The multihop interface now supports xDAI and OXT Orchid accounts and still supports OpenVPN and WireGuard configs that can be strung together into an onion route.",
+    "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "Manage your connection from the circuit builder instead of the account manager. All connections now use a circuit with zero or more hops. Any existing configuration has been migrated to the circuit builder.",
+    "quickStartFor1": "Quick start for $1",
+    "weAddedAMethodToPurchaseAnOrchidAccountAnd": "We added a method to purchase an Orchid account and create a single hop circuit from the homescreen to shortcut the onboarding process."
 }

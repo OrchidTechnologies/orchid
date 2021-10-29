@@ -51,7 +51,6 @@ class _SettingsPageState extends State<SettingsPage> {
   /// Update system config based on changes to user advanced config
   void advancedConfigChanged() async {
     var jsConfig = await OrchidUserConfig().getUserConfigJS();
-
     _showLogging = jsConfig.evalBoolDefault('logging', false);
     _tester = jsConfig.evalBoolDefault('tester', false);
 
@@ -152,7 +151,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     onPressed: () {
                       UserPreferences()
                           .releaseVersion
-                          .set(ReleaseVersion.firstLaunch());
+                          .set(ReleaseVersion.resetFirstLaunch());
                     },
                   ),
                 )),

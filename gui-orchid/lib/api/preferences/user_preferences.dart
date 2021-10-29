@@ -242,8 +242,8 @@ class UserPreferences {
       ObservableAccountSetPreference(
           UserPreferenceKey.CachedDiscoveredAccounts);
 
-  /// An incrementing internal UI app release version used to track first launch
-  /// and new release launch messaging.  See [Release]
+  /// An incrementing internal UI app release notes version used to track
+  /// new release messaging.  See class [Release]
   ObservablePreference<ReleaseVersion> releaseVersion = ObservablePreference(
       key: UserPreferenceKey.ReleaseVersion,
       loadValue: (key) async {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/monitoring/restart_manager.dart';
 import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
@@ -10,6 +11,7 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
@@ -498,23 +500,56 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// Do first launch and per-release activities.
   Future<void> _releaseVersionCheck() async {
-    var version = await UserPreferences().releaseVersion.get();
-
     await _doMigrationActivities();
 
-    log("first launch check.");
-    if (version.isFirstLaunch) {
-      await _doFirstLaunchActivities();
-    }
+    var lastVersion = await _getReleaseVersionWithOverride();
 
-    log("new version check.");
-    var releaseNotes =
-        const bool.fromEnvironment('release_notes', defaultValue: null);
-    if (releaseNotes ?? version.isOlderThan(Release.current)) {
-      await _doNewReleaseActivities();
+    log("connect: first launch check.");
+    if (lastVersion.isFirstLaunch) {
+      log("connect: first launch");
+      await _doFirstLaunchActivities();
+    } else {
+      // show any release notes since the last viewed
+      log("connect: check release notes since version: $lastVersion");
+      if (lastVersion.isOlderThan(Release.current)) {
+        await _showReleaseNotesSince(lastVersion);
+      }
     }
 
     await UserPreferences().releaseVersion.set(Release.current);
+  }
+
+  // Allow override of the last viewed release notes version for testing.
+  // e.g. set to 0 to see all release notes, or high to hide them.
+  Future<ReleaseVersion> _getReleaseVersionWithOverride() async {
+    var version = await UserPreferences().releaseVersion.get();
+
+    const release_version = 'release_version';
+    // From user config
+    var jsConfig = await OrchidUserConfig().getUserConfigJS();
+    var overrideVersion = jsConfig.evalIntDefault(release_version, null);
+    log("XXX: js overrideVersion = $overrideVersion");
+    if (overrideVersion != null) {
+      version = ReleaseVersion(overrideVersion);
+    }
+
+    // From command line
+    overrideVersion =
+        const int.fromEnvironment(release_version, defaultValue: null);
+    log("XXX: cli overrideVersion = $overrideVersion");
+    if (overrideVersion != null) {
+      version = ReleaseVersion(overrideVersion);
+    }
+
+    return version;
+  }
+
+  Future<void> _showReleaseNotesSince(ReleaseVersion lastVersion) async {
+    return AppDialogs.showAppDialog(
+      context: context,
+      title: await Release.whatsNewTitle(context),
+      body: Release.messagesSince(context, lastVersion),
+    );
   }
 
   /// As part of new user onboarding we scan for accounts continually until
@@ -584,15 +619,6 @@ class _ConnectPageState extends State<ConnectPage>
     }
     // Update the UI after first identity created
     setState(() {});
-  }
-
-  Future<void> _doNewReleaseActivities() async {
-    log("new release: Do new release activities.");
-    return AppDialogs.showAppDialog(
-      context: context,
-      title: await Release.title(context),
-      body: Release.message(context),
-    );
   }
 
   Future _circuitConfigurationChanged() async {

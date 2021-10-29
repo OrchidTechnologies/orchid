@@ -116,7 +116,7 @@ class ReleaseVersion {
 
   ReleaseVersion(this.version);
 
-  ReleaseVersion.firstLaunch() : this.version = null;
+  ReleaseVersion.resetFirstLaunch() : this.version = null;
 
   /// This is represents a first launch of the app since the V1 UI.
   bool get isFirstLaunch {
@@ -124,7 +124,12 @@ class ReleaseVersion {
   }
 
   // Compare versions or return true if first launch.
-  bool isOlderThan(ReleaseVersion release) {
-    return version == null || version < release.version;
+  bool isOlderThan(ReleaseVersion other) {
+    return version == null || version < other.version;
+  }
+
+  @override
+  String toString() {
+    return 'ReleaseVersion{version: $version}';
   }
 }
