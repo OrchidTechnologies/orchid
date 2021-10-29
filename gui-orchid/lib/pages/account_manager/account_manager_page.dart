@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -16,7 +18,6 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_detail_store.dart';
-import 'package:orchid/pages/circuit/circuit_utils.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:orchid/common/scan_paste_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
@@ -28,11 +29,11 @@ import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
+import 'package:orchid/util/streams.dart';
 import 'package:orchid/util/strings.dart';
 import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_sizes.dart';
-import '../../common/app_text.dart';
 import '../app_routes.dart';
 import 'account_card.dart';
 import 'account_finder.dart';
@@ -64,6 +65,7 @@ class AccountManagerPage extends StatefulWidget {
 }
 
 class _AccountManagerPageState extends State<AccountManagerPage> {
+  List<StreamSubscription> _subs = [];
   List<StoredEthereumKey> _identities;
   StoredEthereumKey _selectedIdentity;
 
@@ -79,8 +81,15 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void initStateAsync() async {
-    _identities = await UserPreferences().keys.get();
-    _setSelectedIdentity(_identities.isNotEmpty ? _identities.first : null);
+    // Listen for changes to identities
+    (await UserPreferences().keys.streamAsync()).listen((keys) {
+      _identities = keys;
+      // Default if needed
+      if (_selectedIdentity == null) {
+        _setSelectedIdentity(_chooseDefaultIdentity(_identities));
+      }
+      setState(() {});
+    }).dispose(_subs);
 
     // Open to import, purchase, identity
     await _doOpenOptions();
@@ -94,13 +103,19 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       _accountStore.removeListener(_accountsUpdated);
       _accountStore = null;
     }
-    if (identity != null) {
-      _accountStore = AccountStore(identity: identity.ref());
+    if (_selectedIdentity != null) {
+      _accountStore = AccountStore(identity: _selectedIdentity.ref());
       _accountStore.addListener(_accountsUpdated);
       _accountStore.load(waitForDiscovered: false);
     }
 
     setState(() {});
+  }
+
+  /// Pick an identitiy or null if empty
+  static StoredEthereumKey _chooseDefaultIdentity(
+      List<StoredEthereumKey> identities) {
+    return identities.isNotEmpty ? identities.first : null;
   }
 
   Future<void> _doOpenOptions() async {
@@ -143,7 +158,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 8.0),
-          child: _buildIdentitySelectorMenu(),
+          child: _buildIdentitySelectorDropdownMenu(),
         )
       ],
       child: _accountStore == null
@@ -191,7 +206,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
-  Widget _buildIdentitySelectorMenu() {
+  Widget _buildIdentitySelectorDropdownMenu() {
     return Theme(
       data: Theme.of(context).copyWith(
         cardColor: OrchidColors.dark_background,
@@ -263,14 +278,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   void _newIdentity() async {
     var identity = StoredEthereumKey.generate();
     await UserPreferences().addKey(identity);
-    _identities = await UserPreferences().keys.get();
     _setSelectedIdentity(identity);
   }
 
   void _deleteIdentity(StoredEthereumKey identity) async {
     await UserPreferences().removeKey(identity.ref());
-    _identities = await UserPreferences().keys.get();
-    _setSelectedIdentity(_identities.isNotEmpty ? _identities.first : null);
+    _setSelectedIdentity(_chooseDefaultIdentity(_identities));
   }
 
   void _exportIdentity() async {
@@ -547,6 +560,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   @override
   void dispose() {
+    _subs.dispose();
     if (_accountStore != null) {
       _accountStore.removeListener(_accountsUpdated);
     }
