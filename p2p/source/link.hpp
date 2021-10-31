@@ -64,12 +64,12 @@ class Faucet :
     }
 };
 
-template <typename Type_, typename Value_ = const Type_ &>
+template <typename Value_>
 class Spout :
     public Faucet<Drain<Value_>>
 {
   protected:
-    void Land(const Type_ &data) {
+    void Land(Value_ data) {
         return Faucet<Drain<Value_>>::Outer().Land(data);
     }
 
@@ -79,11 +79,11 @@ class Spout :
 
 template <typename Type_, typename Value_ = const Type_ &>
 class Pump :
-    public Spout<Type_, Value_>,
+    public Spout<Value_>,
     public Pipe<Type_>
 {
   public:
-    using Spout<Type_, Value_>::Spout;
+    using Spout<Value_>::Spout;
 };
 
 template <typename Type_>
