@@ -1071,7 +1071,7 @@ class Pad :
     }
 };
 
-class Window :
+class Window final :
     public Buffer
 {
   private:
