@@ -540,8 +540,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _buildMarketStatsButton() {
     return Badge(
-      // TODO: REMOVE!
-      showBadge: true || _showMarketStatsAlert,
+      showBadge: _showMarketStatsAlert,
       position: BadgePosition.topEnd(top: 9, end: 55),
       badgeContent:
           Text('!', style: TextStyle(color: Colors.white, fontSize: 12)),
