@@ -161,7 +161,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
     } catch (err) {
       _pastedCodeValid = false;
     }
-    log("XXX: pasted code valid = $_pastedCodeValid");
+    log("pasted code valid = $_pastedCodeValid");
     setState(() {});
   }
 

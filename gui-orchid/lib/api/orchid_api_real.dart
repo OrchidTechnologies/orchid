@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/monitoring/restart_manager.dart';
 import 'package:orchid/api/orchid_api.dart';
@@ -47,7 +48,7 @@ class RealOrchidAPI implements OrchidAPI {
     await _platform.invokeMethod('ready');
 
     // Write the config file on startup
-    await updateConfiguration();
+    await publishConfiguration();
 
     // Monitor user preferences and start or stop the VPN extension.
     await OrchidRestartManager().initVPNControlListener();
@@ -136,7 +137,7 @@ class RealOrchidAPI implements OrchidAPI {
   static applyRoutingStatus(OrchidVPNRoutingState state) async {
     var publishStatus = OrchidAPI().vpnRoutingStatus;
     var routingEnabled = await UserPreferences().routingEnabled.get();
-    
+
     switch (state) {
       case OrchidVPNRoutingState.VPNNotConnected:
         publishStatus.add(state);
@@ -180,7 +181,7 @@ class RealOrchidAPI implements OrchidAPI {
   Future<void> setVPNExtensionEnabled(bool enabled) async {
     log("api: setVPNExtensionEnabled: $enabled");
     if (enabled) {
-      await updateConfiguration();
+      await publishConfiguration();
       await _platform.invokeMethod('connect');
     } else {
       await _platform.invokeMethod('disconnect');
@@ -198,25 +199,6 @@ class RealOrchidAPI implements OrchidAPI {
 
   Future<String> versionString() async {
     return _platform.invokeMethod('version');
-  }
-
-  /// Get the User visible Orchid Configuration file contents
-  Future<String> getConfiguration() async {
-    // return _platform.invokeMethod('get_config');
-    // Return only the user visible portion of the config.
-    return await UserPreferences().getUserConfig();
-  }
-
-  /// Set the User visible Orchid Configuration file contents
-  /// and publish it to the VPN.
-  Future<bool> setConfiguration(String userConfig) async {
-    String combinedConfig = await generateCombinedConfig(userConfig);
-    log("api: combined config = {$combinedConfig}");
-
-    // todo: return a bool from the native side?
-    String result = await _platform
-        .invokeMethod('set_config', <String, dynamic>{'text': combinedConfig});
-    return result == 'true';
   }
 
   // Generate the portion of the VPN config managed by the GUI.  Managed config
@@ -244,13 +226,15 @@ class RealOrchidAPI implements OrchidAPI {
   }
 
   // Generate the combined user config and generated config
-  static Future<String> generateCombinedConfig(String userConfig) async {
+  static Future<String> generateCombinedConfig() async {
+    var userConfig = await UserPreferences().userConfig.get();
+
     // Append the generated config before saving.
     String generatedConfig;
     try {
       generatedConfig = await generateManagedConfig();
     } catch (err, stack) {
-      log("Error rendering config: $err\n$stack");
+      log("api: Error rendering config: $err\n$stack");
       generatedConfig = " ";
     }
 
@@ -260,8 +244,20 @@ class RealOrchidAPI implements OrchidAPI {
   }
 
   /// Publish the latest configuration to the VPN.
-  Future<bool> updateConfiguration() async {
-    return setConfiguration(await UserPreferences().getUserConfig());
+  Future<bool> publishConfiguration() async {
+    log("api: update configuration");
+    var combinedConfig = await generateCombinedConfig();
+    log("api: combined config = {$combinedConfig}");
+    var path = await groupContainerPath() + '/config.cfg';
+    log("api: write config file: $path");
+    try {
+      // Write a UTF-8 string and flush.
+      await File(path).writeAsString(combinedConfig, flush: true);
+      return true;
+    } catch (err) {
+      log("api: write config file failed: $err");
+      return false;
+    }
   }
 
   void dispose() {

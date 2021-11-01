@@ -67,22 +67,15 @@ abstract class OrchidAPI {
   /// API for funds and budgeting
   OrchidBudgetAPI budget();
 
-  /// The the path for files shared between the
+  /// The the base path for files shared between the UI and VPN extension.
+  /// e.g. groupContainerPath() + '/analysis.db'
   Future<String> groupContainerPath();
 
   /// The build version
   Future<String> versionString();
 
-  /// Get the User visible Orchid Configuration file contents
-  Future<String> getConfiguration();
-
-  /// Set the User visible Orchid Configuration file contents
-  /// and publish it to the VPN.
-  /// Returns true if the configuration was saved successfully.
-  Future<bool>setConfiguration(String userConfig);
-
-  /// Publish the latest configuration to the VPN.
-  Future<bool> updateConfiguration();
+  /// Publish the latest configuration file to the VPN.
+  Future<bool> publishConfiguration();
 
   void dispose() {
     circuitConfigurationChanged.close();

@@ -79,15 +79,19 @@ class UserPreferences {
   ///
 
   // Get the user editable configuration file text.
-  Future<String> getUserConfig() async {
-    return (await SharedPreferences.getInstance())
-        .getString(UserPreferenceKey.UserConfig.toString());
-  }
+  // Future<String> getUserConfig() async {
+  //   return (await SharedPreferences.getInstance())
+  //       .getString(UserPreferenceKey.UserConfig.toString());
+  // }
 
   // Set the user editable configuration file text.
-  Future<bool> setUserConfig(String value) async {
-    return writeStringForKey(UserPreferenceKey.UserConfig, value);
-  }
+  // Future<bool> setUserConfig(String value) async {
+  //   return writeStringForKey(UserPreferenceKey.UserConfig, value);
+  // }
+
+  /// The user-editable portion of the configuration file text.
+  ObservableStringPreference userConfig =
+      ObservableStringPreference(UserPreferenceKey.UserConfig);
 
   ///
   /// Begin: Keys
@@ -276,7 +280,6 @@ class UserPreferences {
 
 enum UserPreferenceKey {
   Circuit,
-  RecentlyDeletedHops,
   UserConfig,
   Keys,
   DefaultCurator,

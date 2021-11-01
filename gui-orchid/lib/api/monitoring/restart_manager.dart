@@ -46,7 +46,7 @@ class OrchidRestartManager {
         return routing || monitoring;
       },
     ).listen((desiredRunning) async {
-      await OrchidAPI().updateConfiguration();
+      await OrchidAPI().publishConfiguration();
 
       // On startup check the state of the world
       if (!_initialized) {

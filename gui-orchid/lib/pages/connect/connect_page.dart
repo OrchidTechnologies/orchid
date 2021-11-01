@@ -391,13 +391,11 @@ class _ConnectPageState extends State<ConnectPage>
       minHeight: isShort,
       onSelectIndex: (index) {
         setState(() {
-          log("XXX: selected index = $index");
           _selectedIndex = index;
           _selectedAccountChanged(_selectedAccount);
         });
       },
       onManageAccountsPressed: () async {
-        log("XXX: manage accounts pressed, selectedAccount = $_selectedAccount");
         await AccountManagerPage.showAccount(context, _selectedAccount);
         _updateStats(null);
       },
@@ -528,7 +526,6 @@ class _ConnectPageState extends State<ConnectPage>
     // From user config
     var jsConfig = await OrchidUserConfig().getUserConfigJS();
     var overrideVersion = jsConfig.evalIntDefault(release_version, null);
-    log("XXX: js overrideVersion = $overrideVersion");
     if (overrideVersion != null) {
       version = ReleaseVersion(overrideVersion);
     }
@@ -536,7 +533,6 @@ class _ConnectPageState extends State<ConnectPage>
     // From command line
     overrideVersion =
         const int.fromEnvironment(release_version, defaultValue: null);
-    log("XXX: cli overrideVersion = $overrideVersion");
     if (overrideVersion != null) {
       version = ReleaseVersion(overrideVersion);
     }

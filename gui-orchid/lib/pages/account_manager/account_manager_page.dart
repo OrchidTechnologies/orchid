@@ -121,7 +121,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Future<void> _doOpenOptions() async {
     // Open to the supplied account
     if (widget.openToAccount != null) {
-      log("XXX: open to account: ${widget.openToAccount}");
+      // log("open to account: ${widget.openToAccount}");
       _setSelectedIdentity(await widget.openToAccount.signerKey);
     }
 
@@ -140,13 +140,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void _accountsUpdated() async {
-    // TODO: We don't want to keep randomly creating a circuit if the user has
-    // TODO: emptied the list themselves, do we?
-    // TODO: shortcut when we've already checked
-    // if (_accountStore.accounts.isNotEmpty) {
-    //   CircuitUtils.defaultCircuitIfNeededFrom(_accountStore.accounts.first);
-    // }
-
     // update the UI
     setState(() {});
   }

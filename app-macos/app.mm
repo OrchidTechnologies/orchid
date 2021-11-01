@@ -286,11 +286,6 @@
         } else if ([@"version" isEqualToString:call.method]) {
             const auto info([[NSBundle mainBundle] infoDictionary]);
             result([NSString stringWithFormat:@"%@ (%@)", [info objectForKey:@"CFBundleShortVersionString"], [info objectForKey:@"CFBundleVersion"]]);
-        } else if ([@"get_config" isEqualToString:call.method]) {
-            [weakSelf getConfig: result];
-        } else if ([@"set_config" isEqualToString:call.method]) {
-            NSString *text = call.arguments[@"text"];
-            [weakSelf setConfig: text result: result];
         } else {
             result(FlutterMethodNotImplemented);
         }
@@ -329,34 +324,6 @@
 - (NSURL *) getConfigURL {
     NSURL *groupURL = [self groupURL];
     return [groupURL URLByAppendingPathComponent: @"config.cfg"];
-}
-
-- (NSString *) getConfig {
-    NSURL *url = [self getConfigURL];
-    NSError *error; // todo
-    NSString *content = [NSString stringWithContentsOfFile:[url path] encoding:NSASCIIStringEncoding error:&error];
-    if (error!=nil) {
-      NSLog(@"Get config error: %@", error);
-      return nil;
-    }
-    return content;
-}
-- (void) getConfig: (FlutterResult)result {
-    result([self getConfig]);
-}
-
-- (bool) setConfig: (NSString *)text {
-    NSURL *url = [self getConfigURL];
-    //NSLog(@"Write config {%@} to file: %@", text, [url path]);
-    NSError *error; // todo
-    [text writeToFile:[url path] atomically:YES encoding:NSUTF8StringEncoding error:&error];
-    if (error!=nil) {
-      NSLog(@"Save config error: %@", error);
-    }
-    return error == nil;
-}
-- (void) setConfig: (NSString *)text result: (FlutterResult)result {
-    result([self setConfig: text] ? @"true" : @"false"); // todo
 }
 
 // Called when the flutter application startup is complete and listeners are registered.

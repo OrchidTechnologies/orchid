@@ -71,12 +71,12 @@ class CircuitUtils {
   /// Save the circuit and update published config and configuration listeners
   static Future<void> saveCircuit(Circuit circuit) async {
     try {
-      log("XXX: Saving circuit: ${circuit.hops.map((e) => e.toJson())}");
+      //log("Saving circuit: ${circuit.hops.map((e) => e.toJson())}");
       await UserPreferences().circuit.set(circuit);
     } catch (err, stack) {
       log("Error saving circuit: $err, $stack");
     }
-    await OrchidAPI().updateConfiguration();
+    await OrchidAPI().publishConfiguration();
     OrchidAPI().circuitConfigurationChanged.add(null);
   }
 

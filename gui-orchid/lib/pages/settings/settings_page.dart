@@ -79,7 +79,6 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-
               // Default curator
               _divided(PageTile(
                 height: height,
@@ -119,6 +118,10 @@ class _SettingsPageState extends State<SettingsPage> {
               _divided(PageTile(
                 height: height,
                 title: s.advancedConfiguration,
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 2.0),
+                  child: Icon(Icons.settings, color: Colors.white, size: 20),
+                ),
                 onTap: () async {
                   await Navigator.pushNamed(context, AppRoutes.configuration);
                   advancedConfigChanged(); // update anything that may have changed via config
@@ -127,7 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
               // Manage Data
               _divided(PageTile.route(
-                  // height: height,
+                  leading: Icon(Icons.import_export, color: Colors.white, size: 24),
                   title: s.configurationManagement,
                   routeName: '/settings/manage_config',
                   context: context)),
