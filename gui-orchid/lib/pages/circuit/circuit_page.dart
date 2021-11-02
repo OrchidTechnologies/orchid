@@ -18,6 +18,8 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_card.dart';
 import 'package:orchid/pages/account_manager/account_detail_store.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
+import 'package:orchid/pages/circuit/model/openvpn_hop.dart';
+import 'package:orchid/pages/circuit/model/wireguard_hop.dart';
 import 'circuit_utils.dart';
 import 'hop_editor.dart';
 import 'hop_tile.dart';
@@ -211,13 +213,15 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildDismissableHopTile(UniqueHop uniqueHop, int index) {
+    bool confirmDismiss =
+        uniqueHop.hop is OpenVPNHop || uniqueHop.hop is WireGuardHop;
     return Padding(
       key: Key(uniqueHop.key.toString()),
       padding: const EdgeInsets.only(bottom: 28.0),
       child: Dismissible(
         key: Key(uniqueHop.key.toString()),
         background: buildDismissableBackground(context),
-        confirmDismiss: _confirmDeleteHop,
+        confirmDismiss: confirmDismiss ? _confirmDeleteHop : null,
         onDismissed: (direction) {
           _deleteHop(uniqueHop);
         },
@@ -395,9 +399,7 @@ class CircuitPageState extends State<CircuitPage>
     var result = await AppDialogs.showConfirmationDialog(
       context: context,
       title: s.confirmDelete,
-      bodyText: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
-          "  " +
-          s.ifYouPlanToReuseTheAccountLaterYouShould,
+      bodyText: s.deletingOpenVPNAndWireguardHopsWillLose,
     );
     return result;
   }
