@@ -331,8 +331,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     var body = StyledText(
       style: OrchidText.body2.black,
       newLineAsBreaks: true,
-      text: s
-          .thisCannotBeUndoneBoldopenvpnboldAndBoldwireguardboldAccountInformationWill,
+      text: s.thisCannotBeUndoneToSaveThisIdentity,
       tags: {
         'bold': StyledTextTag(
           style: OrchidText.body2.black.bold,

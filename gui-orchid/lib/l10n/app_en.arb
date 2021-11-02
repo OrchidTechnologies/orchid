@@ -297,5 +297,6 @@
     "quickStartFor1": "Quick start for $1",
     "weAddedAMethodToPurchaseAnOrchidAccountAnd": "We added a method to purchase an Orchid account and create a single hop circuit from the homescreen to shortcut the onboarding process.",
     "orchidIsUniqueAsAMultiHopOrOnion": "Orchid is unique as a multi-hop or onion routing client supporting multiple VPN protocols. You can set up your connection by chaining together hops from the supported protocols below.\n\nOne hop is like a regular VPN. Three hops (for advanced users) is the classic onion routing choice.  Zero hops allows traffic analysis without any VPN tunnel.",
-    "deletingOpenVPNAndWireguardHopsWillLose": "Deleting OpenVPN and Wireguard hops will lose any associated credentials and connection configuration. Be sure to back up any information before continuing."
+    "deletingOpenVPNAndWireguardHopsWillLose": "Deleting OpenVPN and Wireguard hops will lose any associated credentials and connection configuration. Be sure to back up any information before continuing.",
+    "thisCannotBeUndoneToSaveThisIdentity": "This cannot be undone.  To save this identity hit cancel and use the Export option"
 }
