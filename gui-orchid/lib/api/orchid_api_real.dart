@@ -248,7 +248,7 @@ class RealOrchidAPI implements OrchidAPI {
     log("api: update configuration");
     var combinedConfig = await generateCombinedConfig();
     log("api: combined config = {$combinedConfig}");
-    var path = await groupContainerPath() + '/config.cfg';
+    var path = await groupContainerPath() + '/orchid.cfg';
     log("api: write config file: $path");
     try {
       // Write a UTF-8 string and flush.

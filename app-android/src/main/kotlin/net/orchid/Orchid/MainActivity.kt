@@ -56,24 +56,6 @@ class MainActivity(): FlutterActivity() {
                 "version" -> {
                     result.success("${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                 }
-                "get_config" -> {
-                    var file = configFile();
-                    val text = file.readText()
-                    result.success(text);
-                }
-                "set_config" -> {
-                    Log.d("Orchid", "set config")
-                    var text: String? = call.argument<String>("text")
-                    if ( text == null ) {
-                        Log.d("Orchid", "invalid argument in set_config")
-                        text = "";
-                    }
-                    val textIn = text.byteInputStream();
-                    var file = configFile();
-                    copyTo(textIn, file);
-                    Log.d("Orchid", "copy complete")
-                    result.success("true"); // todo, validation
-                }
                 else -> {
                     result.notImplemented()
                 }

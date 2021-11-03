@@ -321,7 +321,7 @@
 
 - (NSURL *) getConfigURL {
     NSURL *groupURL = [self groupURL];
-    return [groupURL URLByAppendingPathComponent: @"config.cfg"];
+    return [groupURL URLByAppendingPathComponent: @"orchid.cfg"];
 }
 
 // Called when the flutter application startup is complete and listeners are registered.
