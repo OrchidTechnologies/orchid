@@ -5,7 +5,6 @@ import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
-import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../orchid_log_api.dart';
 import 'accounts_preferences.dart';
@@ -59,7 +58,7 @@ class UserPreferences {
 
   // Set the circuit / hops configuration
   static Future<bool> _setCircuit(Circuit circuit) async {
-    String value = jsonEncode(circuit);
+    String value = circuit != null ? jsonEncode(circuit) : null;
     return writeStringForKey(UserPreferenceKey.Circuit, value);
   }
 

@@ -549,7 +549,7 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   /// As part of new user onboarding we scan for accounts continually until
-  /// the first one is found and create a default route.
+  /// the first one is found and create a default single hop route from it.
   Future<void> _scanForAccountsIfNeeded() async {
     // If cached discovered accounts is empty should start the search.
     if ((await UserPreferences().cachedDiscoveredAccounts.get()).isNotEmpty) {

@@ -216,8 +216,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           } else {
             item.action();
           }
-          ConfigChangeDialogs.showConfigurationChangeSuccess(context,
-              warnOnly: true);
         },
         itemBuilder: (BuildContext context) {
           var style = OrchidText.body1;

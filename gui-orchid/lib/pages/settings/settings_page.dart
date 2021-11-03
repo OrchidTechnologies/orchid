@@ -7,8 +7,10 @@ import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/pages/account_manager/account_finder.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
@@ -130,7 +132,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
               // Manage Data
               _divided(PageTile.route(
-                  leading: Icon(Icons.import_export, color: Colors.white, size: 24),
+                  leading:
+                      Icon(Icons.import_export, color: Colors.white, size: 24),
                   title: s.configurationManagement,
                   routeName: '/settings/manage_config',
                   context: context)),
@@ -145,7 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
               if (_tester)
                 _divided(PageTile(
-                  title: "(TEST) Reset First Launch Dialog",
+                  title: "(TEST) Reset First Launch Version",
                   trailing: RaisedButton(
                     child: Text(
                       s.reset.toUpperCase(),
@@ -167,12 +170,41 @@ class _SettingsPageState extends State<SettingsPage> {
                       s.clear.toUpperCase(),
                       style: buttonStyle,
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       log("Clearing cached discovered accounts");
-                      UserPreferences().cachedDiscoveredAccounts.clear();
+                      await UserPreferences().cachedDiscoveredAccounts.clear();
+                      AppDialogs.showAppDialog(
+                          context: context, title: "Cached accounts cleared.");
                     },
                   ),
                 )),
+
+              /*
+              if (_tester)
+                _divided(PageTile(
+                  title: "(TEST) Test Active Account Migration",
+                  trailing: RaisedButton(
+                    child: Text(
+                      s.reset.toUpperCase(),
+                      style: buttonStyle,
+                    ),
+                    onPressed: () async {
+                      log("Testing migration by setting an active account");
+                      await UserPreferences().circuit.clear();
+                      AccountFinder().find((accounts) async {
+                        if (accounts.isNotEmpty) {
+                          await UserPreferences()
+                              .activeAccounts
+                              .set([accounts.first]);
+                          AppDialogs.showAppDialog(
+                              context: context,
+                              title: "Migration reset. Quit the app now.");
+                        }
+                      });
+                    },
+                  ),
+                )),
+               */
 
               /*
               if (_tester)
