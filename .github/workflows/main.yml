@@ -251,7 +251,11 @@ jobs:
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-win
-        path: app-windows/out-win/package
+        path: app-windows/out-win/x86_64/package/
+    - uses: actions/upload-artifact@v2
+      with:
+        name: orchid-msi
+        path: app-windows/out-win/x86_64/Orchid.msi
 
 
   build-win-cli:
@@ -341,7 +345,7 @@ jobs:
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-lnx
-        path: app-linux/out-lnx/package
+        path: app-linux/out-lnx/x86_64/package
 
 
   build-lnx-tst:

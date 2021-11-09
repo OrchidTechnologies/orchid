@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'><Product
+    Manufacturer="$(var.name)" Name="$(var.name)" Version="$(var.version)"
+    Id="$(var.guid)" UpgradeCode="$(var.guid)"
+    Language='1033' Codepage='1252'
+>
+
+<Package Id='*' Keywords='Installer' InstallerVersion='200' Compressed='yes'
+    Description="$(var.name)" Comments="$(var.name)" Manufacturer="$(var.name)"
+    Languages='1033' SummaryCodepage='1252'/>
+
+<Media Id='1' Cabinet="$(var.name).cab" EmbedCab='yes' DiskPrompt="CD-ROM #1"/>
+<Property Id='DiskPrompt' Value="$(var.name) [1]"/>
+
+<Directory Id='TARGETDIR' Name='SourceDir'>
+    <Directory Id='ProgramFiles64Folder'>
+        <Directory Id='INSTALLDIR' Name="$(var.name)"/>
+    </Directory>
+</Directory>
+
+<Feature Id='Complete' Level='1'>
+    <ComponentGroupRef Id='Orchid'/>
+</Feature>
+
+</Product></Wix>

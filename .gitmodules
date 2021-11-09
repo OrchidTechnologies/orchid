@@ -235,3 +235,6 @@
 [submodule "outcome"]
 	path = p2p/outcome
 	url = https://github.com/boostorg/outcome.git
+[submodule "msix-packaging"]
+	path = app-windows/msix-packaging
+	url = https://github.com/microsoft/msix-packaging.git

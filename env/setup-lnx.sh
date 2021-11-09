@@ -21,6 +21,7 @@ sudo -EH apt-get -y install \
     gettext groff texinfo \
     autoconf autoconf-archive automake libtool \
     ninja-build pkg-config \
+    msitools wixl \
 
 function usable() {
     # Ubuntu bionic ships meson 0.45, which is too old to build glib

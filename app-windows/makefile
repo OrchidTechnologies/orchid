@@ -24,7 +24,7 @@ include env/target.mk
 signed := 
 
 .PHONY: all
-all: $(output)/$(name).zip
+all: $(output)/$(machine)/$(name).msix
 
 source += $(wildcard $(pwd)/source/*.cpp)
 source += $(wildcard $(pwd)/source/*.rc)
@@ -33,14 +33,31 @@ $(call include,shared/target-win.mk)
 
 include env/output.mk
 
-$(output)/package/$(name)$(exe): $(patsubst %,$(output)/$(machine)/%,$(object) $(linked))
+makemsix := msix-packaging/.vs/bin/makemsix
+
+package := $(output)/$(machine)/package
+
+$(makemsix):
+	@cd msix-packaging && ./makelinux.sh --pack --skip-samples --skip-tests
+
+$(package)/$(name)$(exe): $(patsubst %,$(output)/$(machine)/%,$(object) $(linked))
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
 	@set -o pipefail; $(cxx) $(more/$(machine)) -Wl,-subsystem,windows $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) 2>&1 -Wl,-v | nl
 	@openssl sha256 -r $@
 	@ls -la $@
-signed += $(output)/package/$(name)$(exe)
+signed += $(package)/$(name)$(exe)
 
-$(output)/$(name).zip: $(signed)
+$(output)/$(machine)/package.wxs: $(signed)
+	find $(package)/ | wixl-heat --prefix $(package)/ --directory-ref INSTALLDIR --component-group $(name) --var var.package >$@
+
+$(output)/$(machine)/$(name).msi: orchid.wxs $(output)/$(machine)/package.wxs
 	@rm -f $@
-	cd $(output)/package && zip -rXy $(zflags) ../$(name).zip *
+	wixl -v -a x64 $^ -o $@ -D name=$(name) -D package=$(package) -D guid=$(guid) -D version=$(version)
+
+$(package)/AppxManifest.xml: AppxManifest.xml.in
+	@mkdir -p $(dir $@)
+	$(replace)
+
+$(output)/$(machine)/$(name).msix: $(package)/AppxManifest.xml $(makemsix) $(signed)
+	$(makemsix) pack -d $(package) -p $@

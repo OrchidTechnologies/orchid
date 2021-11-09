@@ -114,8 +114,6 @@ $(output)/XCBuildData/build.db: shared/empty.plist $(pwd/gui)/$(assemble)/Pods/M
 	done
 
 
-replace = sed -e 's/@MONOTONIC@/$(monotonic)/g; s/@VERSION@/$(version)/g; s/@REVISION@/$(revision)/g; s/@DOMAIN@/$(domain)/g; s/@NAME@/$(name)/g; s/@TEAMID@/$(teamid)/g; s/@SUPPORT@/$(support)/g' $< | if test -n "$(filter noaot,$(debug))"; then sed -e 's/^@D@/   /'; else sed -e '/^@D@/d'; fi | if $(beta); then sed -e 's/^@B@/   /'; else sed -e '/^@B@/d'; fi >$@
-
 $(output)/ents-%.plist: ents-%.plist.in
 	@mkdir -p $(dir $@)
 	$(replace)

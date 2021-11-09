@@ -23,19 +23,19 @@ engine := $(pwd/flutter)/bin/cache/artifacts/engine/$(platform)$(engine)
 
 rsync := rsync -a --delete
 
-$(output)/package/data/flutter_assets/AssetManifest%json: $(dart)
-	rm -rf .dart_tool/flutter_build $(output)/flutter
+$(output)/$(machine)/package/data/flutter_assets/AssetManifest%json: $(dart)
+	rm -rf .dart_tool/flutter_build $(output)/$(machine)/flutter
 	cd $(pwd/gui) && $(flutter) assemble \
 	    -dTargetPlatform="$(platform)" \
 	    -dTargetFile="lib/main.dart" \
 	    -dBuildMode="$(mode)" \
 	    -dTreeShakeIcons="false" \
 	    -dTrackWidgetCreation="true" \
-	    --output="$(CURDIR)/$(output)/flutter" \
+	    --output="$(CURDIR)/$(output)/$(machine)/flutter" \
 	    $(mode)_bundle_$(mismatch)_assets
 	@mkdir -p $(dir $@)
-	$(rsync) $(output)/flutter/flutter_assets/ $(dir $@)
-signed += $(output)/package/data/flutter_assets/AssetManifest.json
+	$(rsync) $(output)/$(machine)/flutter/flutter_assets/ $(dir $@)
+signed += $(output)/$(machine)/package/data/flutter_assets/AssetManifest.json
 
 source += $(filter-out \
     %/engine_method_result.cc \
@@ -58,7 +58,7 @@ cflags += -DFLUTTER_PLUGIN_IMPL
 
 template := $(pwd/flutter)/packages/flutter_tools/templates/app_shared/$(assemble).tmpl
 
-$(output)/package/data/icudtl.dat: $(pwd/flutter)/bin/cache/artifacts/engine/$(platform)/icudtl.dat
+$(output)/$(machine)/package/data/icudtl.dat: $(pwd/flutter)/bin/cache/artifacts/engine/$(platform)/icudtl.dat
 	@mkdir -p $(dir $@)
 	cp -f $< $@
-signed += $(output)/package/data/icudtl.dat
+signed += $(output)/$(machine)/package/data/icudtl.dat

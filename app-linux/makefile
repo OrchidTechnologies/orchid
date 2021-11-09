@@ -25,7 +25,7 @@ include env/target.mk
 signed := 
 
 .PHONY: all
-all: $(output)/$(name).tgz
+all: $(output)/$(machine)/$(name).tgz
 
 source += $(wildcard $(pwd)/source/*.cpp)
 
@@ -54,17 +54,17 @@ lflags += $(output)/sysroot/usr/lib/$(host/x86_64)/libgtk-3.so
 lflags += $(output)/sysroot/usr/lib/$(host/x86_64)/libgio-2.0.so
 lflags += $(output)/sysroot/usr/lib/$(host/x86_64)/libgobject-2.0.so
 
-$(output)/package/$(name)$(exe): $(patsubst %,$(output)/$(machine)/%,$(object) $(linked))
+$(output)/$(machine)/package/$(name)$(exe): $(patsubst %,$(output)/$(machine)/%,$(object) $(linked))
 	@echo [LD] $@
 	@set -o pipefail; $(cxx) $(more/$(machine)) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) -Wl,-rpath,. 2>&1 | nl
 	@openssl sha256 -r $@
 	@ls -la $@
-signed += $(output)/package/$(name)$(exe)
+signed += $(output)/$(machine)/package/$(name)$(exe)
 
-$(output)/$(name).tgz: $(signed)
+$(output)/$(machine)/$(name).tgz: $(signed)
 	@rm -f $@
-	cd $(output)/package && tar -zcvf ../$(name).tgz .
+	cd $(output)/$(machine)/package && tar -zcvf ../$(name).tgz .
 
 .PHONY: test
 test: $(signed)
-	$(output)/package/$(name)$(exe)
+	$(output)/$(machine)/package/$(name)$(exe)

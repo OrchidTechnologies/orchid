@@ -49,13 +49,13 @@ lflags += -municode
 lflags += $(engine)/flutter_windows.dll.lib
 lflags += -lole32
 
-$(output)/package/flutter_windows.dll: $(engine)/flutter_windows.dll
+$(output)/$(machine)/package/flutter_windows.dll: $(engine)/flutter_windows.dll
 	@mkdir -p $(dir $@)
 	cp -f $< $@
-signed += $(output)/package/flutter_windows.dll
+signed += $(output)/$(machine)/package/flutter_windows.dll
 
 # XXX: compile manifest into the executable
-$(output)/package/$(name)$(exe).manifest: $(template)/runner/runner.exe.manifest
+$(output)/$(machine)/package/$(name)$(exe).manifest: $(template)/runner/runner.exe.manifest
 	@mkdir -p $(dir $@)
 	cp -f $< $@
-signed += $(output)/package/$(name)$(exe).manifest
+signed += $(output)/$(machine)/package/$(name)$(exe).manifest

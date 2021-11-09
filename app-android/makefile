@@ -80,7 +80,7 @@ $(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -n
 	@./gradlew -Pandroid.debug.obsoleteApi=true assemble$(if $(filter noaot,$(debug)),Debug,Release) --console verbose --warning-mode all \
 	    -PorcUnique='$(domain).$(name)' -PorcName='$(name)' -PorcOutput='$(output)' \
 	    -PorcStore='$(word 1,$(keystore)).keystore' -PorcAlias='$(word 2,$(keystore))' -PorcPassword='$(word 3,$(keystore))' \
-	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
+	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcCommit='$(commit)' -PorcVersion='$(version)' \
 	    -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/$(flutter/$(machine))$(engine)/flutter.jar -PorcInterface='$(pwd/gui)'
 	exit 0
 	touch $@

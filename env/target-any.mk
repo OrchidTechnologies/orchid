@@ -22,7 +22,7 @@ uname-o := $(shell uname -o 2>/dev/null)
 version := $(shell $(pwd)/version.sh)
 monotonic := $(word 1,$(version))
 revision := $(word 2,$(version))
-package := $(word 3,$(version))
+commit := $(word 3,$(version))
 version := $(word 4,$(version))
 
 export SOURCE_DATE_EPOCH := $(monotonic)
