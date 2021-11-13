@@ -30,6 +30,12 @@
 
 namespace orc {
 
+static std::optional<Address> MaybeAddress(const Json::Value &address) {
+    if (address.isNull())
+        return std::nullopt;
+    return address.asString();
+}
+
 static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &path) {
     size_t offset(0);
     orc_assert(!proofs.isNull());
@@ -155,12 +161,7 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
             return value["gasPrice"].asString();
         }()),
         To<uint64_t>(value["gas"].asString()),
-        [&]() -> std::optional<Address> {
-            const auto &target(value["to"]);
-            if (target.isNull())
-                return std::nullopt;
-            return target.asString();
-        }(),
+        MaybeAddress(value["to"]),
         uint256_t(value["value"].asString()),
         Bless(value["input"].asString()),
         [&]() {
@@ -188,7 +189,7 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
         const uint256_t s(value["s"].asString());
 
         // XXX: https://github.com/OffchainLabs/arb-os/blob/develop/doc/DataFormats.md
-        if (const auto &arbitrum = value["arbType"])
+        if (const auto &arbitrum = value["arbType"]; !arbitrum.isNull()) {
             switch (To<unsigned>(arbitrum.asString())) {
                 case 0x3: switch (To<unsigned>(value["arbSubType"].asString())) {
                     case 0x1: {
@@ -212,7 +213,16 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
 
                 default: orc_assert(false);
             }
-        else normal: {
+        // XXX: https://github.com/celo-org/celo-proposals/blob/master/CIPs/cip-0035.md
+        } else if ([&]() {
+            const auto &celo(value["ethCompatible"]);
+            return !celo.isNull() && !celo.asBool();
+        }()) {
+            const auto currency(MaybeAddress(value["feeCurrency"]));
+            const auto recipient(MaybeAddress(value["gatewayFeeRecipient"]));
+            const uint256_t gateway(value["gatewayFee"].asString());
+            orc_assert(hash_ == HashK(Implode({nonce_, bid_, gas_, currency, recipient, gateway, target_, amount_, data_, v, r, s})));
+        } else normal: {
             const auto expected(hash(chain, v, r, s));
             orc_assert_(hash_ == expected, value << ' ' << expected);
             orc_assert(from_ == from(chain, v, r, s));
@@ -255,6 +265,8 @@ Block::Block(const uint256_t &chain, Json::Value &&value) :
     height_(To<uint64_t>(value["number"].asString())),
     state_(Bless<Brick<32>>(value["stateRoot"].asString())),
     timestamp_(To<uint64_t>(value["timestamp"].asString())),
+    // XXX: Celo (unsupported anyway) fails to return this field
+    // https://github.com/celo-org/celo-blockchain/issues/1738
     limit_(To<uint64_t>(value["gasLimit"].asString())),
     miner_(value["miner"].asString()),
 

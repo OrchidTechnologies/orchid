@@ -27,6 +27,9 @@ args += --chain 137,MATIC,https://polygon-rpc.com/
 args += --chain 200,DAI,https://arbitrum.xdaichain.com/
 args += --chain 250,FTM,https://rpc.ftm.tools/
 args += --chain 42161,ETH,https://arb1.arbitrum.io/rpc
+# https://github.com/celo-org/celo-blockchain/issues/1734
+# https://github.com/celo-org/celo-blockchain/issues/1737
+#args += --chain 42220,CELO,https://forno.celo.org/
 args += --chain 43114,AVAX,https://api.avax.network/ext/bc/C/rpc
 args += --chain 1313161554,ETH,https://rpc.mainnet.aurora.dev:8545/
 
