@@ -47,7 +47,8 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
   }
 
   void initStateAsync() async {
-    (await PacTransaction.shared.streamAsync())
+    PacTransaction.shared
+        .stream()
         .listen(_pacTransactionUpdated)
         .dispose(_subscriptions);
   }

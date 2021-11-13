@@ -82,7 +82,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   void initStateAsync() async {
     // Listen for changes to identities
-    (await UserPreferences().keys.streamAsync()).listen((keys) {
+    UserPreferences().keys.stream().listen((keys) {
       _identities = keys;
       // Default if needed
       if (_selectedIdentity == null) {

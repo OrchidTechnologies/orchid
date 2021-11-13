@@ -63,7 +63,7 @@ class CircuitUtils {
   }
 
   static void addHopToCircuit(CircuitHop hop) async {
-    var circuit = await UserPreferences().getCircuit();
+    var circuit = await UserPreferences().circuit.get();
     circuit.hops.add(hop);
     saveCircuit(circuit);
   }

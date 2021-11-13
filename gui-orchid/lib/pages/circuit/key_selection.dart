@@ -55,7 +55,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
     }
 
     // Monitor changes to keys
-    (await UserPreferences().keys.streamAsync()).listen((keys) {
+    UserPreferences().keys.stream().listen((keys) {
       setState(() {
         this._keys = keys;
         if (_selectedItem != null &&

@@ -11,13 +11,13 @@ import '../orchid_log_api.dart';
 // TODO: Stand-in until we have support for MacOS
 class NonSecureStorage {
   Future<String> read({String key}) async {
-    return (await UserPreferences.sharedPreferences())
+    return (UserPreferences().sharedPreferences())
         .getString(key.toString());
   }
 
   // This method accepts null for property removal.
   Future<void> write({String key, String value}) async {
-    var shared = await UserPreferences.sharedPreferences();
+    var shared = UserPreferences().sharedPreferences();
     if (value == null) {
       return await shared.remove(key);
     }

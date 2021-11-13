@@ -15,49 +15,48 @@ class ObservablePreference<T> {
 
   BehaviorSubject<T> _subject = BehaviorSubject();
 
-  Future<T> Function(UserPreferenceKey key) loadValue;
-  Future Function(UserPreferenceKey key, T value) storeValue;
+  T Function(UserPreferenceKey key) getValue;
+  Future Function(UserPreferenceKey key, T value) putValue;
 
   /// Subscribe to the value stream *without* waiting for the value to be
   /// initialized.  The first values sent by the stream may be the uninititialized
   /// value, followed by the initialized value.
   Stream<T> stream() {
-    ensureInitialized();
+    _ensureInitialized();
     return _subject.asBroadcastStream();
   }
 
+  // We used to support async value sources here.
+  // If needed in the future we should make an ObservableAsyncPreference that
+  // has different initialization requirements.
+  /*
   /// Subscribe to the value stream after waiting for the value to be initialized.
   Future<Stream<T>> streamAsync() async {
     await ensureInitialized();
     return _subject.asBroadcastStream();
   }
+   */
 
-  Future<T> get() async {
+  T get() {
     if (_initialized) {
       return _subject.value;
     } else {
-      T value = await loadValue(key);
+      T value = getValue(key);
       _broadcast(value);
       return value;
     }
   }
 
   Future<T> set(T value) async {
-    await storeValue(key, value);
+    await putValue(key, value);
     // If the value is null attempt to load it again allowing the store method
     // to transform it if needed.
-    _broadcast(value ?? await loadValue(key));
+    _broadcast(value ?? getValue(key));
     return value;
   }
 
-  /// Return the latest value, which may be uninitialized.
-  /// Use [ensureInitialized] or an async [get] to ensure initialization.
-  T get value {
-    return _subject.value;
-  }
-
   bool hasValue() {
-    return value != null;
+    return get() != null;
   }
 
   Future<void> clear() async {
@@ -65,8 +64,8 @@ class ObservablePreference<T> {
   }
 
   // This can be called during startup to block until the property has been initialized
-  Future<void> ensureInitialized() async {
-    return await get();
+  void _ensureInitialized() {
+    get();
   }
 
   void _broadcast(value) {
@@ -75,20 +74,18 @@ class ObservablePreference<T> {
   }
 
   ObservablePreference(
-      {@required this.key,
-      @required this.loadValue,
-      @required this.storeValue});
+      {@required this.key, @required this.getValue, @required this.putValue});
 }
 
 class ObservableStringPreference extends ObservablePreference<String> {
   ObservableStringPreference(UserPreferenceKey key)
       : super(
             key: key,
-            loadValue: (key) {
-              return UserPreferences.readStringForKey(key);
+            getValue: (key) {
+              return UserPreferences().getStringForKey(key);
             },
-            storeValue: (key, value) {
-              return UserPreferences.writeStringForKey(key, value);
+            putValue: (key, value) {
+              return UserPreferences().putStringForKey(key, value);
             });
 }
 
@@ -100,13 +97,13 @@ class ObservableBoolPreference extends ObservablePreference<bool> {
   ObservableBoolPreference(UserPreferenceKey key, {this.defaultValue = false})
       : super(
             key: key,
-            loadValue: (key) async {
-              return (await SharedPreferences.getInstance())
+            getValue: (key) {
+              return (UserPreferences().sharedPreferences())
                       .getBool(key.toString()) ??
                   defaultValue;
             },
-            storeValue: (key, value) async {
-              return (await SharedPreferences.getInstance())
+            putValue: (key, value) async {
+              return (UserPreferences().sharedPreferences())
                   .setBool(key.toString(), value);
             });
 }

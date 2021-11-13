@@ -39,13 +39,13 @@ class _SettingsPageState extends State<SettingsPage> {
     ScreenOrientation.all();
     initStateAsync();
     _defaultCurator.addListener(_curatorChanged);
+
+    _queryBalances = UserPreferences().getQueryBalances();
+    _defaultCurator.text = UserPreferences().getDefaultCurator() ??
+        OrchidHop.appDefaultCurator;
   }
 
   void initStateAsync() async {
-    _queryBalances = await UserPreferences().getQueryBalances();
-    _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
-        OrchidHop.appDefaultCurator;
-
     advancedConfigChanged();
     setState(() {});
   }

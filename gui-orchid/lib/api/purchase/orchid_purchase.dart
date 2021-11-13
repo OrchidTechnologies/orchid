@@ -176,7 +176,6 @@ abstract class OrchidPurchaseAPI {
 
   static Future initPacLogListener() async {
     // Log all PAC Tx activity for now
-    await PacTransaction.shared.ensureInitialized();
     PacTransaction.shared.stream().listen((PacTransaction tx) {
       log("iap: PAC Tx updated: ${tx == null ? '(no tx)' : tx}");
     });

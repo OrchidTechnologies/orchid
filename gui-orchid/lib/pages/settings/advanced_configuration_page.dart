@@ -36,11 +36,10 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
   void initState() {
     super.initState();
 
-    UserPreferences().userConfig.get().then((text) {
-      setState(() {
-        _configFileTextLast = text;
-        _configFileTextController.text = text;
-      });
+    var text = UserPreferences().userConfig.get();
+    setState(() {
+      _configFileTextLast = text;
+      _configFileTextController.text = text;
     });
 
     _configFileTextController.addListener(() {
@@ -144,7 +143,6 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
   }
 
   void _onSave() async {
-
     // validate
     var newConfig = _configFileTextController.text;
     try {

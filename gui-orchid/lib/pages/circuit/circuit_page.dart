@@ -69,7 +69,7 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   void _updateCircuit() async {
-    var circuit = await UserPreferences().getCircuit();
+    var circuit = await UserPreferences().circuit.get();
     if (mounted) {
       setState(() {
         var keyBase = DateTime.now().millisecondsSinceEpoch;

@@ -110,7 +110,7 @@ class OrchidHop extends CircuitHop {
   /// Return key uids for configured hops
   static Future<List<String>> getInUseKeyUids() async {
     // Get the active hop keys
-    var activeHops = (await UserPreferences().getCircuit()).hops;
+    var activeHops = (await UserPreferences().circuit.get()).hops;
     List<OrchidHop> activeOrchidHops =
         activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
     List<StoredEthereumKeyRef> activeKeys = activeOrchidHops.map((h) {

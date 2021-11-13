@@ -59,7 +59,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
   }
 
   void initStateAsync() async {
-    (await UserPreferences().pacTransaction.streamAsync()).listen((tx) {
+    UserPreferences().pacTransaction.stream().listen((tx) {
       if (tx == null) {
         _state = WelcomePanelState.welcome;
       } else {
@@ -255,7 +255,8 @@ class _WelcomePanelState extends State<WelcomePanel> {
           child: StyledText(
             textAlign: TextAlign.center,
             style: OrchidText.body2,
-            text: s.connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By,
+            text: s
+                .connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By,
             tags: {
               'link1': OrchidText.linkStyle.link(OrchidUrls.preferredProviders),
             },
@@ -277,7 +278,8 @@ class _WelcomePanelState extends State<WelcomePanel> {
           child: StyledText(
             textAlign: TextAlign.center,
             style: OrchidText.caption.copyWith(fontSize: 12),
-            text: s.orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink,
+            text: s
+                .orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink,
             tags: {
               'link': OrchidText.linkStyle.size(12).link(OrchidUrls.xdaiChain),
             },

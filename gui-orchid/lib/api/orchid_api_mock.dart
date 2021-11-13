@@ -67,13 +67,12 @@ class MockOrchidAPI implements OrchidAPI {
           applyRoutingStatus(OrchidVPNRoutingState.VPNConnected);
 
           // Mock orchid routing if routing is enabled.
-          UserPreferences().routingEnabled.get().then((routing) {
-            if (routing) {
-              Future.delayed(Duration(seconds: 1), () {
-                applyRoutingStatus(OrchidVPNRoutingState.OrchidConnected);
-              });
-            }
-          });
+          var routing = UserPreferences().routingEnabled.get();
+          if (routing) {
+            Future.delayed(Duration(seconds: 1), () {
+              applyRoutingStatus(OrchidVPNRoutingState.OrchidConnected);
+            });
+          }
 
           break;
         case OrchidVPNExtensionState.Disconnecting:

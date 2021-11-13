@@ -54,8 +54,7 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
     _signer = await widget.signer.get();
 
     // Load accounts, listening for updates
-    (await UserPreferences().cachedDiscoveredAccounts.streamAsync())
-        .listen((cached) {
+    UserPreferences().cachedDiscoveredAccounts.stream().listen((cached) {
       _funderAccounts = cached
           .where((account) => account.identityUid == _signer.uid)
           .toList();
