@@ -1,7 +1,8 @@
 import 'dart:math';
 
-import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
+import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
+import '../chains.dart';
 import '../token_type.dart';
 import 'orchid_contract_v1.dart';
 import 'orchid_eth_v1.dart';

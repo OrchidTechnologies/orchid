@@ -84,8 +84,13 @@ class OrchidTextField extends StatelessWidget {
       borderSide: BorderSide(width: 1, color: Colors.white));
 
   static var textFieldFocusedBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(width: 2, color: Color(0xffFC7EFF)));
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(
+      width: 2,
+      // color: Color(0xffFC7EFF),
+      color: OrchidColors.tappable,
+    ),
+  );
 
   // TODO: Remove
   static BoxDecoration textFieldEnabledDecoration = BoxDecoration(
@@ -99,4 +104,3 @@ class OrchidTextField extends StatelessWidget {
       borderRadius: BorderRadius.circular(8.0),
       border: Border.all(color: OrchidColors.purple_ffb88dfc, width: 3.0));
 }
-

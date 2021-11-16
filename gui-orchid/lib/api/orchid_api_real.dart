@@ -9,7 +9,7 @@ import 'package:rxdart/rxdart.dart';
 import 'configuration/orchid_vpn_config/orchid_vpn_config_generate.dart';
 import 'monitoring/routing_status.dart';
 import 'orchid_budget_api.dart';
-import 'orchid_eth/v0/orchid_eth_v0.dart';
+import 'orchid_eth/chains.dart';
 import 'orchid_log_api.dart';
 
 class RealOrchidAPI implements OrchidAPI {
@@ -212,7 +212,7 @@ class RealOrchidAPI implements OrchidAPI {
 
     // Inject the default (main net Ethereum) RPC provider
     managedConfig +=
-        '\nrpc = "${OrchidEthereumV0.defaultEthereumProviderUrl}";';
+        '\nrpc = "${Chains.defaultEthereumProviderUrl}";';
 
     // Inject the status socket name
     managedConfig += '\ncontrol = "${OrchidRoutingStatus.socketName}";';

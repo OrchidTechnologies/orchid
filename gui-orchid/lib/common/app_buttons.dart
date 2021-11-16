@@ -5,6 +5,7 @@ import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/common/app_text.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/on_off.dart';
 
 import 'formatting.dart';
 
@@ -17,16 +18,22 @@ class RoundedRectButton extends StatelessWidget {
   final Color textColor;
   final Icon icon;
   final double elevation;
+  final Widget child;
+  final Widget trailing;
+  final double lineHeight;
 
   const RoundedRectButton({
     Key key,
-    @required this.text,
     @required this.onPressed,
+    this.text,
     this.backgroundColor,
     this.textColor,
     this.icon,
     this.elevation,
     this.style,
+    this.child,
+    this.trailing,
+    this.lineHeight,
   }) : super(key: key);
 
   @override
@@ -36,22 +43,25 @@ class RoundedRectButton extends StatelessWidget {
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16))),
       child: FittedBox(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            icon ?? Container(),
-            icon != null ? padx(14) : Container(),
-            Padding(
-              padding:
-                  const EdgeInsets.only(top: 8, bottom: 8, left: 24, right: 24),
-              child: Text(text,
-                  style: style ??
-                      OrchidText.button.copyWith(
-                          color: textColor ?? OrchidText.button.color)),
+        child: child ??
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                icon ?? Container(),
+                icon != null ? padx(14) : Container(),
+                Padding(
+                  padding: EdgeInsets.only(
+                      top: 8, bottom: 8, left: 24, right: trailing == null ? 24 : 0),
+                  child: Text(text,
+                      style: style ??
+                          OrchidText.button.copyWith(
+                              color: textColor ?? OrchidText.button.color,
+                              height: lineHeight ?? null)),
+                ),
+                if (icon != null) padx(8),
+                if (trailing != null) trailing,
+              ],
             ),
-            if (icon != null) padx(8)
-          ],
-        ),
       ),
       color: backgroundColor ?? OrchidColors.purple_bright,
       disabledColor: Colors.grey,

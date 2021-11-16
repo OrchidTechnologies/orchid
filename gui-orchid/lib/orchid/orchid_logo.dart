@@ -59,18 +59,22 @@ class NeonOrchidLogoController {
 class NeonOrchidLogo extends StatelessWidget {
   final double light; // 0-1 light level
   final double offset; // 0-1 CRT lines offset
+  final bool showBackground;
 
   // curves for the various layers of the logo
   final Curve _crtAnim = const Interval(0.0, 0.5, curve: Curves.linear);
   final Curve _neonAnim = const Interval(0.25, 1.0, curve: Curves.linear);
   final Curve _neonGlowAnim = const Interval(0.5, 1.0, curve: Curves.linear);
-  final Curve _backgroundGlowAnim = const Interval(0.5, 1.0, curve: Curves.linear);
-  final Curve _offsetAnim = const Interval(0.0, 1.0, curve: Curves.easeInOutSine);
+  final Curve _backgroundGlowAnim =
+      const Interval(0.5, 1.0, curve: Curves.linear);
+  final Curve _offsetAnim =
+      const Interval(0.0, 1.0, curve: Curves.easeInOutSine);
 
   const NeonOrchidLogo({
     Key key,
     this.light = 1.0,
     this.offset = 0.0,
+    this.showBackground = true,
   }) : super(key: key);
 
   @override
@@ -81,9 +85,10 @@ class NeonOrchidLogo extends StatelessWidget {
       child: Stack(
         alignment: Alignment.topCenter,
         children: [
-          Opacity(
-              opacity: _backgroundGlowAnim.transform(light),
-              child: Image.asset('assets/images/Background_Glow.png')),
+          if (showBackground)
+            Opacity(
+                opacity: _backgroundGlowAnim.transform(light),
+                child: Image.asset('assets/images/Background_Glow.png')),
           Stack(
             alignment: Alignment.center,
             children: [

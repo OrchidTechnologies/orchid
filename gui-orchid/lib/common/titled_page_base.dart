@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/pages/orchid_app.dart';
+
+import 'app_sizes.dart';
 
 /// A second level page reached through navigation.
 /// These pages have a title with a back button.
@@ -45,7 +46,7 @@ class TitledPage extends StatelessWidget {
             brightness: Brightness.dark,
             // status bar
             elevation: 0.0),
-        body: constrainWidth ? OrchidAppNoTabs.constrainMaxSize(child) : child,
+        body: constrainWidth ? AppSize.constrainMaxSizeDefaults(child) : child,
 
         // Note: Setting this to false is a workaround for:
         // https://github.com/flutter/flutter/issues/23926

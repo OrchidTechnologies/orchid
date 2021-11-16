@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_eth/abi_encode.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/util/json.dart';
 import 'package:orchid/util/units.dart';
 import 'package:web3dart/crypto.dart';

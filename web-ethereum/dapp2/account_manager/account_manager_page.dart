@@ -1,6 +1,4 @@
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/api/configuration/orchid_account_config/orchid_account_v1.dart';
-import 'package:orchid/pages/common/scan_paste_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,11 +13,13 @@ import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:orchid/common/scan_paste_dialog.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/util/listenable_builder.dart';
 import 'package:orchid/util/strings.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 
 import '../../common/app_colors.dart';
 import '../../common/app_sizes.dart';
@@ -154,19 +154,13 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   void _importIdentity() {
     ScanOrPasteDialog.show(
       context: context,
-      onImportAccount: (ParseOrchidAccountResult result) async {
-        if (result.identity != null) {
-          if (result.identity.isNew) {
-            await UserPreferences().addKey(result.identity.signer);
+      onImportAccount: (ParseOrchidIdentityResult identity) async {
+        if (identity != null) {
+          if (identity.isNew) {
+            await UserPreferences().addKey(identity.signer);
             await _accountStore.load();
           }
-          _accountStore.setActiveIdentity(result.identity.signer);
-        } else {
-          if (result.account.newKeys.isNotEmpty) {
-            await UserPreferences().addKeys(result.account.newKeys);
-            await _accountStore.load();
-          }
-          _accountStore.setActiveIdentity(result.account.account.signer);
+          _accountStore.setActiveIdentity(identity.signer);
         }
       },
     );
@@ -278,7 +272,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         if (_accountStore.activeIdentity != null)
           Container(
             width:
-                AppSize(context).widerThan(AppSize.iphone_12_max) ? null : 250,
+                AppSize(context).widerThan(AppSize.iphone_12_pro_max) ? null : 250,
             child: Center(
               child: TapToCopyText(
                   _accountStore.activeIdentity.address.toString(),

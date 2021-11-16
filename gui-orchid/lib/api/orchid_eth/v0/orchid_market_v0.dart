@@ -5,28 +5,9 @@ import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/util/units.dart';
 
 import '../../pricing/orchid_pricing_v0.dart';
-import '../token_type.dart';
+import '../orchid_market.dart';
+import '../chains.dart';
 import 'orchid_contract_v0.dart';
-
-class MarketConditions {
-  final Token maxFaceValue;
-  final Token costToRedeem;
-  final double efficiency;
-  final bool limitedByBalance;
-
-  MarketConditions(
-    this.maxFaceValue,
-    this.costToRedeem,
-    this.efficiency,
-    this.limitedByBalance,
-  );
-
-  static bool isBelowMinEfficiency(MarketConditions conditions) {
-    return (conditions.efficiency ?? 0) < minEfficiency;
-  }
-
-  static double minEfficiency = 0.2;
-}
 
 // Market conditions for the V0 contract where payment is in OXT with gas in ETH.
 class MarketConditionsV0 implements MarketConditions {

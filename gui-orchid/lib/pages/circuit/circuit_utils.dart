@@ -84,7 +84,7 @@ class CircuitUtils {
   /// supplied account.
   /// Returns true if a circuit was created.
   static Future<bool> defaultCircuitIfNeededFrom(Account account) async {
-    var circuit = await UserPreferences().circuit.get();
+    var circuit = UserPreferences().circuit.get();
     if (circuit.hops.isEmpty && account != null) {
       log("circuit: creating default circuit from account: $account");
       await CircuitUtils.saveCircuit(

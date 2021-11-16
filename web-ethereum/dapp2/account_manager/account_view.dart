@@ -208,7 +208,7 @@ class _AccountViewState extends State<AccountView> {
           ),
           Container(
             width:
-                AppSize(context).widerThan(AppSize.iphone_12_max) ? null : 250,
+                AppSize(context).widerThan(AppSize.iphone_12_pro_max) ? null : 250,
             child: Center(
               child: TapToCopyText(
                 account.funder.toString(),

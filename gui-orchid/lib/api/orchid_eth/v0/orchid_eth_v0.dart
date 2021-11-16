@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
@@ -17,27 +17,17 @@ class OrchidEthereumV0 {
   static OrchidEthereumV0 _shared = OrchidEthereumV0._init();
   static int startBlock = 872000;
 
-  static var defaultEthereumProviderUrl = 'htt' +
-      'ps://et' +
-      'h-main' +
-      'ne' +
-      't.alc' +
-      'hemya' +
-      'pi.i' +
-      'o/v' +
-      '2/VwJMm1VlCgpmjULmKeaVAt3Ik4XVwxO0';
+  // Get the provider URL allowing override in the advanced config
+  static Future<String> get url async {
+    var jsConfig = await OrchidUserConfig().getUserConfigJS();
+    // Note: This var is also used by the tunnel for the eth provider.
+    return jsConfig.evalStringDefault('rpc', Chains.defaultEthereumProviderUrl);
+  }
 
   OrchidEthereumV0._init();
 
   factory OrchidEthereumV0() {
     return _shared;
-  }
-
-  // Get the provider URL allowing override in the advanced config
-  static Future<String> get url async {
-    var jsConfig = await OrchidUserConfig().getUserConfigJS();
-    // Note: This var is also used by the tunnel for the eth provider.
-    return jsConfig.evalStringDefault('rpc', defaultEthereumProviderUrl);
   }
 
   /*
@@ -254,5 +244,3 @@ class OrchidEthereumV0 {
     return body['result'];
   }
 }
-
-class JsonRpc {}

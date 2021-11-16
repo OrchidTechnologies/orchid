@@ -1,16 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
-import 'package:orchid/pages/app_routes.dart';
-import 'package:orchid/pages/side_drawer.dart';
-import 'connect/connect_page.dart';
+import 'package:orchid/pages/dapp_home.dart';
 
 // Provide the MaterialApp wrapper and localization context.
 class OrchidApp extends StatelessWidget {
@@ -35,8 +29,6 @@ class OrchidApp extends StatelessWidget {
       ),
       home: OrchidAppNoTabs(),
       debugShowCheckedModeBanner: false,
-      routes: AppRoutes.routes,
-      scrollBehavior: DragScrollBehavior(),
     );
   }
 }
@@ -66,45 +58,26 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
       decoration:
           BoxDecoration(gradient: OrchidGradients.blackGradientBackground),
       child: Scaffold(
-        extendBodyBehindAppBar: true,
+        /*
         appBar: PreferredSize(
             preferredSize: preferredSize,
             child: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: IconThemeData(color: Colors.white),
-              brightness: Brightness.dark,
-              // status bar
-              actions: [_buildTrafficButton()],
             )),
+         */
         body: _body(),
+        // extendBodyBehindAppBar: false,
         backgroundColor: Colors.transparent,
-        drawer: SideDrawer(),
       ),
     );
   }
 
-  Widget _buildTrafficButton() {
-    return TextButton(
-      onPressed: () {
-        Navigator.pushNamed(context, AppRoutes.traffic);
-      },
-      child: SvgPicture.asset('assets/svg/traffic.svg'),
+  Widget _body() {
+    return Center(
+      child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 600), child: DappHome()),
     );
   }
-
-  // Produce the main app body, which at large sizes is constrained and centered at top.
-  Widget _body() {
-    return AppSize.constrainMaxSizeDefaults(ConnectPage());
-  }
-}
-
-// The default scroll behavior on desktop (with a mouse) does not support dragging.
-class DragScrollBehavior extends MaterialScrollBehavior {
-  @override
-  Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-      };
 }
