@@ -33,6 +33,10 @@ namespace orc {
 struct Currency {
     const std::string name_;
     const Function<Float ()> dollars_;
+
+    static Currency USD() {
+        return Currency{"USD", []() -> Float { return 1 / Ten18; }};
+    }
 };
 
 }

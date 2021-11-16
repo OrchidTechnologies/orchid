@@ -163,6 +163,12 @@ class Task {
     }
 };
 
+template <typename Type_>
+Task<Type_> Freebie(Type_ value) {
+    // NOLINTNEXTLINE (clang-analyzer-cplusplus.Move)
+    co_return value;
+}
+
 class Promise {
     template <typename Value_>
     friend class Task;

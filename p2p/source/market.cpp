@@ -36,7 +36,8 @@ task<Market> Market::New(unsigned milliseconds, S<Chain> chain, Currency currenc
 }
 
 task<Market> Market::New(unsigned milliseconds, uint256_t chain, const S<Base> &base, Locator locator, std::string currency) {
-    auto [chain$, currency$] = *co_await Parallel(Chain::New({std::move(locator), base}, {}, chain), Binance(milliseconds, base, std::move(currency)));
+    auto [chain$, currency$] = *co_await Parallel(Chain::New({std::move(locator), base}, {}, chain),
+        currency == "USD" ? Freebie(Currency::USD()) : Binance(milliseconds, base, std::move(currency)));
     co_return co_await New(milliseconds, std::move(chain$), std::move(currency$));
 }
 
