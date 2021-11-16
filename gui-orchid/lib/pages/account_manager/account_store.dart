@@ -68,7 +68,7 @@ class AccountStore extends ChangeNotifier {
     // Load cached previously discovered accounts for this identity
     var cached = await UserPreferences().cachedDiscoveredAccounts.get();
     cachedAccounts = cached
-        .where((account) => account.identityUid == identity.keyUid)
+        .where((account) => account.signerKeyUid == identity.keyUid)
         .toList();
     log("account_store: loaded cached discovered accounts: "
         "cached = $cached, filtered = $cachedAccounts");

@@ -56,7 +56,7 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
     // Load accounts, listening for updates
     UserPreferences().cachedDiscoveredAccounts.stream().listen((cached) {
       _funderAccounts = cached
-          .where((account) => account.identityUid == _signer.uid)
+          .where((account) => account.signerKeyUid == _signer.uid)
           .toList();
 
       // If the cached accounts list does not include the selected funder add it.

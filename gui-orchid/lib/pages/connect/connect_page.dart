@@ -405,7 +405,7 @@ class _ConnectPageState extends State<ConnectPage>
   // only shows for v1
   Widget _buildStatusPanel() {
     return ConnectStatusPanel(
-      key: Key(_selectedAccount?.identityUid ?? ""),
+      key: Key(_selectedAccount?.signerKeyUid ?? ""),
       minHeight: isShort,
       bandwidthPrice: _bandwidthPrice,
       circuitHops: _circuitHops,

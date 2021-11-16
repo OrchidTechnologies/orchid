@@ -32,11 +32,10 @@ class _TestState extends State<_Test> {
     var signer = "0x45cC0D06CA2052Ef93b5B7adfeC2Af7690731110";
     var funder = "0x7dFae1C74a946FCb50e7376Ff40fe2Aa3A2F9B2b";
     account = AccountDetailPoller(
-      account: Account(
-        identityUid: null,
+      account: Account.fromSignerAddress(
         chainId: Chains.XDAI_CHAINID,
         funder: EthereumAddress.from(funder),
-        resolvedSignerAddress: EthereumAddress.from(signer),
+        signerAddress: EthereumAddress.from(signer),
       ),
     );
     await account.pollOnce();

@@ -202,8 +202,8 @@ class OrchidEthereumV0 {
     List<OrchidCreateEventV0> v0CreateEvents =
         await OrchidEthereumV0().getCreateEvents(signer.address);
     return v0CreateEvents.map((event) {
-      return Account(
-          identityUid: signer.uid,
+      return Account.fromSignerKey(
+          signerKey: signer,
           chainId: Chains.ETH_CHAINID,
           funder: event.funder);
     }).toList();

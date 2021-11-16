@@ -27,14 +27,14 @@ class OrchidHop extends CircuitHop {
   /// The contract version: 1 for Ethereum for the original OXT contract.
   final int chainId;
 
-  // This transient field supports testing without hitting the keystore.
+  // This transient field supports testing without stored keys.
   EthereumAddress resolvedSignerAddress;
 
   /// The Orchid Account associated with this hop.
   // Note: This is a migration from the v0 storage and should eventually replace it.
   Account get account {
-    return Account(
-      identityUid: keyRef?.keyUid,
+    return Account.base(
+      signerKeyUid: keyRef?.keyUid,
       funder: funder,
       version: version,
       chainId: chainId,
@@ -55,7 +55,7 @@ class OrchidHop extends CircuitHop {
       : this(
           curator: appDefaultCurator,
           funder: account.funder,
-          keyRef: account.signerKeyRef,
+          keyRef: account.hasKey ? account.signerKeyRef : null,
           version: account.version,
           chainId: account.chainId,
           resolvedSignerAddress: account.resolvedSignerAddress,
