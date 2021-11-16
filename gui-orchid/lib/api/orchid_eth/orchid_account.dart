@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
@@ -8,33 +8,67 @@ import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/cacheable.dart';
-
 import '../orchid_budget_api.dart';
+import 'orchid_market.dart';
 
 /// The base model for accounts including signer, chain, and funder.
 class Account {
-  final String identityUid; // stored signer key reference uid
-  final EthereumAddress funder; // @nullable
-  final int version; // The contract version: 0 for the original OXT contract.
-  final int chainId; // @nullable
+  /// If this account was created for a stored key then this is the key uid.
+  final String signerKeyUid;
+  final EthereumAddress funder;
 
-  // The signer address is normally resolved by looking up the stored key and
-  // calculating the address from the secret.  This field caches the result and
-  // also allows it to be pre-populated for tests to avoid the keystore.
-  // Note: If this gets any more prevalent we should just mock the keystore.
+  /// The contract version: 0 for the original OXT contract.
+  final int version;
+  final int chainId;
+
+  /// For an account that is created from a stored key the signer address is
+  /// resolved lazily by looking up the key and calculating the address from the secret.
+  /// For an account that is created from a signer address this holds the address.
   EthereumAddress resolvedSignerAddress;
+
+  bool get hasKey {
+    return signerKeyUid != null;
+  }
 
   Chain get chain {
     return Chains.chainFor(chainId);
   }
 
-  Account({
-    @required this.identityUid,
+  Account.base({
+    @required this.signerKeyUid,
+    this.resolvedSignerAddress,
     this.version = 0,
     this.chainId,
     this.funder,
-    this.resolvedSignerAddress,
   });
+
+  /// Create an account with referencing a stored signer key
+  Account.fromSignerKey({
+    @required StoredEthereumKeyRef signerKey,
+    int version = 0,
+    int chainId,
+    EthereumAddress funder,
+  }) : this.base(
+    signerKeyUid: signerKey.keyUid,
+    resolvedSignerAddress: null,
+    version: version,
+    chainId: chainId,
+    funder: funder,
+  );
+
+  /// Create an account with an external signer address (no key)
+  Account.fromSignerAddress({
+    @required EthereumAddress signerAddress,
+    int version = 0,
+    int chainId,
+    EthereumAddress funder,
+  }) : this.base(
+          signerKeyUid: null,
+          resolvedSignerAddress: signerAddress,
+          version: version,
+          chainId: chainId,
+          funder: funder,
+        );
 
   /// This account uses the V0 OXT contract
   bool get isV0 {
@@ -42,7 +76,7 @@ class Account {
   }
 
   static Cache<Account, LotteryPot> lotteryPotCache =
-      Cache(duration: Duration(seconds: 60), name: "lottery pot");
+      Cache(duration: Duration(seconds: 60), name: 'lottery pot');
 
   // Use refresh to force an update to the cache
   Future<LotteryPot> getLotteryPot({bool refresh = false}) async {
@@ -78,7 +112,8 @@ class Account {
   /// This method loads market conditions for each account and sorts them by efficiency.
   static Future<List<Account>> sortAccountsByEfficiency(
       Set<Account> accounts) async {
-    var accountMarketConditions = (await Future.wait(accounts.map((account) async {
+    var accountMarketConditions =
+        (await Future.wait(accounts.map((account) async {
       try {
         return _AccountMarketConditions(
             account, await account.getMarketConditions());
@@ -87,20 +122,29 @@ class Account {
         return null;
       }
     })))
-        .where((e) => e != null) // skip errors
-        .toList();
+            .where((e) => e != null) // skip errors
+            .toList();
 
     // Sort by efficiency descending
     // Note: We have a similar sort in the account manager.
-    accountMarketConditions.sort((_AccountMarketConditions a, _AccountMarketConditions b) {
+    accountMarketConditions
+        .sort((_AccountMarketConditions a, _AccountMarketConditions b) {
       return -((a.marketConditions?.efficiency ?? 0)
           .compareTo((b.marketConditions?.efficiency ?? 0)));
     });
     return accountMarketConditions.map((e) => e.account).toList();
   }
 
+  ///
+  /// Begin key methods
+  ///
+
   StoredEthereumKeyRef get signerKeyRef {
-    return StoredEthereumKeyRef(this.identityUid);
+    if (signerKeyUid == null) {
+      throw Exception(
+          "Account does not have stored key: $resolvedSignerAddress");
+    }
+    return StoredEthereumKeyRef(this.signerKeyUid);
   }
 
   Future<StoredEthereumKey> get signerKey async {
@@ -119,10 +163,14 @@ class Account {
     return signerKeyRef.getFrom(keys).get().address;
   }
 
+  ///
+  /// End key methods
+  ///
+
   // Note: Used in migration from the old active account model
   static Future<Account> get activeAccountLegacy async {
     return _filterActiveAccountLegacyLogic(
-        await UserPreferences().activeAccounts.get());
+        UserPreferences().activeAccounts.get());
   }
 
   // Note: Used in migration from the old active account model
@@ -141,8 +189,10 @@ class Account {
     return chainId == null && funder == null;
   }
 
+  static String signerKeyUidJsonName = 'identityUid';
+
   Account.fromJson(Map<String, dynamic> json)
-      : this.identityUid = json['identityUid'],
+      : this.signerKeyUid = json[signerKeyUidJsonName],
         this.version = int.parse(json['version']),
         this.chainId = parseNullableInt(json['chainId']),
         this.funder = EthereumAddress.fromNullable(json['funder']);
@@ -153,7 +203,7 @@ class Account {
 
   Map<String, dynamic> toJson() => {
         'version': version.toString(),
-        'identityUid': identityUid,
+        signerKeyUidJsonName: signerKeyUid,
         'chainId': chainId == null ? null : chainId.toString(),
         'funder': funder == null ? null : funder.toString(),
       };
@@ -163,21 +213,21 @@ class Account {
       identical(this, other) ||
       other is Account &&
           runtimeType == other.runtimeType &&
-          identityUid == other.identityUid &&
+          signerKeyUid == other.signerKeyUid &&
           version == other.version &&
           chainId == other.chainId &&
           funder == other.funder;
 
   @override
   int get hashCode =>
-      identityUid.hashCode ^
+      signerKeyUid.hashCode ^
       version.hashCode ^
       chainId.hashCode ^
       funder.hashCode;
 
   @override
   String toString() {
-    return 'Account{identityUid: $identityUid, chainId: $chainId, funder: $funder}';
+    return 'Account{identityUid: $signerKeyUid, chainId: $chainId, funder: $funder}';
   }
 }
 

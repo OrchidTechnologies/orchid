@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
@@ -252,7 +252,7 @@ class _PurchasePageState extends State<PurchasePage> {
     // var linkStyle = AppText.linkStyle.copyWith(fontSize: 15.0);
     var linkStyle = OrchidText.linkStyle;
     var unavailableText = StyledText(
-      style: OrchidText.body1.copyWith(color: OrchidColors.highlight),
+      style: OrchidText.body1.copyWith(color: OrchidColors.blue_highlight),
       newLineAsBreaks: true,
       text: s.orchidIsUnableToDisplayInappPurchasesAtThisTime +
           '  ' +
@@ -275,7 +275,7 @@ class _PurchasePageState extends State<PurchasePage> {
     }
     return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: _fixedPacList()
+        children: _buildFixedPacList()
         /*
          _pacs.map(
             (pac) => Padding(
@@ -289,18 +289,16 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   // TODO: This assumes three pre-defined pac tiers rather than the list.
-  List<Widget> _fixedPacList() {
+  List<Widget> _buildFixedPacList() {
     if (_pacs.isEmpty || _pacs.length < 3) {
       log("iap: pacs not ready: $_pacs");
       return [];
     }
+
     // TODO: Hard-coded expected ids
-    var pacTier4 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4';
-    var pacTier10 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier10';
-    var pacTier11 = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier11';
-    var pac1 = _pacs.firstWhere((pac) => pac.productId == pacTier4);
-    var pac2 = _pacs.firstWhere((pac) => pac.productId == pacTier10);
-    var pac3 = _pacs.firstWhere((pac) => pac.productId == pacTier11);
+    var pac1 = OrchidPurchaseAPI.pacForTier(_pacs, 4);
+    var pac2 = OrchidPurchaseAPI.pacForTier(_pacs, 10);
+    var pac3 = OrchidPurchaseAPI.pacForTier(_pacs, 11);
 
     return [
       _buildPurchaseCardView(
@@ -463,6 +461,9 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
+  // TODO: See the alternate impl in the welcome pane
+  // TODO: Rework this dialog to clean up formatting complexity and add
+  // TODO: a standard close button somehow.
   Future<void> _confirmPurchase({PAC pac}) async {
     var style1 =
         OrchidText.medium_18_025.copyWith(height: 1.6); // heights should match
@@ -477,6 +478,22 @@ class _PurchasePageState extends State<PurchasePage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Confirm Purchase").title,
+                Container(
+                  width: 20,
+                  child: FlatButton(
+                    padding: EdgeInsets.zero,
+                    child: Icon(Icons.close, color: Colors.white),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              ],
+            ),
             backgroundColor: OrchidColors.dark_background,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(12.0))),
@@ -484,36 +501,33 @@ class _PurchasePageState extends State<PurchasePage> {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                pady(8),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Flexible(
                       child: IntrinsicWidth(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            pady(8),
+                            pady(16),
                             Text(
                               "VPN Credits",
                               style: style1,
-                              textAlign: TextAlign.left,
-                            ),
+                            ).body2,
+                            pady(13),
                             Text(
-                              "- Tx Fee",
+                              "Tx Fee",
                               style: style1,
-                              textAlign: TextAlign.right,
-                            ),
+                            ).body2,
+                            pady(13),
                             Text(
-                              "- Promo",
+                              "Promotion",
                               style: style1,
-                              textAlign: TextAlign.right,
-                            ),
-                            pady(16),
+                            ).body2,
+                            pady(20),
                             Text(
-                              s.total,
-                              style: style1.bold,
-                              textAlign: TextAlign.left,
+                              s.total.toUpperCase(),
+                              style: OrchidText.button,
                             ),
                           ],
                         ),
@@ -531,12 +545,12 @@ class _PurchasePageState extends State<PurchasePage> {
                             textAlign: TextAlign.right,
                           ),
                           Text(
-                            '- ' + formatCurrency(fee),
+                            '+ ' + formatCurrency(fee),
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),
                           Text(
-                            '+ ' + formatCurrency(promo),
+                            '- ' + formatCurrency(promo),
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),
@@ -560,7 +574,7 @@ class _PurchasePageState extends State<PurchasePage> {
                       textColor: Colors.black,
                       onPressed: () {
                         Navigator.of(context).pop(true);
-                        _purchase(purchase: pac);
+                        _purchase(pac: pac);
                       },
                     ),
                   ],
@@ -571,39 +585,12 @@ class _PurchasePageState extends State<PurchasePage> {
         });
   }
 
-  Future<void> _purchase({PAC purchase}) async {
-    log("iap: calling purchase: $purchase");
-
-    // TODO: Hard coded for xDAI currently
-    var fundingTx = await OrchidPacSeller.defaultFundingTransactionParams(
-        signerKey: widget.signerKey,
-        chain: Chains.xDAI,
-        totalUsdValue: purchase.usdPriceExact);
-
-    var signer = widget.signerKey.address;
-    // Add the pending transaction(s) for this purchase
-    await PacPurchaseTransaction(
-            PacAddBalanceTransaction.pending(
-                signer: signer, productId: purchase.productId),
-            fundingTx)
-        .save();
-
-    // Initiate the in-app purchase
-    try {
-      await OrchidPurchaseAPI().purchase(purchase);
-    } catch (err) {
-      // TODO: Is this still possible?
-      if (err is SKError) {
-        var skerror = err;
-        if (skerror.code == IOSOrchidPurchaseAPI.SKErrorPaymentCancelled) {
-          log("iap: payment cancelled error, purchase page");
-        }
-      }
-      log("iap: Error in purchase call: $err");
-      await _iapPurchaseError(
-          rateLimitExceeded: err is PACPurchaseExceedsRateLimit);
-    }
-
+  Future<void> _purchase({PAC pac}) async {
+    await PurchaseUtils.purchase(
+      purchase: pac,
+      signerKey: widget.signerKey,
+      onError: _iapPurchaseError,
+    );
     Navigator.of(context).pop();
   }
 
@@ -698,4 +685,43 @@ class _PurchasePageState extends State<PurchasePage> {
     return true;
   }
    */
+}
+
+class PurchaseUtils {
+  static Future<void> purchase({
+    @required PAC purchase,
+    @required StoredEthereumKey signerKey,
+    Future<void> Function({bool rateLimitExceeded}) onError,
+  }) async {
+    log("iap: calling purchase: $purchase");
+
+    // TODO: Hard coded for xDAI currently
+    var fundingTx = await OrchidPacSeller.defaultFundingTransactionParams(
+        signerKey: signerKey,
+        chain: Chains.xDAI,
+        totalUsdValue: purchase.usdPriceExact);
+
+    var signer = signerKey.address;
+    // Add the pending transaction(s) for this purchase
+    await PacPurchaseTransaction(
+            PacAddBalanceTransaction.pending(
+                signer: signer, productId: purchase.productId),
+            fundingTx)
+        .save();
+
+    // Initiate the in-app purchase
+    try {
+      await OrchidPurchaseAPI().purchase(purchase);
+    } catch (err) {
+      // TODO: Is this still possible?
+      if (err is SKError) {
+        var skerror = err;
+        if (skerror.code == IOSOrchidPurchaseAPI.SKErrorPaymentCancelled) {
+          log("iap: payment cancelled error, purchase page");
+        }
+      }
+      log("iap: Error in purchase call: $err");
+      await onError(rateLimitExceeded: err is PACPurchaseExceedsRateLimit);
+    }
+  }
 }

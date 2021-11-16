@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_buttons.dart';
@@ -25,18 +26,20 @@ class AdvancedConfigurationPage extends StatefulWidget {
 
 class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
   String _configFileTextLast = "";
+
+  // TODO: Remove this uncessecary observable
   BehaviorSubject<bool> _readyToSave = BehaviorSubject<bool>.seeded(false);
+
   final _configFileTextController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
 
-    OrchidAPI().getConfiguration().then((text) {
-      setState(() {
-        _configFileTextLast = text;
-        _configFileTextController.text = text;
-      });
+    var text = UserPreferences().userConfig.get();
+    setState(() {
+      _configFileTextLast = text;
+      _configFileTextController.text = text;
     });
 
     _configFileTextController.addListener(() {
@@ -139,7 +142,8 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
     });
   }
 
-  void _onSave() {
+  void _onSave() async {
+    // validate
     var newConfig = _configFileTextController.text;
     try {
       // Just parse it to the AST to catch gross syntax errors.
@@ -152,17 +156,20 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
           errorText: err.toString());
       return;
     }
-    OrchidAPI().setConfiguration(newConfig).then((bool saved) {
-      _readyToSave.add(false);
-      if (saved) {
-        UserPreferences().setUserConfig(newConfig);
+
+    // save
+    try {
+      await UserPreferences().userConfig.set(newConfig);
+      setState(() {
         _configFileTextLast = newConfig;
-        ConfigChangeDialogs.showConfigurationChangeSuccess(context);
-      } else {
-        _readyToSave.add(true);
-        ConfigChangeDialogs.showConfigurationChangeFailed(context);
-      }
-    });
+      });
+      _readyToSave.add(false);
+      await OrchidAPI().publishConfiguration();
+      ConfigChangeDialogs.showConfigurationChangeSuccess(context);
+    } catch (err) {
+      log("failed to save config: $err");
+      ConfigChangeDialogs.showConfigurationChangeFailed(context);
+    }
   }
 
   void dispose() {

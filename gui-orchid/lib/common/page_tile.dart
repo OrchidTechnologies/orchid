@@ -29,6 +29,7 @@ class PageTile extends StatelessWidget {
   PageTile.route(
       {this.title,
       this.imageName,
+        this.leading,
       @required BuildContext context,
       @required String routeName,
       this.textColor}) {
@@ -44,6 +45,7 @@ class PageTile extends StatelessWidget {
         height: height ?? 50,
         color: backgroundColor,
         child: ListTile(
+          // contentPadding: EdgeInsets.zero,
             title:
                 Text(title, style: OrchidText.body2.copyWith(color: textColor)),
             subtitle: body,

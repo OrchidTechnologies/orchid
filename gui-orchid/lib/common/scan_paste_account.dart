@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_account_import.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/qrcode_scan.dart';
@@ -161,7 +161,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
     } catch (err) {
       _pastedCodeValid = false;
     }
-    log("XXX: pasted code valid = $_pastedCodeValid");
+    log("pasted code valid = $_pastedCodeValid");
     setState(() {});
   }
 

@@ -55,7 +55,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
     }
 
     // Monitor changes to keys
-    (await UserPreferences().keys.streamAsync()).listen((keys) {
+    UserPreferences().keys.stream().listen((keys) {
       setState(() {
         this._keys = keys;
         if (_selectedItem != null &&
@@ -85,7 +85,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
               focusColor: OrchidColors.purple_menu,
             ),
             child: DropdownButton<KeySelectionItem>(
-              hint: Text("Choose Identity").button,
+              hint: Text(s.chooseIdentity).button,
               isExpanded: true,
               icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
               underline: Container(),

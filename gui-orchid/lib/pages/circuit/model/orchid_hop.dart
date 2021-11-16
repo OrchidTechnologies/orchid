@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 
@@ -10,7 +10,7 @@ import 'circuit_hop.dart';
 class OrchidHop extends CircuitHop {
   // The app default, which may be overridden by the user specified settings
   // default or on a per-hop basis.
-  static const String appDefaultCurator = "partners.orch1d.eth";
+  static const String appDefaultCurator = 'partners.orch1d.eth';
 
   /// Curator URI
   final String curator;
@@ -27,14 +27,14 @@ class OrchidHop extends CircuitHop {
   /// The contract version: 1 for Ethereum for the original OXT contract.
   final int chainId;
 
-  // This transient field supports testing without hitting the keystore.
+  // This transient field supports testing without stored keys.
   EthereumAddress resolvedSignerAddress;
 
   /// The Orchid Account associated with this hop.
   // Note: This is a migration from the v0 storage and should eventually replace it.
   Account get account {
-    return Account(
-      identityUid: keyRef?.keyUid,
+    return Account.base(
+      signerKeyUid: keyRef?.keyUid,
       funder: funder,
       version: version,
       chainId: chainId,
@@ -55,7 +55,7 @@ class OrchidHop extends CircuitHop {
       : this(
           curator: appDefaultCurator,
           funder: account.funder,
-          keyRef: account.signerKeyRef,
+          keyRef: account.hasKey ? account.signerKeyRef : null,
           version: account.version,
           chainId: account.chainId,
           resolvedSignerAddress: account.resolvedSignerAddress,
@@ -110,7 +110,7 @@ class OrchidHop extends CircuitHop {
   /// Return key uids for configured hops
   static Future<List<String>> getInUseKeyUids() async {
     // Get the active hop keys
-    var activeHops = (await UserPreferences().getCircuit()).hops;
+    var activeHops = (await UserPreferences().circuit.get()).hops;
     List<OrchidHop> activeOrchidHops =
         activeHops.where((h) => h is OrchidHop).cast<OrchidHop>().toList();
     List<StoredEthereumKeyRef> activeKeys = activeOrchidHops.map((h) {

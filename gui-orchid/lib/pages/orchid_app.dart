@@ -44,16 +44,6 @@ class OrchidApp extends StatelessWidget {
 class OrchidAppNoTabs extends StatefulWidget {
   @override
   _OrchidAppNoTabsState createState() => _OrchidAppNoTabsState();
-
-  static Widget constrainMaxSize(Widget child) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-          constraints: BoxConstraints(
-              maxWidth: 450, maxHeight: AppSize.iphone_12_pro_max.height),
-          child: child),
-    );
-  }
 }
 
 class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
@@ -105,7 +95,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
 
   // Produce the main app body, which at large sizes is constrained and centered at top.
   Widget _body() {
-    return OrchidAppNoTabs.constrainMaxSize(ConnectPage());
+    return AppSize.constrainMaxSizeDefaults(ConnectPage());
   }
 }
 

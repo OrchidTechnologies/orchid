@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/orchid_logo.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/openvpn_hop.dart';
@@ -31,20 +30,18 @@ class __AccountCardTestState extends State<_AccountCardTest> {
   }
 
   void initStateAsync() async {
-    var account = Account(
-      identityUid: "1234",
+    var account = Account.fromSignerAddress(
       chainId: Chains.XDAI_CHAINID,
       funder:
           EthereumAddress.from('0x6dd46C5F9f19AB8790F6249322F58028a3185087'),
-      resolvedSignerAddress:
+      signerAddress:
           EthereumAddress.from('0x45cC0D06CA2052Ef93b5B7adfeC2Af7690731110'),
     );
-    var account2 = Account(
-      identityUid: "1235",
+    var account2 = Account.fromSignerAddress(
       chainId: Chains.XDAI_CHAINID,
       funder:
           EthereumAddress.from('0x6dd46C5F9f19AB8790F6249322F58028a3185088'),
-      resolvedSignerAddress:
+      signerAddress:
           EthereumAddress.from('0x55cC0D06CA2052Ef93b5B7adfeC2Af7690731111'),
     );
 

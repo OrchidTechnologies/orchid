@@ -67,13 +67,12 @@ class MockOrchidAPI implements OrchidAPI {
           applyRoutingStatus(OrchidVPNRoutingState.VPNConnected);
 
           // Mock orchid routing if routing is enabled.
-          UserPreferences().routingEnabled.get().then((routing) {
-            if (routing) {
-              Future.delayed(Duration(seconds: 1), () {
-                applyRoutingStatus(OrchidVPNRoutingState.OrchidConnected);
-              });
-            }
-          });
+          var routing = UserPreferences().routingEnabled.get();
+          if (routing) {
+            Future.delayed(Duration(seconds: 1), () {
+              applyRoutingStatus(OrchidVPNRoutingState.OrchidConnected);
+            });
+          }
 
           break;
         case OrchidVPNExtensionState.Disconnecting:
@@ -306,10 +305,6 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
     }
   }
 
-  /// Choose a new, randomized, network route.
-  @override
-  Future<void> reroute() async {}
-
   void _setConnectionState(OrchidVPNExtensionState state) {
     logger().write('Connection state: $state');
     vpnExtensionStatus.add(state);
@@ -329,25 +324,13 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
     return "1.0.0";
   }
 
-  /// Get the Orchid Configuration file contents
-  Future<String> getConfiguration() async {
-    // return _platform.invokeMethod('get_config');
-    // Return only the user visible portion of the config.
-    return await UserPreferences().getUserConfig();
-  }
-
-  /// Set the Orchid Configuration file contents
-  Future<bool> setConfiguration(String userConfig) async {
-    var combinedConfig = await RealOrchidAPI.generateCombinedConfig(userConfig);
-    log("mock: combinedConfig = $combinedConfig");
-    // Do nothing.  Fake save.
-    return true;
-  }
-
   /// Publish the latest configuration to the VPN.
-  Future<bool> updateConfiguration() async {
+  Future<bool> publishConfiguration() async {
     log("mock: update configuration");
-    return setConfiguration(await UserPreferences().getUserConfig());
+    var combinedConfig = await RealOrchidAPI.generateCombinedConfig();
+    log("mock: combinedConfig = $combinedConfig");
+    // Do nothing.
+    return true;
   }
 
   void dispose() {

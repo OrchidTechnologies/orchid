@@ -6,7 +6,7 @@ import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/chains.dart';
 
 /// Discovers on-chain and persistently caches accounts for a single signer identity.
 class AccountStore extends ChangeNotifier {
@@ -68,7 +68,7 @@ class AccountStore extends ChangeNotifier {
     // Load cached previously discovered accounts for this identity
     var cached = await UserPreferences().cachedDiscoveredAccounts.get();
     cachedAccounts = cached
-        .where((account) => account.identityUid == identity.keyUid)
+        .where((account) => account.signerKeyUid == identity.keyUid)
         .toList();
     log("account_store: loaded cached discovered accounts: "
         "cached = $cached, filtered = $cachedAccounts");

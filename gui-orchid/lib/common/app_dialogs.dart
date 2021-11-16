@@ -29,7 +29,7 @@ class AppDialogs {
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(16.0))),
           title: Text(title, style: OrchidText.title),
-          content: body ?? Text(bodyText, style: OrchidText.body2),
+          content: body ?? Text(bodyText ?? '', style: OrchidText.body2),
           actions: <Widget>[
             if (linkSettings)
               FlatButton(
@@ -72,7 +72,7 @@ class AppDialogs {
         return AlertDialog(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(8.0))),
-          backgroundColor: OrchidColors.highlight,
+          backgroundColor: OrchidColors.blue_highlight,
           title: title != null
               ? Text(
                   title,

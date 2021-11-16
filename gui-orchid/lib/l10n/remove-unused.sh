@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "Update this to allow for code shared with the dapp2"
+exit;
+
 cd $(dirname "$0")
 
 echo "finding unused strings..."

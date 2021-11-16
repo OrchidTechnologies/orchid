@@ -18,6 +18,8 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_card.dart';
 import 'package:orchid/pages/account_manager/account_detail_store.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
+import 'package:orchid/pages/circuit/model/openvpn_hop.dart';
+import 'package:orchid/pages/circuit/model/wireguard_hop.dart';
 import 'circuit_utils.dart';
 import 'hop_editor.dart';
 import 'hop_tile.dart';
@@ -67,7 +69,7 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   void _updateCircuit() async {
-    var circuit = await UserPreferences().getCircuit();
+    var circuit = await UserPreferences().circuit.get();
     if (mounted) {
       setState(() {
         var keyBase = DateTime.now().millisecondsSinceEpoch;
@@ -86,7 +88,7 @@ class CircuitPageState extends State<CircuitPage>
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-      title: "Circuit Builder",
+      title: s.circuitBuilder,
       decoration: BoxDecoration(),
       child: _buildBody(),
     );
@@ -141,8 +143,6 @@ class CircuitPageState extends State<CircuitPage>
       children: <Widget>[
         pady(8),
         _buildNewHopTile(),
-        if (!_hasHops()) pady(16),
-        _buildDeletedHopsLink(),
       ],
     );
   }
@@ -160,24 +160,9 @@ class CircuitPageState extends State<CircuitPage>
             width: 328,
             height: 72,
             child: Center(
-                child: Text("ADD NEW HOP", style: OrchidText.button.tappable)),
+              child: Text(s.addNewHop, style: OrchidText.button.tappable),
+            ),
           )),
-    );
-  }
-
-  Widget _buildDeletedHopsLink() {
-    return Container(
-      height: 45,
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: LinkText(
-          s.viewDeletedHops,
-          style: OrchidText.caption.linkStyle,
-          onTapped: () {
-            Navigator.pushNamed(context, '/settings/accounts');
-          },
-        ),
-      ),
     );
   }
 
@@ -228,13 +213,15 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   Widget _buildDismissableHopTile(UniqueHop uniqueHop, int index) {
+    bool confirmDismiss =
+        uniqueHop.hop is OpenVPNHop || uniqueHop.hop is WireGuardHop;
     return Padding(
       key: Key(uniqueHop.key.toString()),
       padding: const EdgeInsets.only(bottom: 28.0),
       child: Dismissible(
         key: Key(uniqueHop.key.toString()),
         background: buildDismissableBackground(context),
-        confirmDismiss: _confirmDeleteHop,
+        confirmDismiss: confirmDismiss ? _confirmDeleteHop : null,
         onDismissed: (direction) {
           _deleteHop(uniqueHop);
         },
@@ -273,12 +260,11 @@ class CircuitPageState extends State<CircuitPage>
   /// Add the e.g. entry, exit descriptions
   Widget _buildAnnotatedHopTile(UniqueHop uniqueHop, int index) {
     int count = _hops.length;
-    var title = "Hop";
+    var title = s.hop;
     if (count > 1 && index == 0) {
-      title = "Entry Hop";
-    } else
-    if (count > 1 && index == _hops.length - 1) {
-      title = "Exit Hop";
+      title = s.entryHop;
+    } else if (count > 1 && index == _hops.length - 1) {
+      title = s.exitHop;
     }
     return Column(
       children: [
@@ -349,43 +335,6 @@ class CircuitPageState extends State<CircuitPage>
     );
   }
 
-  // switch deleted hops to use new tiles
-  @deprecated
-  static Widget buildHopTile({
-    @required BuildContext context,
-    @required UniqueHop uniqueHop,
-    VoidCallback onTap,
-    Color bgColor,
-    bool showAlertBadge,
-  }) {
-    Color color = Colors.white;
-    Image image;
-    String svgName;
-    switch (uniqueHop.hop.protocol) {
-      case HopProtocol.Orchid:
-        image = Image.asset('assets/images/logo2.png', color: color);
-        break;
-      case HopProtocol.OpenVPN:
-        svgName = 'assets/svg/openvpn.svg';
-        break;
-      case HopProtocol.WireGuard:
-        svgName = 'assets/svg/wireguard.svg';
-        break;
-    }
-    var title = uniqueHop.hop.displayName(context);
-    return HopTile(
-      showAlertBadge: showAlertBadge,
-      textColor: color,
-      color: bgColor ?? Colors.white,
-      image: image,
-      svgName: svgName,
-      onTap: onTap,
-      key: Key(uniqueHop.key.toString()),
-      title: title,
-      showTopDivider: false,
-    );
-  }
-
   ///
   /// Begin - Add / view hop logic
   ///
@@ -450,9 +399,7 @@ class CircuitPageState extends State<CircuitPage>
     var result = await AppDialogs.showConfirmationDialog(
       context: context,
       title: s.confirmDelete,
-      bodyText: s.deletingThisHopWillRemoveItsConfiguredOrPurchasedAccount +
-          "  " +
-          s.ifYouPlanToReuseTheAccountLaterYouShould,
+      bodyText: s.deletingOpenVPNAndWireguardHopsWillLose,
     );
     return result;
   }
@@ -463,8 +410,6 @@ class CircuitPageState extends State<CircuitPage>
     var removedHop = _hops.removeAt(index);
     setState(() {});
     _saveCircuit();
-    // _recycleHopIfAllowed(uniqueHop);
-    UserPreferences().addRecentlyDeletedHop(removedHop.hop);
   }
 
   // Callback for drag to reorder
@@ -493,9 +438,8 @@ class CircuitPageState extends State<CircuitPage>
         return false;
       case OrchidVPNRoutingState.OrchidConnected:
         return true;
-      default:
-        throw Exception();
     }
+    throw Exception();
   }
 
   /// Called upon a change to Orchid connection state
@@ -533,4 +477,3 @@ class CircuitPageState extends State<CircuitPage>
     super.dispose();
   }
 }
-

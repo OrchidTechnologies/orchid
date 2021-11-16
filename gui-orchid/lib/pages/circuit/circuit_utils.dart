@@ -63,7 +63,7 @@ class CircuitUtils {
   }
 
   static void addHopToCircuit(CircuitHop hop) async {
-    var circuit = await UserPreferences().getCircuit();
+    var circuit = await UserPreferences().circuit.get();
     circuit.hops.add(hop);
     saveCircuit(circuit);
   }
@@ -71,12 +71,12 @@ class CircuitUtils {
   /// Save the circuit and update published config and configuration listeners
   static Future<void> saveCircuit(Circuit circuit) async {
     try {
-      log("XXX: Saving circuit: ${circuit.hops.map((e) => e.toJson())}");
+      //log("Saving circuit: ${circuit.hops.map((e) => e.toJson())}");
       await UserPreferences().circuit.set(circuit);
     } catch (err, stack) {
       log("Error saving circuit: $err, $stack");
     }
-    await OrchidAPI().updateConfiguration();
+    await OrchidAPI().publishConfiguration();
     OrchidAPI().circuitConfigurationChanged.add(null);
   }
 
@@ -84,7 +84,7 @@ class CircuitUtils {
   /// supplied account.
   /// Returns true if a circuit was created.
   static Future<bool> defaultCircuitIfNeededFrom(Account account) async {
-    var circuit = await UserPreferences().circuit.get();
+    var circuit = UserPreferences().circuit.get();
     if (circuit.hops.isEmpty && account != null) {
       log("circuit: creating default circuit from account: $account");
       await CircuitUtils.saveCircuit(

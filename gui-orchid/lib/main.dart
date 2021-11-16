@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/pages/orchid_app.dart';
 import 'package:window_size/window_size.dart';
@@ -9,6 +10,7 @@ import 'api/orchid_platform.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await UserPreferences.init();
   OrchidAPI().logger().write("App Startup");
   OrchidRoutingStatus().beginPollingStatus();
   OrchidAPI().applicationReady();

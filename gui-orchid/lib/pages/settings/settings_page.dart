@@ -7,8 +7,10 @@ import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/pages/account_manager/account_finder.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
@@ -37,13 +39,13 @@ class _SettingsPageState extends State<SettingsPage> {
     ScreenOrientation.all();
     initStateAsync();
     _defaultCurator.addListener(_curatorChanged);
+
+    _queryBalances = UserPreferences().getQueryBalances();
+    _defaultCurator.text = UserPreferences().getDefaultCurator() ??
+        OrchidHop.appDefaultCurator;
   }
 
   void initStateAsync() async {
-    _queryBalances = await UserPreferences().getQueryBalances();
-    _defaultCurator.text = await UserPreferences().getDefaultCurator() ??
-        OrchidHop.appDefaultCurator;
-
     advancedConfigChanged();
     setState(() {});
   }
@@ -51,7 +53,6 @@ class _SettingsPageState extends State<SettingsPage> {
   /// Update system config based on changes to user advanced config
   void advancedConfigChanged() async {
     var jsConfig = await OrchidUserConfig().getUserConfigJS();
-
     _showLogging = jsConfig.evalBoolDefault('logging', false);
     _tester = jsConfig.evalBoolDefault('tester', false);
 
@@ -80,14 +81,6 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // Accounts
-              _divided(PageTile(
-                title: s.deletedHops,
-                onTap: () async {
-                  await Navigator.pushNamed(context, AppRoutes.accounts);
-                },
-              )),
-
               // Default curator
               _divided(PageTile(
                 height: height,
@@ -127,6 +120,10 @@ class _SettingsPageState extends State<SettingsPage> {
               _divided(PageTile(
                 height: height,
                 title: s.advancedConfiguration,
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 2.0),
+                  child: Icon(Icons.settings, color: Colors.white, size: 20),
+                ),
                 onTap: () async {
                   await Navigator.pushNamed(context, AppRoutes.configuration);
                   advancedConfigChanged(); // update anything that may have changed via config
@@ -135,7 +132,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
               // Manage Data
               _divided(PageTile.route(
-                  // height: height,
+                  leading:
+                      Icon(Icons.import_export, color: Colors.white, size: 24),
                   title: s.configurationManagement,
                   routeName: '/settings/manage_config',
                   context: context)),
@@ -150,7 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
               if (_tester)
                 _divided(PageTile(
-                  title: "(TEST) Reset First Launch Dialog",
+                  title: "(TEST) Reset First Launch Version",
                   trailing: RaisedButton(
                     child: Text(
                       s.reset.toUpperCase(),
@@ -159,7 +157,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     onPressed: () {
                       UserPreferences()
                           .releaseVersion
-                          .set(ReleaseVersion.firstLaunch());
+                          .set(ReleaseVersion.resetFirstLaunch());
                     },
                   ),
                 )),
@@ -172,12 +170,41 @@ class _SettingsPageState extends State<SettingsPage> {
                       s.clear.toUpperCase(),
                       style: buttonStyle,
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       log("Clearing cached discovered accounts");
-                      UserPreferences().cachedDiscoveredAccounts.clear();
+                      await UserPreferences().cachedDiscoveredAccounts.clear();
+                      AppDialogs.showAppDialog(
+                          context: context, title: "Cached accounts cleared.");
                     },
                   ),
                 )),
+
+              /*
+              if (_tester)
+                _divided(PageTile(
+                  title: "(TEST) Test Active Account Migration",
+                  trailing: RaisedButton(
+                    child: Text(
+                      s.reset.toUpperCase(),
+                      style: buttonStyle,
+                    ),
+                    onPressed: () async {
+                      log("Testing migration by setting an active account");
+                      await UserPreferences().circuit.clear();
+                      AccountFinder().find((accounts) async {
+                        if (accounts.isNotEmpty) {
+                          await UserPreferences()
+                              .activeAccounts
+                              .set([accounts.first]);
+                          AppDialogs.showAppDialog(
+                              context: context,
+                              title: "Migration reset. Quit the app now.");
+                        }
+                      });
+                    },
+                  ),
+                )),
+               */
 
               /*
               if (_tester)

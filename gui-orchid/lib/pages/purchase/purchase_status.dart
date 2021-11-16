@@ -13,7 +13,6 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import '../../common/app_text.dart';
 import '../../util/streams.dart';
 
 class PurchaseStatus extends StatefulWidget {
@@ -36,7 +35,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
   // If true the user has expanded the help section
   bool _showHelpExpanded = false;
 
-  // If true show the transation completed status
+  // If true show the transaction completed status
   bool _showCompleted = false;
 
   List<StreamSubscription> _subscriptions = [];
@@ -48,7 +47,8 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
   }
 
   void initStateAsync() async {
-    (await PacTransaction.shared.streamAsync())
+    PacTransaction.shared
+        .stream()
         .listen(_pacTransactionUpdated)
         .dispose(_subscriptions);
   }
@@ -89,7 +89,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
             alignment: Alignment.topRight,
             child: IconButton(
               iconSize: 18,
-              icon: Icon(Icons.close),
+              icon: Icon(Icons.close, color: Colors.white),
               onPressed: _dismissCompleted,
             ),
           ),

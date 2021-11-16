@@ -150,7 +150,7 @@ class WalkthroughNextSkipButtons extends StatelessWidget {
         if (allowSkip)
           LinkStyleTextButton(
             "I'll do this later",
-            onPressed: onSkip,
+            onTapped: onSkip,
           ),
         SizedBox(height: bottomPad)
       ],

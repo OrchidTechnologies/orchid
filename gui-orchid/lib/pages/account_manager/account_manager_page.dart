@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_account_import.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/orchid_urls.dart';
@@ -16,8 +18,6 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_detail_store.dart';
-import 'package:orchid/pages/circuit/circuit_utils.dart';
-import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:orchid/common/scan_paste_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
@@ -28,11 +28,11 @@ import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
+import 'package:orchid/util/streams.dart';
 import 'package:orchid/util/strings.dart';
 import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_sizes.dart';
-import '../../common/app_text.dart';
 import '../app_routes.dart';
 import 'account_card.dart';
 import 'account_finder.dart';
@@ -64,6 +64,7 @@ class AccountManagerPage extends StatefulWidget {
 }
 
 class _AccountManagerPageState extends State<AccountManagerPage> {
+  List<StreamSubscription> _subs = [];
   List<StoredEthereumKey> _identities;
   StoredEthereumKey _selectedIdentity;
 
@@ -79,8 +80,15 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void initStateAsync() async {
-    _identities = await UserPreferences().keys.get();
-    _setSelectedIdentity(_identities.isNotEmpty ? _identities.first : null);
+    // Listen for changes to identities
+    UserPreferences().keys.stream().listen((keys) {
+      _identities = keys;
+      // Default if needed
+      if (_selectedIdentity == null) {
+        _setSelectedIdentity(_chooseDefaultIdentity(_identities));
+      }
+      setState(() {});
+    }).dispose(_subs);
 
     // Open to import, purchase, identity
     await _doOpenOptions();
@@ -92,18 +100,27 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     // Switch account stores
     if (_accountStore != null) {
       _accountStore.removeListener(_accountsUpdated);
+      _accountStore = null;
     }
-    _accountStore = AccountStore(identity: identity.ref());
-    _accountStore.addListener(_accountsUpdated);
-    _accountStore.load(waitForDiscovered: false);
+    if (_selectedIdentity != null) {
+      _accountStore = AccountStore(identity: _selectedIdentity.ref());
+      _accountStore.addListener(_accountsUpdated);
+      _accountStore.load(waitForDiscovered: false);
+    }
 
     setState(() {});
+  }
+
+  /// Pick an identitiy or null if empty
+  static StoredEthereumKey _chooseDefaultIdentity(
+      List<StoredEthereumKey> identities) {
+    return identities.isNotEmpty ? identities.first : null;
   }
 
   Future<void> _doOpenOptions() async {
     // Open to the supplied account
     if (widget.openToAccount != null) {
-      log("XXX: open to account: ${widget.openToAccount}");
+      // log("open to account: ${widget.openToAccount}");
       _setSelectedIdentity(await widget.openToAccount.signerKey);
     }
 
@@ -122,74 +139,66 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void _accountsUpdated() async {
-    // TODO: We don't want to keep randomly creating a circuit if the user has
-    // TODO: emptied the list themselves, do we?
-    // TODO: shortcut when we've already checked
-    // if (_accountStore.accounts.isNotEmpty) {
-    //   CircuitUtils.defaultCircuitIfNeededFrom(_accountStore.accounts.first);
-    // }
-
     // update the UI
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_accountStore == null) {
-      return Container();
-    }
-    return ListenableBuilder(
-        listenable: _accountStore,
-        builder: (context, snapshot) {
-          return TitledPage(
-            title: s.accounts,
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: _buildIdentitySelectorMenu(),
-              )
-            ],
-            child: Stack(
-              children: [
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        _buildIdentityHeader(),
-                        pady(8),
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(left: 28.0, right: 28.0),
-                          child: PurchaseStatus(),
-                        ),
-                        pady(8),
-                        Divider(height: 1),
-                        Expanded(child: _buildAccountListAnnotatedActive()),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // The add funds
-                if (OrchidPlatform.hasPurchase)
-                  SafeArea(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
+    return TitledPage(
+      title: s.accounts,
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: _buildIdentitySelectorDropdownMenu(),
+        )
+      ],
+      child: _accountStore == null
+          ? Container(color: Colors.transparent)
+          : ListenableBuilder(
+              listenable: _accountStore,
+              builder: (context, snapshot) {
+                return Stack(
+                  children: [
+                    SafeArea(
                       child: Padding(
-                        padding: EdgeInsets.only(bottom: 40),
-                        child: _buildAddFundsButton(),
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            _buildIdentityHeader(),
+                            pady(8),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 28.0, right: 28.0),
+                              child: PurchaseStatus(),
+                            ),
+                            pady(8),
+                            Divider(height: 1),
+                            Expanded(child: _buildAccountListAnnotatedActive()),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          );
-        });
+
+                    // The add funds
+                    if (OrchidPlatform.hasPurchase)
+                      SafeArea(
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 40),
+                            child: _buildAddFundsButton(),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              }),
+    );
   }
 
-  Widget _buildIdentitySelectorMenu() {
+  Widget _buildIdentitySelectorDropdownMenu() {
     return Theme(
       data: Theme.of(context).copyWith(
         cardColor: OrchidColors.dark_background,
@@ -206,8 +215,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           } else {
             item.action();
           }
-          ConfigChangeDialogs.showConfigurationChangeSuccess(context,
-              warnOnly: true);
         },
         itemBuilder: (BuildContext context) {
           var style = OrchidText.body1;
@@ -248,7 +255,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         if (result != null) {
           if (result.isNew) {
             await UserPreferences().addKey(result.signer);
-            await _accountStore.load(waitForDiscovered: false);
           }
           _setSelectedIdentity(result.signer);
 
@@ -262,14 +268,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   void _newIdentity() async {
     var identity = StoredEthereumKey.generate();
     await UserPreferences().addKey(identity);
-    _identities = await UserPreferences().keys.get();
     _setSelectedIdentity(identity);
   }
 
   void _deleteIdentity(StoredEthereumKey identity) async {
     await UserPreferences().removeKey(identity.ref());
-    _identities = await UserPreferences().keys.get();
-    _setSelectedIdentity(_identities.isNotEmpty ? _identities.first : null);
+    _setSelectedIdentity(_chooseDefaultIdentity(_identities));
   }
 
   void _exportIdentity() async {
@@ -324,11 +328,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     var body = StyledText(
       style: OrchidText.body2.black,
       newLineAsBreaks: true,
-      text:
-          "This cannot be undone. <bold>OpenVPN</bold> and <bold>WireGuard®</bold> account "
-          "information will be lost.  <bold>Orchid account</bold> information is saved. "
-          "To save your entire circuit, cancel this dialog and go to "
-          "<save>Settings → Configuration Management → Export</save> to save your circuit config.",
+      text: s.thisCannotBeUndoneToSaveThisIdentity,
       tags: {
         'bold': StyledTextTag(
           style: OrchidText.body2.black.bold,
@@ -341,7 +341,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
     await AppDialogs.showConfirmationDialog(
       context: context,
-      title: "Delete this Orchid Identity",
+      title: s.deleteThisOrchidIdentity,
       body: body,
       cancelText: s.cancel.toUpperCase(),
       //cancelColor: bodyStyle.color,
@@ -549,7 +549,10 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   @override
   void dispose() {
-    _accountStore.removeListener(_accountsUpdated);
+    _subs.dispose();
+    if (_accountStore != null) {
+      _accountStore.removeListener(_accountsUpdated);
+    }
     _accountDetailStore.dispose();
     super.dispose();
   }

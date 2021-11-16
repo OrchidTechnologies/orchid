@@ -10,8 +10,8 @@ class ObservableAccountListPreference
   ObservableAccountListPreference(UserPreferenceKey key)
       : super(
             key: key,
-            loadValue: (key) async {
-              String value = await UserPreferences.readStringForKey(key);
+            getValue: (key) {
+              String value = UserPreferences().getStringForKey(key);
               try {
                 return fromJson(value);
               } catch (err) {
@@ -19,9 +19,9 @@ class ObservableAccountListPreference
                 return [];
               }
             },
-            storeValue: (key, accounts) {
+            putValue: (key, accounts) {
               String value = toJson(accounts);
-              return UserPreferences.writeStringForKey(key, value);
+              return UserPreferences().putStringForKey(key, value);
             });
 
   static List<Account> fromJson(String value) {
@@ -54,8 +54,8 @@ class ObservableAccountSetPreference
   ObservableAccountSetPreference(UserPreferenceKey key)
       : super(
             key: key,
-            loadValue: (key) async {
-              String value = await UserPreferences.readStringForKey(key);
+            getValue: (key) {
+              String value = UserPreferences().getStringForKey(key);
               try {
                 return Set.from(
                     ObservableAccountListPreference.fromJson(value));
@@ -64,9 +64,9 @@ class ObservableAccountSetPreference
                 return {};
               }
             },
-            storeValue: (key, accounts) async {
-              String value =
-                  ObservableAccountListPreference.toJson((accounts ?? {}).toList());
-              return UserPreferences.writeStringForKey(key, value);
+            putValue: (key, accounts) async {
+              String value = ObservableAccountListPreference.toJson(
+                  (accounts ?? {}).toList());
+              return UserPreferences().putStringForKey(key, value);
             });
 }

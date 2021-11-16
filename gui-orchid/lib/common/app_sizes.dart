@@ -26,6 +26,16 @@ class AppSize {
   AppSize(BuildContext context) {
     this.size = MediaQuery.of(context).size;
   }
+
+  static Widget constrainMaxSizeDefaults(Widget child) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+          constraints: BoxConstraints(
+              maxWidth: 450, maxHeight: AppSize.iphone_12_pro_max.height),
+          child: child),
+    );
+  }
 }
 
 /// Encapsulate a decision about a value or component that depends on screen height

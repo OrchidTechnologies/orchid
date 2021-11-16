@@ -39,14 +39,14 @@ class OrchidRestartManager {
     // Listen for changes in monitoring preferences
     _enableVPNListener = CombineLatestStream.combine2(
       // The initial values are both valid on startup and distinct
-      (await UserPreferences().routingEnabled.streamAsync()).distinct(),
-      (await UserPreferences().monitoringEnabled.streamAsync()).distinct(),
+      UserPreferences().routingEnabled.stream().distinct(),
+      UserPreferences().monitoringEnabled.stream().distinct(),
       (routing, monitoring) {
         log("restart_manager: enable vpn listener: routing=$routing, monitoring=$monitoring");
         return routing || monitoring;
       },
     ).listen((desiredRunning) async {
-      await OrchidAPI().updateConfiguration();
+      await OrchidAPI().publishConfiguration();
 
       // On startup check the state of the world
       if (!_initialized) {

@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/util/collections.dart';
 
-enum HopProtocol { Orchid, OpenVPN, WireGuard }
+enum HopProtocol {
+  // The protocol 'Orchid' represents all versions here (orchid and orch1d).
+  Orchid,
+  OpenVPN,
+  WireGuard,
+}
 
 // A hop element of a circuit
 class CircuitHop {
@@ -27,11 +32,17 @@ class CircuitHop {
       case HopProtocol.WireGuard:
         return S.of(context).wireguard;
         break;
+      default:
+        throw Exception();
     }
   }
 
   // Return the protocol matching the string name ignoring case
   static stringToProtocol(String s) {
+    // Accept orchid or orch1d as a protocol name (this could be cleaner).
+    if (s == 'orch1d') {
+      s = 'orchid';
+    }
     return HopProtocol.values.firstWhere(
         (e) =>
             e.toString().toLowerCase() == ("$HopProtocol." + s).toLowerCase(),
@@ -70,4 +81,3 @@ class UniqueHop {
   /// Hash of the hop content.
   int get contentHash => hop.toJson().toString().hashCode;
 }
-

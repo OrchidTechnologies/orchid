@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/hex.dart';
 import '../../../util/js_config.dart';
 
 /// Import orchid accounts
 class OrchidAccountImport {
-  /// Parse a V1 account identity config from JS, e.g.
+  /// Parse a V1 account identity config from JavaScript (not JSON), e.g.
   /// account = {secret:"0xfb5d5..."}
   static ParseOrchidIdentityResult parseOrchidIdentity(
       String js, List<StoredEthereumKey> existingKeys) {
@@ -58,7 +59,7 @@ class OrchidAccountImport {
       key = existingKeys.firstWhere((key) {
         return key.private == secretInt;
       });
-      //print("parse: found existing key");
+      //log("import: found existing key");
     } catch (err) {
       // Generate a new temporary key
       key = StoredEthereumKey(
@@ -67,15 +68,14 @@ class OrchidAccountImport {
           uid: Crypto.uuid(),
           private: BigInt.parse(secret, radix: 16));
       newKeys.add(key);
-      //print("parse: generated new key");
+      //log("import: preparing new key");
     }
     return key;
   }
 
-  // TODO: Move to JSON lib
-  static String normalizeInputJSON(String text) {
-    text = text.replaceAll("\n", " ");
-    text = text.replaceAll("\r", " ");
+  static String removeNewlines(String text) {
+    text = text.replaceAll('\n', ' ');
+    text = text.replaceAll('\r', ' ');
     return text;
   }
 

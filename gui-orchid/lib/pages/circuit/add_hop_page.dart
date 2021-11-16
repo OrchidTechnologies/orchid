@@ -6,7 +6,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/pages/account_manager/account_finder.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/titled_page_base.dart';
@@ -59,7 +58,7 @@ class _AddHopPageState extends State<AddHopPage> {
                       pady(64),
                     pady(32),
                     Text(
-                      s.orchidIsUniqueAsItSupportsMultipleVPN,
+                      s.orchidIsUniqueAsAMultiHopOrOnion,
                       textAlign: TextAlign.left,
                       style: OrchidText.body2,
                     ),

@@ -8,7 +8,7 @@ class Cache<K, T> {
   final Map<K, _Cached<T>> map = {};
   final String name; // for logging
 
-  Cache({@required this.duration, this.name = "cache"});
+  Cache({@required this.duration, this.name = 'cache'});
 
   Future<T> get({
     K key,
@@ -43,7 +43,7 @@ class SingleCache<T> {
   final String name; // for logging
   _Cached<T> cached;
 
-  SingleCache({@required this.duration, this.name = "cache"});
+  SingleCache({@required this.duration, this.name = 'cache'});
 
   Future<T> get({
     Future<T> Function() producer,

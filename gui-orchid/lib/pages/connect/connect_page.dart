@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/monitoring/restart_manager.dart';
 import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
@@ -10,11 +11,13 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_types.dart';
+import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/screen_orientation.dart';
+import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/account_manager/account_detail_poller.dart';
 import 'package:orchid/pages/account_manager/account_finder.dart';
@@ -67,25 +70,26 @@ class _ConnectPageState extends State<ConnectPage>
   // Key that increments on changes to the circuit
   int _circuitKey = 0;
 
-  bool get _hasCircuit {
-    return _circuit != null;
-  }
-
+  // Circuit hop count or zero when no circuit or not loaded
   int get _circuitHops {
     return _circuit?.hops?.length ?? 0;
   }
 
+  // There is a valid circuit and it has one or more hops
   bool get _circuitHasHops {
     return _circuitHops > 0;
   }
 
   // _hasCircuit here waits for the UI to load
-  bool get _showWelcomePane => _hasCircuit && !_circuitHasHops;
+  bool get _showWelcomePane => _hasDefaultIdentity && !_hasAccounts;
+
+  // User toggle for display of the panel
+  bool _showWelcomePaneMinimized = false;
 
   // The hop selected on the manage accounts card
   int _selectedIndex = 0;
 
-  // The selected hop or null
+  // The selected hop on the account card or null
   CircuitHop get _selectedHop {
     if (!_circuitHasHops) {
       return null;
@@ -93,7 +97,7 @@ class _ConnectPageState extends State<ConnectPage>
     return _circuit.hops[_selectedIndex];
   }
 
-  // The account associated with the selected hop or null.
+  // The account associated with the selected hop on the account card or null.
   Account get _selectedAccount {
     if (_selectedHop != null && _selectedHop is OrchidHop) {
       return (_selectedHop as OrchidHop).account;
@@ -109,6 +113,16 @@ class _ConnectPageState extends State<ConnectPage>
   double _bandwidthAvailableGB; // GB
 
   NeonOrchidLogoController _logoController;
+
+  // If the user has exactly one identity this is the default, else null
+  StoredEthereumKey _defaultIdentity;
+
+  bool get _hasDefaultIdentity {
+    return _defaultIdentity != null;
+  }
+
+  // True if there are cached accounts for any identity
+  bool _hasAccounts;
 
   @override
   void initState() {
@@ -209,6 +223,23 @@ class _ConnectPageState extends State<ConnectPage>
         _vpnState = value;
       });
     }).dispose(_subs);
+
+    // Monitor identities
+    UserPreferences().keys.stream().listen((keys) async {
+      setState(() {
+        _defaultIdentity = (keys ?? []).length == 1 ? keys.first : null;
+      });
+    }).dispose(_subs);
+
+    // Monitor found accounts
+    UserPreferences()
+        .cachedDiscoveredAccounts
+        .stream()
+        .listen((accounts) async {
+      setState(() {
+        _hasAccounts = accounts.isNotEmpty;
+      });
+    }).dispose(_subs);
   }
 
   @override
@@ -233,7 +264,6 @@ class _ConnectPageState extends State<ConnectPage>
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.only(left: 20, right: 20),
-            // padding: EdgeInsets.zero,
             child: _buildPageContent(),
           ),
         ),
@@ -242,7 +272,7 @@ class _ConnectPageState extends State<ConnectPage>
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: EdgeInsets.only(bottom: _showWelcomePane ? 80 : 40.0),
+            padding: EdgeInsets.only(bottom: _showWelcomePane ? 40 : 40),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -255,10 +285,17 @@ class _ConnectPageState extends State<ConnectPage>
         ),
 
         // The welcome panel
-        if (_showWelcomePane)
-          Container(
-            alignment: Alignment.bottomCenter,
-            child: WelcomePanel(),
+        if (_showWelcomePane && !_showWelcomePaneMinimized)
+          Align(
+            alignment: Alignment.center,
+            child: WelcomePanel(
+              identity: _defaultIdentity,
+              onDismiss: () {
+                setState(() {
+                  _showWelcomePaneMinimized = true;
+                });
+              },
+            ),
           )
       ],
     );
@@ -286,15 +323,13 @@ class _ConnectPageState extends State<ConnectPage>
           text = s.disconnect;
       }
     }
-    bool buttonEnabled =
-        ( // Enabled when there is a circuit (or overridden for traffic monitoring)
-                _hasCircuit ||
-                    // TODO:
-                    // Enabled if we are already connected (corner case of changed config while connected).
-                    _routingState == OrchidVPNRoutingState.VPNConnecting ||
-                    _routingState == OrchidVPNRoutingState.VPNConnected ||
-                    _routingState == OrchidVPNRoutingState.OrchidConnected) &&
-            !_restarting;
+    bool buttonEnabled = ( // Enabled when there is a circuit
+            _circuitHasHops ||
+                // Enabled if we are already connected (corner case of changed config while connected).
+                _routingState == OrchidVPNRoutingState.VPNConnecting ||
+                _routingState == OrchidVPNRoutingState.VPNConnected ||
+                _routingState == OrchidVPNRoutingState.OrchidConnected) &&
+        !_restarting;
 
     return OrchidActionButton(
       enabled: buttonEnabled,
@@ -311,9 +346,41 @@ class _ConnectPageState extends State<ConnectPage>
         _buildManageAccountsCard(),
         pady(24),
         _buildStatusPanel(),
+        if (_showWelcomePane && _showWelcomePaneMinimized)
+          Padding(
+            padding: const EdgeInsets.only(top: 24.0),
+            child: _buildWelcomePaneMinimized(),
+          ),
         Spacer(flex: 2),
-        if (_showWelcomePane) Spacer(flex: 1)
       ],
+    );
+  }
+
+  Widget _buildWelcomePaneMinimized() {
+    return SizedBox(
+      width: 308,
+      height: 56,
+      child: OrchidPanel(
+        highlight: true,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: TextButton(
+            onPressed: () {
+              setState(() {
+                _showWelcomePaneMinimized = false;
+              });
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.more_time_rounded, color: Colors.white),
+                padx(8),
+                Text(s.quickFundAnAccount, style: OrchidText.body1).height(1.8),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -324,13 +391,11 @@ class _ConnectPageState extends State<ConnectPage>
       minHeight: isShort,
       onSelectIndex: (index) {
         setState(() {
-          log("XXX: selected index = $index");
           _selectedIndex = index;
           _selectedAccountChanged(_selectedAccount);
         });
       },
       onManageAccountsPressed: () async {
-        log("XXX: manage accounts pressed, selectedAccount = $_selectedAccount");
         await AccountManagerPage.showAccount(context, _selectedAccount);
         _updateStats(null);
       },
@@ -340,7 +405,7 @@ class _ConnectPageState extends State<ConnectPage>
   // only shows for v1
   Widget _buildStatusPanel() {
     return ConnectStatusPanel(
-      key: Key(_selectedAccount?.identityUid ?? ""),
+      key: Key(_selectedAccount?.signerKeyUid ?? ""),
       minHeight: isShort,
       bandwidthPrice: _bandwidthPrice,
       circuitHops: _circuitHops,
@@ -364,7 +429,7 @@ class _ConnectPageState extends State<ConnectPage>
         switch (_vpnState) {
           case OrchidVPNExtensionState.Invalid:
           case OrchidVPNExtensionState.NotConnected:
-            message = _hasCircuit ? s.pushToConnect : '';
+            message = _circuitHasHops ? s.pushToConnect : '';
             break;
           case OrchidVPNExtensionState.Connecting:
             message = s.startingVpn;
@@ -433,29 +498,60 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// Do first launch and per-release activities.
   Future<void> _releaseVersionCheck() async {
-    var version = await UserPreferences().releaseVersion.get();
-
     await _doMigrationActivities();
 
-    log("first launch check.");
-    if (version.isFirstLaunch) {
-      await _doFirstLaunchActivities();
-    }
+    var lastVersion = await _getReleaseVersionWithOverride();
 
-    log("new version check.");
-    var releaseNotes =
-        const bool.fromEnvironment('release_notes', defaultValue: null);
-    if (releaseNotes ?? version.isOlderThan(Release.current)) {
-      await _doNewReleaseActivities();
+    log("connect: first launch check.");
+    if (lastVersion.isFirstLaunch) {
+      log("connect: first launch");
+      await _doFirstLaunchActivities();
+    } else {
+      // show any release notes since the last viewed
+      log("connect: check release notes since version: $lastVersion");
+      if (lastVersion.isOlderThan(Release.current)) {
+        await _showReleaseNotesSince(lastVersion);
+      }
     }
 
     await UserPreferences().releaseVersion.set(Release.current);
   }
 
+  // Allow override of the last viewed release notes version for testing.
+  // e.g. set to 0 to see all release notes, or high to hide them.
+  Future<ReleaseVersion> _getReleaseVersionWithOverride() async {
+    var version = await UserPreferences().releaseVersion.get();
+
+    const release_version = 'release_version';
+    // From user config
+    var jsConfig = await OrchidUserConfig().getUserConfigJS();
+    var overrideVersion = jsConfig.evalIntDefault(release_version, null);
+    if (overrideVersion != null) {
+      version = ReleaseVersion(overrideVersion);
+    }
+
+    // From command line
+    overrideVersion =
+        const int.fromEnvironment(release_version, defaultValue: null);
+    if (overrideVersion != null) {
+      version = ReleaseVersion(overrideVersion);
+    }
+
+    return version;
+  }
+
+  Future<void> _showReleaseNotesSince(ReleaseVersion lastVersion) async {
+    return AppDialogs.showAppDialog(
+      context: context,
+      title: await Release.whatsNewTitle(context),
+      body: Release.messagesSince(context, lastVersion),
+    );
+  }
+
   /// As part of new user onboarding we scan for accounts continually until
-  /// the first one is found and create a default route.
+  /// the first one is found and create a default single hop route from it.
   Future<void> _scanForAccountsIfNeeded() async {
-    // If the cache is empty we have never seen an account.
+    // If cached discovered accounts is empty should start the search.
     if ((await UserPreferences().cachedDiscoveredAccounts.get()).isNotEmpty) {
       log("connect: Found cached accounts, not starting account finder.");
       return;
@@ -463,7 +559,7 @@ class _ConnectPageState extends State<ConnectPage>
 
     log("connect: No accounts in cache, starting account finder.");
     AccountFinder.shared = AccountFinder()
-        .withPollingInterval(Duration(seconds: 30))
+        .withPollingInterval(Duration(seconds: 20))
         .find((accounts) async {
       var sorted = await Account.sortAccountsByEfficiency(accounts);
       if (sorted.isNotEmpty) {
@@ -474,10 +570,9 @@ class _ConnectPageState extends State<ConnectPage>
           SchedulerBinding.instance.addPostFrameCallback(
             (_) => AppDialogs.showAppDialog(
               context: context,
-              title: "Account Found",
+              title: s.accountFound,
               bodyText:
-                  "We found an account associated with your identities and created a "
-                  "single hop Orchid circuit for it.  You are now ready to use the VPN.",
+                  s.weFoundAnAccountAssociatedWithYourIdentitiesAndCreated,
             ),
           );
         }
@@ -517,18 +612,9 @@ class _ConnectPageState extends State<ConnectPage>
       log("first launch: Creating default identity");
       var key = StoredEthereumKey.generate();
       await UserPreferences().addKey(key);
-      // Select it
-      // AccountStore().setActiveIdentity(key);
     }
-  }
-
-  Future<void> _doNewReleaseActivities() async {
-    log("new release: Do new release activities.");
-    return AppDialogs.showAppDialog(
-      context: context,
-      title: await Release.title(context),
-      body: Release.message(context),
-    );
+    // Update the UI after first identity created
+    setState(() {});
   }
 
   Future _circuitConfigurationChanged() async {

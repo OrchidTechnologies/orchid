@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'package:orchid/util/js_config.dart';
-
 import 'orchid_user_config_stub.dart'
     if (dart.library.io) 'orchid_user_config_vpn.dart'
     if (dart.library.js) 'orchid_user_config_web.dart';
@@ -16,5 +14,5 @@ abstract class OrchidUserConfig {
 
   /// Return a JS queryable representation of the user-visible configuration
   /// If there is an error parsing the configuation an empty JSConfig is returned.
-  Future<JSConfig> getUserConfigJS();
+  JSConfig getUserConfigJS();
 }

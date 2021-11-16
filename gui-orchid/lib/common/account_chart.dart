@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
@@ -5,9 +6,9 @@ import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/orchid/orchid_circular_progress.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
-
 import 'loading.dart';
 import 'formatting.dart';
 
@@ -29,16 +30,6 @@ class AccountChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return buildAccountChart(
-        context, lotteryPot, efficiency, transactions, alert);
-  }
-
-  static Widget buildAccountChart(
-      BuildContext context,
-      LotteryPot lotteryPot,
-      double efficiency,
-      List<OrchidUpdateTransactionV0> transactions,
-      bool alert) {
     if (efficiency == null) {
       return LoadingIndicator();
     }
@@ -49,23 +40,20 @@ class AccountChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        circularEfficiencyChart(efficiency),
         pady(8),
+        OrchidCircularEfficiencyIndicators.large(efficiency),
+        pady(16),
         Text(
-          S.of(context).efficiency +
-              ": " +
-              MarketConditionsV0.efficiencyAsPercString(efficiency),
-          style: alert
-              ? TextStyle(
-                  color: Colors.red.shade900, fontWeight: FontWeight.w600)
-              : TextStyle(color: Colors.white),
-        ),
+            S.of(context).efficiency +
+                ": " +
+                MarketConditionsV0.efficiencyAsPercString(efficiency),
+            style: alert ? OrchidText.body1.red : OrchidText.body1),
         pady(16),
         // Show the tickets available / used line
         if (chartModel != null)
           Column(
             children: [
-              buildTicketsAvailableLineChart(chartModel),
+              buildTicketsAvailableLineChart(chartModel, efficiency),
               pady(16),
               Text(
                 S.of(context).minTicketsAvailableTickets(
@@ -77,21 +65,37 @@ class AccountChart extends StatelessWidget {
     );
   }
 
-  static CircularPercentIndicator circularEfficiencyChart(double efficiency) {
-    return CircularPercentIndicator(
-      progressColor: Colors.deepPurple,
-      lineWidth: 10,
-      radius: 70,
-      percent: efficiency,
-    );
-  }
-
+  // TODO: The glow is broken
   // Build the tickets available horizontal line chart
   // This consists of "dashed" segments indicating the number of tickets available
   // at the last high-water mark with a subset colored to indicate currently available.
   static Widget buildTicketsAvailableLineChart(
+      AccountBalanceChartTicketModel chartModel, double efficiency) {
+    return SizedBox(
+      width: 100,
+      height: 4,
+      child: Stack(
+        fit: StackFit.expand,
+        // alignment: Alignment.center,
+        children: [
+          // TODO: Why is this blur not working?
+          // ImageFiltered(
+          //   imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          //   child: buildTicketsAvailableLineChart(chartModel,
+          //       color: OrchidCircularEfficiencyIndicators.colorForEfficiency(
+          //           efficiency)),
+          // ),
+          _buildTicketsAvailableLineChart(chartModel,
+              color: OrchidCircularEfficiencyIndicators.colorForEfficiency(
+                  efficiency)),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildTicketsAvailableLineChart(
       AccountBalanceChartTicketModel chartModel,
-      {Color color = Colors.deepPurple}) {
+      {Color color = OrchidColors.purpleCaption}) {
     var totalCount = chartModel.availableTicketsHighWatermarkMax;
     var currentCount = chartModel.availableTicketsCurrentMax;
 
@@ -108,8 +112,6 @@ class AccountChart extends StatelessWidget {
         totalCount,
         (i) => Flexible(
           child: Container(
-            margin: EdgeInsets.symmetric(horizontal: margin),
-            height: 10,
             color: colorFor(i),
           ),
         ),

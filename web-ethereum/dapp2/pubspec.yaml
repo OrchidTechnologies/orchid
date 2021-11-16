@@ -19,7 +19,6 @@ dependencies:
   dotted_border: 1.0.7
   email_validator: 2.0.1
   ethereum_address: 1.0.1 # for EIP-55
-  flare_flutter: 2.0.6
   flutter:
     sdk: flutter
   flutter_cupertino_localizations: 1.0.1
@@ -35,15 +34,20 @@ dependencies:
   jdenticon_dart: 1.2.1+1 # XXX: uuid (crypto)
   percent_indicator: 3.0.1
   pointycastle: 1.0.2
-  provider: 5.0.0
+  #provider: 5.0.0
   qr_flutter: 4.0.0
   rxdart: 0.25.0
   shared_preferences: 2.0.5
-  styled_text: 1.0.3+4
-  sqflite: 2.0.0+3
+  styled_text: 3.0.4+1
+  #sqflite: 2.0.0+3
   url_launcher: 6.0.3
   uuid: 2.2.2 # XXX: web3dart
   web3dart: 1.2.3
+  flutter_web3: 2.1.6
+
+  # TODO: REMOVE
+  # Just testing a demo...
+  get:
 
 dev_dependencies:
   flutter_test:

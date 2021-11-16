@@ -1,11 +1,9 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
-import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../orchid_log_api.dart';
 import 'accounts_preferences.dart';
@@ -17,22 +15,35 @@ class UserPreferences {
     return _singleton;
   }
 
-  UserPreferences._internal() {
-    debugPrint("Constructed user prefs API");
+  UserPreferences._internal();
+
+  /// The shared instance, initialized by init()
+  SharedPreferences _sharedPreferences;
+
+  /// This must be awaited in main before launching the app.
+  static Future<void> init() async {
+    return UserPreferences()._initInstance();
   }
 
-  static Future<SharedPreferences> sharedPreferences() {
-    return SharedPreferences.getInstance();
+  Future<void> _initInstance() async {
+    log("Initialized user preferences API");
+    _sharedPreferences = await SharedPreferences.getInstance();
   }
 
-  static Future<String> readStringForKey(UserPreferenceKey key) async {
-    return (await sharedPreferences()).getString(key.toString());
+  SharedPreferences sharedPreferences() {
+    if (_sharedPreferences == null) {
+      throw Exception("UserPreferences uninitialized.");
+    }
+    return _sharedPreferences;
   }
 
-  // This method accepts null for property removal.
-  static Future<bool> writeStringForKey(
-      UserPreferenceKey key, String value) async {
-    var shared = await sharedPreferences();
+  String getStringForKey(UserPreferenceKey key) {
+    return sharedPreferences().getString(key.toString());
+  }
+
+  // This method maps null to property removal.
+  Future<bool> putStringForKey(UserPreferenceKey key, String value) async {
+    var shared = sharedPreferences();
     if (value == null) {
       return await shared.remove(key.toString());
     }
@@ -45,73 +56,33 @@ class UserPreferences {
 
   ObservablePreference<Circuit> circuit = ObservablePreference(
       key: UserPreferenceKey.Circuit,
-      loadValue: (key) async {
+      getValue: (key) {
         return _getCircuit();
       },
-      storeValue: (key, circuit) {
+      putValue: (key, circuit) {
         return _setCircuit(circuit);
       });
 
-  @deprecated
-  Future<Circuit> getCircuit() async {
-    return _getCircuit();
-  }
-
   // Set the circuit / hops configuration
   static Future<bool> _setCircuit(Circuit circuit) async {
-    String value = jsonEncode(circuit);
-    return writeStringForKey(UserPreferenceKey.Circuit, value);
+    String value = circuit != null ? jsonEncode(circuit) : null;
+    return UserPreferences().putStringForKey(UserPreferenceKey.Circuit, value);
   }
 
   // Get the circuit / hops configuration
   // This default to an empty [] circuit if uninitialized.
-  static Future<Circuit> _getCircuit() async {
-    String value = (await SharedPreferences.getInstance())
-        .getString(UserPreferenceKey.Circuit.toString());
-    if (value == null) {
-      return Circuit([]);
-    }
-    return Circuit.fromJson(jsonDecode(value));
+  static Circuit _getCircuit() {
+    String value = UserPreferences().getStringForKey(UserPreferenceKey.Circuit);
+    return value == null ? Circuit([]) : Circuit.fromJson(jsonDecode(value));
   }
 
   ///
   /// End: Circuit
   ///
 
-  // Add a single hop to the recently deleted list
-  void addRecentlyDeletedHop(CircuitHop hop) async {
-    var hops = await getRecentlyDeleted();
-    hops.hops.add(hop);
-    await setRecentlyDeleted(hops);
-  }
-
-  // Store recently deleted hops
-  Future<bool> setRecentlyDeleted(Hops hops) async {
-    log("saving recently deleted hops: ${hops.hops}");
-    String value = jsonEncode(hops);
-    return writeStringForKey(UserPreferenceKey.RecentlyDeletedHops, value);
-  }
-
-  // Get a list of recently deleted hops.
-  Future<Hops> getRecentlyDeleted() async {
-    String value = (await SharedPreferences.getInstance())
-        .getString(UserPreferenceKey.RecentlyDeletedHops.toString());
-    if (value == null) {
-      return Hops([]);
-    }
-    return Hops.fromJson(jsonDecode(value));
-  }
-
-  // Get the user editable configuration file text.
-  Future<String> getUserConfig() async {
-    return (await SharedPreferences.getInstance())
-        .getString(UserPreferenceKey.UserConfig.toString());
-  }
-
-  // Set the user editable configuration file text.
-  Future<bool> setUserConfig(String value) async {
-    return writeStringForKey(UserPreferenceKey.UserConfig, value);
-  }
+  /// The user-editable portion of the configuration file text.
+  ObservableStringPreference userConfig =
+      ObservableStringPreference(UserPreferenceKey.UserConfig);
 
   ///
   /// Begin: Keys
@@ -120,17 +91,16 @@ class UserPreferences {
   /// Return the user's keys or [] empty array if uninitialized.
   ObservablePreference<List<StoredEthereumKey>> keys = ObservablePreference(
       key: UserPreferenceKey.Keys,
-      loadValue: (key) async {
+      getValue: (key) {
         return _getKeys();
       },
-      storeValue: (key, keys) {
+      putValue: (key, keys) {
         return _setKeys(keys);
       });
 
   /// Return the user's keys or [] empty array if uninitialized.
-  static Future<List<StoredEthereumKey>> _getKeys() async {
-    String value = (await SharedPreferences.getInstance())
-        .getString(UserPreferenceKey.Keys.toString());
+  static List<StoredEthereumKey> _getKeys() {
+    String value = UserPreferences().getStringForKey(UserPreferenceKey.Keys);
     if (value == null) {
       return [];
     }
@@ -157,17 +127,12 @@ class UserPreferences {
     print("setKeys: storing keys: ${jsonEncode(keys)}");
     try {
       var value = jsonEncode(keys);
-      return await writeStringForKey(UserPreferenceKey.Keys, value);
+      return await UserPreferences()
+          .putStringForKey(UserPreferenceKey.Keys, value);
     } catch (err) {
       log("Error storing keys!: $err");
       return false;
     }
-  }
-
-  /// Return the user's keys or [] empty array if uninitialized.
-  @deprecated
-  Future<List<StoredEthereumKey>> getKeys() async {
-    return keys.get();
   }
 
   /// Add a key to the user's keystore.
@@ -200,31 +165,30 @@ class UserPreferences {
   /// End: Keys
   ///
 
-  Future<String> getDefaultCurator() async {
-    return (await SharedPreferences.getInstance())
-        .getString(UserPreferenceKey.DefaultCurator.toString());
+  String getDefaultCurator() {
+    return getStringForKey(UserPreferenceKey.DefaultCurator);
   }
 
   Future<bool> setDefaultCurator(String value) async {
-    return writeStringForKey(UserPreferenceKey.DefaultCurator, value);
+    return putStringForKey(UserPreferenceKey.DefaultCurator, value);
   }
 
-  Future<bool> getQueryBalances() async {
-    return (await SharedPreferences.getInstance())
+  bool getQueryBalances() {
+    return sharedPreferences()
             .getBool(UserPreferenceKey.QueryBalances.toString()) ??
         true;
   }
 
   Future<bool> setQueryBalances(bool value) async {
-    return (await SharedPreferences.getInstance())
+    return sharedPreferences()
         .setBool(UserPreferenceKey.QueryBalances.toString(), value);
   }
 
   /// The PAC transaction or null if there is none.
   ObservablePreference<PacTransaction> pacTransaction = ObservablePreference(
       key: UserPreferenceKey.PacTransaction,
-      loadValue: (key) async {
-        String value = await readStringForKey(key);
+      getValue: (key) {
+        String value = UserPreferences().getStringForKey(key);
         try {
           return value != null
               ? PacTransaction.fromJson(jsonDecode(value))
@@ -234,9 +198,9 @@ class UserPreferences {
           return null;
         }
       },
-      storeValue: (key, tx) {
+      putValue: (key, tx) {
         String value = tx != null ? jsonEncode(tx) : null;
-        return writeStringForKey(key, value);
+        return UserPreferences().putStringForKey(key, value);
       });
 
   // TODO: Currently maintained only for use in migration to new circuit builder.
@@ -255,26 +219,27 @@ class UserPreferences {
     if (accounts == null || accounts.isEmpty) {
       return;
     }
-    var cached = await cachedDiscoveredAccounts.get();
+    var cached = cachedDiscoveredAccounts.get();
     cached.addAll(accounts);
     cachedDiscoveredAccounts.set(cached);
   }
 
   /// A set of accounts previously discovered for user identities
+  /// Returns {} empty set initially.
   ObservablePreference<Set<Account>> cachedDiscoveredAccounts =
       ObservableAccountSetPreference(
           UserPreferenceKey.CachedDiscoveredAccounts);
 
-  /// An incrementing internal UI app release version used to track first launch
-  /// and new release launch messaging.  See [Release]
+  /// An incrementing internal UI app release notes version used to track
+  /// new release messaging.  See class [Release]
   ObservablePreference<ReleaseVersion> releaseVersion = ObservablePreference(
       key: UserPreferenceKey.ReleaseVersion,
-      loadValue: (key) async {
+      getValue: (key) {
         return ReleaseVersion(
-            (await SharedPreferences.getInstance()).getInt(key.toString()));
+            (UserPreferences().sharedPreferences()).getInt(key.toString()));
       },
-      storeValue: (key, value) async {
-        var sharedPreferences = await SharedPreferences.getInstance();
+      putValue: (key, value) async {
+        var sharedPreferences = UserPreferences().sharedPreferences();
         if (value.version == null) {
           return sharedPreferences.remove(key.toString());
         }
@@ -299,7 +264,6 @@ class UserPreferences {
 
 enum UserPreferenceKey {
   Circuit,
-  RecentlyDeletedHops,
   UserConfig,
   Keys,
   DefaultCurator,

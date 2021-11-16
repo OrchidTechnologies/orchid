@@ -4,7 +4,7 @@ import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
+import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/gradient_border.dart';
@@ -13,7 +13,7 @@ import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/util/units.dart';
-import '../account_manager/account_detail_poller.dart';
+import 'account_detail_poller.dart';
 import '../../orchid/orchid_panel.dart';
 import '../../orchid/orchid_text.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -294,11 +294,10 @@ class _AccountCardState extends State<AccountCard>
     var lotteryPot = widget.accountDetail?.lotteryPot;
     var depositText = lotteryPot?.deposit?.formatCurrency(digits: 2) ?? "";
     final efficiency = widget.accountDetail?.marketConditions?.efficiency ?? 0;
-    final chartModel =
-        lotteryPot != null
-            ? AccountBalanceChartTicketModel(
-                lotteryPot, widget.accountDetail.transactions ?? [])
-            : null;
+    final chartModel = lotteryPot != null
+        ? AccountBalanceChartTicketModel(
+            lotteryPot, widget.accountDetail.transactions ?? [])
+        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40.0),
@@ -347,36 +346,13 @@ class _AccountCardState extends State<AccountCard>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(s.tickets, style: OrchidText.body2),
-                _buildGlowingTicketsChart(chartModel, efficiency)
+                AccountChart.buildTicketsAvailableLineChart(
+                    chartModel, efficiency)
               ],
             ),
         ],
       ),
     );
-  }
-
-  Widget _buildGlowingTicketsChart(
-      AccountBalanceChartTicketModel chartModel, double efficiency) {
-    final chart = _buildTicketsChart(chartModel, efficiency);
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // TODO: Why is this blur not working (to add the glow)?
-        // ImageFiltered(
-        //     imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16), child: chart),
-        chart,
-      ],
-    );
-  }
-
-  Widget _buildTicketsChart(
-      AccountBalanceChartTicketModel chartModel, double efficiency) {
-    return SizedBox(
-        width: 100,
-        height: 4,
-        child: AccountChart.buildTicketsAvailableLineChart(chartModel,
-            color: OrchidCircularEfficiencyIndicators.colorForEfficiency(
-                efficiency)));
   }
 
   SizedBox _buildLoading() {

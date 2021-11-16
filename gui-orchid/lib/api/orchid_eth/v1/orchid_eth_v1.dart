@@ -7,6 +7,7 @@ import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
 import '../abi_encode.dart';
+import '../chains.dart';
 import '../orchid_account.dart';
 import '../../orchid_budget_api.dart';
 import '../../orchid_crypto.dart';
@@ -24,7 +25,7 @@ class OrchidEthereumV1 {
   }
 
   Cache<Chain, Token> _gasPriceCache =
-      Cache(duration: Duration(seconds: 15), name: "gas price");
+      Cache(duration: Duration(seconds: 15), name: 'gas price');
 
   /// Get gas price cached
   Future<Token> getGasPrice(Chain chain, {bool refresh = false}) async {
@@ -62,7 +63,7 @@ class OrchidEthereumV1 {
     Chain chain,
     EthereumAddress signer,
   ) async {
-    print("fetch create events for: $signer, url = ${chain.providerUrl}");
+    log("fetch create events for: $signer, url = ${chain.providerUrl}");
     var startBlock = 0; // per chain
     var params = [
       {
@@ -90,9 +91,9 @@ class OrchidEthereumV1 {
     List<OrchidCreateEvent> createEvents =
         await getCreateEvents(chain, signer.address);
     return createEvents.map((event) {
-      return Account(
+      return Account.fromSignerKey(
           version: 1,
-          identityUid: signer.uid,
+          signerKey: signer.ref(),
           chainId: chain.chainId,
           funder: event.funder);
     }).toList();
@@ -101,7 +102,7 @@ class OrchidEthereumV1 {
   // Note: this method's results are cached by the Account API
   static Future<LotteryPot> getLotteryPot(
       {Chain chain, EthereumAddress funder, EthereumAddress signer}) async {
-    print("fetch pot V1 for: $funder, $signer, chain = $chain");
+    log("fetch pot V1 for: $funder, $signer, chain = $chain");
 
     var address = AbiEncode.address;
     // construct the abi encoded eth_call
@@ -118,7 +119,7 @@ class OrchidEthereumV1 {
 
     String result = await ethCall(url: chain.providerUrl, params: params);
     if (!result.startsWith("0x")) {
-      print("Error result: $result");
+      log("Error result: $result");
       throw Exception();
     }
 
@@ -162,7 +163,7 @@ class OrchidEthereumV1 {
     String result =
         await ethCall(url: Chains.Ethereum.providerUrl, params: params);
     if (!result.startsWith("0x")) {
-      print("Error result: $result");
+      log("Error result: $result");
       throw Exception();
     }
 

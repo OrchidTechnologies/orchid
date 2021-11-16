@@ -30,28 +30,31 @@ class OrchidActionButton extends StatelessWidget {
 
     return AbsorbPointer(
       absorbing: !enabled,
-      child: SizedBox(
-        width: 294,
-        height: 52,
-        child: GradientBorder(
-          strokeWidth: 1.5,
-          radius: 16,
-          gradient: OrchidGradients.verticalTransparentGradient,
-          child: FlatButton(
-              color: Color(0xffaca3bc),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(16))),
-              padding: EdgeInsets.zero,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                  gradient: enabled ? radialGradient : null,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: SizedBox(
+          width: 294,
+          height: 52,
+          child: GradientBorder(
+            strokeWidth: 1.5,
+            radius: 16,
+            gradient: OrchidGradients.verticalTransparentGradient,
+            child: FlatButton(
+                color: Color(0xffaca3bc),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16))),
+                padding: EdgeInsets.zero,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    gradient: enabled ? radialGradient : null,
+                  ),
+                  child: Center(
+                      child: Text(text, style: OrchidText.button.black)),
                 ),
-                child: Center(
-                    child: Text(text, style: OrchidText.button.black)),
-              ),
-              // If onPressed is null this does not render the background color
-              onPressed: onPressed),
+                // If onPressed is null this does not render the background color
+                onPressed: onPressed),
+          ),
         ),
       ),
     );
