@@ -17,11 +17,8 @@ class OrchidEthereumV0 {
   static OrchidEthereumV0 _shared = OrchidEthereumV0._init();
   static int startBlock = 872000;
 
-  // Get the provider URL allowing override in the advanced config
-  static Future<String> get url async {
-    var jsConfig = await OrchidUserConfig().getUserConfigJS();
-    // Note: This var is also used by the tunnel for the eth provider.
-    return jsConfig.evalStringDefault('rpc', Chains.defaultEthereumProviderUrl);
+  static String get _rpc {
+    return Chains.defaultEthereumProviderUrl;
   }
 
   OrchidEthereumV0._init();
@@ -50,7 +47,7 @@ class OrchidEthereumV0 {
   */
   static Future<OXTLotteryPot> getLotteryPot(
       EthereumAddress funder, EthereumAddress signer) async {
-    log("fetch pot V0 for: $funder, $signer, url = ${await url}");
+    log("fetch pot V0 for: $funder, $signer, url = ${await _rpc}");
 
     // construct the abi encoded eth_call
     var params = [
@@ -146,7 +143,7 @@ class OrchidEthereumV0 {
     EthereumAddress funder,
     EthereumAddress signer,
   ) async {
-    log("fetch update events for: $funder, $signer, url = ${await url}");
+    log("fetch update events for: $funder, $signer, url = ${await _rpc}");
     var params = [
       {
         "topics": [
@@ -168,7 +165,7 @@ class OrchidEthereumV0 {
   Future<List<OrchidCreateEventV0>> getCreateEvents(
     EthereumAddress signer,
   ) async {
-    log("fetch create events for: $signer, url = ${await url}");
+    log("fetch create events for: $signer, url = ${await _rpc}");
     var params = [
       {
         "topics": [
@@ -203,7 +200,7 @@ class OrchidEthereumV0 {
     @required String method,
     List<Object> params = const [],
   }) async {
-    return ethJsonRpcCall(url: await url, method: method, params: params);
+    return ethJsonRpcCall(url: await _rpc, method: method, params: params);
   }
 
   /// Ethereum json rpc call

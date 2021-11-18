@@ -11,7 +11,7 @@ import 'package:orchid/util/cacheable.dart';
 import '../orchid_budget_api.dart';
 import 'orchid_market.dart';
 
-/// The base model for accounts including signer, chain, and funder.
+/// The base model for accounts including chain, signer, funder, and contract version.
 class Account {
   /// If this account was created for a stored key then this is the key uid.
   final String signerKeyUid;
