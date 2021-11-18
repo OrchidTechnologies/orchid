@@ -38,7 +38,7 @@ After tapping connect Orchid will:
 * Connect to the provider
 * Change the status to “Connected” and animate the logo
 
-Note that this process can sometimes take a few dozen seconds, depending on the status of Orchid’s providers. If the the process is stuck, it could be because the Orchid providers are rejecting your Orchid account or becuase your device is having trouble connecting to the default Ethereum RPC endpoint, and so cannot get information about the state of the provider directory.
+Note that this process can sometimes take a few dozen seconds, depending on the status of Orchid’s providers. If the the process is stuck, it could be because the Orchid providers are rejecting your Orchid account or because your device is having trouble connecting to the default Ethereum RPC endpoint, and so cannot get information about the state of the provider directory.
 
 It is also possible to connect to a server, have the screen change states, and then have the connection die. Typically turning the app off/on can help kickstart the reconnect process whenever you experience no connectivity.
 
@@ -78,7 +78,7 @@ Orchid is the only multi-hop VPN application that allows you to make an "onion r
 
 A single hop circuit is similar to a typical VPN provider. Three hops is a standard "onion route". For more information about the implications of multiple hops, refer to the [FAQ section on Security](../faq/#security-and-privacy).
 
-Tap on the Add New Hop button to add a hop. Swipe a hop to the left or right to delete the hop. Long press on a hop to move it up or down in the circuit. The entry node is at the top of the screen and the exit node is at the bottom. While Orchid accounts are stored in the account manger, there is no way to store OpenVPN or WireGuard hops except by adding them to your active circuit. See below on how to save your circuit and export the entire configuration, which could help you manage inactive OpenVPN or WireGuard hops.
+Tap on the Add New Hop button to add a hop. Swipe a hop to the left or right to delete the hop. Long press on a hop to move it up or down in the circuit. The entry node is at the top of the screen and the exit node is at the bottom. While Orchid accounts are stored in the account manager, there is no way to store OpenVPN or WireGuard hops except by adding them to your active circuit. See below on how to save your circuit and export the entire configuration, which could help you manage inactive OpenVPN or WireGuard hops.
 
 ![Circuit builder screenshot](img/circuit-builder.png "Circuit builder screen")
 
@@ -128,7 +128,7 @@ The traffic analyzer supports different ways to filter the traffic to better mak
 ## Settings
 From the homescreen, swipe right or tap the hamburger menu in the top left. From there you can navigate to all the screens in the app, get in-app help, read the privacy policy, open source license and version number on the bottom. For settings, tap Settings.
 
-![Settings screenshot](img/settings.png "Settings screen")
+![Settings screenshot](img/settings.PNG "Settings screen")
 
 ### Default Curator
 Orchid uses an on-chain curated list which filters the viable nodes to a custom subset called a curator. Orchid's official curator is `partners.orch1d.eth`. The Orchid client uses this list to prevent certain kinds of attacks from malicious exit nodes (e.g. SSL downgrade attacks) by using a default list with trusted VPN partners. 
@@ -161,7 +161,9 @@ Note: the keys to your Orchid account(s) will be exposed when you export your co
 
 **Active circuit**: the active circuit contains all the information sent to the backend vpn tunnel to form the multi-hop route. For OpenVPN and WireGuard hops, the account information and details to connect to that VPN node is encoded. For each Orchid hop, there is a curator, the public address of the funding wallet, the Orchid account private key, chainid of where the account is housed, the currency and the RPC endpoint for accessing information on the blockchain where 
 
+```
 hops = [{protocol: "orch1d", curator: "partners.orch1d.eth", funder: "<public address of funder wallet>", secret: "<Orchid account key>", chainid: 100, currency: "DAI", rpc="https://rpc.xdaichain.com/"}];
+```
 
 **protocol**: the VPN tunnel protocol. Either "orch1d" for Orchid, "openvpn" for OpenVPN or "wireguard" for WireGaurd
 **curator**: for Orchid hops, this is the curator for this hop
@@ -197,16 +199,16 @@ hops = [{protocol: "orch1d", curator: "partners.orch1d.eth", funder: "<public ad
 - Enter a newline and add in the Ethereum RPC with `rpc = "https://cloudflare-eth.com/";`
 
 - The final format should look like this for OXT accounts on Ethereum: **Note: funder starts with 0x and secret does not**
-    ```js
-    hops = [{curator: "partners.orch1d.eth", protocol: "orchid", funder: "0x000000000000000000000000000000000000000", secret: "00000000000000000000000000000000000000000000000000000000000000000"}];
-    rpc = "https://cloudflare-eth.com/";
-    ```
+```
+hops = [{curator: "partners.orch1d.eth", protocol: "orchid", funder: "0x000000000000000000000000000000000000000", secret: "00000000000000000000000000000000000000000000000000000000000000000"}];
+rpc = "https://cloudflare-eth.com/";
+```
 - To use XDAI accounts on xDAI, there is an extra step. You will need to add `, rpc="https://rpc.xdaichain.com/` after the currency variable **for each hop denoted in {}**. The final format should look like this:
 
-    ```js
-    hops = [{protocol: "orch1d", curator: "partners.orch1d.eth", funder: "0x000000000000000000000000000000000000000", secret: "00000000000000000000000000000000000000000000000000000000000000000", chainid: 100, currency: "DAI", rpc="https://rpc.xdaichain.com/"}];
-    rpc = "https://cloudflare-eth.com/";
-    ```
+```
+hops = [{protocol: "orch1d", curator: "partners.orch1d.eth", funder: "0x000000000000000000000000000000000000000", secret: "00000000000000000000000000000000000000000000000000000000000000000", chainid: 100, currency: "DAI", rpc="https://rpc.xdaichain.com/"}];
+rpc = "https://cloudflare-eth.com/";
+```
 
 
 - Save the file as `'orchid.cfg'`
