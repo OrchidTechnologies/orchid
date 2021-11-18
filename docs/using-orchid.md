@@ -1,147 +1,232 @@
 # Using the Orchid app
+Welcome to the Orchid userguide. For product support, send an email to help at orchid.com.
 
 ## Quick Setup
+To get a single hop connection running ASAP, simply open the Orchid app and tap "Get started for $1". Confirm the $1 USD (or equivalent local currency) in-app purchase. Orchid will then fund your account on the xDAI blockchain with a 0.10 xDAI deposit and ~0.87 xDAI balance. The app will also construct a single hop circuit using the new account. 
 
-To connect to an Orchid provider, you will need an Orchid account with enough funds in the balance and deposit for a provider to accept payment from that account.  Once you buy, import, or create an account you can then make it active and hit the connect button to connect to a VPN provider. 
+After the purchase completes, hit the connect button to start the VPN. You will connect randomly to an Orchid provider after you hit the button. The provider selected is based on the amount of OXT that provider staked on the network. This is for secruity and incentive alignment.
 
-Orchid accounts live in the Manage Accounts screen and are listed underneath an [Orchid address](../#orchid-address). 
+ It's that easy!
 
-There are three ways to get an Orchid account:
+![Get Started Screenshot](img/get-started.png "Get started")
 
-### Importing Accounts
+## Home
+The home screen displays key pieces of information about how your device is connecting to the Internet, your account balance(s), an estimate on how many GB of service you could buy and the current average price of bandwidth. Tapping 'manage accounts' will take you to the account manager. Tapping '1 Hop Circuit' will take you to the circuit builder. The average price per GB for VPN service is displayed by polling the Chainlink oracle that averages the cost of bandwidth across the different providers in the network.
 
-To import existing Orchid accounts, you can go to the cog wheel next to Orchid Address -> Import which brings up the interface to either scan the QR code, or paste in the text of an Orchid key from the clipboard. That will import all the accounts associated with that key's address.
+Problems with your account balance, deposit or circuit will be denoted with a red !.
 
-### Create an Orchid account with crypto
+![Home screenshot](img/home.png "Home screen")
 
-To create an account you will need a wallet (we recommend [Metamask's Chrome plug-in](https://metamask.io/)) and the appropriate funds for the blockchain that you want to house the account. 
+### Circuit and account display
+The active circuit and associated Orchid accounts that are paying for each hop are displayed in the middle of the home screen above the Manage Accounts link. Tapping on an Orchid icon will display the balance of the account. This display will denote WireGuard and OpenVPN nodes using the appropriate icons and displays the entire circuit from left to right starting with the entry hop and ending with the exit hop. To change your active circuit, tap the '1 Hop Circuit' display to go into the circuit builder.
 
-The Orchid address and key are held in the app. To create an account with crypto, you will need the address from the app. Tapping on the number underneath the icon on the Manage Accounts screen will copy the address to your clipboard. Paste this information into the Address form field on the [dApp](https://account.orchid.com/), connect your wallet and then transfer crypto to create an account.
+### Orchid identity
+
+The hexidecimal address displayed for each hop  in the circuit display is the Orchid identity associated with that account. **NOTE:** An Orchid identity is NOT an Ethereum wallet, even though it appears like an Ethereum wallet.  Never send cryptocurrency to your Orchid identity. Doing so could cause loss of funds.
+
+An Orchid identity is your public address within the nanopayment system. When you first start the app, a new identity is created for you. You can easily create/delete/import/export identities in the account manager. You can add funds to an identity in the account manager on the xDAI chain using an in-app purchase or you can take the Orchid identity and add funds to it in the dapp.
+
+### Connecting
+For the connect button to become available, you will need a funded account and an active circuit. If the circuit widget displays "0 Hop Circuit" you will need to tap on it and go into the circuit builder to create a circuit before you can connect.
+
+After tapping connect Orchid will:
+
+* Display "Orchid connecting”
+* Pause all Internet traffic on the device
+* Call the default Ethereum RPC to access the stake-weighted random selection smart contract
+* Check to ensure that provider is in the Curator
+* Connect to the provider
+* Change the status to “Connected” and animate the logo
+
+Note that this process can sometimes take a few dozen seconds, depending on the status of Orchid’s providers. If the the process is stuck, it could be because the Orchid providers are rejecting your Orchid account or becuase your device is having trouble connecting to the default Ethereum RPC endpoint, and so cannot get information about the state of the provider directory.
+
+It is also possible to connect to a server, have the screen change states, and then have the connection die. Typically turning the app off/on can help kickstart the reconnect process whenever you experience no connectivity.
+
+## Account manager
+The account manager allows you to manage multiple accounts and associated identities. It is also where you can go to export and import an accounts. The identity is displayed under "Orchid Identity". The funder wallet address is displayed inside the account. The identity and funder wallet together are key bits of information for each account. Learn more about Orchid's layer 2 nanopayment system: [Orchid accounts](../accounts/).
+
+![Account manager screenshot](img/account-manager.png "Account manager screen")
+
+### Add funds with an in-app purchase
+Orchid includes a system for buying "prepaid access credits" to connect to our list of [preferred providers](https://www.orchid.com/preferredproviders). Orchid VPN providers that are not part of the preferred provider system cannot accept payments in prepaid access credits, which limits the number of providers available to you when using prepaid access credits. Also Orchid manages the funder wallet for the account. Therefore the crypto purchased via in-app payments is custodial, and not available for withdaw or transfer by the user.
+
+The add funds option is available on iOS/macOS and Android. You will need a valid form of payment attached to your Apple or Google account associated with the phone to make the in-app purchase. The fiat amount of the in-app payment will be denominated in your local currency. The purchase will convert the amount to xDAI and fund the selected identity on the xDai blockchain. The xDai chain is a stable payments blockchain designed for fast and inexpensive transactions. Orchid accounts created on xDai are viewable using the [BlockScout Explorer](https://blockscout.com/xdai/mainnet/address/0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82). Learn more about [xDai](https://www.xdaichain.com/). 
+
+When using the "Get started for $1" quick start, you will fund the account for $1. From the account manager you can add funds in three different preset amounts: $1, $5 and $20 which is more appropriate for topping up an account when funds run low. Note that there is no significant advantage in terms of pricing for purchasing a larger account. Orchid is simply converting your fiat to the xDAI stablecoin and placing those funds on-chain in your selected account. 
+
+The average price per GB across the network is denoted on the homescreen and varies from provider to provider.
+
+### Add funds with the dapp
+To fund an account yourself you will need a wallet (we primarily test with [Metamask's Chrome plug-in](https://metamask.io/)) and the appropriate funds for the blockchain that you want to house the account. For example, OXT on Ethereum. You will also need enough cyrpto to pay for the gas fees associated with executing the nanopayment contract.
+
+Note: Do not transfer OXT to your Orchid identity! That will not work. You will need to use the Orchid dapp in order to manage your on-chain funds yourself. All transactions using the dapp including funding/unlocking/withdrawing fund the account will require the user to pay for network fees on the blockchain that houses the account.
+
+Before you can use the Orchid dapp, you will also need an Orchid identity that you intend to fund. From the account manager you can tap on the hexidecimal string under Orchid Identity to copy the identity to your clipboard. Paste this information into the Identity field in the [dApp](https://account.orchid.com/) to manage that account.
 
 Learn more about how to [create an account](../orchid-dapp/#create-account) in the Orchid dApp.
 
-### Buy an Orchid account
+### Importing accounts
+To import existing Orchid accounts, tap manage accounts -> cog wheel -> import to bring up the interface to either scan the QR code or paste in the text of an exported identity. That will import all the accounts associated with that account's identity and make them available.
 
-In the iOS/macOS and Android app, you can simply buy a pre-created Orchid account filled with [xDai](../#xdai), by tapping 'Add Credit' from the accounts screen. These accounts come in 3 different sizes. The purchased accounts can only connect to our list of [preferred providers](https://www.orchid.com/preferredproviders).
+### Exporting accounts
+To export your selected Orchid account, tap the cog wheel in the upper right and then 'export'. You will then get a QR code of the key and a copy button that will copy the key into your clipboard.
 
-To add funds to an account that has a low balance, simply tap the 'Add Credit' button again with that Orchid address selected.
+With the key, the funds in the Orchid account can be spent or extracted. It is a good practice to save the key in your password manager or to store it somewhere safe. The best practice for storing all the relevant details of an Orchid account is to save the funding wallet as a username and the raw key as the password in a password manager.
 
-### Connecting
+## Circuit builder
+Orchid is the only multi-hop VPN application that allows you to make an "onion route" through multiple independent VPN servers with layered encryption between each node. This screen allows you to manage the VPN server connections that form your circuit.
 
-After buying, creating or importing your account, you will need to make one of the accounts active which means when you connect, you will start making nanopayments on the Orchid network. 
+A single hop circuit is similar to a typical VPN provider. Three hops is a standard "onion route". For more information about the implications of multiple hops, refer to the [FAQ section on Security](../faq/#security-and-privacy).
 
-Once you have an active account, your home screen will show the available balance and the current cost of bandwidth below the connect button. You can then tap Connect to connect to one of the decentralized VPN providers. If there is a problem with an Orchid account used in the profile, a red exclamation mark will appear next to the balance of the account. If this mark appears, the app will not be able to connect successfully to a provider. Read the Orchid account troubleshooting guide for help.
+Tap on the Add New Hop button to add a hop. Swipe a hop to the left or right to delete the hop. Long press on a hop to move it up or down in the circuit. The entry node is at the top of the screen and the exit node is at the bottom. While Orchid accounts are stored in the account manger, there is no way to store OpenVPN or WireGuard hops except by adding them to your active circuit. See below on how to save your circuit and export the entire configuration, which could help you manage inactive OpenVPN or WireGuard hops.
 
-After tapping connect, the Orchid app will do a number of things:
+![Circuit builder screenshot](img/circuit-builder.png "Circuit builder screen")
 
-* Show the “Connecting” status
-* Stop all internet traffic across the device (kill switch)
-* Go through the stake-weighted random selection to find a provider
-* Check to ensure that provider is in the Curator
-* Connect to the provider
-* If an error is hit, re-try
-* Change the status from “Connecting” to “Connected” and change the screen state from white to purple
+### Orchid hop
+Orchid hops are not a single specific server, but are rather defined as an Orchid account that will pay for a randomized node picked from the stake weighted random directory. When you connect, the app runs through the directory and gets back a server to use in the circuit. The randomness is an important part of Orchid. For detailed information on stake-weighted random selection and why it matters, read section 4.4 of the [Orchid whitepaper](https://www.orchid.com/whitepaper/english.pdf).
 
-Note that this process can sometimes take a few minutes, depending on the status of Orchid’s providers. It is also possible to connect to a server, have the screen change states, and then have the connection die. Typically turning the app off/on can help kickstart the reconnect process whenever you experience no connectivity.
+To add an Orchid node you will need to first select the identity of the payment account and then select the funding wallet. The Orchid identity and funding wallet are two key pieces of information that define an Orchid account.
 
-## Key concepts
+The app scans blockchains using RPC servers for active accounts. If account detection fails, it is possible to paste in the funding wallet address if you are certain
 
-### Orchid Address
+### WireGuard
+Orchid supports WireGuard. When you add a WireGuard server to your circuit, Orchid will connect to that specific WireGuard server. Tap Add a Hop and then paste in your WireGuard configuration file and hit save. 
 
-An Orchid Address will be created for you the first time you use the Orchid app. On a single Orchid Address, you can buy and create multiple Orchid Accounts which will appear in a list.
+### OpenVPN
+Orchid supports OpenVPN. Tap Add a Hop and then put in the information for that OpenVPN server. 
 
-You can also copy your Orchid Address (by clicking on the number below where it says 'Orchid Address' with an icon) and use it to create an Orchid Account funded using crypto currency by pasting it into the Signer Address field on the Create New Account page on the dApp at account.orchid.com
+OpenVPN configuration files can vary from VPN provider to VPN provider. We don't know if all configurations work; please email us at help at orchid dot com for support or to let us know what is working or not working for you. We appreciate your help!
 
-### Orchid Accounts
+Here are some items to note and check:
 
-To access the Orchid network of providers, you need either Orchid Credits purchased with your native currency within the Orchid App (iOS/macOS/Android), or an Orchid Account created and funded using crypto currency with the dApp at account.orchid.com
+* Orchid uses OpenVPN3 without command line flags
+* user/pwd is provided when adding the config. If your config contains `auth-user-pass` then try adding `client-cert-not-required` on a newline
+* try removing arguments to `auth-user-pass`
 
-Credits can be purchased in the iOS/macOS or Android app by going to Manage Accounts then Add Credit. While Orchid Credits are simpler to set up, creating an Orchid account using the dApp gives more control over the account.
+### Saving your circuit
+For Orchid hops, the app stores Orchid account information from the account manager. Deleting an Orchid hop doesn't destroy any information.
 
-Learn more about [Orchid accounts](../accounts/).
+For WireGuard and OpenVPN, there is no way to save each specific hop at this time. If you delete either type of hop, the config information that you entered will be deleted.
 
-### xDai
+One mechanism to save this information is to export your entire circuit configuration. You can save this as text and then re-add it later. While not perfect, this method will let you save circuits by exporting them. To export and import a circuit, go to the hamburger menu -> settings -> manage configuration -> export and save the text.
 
-The xDai chain is The xDai chain is a stable payments blockchain designed for fast and inexpensive transactions. Orchid accounts created on xDai are viewable using the [BlockScout Explorer](https://blockscout.com/xdai/mainnet). 
+## Traffic analyzer
+Orchid has a built-in traffic monitor that can run with or without an Orchid account (it's a free feature!). Using the traffic monitor is similar to WireShark--and Orchid works on iOS! The traffic monitor also works across every platform that Orchid supports: iOS, macOS and Android.
 
-Having Orchid accounts denominated in USD is beneficial for users as VPN providers charge for service in USD. xDai Orchid accounts are not subject to exchange risk such as accounts filled with other crypto currencies.
+To enable the traffic analyzer and review your devices connections, top on the traffic light icon in the upper right of the homescreen or tap the hamburger menu -> traffic analyzer.
 
-Learn more about [xDai](https://www.xdaichain.com/). 
+![Traffic analyzer screenshot](img/traffic-analyzer.png "Traffic analyzer screen")
 
-## Using the multi-hop interface
+### Traffic filters
+The traffic analyzer supports different ways to filter the traffic to better make sense of the connections your phone is making. 
 
-In order to continue using multi-hop, OpenVPN or WireGuard you will need to go to settings and 'Enable Multi-hop' which will switch back to an older version of the interface. In future releases, we will re-unify this interface to be compatible with the way we handle accounts on multiple chains. The following information in this section is relevant only if you have enabled multi-hop and want to use Orchid in a multi-hop mode.
+* Enter a hostname or partial hostname into the search bar to show only matching rows.
+* Enter multiple terms separated by a space to combine hostname filters using “AND” logic.  e.g. “goog api” will match rows including both “goog” and “api”, such as “api1.google.com”.
+* Use a “-” minus sign to exclude terms.  e.g. “-goog” will show all hostnames *except* those matching “goog”.  You can mix these to include and exclude combinations such as: “google -api” to find all “google” entries excluding those with “api”.
+* Use “prot:<name of protocol>”to filter by protocol name.  e.g. “prot:imap” will match all traffic identified as “imap” connections and  “-prot:dns” will filter out all DNS queries from the results.
 
-### Profile Manager (multi-hop interface)
+## Settings
+From the homescreen, swipe right or tap the hamburger menu in the top left. From there you can navigate to all the screens in the app, get in-app help, read the privacy policy, open source license and version number on the bottom. For settings, tap Settings.
 
-To access the profile manager, hit ‘Manage Profile’ on the Orchid home / status screen. 
+![Settings screenshot](img/settings.png "Settings screen")
 
-The profile manager is used to organize hops into the “profile” that your device will use to connect to the Internet. A typical VPN user only needs one hop. Hops can be mixed and matched here to form your own custom-styled circuits. For example, you could configure a profile with three different Orchid hops, so that your Internet traffic passes through three different servers between your device and the server you are accessing. 
+### Default Curator
+Orchid uses an on-chain curated list which filters the viable nodes to a custom subset called a curator. Orchid's official curator is `partners.orch1d.eth`. The Orchid client uses this list to prevent certain kinds of attacks from malicious exit nodes (e.g. SSL downgrade attacks) by using a default list with trusted VPN partners. 
 
-On this screen, you’ll also see ‘View Deleted Hops’ at the bottom. This is an easy way to restore recently removed hops.
+The curator is set for each Orchid hop. This setting is the default that will appear with you add a hop. By leaving this blank, you will remove curation and accept a connection to any provider you connect with in the directory.
 
-There is currently no way to save profiles, nor an easy way to switch between them. The profile manager allows you to only modify the active profile at any given time. If you delete hops, they are still saved and available to be restored.
+The curation system is open and it is possible for anyone to make a curated list.
 
-### Adding a hop (multi-hop interface)
+### Query balances
+Orchid uses access to RPC endpoints in order to get information about account balances. If you do not want Orchid to connect to RPC endpoints for security reasons, turn off query balances.
 
-To use Orchid's decentralized providers, you will need to add an Orchid hop to your profile. The WireGuard and OpenVPN options are for making connections to existing servers where you have login credentials. 
+### Advanced configuration: Ethereum RPC
+The advanced configuration box is where you can input custom commands into the client. Mainly this is used for testing purposes, however there are some user facing commands that are useful.
 
-Orchid hops will use the attached Orchid account to send payments and then connect to a random provider on the network.
+One of the most useful settings is the Ethereum RPC endpoint. For Orchid to connect, the app needs to access the Ethereum blockchain to access the stake weighted directory in order to find a provider. The default RPC uses [Alchemy](https://www.alchemy.com/). You can overide the default Ethereum with `rpc='<URL to ETH Endpoint>'` (no ; or other characters). There are many ways to get access to the latest state of the Ethereum blockchain:
 
-From the Manage Profile screen, tap "New Hop" and then select an option:
+* Cloudflare runs a public endpoint. To connect add this line: `rpc='https://cloudflare-eth.com'` with no ; or extra spaces
+* You can run your own Ethereum node using [GETH](https://geth.ethereum.org/), enable the RPC endpoint and then set the `rpc='<URL to ETH Endpoint>'
+* [Infura](https://infura.io/) offers free Ethereum endpoints after you register for an account
+* [POKT Network](https://www.pokt.network/) offers a free Ethereum endpoint after you register for an account
 
-### Linking an Orchid account (multi-hop interface)
+Note that both POKT and Infura will require an account. After you register, they will provide a unique URL that you can use in the advanced configuration.
 
-If you have created an Orchid account in the dApp, you can tap Link Orchid Account to simply scan in the QR code. The other option is to copy the text of the account into your clipboard and then tap the Paste option to read in the account that way.
+Without a functioning Ethereum endpoint, Orchid will not connect. When troubleshooting, use a browser to test and see if certain domains are blocked, such as Alchemy.com. If your browser cannot open Alchemy.com, then it is probably blocked in your region and you will need to find an alternative Ethereum RPC to connect.
 
-Orchid accounts are shareable, so if your friend sends you a QR code or the text of their account, you can link the account and use it by using the Link Orchid Account option.
+### Configuration management
+The configuration management screen is a way to export and import all of the accounts currently on the app along with the current active circuit. This is very useful for backing up all your accounts and current application state.
 
-### How to restore deleted hops (multi-hop interface)
+Note: the keys to your Orchid account(s) will be exposed when you export your configuration. Use caution when exporting and do not store your keys in plaintext.
 
-To restore deleted hops, go to ‘Manage Profile’ from the home / status screen. At the bottom you’ll see a link to ‘View Deleted Hops’.
+**Active circuit**: the active circuit contains all the information sent to the backend vpn tunnel to form the multi-hop route. For OpenVPN and WireGuard hops, the account information and details to connect to that VPN node is encoded. For each Orchid hop, there is a curator, the public address of the funding wallet, the Orchid account private key, chainid of where the account is housed, the currency and the RPC endpoint for accessing information on the blockchain where 
 
-You’ll need to:
+hops = [{protocol: "orch1d", curator: "partners.orch1d.eth", funder: "<public address of funder wallet>", secret: "<Orchid account key>", chainid: 100, currency: "DAI", rpc="https://rpc.xdaichain.com/"}];
 
-* Click into the hop you want to restore
-* Hit ‘Share Orchid Account’ and hit ‘Copy’
-* Return to the ‘Manage Profile’ screen, click ‘New Hop’ then ‘Link Orchid Account’ and ‘Paste’
-* Your deleted hop will now appear at the bottom of your list of hops
+**protocol**: the VPN tunnel protocol. Either "orch1d" for Orchid, "openvpn" for OpenVPN or "wireguard" for WireGaurd
+**curator**: for Orchid hops, this is the curator for this hop
+**funder**: the public address of the Ethereum wallet that created the account using the dapp. For xDAI accounts associated with the pre-paid access credit system, this address will be the custody wallet run by Orchid
+**secret**: the key of the Orchid account. Accessible from the account manager -> gear icon -> export
+**chainid**: the chainid of where the account is stored
+**currency**: the currency of the account balance and deposit
+**rpc**: the RPC endpoint used to look up account information on that chain
 
-### A note on multiple hops (multi-hop interface)
+## Windows Beta
 
-Orchid supports the use of multiple hops, allowing your Internet connection to be routed through an arbitrary number of VPN servers before reaching its destination. For more information about the implications of multiple hops, refer to the [FAQ section on Security](../faq/#security-and-privacy).
+*Note: this is an early beta release that requires some effort on the command line in addition to manually editing files and installing a driver. Thank you for trying out our beta! Our product team would love to hear your feedback or help needed on our [Discord Channel](https://discord.gg/4ed63G7my5)*
 
-Different protocols can be used with the multiple hop feature. For example, you could set up your traffic to go to three different Orchid servers, three different WireGuard servers or a combination therein. 
+### Download the Orchid client for Windows on Github
 
-### OpenVPN (multi-hop interface)
+- Go to the [Orchid releases page](https://github.com/OrchidTechnologies/orchid/releases)
+- Download the most recent `orchidcd-win_.0.x.x.exe` file and ensure it is at least version **0.9.35 or greater**
 
-To use an OpenVPN hop, you’ll need your username, password and configuration file from your VPN provider. You can usually find these in your provider VPN account under manual configuration or OpenVPN configuration.
+    **orchidcd**-win\_.0.x.x.exe is the client, the other **orchidd**-win\_.0.x.x.exe executable is the server
 
-To use your OpenVPN configuration, go to ‘Manage Profile’ and ‘New Hop’ then ‘Enter OpenVPN Config’.
+### Install the OpenVPN Tap driver
 
-### WireGuard (multi-hop interface)
+- Download the Tap driver here: <https://build.openvpn.net/downloads/releases/tap-windows-9.24.2-I601-Win10.exe>
+- Run the exe file and follow the prompts to install the Tap driver
+- Restart the machine
 
-To use your OpenVPN configuration, go to ‘Manage Profile’ and ‘New Hop’ then ‘Enter WireGuard Config’.
+### Prepare your configuration file
 
-Paste your WireGuard configuration into the text box and tap save in the upper right corner. The WireGuard account will now become an active hop available at the manage profile screen.
+- Read the above section on Configuration Management. You will need to export or create a complete configuration file that includes the details of all your hops. This can be done simply by exporting your active circuit from the Settings -> Configuration Management -> Export Hops Configuration and then coppying the line starting at "hops =". For XDAI accounts, some modifications are neccesary.
 
-## Using the traffic monitor
+- Paste your Circuit from the configuration manager into a text editor. Note if you have an OXT account on Ethereum or an XDAI account on xDAI
 
-Orchid has a built-in traffic monitor that can run with or without an Orchid account. Using the traffic monitor is similar to WireShark--and Orchid works on iOS! The traffic monitor also works across every platform that Orchid supports.
+- Enter a newline and add in the Ethereum RPC with `rpc = "https://cloudflare-eth.com/";`
 
-There are two ways to enable the traffic monitor:
+- The final format should look like this for OXT accounts on Ethereum: **Note: funder starts with 0x and secret does not**
+    ```js
+    hops = [{curator: "partners.orch1d.eth", protocol: "orchid", funder: "0x000000000000000000000000000000000000000", secret: "00000000000000000000000000000000000000000000000000000000000000000"}];
+    rpc = "https://cloudflare-eth.com/";
+    ```
+- To use XDAI accounts on xDAI, there is an extra step. You will need to add `, rpc="https://rpc.xdaichain.com/` after the currency variable **for each hop denoted in {}**. The final format should look like this:
 
-* If you have a connection with at least one hop set up, when your connection is active you will be able to use the traffic monitor
-* If you have no hops set up, you can go to ‘Settings’ and then you can enable ‘Allow No Hop VPN’
+    ```js
+    hops = [{protocol: "orch1d", curator: "partners.orch1d.eth", funder: "0x000000000000000000000000000000000000000", secret: "00000000000000000000000000000000000000000000000000000000000000000", chainid: 100, currency: "DAI", rpc="https://rpc.xdaichain.com/"}];
+    rpc = "https://cloudflare-eth.com/";
+    ```
 
-Once it’s enabled, you can find the traffic monitor from the home screen by opening the menu from the icon on the top left of the screen. ‘Traffic Monitor’ is at the bottom of the menu.
 
-### Filters
+- Save the file as `'orchid.cfg'`
 
-Enter a hostname or partial hostname into the search bar to show only matching rows.
-Enter multiple terms separated by a space to combine hostname filters using “AND” logic.  e.g. “goog api” will match rows including both “goog” and “api”, such as “api1.google.com”.
-Use a “-” minus sign to exclude terms.  e.g. “-goog” will show all hostnames *except* those matching “goog”.  You can mix these to include and exclude combinations such as: “google -api” to find all “google” entries excluding those with “api”.
-Use “prot:<name of protocol>”to filter by protocol name.  e.g. “prot:imap” will match all traffic identified as “imap” connections and  “-prot:dns” will filter out all DNS queries from the results.
+    - In Notepad, you will need to make sure `.txt` is not appended. To do that, when you hit Save, select the “Save as type” dialog box and select “All Files.” This will allow you to save the file with the `.cfg` file extension.
+
+    - Save as `'orchid.cfg'` and make sure it is in the same folder as the .exe file\
+
+### Run the Orchid client
+
+- Open the command prompt as Administrator
+    - Click the Start/Windows icon button
+    - Type `CMD`
+    - Right click the Command Prompt icon and select `"Run as administrator"`
+- At the command line prompt, navigate to the folder where you downloaded the .exe and saved the .cfg file
+    - An easy way to do this is to copy the file path from the File Explorer top bar and then typing the command `"dir <pasted in filepath>"`
+- To run orchid, type `'orchidcd-win.exe --config orchid.cfg'`
+- To stop, terminate the program using CTRL+C
+
+
 
 ## Gathering Logs
 
