@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-git submodule foreach 'git fetch -v && git remote set-head origin -a'
+# XXX: min-zlib/googletest is throwing "error: Cannot determine remote HEAD" :/
+git submodule foreach 'git fetch -v && (git remote set-head origin -a || true)'
 
 declare -A head
 
