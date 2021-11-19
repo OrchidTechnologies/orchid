@@ -31,6 +31,15 @@ class TokenTypes {
           BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
       decimals: 18,
       chainId: Chains.XDAI_CHAINID);
+
+  // ignore: non_constant_identifier_names
+  static const TokenType TOK = TokenType(
+      name: 'TOK',
+      symbol: 'TOK',
+      exchangeRateSource:
+          BinanceExchangeRateSource(symbolOverride: 'ETH', inverted: true),
+      decimals: 18,
+      chainId: Chains.GANACHE_TEST_CHAINID);
 }
 
 // ERC20 Token type
@@ -65,6 +74,10 @@ class TokenType {
   // From the integer denomination value e.g. WEI for ETH
   Token fromInt(BigInt intValue) {
     return Token(this, intValue);
+  }
+
+  Token get zero {
+    return fromInt(BigInt.zero);
   }
 
   // From a number representing the nominal token denomination, e.g. 1.0 OXT
@@ -141,6 +154,14 @@ class Token {
 
   Token operator -(Token other) {
     return subtract(other);
+  }
+
+  bool operator <(Token other) {
+    return intValue < other.intValue;
+  }
+
+  bool operator >(Token other) {
+    return intValue > other.intValue;
   }
 
   Token add(Token other) {

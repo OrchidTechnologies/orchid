@@ -71,6 +71,11 @@ class OrchidTextField extends StatelessWidget {
                   keyboardType: numeric
                       ? TextInputType.numberWithOptions(decimal: true)
                       : null,
+                  inputFormatters: numeric
+                      ? <TextInputFormatter>[
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                        ]
+                      : null,
                 ),
               ),
             ),

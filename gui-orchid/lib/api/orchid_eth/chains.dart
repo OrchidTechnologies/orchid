@@ -8,6 +8,8 @@ import 'token_type.dart';
 class Chains {
   // ignore: non_constant_identifier_names
   static const int ETH_CHAINID = 1;
+  static const int XDAI_CHAINID = 100;
+  static const int GANACHE_TEST_CHAINID = 1337;
 
   static final _defaultEthereumProviderUrl = 'htt' +
       'ps://et' +
@@ -36,11 +38,10 @@ class Chains {
     name: "Ethereum",
     nativeCurrency: TokenTypes.ETH,
     providerUrl: defaultEthereumProviderUrl,
+    // TODO: Missing ETH icon
     icon: SvgPicture.asset('assets/svg/orchid_icon.svg'),
   );
 
-  // ignore: non_constant_identifier_names
-  static const int XDAI_CHAINID = 100;
   static Chain xDAI = Chain(
     chainId: XDAI_CHAINID,
     name: "xDAI",
@@ -50,16 +51,28 @@ class Chains {
     icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
   );
 
-  // TODO: Embed the chain.info db here as we do in the dapp.
+  // ignore: non_constant_identifier_names
+  static Chain GanacheTest = Chain(
+    chainId: GANACHE_TEST_CHAINID,
+    name: "Ganache Test",
+    nativeCurrency: TokenTypes.TOK,
+    providerUrl: 'http://127.0.0.1:7545/',
+    icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+  );
+
+  static Map<int, Chain> map = {
+    Ethereum.chainId: Ethereum,
+    xDAI.chainId: xDAI,
+    GanacheTest.chainId: GanacheTest,
+  };
+
   // Get the chain for chainId
   static Chain chainFor(int chainId) {
-    switch (chainId) {
-      case ETH_CHAINID:
-        return Ethereum;
-      case XDAI_CHAINID:
-        return xDAI;
+    var chain = map[chainId];
+    if (chain == null) {
+      throw Exception("no chain for chainId: $chainId");
     }
-    throw Exception("no chain for chainId: $chainId");
+    return chain;
   }
 }
 
