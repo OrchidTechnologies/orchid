@@ -15,15 +15,13 @@ void main() async {
   OrchidRoutingStatus().beginPollingStatus();
   OrchidAPI().applicationReady();
   OrchidPlatform.pretendToBeAndroid =
-      (await OrchidUserConfig().getUserConfigJS())
-          .evalBoolDefault('isAndroid', false);
+      OrchidUserConfig().getUserConfigJS().evalBoolDefault('isAndroid', false);
   if (OrchidPlatform.isApple || OrchidPlatform.isAndroid) {
     OrchidPurchaseAPI().initStoreListener();
   }
   var languageOverride =
       (const String.fromEnvironment('language', defaultValue: null)) ??
-          (await OrchidUserConfig().getUserConfigJS())
-              .evalStringDefault("lang", null);
+          OrchidUserConfig().getUserConfigJS().evalStringDefault("lang", null);
   if (languageOverride != null &&
       OrchidPlatform.hasLanguage(languageOverride)) {
     OrchidPlatform.languageOverride = languageOverride;

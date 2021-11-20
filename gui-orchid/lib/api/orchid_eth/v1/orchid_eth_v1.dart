@@ -15,6 +15,7 @@ import '../v0/orchid_eth_v0.dart';
 import '../v0/orchid_contract_v0.dart';
 import 'orchid_contract_v1.dart';
 
+// TODO: Abstract this so that the dapp can sub in the web3 version
 class OrchidEthereumV1 {
   static OrchidEthereumV1 _shared = OrchidEthereumV1._init();
 
@@ -30,7 +31,7 @@ class OrchidEthereumV1 {
   /// Get gas price cached
   Future<Token> getGasPrice(Chain chain, {bool refresh = false}) async {
     // Allow override via config for testing
-    var jsConfig = await OrchidUserConfig().getUserConfigJS();
+    var jsConfig = OrchidUserConfig().getUserConfigJS();
     double overrideValue = jsConfig.evalDoubleDefault('gasPrice', null);
     if (overrideValue != null) {
       TokenType tokenType = chain.nativeCurrency;
@@ -67,7 +68,7 @@ class OrchidEthereumV1 {
     var startBlock = 0; // per chain
     var params = [
       {
-        "address": "${await OrchidContractV1.lotteryContractAddressV1}",
+        "address": "${OrchidContractV1.lotteryContractAddressV1}",
         "topics": [
           OrchidContractV1.createEventHashV1, // topic[0]
           [], // no token address specified for topic[1]
@@ -108,7 +109,7 @@ class OrchidEthereumV1 {
     // construct the abi encoded eth_call
     var params = [
       {
-        "to": "${await OrchidContractV1.lotteryContractAddressV1}",
+        "to": "${OrchidContractV1.lotteryContractAddressV1}",
         "data": "0x${OrchidContractV1.readMethodHash}"
             "${address(EthereumAddress.zero)}"
             "${address(funder)}"
@@ -118,6 +119,7 @@ class OrchidEthereumV1 {
     ];
 
     String result = await ethCall(url: chain.providerUrl, params: params);
+    log("XXX: lottery pot fetch result = $result");
     if (!result.startsWith("0x")) {
       log("Error result: $result");
       throw Exception();

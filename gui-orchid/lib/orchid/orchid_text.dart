@@ -221,6 +221,19 @@ extension OrchidTextExtensions on Text {
     return this.copyWith(style: this.style.copyWith(height: height));
   }
 
+  Text get white {
+    return this.copyWith(style: this.style.copyWith(color: Colors.white));
+  }
+
+  Text get black {
+    return this.copyWith(style: this.style.copyWith(color: Colors.black));
+  }
+
+  Text get tappable {
+    return this
+        .copyWith(style: this.style.copyWith(color: OrchidColors.tappable));
+  }
+
   Text get center {
     return this.copyWith(textAlign: TextAlign.center);
   }

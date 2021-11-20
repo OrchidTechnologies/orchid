@@ -10,6 +10,7 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 
+/// Orchid account details including pot balance and market conditions.
 abstract class AccountDetail {
   Account get account;
 
@@ -86,7 +87,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       signerAddress = await account.signerAddress;
     }
 
-    //log("polling account details: signer = $resolvedSigner, funder = $funder");
+    log("polling account details: signer = $signerAddress, funder = $funder");
     if (_balancePollInProgress) {
       return;
     }
