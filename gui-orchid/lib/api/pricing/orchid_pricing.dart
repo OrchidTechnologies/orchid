@@ -61,7 +61,7 @@ class BinanceExchangeRateSource extends ExchangeRateSource {
       : super(symbolOverride: symbolOverride); // Binance exchange rates
 
   // https://api.binance.com/api/v3/avgPrice?symbol=ETHUSDT
-  String url(TokenType tokenType) {
+  String _url(TokenType tokenType) {
     var symbol = symbolOverride ?? tokenType.symbol.toUpperCase();
     var pair = inverted ? 'USDT$symbol' : '${symbol}USDT';
     return 'https://api.binance.com/api/v3/avgPrice?symbol=$pair';
@@ -76,8 +76,8 @@ class BinanceExchangeRateSource extends ExchangeRateSource {
   Future<double> _getPrice(TokenType tokenType) async {
     log("pricing: Binance fetching rate for: $tokenType");
     try {
-      var response = await http.get(url(tokenType),
-          headers: {'referer': 'https://account.orchid.com'});
+      var response = await http.get(_url(tokenType),
+          headers: {'Referer': 'https://account.orchid.com'});
       if (response.statusCode != 200) {
         throw Exception("Error status code: ${response.statusCode}");
       }

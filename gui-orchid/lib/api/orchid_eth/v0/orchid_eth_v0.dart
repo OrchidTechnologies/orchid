@@ -200,7 +200,7 @@ class OrchidEthereumV0 {
     @required String method,
     List<Object> params = const [],
   }) async {
-    return ethJsonRpcCall(url: await _rpc, method: method, params: params);
+    return ethJsonRpcCall(url: _rpc, method: method, params: params);
   }
 
   /// Ethereum json rpc call
