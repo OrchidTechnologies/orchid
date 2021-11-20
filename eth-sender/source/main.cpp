@@ -574,11 +574,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
         const auto csv(Load(std::to_string(uint64_t(*nonce_)) + ".csv"));
         for (auto line : Split(csv, {'\n'})) {
-            if (line.size() == 0 || line[0] == '#')
+            if (line.empty() || line[0] == '#')
                 continue;
             if (line[line.size() - 1] == '\r') {
                 line -= 1;
-                if (line.size() == 0)
+                if (line.empty())
                     continue;
             }
 
@@ -713,11 +713,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
         const auto csv(Load(std::to_string(uint64_t(*nonce_)) + ".csv"));
         for (auto line : Split(csv, {'\n'})) {
-            if (line.size() == 0 || line[0] == '#')
+            if (line.empty() || line[0] == '#')
                 continue;
             if (line[line.size() - 1] == '\r') {
                 line -= 1;
-                if (line.size() == 0)
+                if (line.empty())
                     continue;
             }
 

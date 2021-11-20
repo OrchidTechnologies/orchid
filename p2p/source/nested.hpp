@@ -42,7 +42,7 @@ template <typename Type_>
 std::string Stripped(Type_ value) {
     Number<decltype(value)> data(value);
     auto span(data.span());
-    while (span.size() != 0 && span[0] == 0)
+    while (!span.empty() && span[0] == 0)
         ++span;
     return {reinterpret_cast<const char *>(span.data()), span.size()};
 }

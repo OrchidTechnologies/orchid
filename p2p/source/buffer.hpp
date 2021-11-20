@@ -75,6 +75,10 @@ class Range {
     size_t size() const {
         return size_;
     }
+
+    bool empty() const {
+        return size() == 0;
+    }
 };
 
 class Region;
