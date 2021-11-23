@@ -83,7 +83,8 @@ class Release {
             style: OrchidText.body1,
           ),
           pady(16),
-          Text(s.quickStartFor1, style: headingStyle),
+          // TODO: Localize value
+          Text(s.quickStartFor1('\$1'), style: headingStyle),
           pady(8),
           Text(
             s.weAddedAMethodToPurchaseAnOrchidAccountAnd,

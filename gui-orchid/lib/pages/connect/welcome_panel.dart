@@ -225,7 +225,8 @@ class _WelcomePanelState extends State<WelcomePanel> {
         pady(40),
         OrchidActionButton(
           enabled: true,
-          text: s.getStartedFor1,
+          // TODO: Localize value
+          text: s.getStartedFor1('\$1'),
           onPressed: () {
             setState(() {
               _state = WelcomePanelState.confirm;
