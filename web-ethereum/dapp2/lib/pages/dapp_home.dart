@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
@@ -14,6 +15,7 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_logo.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
 import 'package:orchid/util/on_off.dart';
 import 'account_manager/account_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -50,14 +52,12 @@ class _DappHomeState extends State<DappHome> {
 
   void initStateAsync() async {
     // TODO: TESTING
-    /*
-    await Future.delayed(Duration(seconds: 0), () {
-      _connectEthereum();
-      _signer =
-          EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
-      _pastedSignerField.text = _signer.toString();
-    });
-     */
+    // await Future.delayed(Duration(seconds: 0), () {
+    //   _connectEthereum();
+    //   _signer =
+    //       EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
+    //   _pastedSignerField.text = _signer.toString();
+    // });
   }
 
   bool get _connected {
@@ -65,11 +65,15 @@ class _DappHomeState extends State<DappHome> {
   }
 
   void _textFieldChanged() {
+    var oldSigner = _signer;
     try {
       _signer = EthereumAddress.from(_pastedSignerField.text);
       log("signer = $_signer");
     } catch (err) {
       _signer = null;
+    }
+    if (_signer != oldSigner) {
+      _selectedAccountChanged();
     }
     setState(() {});
   }
@@ -84,7 +88,8 @@ class _DappHomeState extends State<DappHome> {
     _accountDetail = null;
   }
 
-  void _walletAddressChanged() async {
+  // TODO: replace this account detail management with a provider builder
+  void _selectedAccountChanged() async {
     _clearAccountDetail();
     if (_signer != null && _context?.walletAddress != null) {
       var account = Account.fromSignerAddress(
@@ -378,8 +383,7 @@ class _DappHomeState extends State<DappHome> {
       log("web3: disconnected");
     });
 
-    _walletAddressChanged();
-    setState(() {});
+    _contextChanged();
     log("new context = $_context");
   }
 
@@ -392,8 +396,15 @@ class _DappHomeState extends State<DappHome> {
       _context = await OrchidWeb3Context.fromWalletConnect(
           _context.walletConnectProvider);
     }
-    _walletAddressChanged();
     log("updated context = $_context");
+    _contextChanged();
+  }
+
+  // The context was replaced or updated (wallet address, chain id, connection)
+  void _contextChanged() async {
+    _selectedAccountChanged();
+    OrchidEthereumV1.setWeb3Provider(OrchidEthereumV1Web3Impl(_context));
+    setState(() {});
   }
 
   void _disconnect() async {

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_eth/abi_encode.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
+import 'package:orchid/api/orchid_eth/eth_rpc.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
@@ -263,13 +264,12 @@ class OrchidPacSeller {
     var params = [
       {
         "to": "$sellerContractAddress",
-        "data": "0x${readMethodHash}"
-            "${AbiEncode.address(signer)}"
+        "data": "0x$readMethodHash${AbiEncode.address(signer)}"
       },
       "latest"
     ];
     String result =
-        await OrchidEthereumV1.ethCall(url: chain.providerUrl, params: params);
+        await EthereumJsonRpc.ethCall(url: chain.providerUrl, params: params);
     var buff = HexStringBuffer(result);
     var nonce = buff.takeUint256().toUnsigned(64).toInt();
     log("pac: getL3Nonce result = $result, nonce = $nonce");

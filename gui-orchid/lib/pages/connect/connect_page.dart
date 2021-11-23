@@ -157,7 +157,7 @@ class _ConnectPageState extends State<ConnectPage>
 
     // update bandwidth price
     try {
-      _bandwidthPrice = await OrchidEthereumV1.getBandwidthPrice();
+      _bandwidthPrice = await OrchidBandwidthPricing.getBandwidthPrice();
     } catch (err) {
       log("error getting bandwidth price: $err");
     }

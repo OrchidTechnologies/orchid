@@ -1,4 +1,3 @@
-import 'dart:js_util';
 
 import 'package:flutter_web3/flutter_web3.dart' as flutter_web3;
 import 'package:flutter_web3/flutter_web3.dart';
@@ -11,6 +10,7 @@ import 'package:orchid/api/orchid_log_api.dart';
 import '../orchid_web3_context.dart';
 import 'orchid_contract_web3_v1.dart';
 
+/// Read/write calls used in the dapp.
 class OrchidWeb3V1 {
   final OrchidWeb3Context context;
   final flutter_web3.Contract _lottery;
@@ -45,21 +45,6 @@ class OrchidWeb3V1 {
     throw UnimplementedError();
   }
 
-  /*
-  async orchidAddFunds(
-    funder: EthAddress, signer: EthAddress, addBalance: LotFunds, addEscrow: LotFunds, wallet: Wallet
-  ): Promise<string> {
-
-    async function doFundTx() {
-      return new Promise<string>(function (resolve, reject) {
-      });
-    }
-
-    // The UI monitors the funding tx.
-    return doFundTx();
-  }
-   */
-
   /// Transfer the int amount from the user to the specified lottery pot address.
   /// If the total exceeds walletBalance the amount value is automatically reduced.
   Future< /*TransactionId*/ String> orchidAddFunds(
@@ -92,13 +77,6 @@ class OrchidWeb3V1 {
 
     // function edit(address signer, int256 adjust, int256 warn, uint256 retrieve) {
     var contract = _lottery.connect(context.web3.getSigner());
-
-    // "function read(IERC20 token, address funder, address signer) external view returns (uint256, uint256)",
-    // var read = await contract.call('read', [
-    //   EthereumAddress.zero.toString(prefix: false),
-    //   wallet.address.toString(prefix: false),
-    //   signer.toString(prefix: false),
-    // ]);
 
     var tx = await contract.send(
       'edit',

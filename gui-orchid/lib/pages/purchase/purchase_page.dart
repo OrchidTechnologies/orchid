@@ -72,7 +72,7 @@ class _PurchasePageState extends State<PurchasePage> {
       setState(() {});
     }
 
-    _bandwidthPrice = await OrchidEthereumV1.getBandwidthPrice();
+    _bandwidthPrice = await OrchidBandwidthPricing.getBandwidthPrice();
     if (mounted) {
       setState(() {});
     }

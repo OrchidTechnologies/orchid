@@ -70,7 +70,7 @@ class Crypto {
       }
       var keyInt = BigInt.parse(text, radix: 16);
       if (keyInt > BigInt.from(0) &&
-          keyInt < ((BigInt.from(1) << 256) - BigInt.from(1))) {
+          keyInt < ((BigInt.one << 256) - BigInt.one)) {
         return keyInt;
       } else {
         throw Exception("invalid range");
@@ -204,8 +204,12 @@ class StoredEthereumKey {
     return {for (var key in list) key.uid: key};
   }
 
-  static StoredEthereumKey find(List<StoredEthereumKey> list, String uid) {
+  static StoredEthereumKey findByUid(List<StoredEthereumKey> list, String uid) {
     return list.firstWhere((key) => key.uid == uid, orElse: () => null);
+  }
+
+  static StoredEthereumKey findByAddress(List<StoredEthereumKey> list, EthereumAddress signerAddress) {
+    return list.firstWhere((key) => key.address == signerAddress, orElse: () => null);
   }
 
   static StoredEthereumKey generate() {

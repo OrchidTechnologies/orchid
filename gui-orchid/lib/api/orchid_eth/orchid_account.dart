@@ -49,12 +49,12 @@ class Account {
     int chainId,
     EthereumAddress funder,
   }) : this.base(
-    signerKeyUid: signerKey.keyUid,
-    resolvedSignerAddress: null,
-    version: version,
-    chainId: chainId,
-    funder: funder,
-  );
+          signerKeyUid: signerKey.keyUid,
+          resolvedSignerAddress: null,
+          version: version,
+          chainId: chainId,
+          funder: funder,
+        );
 
   /// Create an account with an external signer address (no key)
   Account.fromSignerAddress({
@@ -89,7 +89,7 @@ class Account {
     if (account.isV0) {
       return OrchidEthereumV0.getLotteryPot(account.funder, signer);
     } else {
-      return OrchidEthereumV1.getLotteryPot(
+      return OrchidEthereumV1().getLotteryPot(
           chain: account.chain, funder: account.funder, signer: signer);
     }
   }
@@ -142,8 +142,9 @@ class Account {
   StoredEthereumKeyRef get signerKeyRef {
     if (signerKeyUid == null) {
       throw Exception(
-          "Account does not have stored key: $resolvedSignerAddress");
+          "Account does not resolve to a stored key: $resolvedSignerAddress");
     }
+
     return StoredEthereumKeyRef(this.signerKeyUid);
   }
 
@@ -158,7 +159,7 @@ class Account {
     return resolvedSignerAddress;
   }
 
-  // Resolve the signer address using the supplied keystore. (non-async)
+  // Resolve the signer address using the supplied keystore.
   EthereumAddress signerAddressFrom(List<StoredEthereumKey> keys) {
     return signerKeyRef.getFrom(keys).get().address;
   }

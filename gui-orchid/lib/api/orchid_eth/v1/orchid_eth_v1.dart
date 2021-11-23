@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/orchid_eth/eth_rpc.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/util/cacheable.dart';
@@ -11,27 +12,53 @@ import '../chains.dart';
 import '../orchid_account.dart';
 import '../../orchid_budget_api.dart';
 import '../../orchid_crypto.dart';
-import '../v0/orchid_eth_v0.dart';
 import '../v0/orchid_contract_v0.dart';
 import 'orchid_contract_v1.dart';
 
-// TODO: Abstract this so that the dapp can sub in the web3 version
-class OrchidEthereumV1 {
-  static OrchidEthereumV1 _shared = OrchidEthereumV1._init();
+/// This API describes the read-only eth calls shared by the dapp and the app
+/// and allows them to be overridden in the web3 context.
+abstract class OrchidEthereumV1 {
+  static OrchidEthereumV1 _shared;
 
-  OrchidEthereumV1._init();
+  // This method is used by the dapp to set a web3 provider implementation
+  static setWeb3Provider(OrchidEthereumV1 impl) {
+    _shared = impl;
+  }
 
+  /// Return the default eth api provider.  This will be the direct
+  /// json rpc endpoint for the chain unless overridden by providing a web3
+  /// context provider.
   factory OrchidEthereumV1() {
+    if (_shared == null) {
+      _shared = OrchidEthereumV1JsonRpcImpl.init();
+    }
     return _shared;
   }
 
+  Future<Token> getGasPrice(Chain chain, {bool refresh = false});
+
+  Future<List<Account>> discoverAccounts(
+      {Chain chain, StoredEthereumKey signer});
+
+  Future<LotteryPot> getLotteryPot(
+      {Chain chain, EthereumAddress funder, EthereumAddress signer});
+}
+
+/// Implementation that uses the chain's default json rpc endpoint
+class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
+  OrchidEthereumV1JsonRpcImpl.init();
+
+  // TODO: gas price caching should probably be consolidated at the Chain level.
   Cache<Chain, Token> _gasPriceCache =
       Cache(duration: Duration(seconds: 15), name: 'gas price');
 
+  // TODO: gas price should probably be consolidated at the Chain level.
+  // TODO: and shared with the web3 impl.
   /// Get gas price cached
   Future<Token> getGasPrice(Chain chain, {bool refresh = false}) async {
     // Allow override via config for testing
     var jsConfig = OrchidUserConfig().getUserConfigJS();
+    // TODO: gas price override should be per-chain
     double overrideValue = jsConfig.evalDoubleDefault('gasPrice', null);
     if (overrideValue != null) {
       TokenType tokenType = chain.nativeCurrency;
@@ -45,7 +72,7 @@ class OrchidEthereumV1 {
   Future<Token> _fetchGasPrice(Chain chain) async {
     log("Fetching gas price for chain: $chain");
     String result =
-        await jsonRPC(url: chain.providerUrl, method: "eth_gasPrice");
+        await _jsonRPC(url: chain.providerUrl, method: "eth_gasPrice");
     if (result.startsWith('0x')) {
       result = result.substring(2);
     }
@@ -60,7 +87,7 @@ class OrchidEthereumV1 {
     event Update(bytes32 indexed key, uint256 escrow_amount);
     event Delete(bytes32 indexed key, uint256 unlock_warned);
    */
-  Future<List<OrchidCreateEvent>> getCreateEvents(
+  Future<List<OrchidCreateEvent>> _getCreateEvents(
     Chain chain,
     EthereumAddress signer,
   ) async {
@@ -78,7 +105,7 @@ class OrchidEthereumV1 {
         "fromBlock": "0x" + startBlock.toRadixString(16)
       }
     ];
-    dynamic results = await jsonRPC(
+    dynamic results = await _jsonRPC(
         url: chain.providerUrl, method: "eth_getLogs", params: params);
     List<OrchidCreateEvent> events =
         results.map<OrchidCreateEvent>((var result) {
@@ -87,10 +114,14 @@ class OrchidEthereumV1 {
     return events;
   }
 
+  // Note: This method requires signer key because to produce orchid accounts that
+  // Note: are capable of signing.  If we need this in the web3 context we should
+  // Note: provide another version that accepts the signer address and produces
+  // Note: tracked accounts by address.
   Future<List<Account>> discoverAccounts(
       {Chain chain, StoredEthereumKey signer}) async {
     List<OrchidCreateEvent> createEvents =
-        await getCreateEvents(chain, signer.address);
+        await _getCreateEvents(chain, signer.address);
     return createEvents.map((event) {
       return Account.fromSignerKey(
           version: 1,
@@ -101,7 +132,7 @@ class OrchidEthereumV1 {
   }
 
   // Note: this method's results are cached by the Account API
-  static Future<LotteryPot> getLotteryPot(
+  Future<LotteryPot> getLotteryPot(
       {Chain chain, EthereumAddress funder, EthereumAddress signer}) async {
     log("fetch pot V1 for: $funder, $signer, chain = $chain");
 
@@ -118,22 +149,28 @@ class OrchidEthereumV1 {
       "latest"
     ];
 
-    String result = await ethCall(url: chain.providerUrl, params: params);
+    String result =
+        await EthereumJsonRpc.ethCall(url: chain.providerUrl, params: params);
     log("XXX: lottery pot fetch result = $result");
+    return parseLotteryPotRpcResult(result, chain);
+  }
+
+  static LotteryPot parseLotteryPotRpcResult(String result, Chain chain) {
     if (!result.startsWith("0x")) {
       log("Error result: $result");
-      throw Exception();
+      throw Exception("can't parse lottery pot rpc result: $result");
     }
-
     // Parse the results:
-    //   returns (uint256, uint256, uint256) escrow_amount, warned, bound
-
+    // struct Account {
+    //         uint256 escrow_amount_;
+    //         uint256 unlock_warned_;
+    //     }
     var buff = HexStringBuffer(result);
     BigInt escrowAmount = buff.takeUint256();
     TokenType tokenType = chain.nativeCurrency;
 
     Token deposit = tokenType.fromInt(escrowAmount >> 128);
-    BigInt maskLow128 = (BigInt.from(1) << 128) - BigInt.from(1);
+    BigInt maskLow128 = (BigInt.one << 128) - BigInt.one;
     Token balance = tokenType.fromInt(escrowAmount & maskLow128);
     BigInt unlock = buff.takeUint256();
     //EthereumAddress verifier = EthereumAddress(buff.takeAddress());
@@ -141,6 +178,17 @@ class OrchidEthereumV1 {
     return LotteryPot(balance: balance, deposit: deposit, unlock: unlock);
   }
 
+  static Future<dynamic> _jsonRPC({
+    @required String url,
+    @required String method,
+    List<Object> params = const [],
+  }) async {
+    return EthereumJsonRpc.ethJsonRpcCall(
+        url: url, method: method, params: params);
+  }
+}
+
+class OrchidBandwidthPricing {
   static SingleCache<USD> _bandwidthPriceCache =
       SingleCache(duration: Duration(seconds: 60), name: "bandwidth price");
 
@@ -162,8 +210,8 @@ class OrchidEthereumV1 {
       "latest"
     ];
 
-    String result =
-        await ethCall(url: Chains.Ethereum.providerUrl, params: params);
+    String result = await EthereumJsonRpc.ethCall(
+        url: Chains.Ethereum.providerUrl, params: params);
     if (!result.startsWith("0x")) {
       log("Error result: $result");
       throw Exception();
@@ -173,22 +221,5 @@ class OrchidEthereumV1 {
     var buff = HexStringBuffer(result);
     BigInt value = buff.takeUint256();
     return USD(value.toDouble() / 1e5);
-  }
-
-  static Future<dynamic> ethCall({
-    @required String url,
-    List<Object> params = const [],
-  }) async {
-    return OrchidEthereumV0.ethJsonRpcCall(
-        url: url, method: "eth_call", params: params);
-  }
-
-  static Future<dynamic> jsonRPC({
-    @required String url,
-    @required String method,
-    List<Object> params = const [],
-  }) async {
-    return OrchidEthereumV0.ethJsonRpcCall(
-        url: url, method: method, params: params);
   }
 }

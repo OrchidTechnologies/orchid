@@ -66,7 +66,7 @@ class AccountStore extends ChangeNotifier {
   // This method can be awaited without potential long delays for network activity.
   Future<AccountStore> _loadCached() async {
     // Load cached previously discovered accounts for this identity
-    var cached = await UserPreferences().cachedDiscoveredAccounts.get();
+    var cached = UserPreferences().cachedDiscoveredAccounts.get();
     cachedAccounts = cached
         .where((account) => account.signerKeyUid == identity.keyUid)
         .toList();

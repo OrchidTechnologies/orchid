@@ -52,6 +52,7 @@ class LotteryPot {
   final Token deposit;
   final Token balance;
   final BigInt unlock;
+  // TODO: Warned
 
   LotteryPot({
     this.deposit,
