@@ -8,7 +8,6 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:rxdart/rxdart.dart';
 import 'configuration/orchid_vpn_config/orchid_vpn_config_generate.dart';
 import 'monitoring/routing_status.dart';
-import 'orchid_budget_api.dart';
 import 'orchid_eth/chains.dart';
 import 'orchid_log_api.dart';
 
@@ -186,11 +185,6 @@ class RealOrchidAPI implements OrchidAPI {
     } else {
       await _platform.invokeMethod('disconnect');
     }
-  }
-
-  @override
-  OrchidBudgetAPI budget() {
-    return OrchidBudgetAPI();
   }
 
   Future<String> groupContainerPath() async {

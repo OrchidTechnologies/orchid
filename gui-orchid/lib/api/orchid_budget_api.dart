@@ -1,23 +1,43 @@
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/util/units.dart';
-
 import 'orchid_crypto.dart';
 
-// Funds and Budgeting API
-class OrchidBudgetAPI {
-  static OrchidBudgetAPI _shared = OrchidBudgetAPI._init();
+class LotteryPot {
+  final Token deposit;
+  final Token balance;
+  final BigInt unlock;
+  final Token warned;
 
-  OrchidBudgetAPI._init();
-
-  factory OrchidBudgetAPI() {
-    return _shared;
+  DateTime get unlockTime {
+    return DateTime.fromMillisecondsSinceEpoch(unlock.toInt() * 1000);
   }
 
-  void applicationReady() async {}
+  bool get isUnlocked {
+    return unlock == BigInt.zero || unlockTime.isBefore(DateTime.now());
+  }
+
+  LotteryPot({
+    this.deposit,
+    this.balance,
+    this.unlock,
+    this.warned,
+  });
+
+  Token get maxTicketFaceValue {
+    return maxTicketFaceValueFor(balance, deposit);
+  }
+
+  @override
+  String toString() {
+    return 'LotteryPot{deposit: $deposit, balance: $balance, unlock: $unlock, warned: $warned}';
+  }
+
+  static Token maxTicketFaceValueFor(Token balance, Token deposit) {
+    return Token.min(balance, deposit / 2.0);
+  }
 }
 
 /// Lottery pot balance and deposit amounts.
-// TODO: Remove after migration
 // Note: This supports migration of OXT-specific code. If we simply generalize
 // Note: the value types to Token Dart would not catch assignment type errors
 // Note: until runtime due to its automatic downcasting.
@@ -46,31 +66,14 @@ class OXTLotteryPot implements LotteryPot {
   String toString() {
     return 'OXTLotteryPot{deposit: $deposit, balance: $balance}';
   }
-}
-
-class LotteryPot {
-  final Token deposit;
-  final Token balance;
-  final BigInt unlock;
-  // TODO: Warned
-
-  LotteryPot({
-    this.deposit,
-    this.balance,
-    this.unlock,
-  });
-
-  Token get maxTicketFaceValue {
-    return maxTicketFaceValueFor(balance, deposit);
-  }
-
 
   @override
-  String toString() {
-    return 'LotteryPot{deposit: $deposit, balance: $balance, unlock: $unlock}';
-  }
+  DateTime get unlockTime => throw UnimplementedError();
 
-  static Token maxTicketFaceValueFor(Token balance, Token deposit) {
-    return Token.min(balance, deposit / 2.0);
-  }
+  @override
+  Token get warned => throw UnimplementedError();
+
+  @override
+  bool get isUnlocked => throw UnimplementedError();
 }
+

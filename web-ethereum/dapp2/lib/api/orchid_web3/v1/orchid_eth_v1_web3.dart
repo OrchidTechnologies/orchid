@@ -50,12 +50,11 @@ class OrchidEthereumV1Web3Impl implements OrchidEthereumV1 {
     Token deposit = tokenType.fromInt(escrowAmount >> 128);
     BigInt maskLow128 = (BigInt.one << 128) - BigInt.one;
     Token balance = tokenType.fromInt(escrowAmount & maskLow128);
-
     BigInt unlock = unlockWarned >> 128;
-    BigInt warned = unlockWarned & maskLow128;
+    Token warned = tokenType.fromInt(unlockWarned & maskLow128);
 
-    // TODO: Warned
-    return LotteryPot(balance: balance, deposit: deposit, unlock: unlock);
+    return LotteryPot(
+        balance: balance, deposit: deposit, unlock: unlock, warned: warned);
   }
 
   // Note: This method requires signer key because to produce orchid accounts that

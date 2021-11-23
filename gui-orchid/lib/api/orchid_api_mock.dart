@@ -10,7 +10,6 @@ import 'package:rxdart/rxdart.dart';
 import 'package:sqflite/sqflite.dart';
 import 'monitoring/analysis_db.dart';
 import 'monitoring/restart_manager.dart';
-import 'orchid_budget_api.dart';
 import 'orchid_log_api.dart';
 
 ///
@@ -308,11 +307,6 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
   void _setConnectionState(OrchidVPNExtensionState state) {
     logger().write('Connection state: $state');
     vpnExtensionStatus.add(state);
-  }
-
-  @override
-  OrchidBudgetAPI budget() {
-    return OrchidBudgetAPI();
   }
 
   Future<String> groupContainerPath() async {
