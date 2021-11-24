@@ -12,16 +12,20 @@ class LotteryPot {
     return DateTime.fromMillisecondsSinceEpoch(unlock.toInt() * 1000);
   }
 
+  /// An amount is warned and the warn time has elapsed
   bool get isUnlocked {
     return unlock > BigInt.zero && unlockTime.isBefore(DateTime.now());
   }
 
-  bool get isLocked {
-    return !isUnlocked;
-  }
-
+  /// An amount is warned but the warn time has not yet arrived
   bool get isUnlocking {
     return unlock > BigInt.zero && unlockTime.isAfter(DateTime.now());
+  }
+
+  /// There is no warned amount or the warned time has not yet arrived.
+  /// All funds remain locked.
+  bool get isLocked {
+    return !isUnlocked;
   }
 
   Token get unlockedAmount {

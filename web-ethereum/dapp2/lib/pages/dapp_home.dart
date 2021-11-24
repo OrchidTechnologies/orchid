@@ -13,6 +13,7 @@ import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_logo.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
@@ -159,7 +160,7 @@ class _DappHomeState extends State<DappHome> {
         Expanded(
           child: SingleChildScrollView(
             child: SizedBox(
-              width: 500,
+              width: 600,
               child: Column(
                 children: [
                   if (_connected) _buildPasteSignerField(),
@@ -173,13 +174,13 @@ class _DappHomeState extends State<DappHome> {
                     ),
                   _buildTransactionsList(),
                   pady(40),
-                  // add funds
+                  // tabs
                   if (_connected && _signer != null) ...[
                     Divider(color: Colors.white.withOpacity(0.3)),
-                    pady(32),
-                    _buildAddFunds(),
-                    pady(32),
-                    Divider(color: Colors.white.withOpacity(0.3)),
+                    pady(16),
+                    _buildTabs(),
+                    // pady(16),
+                    // Divider(color: Colors.white.withOpacity(0.3)),
                   ],
                 ],
               ),
@@ -290,6 +291,42 @@ class _DappHomeState extends State<DappHome> {
     });
   }
 
+  Widget _buildTabs() {
+    return SizedBox(
+      height: 320,
+      child: DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: PreferredSize(
+            preferredSize: Size(double.infinity, 50),
+            child: AppBar(
+              backgroundColor: Colors.transparent,
+              bottom: TabBar(
+                indicatorColor: OrchidColors.tappable,
+                tabs: [
+                  Tab(child: Text("ADD FUNDS").button),
+                  Tab(child: Text("MOVE FUNDS").button),
+                  Tab(child: Text("WITHDRAW FUNDS").button),
+                ],
+              ),
+            ),
+          ),
+          body: TabBarView(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0),
+                child: Center(child: SizedBox(width: 500, child: _buildAddFunds())),
+              ),
+              Icon(Icons.directions_transit),
+              Icon(Icons.directions_bike),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAddFunds() {
     if (_wallet?.balance == null) {
       return Container();
@@ -298,8 +335,8 @@ class _DappHomeState extends State<DappHome> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Add Funds").title,
-        pady(16),
+        // Text("Add Funds").title,
+        // pady(16),
         _buildLabeledNumericField(
             controller: _addBalanceField,
             label: "Balance" + ':',
@@ -314,7 +351,7 @@ class _DappHomeState extends State<DappHome> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildButton(
-                text: "Add",
+                text: "ADD FUNDS",
                 onPressed: _addFundsFormEnabled ? _addFunds : null),
           ],
         ),
