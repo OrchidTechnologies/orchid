@@ -160,8 +160,16 @@ class Token {
     return intValue < other.intValue;
   }
 
+  bool operator <=(Token other) {
+    return intValue <= other.intValue;
+  }
+
   bool operator >(Token other) {
     return intValue > other.intValue;
+  }
+
+  bool operator >=(Token other) {
+    return intValue >= other.intValue;
   }
 
   Token add(Token other) {

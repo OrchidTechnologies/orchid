@@ -57,7 +57,7 @@ class Orange extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.orange,
-      child: child,
+      child: child ?? SizedBox(width: 200, height: 200),
     );
   }
 }

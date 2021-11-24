@@ -5,6 +5,10 @@ import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.d
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'token_type.dart';
 
+/*
+TODO: embed Chain data from https://chainid.network/chains.json
+  https://github.com/ethereum-lists/chains
+ */
 class Chains {
   // ignore: non_constant_identifier_names
   static const int ETH_CHAINID = 1;
@@ -95,6 +99,14 @@ class Chain {
 
   Future<Token> getGasPrice({bool refresh = false}) {
     return OrchidEthereumV1().getGasPrice(this, refresh: refresh);
+  }
+
+  int get requiredConfirmations {
+    return isGanache ? 1 : 2;
+  }
+
+  bool get isGanache {
+    return this == Chains.GanacheTest;
   }
 
   @override

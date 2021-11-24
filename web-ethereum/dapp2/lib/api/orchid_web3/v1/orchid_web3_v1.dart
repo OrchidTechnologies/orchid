@@ -1,5 +1,4 @@
 
-import 'package:flutter_web3/flutter_web3.dart' as flutter_web3;
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
@@ -13,7 +12,7 @@ import 'orchid_contract_web3_v1.dart';
 /// Read/write calls used in the dapp.
 class OrchidWeb3V1 {
   final OrchidWeb3Context context;
-  final flutter_web3.Contract _lottery;
+  final Contract _lottery;
 
   final int version = 1;
 
@@ -32,8 +31,6 @@ class OrchidWeb3V1 {
     return context.chain.nativeCurrency;
   }
 
-  int requiredConfirmations = 2;
-
   // used in market conditions
   Future<Token> getAccountCreationGasRequired() {
     // TODO: implement getAccountCreationGasRequired
@@ -47,7 +44,7 @@ class OrchidWeb3V1 {
 
   /// Transfer the int amount from the user to the specified lottery pot address.
   /// If the total exceeds walletBalance the amount value is automatically reduced.
-  Future< /*TransactionId*/ String> orchidAddFunds(
+  Future<String/*TransactionId*/> orchidAddFunds(
       {OrchidWallet wallet,
       EthereumAddress signer,
       Token addBalance,
@@ -78,7 +75,7 @@ class OrchidWeb3V1 {
     // function edit(address signer, int256 adjust, int256 warn, uint256 retrieve) {
     var contract = _lottery.connect(context.web3.getSigner());
 
-    var tx = await contract.send(
+    TransactionResponse tx = await contract.send(
       'edit',
       [
         signer.toString(),
@@ -88,12 +85,16 @@ class OrchidWeb3V1 {
       ],
       TransactionOverride(value: total.intValue),
     );
-    log("waiting for tx: $tx");
-    flutter_web3.TransactionReceipt txResult =
-        await tx.wait(requiredConfirmations);
-    log("result = $txResult");
+    return tx.hash;
 
-    return txResult.transactionHash;
+    // TESTING
+    // if (tx.chainId == Chains.GanacheTest.chainId) {
+    //   await Future.delayed(Duration(seconds: 2));
+    // }
+
+    // TransactionReceipt txResult = await tx.wait(requiredConfirmations);
+    // log("result = $txResult");
+    // return txResult.transactionHash;
 
     /* .send({
       from: funder,

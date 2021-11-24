@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -29,6 +31,7 @@ class OrchidApp extends StatelessWidget {
       ),
       home: OrchidAppNoTabs(),
       debugShowCheckedModeBanner: false,
+      scrollBehavior: DragScrollBehavior(),
     );
   }
 }
@@ -80,4 +83,14 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
           constraints: BoxConstraints(maxWidth: 600), child: DappHome()),
     );
   }
+}
+
+// The default scroll behavior on desktop (with a mouse) does not support dragging.
+class DragScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+  };
 }
