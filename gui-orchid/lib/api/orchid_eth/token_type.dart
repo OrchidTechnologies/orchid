@@ -45,7 +45,7 @@ class TokenTypes {
 // ERC20 Token type
 // Note: Unfortunately Dart does not have a polyomorphic 'this' type so the
 // Note: token type cannot serve as a typesafe factory for the token subtypes
-// Note: as we do in the dapp. See token-specific Token subclasses for certain
+// Note: as we (used to) do in the dapp. See token-specific Token subclasses for certain
 // Note: tokens such as OXT.
 class TokenType {
   final int chainId;

@@ -13,9 +13,21 @@ class LotteryPot {
   }
 
   bool get isUnlocked {
-    return unlock == BigInt.zero || unlockTime.isBefore(DateTime.now());
+    return unlock > BigInt.zero && unlockTime.isBefore(DateTime.now());
   }
 
+  bool get isLocked {
+    return !isUnlocked;
+  }
+
+  bool get isUnlocking {
+    return unlock > BigInt.zero && unlockTime.isAfter(DateTime.now());
+  }
+
+  Token get unlockedAmount {
+    return warned;
+  }
+  
   LotteryPot({
     this.deposit,
     this.balance,
@@ -75,5 +87,14 @@ class OXTLotteryPot implements LotteryPot {
 
   @override
   bool get isUnlocked => throw UnimplementedError();
+
+  @override
+  bool get isLocked => throw UnimplementedError();
+
+  @override
+  Token get unlockedAmount => throw UnimplementedError();
+
+  @override
+  bool get isUnlocking => throw UnimplementedError();
 }
 

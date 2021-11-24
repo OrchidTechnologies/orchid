@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/common/account_chart.dart';
@@ -36,6 +37,8 @@ class AccountCard extends StatefulWidget {
   /// Produces a shorter card
   final bool minHeight;
 
+  final bool showLockStatus;
+
   const AccountCard({
     Key key,
     this.accountDetail,
@@ -44,6 +47,7 @@ class AccountCard extends StatefulWidget {
     this.onSelected,
     this.initiallyExpanded = false,
     this.minHeight = false,
+    this.showLockStatus = false,
   }) : super(key: key);
 
   @override
@@ -88,7 +92,10 @@ class _AccountCardState extends State<AccountCard>
 
   @override
   Widget build(BuildContext context) {
-    var height = short ? (expanded ? 360.0 : 74.0) : (expanded ? 360.0 : 116.0);
+    final expandedHeight = widget.showLockStatus ? 460.0 : 360.0;
+    var height = short
+        ? (expanded ? expandedHeight : 74.0)
+        : (expanded ? expandedHeight : 116.0);
     var width = 334.0;
     var checkExtraHeight = _hasSelection ? 12.0 : 0.0;
     var checkExtraWidth = _hasSelection ? 16.0 : 0.0;
@@ -168,6 +175,72 @@ class _AccountCardState extends State<AccountCard>
               child: _buildEfficiencyMeter(efficiency),
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _buildLockInfo() {
+    var pot = widget.accountDetail?.lotteryPot;
+    if (pot == null) {
+      return Container();
+    }
+
+    // TESTING
+    // final zero = TokenTypes.XDAI.zero;
+    // pot = LotteryPot(
+    //   balance: zero,
+    //   deposit: zero,
+    //   warned: zero,
+    //   unlock: BigInt.from(DateTime.now().add(Duration(days: 1)).millisecondsSinceEpoch / 1000),
+      // unlock: BigInt.from(DateTime.now().subtract(Duration(days: 1)).millisecondsSinceEpoch / 1000),
+    // );
+
+    return Column(
+      children: [
+        if (pot.isUnlocking)
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Unlocking:").body2,
+                  if (pot.warned == pot.deposit)
+                    Text("Full Deposit").body2
+                  else
+                    Text(pot.warned.formatCurrency()).body2,
+                ],
+              ),
+              pady(16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("On:").body2,
+                  Text(pot.unlockTime.toString()).body2,
+                ],
+              ),
+            ],
+          ),
+        if (pot.isUnlocked) ...[
+          pady(16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Unlocked:").body2,
+              if (pot.warned == pot.deposit)
+                Text("Full Deposit").body2
+              else
+                Text(pot.warned.formatCurrency()).body2,
+            ],
+          ),
+        ],
+        if (pot.isUnlocking || pot.isUnlocked) pady(24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(pot.isUnlocked ? Icons.lock_open : Icons.lock,
+                color: Colors.white),
+          ],
+        ),
       ],
     );
   }
@@ -339,8 +412,7 @@ class _AccountCardState extends State<AccountCard>
               ),
             ],
           ),
-          pady(16),
-          pady(16),
+          pady(32),
           if (chartModel != null)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -350,6 +422,10 @@ class _AccountCardState extends State<AccountCard>
                     chartModel, efficiency)
               ],
             ),
+          if (widget.showLockStatus) ...[
+            pady(24),
+            _buildLockInfo(),
+          ],
         ],
       ),
     );

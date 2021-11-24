@@ -124,6 +124,8 @@ class _DappHomeState extends State<DappHome> {
 
   @override
   Widget build(BuildContext context) {
+    var showLockStatus = (_accountDetail?.lotteryPot?.isUnlocking ?? false) ||
+        (_accountDetail?.lotteryPot?.isUnlocked ?? false);
     return Column(
       children: [
         pady(32),
@@ -167,6 +169,7 @@ class _DappHomeState extends State<DappHome> {
                     AccountCard(
                       accountDetail: _accountDetail,
                       initiallyExpanded: true,
+                      showLockStatus: showLockStatus,
                     ),
                   _buildTransactionsList(),
                   pady(40),
@@ -446,7 +449,15 @@ class _DappHomeState extends State<DappHome> {
           bodyText: "No Wallet or Browser not supported.");
       return;
     }
-
+    var chainId = await ethereum.getChainId();
+    if (!Chains.isKnown(chainId)) {
+      AppDialogs.showAppDialog(
+          context: context,
+          title: "Unknown Chain",
+          bodyText:
+              "The Orchid Account Manager doesn't support this chain yet.");
+      return;
+    }
     var web3 = await OrchidWeb3Context.fromEthereum(ethereum);
     _setNewContex(web3);
   }

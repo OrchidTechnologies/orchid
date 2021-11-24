@@ -70,6 +70,10 @@ class Chains {
     GanacheTest.chainId: GanacheTest,
   };
 
+  static bool isKnown(int chainId) {
+    return map[chainId] != null;
+  }
+
   // Get the chain for chainId
   static Chain chainFor(int chainId) {
     var chain = map[chainId];
