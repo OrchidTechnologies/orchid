@@ -76,7 +76,7 @@ class Account {
   }
 
   static Cache<Account, LotteryPot> lotteryPotCache =
-      Cache(duration: Duration(seconds: 60), name: 'lottery pot');
+      Cache(duration: Duration(seconds: 30), name: 'lottery pot');
 
   // Use refresh to force an update to the cache
   Future<LotteryPot> getLotteryPot({bool refresh = false}) async {
@@ -85,6 +85,7 @@ class Account {
   }
 
   static Future<LotteryPot> _getLotteryPotFor(Account account) async {
+    // log("Fetching lottery pot from network: $account");
     var signer = await account.signerAddress;
     if (account.isV0) {
       return OrchidEthereumV0.getLotteryPot(account.funder, signer);

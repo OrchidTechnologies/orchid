@@ -185,8 +185,16 @@ class Token {
     return intValue < BigInt.zero;
   }
 
+  bool gtZero() {
+    return intValue > BigInt.zero;
+  }
+
   bool lteZero() {
     return intValue <= BigInt.zero;
+  }
+
+  bool gteZero() {
+    return intValue >= BigInt.zero;
   }
 
   assertType(Token other) {

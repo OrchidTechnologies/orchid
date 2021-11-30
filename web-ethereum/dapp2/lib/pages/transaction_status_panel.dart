@@ -14,7 +14,9 @@ import 'package:orchid/util/on_off.dart';
 class TransactionStatusPanel extends StatefulWidget {
   // TODO: persist this with the tx hashes
   final String description = "Orchid Transaction";
+
   final Function(String) onDismiss;
+  final VoidCallback onCompletedTx;
 
   // final TransactionResponse tx;
   final OrchidWeb3Context context;
@@ -25,6 +27,7 @@ class TransactionStatusPanel extends StatefulWidget {
     @required this.context,
     @required this.transactionHash,
     @required this.onDismiss,
+    this.onCompletedTx,
   }) : super(key: key);
 
   @override
@@ -33,6 +36,9 @@ class TransactionStatusPanel extends StatefulWidget {
 
 class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
   TransactionReceipt _receipt;
+
+  // Support onCompltedTx callback
+  bool _txCompleteLastStatus;
 
   bool get _txComplete {
     if (widget.context == null) {
@@ -61,6 +67,13 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
       _receipt = await widget.context.web3
           .getTransactionReceipt(widget.transactionHash);
     }
+
+    // Check for a change in tx complete status from false to true.
+    if (_txCompleteLastStatus == false && _txComplete == true) {
+      widget.onCompletedTx();
+    }
+    _txCompleteLastStatus = _txComplete;
+
     setState(() {});
   }
 

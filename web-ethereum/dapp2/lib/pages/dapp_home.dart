@@ -3,13 +3,11 @@ import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
-import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
@@ -18,12 +16,14 @@ import 'package:orchid/orchid/orchid_logo.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
+import 'package:orchid/pages/dapp_withdraw_funds.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
-import 'package:orchid/util/on_off.dart';
 import 'account_manager/account_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'account_manager/account_detail_poller.dart';
+import 'dapp_add_funds.dart';
+import 'dapp_button.dart';
 
 class DappHome extends StatefulWidget {
   const DappHome({Key key}) : super(key: key);
@@ -43,17 +43,12 @@ class _DappHomeState extends State<DappHome> {
   OrchidWallet _wallet;
 
   final _signerField = TextEditingController();
-  final _addBalanceField = TextEditingController();
-  final _addDepositField = TextEditingController();
-
-  bool _txPending = false;
 
   @override
   void initState() {
     super.initState();
-    _signerField.addListener(_textFieldChanged);
-    _addBalanceField.addListener(_textFieldChanged);
-    _addDepositField.addListener(_textFieldChanged);
+    _signerField.addListener(_formFieldChanged);
+    log("XXX: query = ${Uri.base.queryParameters}");
     initStateAsync();
   }
 
@@ -71,7 +66,7 @@ class _DappHomeState extends State<DappHome> {
     return _context != null;
   }
 
-  void _textFieldChanged() {
+  void _formFieldChanged() {
     // signer field changed?
     var oldSigner = _signer;
     try {
@@ -206,6 +201,10 @@ class _DappHomeState extends State<DappHome> {
                       context: _context,
                       transactionHash: tx,
                       onDismiss: _dismissTransaction,
+                      onCompletedTx: () {
+                        log("XXX: tx panel indicated complete, refreshing");
+                        _accountDetail.refresh();
+                      },
                     ),
                   ))
               .toList();
@@ -219,82 +218,11 @@ class _DappHomeState extends State<DappHome> {
         });
   }
 
-  // the value or null
-  Token get _addBalanceAmount {
-    return _tokenFieldValue(
-        controller: _addBalanceField, type: _wallet.balance.type);
-  }
-
-  // the value or null
-  Token get _addDepositAmount {
-    return _tokenFieldValue(
-        controller: _addDepositField, type: _wallet.balance.type);
-  }
-
-  Token _tokenFieldValue({TextEditingController controller, TokenType type}) {
-    var text = controller.text;
-    if (text == null || text == "") {
-      return type.zero;
-    }
-    try {
-      var value = double.parse(text);
-      return type.fromDouble(value);
-    } catch (err) {
-      return null;
-    }
-  }
-
-  bool get _addBalanceFieldValid {
-    var value = _addBalanceAmount;
-    return value != null && value < _wallet.balance;
-  }
-
-  bool get _addDepositFieldValid {
-    var value = _addDepositAmount;
-    return value != null && value < _wallet.balance;
-  }
-
-  bool get _addFundsFormEnabled {
-    if (_txPending) {
-      return false;
-    }
-    if (_addBalanceFieldValid && _addDepositFieldValid) {
-      var total = _addBalanceAmount + _addDepositAmount;
-      return total > _wallet.balance.type.zero && total <= _wallet.balance;
-    }
-    return false;
-  }
-
-  void _addFunds() async {
-    setState(() {
-      _txPending = true;
-    });
-    if (!_addBalanceFieldValid) {
-      return;
-    }
-    try {
-      var txHash = await OrchidWeb3V1(_context).orchidAddFunds(
-        wallet: _wallet,
-        signer: _signer,
-        addBalance: _addBalanceAmount,
-        addEscrow: _addDepositAmount,
-      );
-      UserPreferences().addTransaction(txHash);
-      _addBalanceField.text = '';
-      _addDepositField.text = '';
-      setState(() {});
-    } catch (err) {
-      log("Error on add funds: $err");
-    }
-    setState(() {
-      _txPending = false;
-    });
-  }
-
   Widget _buildTabs() {
     return SizedBox(
-      height: 320,
+      height: 420,
       child: DefaultTabController(
+        initialIndex: 0,
         length: 3,
         child: Scaffold(
           backgroundColor: Colors.transparent,
@@ -306,8 +234,8 @@ class _DappHomeState extends State<DappHome> {
                 indicatorColor: OrchidColors.tappable,
                 tabs: [
                   Tab(child: Text("ADD FUNDS").button),
-                  Tab(child: Text("MOVE FUNDS").button),
                   Tab(child: Text("WITHDRAW FUNDS").button),
+                  Tab(child: Text("ADVANCED").button),
                 ],
               ),
             ),
@@ -316,65 +244,41 @@ class _DappHomeState extends State<DappHome> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 24.0),
-                child: Center(child: SizedBox(width: 500, child: _buildAddFunds())),
+                child: Center(
+                    child: SizedBox(
+                  width: 500,
+                  child: AddFundsPane(
+                    context: _context,
+                    wallet: _wallet,
+                    signer: _signer,
+                    onTransaction: () async {
+                      _accountDetail.refresh();
+                      setState(() {});
+                    },
+                  ),
+                )),
               ),
-              Icon(Icons.directions_transit),
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0),
+                child: Center(
+                    child: SizedBox(
+                      width: 500,
+                      child: WithdrawFundsPane(
+                        context: _context,
+                        pot: _accountDetail?.lotteryPot,
+                        signer: _signer,
+                        onTransaction: () async {
+                          _accountDetail.refresh();
+                          setState(() {});
+                        },
+                      ),
+                    )),
+              ),
               Icon(Icons.directions_bike),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildAddFunds() {
-    if (_wallet?.balance == null) {
-      return Container();
-    }
-    var tokenText = Text(_wallet.balance.type.symbol ?? "").button.height(1.5);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Text("Add Funds").title,
-        // pady(16),
-        _buildLabeledNumericField(
-            controller: _addBalanceField,
-            label: "Balance" + ':',
-            trailing: tokenText),
-        pady(4),
-        _buildLabeledNumericField(
-            controller: _addDepositField,
-            label: "Deposit" + ':',
-            trailing: tokenText),
-        pady(24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildButton(
-                text: "ADD FUNDS",
-                onPressed: _addFundsFormEnabled ? _addFunds : null),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLabeledNumericField(
-      {TextEditingController controller, String label, Widget trailing}) {
-    return Row(
-      children: [
-        SizedBox(width: 80, child: Text(label).button),
-        Flexible(
-          child: OrchidTextField(
-            hintText: '0.0',
-            margin: EdgeInsets.zero,
-            controller: controller,
-            numeric: true,
-          ),
-        ),
-        // padx(4),
-        trailing ?? Container(),
-      ],
     );
   }
 
@@ -439,12 +343,12 @@ class _DappHomeState extends State<DappHome> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildButton(
+        DappButton(
           text: "Connect",
           onPressed: _connected ? null : _connectEthereum,
         ),
         padx(24),
-        _buildButton(
+        DappButton(
           text: "Wallet Connect",
           onPressed: _connected ? null : _connectWalletConnect,
           trailing: Padding(
@@ -453,29 +357,12 @@ class _DappHomeState extends State<DappHome> {
           ),
         ),
         padx(24),
-        _buildButton(
+        DappButton(
           text: "Disconnect",
           onPressed: _connected ? _disconnect : null,
         ),
       ],
     );
-  }
-
-  Widget _buildButton({
-    String text,
-    VoidCallback onPressed,
-    Widget trailing,
-  }) {
-    var height = 42.0;
-    return Container(
-        height: height,
-        child: RoundedRectButton(
-          text: text,
-          textColor: Colors.black,
-          lineHeight: 1.2,
-          trailing: trailing,
-          onPressed: onPressed,
-        ));
   }
 
   void _connectEthereum() async {
@@ -488,14 +375,15 @@ class _DappHomeState extends State<DappHome> {
     }
     var chainId = await ethereum.getChainId();
     if (!Chains.isKnown(chainId)) {
-      AppDialogs.showAppDialog(
-          context: context,
-          title: "Unknown Chain",
-          bodyText:
-              "The Orchid Account Manager doesn't support this chain yet.");
-      return;
+      return _invalidChain();
     }
     var web3 = await OrchidWeb3Context.fromEthereum(ethereum);
+    // check the contract
+    var code =
+        await web3.web3.getCode(OrchidContractV1.lotteryContractAddressV1);
+    if (code == "0x") {
+      return _noContract();
+    }
     _setNewContex(web3);
   }
 
@@ -522,24 +410,25 @@ class _DappHomeState extends State<DappHome> {
     _setNewContex(web3);
   }
 
+  // TODO: change this to contextProviderChanged
   // Init a new context, disconnecting any old context and adding new listeners
   void _setNewContex(OrchidWeb3Context context) {
     _context?.removeAllListeners();
     _context?.disconnect();
     _context = context;
 
-    _context.onAccountsChanged((accounts) {
+    _context?.onAccountsChanged((accounts) {
       log("web3: accounts changed: $accounts");
       _updateContext();
     });
-    _context.onChainChanged((chainId) {
+    _context?.onChainChanged((chainId) {
       log("web3: chain changed: $chainId");
       _updateContext();
     });
-    _context.onConnect(() {
+    _context?.onConnect(() {
       log("web3: connected");
     });
-    _context.onDisconnect(() {
+    _context?.onDisconnect(() {
       log("web3: disconnected");
     });
 
@@ -547,28 +436,69 @@ class _DappHomeState extends State<DappHome> {
     log("new context = $_context");
   }
 
+  // TODO: break this out into chain changed, account changed
   // Update the existing context on change of address or chain
   void _updateContext() async {
-    if (_context.ethereumProvider != null) {
-      _context =
-          await OrchidWeb3Context.fromEthereum(_context.ethereumProvider);
-    } else {
-      _context = await OrchidWeb3Context.fromWalletConnect(
-          _context.walletConnectProvider);
+    var chainId = await ethereum.getChainId();
+    if (!Chains.isKnown(chainId)) {
+      return _invalidChain();
+    }
+    if (_context != null) {
+      if (_context.ethereumProvider != null) {
+        _context =
+            await OrchidWeb3Context.fromEthereum(_context.ethereumProvider);
+      } else {
+        _context = await OrchidWeb3Context.fromWalletConnect(
+            _context.walletConnectProvider);
+      }
+    }
+    // check the contract
+    if (_context != null) {
+      var code = await _context.web3
+          .getCode(OrchidContractV1.lotteryContractAddressV1);
+      if (code == "0x") {
+        return _noContract();
+      }
     }
     log("updated context = $_context");
+
     _contextChanged();
   }
 
+  // TODO: break this out into chain changed, account changed
   // The context was replaced or updated (wallet address, chain id, connection)
   void _contextChanged() async {
     _selectedAccountChanged();
-    OrchidEthereumV1.setWeb3Provider(OrchidEthereumV1Web3Impl(_context));
+    if (_context != null) {
+      OrchidEthereumV1.setWeb3Provider(OrchidEthereumV1Web3Impl(_context));
+    } else {
+      OrchidEthereumV1.setWeb3Provider(null);
+    }
+
     setState(() {});
   }
 
   _dismissTransaction(String txHash) {
     UserPreferences().removeTransaction(txHash);
+  }
+
+  void _invalidChain() {
+    AppDialogs.showAppDialog(
+        context: context,
+        title: "Unknown Chain",
+        bodyText: "The Orchid Account Manager doesn't support this chain yet.");
+
+    _setNewContex(null);
+  }
+
+  void _noContract() {
+    AppDialogs.showAppDialog(
+        context: context,
+        title: "Orchid isn't on this chain",
+        bodyText:
+            "The Orchid contract hasn't been deployed on this chain yet.");
+
+    _setNewContex(null);
   }
 
   void _disconnect() async {

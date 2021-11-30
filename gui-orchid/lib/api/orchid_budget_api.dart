@@ -28,10 +28,17 @@ class LotteryPot {
     return !isUnlocked;
   }
 
+  /// The amount of deposit currently unlocked and available for withdrawal or zero
   Token get unlockedAmount {
-    return warned;
+    return isUnlocked ? warned : deposit.type.zero;
   }
-  
+
+  /// The amount that can be withdrawn by moving any unlocked funds from deposit
+  /// to balance and withdrawing the resulting balance amount.
+  Token get maxWithdrawable {
+    return balance + unlockedAmount;
+  }
+
   LotteryPot({
     this.deposit,
     this.balance,
@@ -100,5 +107,7 @@ class OXTLotteryPot implements LotteryPot {
 
   @override
   bool get isUnlocking => throw UnimplementedError();
-}
 
+  @override
+  Token get maxWithdrawable => throw UnimplementedError();
+}

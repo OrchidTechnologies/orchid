@@ -96,7 +96,6 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       // Fetch the pot balance
       LotteryPot _pot;
       try {
-        //log("Detail poller fetch pot, eth=$eth, funder=$funder, signer=$resolvedSigner");
         _pot = await account
             .getLotteryPot(refresh: refresh)
             .timeout(Duration(seconds: 30));
