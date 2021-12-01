@@ -39,16 +39,13 @@ class _DappHomeState extends State<DappHome> {
   // TODO: Encapsulate this in a provider widget
   AccountDetailPoller _accountDetail;
 
-  // TODO: Encapsulate this in a provider widget
-  OrchidWallet _wallet;
-
   final _signerField = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _signerField.addListener(_formFieldChanged);
-    log("XXX: query = ${Uri.base.queryParameters}");
+    log("dapp home query = ${Uri.base.queryParameters}");
     initStateAsync();
   }
 
@@ -102,14 +99,14 @@ class _DappHomeState extends State<DappHome> {
         funder: _context.walletAddress,
         chainId: _context.chain.chainId,
       );
-      _accountDetail = AccountDetailPoller(account: account);
+      _accountDetail = AccountDetailPoller(
+        account: account,
+        pollingPeriod: Duration(seconds: 10),
+      );
       _accountDetail.addListener(_updateAccountDetail);
       _accountDetail.startPolling();
       log("accountDetail = $_accountDetail");
     }
-    setState(() {});
-
-    _wallet = await _context?.getWallet();
     setState(() {});
   }
 
@@ -201,8 +198,8 @@ class _DappHomeState extends State<DappHome> {
                       context: _context,
                       transactionHash: tx,
                       onDismiss: _dismissTransaction,
-                      onCompletedTx: () {
-                        log("XXX: tx panel indicated complete, refreshing");
+                      onCompletedTransaction: () {
+                        _context.refresh();
                         _accountDetail.refresh();
                       },
                     ),
@@ -249,7 +246,7 @@ class _DappHomeState extends State<DappHome> {
                   width: 500,
                   child: AddFundsPane(
                     context: _context,
-                    wallet: _wallet,
+                    wallet: _context.wallet,
                     signer: _signer,
                     onTransaction: () async {
                       _accountDetail.refresh();
@@ -262,17 +259,17 @@ class _DappHomeState extends State<DappHome> {
                 padding: const EdgeInsets.only(top: 24.0),
                 child: Center(
                     child: SizedBox(
-                      width: 500,
-                      child: WithdrawFundsPane(
-                        context: _context,
-                        pot: _accountDetail?.lotteryPot,
-                        signer: _signer,
-                        onTransaction: () async {
-                          _accountDetail.refresh();
-                          setState(() {});
-                        },
-                      ),
-                    )),
+                  width: 500,
+                  child: WithdrawFundsPane(
+                    context: _context,
+                    pot: _accountDetail?.lotteryPot,
+                    signer: _signer,
+                    onTransaction: () async {
+                      _accountDetail.refresh();
+                      setState(() {});
+                    },
+                  ),
+                )),
               ),
               Icon(Icons.directions_bike),
             ],
@@ -308,10 +305,10 @@ class _DappHomeState extends State<DappHome> {
   }
 
   Widget _buildWalletBalance() {
-    if (_wallet == null) {
+    if (_context.wallet == null) {
       return Container();
     }
-    return Text(_wallet.balance.formatCurrency()).title.white;
+    return Text(_context.wallet.balance.formatCurrency()).title.white;
   }
 
   Widget _buildPasteSignerField() {
@@ -419,17 +416,21 @@ class _DappHomeState extends State<DappHome> {
 
     _context?.onAccountsChanged((accounts) {
       log("web3: accounts changed: $accounts");
-      _updateContext();
+      _onAccountOrChainChange();
     });
     _context?.onChainChanged((chainId) {
       log("web3: chain changed: $chainId");
-      _updateContext();
+      _onAccountOrChainChange();
     });
     _context?.onConnect(() {
       log("web3: connected");
     });
     _context?.onDisconnect(() {
       log("web3: disconnected");
+    });
+    _context?.onWalletUpdate(() {
+      // Update the UI
+      setState(() {});
     });
 
     _contextChanged();
@@ -438,11 +439,12 @@ class _DappHomeState extends State<DappHome> {
 
   // TODO: break this out into chain changed, account changed
   // Update the existing context on change of address or chain
-  void _updateContext() async {
+  void _onAccountOrChainChange() async {
     var chainId = await ethereum.getChainId();
     if (!Chains.isKnown(chainId)) {
       return _invalidChain();
     }
+    /*
     if (_context != null) {
       if (_context.ethereumProvider != null) {
         _context =
@@ -452,6 +454,7 @@ class _DappHomeState extends State<DappHome> {
             _context.walletConnectProvider);
       }
     }
+     */
     // check the contract
     if (_context != null) {
       var code = await _context.web3
@@ -460,6 +463,7 @@ class _DappHomeState extends State<DappHome> {
         return _noContract();
       }
     }
+    _context.refresh();
     log("updated context = $_context");
 
     _contextChanged();

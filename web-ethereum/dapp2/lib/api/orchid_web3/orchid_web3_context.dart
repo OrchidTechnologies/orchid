@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+
+import '../orchid_log_api.dart';
 
 /// This class abstracts over the flutter_web3 ethereum and wallet connect providers
 /// and provides access to chain and wallet info for the current connection.
@@ -19,6 +23,13 @@ class OrchidWeb3Context {
   /// If the web3 provider wraps wallet connect this is the underlying provider.
   final WalletConnectProvider walletConnectProvider;
 
+  // Wallet
+  OrchidWallet wallet;
+  OrchidWallet _lastWallet;
+  Timer _pollWalletTimer;
+  Duration _pollWalletPeriod = Duration(seconds: 5);
+  VoidCallback _walletUpdateListener;
+
   OrchidWeb3Context._({
     this.web3,
     this.chain,
@@ -26,7 +37,14 @@ class OrchidWeb3Context {
     Ethereum ethereumProvider,
     WalletConnectProvider walletConnectProvider,
   })  : this.ethereumProvider = ethereumProvider,
-        this.walletConnectProvider = walletConnectProvider;
+        this.walletConnectProvider = walletConnectProvider {
+    _startPollingWallet();
+  }
+
+  void _startPollingWallet() {
+    _pollWalletTimer = Timer.periodic(_pollWalletPeriod, _pollWallet);
+    _pollWallet(null);
+  }
 
   static Future<OrchidWeb3Context> fromEthereum(Ethereum ethereum) async {
     var accounts = await ethereum.requestAccount(); // requestAccounts
@@ -99,12 +117,37 @@ class OrchidWeb3Context {
     }
   }
 
+  void _pollWallet(_) async {
+    try {
+      wallet = await getWallet();
+      if (wallet != _lastWallet) {
+        if (_walletUpdateListener != null) {
+          _walletUpdateListener();
+        }
+      }
+      _lastWallet = wallet;
+    } catch (err) {
+      log("Error polling wallet: $err");
+    }
+  }
+
+  /// Update polled items including the wallet
+  void refresh() {
+    _pollWallet(null);
+  }
+
+  void onWalletUpdate(void Function() listener) {
+    _walletUpdateListener = listener;
+  }
+
   void removeAllListeners() {
     ethereumProvider?.removeAllListeners();
     walletConnectProvider?.removeAllListeners();
+    _walletUpdateListener = null;
   }
 
   void disconnect() async {
+    _pollWalletTimer?.cancel();
     removeAllListeners();
 
     // TODO: How do we close a plain eth provider?
@@ -139,4 +182,14 @@ class OrchidWallet {
   String toString() {
     return 'Wallet{address: $address, balances: $balances}';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OrchidWallet &&
+          runtimeType == other.runtimeType &&
+          mapEquals(balances, other.balances);
+
+  @override
+  int get hashCode => balances.hashCode;
 }

@@ -151,7 +151,7 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
 
     String result =
         await EthereumJsonRpc.ethCall(url: chain.providerUrl, params: params);
-    log("XXX: lottery pot fetch result = $result");
+    // log("XXX: lottery pot fetch result = $result");
     return parseLotteryPotRpcResult(result, chain);
   }
 

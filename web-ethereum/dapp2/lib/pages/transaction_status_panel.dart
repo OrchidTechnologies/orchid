@@ -16,7 +16,7 @@ class TransactionStatusPanel extends StatefulWidget {
   final String description = "Orchid Transaction";
 
   final Function(String) onDismiss;
-  final VoidCallback onCompletedTx;
+  final VoidCallback onCompletedTransaction;
 
   // final TransactionResponse tx;
   final OrchidWeb3Context context;
@@ -27,7 +27,7 @@ class TransactionStatusPanel extends StatefulWidget {
     @required this.context,
     @required this.transactionHash,
     @required this.onDismiss,
-    this.onCompletedTx,
+    this.onCompletedTransaction,
   }) : super(key: key);
 
   @override
@@ -70,7 +70,7 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
 
     // Check for a change in tx complete status from false to true.
     if (_txCompleteLastStatus == false && _txComplete == true) {
-      widget.onCompletedTx();
+      widget.onCompletedTransaction();
     }
     _txCompleteLastStatus = _txComplete;
 

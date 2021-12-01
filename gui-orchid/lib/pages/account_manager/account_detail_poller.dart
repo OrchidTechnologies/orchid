@@ -49,7 +49,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
 
   AccountDetailPoller({
     @required this.account,
-    this.pollingPeriod = const Duration(seconds: 15),
+    this.pollingPeriod = const Duration(seconds: 30),
   });
 
   Timer _balanceTimer;

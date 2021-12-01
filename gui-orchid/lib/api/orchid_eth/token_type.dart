@@ -251,6 +251,17 @@ class Token {
   }
 
   @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Token &&
+          runtimeType == other.runtimeType &&
+          type == other.type &&
+          intValue == other.intValue;
+
+  @override
+  int get hashCode => type.hashCode ^ intValue.hashCode;
+
+  @override
   String toString() {
     return 'Token{type: ${type.symbol}, floatValue: $floatValue}';
   }
