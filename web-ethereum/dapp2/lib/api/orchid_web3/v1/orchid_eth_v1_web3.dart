@@ -22,7 +22,7 @@ class OrchidEthereumV1Web3Impl implements OrchidEthereumV1 {
     if (chain != _context.chain) {
       throw Exception("incorrect chain for web3 provider: $chain, $_context");
     }
-    log('OrchidEthereumV1Web3Impl: get gas price');
+    // log('OrchidEthereumV1Web3Impl: get gas price');
     TokenType tokenType = chain.nativeCurrency;
     return tokenType.fromInt(await _context.web3.getGasPrice());
   }

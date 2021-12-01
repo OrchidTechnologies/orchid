@@ -140,6 +140,7 @@ class Chain {
   final String name;
   final TokenType nativeCurrency;
   final String providerUrl;
+  final int requiredConfirmations;
 
   /// Optional icon svg
   final SvgPicture icon;
@@ -152,16 +153,13 @@ class Chain {
     @required this.name,
     @required this.nativeCurrency,
     @required this.providerUrl,
+    this.requiredConfirmations = 1,
     this.icon,
     this.explorerUrl,
   });
 
   Future<Token> getGasPrice({bool refresh = false}) {
     return OrchidEthereumV1().getGasPrice(this, refresh: refresh);
-  }
-
-  int get requiredConfirmations {
-    return isGanache ? 1 : 2;
   }
 
   bool get isGanache {

@@ -51,12 +51,12 @@ class _DappHomeState extends State<DappHome> {
 
   void initStateAsync() async {
     // TODO: TESTING
-    await Future.delayed(Duration(seconds: 0), () {
-      _connectEthereum();
-      _signer =
-          EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
-      _signerField.text = _signer.toString();
-    });
+    // await Future.delayed(Duration(seconds: 0), () {
+    //   _connectEthereum();
+    //   _signer =
+    //       EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
+    //   _signerField.text = _signer.toString();
+    // });
   }
 
   bool get _connected {
@@ -199,7 +199,7 @@ class _DappHomeState extends State<DappHome> {
                       context: _context,
                       transactionHash: tx,
                       onDismiss: _dismissTransaction,
-                      onCompletedTransaction: () {
+                      onTransactionUpdated: () {
                         _context.refresh();
                         _accountDetail.refresh();
                       },

@@ -87,7 +87,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       signerAddress = await account.signerAddress;
     }
 
-    log("polling account details: signer = $signerAddress, funder = $funder");
+    // log("polling account details: signer = $signerAddress, funder = $funder");
     if (_balancePollInProgress) {
       return;
     }

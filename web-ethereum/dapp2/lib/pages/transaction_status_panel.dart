@@ -16,7 +16,7 @@ class TransactionStatusPanel extends StatefulWidget {
   final String description = "Orchid Transaction";
 
   final Function(String) onDismiss;
-  final VoidCallback onCompletedTransaction;
+  final VoidCallback onTransactionUpdated;
 
   // final TransactionResponse tx;
   final OrchidWeb3Context context;
@@ -27,7 +27,7 @@ class TransactionStatusPanel extends StatefulWidget {
     @required this.context,
     @required this.transactionHash,
     @required this.onDismiss,
-    this.onCompletedTransaction,
+    this.onTransactionUpdated,
   }) : super(key: key);
 
   @override
@@ -36,9 +36,6 @@ class TransactionStatusPanel extends StatefulWidget {
 
 class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
   TransactionReceipt _receipt;
-
-  // Support onCompltedTx callback
-  bool _txCompleteLastStatus;
 
   bool get _txComplete {
     if (widget.context == null) {
@@ -50,6 +47,14 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
 
   Duration pollingPeriod = const Duration(seconds: 1);
   Timer _pollTimer;
+
+
+  int get confirmations {
+    return _receipt?.confirmations ?? 0;
+  }
+
+  // Support onTransactionUpdated callback
+  int _lastConfirmationCount;
 
   @override
   void initState() {
@@ -68,11 +73,11 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
           .getTransactionReceipt(widget.transactionHash);
     }
 
-    // Check for a change in tx complete status from false to true.
-    if (_txCompleteLastStatus == false && _txComplete == true) {
-      widget.onCompletedTransaction();
+    // Update listeners on change
+    if (_lastConfirmationCount != null && confirmations > _lastConfirmationCount) {
+      widget.onTransactionUpdated();
     }
-    _txCompleteLastStatus = _txComplete;
+    _lastConfirmationCount = confirmations;
 
     setState(() {});
   }
