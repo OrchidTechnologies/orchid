@@ -99,7 +99,7 @@ class Chains {
   );
 
   /*
-  TODO: We would need a price source for AETH
+  TODO: We would need to estimate the L1 fees.
   // Arbitrum One
   static const int ARBITRUM_ONE_CHAINID = 42161;
   static Chain ArbitrumOne = Chain(
