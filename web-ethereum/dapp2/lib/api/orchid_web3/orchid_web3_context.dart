@@ -11,6 +11,9 @@ import '../orchid_log_api.dart';
 /// This class abstracts over the flutter_web3 ethereum and wallet connect providers
 /// and provides access to chain and wallet info for the current connection.
 class OrchidWeb3Context {
+  static int contextId = 0; // for logging
+  final int id;
+
   /// The web3 provider, either wrapping an Ethereum provider or a Wallet Connect provider.
   final Web3Provider web3;
 
@@ -23,6 +26,10 @@ class OrchidWeb3Context {
   /// If the web3 provider wraps wallet connect this is the underlying provider.
   final WalletConnectProvider walletConnectProvider;
 
+  // Indicates that this context has been disconnected and should no longer be alive.
+  // This is a workaround to ensure that listeners do not fire in this state.
+  bool disposed = false;
+
   // Wallet
   OrchidWallet wallet;
   OrchidWallet _lastWallet;
@@ -34,10 +41,10 @@ class OrchidWeb3Context {
     this.web3,
     this.chain,
     this.walletAddress,
-    Ethereum ethereumProvider,
-    WalletConnectProvider walletConnectProvider,
-  })  : this.ethereumProvider = ethereumProvider,
-        this.walletConnectProvider = walletConnectProvider {
+    this.ethereumProvider,
+    this.walletConnectProvider,
+  }) : this.id = (contextId += 1) {
+    log("context created: $id");
     _startPollingWallet();
   }
 
@@ -86,21 +93,36 @@ class OrchidWeb3Context {
   }
 
   void onAccountsChanged(void Function(List<String> accounts) listener) {
+    void invokeListener(List<String> accounts) {
+      // log("XXX: context ($id) callback onAccountsChanged");
+      // Ensure that we don't fire callbacks after this context has been destroyed.
+      if (!disposed) {
+        listener(accounts);
+      }
+    }
     if (ethereumProvider != null) {
-      ethereumProvider.onAccountsChanged(listener);
+      ethereumProvider.onAccountsChanged(invokeListener);
     } else {
-      walletConnectProvider.onAccountsChanged(listener);
+      walletConnectProvider.onAccountsChanged(invokeListener);
     }
   }
 
   void onChainChanged(void Function(int chainId) listener) {
+    void invokeListener(int chainId) {
+      // log("XXX: context ($id) callback onChainChanged");
+      // Ensure that we don't fire callbacks after this context has been destroyed.
+      if (!disposed) {
+        listener(chainId);
+      }
+    }
     if (ethereumProvider != null) {
-      ethereumProvider.onChainChanged(listener);
+      ethereumProvider.onChainChanged(invokeListener);
     } else {
-      walletConnectProvider.onChainChanged(listener);
+      walletConnectProvider.onChainChanged(invokeListener);
     }
   }
 
+  /*
   void onConnect(void Function() listener) {
     if (ethereumProvider != null) {
       ethereumProvider.onConnect((_) => listener());
@@ -116,6 +138,7 @@ class OrchidWeb3Context {
       walletConnectProvider.onDisconnect((code, reason) => listener());
     }
   }
+   */
 
   void _pollWallet(_) async {
     try {
@@ -127,7 +150,7 @@ class OrchidWeb3Context {
       }
       _lastWallet = wallet;
     } catch (err) {
-      log("Error polling wallet: $err");
+      log("Error polling wallet: $err, context id = $id");
     }
   }
 
@@ -141,18 +164,29 @@ class OrchidWeb3Context {
   }
 
   void removeAllListeners() {
+    //log("XXX: context ($id) removing listeners");
     ethereumProvider?.removeAllListeners();
     walletConnectProvider?.removeAllListeners();
     _walletUpdateListener = null;
+    //log("XXX: after removing listeners: ${ethereumProvider.listenerCount()}");
   }
 
   void disconnect() async {
-    _pollWalletTimer?.cancel();
+    log("XXX: disconnect context ($id)");
+
     removeAllListeners();
+    _pollWalletTimer?.cancel();
 
     // TODO: How do we close a plain eth provider?
     // _ethereumProvider.call('close'); // ??
     walletConnectProvider?.disconnect();
+
+    disposed = true;
+  }
+
+  @override
+  String toString() {
+    return 'OrchidWeb3Context{id: $id, chain: ${chain.chainId}, walletAddress: $walletAddress}';
   }
 }
 

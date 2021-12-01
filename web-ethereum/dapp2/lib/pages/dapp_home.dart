@@ -44,26 +44,26 @@ class _DappHomeState extends State<DappHome> {
   @override
   void initState() {
     super.initState();
-    _signerField.addListener(_formFieldChanged);
+    _signerField.addListener(_signerFieldChanged);
     log("dapp home query = ${Uri.base.queryParameters}");
     initStateAsync();
   }
 
   void initStateAsync() async {
     // TODO: TESTING
-    // await Future.delayed(Duration(seconds: 0), () {
-    //   _connectEthereum();
-    //   _signer =
-    //       EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
-    //   _signerField.text = _signer.toString();
-    // });
+    await Future.delayed(Duration(seconds: 0), () {
+      _connectEthereum();
+      _signer =
+          EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
+      _signerField.text = _signer.toString();
+    });
   }
 
   bool get _connected {
     return _context != null;
   }
 
-  void _formFieldChanged() {
+  void _signerFieldChanged() {
     // signer field changed?
     var oldSigner = _signer;
     try {
@@ -83,6 +83,7 @@ class _DappHomeState extends State<DappHome> {
     setState(() {});
   }
 
+  // TODO: replace this account detail management with a provider builder
   void _clearAccountDetail() {
     _accountDetail?.cancel();
     _accountDetail?.removeListener(_updateAccountDetail);
@@ -101,7 +102,7 @@ class _DappHomeState extends State<DappHome> {
       );
       _accountDetail = AccountDetailPoller(
         account: account,
-        pollingPeriod: Duration(seconds: 10),
+        pollingPeriod: Duration(seconds: 5),
       );
       _accountDetail.addListener(_updateAccountDetail);
       _accountDetail.startPolling();
@@ -370,17 +371,7 @@ class _DappHomeState extends State<DappHome> {
           bodyText: "No Wallet or Browser not supported.");
       return;
     }
-    var chainId = await ethereum.getChainId();
-    if (!Chains.isKnown(chainId)) {
-      return _invalidChain();
-    }
     var web3 = await OrchidWeb3Context.fromEthereum(ethereum);
-    // check the contract
-    var code =
-        await web3.web3.getCode(OrchidContractV1.lotteryContractAddressV1);
-    if (code == "0x") {
-      return _noContract();
-    }
     _setNewContex(web3);
   }
 
@@ -407,54 +398,57 @@ class _DappHomeState extends State<DappHome> {
     _setNewContex(web3);
   }
 
-  // TODO: change this to contextProviderChanged
-  // Init a new context, disconnecting any old context and adding new listeners
+  // Init a new context, disconnecting any old context and registering listeners
   void _setNewContex(OrchidWeb3Context context) {
-    _context?.removeAllListeners();
-    _context?.disconnect();
-    _context = context;
 
-    _context?.onAccountsChanged((accounts) {
+    // Clear the old context, removing listeners and disposing of it properly.
+    _context?.disconnect();
+
+    // Register listeners on the new context
+    context.onAccountsChanged((accounts) {
       log("web3: accounts changed: $accounts");
       _onAccountOrChainChange();
     });
-    _context?.onChainChanged((chainId) {
+    context.onChainChanged((chainId) {
       log("web3: chain changed: $chainId");
       _onAccountOrChainChange();
     });
-    _context?.onConnect(() {
-      log("web3: connected");
-    });
-    _context?.onDisconnect(() {
-      log("web3: disconnected");
-    });
-    _context?.onWalletUpdate(() {
+    // _context?.onConnect(() { log("web3: connected"); });
+    // _context?.onDisconnect(() { log("web3: disconnected"); });
+    context.onWalletUpdate(() {
       // Update the UI
       setState(() {});
     });
 
+    log("new context: $context");
+    _context = context;
     _contextChanged();
-    log("new context = $_context");
   }
 
-  // TODO: break this out into chain changed, account changed
   // Update the existing context on change of address or chain
   void _onAccountOrChainChange() async {
+    if (_context == null) {
+      return;
+    }
+
+    // Recreate the context wrapper
+    var context;
+    if (_context.ethereumProvider != null) {
+      context = await OrchidWeb3Context.fromEthereum(_context.ethereumProvider);
+    } else {
+      context = await OrchidWeb3Context.fromWalletConnect(
+          _context.walletConnectProvider);
+    }
+    _setNewContex(context);
+  }
+
+  // The context was replaced or updated. Check various attributes.
+  void _contextChanged() async {
     var chainId = await ethereum.getChainId();
     if (!Chains.isKnown(chainId)) {
       return _invalidChain();
     }
-    /*
-    if (_context != null) {
-      if (_context.ethereumProvider != null) {
-        _context =
-            await OrchidWeb3Context.fromEthereum(_context.ethereumProvider);
-      } else {
-        _context = await OrchidWeb3Context.fromWalletConnect(
-            _context.walletConnectProvider);
-      }
-    }
-     */
+
     // check the contract
     if (_context != null) {
       var code = await _context.web3
@@ -463,15 +457,8 @@ class _DappHomeState extends State<DappHome> {
         return _noContract();
       }
     }
-    _context.refresh();
-    log("updated context = $_context");
+    _context?.refresh();
 
-    _contextChanged();
-  }
-
-  // TODO: break this out into chain changed, account changed
-  // The context was replaced or updated (wallet address, chain id, connection)
-  void _contextChanged() async {
     _selectedAccountChanged();
     if (_context != null) {
       OrchidEthereumV1.setWeb3Provider(OrchidEthereumV1Web3Impl(_context));
@@ -506,6 +493,7 @@ class _DappHomeState extends State<DappHome> {
   }
 
   void _disconnect() async {
+    log("XXX: dapp_home disconnecting");
     _context?.disconnect();
     setState(() {
       _clearAccountDetail();
