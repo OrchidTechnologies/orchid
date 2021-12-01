@@ -4,7 +4,6 @@ import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'chains.dart';
 
 class TokenTypes {
-  // ignore: non_constant_identifier_names
   static const TokenType ETH = TokenType(
     name: 'ETH',
     symbol: 'ETH',
@@ -13,7 +12,6 @@ class TokenTypes {
     chainId: Chains.ETH_CHAINID,
   );
 
-  // ignore: non_constant_identifier_names
   // See class OXT.
   static const TokenType OXT = TokenType(
     name: 'OXT',
@@ -23,7 +21,6 @@ class TokenTypes {
     chainId: Chains.ETH_CHAINID,
   );
 
-  // ignore: non_constant_identifier_names
   static const TokenType XDAI = TokenType(
       name: 'xDAI',
       symbol: 'xDAI',
@@ -32,7 +29,6 @@ class TokenTypes {
       decimals: 18,
       chainId: Chains.XDAI_CHAINID);
 
-  // ignore: non_constant_identifier_names
   static const TokenType TOK = TokenType(
       name: 'TOK',
       symbol: 'TOK',
@@ -40,6 +36,41 @@ class TokenTypes {
           BinanceExchangeRateSource(symbolOverride: 'ETH', inverted: true),
       decimals: 18,
       chainId: Chains.GANACHE_TEST_CHAINID);
+
+  static const TokenType AVAX = TokenType(
+      name: 'Avalanche',
+      symbol: 'AVAX',
+      exchangeRateSource:
+      BinanceExchangeRateSource(),
+      decimals: 18,
+      chainId: Chains.AVALANCHE_CHAINID);
+
+  static const TokenType BNB = TokenType(
+      name: 'BNB',
+      symbol: 'BNB',
+      exchangeRateSource:
+      BinanceExchangeRateSource(),
+      decimals: 18,
+      chainId: Chains.BSC_CHAINID);
+
+  static const TokenType MATIC = TokenType(
+      name: 'MATIC',
+      symbol: 'MATIC',
+      exchangeRateSource:
+      BinanceExchangeRateSource(),
+      decimals: 18,
+      chainId: Chains.POLYGON_CHAINID);
+
+  /*
+  static const TokenType AETH = TokenType(
+    name: 'AETH',
+    symbol: 'AETH',
+    exchangeRateSource: BinanceExchangeRateSource(),
+    decimals: 18,
+    chainId: Chains.ARBITRUM_ONE_CHAINID,
+  );
+   */
+
 }
 
 // ERC20 Token type

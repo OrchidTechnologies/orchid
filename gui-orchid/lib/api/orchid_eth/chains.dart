@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
@@ -10,11 +12,6 @@ TODO: embed Chain data from https://chainid.network/chains.json
   https://github.com/ethereum-lists/chains
  */
 class Chains {
-  // ignore: non_constant_identifier_names
-  static const int ETH_CHAINID = 1;
-  static const int XDAI_CHAINID = 100;
-  static const int GANACHE_TEST_CHAINID = 1337;
-
   static final _defaultEthereumProviderUrl = 'htt' +
       'ps://et' +
       'h-main' +
@@ -36,7 +33,8 @@ class Chains {
     return jsConfig.evalStringDefault('rpc', _defaultEthereumProviderUrl);
   }
 
-  // ignore: non_constant_identifier_names
+  // Ethereum
+  static const int ETH_CHAINID = 1;
   static Chain Ethereum = Chain(
     chainId: ETH_CHAINID,
     name: "Ethereum",
@@ -46,6 +44,8 @@ class Chains {
     icon: SvgPicture.asset('assets/svg/orchid_icon.svg'),
   );
 
+  // xDAI
+  static const int XDAI_CHAINID = 100;
   static Chain xDAI = Chain(
     chainId: XDAI_CHAINID,
     name: "xDAI",
@@ -55,7 +55,8 @@ class Chains {
     icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
   );
 
-  // ignore: non_constant_identifier_names
+  // Ganache
+  static const int GANACHE_TEST_CHAINID = 1337;
   static Chain GanacheTest = Chain(
     chainId: GANACHE_TEST_CHAINID,
     name: "Ganache Test",
@@ -64,10 +65,60 @@ class Chains {
     icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
   );
 
+  // Avalanch (AVAX)
+  static const int AVALANCHE_CHAINID = 43114;
+  static Chain Avalanche = Chain(
+    chainId: AVALANCHE_CHAINID,
+    name: "Avalanche Mainnet",
+    nativeCurrency: TokenTypes.AVAX,
+    providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
+    //icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+    explorerUrl: 'https://snowtrace.io/',
+  );
+
+  // Binance Smart Chain (BSC)
+  static const int BSC_CHAINID = 56;
+  static Chain BinanceSmartChain = Chain(
+    chainId: BSC_CHAINID,
+    name: "Binance Smart Chain",
+    nativeCurrency: TokenTypes.BNB,
+    providerUrl: 'https://bsc-dataseed1.binance.org',
+    //icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+    explorerUrl: 'https://bscscan.com',
+  );
+
+  // Polygon (MATIC)
+  static const int POLYGON_CHAINID = 137;
+  static Chain Polygon = Chain(
+    chainId: POLYGON_CHAINID,
+    name: "Polygon Chain",
+    nativeCurrency: TokenTypes.MATIC,
+    providerUrl: 'https://polygon-rpc.com/',
+    //icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+    explorerUrl: 'https://polygonscan.com/',
+  );
+
+  /*
+  TODO: We would need a price source for AETH
+  // Arbitrum One
+  static const int ARBITRUM_ONE_CHAINID = 42161;
+  static Chain ArbitrumOne = Chain(
+    chainId: ARBITRUM_ONE_CHAINID,
+    name: "Arbitrum One",
+    nativeCurrency: TokenTypes.AETH,
+    providerUrl: 'https://arb1.arbitrum.io/rpc/',
+    //icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+    explorerUrl: 'https://arbiscan.io/',
+  );
+   */
+
   static Map<int, Chain> map = {
     Ethereum.chainId: Ethereum,
     xDAI.chainId: xDAI,
     GanacheTest.chainId: GanacheTest,
+    Avalanche.chainId: Avalanche,
+    BinanceSmartChain.chainId: BinanceSmartChain,
+    Polygon.chainId: Polygon,
   };
 
   static bool isKnown(int chainId) {
@@ -90,8 +141,11 @@ class Chain {
   final TokenType nativeCurrency;
   final String providerUrl;
 
-  // Optional icon svg
+  /// Optional icon svg
   final SvgPicture icon;
+
+  /// Optional explorer URL
+  final String explorerUrl;
 
   const Chain({
     @required this.chainId,
@@ -99,6 +153,7 @@ class Chain {
     @required this.nativeCurrency,
     @required this.providerUrl,
     this.icon,
+    this.explorerUrl,
   });
 
   Future<Token> getGasPrice({bool refresh = false}) {
