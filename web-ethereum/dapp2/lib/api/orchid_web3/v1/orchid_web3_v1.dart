@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_web3/flutter_web3.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -107,10 +108,11 @@ class OrchidWeb3V1 {
 
     // Move the specified amount from deposit to balance
     // This is capped at the warned amount.
-    var adjustAmount = Token.min(withdrawEscrow, pot.warned).intValue;
+    var moveEscrowToBalanceAmount =
+        Token.min(withdrawEscrow, pot.warned).intValue;
     // Withdraw the sum
-    var retrieve =
-        Token.min(withdrawBalance, pot.balance).intValue + adjustAmount;
+    var retrieve = Token.min(withdrawBalance, pot.balance).intValue +
+        moveEscrowToBalanceAmount;
     // Warn more if desired
     var warn = (warnDeposit && pot.deposit.gtZero())
         ? pot.deposit.intValue
@@ -119,16 +121,75 @@ class OrchidWeb3V1 {
     // This client does not specify a gas price. We will assume that an EIP-1559 wallet
     // will do something appropriate.
 
+    // positive adjust moves from balance to escrow
+    final moveBalanceToEscrowAmount = -moveEscrowToBalanceAmount;
     TransactionResponse tx = await _editCall(
       signer: signer,
-      adjust: -adjustAmount, // negative move escrow->balance
+      adjust: moveBalanceToEscrowAmount,
       warn: warn,
       retrieve: retrieve,
     );
     return tx.hash;
   }
 
+  /// If positive, netPayable indicates net payable amount from the wallet to the
+  /// contract. If negative the netPayable indicates the withdraw amount that will
+  /// be recieved back to the wallet.
+  /// If adjustAmount is positive funds move from balance to deposit;
+  /// If adjustAmount is negative funds move from deposit to balance.
+  /// warnAmount may be positive or negative to indicate a change in the warned amount.
+  Future<String /*TransactionId*/ > orchidEditFunds({
+    @required OrchidWallet wallet,
+    @required EthereumAddress signer,
+    @required LotteryPot pot,
+    @required Token netPayable,
+    @required Token adjustAmount,
+    @required Token warnAmount,
+  }) async {
+    log("orchidEditFunds: netPayable: $netPayable, adjustAmount: $adjustAmount, warnAmount: $warnAmount ");
+
+    // check payable
+    if (netPayable > wallet.balance) {
+      throw Exception('insufficient wallet balance: ');
+    }
+    // check adjust
+    final moveToDeposit = adjustAmount;
+    if (moveToDeposit.gtZero() && moveToDeposit > pot.balance) {
+      throw Exception(
+          'insufficient balance for adjustAmount: $adjustAmount, $pot');
+    }
+    final moveToBalance = -moveToDeposit;
+    if (moveToBalance.gtZero() && moveToBalance > pot.warned) {
+      throw Exception(
+          'insufficient warned for adjustAmount: $moveToBalance, $pot');
+    }
+
+    // check warn
+    if (warnAmount.ltZero()) {
+      final warnSubtract = -warnAmount;
+      if (warnSubtract > pot.warned) {
+        throw Exception(
+            'attempt to un-warn more than currently warned: $warnAmount, $pot');
+      }
+    }
+    // The contract doesn't care if the warned value is greater than the deposit.
+    // if (warnAmount.gtZero()) { }
+
+    final retrieve = netPayable.lteZero() ? -netPayable.intValue : BigInt.zero;
+    final pay = netPayable.gtZero() ? netPayable : null;
+
+    TransactionResponse tx = await _editCall(
+      signer: signer,
+      adjust: adjustAmount.intValue,
+      warn: warnAmount.intValue,
+      retrieve: retrieve,
+      totalPayable: pay,
+    );
+    return tx.hash;
+  }
+
   // function edit(address signer, int256 adjust, int256 warn, uint256 retrieve)
+  // positive adjust moves from balance to escrow
   Future<TransactionResponse> _editCall({
     @required EthereumAddress signer,
     @required BigInt adjust,

@@ -11,13 +11,17 @@ class LabeledTokenValueField extends StatelessWidget {
   final TokenType type;
   final String label;
   final double labelWidth;
+  final bool enabled;
+  final VoidCallback onClear;
 
   LabeledTokenValueField({
     Key key,
     @required this.type,
     @required this.controller,
     @required this.label,
+    this.enabled,
     this.labelWidth,
+    this.onClear,
   }) : super(key: key) {
     controller.type = type;
   }
@@ -34,6 +38,8 @@ class LabeledTokenValueField extends StatelessWidget {
             margin: EdgeInsets.zero,
             controller: controller._textController,
             numeric: true,
+            enabled: enabled ?? true,
+            onClear: onClear,
           ),
         ),
         // padx(4),
@@ -49,12 +55,12 @@ class TokenValueFieldController implements Listenable {
 
   TokenValueFieldController();
 
-  /// Return the value or null if invalid
+  /// Return the value, zero if empty, or null if invalid
   Token get value {
     if (type == null) {
       return null;
     }
-    var text = _textController.text;
+    final text = _textController.text;
     if (text == null || text == "") {
       return type.zero;
     }
@@ -66,8 +72,21 @@ class TokenValueFieldController implements Listenable {
     }
   }
 
+  set value(Token value) {
+    _textController.text = value.floatValue.toString();
+  }
+
+  bool get hasValue {
+    final text = _textController.text;
+    return text != null && text != '';
+  }
+
+  bool get hasNoValue {
+    return !hasValue;
+  }
+
   void clear() {
-    _textController.text = '';
+    _textController.clear();
   }
 
   @override

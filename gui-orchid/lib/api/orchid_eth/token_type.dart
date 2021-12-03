@@ -40,28 +40,25 @@ class TokenTypes {
   static const TokenType AVAX = TokenType(
       name: 'Avalanche',
       symbol: 'AVAX',
-      exchangeRateSource:
-      BinanceExchangeRateSource(),
+      exchangeRateSource: BinanceExchangeRateSource(),
       decimals: 18,
       chainId: Chains.AVALANCHE_CHAINID);
 
   static const TokenType BNB = TokenType(
       name: 'BNB',
       symbol: 'BNB',
-      exchangeRateSource:
-      BinanceExchangeRateSource(),
+      exchangeRateSource: BinanceExchangeRateSource(),
       decimals: 18,
       chainId: Chains.BSC_CHAINID);
 
   static const TokenType MATIC = TokenType(
       name: 'MATIC',
       symbol: 'MATIC',
-      exchangeRateSource:
-      BinanceExchangeRateSource(),
+      exchangeRateSource: BinanceExchangeRateSource(),
       decimals: 18,
       chainId: Chains.POLYGON_CHAINID);
 
-  /*
+/*
   static const TokenType AETH = TokenType(
     name: 'AETH',
     symbol: 'AETH',
@@ -183,6 +180,10 @@ class Token {
     return type.fromInt(intValue - other.intValue);
   }
 
+  Token operator -() {
+    return type.fromInt(-intValue);
+  }
+
   Token operator -(Token other) {
     return subtract(other);
   }
@@ -222,6 +223,14 @@ class Token {
 
   bool lteZero() {
     return intValue <= BigInt.zero;
+  }
+
+  bool isZero() {
+    return intValue == BigInt.zero;
+  }
+
+  bool isNotZero() {
+    return !isZero();
   }
 
   bool gteZero() {

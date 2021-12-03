@@ -66,9 +66,21 @@ class _WithdrawFundsPaneState extends State<WithdrawFundsPane> {
     var tokenType = pot.balance.type;
     var buttonTitle =
         _unlockDeposit ? "WITHDRAW AND UNLOCK FUNDS" : "WITHDRAW FUNDS";
+
+    final totalFunds = pot.balance + pot.deposit;
+    final maxWithdraw = pot.maxWithdrawable;
+    final fullyUnlocked = maxWithdraw >= totalFunds;
+
+    final availableText = fullyUnlocked
+        ? "All of your funds are available for withdrawal."
+        : "${maxWithdraw.formatCurrency()} of your ${totalFunds.formatCurrency()} combined funds are currently available for withdrawal.";
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        pady(16),
+        Text(availableText).title,
+        pady(24),
         LabeledTokenValueField(
           labelWidth: 90,
           type: tokenType,
@@ -90,7 +102,7 @@ class _WithdrawFundsPaneState extends State<WithdrawFundsPane> {
           ],
         ),
         pady(32),
-        _buildInstructions(),
+        _buildInstructions(fullyUnlocked),
       ],
     );
   }
@@ -98,7 +110,7 @@ class _WithdrawFundsPaneState extends State<WithdrawFundsPane> {
   Row _buildUnlockDepositCheckbox(BuildContext context) {
     return Row(
       children: [
-        Text("Unlock deposit: ").button.height(1.3),
+        Text("Also unlock remaining deposit: ").button.height(1.3),
         padx(8),
         Theme(
           data: Theme.of(context).copyWith(
@@ -117,19 +129,14 @@ class _WithdrawFundsPaneState extends State<WithdrawFundsPane> {
     );
   }
 
-  Widget _buildInstructions() {
-    final totalFunds = pot.balance + pot.deposit;
-    final maxWithdraw = pot.maxWithdrawable;
-    final fullyUnlocked = maxWithdraw >= totalFunds;
+  Widget _buildInstructions(bool fullyUnlocked) {
+
     final fullyUnlockedInstruction =
-        "All of your funds are available for withdrawal."
-                '  ' +
-            "If you specify less than the full amount funds will be drawn from your balance first."
+        "If you specify less than the full amount funds will be drawn from your balance first."
                 '  ' +
             "For additional options see the ADVANCED panel.";
+
     final partiallyUnlockedInstruction =
-        "${maxWithdraw.formatCurrency()} of your ${totalFunds.formatCurrency()} funds are currently available for withdrawal."
-        '  '
         "If you specify less than the full amount funds will be drawn from your balance first."
         '  '
         "If you select the unlock deposit option this transaction will immediately "
@@ -138,7 +145,7 @@ class _WithdrawFundsPaneState extends State<WithdrawFundsPane> {
         '  '
         "Deposit funds are available for withdrawal 24 hours after unlocking."
         '  '
-        "See the ADVANCED panel for additional options.";
+        "For additional options see the ADVANCED panel.";
 
     return StyledText(
       style: OrchidText.caption,
@@ -193,10 +200,17 @@ class _WithdrawFundsPaneState extends State<WithdrawFundsPane> {
       setState(() {});
       widget.onTransaction();
     } catch (err) {
-      log("Error on add funds: $err");
+      log("Error on withdraw funds: $err");
     }
     setState(() {
       _txPending = false;
     });
+  }
+
+  @override
+  void dispose() {
+    _withdrawBalanceField.removeListener(_formFieldChanged);
+    _withdrawBalanceField.removeListener(_formFieldChanged);
+    super.dispose();
   }
 }

@@ -23,6 +23,8 @@ class OrchidTextField extends StatelessWidget {
   final bool numeric;
   final double height;
 
+  final VoidCallback onClear;
+
   OrchidTextField({
     this.hintText,
     this.trailing,
@@ -35,10 +37,13 @@ class OrchidTextField extends StatelessWidget {
     this.margin,
     this.numeric = false,
     this.height = 56,
+    this.onClear,
   });
 
   @override
   Widget build(BuildContext context) {
+    var textStyle = OrchidText.body2.copyWith(height: 1.5);
+    var hasValue = controller.text != '';
     return Container(
         height: height,
         margin: margin ??
@@ -50,7 +55,7 @@ class OrchidTextField extends StatelessWidget {
                 padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
                 child: TextField(
                   enabled: enabled,
-                  style: OrchidText.body2,
+                  style: textStyle,
                   obscureText: obscureText,
                   controller: controller,
                   autocorrect: false,
@@ -64,10 +69,23 @@ class OrchidTextField extends StatelessWidget {
                         top: 24, bottom: 20, left: 16, right: 16),
                     border: InputBorder.none,
                     hintText: hintText,
-                    hintStyle: OrchidText.body2,
+                    hintStyle: textStyle.copyWith(
+                        color: Colors.white.withOpacity(0.3)),
                     enabledBorder: textFieldEnabledBorder,
                     focusedBorder: textFieldFocusedBorder,
+                    suffixIcon: hasValue
+                        ? IconButton(
+                            onPressed: onClear ?? controller.clear,
+                            icon: Padding(
+                              padding: const EdgeInsets.only(right: 4.0),
+                              child: Icon(Icons.clear,
+                                  color: Colors.white.withOpacity(0.5),
+                                  size: 20),
+                            ),
+                          )
+                        : null,
                   ),
+                  cursorColor: Colors.white,
                   keyboardType: numeric
                       ? TextInputType.numberWithOptions(decimal: true)
                       : null,

@@ -58,8 +58,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
     log("locale = $locale");
     var preferredSize = Size.fromHeight(kToolbarHeight);
     return Container(
-      decoration:
-          BoxDecoration(gradient: OrchidGradients.blackGradientBackground),
+      decoration: BoxDecoration(gradient: OrchidGradients.blackGradientBackground),
       child: Scaffold(
         /*
         appBar: PreferredSize(
@@ -78,10 +77,11 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   }
 
   Widget _body() {
-    return Center(
-      child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 600), child: DappHome()),
-    );
+    return Center(child: DappHome());
+    // return Center(
+    //   child: ConstrainedBox(
+    //       constraints: BoxConstraints(maxWidth: 600), child: DappHome()),
+    // );
   }
 }
 

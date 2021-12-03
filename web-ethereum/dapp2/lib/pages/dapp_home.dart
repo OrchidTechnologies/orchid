@@ -6,10 +6,12 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_logo.dart';
@@ -18,11 +20,13 @@ import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
 import 'package:orchid/pages/dapp_withdraw_funds.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
+import 'package:orchid/util/on_off.dart';
 import 'account_manager/account_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'account_manager/account_detail_poller.dart';
 import 'dapp_add_funds.dart';
+import 'dapp_advanced_funds.dart';
 import 'dapp_button.dart';
 
 class DappHome extends StatefulWidget {
@@ -40,6 +44,7 @@ class _DappHomeState extends State<DappHome> {
   AccountDetailPoller _accountDetail;
 
   final _signerField = TextEditingController();
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -135,47 +140,65 @@ class _DappHomeState extends State<DappHome> {
                 )
               : SizedBox(height: 48),
         ),
-        // logo
-        pady(_accountDetail == null ? 64 : 32),
-        AnimatedContainer(
-            duration: Duration(milliseconds: 300),
-            height: _accountDetail == null ? 180 : 64,
-            width: _accountDetail == null ? 300 : 128,
-            child: FittedBox(
-              fit: BoxFit.fitWidth,
-              child: NeonOrchidLogo(
-                showBackground: false,
-                light: _connected ? 1.0 : 0.0,
-              ),
-            )),
-        pady(16),
+
         // main info column
         Expanded(
-          child: SingleChildScrollView(
-            child: SizedBox(
-              width: 600,
-              child: Column(
-                children: [
-                  if (_connected) _buildPasteSignerField(),
-                  pady(40),
-                  // account card
-                  if (_accountDetail != null)
-                    AccountCard(
-                      accountDetail: _accountDetail,
-                      initiallyExpanded: true,
-                      showLockStatus: showLockStatus,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              highlightColor: OrchidColors.tappable,
+              scrollbarTheme: ScrollbarThemeData(
+                thumbColor:
+                    MaterialStateProperty.all(Colors.white.withOpacity(0.4)),
+                // isAlwaysShown: true,
+              ),
+            ),
+            child: Scrollbar(
+              controller: _scrollController,
+              child: SingleChildScrollView(
+                physics: OrchidPlatform.isWeb ? ClampingScrollPhysics() : null,
+                controller: _scrollController,
+                child: Center(
+                  child: SizedBox(
+                    width: 600,
+                    child: Column(
+                      children: [
+                        // logo
+                        pady(_accountDetail == null ? 64 : 32),
+                        AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
+                            height: _accountDetail == null ? 180 : 64,
+                            width: _accountDetail == null ? 300 : 128,
+                            child: FittedBox(
+                              fit: BoxFit.fitWidth,
+                              child: NeonOrchidLogo(
+                                showBackground: false,
+                                light: _connected ? 1.0 : 0.0,
+                              ),
+                            )),
+                        pady(16),
+                        if (_connected) _buildPasteSignerField(),
+                        pady(40),
+                        // account card
+                        if (_accountDetail != null)
+                          AccountCard(
+                            accountDetail: _accountDetail,
+                            initiallyExpanded: true,
+                            showLockStatus: showLockStatus,
+                          ),
+                        _buildTransactionsList(),
+                        pady(40),
+                        // tabs
+                        if (_connected && _signer != null) ...[
+                          Divider(color: Colors.white.withOpacity(0.3)),
+                          pady(16),
+                          _buildTabs(),
+                          // pady(16),
+                          // Divider(color: Colors.white.withOpacity(0.3)),
+                        ],
+                      ],
                     ),
-                  _buildTransactionsList(),
-                  pady(40),
-                  // tabs
-                  if (_connected && _signer != null) ...[
-                    Divider(color: Colors.white.withOpacity(0.3)),
-                    pady(16),
-                    _buildTabs(),
-                    // pady(16),
-                    // Divider(color: Colors.white.withOpacity(0.3)),
-                  ],
-                ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -200,8 +223,8 @@ class _DappHomeState extends State<DappHome> {
                       transactionHash: tx,
                       onDismiss: _dismissTransaction,
                       onTransactionUpdated: () {
-                        _context.refresh();
-                        _accountDetail.refresh();
+                        _context?.refresh();
+                        _accountDetail?.refresh();
                       },
                     ),
                   ))
@@ -218,9 +241,9 @@ class _DappHomeState extends State<DappHome> {
 
   Widget _buildTabs() {
     return SizedBox(
-      height: 420,
+      height: 1000,
       child: DefaultTabController(
-        initialIndex: 0,
+        initialIndex: 2,
         length: 3,
         child: Scaffold(
           backgroundColor: Colors.transparent,
@@ -272,7 +295,24 @@ class _DappHomeState extends State<DappHome> {
                   ),
                 )),
               ),
-              Icon(Icons.directions_bike),
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0),
+                child: Center(
+                    child: SizedBox(
+                  width: 500,
+                  child: AdvancedFundsPane(
+                    // the warn value is captured for the warn field
+                    key: Key(_accountDetail?.lotteryPot?.toString() ?? ''),
+                    context: _context,
+                    pot: _accountDetail?.lotteryPot,
+                    signer: _signer,
+                    onTransaction: () async {
+                      _accountDetail.refresh();
+                      setState(() {});
+                    },
+                  ),
+                )),
+              ),
             ],
           ),
         ),
@@ -297,10 +337,12 @@ class _DappHomeState extends State<DappHome> {
         padx(16),
         SizedBox(
             width: 200,
-            child: Text(
+            child: TapToCopyText(
               _context.walletAddress.toString(),
+              style: OrchidText.title,
               overflow: TextOverflow.ellipsis,
-            ).title),
+              padding: EdgeInsets.zero,
+            )),
       ],
     );
   }
@@ -309,7 +351,8 @@ class _DappHomeState extends State<DappHome> {
     if (_context.wallet == null) {
       return Container();
     }
-    return Text(_context.wallet.balance.formatCurrency()).title.white;
+    return SelectableText(_context.wallet.balance.formatCurrency(),
+        style: OrchidText.title);
   }
 
   Widget _buildPasteSignerField() {
@@ -400,22 +443,21 @@ class _DappHomeState extends State<DappHome> {
 
   // Init a new context, disconnecting any old context and registering listeners
   void _setNewContex(OrchidWeb3Context context) {
-
     // Clear the old context, removing listeners and disposing of it properly.
     _context?.disconnect();
 
     // Register listeners on the new context
-    context.onAccountsChanged((accounts) {
+    context?.onAccountsChanged((accounts) {
       log("web3: accounts changed: $accounts");
       _onAccountOrChainChange();
     });
-    context.onChainChanged((chainId) {
+    context?.onChainChanged((chainId) {
       log("web3: chain changed: $chainId");
       _onAccountOrChainChange();
     });
     // _context?.onConnect(() { log("web3: connected"); });
     // _context?.onDisconnect(() { log("web3: disconnected"); });
-    context.onWalletUpdate(() {
+    context?.onWalletUpdate(() {
       // Update the UI
       setState(() {});
     });
@@ -493,7 +535,6 @@ class _DappHomeState extends State<DappHome> {
   }
 
   void _disconnect() async {
-    log("XXX: dapp_home disconnecting");
     _context?.disconnect();
     setState(() {
       _clearAccountDetail();

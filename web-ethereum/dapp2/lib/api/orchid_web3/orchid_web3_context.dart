@@ -173,7 +173,6 @@ class OrchidWeb3Context {
 
   void disconnect() async {
     log("XXX: disconnect context ($id)");
-
     removeAllListeners();
     _pollWalletTimer?.cancel();
 

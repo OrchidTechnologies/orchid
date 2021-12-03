@@ -151,4 +151,11 @@ class _AddFundsPaneState extends State<AddFundsPane> {
       _txPending = false;
     });
   }
+
+  @override
+  void dispose() {
+    _addBalanceField.removeListener(_formFieldChanged);
+    _addDepositField.removeListener(_formFieldChanged);
+    super.dispose();
+  }
 }
