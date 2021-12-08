@@ -45,12 +45,14 @@ class _DappHomeState extends State<DappHome> {
 
   final _signerField = TextEditingController();
   final _scrollController = ScrollController();
+  var _showWalletConnect;
 
   @override
   void initState() {
     super.initState();
     _signerField.addListener(_signerFieldChanged);
     log("dapp home query = ${Uri.base.queryParameters}");
+    _showWalletConnect = Uri.base.queryParameters["wc"] != null;
     initStateAsync();
   }
 
@@ -388,15 +390,17 @@ class _DappHomeState extends State<DappHome> {
           text: "Connect",
           onPressed: _connected ? null : _connectEthereum,
         ),
-        padx(24),
-        DappButton(
-          text: "Wallet Connect",
-          onPressed: _connected ? null : _connectWalletConnect,
-          trailing: Padding(
-            padding: const EdgeInsets.only(left: 10.0, right: 16.0),
-            child: Icon(Icons.qr_code, color: Colors.black),
+        if (_showWalletConnect) ...[
+          padx(24),
+          DappButton(
+            text: "Wallet Connect",
+            onPressed: _connected ? null : _connectWalletConnect,
+            trailing: Padding(
+              padding: const EdgeInsets.only(left: 10.0, right: 16.0),
+              child: Icon(Icons.qr_code, color: Colors.black),
+            ),
           ),
-        ),
+        ],
         padx(24),
         DappButton(
           text: "Disconnect",
