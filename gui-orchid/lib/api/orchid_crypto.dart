@@ -306,7 +306,6 @@ class EthereumAddress {
     return text == null ? null : EthereumAddress.from(text);
   }
 
-  // TODO: EIP55
   // Display the optionally prefixed 40 char hex address.
   @override
   String toString({bool prefix: true}) {
@@ -318,10 +317,22 @@ class EthereumAddress {
     return (prefix ? eip55 : Hex.remove0x(eip55));
   }
 
-  // TODO: EIP55
+  static bool isValid(String text) {
+    try {
+      EthereumAddress.parse(text);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
   static BigInt parse(String text) {
     if (text == null) {
       throw Exception("invalid, null");
+    }
+    // eip55 check
+    if (!isValidEthereumAddress(text)) {
+      throw Exception("invalid eth address: $text");
     }
     text = Hex.remove0x(text);
     if (text.length != 40) {

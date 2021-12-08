@@ -69,7 +69,7 @@ class Chains {
   static const int AVALANCHE_CHAINID = 43114;
   static Chain Avalanche = Chain(
     chainId: AVALANCHE_CHAINID,
-    name: "Avalanche Mainnet",
+    name: "Avalanche Chain",
     nativeCurrency: TokenTypes.AVAX,
     providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
     //icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
@@ -115,10 +115,10 @@ class Chains {
   static Map<int, Chain> map = {
     Ethereum.chainId: Ethereum,
     xDAI.chainId: xDAI,
-    GanacheTest.chainId: GanacheTest,
     Avalanche.chainId: Avalanche,
     BinanceSmartChain.chainId: BinanceSmartChain,
     Polygon.chainId: Polygon,
+    GanacheTest.chainId: GanacheTest,
   };
 
   static bool isKnown(int chainId) {
@@ -164,6 +164,10 @@ class Chain {
 
   bool get isGanache {
     return this == Chains.GanacheTest;
+  }
+
+  bool get isEthereum{
+    return this == Chains.Ethereum;
   }
 
   @override
