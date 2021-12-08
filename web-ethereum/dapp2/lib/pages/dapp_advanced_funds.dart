@@ -83,20 +83,20 @@ class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
       children: [
         // add
         ..._buildBalanceForm(tokenType),
-        pady(48),
+        pady(32),
 
         // withdraw
         ..._buildDepositForm(tokenType),
 
-        pady(48),
+        pady(32),
         // move
         ..._buildMoveFunds(tokenType),
 
-        pady(48),
+        pady(32),
         // warn
         ..._buildWarn(tokenType),
 
-        pady(48),
+        pady(32),
         // submit button
         _buildSubmitButton(),
         pady(32),
