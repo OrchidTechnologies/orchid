@@ -44,10 +44,7 @@ dependencies:
   uuid: 2.2.2 # XXX: web3dart
   web3dart: 1.2.3
   flutter_web3: 2.1.6
-
-  # TODO: REMOVE
-  # Just testing a demo...
-  get:
+  flutter_lints: ^1.0.0
 
 dev_dependencies:
   flutter_test:

@@ -153,16 +153,7 @@ class OrchidWeb3V1 {
       throw Exception('insufficient wallet balance: ');
     }
     // check adjust
-    final moveToDeposit = adjustAmount;
-    if (moveToDeposit.gtZero() && moveToDeposit > pot.balance) {
-      throw Exception(
-          'insufficient balance for adjustAmount: $adjustAmount, $pot');
-    }
-    final moveToBalance = -moveToDeposit;
-    if (moveToBalance.gtZero() && moveToBalance > pot.warned) {
-      throw Exception(
-          'insufficient warned for adjustAmount: $moveToBalance, $pot');
-    }
+    //...
 
     // check warn
     if (warnAmount.ltZero()) {

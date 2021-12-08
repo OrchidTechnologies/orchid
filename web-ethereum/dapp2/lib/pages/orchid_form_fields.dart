@@ -18,7 +18,7 @@ class LabeledTokenValueField extends StatelessWidget {
     Key key,
     @required this.type,
     @required this.controller,
-    @required this.label,
+    this.label,
     this.enabled,
     this.labelWidth,
     this.onClear,
@@ -31,7 +31,7 @@ class LabeledTokenValueField extends StatelessWidget {
     var tokenText = Text(type.symbol ?? "").button.height(1.5);
     return Row(
       children: [
-        SizedBox(width: labelWidth ?? 80, child: Text(label).button),
+        SizedBox(width: labelWidth ?? 80, child: Text(label ?? '').button),
         Flexible(
           child: OrchidTextField(
             hintText: '0.0',

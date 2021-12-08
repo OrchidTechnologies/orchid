@@ -7,6 +7,7 @@ import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/on_off.dart';
 
@@ -32,17 +33,17 @@ class AdvancedFundsPane extends StatefulWidget {
 }
 
 class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
-  final _addBalanceField = TokenValueFieldController();
-  final _withdrawBalanceField = TokenValueFieldController();
-  final _addDepositField = TokenValueFieldController();
-  final _withdrawDepositField = TokenValueFieldController();
+  final _balanceField = TokenValueFieldController();
+  _AddWithdrawDirection _balanceFieldDirection = _AddWithdrawDirection.Add;
 
-  // final _adjustAmountField = TokenValueFieldController();
-  final _moveBalanceToDepositField = TokenValueFieldController();
-  final _moveDepositToBalanceField = TokenValueFieldController();
-  final _warnedAmountField = TokenValueFieldController();
+  final _depositField = TokenValueFieldController();
+  _AddWithdrawDirection _depositFieldDirection = _AddWithdrawDirection.Add;
 
-  // bool _adjustBalanceToDeposit = true;
+  final _moveField = TokenValueFieldController();
+  _MoveDirection _moveFieldDirection = _MoveDirection.BalanceToDeposit;
+
+  final _warnedField = TokenValueFieldController();
+
   bool _txPending = false;
 
   OrchidWallet get wallet {
@@ -56,20 +57,16 @@ class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
   @override
   void initState() {
     super.initState();
-    _withdrawBalanceField.addListener(_formFieldChanged);
-    _addBalanceField.addListener(_formFieldChanged);
-    _withdrawBalanceField.addListener(_formFieldChanged);
-    _addDepositField.addListener(_formFieldChanged);
-    _withdrawDepositField.addListener(_formFieldChanged);
-    _moveBalanceToDepositField.addListener(_formFieldChanged);
-    _moveDepositToBalanceField.addListener(_formFieldChanged);
-    _warnedAmountField.addListener(_formFieldChanged);
+    _balanceField.addListener(_formFieldChanged);
+    _depositField.addListener(_formFieldChanged);
+    _moveField.addListener(_formFieldChanged);
+    _warnedField.addListener(_formFieldChanged);
     _resetWarnedField();
   }
 
   void _resetWarnedField() {
     if (pot != null) {
-      _warnedAmountField.value = pot.warned;
+      _warnedField.value = pot.warned;
     }
   }
 
@@ -85,21 +82,21 @@ class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // add
-        ..._buildAddFunds(tokenType),
-        _divider(),
+        ..._buildBalanceForm(tokenType),
+        pady(48),
 
         // withdraw
-        ..._buildWithdrawFunds(tokenType),
-        _divider(),
+        ..._buildDepositForm(tokenType),
 
+        pady(48),
         // move
         ..._buildMoveFunds(tokenType),
-        _divider(),
 
+        pady(48),
         // warn
         ..._buildWarn(tokenType),
 
-        pady(40),
+        pady(48),
         // submit button
         _buildSubmitButton(),
         pady(32),
@@ -119,72 +116,89 @@ class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
     );
   }
 
-  List<Widget> _buildAddFunds(TokenType tokenType) {
+  List<Widget> _buildBalanceForm(TokenType tokenType) {
     return [
-      _buildCenteredTitle("Add Funds"),
-      pady(16),
-      // add
-      _hidingField(
-        type: tokenType,
-        controller: _addBalanceField,
-        label: "Balance" + ':',
-        hide: _withdrawBalanceField.hasValue,
+      _buildCenteredTitle("Balance"),
+      pady(24),
+      Row(
+        children: [
+          _AddWithdrawDropdown(
+            value: _balanceFieldDirection,
+            onChanged: (value) {
+              setState(() {
+                _balanceFieldDirection = value;
+              });
+            },
+          ),
+          padx(16),
+          Expanded(
+            child: LabeledTokenValueField(
+              labelWidth: 0,
+              type: tokenType,
+              controller: _balanceField,
+            ),
+          ),
+        ],
       ),
-      pady(4),
-      _hidingField(
-        type: tokenType,
-        controller: _addDepositField,
-        label: "Deposit" + ':',
-        hide: _withdrawDepositField.hasValue,
-      )
     ];
   }
 
-  List<Widget> _buildWithdrawFunds(TokenType tokenType) {
+  List<Widget> _buildDepositForm(TokenType tokenType) {
     return [
-      _buildCenteredTitle("Withdraw Funds"),
-      pady(16),
-      _hidingField(
-        type: tokenType,
-        controller: _withdrawBalanceField,
-        label: "Balance" + ':',
-        hide: _addBalanceField.hasValue,
+      _buildCenteredTitle("Deposit"),
+      pady(24),
+      Row(
+        children: [
+          _AddWithdrawDropdown(
+            value: _depositFieldDirection,
+            onChanged: (value) {
+              setState(() {
+                _depositFieldDirection = value;
+              });
+            },
+          ),
+          padx(16),
+          Expanded(
+            child: LabeledTokenValueField(
+              labelWidth: 0,
+              type: tokenType,
+              controller: _depositField,
+            ),
+          ),
+        ],
       ),
-      pady(4),
-      _hidingField(
-        type: tokenType,
-        controller: _withdrawDepositField,
-        label: "Deposit" + ':',
-        hide: _addDepositField.hasValue,
-      )
     ];
   }
 
   List<Widget> _buildMoveFunds(TokenType tokenType) {
     return [
-      _buildCenteredTitle("Move Funds"),
-      pady(16),
-      _hidingField(
-        width: 200,
-        type: tokenType,
-        controller: _moveBalanceToDepositField,
-        label: "BALANCE -> DEPOSIT",
-        hide: _moveDepositToBalanceField.hasValue,
-      ),
-      pady(8),
-      _hidingField(
-        width: 200,
-        type: tokenType,
-        controller: _moveDepositToBalanceField,
-        label: "DEPOSIT -> BALANCE",
-        hide: _moveBalanceToDepositField.hasValue,
+      _buildCenteredTitle("Move"),
+      pady(24),
+      Row(
+        children: [
+          _MoveDirectionDropdown(
+            value: _moveFieldDirection,
+            onChanged: (value) {
+              setState(() {
+                _moveFieldDirection = value;
+              });
+            },
+          ),
+          padx(16),
+          Expanded(
+            child: LabeledTokenValueField(
+              labelWidth: 0,
+              type: tokenType,
+              controller: _moveField,
+            ),
+          ),
+        ],
       ),
     ];
   }
 
   List<Widget> _buildWarn(TokenType tokenType) {
-    var warnedIncreased =
-        (_warnedAmountField.value ?? tokenType.zero) > pot.warned;
+    var warnedIncreased = (_warnedField.value ?? tokenType.zero) > pot.warned;
     var unlockTime = warnedIncreased
         ? DateTime.now().add(Duration(days: 1))
         : pot.unlockTime;
@@ -194,16 +208,16 @@ class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
 
     return [
       _buildCenteredTitle("Set Warned Amount"),
-      pady(16),
+      pady(24),
       LabeledTokenValueField(
-        labelWidth: 90,
+        labelWidth: 120,
         type: tokenType,
-        controller: _warnedAmountField,
+        controller: _warnedField,
         label: "Amount" + ':',
         onClear: _resetWarnedField,
       ),
       Visibility(
-        visible: _warnedAmountField.value.gtZero(),
+        visible: _warnedField.value.gtZero(),
         child: Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: Row(
@@ -216,93 +230,6 @@ class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
       )
     ];
   }
-
-  Widget _hidingField({
-    @required TokenType type,
-    @required TokenValueFieldController controller,
-    @required String label,
-    @required bool hide,
-    double width,
-  }) {
-    return AbsorbPointer(
-      absorbing: hide,
-      child: Opacity(
-        opacity: hide ? 0.33 : 1.0,
-        child: LabeledTokenValueField(
-          labelWidth: width ?? 90,
-          type: type,
-          controller: controller,
-          label: label,
-        ),
-      ),
-    );
-  }
-
-  /*
-  AnimatedContainer _hidingField({
-    @required TokenType type,
-    @required TokenValueFieldController controller,
-    @required String label,
-    @required bool hide,
-    double width,
-  }) {
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 330),
-      height: hide ? 0 : 56,
-      child: Visibility(
-        visible: !hide, // animated container leaves a line at zero height?
-        child: LabeledTokenValueField(
-          labelWidth: width ?? 90,
-          type: type,
-          controller: controller,
-          label: label,
-        ),
-      ),
-    );
-  }
-   */
-
-  /*
-  List<Widget> _buildMoveFunds2(TokenType tokenType) {
-    return [
-      _buildCenteredTitle("Move Funds"),
-      pady(24),
-      Padding(
-        padding: const EdgeInsets.only(left: 110),
-        child: Text(_adjustBalanceToDeposit
-                ? "Move amount from balance to deposit."
-                : "Move amount from deposit to balance.")
-            .subtitle
-            .center,
-      ),
-      pady(16),
-      LabeledTokenValueField(
-        labelWidth: 90,
-        type: tokenType,
-        controller: _adjustAmountField,
-        label: "Amount:",
-      ),
-      pady(16),
-      Center(
-        child: Text(_adjustBalanceToDeposit
-                ? "BALANCE -> DEPOSIT"
-                : "DEPOSIT -> BALANCE")
-            .title,
-      ),
-      pady(8),
-      Center(
-        child: DappButton(
-          text: "REVERSE",
-          onPressed: () {
-            setState(() {
-              _adjustBalanceToDeposit = !_adjustBalanceToDeposit;
-            });
-          },
-        ),
-      )
-    ];
-  }
-   */
 
   Row _buildCenteredTitle(String text) {
     return Row(
@@ -321,90 +248,139 @@ class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
   }
 
   void _formFieldChanged() {
-    if (_warnedAmountField.hasNoValue) {
+    if (_warnedField.hasNoValue) {
       _resetWarnedField();
     }
     // Update UI
     setState(() {});
   }
 
-  Token get _netBalanceChange {
-    // @formatter:off
-    return _addBalanceField.value
-        - _withdrawBalanceField.value
-        + _moveDepositToBalanceField.value
-        - _moveBalanceToDepositField.value;
-    // @formatter:on
+  // The move balance to deposit amount which may be negative to indicate
+  // a move from deposit to balance.
+  Token get _moveBalanceToDepositAmount {
+    return _moveFieldDirection == _MoveDirection.BalanceToDeposit
+        ? _moveField.value
+        : -_moveField.value;
   }
 
-  Token get _netDepositChange {
-    // @formatter:off
-    return _addDepositField.value
-        - _withdrawDepositField.value
-        + _moveBalanceToDepositField.value
-        - _moveDepositToBalanceField.value;
-    // @formatter:on
+  // The add balance amount which may be negative to indicate a withdrawal.
+  Token get _addBalanceAmount {
+    return _balanceFieldDirection == _AddWithdrawDirection.Add
+        ? _balanceField.value
+        : -_balanceField.value;
+  }
+
+  // a positive or negative amount indicating the amount added to balance;
+  Token get _netBalanceAdd {
+    return _addBalanceAmount - _moveBalanceToDepositAmount;
+  }
+
+  Token get _netBalanceWithdraw {
+    return -_netBalanceAdd;
+  }
+
+  // The add deposit amount which may be negative to indicate a withdrawal.
+  Token get _addDepositAmount {
+    return _depositFieldDirection == _AddWithdrawDirection.Add
+        ? _depositField.value
+        : -_depositField.value;
+  }
+
+  // a positive or negative amount indicating the amount added to deposit
+  Token get _netDepositAdd {
+    return _addDepositAmount + _moveBalanceToDepositAmount;
+  }
+
+  Token get _netDepositWithdraw {
+    return -_netDepositAdd;
   }
 
   // positive if the warned amount is increasing
-  Token get _warnedAmountChange {
-    return (_warnedAmountField.value ?? pot.warned) - pot.warned;
+  Token get _warnedAmountAdd {
+    return (_warnedField.value ?? pot.warned) - pot.warned;
   }
 
   // The net amount leaving the user's wallet (which may be negative)
   Token get _netPayable {
-    return _netBalanceChange + _netDepositChange;
+    return _netBalanceAdd + _netDepositAdd;
   }
 
-  bool get _addFundsFormValid {
+  bool get _netFundsChangeValid {
     return _netPayable <= wallet.balance;
   }
 
-  bool get _withdrawFundsFormValid {
-    return _withdrawBalanceField.value <= pot.balance &&
-        _withdrawDepositField.value <= pot.warned;
+  bool get _balanceFormValid {
+    switch (_balanceFieldDirection) {
+      case _AddWithdrawDirection.Add:
+        return true;
+        break;
+      case _AddWithdrawDirection.Withdraw:
+        return _balanceField.value <= pot.balance &&
+            _netBalanceWithdraw <= pot.balance;
+        break;
+      default:
+        throw Exception();
+    }
   }
 
-  bool get _moveFundsFormValid {
-    return _moveBalanceToDepositField.value <= pot.balance &&
-        _moveDepositToBalanceField.value <= pot.unlockedAmount;
+  bool get _depositFormValid {
+    switch (_depositFieldDirection) {
+      case _AddWithdrawDirection.Add:
+        return true;
+        break;
+      case _AddWithdrawDirection.Withdraw:
+        return _depositField.value <= pot.warned &&
+            _netDepositWithdraw <= pot.warned;
+        break;
+      default:
+        throw Exception();
+    }
+  }
+
+  bool get _moveFormValid {
+    // return _balanceField.value <= pot.balance && _withdrawDepositField.value <= pot.warned;
+    switch (_moveFieldDirection) {
+      case _MoveDirection.BalanceToDeposit:
+        return _moveField.value <= pot.balance;
+        break;
+      case _MoveDirection.DepositToBalance:
+        return _moveField.value <= pot.warned;
+        break;
+      default:
+        throw Exception();
+    }
   }
 
   bool get _warnFormValid {
-    return _warnedAmountField.value <= pot.deposit;
+    return _warnedField.value <= pot.deposit;
   }
 
   // Would the transaction described by the form actually cause a change.
   bool get _formTransactionHasNetEffect {
     return _netPayable.isNotZero() ||
-        _netDepositChange.isNotZero() ||
-        _warnedAmountChange.isNotZero();
+        _netDepositAdd.isNotZero() ||
+        _warnedAmountAdd.isNotZero();
   }
 
   bool get _formEnabled {
-    //log("XXX formEnabled: tx net effect: $_formTransactionHasNetEffect, warned form valid: $_warnFormValid");
     final fields = [
-      _addBalanceField.value,
-      _withdrawBalanceField.value,
-      _moveDepositToBalanceField.value,
-      _moveBalanceToDepositField.value,
-      _addDepositField.value,
-      _withdrawDepositField.value,
-      _moveBalanceToDepositField.value,
-      _moveDepositToBalanceField.value,
+      _balanceField.value,
+      _depositField.value,
+      _moveField.value,
+      _warnedField.value,
     ];
-
     // If a field is null it is invalid
     if (fields.any((e) => e == null)) {
       return false;
     }
 
-    return !_txPending && _addFundsFormValid
-        && _withdrawFundsFormValid
-        && _moveFundsFormValid
-        && _warnFormValid
-        && _formTransactionHasNetEffect
-        ;
+    return !_txPending &&
+        _netFundsChangeValid &&
+        _balanceFormValid &&
+        _depositFormValid &&
+        _moveFormValid &&
+        _warnFormValid &&
+        _formTransactionHasNetEffect;
   }
 
   void _doTx() async {
@@ -417,19 +393,15 @@ class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
         pot: pot,
         signer: widget.signer,
         netPayable: _netPayable,
-        adjustAmount: _netDepositChange,
-        warnAmount: _warnedAmountChange,
+        adjustAmount: _netDepositAdd,
+        warnAmount: _warnedAmountAdd,
       );
 
       UserPreferences().addTransaction(txHash);
-      _addBalanceField.clear();
-      _withdrawBalanceField.clear();
-      _addDepositField.clear();
-      _withdrawDepositField.clear();
-      _moveDepositToBalanceField.clear();
-      _moveBalanceToDepositField.clear();
-      _warnedAmountField.clear();
-      // _adjustAmountField.clear();
+      _balanceField.clear();
+      _depositField.clear();
+      _moveField.clear();
+      _warnedField.clear();
 
       setState(() {});
       widget.onTransaction();
@@ -443,14 +415,101 @@ class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
 
   @override
   void dispose() {
-    _withdrawBalanceField.removeListener(_formFieldChanged);
-    _addBalanceField.removeListener(_formFieldChanged);
-    _withdrawBalanceField.removeListener(_formFieldChanged);
-    _addDepositField.removeListener(_formFieldChanged);
-    _withdrawDepositField.removeListener(_formFieldChanged);
-    _moveBalanceToDepositField.removeListener(_formFieldChanged);
-    _moveDepositToBalanceField.removeListener(_formFieldChanged);
-    _warnedAmountField.removeListener(_formFieldChanged);
+    _balanceField.removeListener(_formFieldChanged);
+    _depositField.removeListener(_formFieldChanged);
+    _moveField.removeListener(_formFieldChanged);
+    _warnedField.removeListener(_formFieldChanged);
     super.dispose();
+  }
+}
+
+enum _AddWithdrawDirection { Add, Withdraw }
+
+class _AddWithdrawDropdown extends StatelessWidget {
+  final _AddWithdrawDirection value;
+  final ValueChanged<_AddWithdrawDirection> onChanged;
+
+  const _AddWithdrawDropdown({
+    Key key,
+    @required this.value,
+    @required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        canvasColor: OrchidColors.dark_background,
+        focusColor: OrchidColors.purple_menu,
+      ),
+      child: SizedBox(
+        width: 110,
+        child: DropdownButton<_AddWithdrawDirection>(
+          isExpanded: true,
+          // make the width flexible
+          hint: Text("Select", style: OrchidText.button),
+          underline: Container(),
+          value: value,
+          items: [
+            DropdownMenuItem(
+              child: Text(
+                "Add",
+                textAlign: TextAlign.right,
+              ).button,
+              value: _AddWithdrawDirection.Add,
+            ),
+            DropdownMenuItem(
+              child: Text("Withdraw").button,
+              value: _AddWithdrawDirection.Withdraw,
+            ),
+          ],
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+}
+
+enum _MoveDirection { BalanceToDeposit, DepositToBalance }
+
+class _MoveDirectionDropdown extends StatelessWidget {
+  final _MoveDirection value;
+  final ValueChanged<_MoveDirection> onChanged;
+
+  const _MoveDirectionDropdown({
+    Key key,
+    @required this.value,
+    @required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        canvasColor: OrchidColors.dark_background,
+        focusColor: OrchidColors.purple_menu,
+      ),
+      child: SizedBox(
+        width: 200,
+        child: DropdownButton<_MoveDirection>(
+          isExpanded: true,
+          // make the width flexible
+          hint: Text("Select", style: OrchidText.button),
+          underline: Container(),
+          value: value,
+          items: [
+            DropdownMenuItem(
+              child: Text("Balance to Deposit").button,
+              value: _MoveDirection.BalanceToDeposit,
+            ),
+            DropdownMenuItem(
+              child: Text("Deposit to Balance").button,
+              value: _MoveDirection.DepositToBalance,
+            ),
+          ],
+          onChanged: onChanged,
+        ),
+      ),
+    );
   }
 }
