@@ -11,7 +11,7 @@
     "trafficMonitoringOnly": "トラフィック モニタリングのみ",
     "orchidConnecting": "Orchid接続中",
     "orchidDisconnecting": "Orchid切断中",
-    "numHopsConfigured": "{num, plural, other{{num} ホップを設定しました}}",
+    "numHopsConfigured": "{num, plural, =0{ホップが構成されていません} =1{1 ホップが構成されました} =2{2 ホップが構成されました} other{{num} ホップが構成されました}}",
     "@numHopsConfigured": {
         "type": "text",
         "placeholders": {
@@ -262,41 +262,55 @@
     "total": "合計",
     "pausingAllTraffic": "すべてのトラフィックを一時停止しています...",
     "queryingEthereumForARandom": "イーサリアムにランダム プロバイダーを照会しています...",
+    "quickFundAnAccount": "アカウントにすばやく資金を提供します！",
     "accountFound": "アカウントが見つかりました",
-    "accountManager": "アカウントマネージャー",
-    "addNewHop": "新しいホップを追加",
-    "blockchainFee": "ブロックチェーン料金",
-    "chooseIdentity": "アイデンティティを選択",
-    "circuitBuilder": "回路ビルダー",
-    "confirmPurchase": "購入を確認します",
-    "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "VPNクレジットを購入して、共有可能で補充可能なOrchidアカウントに資金を提供することにより、ネットワークの <link1>優先プロバイダー</link1> の1つに自動的に接続します。",
-    "deleteThisOrchidIdentity": "この蘭のアイデンティティを削除します",
-    "deletingOpenVPNAndWireguardHopsWillLose": "OpenVPNおよびWireguardホップを削除すると、関連する資格情報と接続構成が失われます。続行する前に、必ず情報をバックアップしてください。",
-    "entryHop": "エントリーホップ",
-    "exitHop": "出口ホップ",
+    "weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "あなたのIDに関連付けられたアカウントを見つけ、そのためのシングル ホップ Orchid サーキットを作成しました。これで、VPN を使用する準備が整いました。",
+    "welcomeToOrchid": "Orchid にようこそ！",
     "fundYourAccount": "アカウントに資金を提供する",
-    "getStartedFor1": "1ドルで始めましょう",
-    "illDoThisLater": "後でやります",
-    "importAccount": "輸入口座",
-    "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "アカウントマネージャーではなく、回線ビルダーから接続を管理します。すべての接続で、ホップ数が0以上の回路が使用されるようになりました。既存の構成はすべてCircuitBuilderに移行されています。",
-    "newCircuitBuilder": "新しい回路ビルダー！",
-    "orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Orchidアカウントは、 <link>xDAI暗号通貨</link>に裏打ちされたVPNクレジットを使用し、24時間年中無休のカスタマーサポート、無制限のデバイス共有を含み、アプリストアの払い戻しポリシーの対象となります。",
-    "orchidIsUniqueAsAMultiHopOrOnion": "Orchidは、複数のVPNプロトコルをサポートするマルチホップまたはオニオンルーティングクライアントとしてユニークです。以下のサポートされているプロトコルからのホップをチェーン化することにより、接続をセットアップできます。\n\nワンホップは通常のVPNのようなものです。 3ホップ（上級ユーザー向け）は、古典的なオニオンルーティングの選択肢です。ゼロホップにより、VPNトンネルなしでトラフィック分析が可能になります。",
-    "processing": "処理...",
-    "promotion": "昇進",
-    "quickFundAnAccount": "アカウントにすばやく資金を提供します。",
-    "quickStartFor1": "1ドルのクイックスタート",
-    "showInAccountManager": "アカウントマネージャーに表示",
-    "subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "サブスクリプションフリー、従量課金制、分散型のオープンソースVPNサービス。",
-    "thisCannotBeUndoneToSaveThisIdentity": "これは、元に戻すことはできません。このIDを保存するには、[キャンセル]をクリックして、[エクスポート]オプションを使用します",
-    "thisMayTakeAMinute": "これには1分かかる場合があります...",
+    "processing": "処理しています...",
+    "subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "サブスクリプションなし、従量課金制、分散型のオープンソース VPN サービス。",
+    "getStartedFor1": "{smallAmount} で始める",
+    "@getStartedFor1": {
+        "placeholders": {
+            "smallAmount": {
+                "type": "String"
+            }
+        }
+    },
+    "importAccount": "アカウントをインポート",
+    "illDoThisLater": "後で行う",
+    "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "VPN クレジットを購入して、共有可能で補充可能な Orchid アカウントに資金を提供することにより、ネットワークの<link1>優先プロバイダー</link1>の 1 つに自動的に接続します。",
+    "confirmPurchase": "購入を確認",
+    "orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Orchid アカウントは、<link>xDAI 暗号通貨</link>に裏打ちされた VPN クレジットを使用し、24 時間年中無休のカスタマー サポート、無制限のデバイス共有を含み、アプリ ストアの払い戻しポリシーの対象となります。",
+    "yourPurchaseIsInProgress": "ご購入が進行中です。",
     "thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "この購入の処理には予想よりも時間がかかり、エラーが発生した可能性があります。",
-    "trafficAnalysis": "トラフィック分析",
+    "thisMayTakeAMinute": "これには 1 分かかる場合があります...",
+    "vpnCredits": "VPN クレジット",
+    "blockchainFee": "ブロックチェーン料金",
+    "promotion": "プロモーション",
+    "showInAccountManager": "アカウント マネージャーに表示",
+    "deleteThisOrchidIdentity": "この Orchid アイデンティティを削除",
+    "chooseIdentity": "アイデンティティを選択",
     "updatingAccounts": "アカウントの更新",
-    "vpnCredits": "VPNクレジット",
-    "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Orchidアカウントを購入し、ホーム画面からシングルホップ回路を作成してオンボーディングプロセスを短縮する方法を追加しました。",
-    "weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "あなたのIDに関連付けられたアカウントを見つけ、そのためのシングルホップオーキッドサーキットを作成しました。これで、VPNを使用する準備が整いました。",
-    "welcomeToOrchid": "オーキッドへようこそ！",
-    "youCanNowPayForAMultihopOrchidCircuitWith": "これで、xDAIを使用してマルチホップオーキッド回線の料金を支払うことができます。マルチホップインターフェイスは、xDAIおよびOXT Orchidアカウントをサポートするようになり、オニオンルートにまとめることができるOpenVPNおよびWireGuard構成を引き続きサポートします。",
-    "yourPurchaseIsInProgress": "購入は進行中です。"
+    "trafficAnalysis": "トラフィック分析",
+    "accountManager": "アカウント マネージャー",
+    "circuitBuilder": "回路ビルダー",
+    "exitHop": "出口ホップ",
+    "entryHop": "エントリー ホップ",
+    "addNewHop": "新しいホップを追加",
+    "newCircuitBuilder": "新しい回路ビルダー！",
+    "youCanNowPayForAMultihopOrchidCircuitWith": "これで、xDAI を使用してマルチホップ Orchid 回路の料金を支払うことができます。 マルチホップ インターフェイスは、xDAI および OXT Orchid アカウントをサポートするようになり、オニオン ルートにまとめることができる OpenVPN および WireGuard 構成を引き続きサポートします。",
+    "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "アカウント マネージャーではなく、回路ビルダーから接続を管理します。 すべての接続で、ホップ数が 0 以上の回路が使用されるようになりました。既存の構成はすべて回路ビルダーに移行されています。",
+    "quickStartFor1": "{smallAmount} でクイック スタート",
+    "@quickStartFor1": {
+        "placeholders": {
+            "smallAmount": {
+                "type": "String"
+            }
+        }
+    },
+    "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Orchid アカウントを購入し、ホーム画面からシングル ホップ回路を作成してオンボーディング プロセスを短縮する方法を追加しました。",
+    "orchidIsUniqueAsAMultiHopOrOnion": "Orchid は、複数の VPN プロトコルをサポートするマルチホップまたはクラシック オニオン ルーティング クライアントとしてユニークです。以下のサポートされているプロトコルからのホップをチェーン化することにより、接続をセットアップできます。\n\n1 ホップは通常の VPN のようなものです。 3 ホップ (上級ユーザー向け) は、オニオン ルーティングの選択肢です。0 ホップにより、VPN トンネルなしでトラフィック分析が可能になります。",
+    "deletingOpenVPNAndWireguardHopsWillLose": "OpenVPN および Wireguard ホップを削除すると、関連する資格情報と接続構成が失われます。続行する前に、必ず情報をバックアップしてください。",
+    "thisCannotBeUndoneToSaveThisIdentity": "これは、元に戻すことはできません。このアイデンティティを保存するには、[キャンセル] をクリックして、[エクスポート] オプションを使用します"
 }

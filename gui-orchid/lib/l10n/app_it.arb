@@ -11,7 +11,7 @@
     "trafficMonitoringOnly": "Solo monitoraggio del traffico",
     "orchidConnecting": "Orchid si sta connettendo",
     "orchidDisconnecting": "Orchid si sta disconnettendo",
-    "numHopsConfigured": "{num, plural, =0{Nessun hop configurato} =1{Un hop configurato} =2{Due hops configurati} other{{num} hops configurati}}",
+    "numHopsConfigured": "{num, plural, =0{Nessun hop configurato} =1{Un hop configurato} =2{Due hop configurati} other{{num} hop configurati}}",
     "@numHopsConfigured": {
         "type": "text",
         "placeholders": {
@@ -262,41 +262,55 @@
     "total": "Totale",
     "pausingAllTraffic": "Sospendo tutto il traffico...",
     "queryingEthereumForARandom": "Eseguo query su Ethereum per un provider casuale...",
+    "quickFundAnAccount": "Finanzia rapidamente un account!",
     "accountFound": "Account trovato",
-    "accountManager": "Account manager",
-    "addNewHop": "AGGIUNGI NUOVO LUPPOLO",
-    "blockchainFee": "Tariffa blockchain",
-    "chooseIdentity": "Scegli l'identità",
-    "circuitBuilder": "Costruttore di circuiti",
-    "confirmPurchase": "Confermare l'acquisto",
-    "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Connettiti automaticamente a uno dei <link1>provider preferiti</link1> della rete acquistando crediti VPN per finanziare il tuo account Orchid condivisibile e ricaricabile.",
-    "deleteThisOrchidIdentity": "Elimina questa identità dell'orchidea",
-    "deletingOpenVPNAndWireguardHopsWillLose": "L'eliminazione degli hop OpenVPN e Wireguard perderà tutte le credenziali associate e la configurazione della connessione. Assicurati di eseguire il backup di tutte le informazioni prima di continuare.",
-    "entryHop": "Ingresso Hop",
-    "exitHop": "Esci Hop",
+    "weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "Abbiamo trovato un account associato alle tue identità e creato un singolo circuito Orchid hop per lo stesso. Ora puoi utilizzare la VPN.",
+    "welcomeToOrchid": "Ti diamo il benvenuto su Orchid!",
     "fundYourAccount": "Finanzia il tuo account",
-    "getStartedFor1": "INIZIA PER $1",
-    "illDoThisLater": "Lo farò più tardi",
-    "importAccount": "IMPORTA CONTO",
-    "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "Gestisci la tua connessione dal costruttore di circuiti invece che dall'account manager. Tutte le connessioni ora utilizzano un circuito con zero o più hop. Qualsiasi configurazione esistente è stata migrata al generatore di circuiti.",
-    "newCircuitBuilder": "Nuovo costruttore di circuiti!",
-    "orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Gli account Orchid utilizzano crediti VPN supportati dalla <link>criptovaluta xDAI</link>, includono assistenza clienti 24 ore su 24, 7 giorni su 7, condivisione illimitata dei dispositivi e sono coperti dalle politiche di rimborso dell'app store.",
-    "orchidIsUniqueAsAMultiHopOrOnion": "Orchid è unico come client di routing multi-hop o onion che supporta più protocolli VPN. È possibile configurare la connessione concatenando gli hop dai protocolli supportati di seguito.\n\nUn salto è come una normale VPN. Tre hop (per utenti avanzati) è la classica scelta di routing onion. Zero hop consente l'analisi del traffico senza alcun tunnel VPN.",
-    "processing": "In lavorazione...",
-    "promotion": "promozione",
-    "quickFundAnAccount": "Finanzia rapidamente un conto!",
-    "quickStartFor1": "Avvio rapido per $ 1",
-    "showInAccountManager": "Mostra in Gestione account",
+    "processing": "Elaboro...",
     "subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "Servizio VPN decentralizzato e open source, senza abbonamento, con pagamento in base al consumo.",
-    "thisCannotBeUndoneToSaveThisIdentity": "Questo non può essere annullato. Per salvare questa identità, premi Annulla e usa l'opzione Esporta",
-    "thisMayTakeAMinute": "Potrebbe volerci un minuto...",
-    "thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "L'elaborazione di questo acquisto richiede più tempo del previsto e potrebbe essersi verificato un errore.",
-    "trafficAnalysis": "Analisi del traffico",
-    "updatingAccounts": "Aggiornare gli account",
+    "getStartedFor1": "INIZIA A {smallAmount}",
+    "@getStartedFor1": {
+        "placeholders": {
+            "smallAmount": {
+                "type": "String"
+            }
+        }
+    },
+    "importAccount": "IMPORTA ACCOUNT",
+    "illDoThisLater": "Lo farò dopo",
+    "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Collegati automaticamente a uno dei <link1>provider preferiti</link1> della rete acquistando crediti VPN per finanziare il tuo account Orchid condivisibile e ricaricabile.",
+    "confirmPurchase": "CONFERMA ACQUISTO",
+    "orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Gli account Orchid utilizzano crediti VPN supportati dalla <link>criptovaluta xDAI</link>, includono assistenza clienti 24x7, condivisione illimitata dei dispositivi e sono coperti dalle politiche di rimborso dell'app store.",
+    "yourPurchaseIsInProgress": "Il tuo acquisto è in corso.",
+    "thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "L'elaborazione di questo acquisto richiede più tempo del previsto ed è possibile che si sia verificato un errore.",
+    "thisMayTakeAMinute": "L'operazione potrebbe richiedere qualche minuto...",
     "vpnCredits": "Crediti VPN",
-    "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Abbiamo aggiunto un metodo per acquistare un account Orchid e creare un singolo circuito hop dalla schermata iniziale per abbreviare il processo di onboarding.",
-    "weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "Abbiamo trovato un account associato alle tue identità e abbiamo creato un singolo circuito Orchid hop per esso. Ora sei pronto per utilizzare la VPN.",
-    "welcomeToOrchid": "Benvenuto all'Orchidea!",
-    "youCanNowPayForAMultihopOrchidCircuitWith": "Ora puoi pagare per un circuito Orchid multi-hop con xDAI. L'interfaccia multihop ora supporta gli account xDAI e OXT Orchid e supporta ancora le configurazioni OpenVPN e WireGuard che possono essere messe insieme in una route onion.",
-    "yourPurchaseIsInProgress": "Il tuo acquisto è in corso."
+    "blockchainFee": "Commissione blockchain",
+    "promotion": "Promozione",
+    "showInAccountManager": "Mostra in Gestione account",
+    "deleteThisOrchidIdentity": "Elimina questa identità Orchid",
+    "chooseIdentity": "Scegli identità",
+    "updatingAccounts": "Aggiorno gli account",
+    "trafficAnalysis": "Analisi del traffico",
+    "accountManager": "Gestione account",
+    "circuitBuilder": "Generatore di circuiti",
+    "exitHop": "Hop di uscita",
+    "entryHop": "Hop di entrata",
+    "addNewHop": "AGGIUNGI NUOVO HOP",
+    "newCircuitBuilder": "Nuovo Generatore di circuiti!",
+    "youCanNowPayForAMultihopOrchidCircuitWith": "Ora puoi pagare un circuito Orchid multi-hop con xDAI. L'interfaccia multi-hop supporta gli account xDAI e OXT Orchid e supporta sempre le configurazioni OpenVPN e WireGuard che possono essere combinate in un instradamento a cipolla.",
+    "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "Gestisci la tua connessione dal Generatore di circuiti anziché da Gestione account. Tutte le connessioni ora utilizzano un circuito con zero o più hop. Qualsiasi configurazione esistente è stata migrata al Generatore di circuiti.",
+    "quickStartFor1": "Avvio rapido con {smallAmount}",
+    "@quickStartFor1": {
+        "placeholders": {
+            "smallAmount": {
+                "type": "String"
+            }
+        }
+    },
+    "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Abbiamo aggiunto un metodo per acquistare un account Orchid e creare un singolo circuito hop dalla schermata iniziale per semplificare il processo di onboarding.",
+    "orchidIsUniqueAsAMultiHopOrOnion": "Orchid è un client multi-hop o di instradamento a cipolla esclusivo che supporta più protocolli VPN. Puoi configurare la connessione concatenando gli hop dai seguenti protocolli supportati.\n\nUn hop è come una normale VPN. Tre hop (per utenti avanzati) è la classica scelta di instradamento a cipolla. Zero hop consente l'analisi del traffico senza tunnel VPN.",
+    "deletingOpenVPNAndWireguardHopsWillLose": "L'eliminazione degli hop OpenVPN e Wireguard comporterà la cancellazione di tutte le credenziali associate e della configurazione della connessione. Assicurati di eseguire il backup di tutte le informazioni prima di continuare.",
+    "thisCannotBeUndoneToSaveThisIdentity": "Questa operazione è irreversibile. Per salvare questa identità, premi Annulla e usa l'opzione Esporta"
 }
