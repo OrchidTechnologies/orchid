@@ -3,6 +3,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/on_off.dart';
@@ -23,12 +24,12 @@ class Release {
     return S.of(context).whatsNewInOrchid + ' $version?';
   }
 
-  static Widget messagesSince(
-      BuildContext context, ReleaseVersion lastVersion) {
+  static Future<Widget> messagesSince(
+      BuildContext context, ReleaseVersion lastVersion) async {
     // Concatenate messages starting at the version after last viewed
     List<Widget> children = [];
     for (var i = lastVersion.version + 1; i <= current.version; i++) {
-      children.add(message(context, i));
+      children.add(await message(context, i));
       if (i < current.version) {
         children.add(Padding(
           padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -50,7 +51,7 @@ class Release {
     );
   }
 
-  static Widget message(BuildContext context, int version) {
+  static Future<Widget> message(BuildContext context, int version) async {
     switch (version) {
       case 1:
         return version1(context);
@@ -64,9 +65,10 @@ class Release {
   }
 
   // Build the release message for version 2
-  static Widget version2(BuildContext context) {
-    var s = S.of(context);
-    var headingStyle = OrchidText.subtitle.purpleBright;
+  static Future<Widget> version2(BuildContext context) async {
+    final dollarPac = await OrchidPurchaseAPI.getDollarPAC();
+    final s = S.of(context);
+    final headingStyle = OrchidText.subtitle.purpleBright;
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -83,8 +85,7 @@ class Release {
             style: OrchidText.body1,
           ),
           pady(16),
-          // TODO: Localize value
-          Text(s.quickStartFor1('\$1'), style: headingStyle),
+          Text(s.quickStartFor1(dollarPac.localDisplayPrice), style: headingStyle),
           pady(8),
           Text(
             s.weAddedAMethodToPurchaseAnOrchidAccountAnd,

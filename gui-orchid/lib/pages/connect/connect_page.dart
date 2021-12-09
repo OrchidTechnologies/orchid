@@ -544,7 +544,7 @@ class _ConnectPageState extends State<ConnectPage>
     return AppDialogs.showAppDialog(
       context: context,
       title: await Release.whatsNewTitle(context),
-      body: Release.messagesSince(context, lastVersion),
+      body: await Release.messagesSince(context, lastVersion),
     );
   }
 
