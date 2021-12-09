@@ -40,8 +40,7 @@ class Chains {
     name: "Ethereum",
     nativeCurrency: TokenTypes.ETH,
     providerUrl: defaultEthereumProviderUrl,
-    // TODO: Missing ETH icon
-    icon: SvgPicture.asset('assets/svg/orchid_icon.svg'),
+    iconPath: 'assets/svg/chains/ethereum-eth-logo.svg',
   );
 
   // xDAI
@@ -52,7 +51,7 @@ class Chains {
     nativeCurrency: TokenTypes.XDAI,
     // providerUrl: 'https://dai.poa.network',
     providerUrl: 'https://rpc.xdaichain.com/',
-    icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+    iconPath: 'assets/svg/chains/logo-xdai2.svg',
   );
 
   // Ganache
@@ -62,7 +61,7 @@ class Chains {
     name: "Ganache Test",
     nativeCurrency: TokenTypes.TOK,
     providerUrl: 'http://127.0.0.1:7545/',
-    icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+    iconPath: 'assets/svg/chains/ethereum-eth-logo.svg',
   );
 
   // Avalanch (AVAX)
@@ -72,7 +71,7 @@ class Chains {
     name: "Avalanche Chain",
     nativeCurrency: TokenTypes.AVAX,
     providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
-    //icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+    iconPath: 'assets/svg/chains/avalanche-avax-logo.svg',
     explorerUrl: 'https://snowtrace.io/',
   );
 
@@ -83,7 +82,7 @@ class Chains {
     name: "Binance Smart Chain",
     nativeCurrency: TokenTypes.BNB,
     providerUrl: 'https://bsc-dataseed1.binance.org',
-    //icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+    iconPath: 'assets/svg/chains/binance-coin-bnb-logo.svg',
     explorerUrl: 'https://bscscan.com',
   );
 
@@ -94,7 +93,7 @@ class Chains {
     name: "Polygon Chain",
     nativeCurrency: TokenTypes.MATIC,
     providerUrl: 'https://polygon-rpc.com/',
-    //icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+    iconPath: 'assets/svg/chains/matic-token-icon1.svg',
     explorerUrl: 'https://polygonscan.com/',
   );
 
@@ -107,7 +106,7 @@ class Chains {
     name: "Arbitrum One",
     nativeCurrency: TokenTypes.AETH,
     providerUrl: 'https://arb1.arbitrum.io/rpc/',
-    //icon: SvgPicture.asset('assets/svg/logo-xdai2.svg'),
+    //iconPath: 'assets/svg/logo-xdai2.svg',
     explorerUrl: 'https://arbiscan.io/',
   );
    */
@@ -143,7 +142,11 @@ class Chain {
   final int requiredConfirmations;
 
   /// Optional icon svg
-  final SvgPicture icon;
+  final String iconPath;
+
+  SvgPicture get icon {
+    return SvgPicture.asset(iconPath);
+  }
 
   /// Optional explorer URL
   final String explorerUrl;
@@ -154,7 +157,7 @@ class Chain {
     @required this.nativeCurrency,
     @required this.providerUrl,
     this.requiredConfirmations = 1,
-    this.icon,
+    this.iconPath,
     this.explorerUrl,
   });
 
@@ -166,7 +169,7 @@ class Chain {
     return this == Chains.GanacheTest;
   }
 
-  bool get isEthereum{
+  bool get isEthereum {
     return this == Chains.Ethereum;
   }
 

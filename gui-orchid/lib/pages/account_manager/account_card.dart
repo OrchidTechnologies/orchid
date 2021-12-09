@@ -53,16 +53,20 @@ class AccountCard extends StatefulWidget {
   @override
   _AccountCardState createState() => _AccountCardState();
 
-  static Widget iconForTokenType(TokenType t) {
-    if (t == TokenTypes.ETH) {
+  // Allow some overrides for the icons in this context
+  static Widget iconForTokenType(TokenType token) {
+    if (token == TokenTypes.ETH) {
       return Image.asset('assets/images/eth_token_icon.png', fit: BoxFit.fill);
     }
-    if (t == TokenTypes.XDAI) {
+    if (token == TokenTypes.XDAI) {
       return Image.asset('assets/images/xdai_token_icon.png', fit: BoxFit.fill);
     }
-    if (t == TokenTypes.OXT) {
+    if (token == TokenTypes.OXT) {
       return SvgPicture.asset('assets/svg/oxt_token_icon.svg',
           fit: BoxFit.fill);
+    }
+    if (token?.chain != null) {
+      return SvgPicture.asset(token.chain.iconPath, fit: BoxFit.fill);
     }
     return null;
   }
@@ -192,7 +196,7 @@ class _AccountCardState extends State<AccountCard>
     //   deposit: zero,
     //   warned: zero,
     //   unlock: BigInt.from(DateTime.now().add(Duration(days: 1)).millisecondsSinceEpoch / 1000),
-      // unlock: BigInt.from(DateTime.now().subtract(Duration(days: 1)).millisecondsSinceEpoch / 1000),
+    // unlock: BigInt.from(DateTime.now().subtract(Duration(days: 1)).millisecondsSinceEpoch / 1000),
     // );
 
     return Column(
