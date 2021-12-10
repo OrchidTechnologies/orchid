@@ -127,13 +127,15 @@ $(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$
 	@$(eval ccrs := $(if $(filter $(triple/$(arch)),$(shell $(rust) rustup show | sed -e '/^Default host: /!d;s///')),HOST,TARGET))
 	@# or if using rustc: rustc --version --verbose | sed -e '/^host: /!d;s///'
 	
+	@# https://github.com/buildroot/buildroot/commit/4b2be770b8a853a7dd97b5788d837f0d84923fa1
 	cd $(folder) && RUST_BACKTRACE=1 $(rust):$(dir $(word 1,$(cc))) \
 	    $(ccrs)_CC='$(cc) $(more/$(arch)) $(qflags)' $(ccrs)_AR='$(ar/$(arch))' \
 	    PKG_CONFIG_ALLOW_CROSS=1 PKG_CONFIG="$(CURDIR)/env/pkg-config" ENV_ARCH="$(arch)" \
 	    CARGO_HOME='$(call path,$(CURDIR)/$(output)/cargo)' CARGO_INCREMENTAL=0 \
+	    __CARGO_TEST_CHANNEL_OVERRIDE_DO_NOT_USE_THIS=nightly CARGO_TARGET_APPLIES_TO_HOST=false \
 	    CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(arch))))_LINKER='$(firstword $(cc))' \
 	    CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(arch))))_RUSTFLAGS='$(foreach arg,$(wordlist 2,$(words $(cc)),$(cc)) $(more/$(arch)) $(wflags),-C link-arg=$(arg)) $(rflags)' \
-	    cargo build --verbose --lib --release --target $(triple/$(arch)) \
+	    cargo build --verbose --lib --release --target $(triple/$(arch)) -Z target-applies-to-host \
 	    --target-dir $(call path,$(CURDIR)/$(output)/$(arch)/$(folder))
 	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/lib$(subst -,_,$(notdir $(folder))).a $@
 
