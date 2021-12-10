@@ -51,7 +51,7 @@ class Chains {
     nativeCurrency: TokenTypes.XDAI,
     // providerUrl: 'https://dai.poa.network',
     providerUrl: 'https://rpc.xdaichain.com/',
-    iconPath: 'assets/svg/chains/logo-xdai2.svg',
+    iconPath: 'assets/svg/chains/xdai2.svg',
   );
 
   // Ganache
