@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_crypto.dart';
@@ -90,6 +91,12 @@ class AccountStore extends ChangeNotifier {
         .map((hop) => hop.account)
         .where((account) => account.signerKeyUid == identity.keyUid)
         .toList();
+
+    // Cache any newly discovered accounts from the hop config
+    var cachedAccounts = UserPreferences().cachedDiscoveredAccounts.get();
+    if (!setEquals(circuitAccounts.toSet(), cachedAccounts)) {
+      UserPreferences().addCachedDiscoveredAccounts(circuitAccounts);
+    }
   }
 
   // Discovery new account information for the identity.
@@ -101,12 +108,11 @@ class AccountStore extends ChangeNotifier {
 
       discoveredAccounts = [];
 
+      // Discover accounts for the active identity on supported V1 chains.
       StoredEthereumKey signer = await identity.get();
       try {
-        // Discover accounts for the active identity on V1 chains.
-        discoveredAccounts = await OrchidEthereumV1()
-            .discoverAccounts(chain: Chains.xDAI, signer: signer);
-
+        await _discoverV1Accounts(chain: Chains.xDAI, signer: signer);
+        await _discoverV1Accounts(chain: Chains.Avalanche, signer: signer);
         notifyListeners();
         log("account_store: After discovering v1 accounts: discovered = $discoveredAccounts");
       } catch (err) {
@@ -130,5 +136,18 @@ class AccountStore extends ChangeNotifier {
     }
 
     return this;
+  }
+
+  // discover and add accounts to the discovered accounts list
+  Future<void> _discoverV1Accounts(
+      {Chain chain, StoredEthereumKey signer}) async {
+    try {
+      var found = await OrchidEthereumV1()
+          .discoverAccounts(chain: chain, signer: signer);
+      log("account_store: events found ${found.length} accounts on: ${chain.name}");
+      discoveredAccounts += found;
+    } catch (err) {
+      log("account_store: Error discovering accounts on ${chain.name}: $err");
+    }
   }
 }
