@@ -162,6 +162,7 @@ class Chain {
   });
 
   Future<Token> getGasPrice({bool refresh = false}) {
+    // The gas price call is generic and works for V0 and V1
     return OrchidEthereumV1().getGasPrice(this, refresh: refresh);
   }
 

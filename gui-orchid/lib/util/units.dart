@@ -29,6 +29,8 @@ class ScalarValue<T extends num> {
 class OXT extends Token {
   OXT(BigInt value) : super(TokenTypes.OXT, value);
 
+  static OXT zero = OXT.fromInt(BigInt.zero);
+
   static OXT fromInt(BigInt keiki) {
     return OXT(keiki);
   }

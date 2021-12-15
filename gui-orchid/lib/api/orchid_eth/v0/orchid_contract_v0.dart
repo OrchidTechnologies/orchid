@@ -4,7 +4,7 @@ import 'package:orchid/util/units.dart';
 
 class OrchidContractV0 {
   // Lottery contract address on main net
-  static var lotteryContractAddress =
+  static var lotteryContractAddressV0 =
       '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1';
 
   static String updateEventHashV0 =

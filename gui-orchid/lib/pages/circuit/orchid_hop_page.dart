@@ -514,7 +514,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _buildAccountBalance() {
     var balanceText = _lotteryPot?.balance?.formatCurrency() ?? '...';
-    var depositText = _lotteryPot?.deposit?.formatCurrency() ?? '...';
+    var depositText = _lotteryPot?.effectiveDeposit?.formatCurrency() ?? '...';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[

@@ -35,6 +35,7 @@ abstract class OrchidEthereumV1 {
     return _shared;
   }
 
+  // This gas price call is used for V0 and V1.
   Future<Token> getGasPrice(Chain chain, {bool refresh = false});
 
   Future<List<Account>> discoverAccounts(
@@ -167,15 +168,17 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
     //     }
     var buff = HexStringBuffer(result);
     BigInt escrowAmount = buff.takeUint256();
+    BigInt unlockWarned = buff.takeUint256();
+
     TokenType tokenType = chain.nativeCurrency;
-
-    Token deposit = tokenType.fromInt(escrowAmount >> 128);
     BigInt maskLow128 = (BigInt.one << 128) - BigInt.one;
-    Token balance = tokenType.fromInt(escrowAmount & maskLow128);
-    BigInt unlock = buff.takeUint256();
-    //EthereumAddress verifier = EthereumAddress(buff.takeAddress());
+    Token escrow = tokenType.fromInt(escrowAmount >> 128);
+    Token amount = tokenType.fromInt(escrowAmount & maskLow128);
+    BigInt unlock = unlockWarned >> 128;
+    Token warned = tokenType.fromInt(unlockWarned & maskLow128);
 
-    return LotteryPot(balance: balance, deposit: deposit, unlock: unlock);
+    return LotteryPot(
+        balance: amount, deposit: escrow, unlock: unlock, warned: warned);
   }
 
   static Future<dynamic> _jsonRPC({

@@ -9,8 +9,9 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_contract_web3_v1.dart';
 
-/// This API describes the read-only eth calls shared by the dapp and the app
-/// and allows them to be overridden in the web3 context.
+/// This API implements the read-only eth calls shared by the dapp and the app,
+/// overridding them to use the web3 context instead of default provider calls.
+/// @see the OrchidEthereumV1 factory.
 class OrchidEthereumV1Web3Impl implements OrchidEthereumV1 {
   final OrchidWeb3Context _context;
   final Contract _lottery;
@@ -47,14 +48,14 @@ class OrchidEthereumV1Web3Impl implements OrchidEthereumV1 {
     var unlockWarned = BigInt.parse(result[1].toString());
 
     TokenType tokenType = chain.nativeCurrency;
-    Token deposit = tokenType.fromInt(escrowAmount >> 128);
+    Token escrow = tokenType.fromInt(escrowAmount >> 128);
     BigInt maskLow128 = (BigInt.one << 128) - BigInt.one;
-    Token balance = tokenType.fromInt(escrowAmount & maskLow128);
+    Token amount = tokenType.fromInt(escrowAmount & maskLow128);
     BigInt unlock = unlockWarned >> 128;
     Token warned = tokenType.fromInt(unlockWarned & maskLow128);
 
     return LotteryPot(
-        balance: balance, deposit: deposit, unlock: unlock, warned: warned);
+        balance: amount, deposit: escrow, unlock: unlock, warned: warned);
   }
 
   // Note: This method requires signer key because to produce orchid accounts that

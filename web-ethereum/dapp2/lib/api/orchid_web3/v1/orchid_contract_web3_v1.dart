@@ -10,10 +10,10 @@ class OrchidContractWeb3V1 {
 
   Contract contract() {
     return Contract(
-        OrchidContractV1.lotteryContractAddressV1, lotteryAbi, context.web3);
+        OrchidContractV1.lotteryContractAddressV1, _lotteryAbi, context.web3);
   }
 
-  static List<String> lotteryAbi = [
+  static List<String> _lotteryAbi = [
     "event Create(address indexed token, address indexed funder, address indexed signer)",
     "event Update(bytes32 indexed key, uint256 escrow_amount)",
     "event Delete(bytes32 indexed key, uint256 unlock_warned)",

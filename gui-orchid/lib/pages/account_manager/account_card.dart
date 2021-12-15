@@ -3,9 +3,11 @@ import 'dart:ui';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/gradient_border.dart';
@@ -37,8 +39,6 @@ class AccountCard extends StatefulWidget {
   /// Produces a shorter card
   final bool minHeight;
 
-  final bool showLockStatus;
-
   const AccountCard({
     Key key,
     this.accountDetail,
@@ -47,7 +47,6 @@ class AccountCard extends StatefulWidget {
     this.onSelected,
     this.initiallyExpanded = false,
     this.minHeight = false,
-    this.showLockStatus = false,
   }) : super(key: key);
 
   @override
@@ -94,9 +93,30 @@ class _AccountCardState extends State<AccountCard>
     return widget.minHeight;
   }
 
+  LotteryPot get pot {
+    /*
+    // TESTING
+    final type = widget.accountDetail?.lotteryPot?.balance?.type;
+    return LotteryPot(
+      balance: type.fromDouble(1.0),
+      deposit: type.fromDouble(1.0),
+      warned: type.fromDouble(0.5),
+      // warned: type.zero,
+      unlock: BigInt.from( DateTime.now().add(Duration(hours: 23)).millisecondsSinceEpoch / 1000),
+      // unlock: BigInt.from( DateTime.now().subtract(Duration(days: 1)).millisecondsSinceEpoch / 1000),
+    );
+     */
+
+    return widget.accountDetail?.lotteryPot;
+  }
+
+  bool get showLockStatus {
+    return pot?.isWarned ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final expandedHeight = widget.showLockStatus ? 460.0 : 360.0;
+    final expandedHeight = showLockStatus ? 440.0 : 360.0;
     var height = short
         ? (expanded ? expandedHeight : 74.0)
         : (expanded ? expandedHeight : 116.0);
@@ -145,9 +165,12 @@ class _AccountCardState extends State<AccountCard>
     );
   }
 
+  TokenType get tokenType {
+    return widget.accountDetail?.lotteryPot?.balance?.type;
+  }
+
   Widget _buildCardContent(BuildContext context) {
     final efficiency = widget.accountDetail?.marketConditions?.efficiency;
-    final tokenType = widget.accountDetail?.lotteryPot?.balance?.type;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -184,20 +207,15 @@ class _AccountCardState extends State<AccountCard>
   }
 
   Widget _buildLockInfo() {
-    var pot = widget.accountDetail?.lotteryPot;
     if (pot == null) {
       return Container();
     }
 
-    // TESTING
-    // final zero = TokenTypes.XDAI.zero;
-    // pot = LotteryPot(
-    //   balance: zero,
-    //   deposit: zero,
-    //   warned: zero,
-    //   unlock: BigInt.from(DateTime.now().add(Duration(days: 1)).millisecondsSinceEpoch / 1000),
-    // unlock: BigInt.from(DateTime.now().subtract(Duration(days: 1)).millisecondsSinceEpoch / 1000),
-    // );
+    // log("XXX: pot = $pot, unlocked = ${pot.isUnlocked}, warned int = ${pot.warned.intValue}");
+    // var unlockTimeStr = DateFormat("MM/dd/yyyy HH:mm:ss").format(pot.unlockTime);
+    var unlockIn = pot.unlockTime.difference(DateTime.now());
+    String unlockInStr =
+        "${unlockIn.inHours}:${unlockIn.inMinutes.remainder(60)}:${(unlockIn.inSeconds.remainder(60))}";
 
     return Column(
       children: [
@@ -218,14 +236,15 @@ class _AccountCardState extends State<AccountCard>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("On:").body2,
-                  Text(pot.unlockTime.toString()).body2,
+                  Text("Unlock Time:").body2,
+                  Text(unlockInStr).body2,
+                  // Text("Unlock In:").body2,
+                  // Text(durationStr).body2,
                 ],
               ),
             ],
           ),
-        if (pot.isUnlocked) ...[
-          pady(16),
+        if (pot.isUnlocked)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -236,7 +255,7 @@ class _AccountCardState extends State<AccountCard>
                 Text(pot.warned.formatCurrency()).body2,
             ],
           ),
-        ],
+        /*
         if (pot.isUnlocking || pot.isUnlocked) pady(24),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -245,6 +264,7 @@ class _AccountCardState extends State<AccountCard>
                 color: Colors.white),
           ],
         ),
+         */
       ],
     );
   }
@@ -364,16 +384,15 @@ class _AccountCardState extends State<AccountCard>
   String _balanceText() {
     return widget.accountDetail == null
         ? formatCurrency(0.0, digits: 2)
-        : (widget.accountDetail.lotteryPot?.balance?.formatCurrency(digits: 2));
+        : (pot?.balance?.formatCurrency(digits: 2));
   }
 
   Widget _buildExpandedDetail() {
-    var lotteryPot = widget.accountDetail?.lotteryPot;
-    var depositText = lotteryPot?.deposit?.formatCurrency(digits: 2) ?? "";
+    final depositText = pot?.effectiveDeposit?.formatCurrency(digits: 2) ?? "";
     final efficiency = widget.accountDetail?.marketConditions?.efficiency ?? 0;
-    final chartModel = lotteryPot != null
+    final chartModel = pot != null
         ? AccountBalanceChartTicketModel(
-            lotteryPot, widget.accountDetail.transactions ?? [])
+            pot, widget.accountDetail.transactions ?? [])
         : null;
 
     return Padding(
@@ -426,7 +445,7 @@ class _AccountCardState extends State<AccountCard>
                     chartModel, efficiency)
               ],
             ),
-          if (widget.showLockStatus) ...[
+          if (showLockStatus) ...[
             pady(24),
             _buildLockInfo(),
           ],

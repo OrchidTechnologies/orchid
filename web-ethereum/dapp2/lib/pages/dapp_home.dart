@@ -558,3 +558,4 @@ class _DappHomeState extends State<DappHome> {
     return S.of(context);
   }
 }
+

@@ -7,6 +7,7 @@ import 'package:orchid/util/units.dart';
 import '../../pricing/orchid_pricing_v0.dart';
 import '../orchid_market.dart';
 import '../chains.dart';
+import '../token_type.dart';
 import 'orchid_contract_v0.dart';
 
 // Market conditions for the V0 contract where payment is in OXT with gas in ETH.
@@ -25,7 +26,7 @@ class MarketConditionsV0 implements MarketConditions {
   }
 
   // TODO: Add refresh option
-  static Future<MarketConditionsV0> forPotV0(OXTLotteryPot pot) async {
+  static Future<MarketConditionsV0> forPotV0(LotteryPot pot) async {
     // TODO: Add refresh option
     return forBalanceV0(pot.balance, pot.deposit);
   }
@@ -37,7 +38,7 @@ class MarketConditionsV0 implements MarketConditions {
     // TODO: Add refresh option
     var costToRedeem = await getCostToRedeemTicketV0();
     var limitedByBalance = balance.floatValue <= (escrow / 2.0).floatValue;
-    OXT maxFaceValue = OXTLotteryPot.maxTicketFaceValueFor(balance, escrow);
+    Token maxFaceValue = LotteryPot.maxTicketFaceValueFor(balance, escrow);
 
     // value received as a fraction of ticket face value
     double efficiency = maxFaceValue.floatValue == 0

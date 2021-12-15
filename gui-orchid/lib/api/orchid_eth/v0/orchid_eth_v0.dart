@@ -43,14 +43,14 @@ class OrchidEthereumV0 {
     Result:
     {"jsonrpc":"2.0","id":1,"result":"0x000000000000000000000000000000000000000000000002b5e3af16b18800000000000000000000000000000000000000000000000000008ac7230489e800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000"}
   */
-  static Future<OXTLotteryPot> getLotteryPot(
+  static Future<LotteryPot> getLotteryPot(
       EthereumAddress funder, EthereumAddress signer) async {
     log("fetch pot V0 for: $funder, $signer, url = $_rpc");
 
     // construct the abi encoded eth_call
     var params = [
       {
-        "to": "${OrchidContractV0.lotteryContractAddress}",
+        "to": "${OrchidContractV0.lotteryContractAddressV0}",
         "data": "0x${OrchidContractV0.lotteryLookMethodHash}"
             "${AbiEncode.address(funder)}"
             "${AbiEncode.address(signer)}"
@@ -66,18 +66,14 @@ class OrchidEthereumV0 {
 
     // Parse the results
     var buff = HexStringBuffer(result);
-    OXT balance = OXT.fromInt(buff.take(64)); // uint128 padded
-    OXT deposit = OXT.fromInt(buff.take(64)); // uint128 padded
-    BigInt unlock = buff.take(64); // uint256
+    OXT balance = OXT.fromInt(buff.takeUint128()); // uint128 padded
+    OXT deposit = OXT.fromInt(buff.takeUint128()); // uint128 padded
+    BigInt unlock = buff.takeUint256(); // uint256
+    // For v0 the warned amount is all or nothing.
+    OXT warned = unlock == BigInt.zero ? OXT.zero : deposit;
 
-    // The verifier only has a non-zero value for PACs.
-    EthereumAddress verifier;
-    try {
-      verifier = EthereumAddress(buff.take(64));
-    } catch (err) {}
-
-    return OXTLotteryPot(
-        balance: balance, deposit: deposit, unlock: unlock, verifier: verifier);
+    return LotteryPot(
+        balance: balance, deposit: deposit, unlock: unlock, warned: warned);
   }
 
   /// Get Orchid transactions associated with Update events that affect the balance.
@@ -182,13 +178,15 @@ class OrchidEthereumV0 {
     return events;
   }
 
-  Future<List<Account>> discoverAccounts({signer: StoredEthereumKey}) async {
+  Future<List<Account>> discoverAccounts({StoredEthereumKey signer}) async {
     // Discover accounts for the active identity on V0 Ethereum.
     List<OrchidCreateEventV0> v0CreateEvents =
         await OrchidEthereumV0().getCreateEvents(signer.address);
     return v0CreateEvents.map((event) {
       return Account.fromSignerKey(
-          signerKey: signer, chainId: Chains.ETH_CHAINID, funder: event.funder);
+          signerKey: signer.ref(),
+          chainId: Chains.ETH_CHAINID,
+          funder: event.funder);
     }).toList();
   }
 
