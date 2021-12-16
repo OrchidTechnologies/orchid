@@ -226,10 +226,7 @@ class _AccountCardState extends State<AccountCard>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text("Unlocking:").body2,
-                  if (pot.warned == pot.deposit)
-                    Text("Full Deposit").body2
-                  else
-                    Text(pot.warned.formatCurrency()).body2,
+                  Text(pot.warned.formatCurrency()).body2,
                 ],
               ),
               pady(16),
@@ -249,10 +246,7 @@ class _AccountCardState extends State<AccountCard>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text("Unlocked:").body2,
-              if (pot.warned == pot.deposit)
-                Text("Full Deposit").body2
-              else
-                Text(pot.warned.formatCurrency()).body2,
+              Text(pot.warned.formatCurrency()).body2,
             ],
           ),
         /*
