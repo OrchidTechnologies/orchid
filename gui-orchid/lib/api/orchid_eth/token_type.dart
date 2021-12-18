@@ -4,7 +4,6 @@ import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'chains.dart';
 
 class TokenTypes {
-  // ignore: non_constant_identifier_names
   static const TokenType ETH = TokenType(
     name: 'ETH',
     symbol: 'ETH',
@@ -13,7 +12,6 @@ class TokenTypes {
     chainId: Chains.ETH_CHAINID,
   );
 
-  // ignore: non_constant_identifier_names
   // See class OXT.
   static const TokenType OXT = TokenType(
     name: 'OXT',
@@ -23,7 +21,6 @@ class TokenTypes {
     chainId: Chains.ETH_CHAINID,
   );
 
-  // ignore: non_constant_identifier_names
   static const TokenType XDAI = TokenType(
       name: 'xDAI',
       symbol: 'xDAI',
@@ -32,7 +29,6 @@ class TokenTypes {
       decimals: 18,
       chainId: Chains.XDAI_CHAINID);
 
-  // ignore: non_constant_identifier_names
   static const TokenType TOK = TokenType(
       name: 'TOK',
       symbol: 'TOK',
@@ -40,12 +36,44 @@ class TokenTypes {
           BinanceExchangeRateSource(symbolOverride: 'ETH', inverted: true),
       decimals: 18,
       chainId: Chains.GANACHE_TEST_CHAINID);
+
+  static const TokenType AVAX = TokenType(
+      name: 'Avalanche',
+      symbol: 'AVAX',
+      exchangeRateSource: BinanceExchangeRateSource(),
+      decimals: 18,
+      chainId: Chains.AVALANCHE_CHAINID);
+
+  static const TokenType BNB = TokenType(
+      name: 'BNB',
+      symbol: 'BNB',
+      exchangeRateSource: BinanceExchangeRateSource(),
+      decimals: 18,
+      chainId: Chains.BSC_CHAINID);
+
+  static const TokenType MATIC = TokenType(
+      name: 'MATIC',
+      symbol: 'MATIC',
+      exchangeRateSource: BinanceExchangeRateSource(),
+      decimals: 18,
+      chainId: Chains.POLYGON_CHAINID);
+
+/*
+  static const TokenType AETH = TokenType(
+    name: 'AETH',
+    symbol: 'AETH',
+    exchangeRateSource: BinanceExchangeRateSource(),
+    decimals: 18,
+    chainId: Chains.ARBITRUM_ONE_CHAINID,
+  );
+   */
+
 }
 
 // ERC20 Token type
 // Note: Unfortunately Dart does not have a polyomorphic 'this' type so the
 // Note: token type cannot serve as a typesafe factory for the token subtypes
-// Note: as we do in the dapp. See token-specific Token subclasses for certain
+// Note: as we (used to) do in the dapp. See token-specific Token subclasses for certain
 // Note: tokens such as OXT.
 class TokenType {
   final int chainId;
@@ -152,6 +180,10 @@ class Token {
     return type.fromInt(intValue - other.intValue);
   }
 
+  Token operator -() {
+    return type.fromInt(-intValue);
+  }
+
   Token operator -(Token other) {
     return subtract(other);
   }
@@ -160,8 +192,16 @@ class Token {
     return intValue < other.intValue;
   }
 
+  bool operator <=(Token other) {
+    return intValue <= other.intValue;
+  }
+
   bool operator >(Token other) {
     return intValue > other.intValue;
+  }
+
+  bool operator >=(Token other) {
+    return intValue >= other.intValue;
   }
 
   Token add(Token other) {
@@ -177,8 +217,24 @@ class Token {
     return intValue < BigInt.zero;
   }
 
+  bool gtZero() {
+    return intValue > BigInt.zero;
+  }
+
   bool lteZero() {
     return intValue <= BigInt.zero;
+  }
+
+  bool isZero() {
+    return intValue == BigInt.zero;
+  }
+
+  bool isNotZero() {
+    return !isZero();
+  }
+
+  bool gteZero() {
+    return intValue >= BigInt.zero;
   }
 
   assertType(Token other) {
@@ -202,6 +258,17 @@ class Token {
     assertSameType(a, b);
     return a.intValue > b.intValue ? a : b;
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Token &&
+          runtimeType == other.runtimeType &&
+          type == other.type &&
+          intValue == other.intValue;
+
+  @override
+  int get hashCode => type.hashCode ^ intValue.hashCode;
 
   @override
   String toString() {

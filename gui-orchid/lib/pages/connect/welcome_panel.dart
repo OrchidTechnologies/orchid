@@ -83,7 +83,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
       setState(() {});
     });
 
-    _dollarPAC = await _getDollarPAC();
+    _dollarPAC = await OrchidPurchaseAPI.getDollarPAC();
     setState(() {});
   }
 
@@ -225,7 +225,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
         pady(40),
         OrchidActionButton(
           enabled: true,
-          text: s.getStartedFor1,
+          text: s.getStartedFor1(_dollarPAC?.localDisplayPrice ?? ''),
           onPressed: () {
             setState(() {
               _state = WelcomePanelState.confirm;
@@ -433,16 +433,6 @@ class _WelcomePanelState extends State<WelcomePanel> {
         });
       },
     );
-  }
-
-  Future<PAC> _getDollarPAC() async {
-    try {
-      Map<String, PAC> pacs = await OrchidPurchaseAPI().requestProducts();
-      return pacs[OrchidPurchaseAPI.pacTierDollarProductId];
-    } catch (err) {
-      log("welcome panel: error requesting products purchase: $err");
-      throw err;
-    }
   }
 
   void _dismiss() {

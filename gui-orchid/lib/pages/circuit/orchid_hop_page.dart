@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
@@ -29,6 +30,7 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/pages/account_manager/account_finder.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
+import 'package:orchid/pages/circuit/chain_selection.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
@@ -60,6 +62,7 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
 
 class _OrchidHopPageState extends State<OrchidHopPage> {
   var _pastedFunderField = TextEditingController();
+  Chain _pastedFunderChainselection;
   var _curatorField = TextEditingController();
   KeySelectionItem _initialSelectedKeyItem;
   KeySelectionItem _selectedKeyItem;
@@ -142,12 +145,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   @override
   Widget build(BuildContext context) {
-    var isValid = _funderValid() && _keyRefValid();
+    var formValid = _funderValid() && _keyRefValid();
     return TapClearsFocus(
       child: TitledPage(
         title: s.orchidHop,
         actions: widget.mode == HopEditorMode.Create
-            ? [widget.buildSaveButton(context, _onSave, isValid: isValid)]
+            ? [widget.buildSaveButton(context, _onSave, isValid: formValid)]
             : [],
         child: SafeArea(
           child: SingleChildScrollView(
@@ -464,23 +467,33 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         OrchidTextField(
-            hintText: '0x...',
-            margin: EdgeInsets.zero,
-            controller: _pastedFunderField,
-            readOnly: widget.readOnly(),
-            enabled: widget.editable(),
-            trailing: widget.editable()
-                ? FlatButton(
-                    color: Colors.transparent,
-                    padding: EdgeInsets.zero,
-                    child: Text(s.paste, style: OrchidText.button.purpleBright),
-                    onPressed: _onPasteFunderAddress)
-                : null)
+          hintText: '0x...',
+          margin: EdgeInsets.zero,
+          padding: EdgeInsets.zero,
+          controller: _pastedFunderField,
+          readOnly: widget.readOnly(),
+          enabled: widget.editable(),
+          trailing: widget.editable()
+              ? FlatButton(
+                  color: Colors.transparent,
+                  padding: EdgeInsets.zero,
+                  child: Icon(Icons.paste, color: OrchidColors.tappable),
+                  onPressed: _onPasteFunderAddressButton)
+              : null,
+        ),
+        pady(24),
+        ChainSelectionDropdown(
+          onSelection: (chain) {
+            setState(() {
+              _pastedFunderChainselection = chain;
+            });
+          },
+        ),
       ],
     );
   }
 
-  void _onPasteFunderAddress() async {
+  void _onPasteFunderAddressButton() async {
     ClipboardData data = await Clipboard.getData('text/plain');
     _pastedFunderField.text = data.text;
   }
@@ -703,17 +716,13 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     return (_selectedFunderItem != null &&
             _selectedFunderItem.option !=
                 FunderSelectionDropdown.pasteKeyOption) ||
-        _pastedFunderValid() ||
+        _pastedFunderAndChainValid() ||
         widget.readOnly();
   }
 
-  bool _pastedFunderValid() {
-    try {
-      EthereumAddress.parse(_pastedFunderField.text);
-      return true;
-    } catch (err) {
-      return false;
-    }
+  bool _pastedFunderAndChainValid() {
+    return EthereumAddress.isValid(_pastedFunderField.text) &&
+        _pastedFunderChainselection != null;
   }
 
   // Note: Called whenever setState() is invoked. We should probably make this explicit.
@@ -727,8 +736,11 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     try {
       var account = _selectedFunderItem?.account;
       funder = account?.funder ?? EthereumAddress.from(_pastedFunderField.text);
-      chainId = account?.chainId;
-      version = account?.version;
+      chainId = account?.chainId ?? _pastedFunderChainselection.chainId;
+
+      // Note: Currently inferring contract version from chain selection here.
+      version =
+          account?.version ?? (_pastedFunderChainselection.isEthereum ? 0 : 1);
     } catch (err) {
       funder = null; // don't update it
     }

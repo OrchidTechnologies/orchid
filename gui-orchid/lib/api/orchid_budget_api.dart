@@ -1,23 +1,66 @@
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/util/units.dart';
-
 import 'orchid_crypto.dart';
 
-// Funds and Budgeting API
-class OrchidBudgetAPI {
-  static OrchidBudgetAPI _shared = OrchidBudgetAPI._init();
+class LotteryPot {
+  final Token deposit;
+  final Token balance;
+  final BigInt unlock;
+  final Token warned;
 
-  OrchidBudgetAPI._init();
-
-  factory OrchidBudgetAPI() {
-    return _shared;
+  DateTime get unlockTime {
+    return DateTime.fromMillisecondsSinceEpoch(unlock.toInt() * 1000);
   }
 
-  void applicationReady() async {}
+  /// An amount is warned and the warn time has elapsed
+  bool get isUnlocked {
+    return unlock > BigInt.zero && unlockTime.isBefore(DateTime.now());
+  }
+
+  /// An amount is warned but the warn time has not yet arrived
+  bool get isUnlocking {
+    return unlock > BigInt.zero && unlockTime.isAfter(DateTime.now());
+  }
+
+  /// There is no warned amount or the warned time has not yet arrived.
+  /// All funds remain locked.
+  bool get isLocked {
+    return !isUnlocked;
+  }
+
+  /// The amount of deposit currently unlocked and available for withdrawal or zero
+  Token get unlockedAmount {
+    return isUnlocked ? warned : deposit.type.zero;
+  }
+
+  /// The amount that can be withdrawn by moving any unlocked funds from deposit
+  /// to balance and withdrawing the resulting balance amount.
+  Token get maxWithdrawable {
+    return balance + unlockedAmount;
+  }
+
+  LotteryPot({
+    this.deposit,
+    this.balance,
+    this.unlock,
+    this.warned,
+  });
+
+  Token get maxTicketFaceValue {
+    return maxTicketFaceValueFor(balance, deposit);
+  }
+
+  @override
+  String toString() {
+    return 'LotteryPot{deposit: $deposit, balance: $balance, unlock: $unlock, warned: $warned}';
+  }
+
+  static Token maxTicketFaceValueFor(Token balance, Token deposit) {
+    return Token.min(balance, deposit / 2.0);
+  }
 }
 
 /// Lottery pot balance and deposit amounts.
-// TODO: Remove after migration
 // Note: This supports migration of OXT-specific code. If we simply generalize
 // Note: the value types to Token Dart would not catch assignment type errors
 // Note: until runtime due to its automatic downcasting.
@@ -46,30 +89,25 @@ class OXTLotteryPot implements LotteryPot {
   String toString() {
     return 'OXTLotteryPot{deposit: $deposit, balance: $balance}';
   }
-}
-
-class LotteryPot {
-  final Token deposit;
-  final Token balance;
-  final BigInt unlock;
-
-  LotteryPot({
-    this.deposit,
-    this.balance,
-    this.unlock,
-  });
-
-  Token get maxTicketFaceValue {
-    return maxTicketFaceValueFor(balance, deposit);
-  }
-
 
   @override
-  String toString() {
-    return 'LotteryPot{deposit: $deposit, balance: $balance, unlock: $unlock}';
-  }
+  DateTime get unlockTime => throw UnimplementedError();
 
-  static Token maxTicketFaceValueFor(Token balance, Token deposit) {
-    return Token.min(balance, deposit / 2.0);
-  }
+  @override
+  Token get warned => throw UnimplementedError();
+
+  @override
+  bool get isUnlocked => throw UnimplementedError();
+
+  @override
+  bool get isLocked => throw UnimplementedError();
+
+  @override
+  Token get unlockedAmount => throw UnimplementedError();
+
+  @override
+  bool get isUnlocking => throw UnimplementedError();
+
+  @override
+  Token get maxWithdrawable => throw UnimplementedError();
 }

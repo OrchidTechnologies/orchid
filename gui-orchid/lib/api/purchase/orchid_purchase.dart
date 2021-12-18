@@ -200,6 +200,16 @@ abstract class OrchidPurchaseAPI {
   static String pacTierDollarProductId =
       OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4';
 
+  static Future<PAC> getDollarPAC() async {
+    try {
+      Map<String, PAC> pacs = await OrchidPurchaseAPI().requestProducts();
+      return pacs[OrchidPurchaseAPI.pacTierDollarProductId];
+    } catch (err) {
+      log("welcome panel: error requesting products purchase: $err");
+      throw err;
+    }
+  }
+
   // TODO: Clean this up
   static pacForTier(Iterable<PAC> pacs, int tier) {
     var pacTier = OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier$tier';
@@ -211,8 +221,10 @@ abstract class OrchidPurchaseAPI {
     var pacs = [
       PAC(
         productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4',
-        localCurrencyCode: "USD",
-        localCurrencySymbol: '\$',
+        localCurrencyCode: "EUR",
+        localCurrencySymbol: '€',
+        // localCurrencyCode: "USD",
+        // localCurrencySymbol: '\$',
         localPrice: price,
         usdPriceExact: USD(price),
       ),

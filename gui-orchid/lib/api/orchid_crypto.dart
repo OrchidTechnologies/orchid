@@ -70,7 +70,7 @@ class Crypto {
       }
       var keyInt = BigInt.parse(text, radix: 16);
       if (keyInt > BigInt.from(0) &&
-          keyInt < ((BigInt.from(1) << 256) - BigInt.from(1))) {
+          keyInt < ((BigInt.one << 256) - BigInt.one)) {
         return keyInt;
       } else {
         throw Exception("invalid range");
@@ -204,8 +204,12 @@ class StoredEthereumKey {
     return {for (var key in list) key.uid: key};
   }
 
-  static StoredEthereumKey find(List<StoredEthereumKey> list, String uid) {
+  static StoredEthereumKey findByUid(List<StoredEthereumKey> list, String uid) {
     return list.firstWhere((key) => key.uid == uid, orElse: () => null);
+  }
+
+  static StoredEthereumKey findByAddress(List<StoredEthereumKey> list, EthereumAddress signerAddress) {
+    return list.firstWhere((key) => key.address == signerAddress, orElse: () => null);
   }
 
   static StoredEthereumKey generate() {
@@ -302,7 +306,6 @@ class EthereumAddress {
     return text == null ? null : EthereumAddress.from(text);
   }
 
-  // TODO: EIP55
   // Display the optionally prefixed 40 char hex address.
   @override
   String toString({bool prefix: true}) {
@@ -314,10 +317,22 @@ class EthereumAddress {
     return (prefix ? eip55 : Hex.remove0x(eip55));
   }
 
-  // TODO: EIP55
+  static bool isValid(String text) {
+    try {
+      EthereumAddress.parse(text);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
   static BigInt parse(String text) {
     if (text == null) {
       throw Exception("invalid, null");
+    }
+    // eip55 check
+    if (!isValidEthereumAddress(text)) {
+      throw Exception("invalid eth address: $text");
     }
     text = Hex.remove0x(text);
     if (text.length != 40) {

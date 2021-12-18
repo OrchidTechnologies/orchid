@@ -21,6 +21,8 @@ lflags += -lmswsock
 lflags += -luserenv
 # XXX: technically for glib
 lflags += -lole32
+# XXX: technically for rust
+lflags += -lbcrypt
 
 lflags += -lcrypt32
 lflags += -liphlpapi

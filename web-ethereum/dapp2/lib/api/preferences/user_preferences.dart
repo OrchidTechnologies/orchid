@@ -53,7 +53,6 @@ class UserPreferences {
   ObservableStringPreference userConfig =
       ObservableStringPreference(UserPreferenceKey.UserConfig);
 
-
   ///
   /// Begin: Keys
   ///
@@ -78,13 +77,13 @@ class UserPreferences {
       var jsonList = jsonDecode(value) as List<dynamic>;
       return jsonList
           .map((el) {
-        try {
-          return StoredEthereumKey.fromJson(el);
-        } catch (err) {
-          log("Error decoding key: $err");
-          return null;
-        }
-      })
+            try {
+              return StoredEthereumKey.fromJson(el);
+            } catch (err) {
+              log("Error decoding key: $err");
+              return null;
+            }
+          })
           .where((key) => key != null)
           .toList();
     } catch (err) {
@@ -168,6 +167,62 @@ class UserPreferences {
   ObservablePreference<Set<Account>> cachedDiscoveredAccounts =
       ObservableAccountSetPreference(
           UserPreferenceKey.CachedDiscoveredAccounts);
+
+  ///
+  /// Begin: dapp transactions
+  ///
+
+  /// Tracked user dapp transactions
+  ObservablePreference<List<String>> transactions = ObservablePreference(
+      key: UserPreferenceKey.Transactions,
+      getValue: (key) {
+        return _getTransactions();
+      },
+      putValue: (key, List<String> txs) {
+        return _setTransactions(txs);
+      });
+
+  void addTransaction(String txHash) {
+    transactions.set(transactions.get() + [txHash]);
+  }
+
+  void removeTransaction(String txHash) {
+    var list = transactions.get();
+    list.remove(txHash);
+    transactions.set(list);
+  }
+
+  static List<String> _getTransactions() {
+    String value =
+        UserPreferences().getStringForKey(UserPreferenceKey.Transactions);
+    if (value == null) {
+      return [];
+    }
+    try {
+      var jsonList = jsonDecode(value) as List<dynamic>;
+      return jsonList.map((e) => e.toString()).toList();
+    } catch (err) {
+      log("Error retrieving txs!: $err");
+      return [];
+    }
+  }
+
+  static Future<bool> _setTransactions(List<String> txs) async {
+    print("XXX setTxs: storing txs: ${jsonEncode(txs)}");
+    try {
+      var value = jsonEncode(txs);
+      return await UserPreferences()
+          .putStringForKey(UserPreferenceKey.Transactions, value);
+    } catch (err) {
+      log("Error storing txs!: $err");
+      return false;
+    }
+  }
+
+  ///
+  /// End: dapp transactions
+  ///
+
 }
 
 // TODO: Remove unneeded items.
@@ -176,5 +231,5 @@ enum UserPreferenceKey {
   Keys,
   ActiveAccounts,
   CachedDiscoveredAccounts,
-  GuiV0,
+  Transactions,
 }

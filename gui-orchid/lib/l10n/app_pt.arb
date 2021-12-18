@@ -3,15 +3,15 @@
     "@newHop": {
         "description": "New network hop"
     },
-    "orchidHop": "Salto Orchid",
+    "orchidHop": "Salto da Orchid",
     "@orchidHop": {
         "description": "Orchid network hop"
     },
-    "orchidDisabled": "Orchid desativada",
-    "trafficMonitoringOnly": "Apenas monitoração de tráfego",
+    "orchidDisabled": "Orchid desativado",
+    "trafficMonitoringOnly": "Apenas monitorização de tráfego",
     "orchidConnecting": "Orchid a estabelecer ligação",
     "orchidDisconnecting": "Orchid a terminar ligação",
-    "numHopsConfigured": "{num, plural, =0{Sem Hop configurados} =1{Um hop configurado} =2{Dois hops configurados} other{{num} hops configurados}}",
+    "numHopsConfigured": "{num, plural, =0{Sem hops configurados} =1{Um hop configurado} =2{Dois hops configurados} other{{num} hops configurados}}",
     "@numHopsConfigured": {
         "type": "text",
         "placeholders": {
@@ -45,7 +45,7 @@
     "changesWillTakeEffectInstruction": "As suas alterações serão aplicadas assim que a VPN seja reiniciada.",
     "saved": "Guardado",
     "configurationSaved": "Configuração Guardada",
-    "whoops": "Opa",
+    "whoops": "Ups",
     "configurationFailedInstruction": "Falha ao salvar a configuração. Verifique a sintaxe e tente novamente.",
     "addHop": "Adicionar Hop",
     "scan": "Digitalizar",
@@ -73,7 +73,7 @@
     "reset": "Redefinir",
     "manageConfiguration": "Gerir Configuração",
     "warningThesefeature": "Aviso: esses recursos são direcionados somente a usuários avançados. Leia todas as instruções.",
-    "exportHopsConfiguration": "Exportar configurações de salto",
+    "exportHopsConfiguration": "Exportar configurações de hop",
     "export": "Exportar",
     "warningExportedConfiguration": "Aviso: a configuração exportada inclui os segredos de chave privada do signatário para os hops exportados. Revelar chaves privadas expõe-o à perda de todos os seus fundos nas contas Orchid relacionadas.",
     "importHopsConfiguration": "Importar configurações do Hop",
@@ -262,41 +262,55 @@
     "total": "Total",
     "pausingAllTraffic": "A colocar todo o tráfego em pausa...",
     "queryingEthereumForARandom": "A consultar Ethereum para um fornecedor aleatório...",
+    "quickFundAnAccount": "Coloque rapidamente fundos numa conta!",
     "accountFound": "Conta encontrada",
-    "accountManager": "Gerente de contas",
-    "addNewHop": "ADICIONE NOVA HOP",
-    "blockchainFee": "Taxa de blockchain",
-    "chooseIdentity": "Escolha a identidade",
-    "circuitBuilder": "Construtor de Circuito",
-    "confirmPurchase": "Confirmar compra",
-    "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Conecte-se automaticamente a um dos <link1>provedores preferenciais</link1> da rede, comprando créditos VPN para financiar sua conta Orchid compartilhável e recarregável.",
-    "deleteThisOrchidIdentity": "Excluir esta identidade de orquídea",
-    "deletingOpenVPNAndWireguardHopsWillLose": "A exclusão de saltos OpenVPN e Wireguard perderá todas as credenciais associadas e configuração de conexão. Certifique-se de fazer backup de todas as informações antes de continuar.",
-    "entryHop": "Salto de entrada",
-    "exitHop": "Salto de saída",
-    "fundYourAccount": "financiar a sua conta",
-    "getStartedFor1": "COMEÇAR POR US $ 1",
-    "illDoThisLater": "Vou fazer isso depois",
+    "weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "Encontrámos uma conta associada às suas identidades e criámos um circuito do Orchid de hop única para ela. Agora pode utilizar a VPN.",
+    "welcomeToOrchid": "Seja bem-vindo(a) ao Orchid!",
+    "fundYourAccount": "Adicione Fundos à sua Conta",
+    "processing": "A processar...",
+    "subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "Serviço VPN em código aberto, descentralizado, sem subscrições, pague conforme o uso.",
+    "getStartedFor1": "COMEÇAR POR {smallAmount}",
+    "@getStartedFor1": {
+        "placeholders": {
+            "smallAmount": {
+                "type": "String"
+            }
+        }
+    },
     "importAccount": "IMPORTAR CONTA",
-    "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "Gerencie sua conexão com o construtor de circuito em vez do gerenciador de contas. Todas as conexões agora usam um circuito com zero ou mais saltos. Qualquer configuração existente foi migrada para o construtor de circuito.",
-    "newCircuitBuilder": "Novo construtor de circuito!",
-    "orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "As contas Orchid usam créditos VPN apoiados pela <link>criptomoeda xDAI</link>, incluem suporte ao cliente 24 horas por dia, 7 dias por semana, compartilhamento ilimitado de dispositivos e são cobertas por políticas de reembolso da loja de aplicativos.",
-    "orchidIsUniqueAsAMultiHopOrOnion": "O Orchid é único como cliente de roteamento de vários saltos ou cebola, com suporte a vários protocolos VPN. Você pode configurar sua conexão encadeando saltos dos protocolos suportados abaixo.\n\nUm salto é como uma VPN normal. Três saltos (para usuários avançados) é a escolha clássica de roteamento cebola. O salto zero permite a análise de tráfego sem qualquer túnel VPN.",
-    "processing": "Em processamento...",
+    "illDoThisLater": "Faço isto mais tarde",
+    "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Ligue-se automaticamente a um dos <link1>fornecedores favoritos</link1> da rede ao adquirir créditos de VPN para adicionar saldo à sua conta partilhável e recarregável do Orchid.",
+    "confirmPurchase": "CONFIRMAR COMPRA",
+    "orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "As contas do Orchid utilizam créditos de VPN suportadas pela <link>criptomoeda xDAI</link>, inclui apoio ao cliente 24h, partilha ilimitada de dispositivos e são cobertas pelas políticas de reembolso das lojas de aplicações.",
+    "yourPurchaseIsInProgress": "A sua compra está em curso.",
+    "thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "O processamento desta compra está a demorar mais que o esperado, pode ter sido encontrado um erro.",
+    "thisMayTakeAMinute": "Isto pode demorar um minuto...",
+    "vpnCredits": "Créditos de VPN",
+    "blockchainFee": "Taxa de blockchain",
     "promotion": "Promoção",
-    "quickFundAnAccount": "Financie rapidamente uma conta!",
-    "quickStartFor1": "Início rápido por $ 1",
-    "showInAccountManager": "Mostrar no gerenciador de contas",
-    "subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "Serviço de VPN descentralizado e de código aberto, sem assinatura, pré-pago.",
-    "thisCannotBeUndoneToSaveThisIdentity": "Isto não pode ser desfeito. Para salvar esta identidade clique em cancelar e use a opção Exportar",
-    "thisMayTakeAMinute": "Isso pode demorar um minuto ...",
-    "thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "Esta compra está demorando mais do que o esperado para ser processada e pode ter encontrado um erro.",
+    "showInAccountManager": "Mostrar no Gestor de Contas",
+    "deleteThisOrchidIdentity": "Eliminar esta Identidade do Orchid",
+    "chooseIdentity": "Escolher Identidade",
+    "updatingAccounts": "A atualizar Contas",
     "trafficAnalysis": "Análise de Tráfego",
-    "updatingAccounts": "Atualizando contas",
-    "vpnCredits": "Créditos VPN",
-    "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Adicionamos um método para comprar uma conta Orchid e criar um circuito de salto único na tela inicial para atuar no processo de integração.",
-    "weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "Encontramos uma conta associada às suas identidades e criamos um circuito Orchid de salto único para ela. Agora você está pronto para usar a VPN.",
-    "welcomeToOrchid": "Bem-vindo ao Orchid!",
-    "youCanNowPayForAMultihopOrchidCircuitWith": "Agora você pode pagar por um circuito Orchid multi-hop com xDAI. A interface multihop agora suporta contas xDAI e OXT Orchid e ainda suporta configurações OpenVPN e WireGuard que podem ser agrupadas em uma rota onion.",
-    "yourPurchaseIsInProgress": "Sua compra está em andamento."
+    "accountManager": "Gestor de Conta",
+    "circuitBuilder": "Criador de Circuitos",
+    "exitHop": "Hop de Saída",
+    "entryHop": "Hop de Entrada",
+    "addNewHop": "ADICIONAR NOVO HOP",
+    "newCircuitBuilder": "Novo criador de circuitos!",
+    "youCanNowPayForAMultihopOrchidCircuitWith": "Agora pode pagar por um circuito do Orchi com vários hops com xDAI. A interface multihop agora suporta contas do Orchid xDAI e OXT. Ainda é compatível com configurações OpenVPN e WireGuard que podem ser agrupadas num percurso onion.",
+    "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "Faça a gestão da sua ligação a partir do criador de circuitos em vez do gestor de contas. Todas as ligações utilizam agora um circuito com zero ou mais hops. Qualquer configuração existente foi migrada para o criador de circuitos.",
+    "quickStartFor1": "Começar rapidamente por {smallAmount}",
+    "@quickStartFor1": {
+        "placeholders": {
+            "smallAmount": {
+                "type": "String"
+            }
+        }
+    },
+    "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Adicionamos uma forma de comprar uma conta do Orchid e criar um circuito de único hop a partir do ecrã inicial para criar um atalho para o processo de integração.",
+    "orchidIsUniqueAsAMultiHopOrOnion": "O Orchid é único enquanto cliente de encaminhamento multi-hop ou onion que suporta vários protocolos de VPN. Pode configurar a sua ligação ao encadear hops a partir dos protocolos compatíveis abaixo.\n\nUm hop é como um VPN normal. Três hops (para utilizadores avançados) é a opção de encaminhamento onion clássica. Zero hops permitem a análise de tráfego sem qualquer túnel de VPN.",
+    "deletingOpenVPNAndWireguardHopsWillLose": "Eliminar os hops do OpenVPN e do Wireguard faz perder quaisquer credenciais associadas e configurações de ligação. Certifique-se de que salvaguarda quaisquer informações antes de continuar.",
+    "thisCannotBeUndoneToSaveThisIdentity": "Esta ação não pode ser desfeita. Para guardar esta identidade, toque em Cancelar e utilize a opção de Exportar"
 }

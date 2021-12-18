@@ -116,7 +116,7 @@ void main() async {
     });
 
     test('get bandwidth price', () async {
-      var price = await OrchidEthereumV1.getBandwidthPrice();
+      var price = await OrchidBandwidthPricing.getBandwidthPrice();
       print("bandwidth price = $price");
     });
 

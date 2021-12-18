@@ -48,6 +48,15 @@ Widget orange(Widget child) {
   return Orange(child: child);
 }
 
+extension DebugExtension on Widget {
+  Widget get orange {
+    return Orange(child: this);
+  }
+  Widget get green {
+    return Orange(child: this);
+  }
+}
+
 class Orange extends StatelessWidget {
   final Widget child;
 
@@ -57,7 +66,7 @@ class Orange extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.orange,
-      child: child,
+      child: child ?? SizedBox(width: 200, height: 200),
     );
   }
 }

@@ -1,7 +1,6 @@
-import 'dart:js_util';
-
-import 'package:flutter_web3/flutter_web3.dart' as flutter_web3;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_web3/flutter_web3.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -11,9 +10,10 @@ import 'package:orchid/api/orchid_log_api.dart';
 import '../orchid_web3_context.dart';
 import 'orchid_contract_web3_v1.dart';
 
+/// Read/write calls used in the dapp.
 class OrchidWeb3V1 {
   final OrchidWeb3Context context;
-  final flutter_web3.Contract _lottery;
+  final Contract _lottery;
 
   final int version = 1;
 
@@ -32,8 +32,6 @@ class OrchidWeb3V1 {
     return context.chain.nativeCurrency;
   }
 
-  int requiredConfirmations = 2;
-
   // used in market conditions
   Future<Token> getAccountCreationGasRequired() {
     // TODO: implement getAccountCreationGasRequired
@@ -45,30 +43,13 @@ class OrchidWeb3V1 {
     throw UnimplementedError();
   }
 
-  /*
-  async orchidAddFunds(
-    funder: EthAddress, signer: EthAddress, addBalance: LotFunds, addEscrow: LotFunds, wallet: Wallet
-  ): Promise<string> {
-
-    async function doFundTx() {
-      return new Promise<string>(function (resolve, reject) {
-      });
-    }
-
-    // The UI monitors the funding tx.
-    return doFundTx();
-  }
-   */
-
   /// Transfer the int amount from the user to the specified lottery pot address.
   /// If the total exceeds walletBalance the amount value is automatically reduced.
-  Future< /*TransactionId*/ String> orchidAddFunds(
+  Future<String /*TransactionId*/ > orchidAddFunds(
       {OrchidWallet wallet,
       EthereumAddress signer,
       Token addBalance,
       Token addEscrow}) async {
-    //return fakeTx(false);
-
     var nativeCurrency = context.chain.nativeCurrency;
     var walletBalance = wallet.balances[nativeCurrency];
     if (walletBalance == null) {
@@ -77,8 +58,8 @@ class OrchidWeb3V1 {
 
     // Don't attempt to add more than the wallet balance.
     // This mitigates the potential for rounding errors in calculated amounts.
-    var total = Token.min(addBalance.add(addEscrow), walletBalance);
-    log("Add funds signer: $signer, amount: ${total.subtract(addEscrow)}, escrow: $addEscrow");
+    var totalPayable = Token.min(addBalance.add(addEscrow), walletBalance);
+    log("Add funds signer: $signer, amount: ${totalPayable.subtract(addEscrow)}, escrow: $addEscrow");
 
     // 'adjust' specifies how much to move from balance to escrow (positive)
     // or escrow to balance (negative)
@@ -90,17 +71,125 @@ class OrchidWeb3V1 {
     // This client does not specify a gas price. We will assume that an EIP-1559 wallet
     // will do something appropriate.
 
-    // function edit(address signer, int256 adjust, int256 warn, uint256 retrieve) {
+    // function edit(address signer, int256 adjust, int256 warn, uint256 retrieve)
+    TransactionResponse tx = await _editCall(
+      signer: signer,
+      adjust: adjust,
+      warn: warn,
+      retrieve: retrieve,
+      totalPayable: totalPayable,
+    );
+    return tx.hash;
+  }
+
+  /// Withdraw funds by moving the specified withdrawEscrow amount from escrow
+  /// to balance in combination with retrieving the sum of withdrawBalance and
+  /// withdrawEscrow amount from balance to the current wallet.
+  /// If warnDeposit is true and the deposit is non-zero all remaining deposit
+  /// will be warned.
+  Future<String /*TransactionId*/ > orchidWithdrawFunds({
+    @required LotteryPot pot,
+    @required EthereumAddress signer,
+    @required Token withdrawBalance,
+    @required Token withdrawEscrow,
+    @required bool warnDeposit,
+  }) async {
+    log("orchidWithdrawFunds: balance: $withdrawBalance, escrow: $withdrawEscrow, warn: $warnDeposit");
+
+    if (withdrawBalance > pot.balance) {
+      throw Exception('insufficient balance: $withdrawBalance, $pot');
+    }
+    if (withdrawEscrow > pot.warned) {
+      throw Exception('insufficient warned: $withdrawEscrow, $pot');
+    }
+    if (withdrawEscrow.gtZero() && pot.isLocked) {
+      throw Exception('pot locked: $withdrawEscrow, $pot');
+    }
+
+    // Move the specified amount from deposit to balance
+    // This is capped at the warned amount.
+    var moveEscrowToBalanceAmount =
+        Token.min(withdrawEscrow, pot.warned).intValue;
+    // Withdraw the sum
+    var retrieve = Token.min(withdrawBalance, pot.balance).intValue +
+        moveEscrowToBalanceAmount;
+    // Warn more if desired
+    var warn = (warnDeposit && pot.deposit.gtZero())
+        ? pot.deposit.intValue
+        : BigInt.zero;
+
+    // This client does not specify a gas price. We will assume that an EIP-1559 wallet
+    // will do something appropriate.
+
+    // positive adjust moves from balance to escrow
+    final moveBalanceToEscrowAmount = -moveEscrowToBalanceAmount;
+    TransactionResponse tx = await _editCall(
+      signer: signer,
+      adjust: moveBalanceToEscrowAmount,
+      warn: warn,
+      retrieve: retrieve,
+    );
+    return tx.hash;
+  }
+
+  /// If positive, netPayable indicates net payable amount from the wallet to the
+  /// contract. If negative the netPayable indicates the withdraw amount that will
+  /// be recieved back to the wallet.
+  /// If adjustAmount is positive funds move from balance to deposit;
+  /// If adjustAmount is negative funds move from deposit to balance.
+  /// warnAmount may be positive or negative to indicate a change in the warned amount.
+  Future<String /*TransactionId*/ > orchidEditFunds({
+    @required OrchidWallet wallet,
+    @required EthereumAddress signer,
+    @required LotteryPot pot,
+    @required Token netPayable,
+    @required Token adjustAmount,
+    @required Token warnAmount,
+  }) async {
+    log("orchidEditFunds: netPayable: $netPayable, adjustAmount: $adjustAmount, warnAmount: $warnAmount ");
+
+    // check payable
+    if (netPayable > wallet.balance) {
+      throw Exception('insufficient wallet balance: ');
+    }
+    // check adjust
+    //...
+
+    // check warn
+    if (warnAmount.ltZero()) {
+      final warnSubtract = -warnAmount;
+      if (warnSubtract > pot.warned) {
+        throw Exception(
+            'attempt to un-warn more than currently warned: $warnAmount, $pot');
+      }
+    }
+    // The contract doesn't care if the warned value is greater than the deposit.
+    // if (warnAmount.gtZero()) { }
+
+    final retrieve = netPayable.lteZero() ? -netPayable.intValue : BigInt.zero;
+    final pay = netPayable.gtZero() ? netPayable : null;
+
+    TransactionResponse tx = await _editCall(
+      signer: signer,
+      adjust: adjustAmount.intValue,
+      warn: warnAmount.intValue,
+      retrieve: retrieve,
+      totalPayable: pay,
+    );
+    return tx.hash;
+  }
+
+  // function edit(address signer, int256 adjust, int256 warn, uint256 retrieve)
+  // positive adjust moves from balance to escrow
+  Future<TransactionResponse> _editCall({
+    @required EthereumAddress signer,
+    @required BigInt adjust,
+    @required BigInt warn,
+    @required BigInt retrieve,
+    Token totalPayable,
+  }) async {
     var contract = _lottery.connect(context.web3.getSigner());
-
-    // "function read(IERC20 token, address funder, address signer) external view returns (uint256, uint256)",
-    // var read = await contract.call('read', [
-    //   EthereumAddress.zero.toString(prefix: false),
-    //   wallet.address.toString(prefix: false),
-    //   signer.toString(prefix: false),
-    // ]);
-
-    var tx = await contract.send(
+    TransactionResponse tx = await contract.send(
       'edit',
       [
         signer.toString(),
@@ -108,84 +197,11 @@ class OrchidWeb3V1 {
         warn.toString(),
         retrieve.toString(),
       ],
-      TransactionOverride(value: total.intValue),
+      totalPayable != null
+          ? TransactionOverride(value: totalPayable.intValue)
+          : TransactionOverride(),
     );
-    log("waiting for tx: $tx");
-    flutter_web3.TransactionReceipt txResult =
-        await tx.wait(requiredConfirmations);
-    log("result = $txResult");
-
-    return txResult.transactionHash;
-
-    /* .send({
-      from: funder,
-      gas: OrchidContractV1.lottery_move_max_gas,
-      gasPrice: gasPrice,
-      value: total.intValue.toString(),
-    })
-        .on("transactionHash", (hash: any) => {
-    console.log("Fund hash: ", hash);
-    OrchidAPI.shared().transactionMonitor.add(
-    new OrchidTransaction(new Date(), OrchidTransactionType.AddFunds, thisCapture.chainId, [hash]));
-    })
-        .on('confirmation', (confirmationNumber: any, receipt: any) => {
-    console.log("Fund confirmation", confirmationNumber, JSON.stringify(receipt));
-    // Wait for confirmations on the funding tx.
-    if (confirmationNumber >= thisCapture.requiredConfirmations) {
-    const hash = receipt['transactionHash'];
-    resolve(hash);
-    } else {
-    console.log("waiting for more confirmations...");
-    }
-    })
-        .on('error', (err: any) => {
-    console.log("Fund error: ", JSON.stringify(err));
-    reject(err['message']);
-    });
-        */
-  }
-
-  Future<LotteryPot> orchidGetLotteryPot(
-      {OrchidWallet funder, EthereumAddress signer}) {
-    // TODO: implement orchidGetLotteryPot
-    throw UnimplementedError();
-  }
-
-  Future< /*TransactionId*/ String> orchidLock(
-      LotteryPot pot, EthereumAddress funder, EthereumAddress signer) {
-    // TODO: implement orchidLock
-    throw UnimplementedError();
-  }
-
-  Future< /*TransactionId*/ String> orchidMoveFundsToEscrow(
-      {OrchidWallet funder,
-      EthereumAddress signer,
-      Token amount,
-      Token potBalance}) {
-    // TODO: implement orchidMoveFundsToEscrow
-    throw UnimplementedError();
-  }
-
-  Future< /*TransactionId*/ String> orchidUnlock(
-      LotteryPot pot, EthereumAddress funder, EthereumAddress signer) {
-    // TODO: implement orchidUnlock
-    throw UnimplementedError();
-  }
-
-  Future< /*TransactionId*/ String> orchidWithdrawFunds(
-      {OrchidWallet funder,
-      EthereumAddress signer,
-      EthereumAddress targetAddress,
-      Token amount,
-      Token potBalance}) {
-    // TODO: implement orchidWithdrawFunds
-    throw UnimplementedError();
-  }
-
-  Future< /*TransactionId*/ String> orchidWithdrawFundsAndEscrow(
-      {LotteryPot pot, EthereumAddress targetAddress}) {
-    // TODO: implement orchidWithdrawFundsAndEscrow
-    throw UnimplementedError();
+    return tx;
   }
 
 // orchidGetSigners(wallet: Wallet): Promise<Signer []>

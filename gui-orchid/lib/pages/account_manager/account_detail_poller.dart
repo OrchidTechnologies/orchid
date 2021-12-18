@@ -49,7 +49,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
 
   AccountDetailPoller({
     @required this.account,
-    this.pollingPeriod = const Duration(seconds: 15),
+    this.pollingPeriod = const Duration(seconds: 30),
   });
 
   Timer _balanceTimer;
@@ -87,7 +87,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       signerAddress = await account.signerAddress;
     }
 
-    log("polling account details: signer = $signerAddress, funder = $funder");
+    // log("polling account details: signer = $signerAddress, funder = $funder");
     if (_balancePollInProgress) {
       return;
     }
@@ -96,7 +96,6 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
       // Fetch the pot balance
       LotteryPot _pot;
       try {
-        //log("Detail poller fetch pot, eth=$eth, funder=$funder, signer=$resolvedSigner");
         _pot = await account
             .getLotteryPot(refresh: refresh)
             .timeout(Duration(seconds: 30));

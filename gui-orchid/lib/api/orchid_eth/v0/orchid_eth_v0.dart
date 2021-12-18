@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/orchid_eth/eth_rpc.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/util/hex.dart';
@@ -47,7 +45,7 @@ class OrchidEthereumV0 {
   */
   static Future<OXTLotteryPot> getLotteryPot(
       EthereumAddress funder, EthereumAddress signer) async {
-    log("fetch pot V0 for: $funder, $signer, url = ${await _rpc}");
+    log("fetch pot V0 for: $funder, $signer, url = $_rpc");
 
     // construct the abi encoded eth_call
     var params = [
@@ -60,7 +58,7 @@ class OrchidEthereumV0 {
       "latest"
     ];
 
-    String result = await jsonRpc(method: "eth_call", params: params);
+    String result = await _jsonRpc(method: "eth_call", params: params);
     if (!result.startsWith("0x")) {
       log("Error result: $result");
       throw Exception();
@@ -106,7 +104,7 @@ class OrchidEthereumV0 {
       String transactionHash) async {
     var params = [transactionHash];
     return OrchidTransactionV0.fromJsonRpcResult(
-        await jsonRpc(method: "eth_getTransactionByHash", params: params));
+        await _jsonRpc(method: "eth_getTransactionByHash", params: params));
   }
 
   /*
@@ -143,7 +141,7 @@ class OrchidEthereumV0 {
     EthereumAddress funder,
     EthereumAddress signer,
   ) async {
-    log("fetch update events for: $funder, $signer, url = ${await _rpc}");
+    log("fetch update events for: $funder, $signer, url = $_rpc");
     var params = [
       {
         "topics": [
@@ -154,7 +152,7 @@ class OrchidEthereumV0 {
         "fromBlock": "0x" + startBlock.toRadixString(16)
       }
     ];
-    dynamic results = await jsonRpc(method: "eth_getLogs", params: params);
+    dynamic results = await _jsonRpc(method: "eth_getLogs", params: params);
     List<OrchidUpdateEventV0> events =
         results.map<OrchidUpdateEventV0>((var result) {
       return OrchidUpdateEventV0.fromJsonRpcResult(result);
@@ -165,7 +163,7 @@ class OrchidEthereumV0 {
   Future<List<OrchidCreateEventV0>> getCreateEvents(
     EthereumAddress signer,
   ) async {
-    log("fetch create events for: $signer, url = ${await _rpc}");
+    log("fetch create events for: $signer, url = $_rpc");
     var params = [
       {
         "topics": [
@@ -176,7 +174,7 @@ class OrchidEthereumV0 {
         "fromBlock": "0x" + startBlock.toRadixString(16)
       }
     ];
-    dynamic results = await jsonRpc(method: "eth_getLogs", params: params);
+    dynamic results = await _jsonRpc(method: "eth_getLogs", params: params);
     List<OrchidCreateEventV0> events =
         results.map<OrchidCreateEventV0>((var result) {
       return OrchidCreateEventV0.fromJsonRpcResult(result);
@@ -190,54 +188,15 @@ class OrchidEthereumV0 {
         await OrchidEthereumV0().getCreateEvents(signer.address);
     return v0CreateEvents.map((event) {
       return Account.fromSignerKey(
-          signerKey: signer,
-          chainId: Chains.ETH_CHAINID,
-          funder: event.funder);
+          signerKey: signer, chainId: Chains.ETH_CHAINID, funder: event.funder);
     }).toList();
   }
 
-  static Future<dynamic> jsonRpc({
+  static Future<dynamic> _jsonRpc({
     @required String method,
     List<Object> params = const [],
   }) async {
-    return ethJsonRpcCall(url: _rpc, method: method, params: params);
-  }
-
-  /// Ethereum json rpc call
-  static Future<dynamic> ethJsonRpcCall({
-    @required String url,
-    @required String method,
-    List<Object> params = const [],
-  }) async {
-    // construct the abi encoded eth_call
-    var postBody = jsonEncode(
-        {"jsonrpc": "2.0", "method": method, "id": 1, "params": params});
-
-    // json null params should not be quoted
-    postBody = postBody.replaceAll('"null"', 'null');
-    log("jsonRPC to $url: postbody = $postBody");
-    //debugPrintStack();
-
-    // do the post
-    var response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Referer': 'https://account.orchid.com',
-      },
-      body: postBody,
-    );
-
-    if (response.statusCode != 200) {
-      log("jsonRPC: error response from $url: ${response.body}");
-      throw Exception("Error status code: ${response.statusCode}");
-    }
-    var body = json.decode(response.body);
-    if (body['error'] != null) {
-      throw Exception("fetch error in response: $body");
-    }
-
-    //log("jsonRPC: to $url: result = ${body['result']}");
-    return body['result'];
+    return EthereumJsonRpc.ethJsonRpcCall(
+        url: _rpc, method: method, params: params);
   }
 }
