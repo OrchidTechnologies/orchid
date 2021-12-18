@@ -137,11 +137,7 @@ vflags += -DV8_WIN64_UNWINDING_INFO
 
 cflags += -DICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_STATIC
 
-ifeq ($(target),win)
-vflags += -DUCHAR_TYPE=wchar_t
-else
-vflags += -DUCHAR_TYPE=uint16_t
-endif
+vflags += -DUCHAR_TYPE=char16_t
 
 ifeq ($(target),win)
 vflags += -DUNICODE
@@ -203,10 +199,10 @@ tqsrc += enum-verifiers.cc
 tqsrc += factory.cc
 tqsrc += factory.inc
 tqsrc += interface-descriptors.inc
-tqsrc += field-offsets.h
 tqsrc += instance-types.h
 tqsrc += objects-body-descriptors-inl.inc
 tqsrc += objects-printer.cc
+tqsrc += visitor-lists.h
 tqsrc := $(patsubst %,$(output)/$(pwd/v8)/torque-generated/%,$(tqsrc))
 
 #$(error - $(filter-out $(shell find $(output)/$(pwd/v8)/torque-generated -name '*.h' -o -name '*.cc' -o -name '*.inc'),$(tqsrc)))
