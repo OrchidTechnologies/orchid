@@ -52,6 +52,7 @@ std::string currency_;
 uint256_t multiple_ = 1;
 std::optional<uint256_t> nonce_;
 std::optional<uint64_t> gas_;
+std::optional<uint64_t> height_;
 Locator rpc_{{"http", "127.0.0.1", "8545"}, "/"};
 
 class Args :
@@ -312,6 +313,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
             return arg;
         if (false);
         ORC_PARAM(bid,flags.,_)
+        ORC_PARAM(height,,_)
         ORC_PARAM(currency,,_)
         ORC_PARAM(executor,,)
         ORC_PARAM(gas,,_)
@@ -329,7 +331,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
         executor_ = co_await Option<decltype(executor_)>::_(std::move(executor));
 
     const auto block([&]() -> cppcoro::shared_task<Block> {
-        const auto height(co_await chain_->Height());
+        const auto height(height_ ? *height_ : co_await chain_->Height());
         const auto block(co_await chain_->Header(height));
         co_return block;
     });
