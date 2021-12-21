@@ -275,7 +275,7 @@ static cppcoro::shared_task<S<Executor>> _(std::string_view arg) {
 
 template <>
 struct Option<Bytes> {
-static Bytes _(std::string_view arg) {
+static Bytes _(std::string arg) {
     if (!arg.empty() && arg[0] == '@')
         arg = Load(arg.substr(1));
     return Bless(arg);
