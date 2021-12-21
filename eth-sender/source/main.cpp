@@ -208,6 +208,10 @@ static Address _(std::string_view arg) {
         return "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"; }
     else if (arg == "lottery1") {
         return "0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82"; }
+    else if (arg == "eip1820") {
+        return "0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24"; }
+    else if (arg == "eip2470") {
+        return "0xce0042B868300000d44A59004Da54A005ffdcf9f"; }
     else if (arg == "transferv") {
         return TransferV; }
     else if (arg == "OTT") {
