@@ -28,7 +28,7 @@ $(output)/%/openssl/Makefile $(subst @,%,$(patsubst %,$(output)/@/openssl/includ
 	cp -f $(pwd/openssl)/include/openssl/opensslv.h $(output)/$*/openssl/include/openssl
 
 $(output)/%/openssl/libssl.a $(output)/%/openssl/libcrypto.a: $(output)/%/openssl/Makefile $(sysroot)
-	PATH=$(dir $(word 1,$(cc))):$${PATH} $(MAKE) -C $(output)/$*/openssl build_libs
+	$(if $(findstring /,$(word 1,$(cc))),PATH=$(dir $(word 1,$(cc))):$${PATH}) $(MAKE) -C $(output)/$*/openssl build_libs
 
 cflags += -I$(pwd)/openssl/include
 cflags += -I$(pwd)/openssl/test/ossl_shim/include
