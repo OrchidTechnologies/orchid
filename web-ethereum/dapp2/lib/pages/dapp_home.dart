@@ -1,9 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
@@ -37,7 +37,7 @@ class DappHome extends StatefulWidget {
 }
 
 class _DappHomeState extends State<DappHome> {
-  OrchidWeb3Context _context;
+  OrchidWeb3Context _web3Context;
   EthereumAddress _signer;
 
   // TODO: Encapsulate this in a provider widget
@@ -46,6 +46,19 @@ class _DappHomeState extends State<DappHome> {
   final _signerField = TextEditingController();
   final _scrollController = ScrollController();
   var _showWalletConnect;
+
+  /// The contract version defaulted or selected by the user.
+  /// Null if no contacts are available.
+  int _contractVersionSelected;
+
+  int get contractVersionSelected {
+    return _contractVersionSelected;
+  }
+
+  set contractVersionSelected(int version) {
+    _contractVersionSelected = version;
+    _onContractVersionChanged(version);
+  }
 
   @override
   void initState() {
@@ -67,7 +80,7 @@ class _DappHomeState extends State<DappHome> {
   }
 
   bool get _connected {
-    return _context != null;
+    return _web3Context != null;
   }
 
   void _signerFieldChanged() {
@@ -100,12 +113,12 @@ class _DappHomeState extends State<DappHome> {
   // TODO: replace this account detail management with a provider builder
   void _selectedAccountChanged() async {
     _clearAccountDetail();
-    if (_signer != null && _context?.walletAddress != null) {
+    if (_signer != null && _web3Context?.walletAddress != null) {
       var account = Account.fromSignerAddress(
         signerAddress: _signer,
         version: 1,
-        funder: _context.walletAddress,
-        chainId: _context.chain.chainId,
+        funder: _web3Context.walletAddress,
+        chainId: _web3Context.chain.chainId,
       );
       _accountDetail = AccountDetailPoller(
         account: account,
@@ -125,8 +138,6 @@ class _DappHomeState extends State<DappHome> {
 
   @override
   Widget build(BuildContext context) {
-    var showLockStatus = (_accountDetail?.lotteryPot?.isUnlocking ?? false) ||
-        (_accountDetail?.lotteryPot?.isUnlocked ?? false);
     return Column(
       children: [
         pady(32),
@@ -185,7 +196,6 @@ class _DappHomeState extends State<DappHome> {
                           AccountCard(
                             accountDetail: _accountDetail,
                             initiallyExpanded: true,
-                            showLockStatus: showLockStatus,
                           ),
                         _buildTransactionsList(),
                         pady(40),
@@ -221,11 +231,11 @@ class _DappHomeState extends State<DappHome> {
               .map((tx) => Padding(
                     padding: const EdgeInsets.only(top: 32),
                     child: TransactionStatusPanel(
-                      context: _context,
+                      context: _web3Context,
                       transactionHash: tx,
                       onDismiss: _dismissTransaction,
                       onTransactionUpdated: () {
-                        _context?.refresh();
+                        _web3Context?.refresh();
                         _accountDetail?.refresh();
                       },
                     ),
@@ -271,8 +281,8 @@ class _DappHomeState extends State<DappHome> {
                     child: SizedBox(
                   width: 500,
                   child: AddFundsPane(
-                    context: _context,
-                    wallet: _context.wallet,
+                    context: _web3Context,
+                    wallet: _web3Context.wallet,
                     signer: _signer,
                     onTransaction: () async {
                       _accountDetail.refresh();
@@ -287,7 +297,7 @@ class _DappHomeState extends State<DappHome> {
                     child: SizedBox(
                   width: 500,
                   child: WithdrawFundsPane(
-                    context: _context,
+                    context: _web3Context,
                     pot: _accountDetail?.lotteryPot,
                     signer: _signer,
                     onTransaction: () async {
@@ -305,7 +315,7 @@ class _DappHomeState extends State<DappHome> {
                   child: AdvancedFundsPane(
                     // the warn value is captured for the warn field
                     key: Key(_accountDetail?.lotteryPot?.toString() ?? ''),
-                    context: _context,
+                    context: _web3Context,
                     pot: _accountDetail?.lotteryPot,
                     signer: _signer,
                     onTransaction: () async {
@@ -322,25 +332,27 @@ class _DappHomeState extends State<DappHome> {
     );
   }
 
+  /// The row showing the chain, wallet balance, and wallet address.
   Widget _buildWalletPane() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: SizedBox(width: 32, height: 32, child: _context.chain.icon),
+          padding: const EdgeInsets.only(top: 0, bottom: 1, right: 8),
+          child:
+              SizedBox(width: 22, height: 22, child: _web3Context.chain.icon),
         ),
         padx(8),
-        Text(_context.chain.name).title,
+        Text(_web3Context.chain.name).title,
         padx(16),
         _buildWalletBalance(),
         padx(32),
-        OrchidCircularIdenticon(address: _context.walletAddress, size: 24),
+        OrchidCircularIdenticon(address: _web3Context.walletAddress, size: 24),
         padx(16),
         SizedBox(
             width: 200,
             child: TapToCopyText(
-              _context.walletAddress.toString(),
+              _web3Context.walletAddress.toString(),
               style: OrchidText.title,
               overflow: TextOverflow.ellipsis,
               padding: EdgeInsets.zero,
@@ -350,10 +362,10 @@ class _DappHomeState extends State<DappHome> {
   }
 
   Widget _buildWalletBalance() {
-    if (_context.wallet == null) {
+    if (_web3Context.wallet == null) {
       return Container();
     }
-    return SelectableText(_context.wallet.balance.formatCurrency(),
+    return SelectableText(_web3Context.wallet.balance.formatCurrency(),
         style: OrchidText.title);
   }
 
@@ -406,6 +418,56 @@ class _DappHomeState extends State<DappHome> {
           text: "Disconnect",
           onPressed: _connected ? _disconnect : null,
         ),
+        padx(24),
+        _buildVersionSwitch(),
+      ],
+    );
+  }
+
+  Widget _buildVersionSwitch() {
+    var versions = _web3Context?.contractVersionsAvailable;
+    if (_web3Context == null || versions == null) {
+      return Container();
+    }
+    var selectedVersion = _contractVersionSelected;
+    if (versions.length == 1) {
+      return Text("V${selectedVersion}").title;
+    }
+
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _contractVersionSelected = 0;
+            });
+          },
+          child: Opacity(
+              opacity: selectedVersion == 0 ? 1.0 : 0.4,
+              child: Text("V0").title),
+        ),
+        padx(8),
+        CupertinoSwitch(
+          trackColor: Colors.grey.withOpacity(0.5),
+          thumbColor: Colors.white,
+          activeColor: Colors.grey.withOpacity(0.5),
+          value: selectedVersion == 1,
+          onChanged: (bool value) {
+            setState(() {
+              _contractVersionSelected = value ? 1 : 0;
+            });
+          },
+        ),
+        padx(8),
+        GestureDetector(
+            onTap: () {
+              setState(() {
+                _contractVersionSelected = 1;
+              });
+            },
+            child: Opacity(
+                opacity: selectedVersion == 1 ? 1.0 : 0.4,
+                child: Text("V1").title)),
       ],
     );
   }
@@ -455,54 +517,61 @@ class _DappHomeState extends State<DappHome> {
   }
 
   // Init a new context, disconnecting any old context and registering listeners
-  void _setNewContex(OrchidWeb3Context context) async {
+  void _setNewContex(OrchidWeb3Context web3Context) async {
     // Clear the old context, removing listeners and disposing of it properly.
-    _context?.disconnect();
+    _web3Context?.disconnect();
 
     // Register listeners on the new context
-    context?.onAccountsChanged((accounts) {
+    web3Context?.onAccountsChanged((accounts) {
       log("web3: accounts changed: $accounts");
       _onAccountOrChainChange();
     });
-    context?.onChainChanged((chainId) {
+    web3Context?.onChainChanged((chainId) {
       log("web3: chain changed: $chainId");
       _onAccountOrChainChange();
     });
     // _context?.onConnect(() { log("web3: connected"); });
     // _context?.onDisconnect(() { log("web3: disconnected"); });
-    context?.onWalletUpdate(() {
+    web3Context?.onWalletUpdate(() {
       // Update the UI
       setState(() {});
     });
 
-    log("new context: $context");
-    _context = context;
+    log("new context: $web3Context");
+    _web3Context = web3Context;
 
     // The context was replaced or updated. Check various attributes.
     // check the contract
-    if (_context != null) {
-      var code = await _context.web3
-          .getCode(OrchidContractV1.lotteryContractAddressV1);
-      if (code == "0x") {
+    if (_web3Context != null) {
+      final versions = await _web3Context.contractVersionsAvailable;
+      if (versions.isEmpty) {
         return _noContract();
       }
     }
-    _context?.refresh();
+    _web3Context?.refresh();
 
     _selectedAccountChanged();
 
-    if (_context != null) {
-      OrchidEthereumV1.setWeb3Provider(OrchidEthereumV1Web3Impl(_context));
+    if (_web3Context != null) {
+      OrchidEthereumV1.setWeb3Provider(OrchidEthereumV1Web3Impl(_web3Context));
     } else {
       OrchidEthereumV1.setWeb3Provider(null);
     }
+
+    // Default the contract version
+    _contractVersionSelected =
+        _web3Context.contractVersionsAvailable.contains(1)
+            ? 1
+            : _web3Context.contractVersionsAvailable.contains(0)
+                ? 0
+                : null;
 
     setState(() {});
   }
 
   /// Update on change of address or chain by rebuilding the web3 context.
   void _onAccountOrChainChange() async {
-    if (_context == null) {
+    if (_web3Context == null) {
       return;
     }
 
@@ -514,17 +583,22 @@ class _DappHomeState extends State<DappHome> {
 
     // Recreate the context wrapper
     var context;
-    if (_context.ethereumProvider != null) {
-      context = await OrchidWeb3Context.fromEthereum(_context.ethereumProvider);
+    if (_web3Context.ethereumProvider != null) {
+      context =
+          await OrchidWeb3Context.fromEthereum(_web3Context.ethereumProvider);
     } else {
       context = await OrchidWeb3Context.fromWalletConnect(
-          _context.walletConnectProvider);
+          _web3Context.walletConnectProvider);
     }
     _setNewContex(context);
   }
 
   _dismissTransaction(String txHash) {
     UserPreferences().removeTransaction(txHash);
+  }
+
+  void _onContractVersionChanged(int version) async {
+    // TODO:
   }
 
   void _invalidChain() {
@@ -547,10 +621,10 @@ class _DappHomeState extends State<DappHome> {
   }
 
   void _disconnect() async {
-    _context?.disconnect();
+    _web3Context?.disconnect();
     setState(() {
       _clearAccountDetail();
-      _context = null;
+      _web3Context = null;
     });
   }
 
@@ -558,4 +632,3 @@ class _DappHomeState extends State<DappHome> {
     return S.of(context);
   }
 }
-

@@ -5,7 +5,7 @@ class OrchidContractV1 {
   static var _lotteryContractAddressV1 = '0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82';
 
   // TODO: TESTING Ganache
-  // static var _lotteryContractAddressV1 = '0x30CE69f1d7b5b281559bA97e7f8B0Bc6F78440A3';
+  // static var _lotteryContractAddressV1 = '0x9a9bD72080219Ef38deE01bCBFC91A9C0Ffe95C6';
 
   static String get lotteryContractAddressV1 {
     return OrchidUserConfig()

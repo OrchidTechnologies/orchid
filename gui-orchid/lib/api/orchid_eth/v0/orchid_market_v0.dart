@@ -28,7 +28,7 @@ class MarketConditionsV0 implements MarketConditions {
   // TODO: Add refresh option
   static Future<MarketConditionsV0> forPotV0(LotteryPot pot) async {
     // TODO: Add refresh option
-    return forBalanceV0(pot.balance, pot.deposit);
+    return forBalanceV0(pot.balance, pot.effectiveDeposit);
   }
 
   // TODO: Add refresh option

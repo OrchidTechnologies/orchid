@@ -5,6 +5,8 @@ import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 
 import '../orchid_log_api.dart';
 
@@ -37,6 +39,9 @@ class OrchidWeb3Context {
   Duration _pollWalletPeriod = Duration(seconds: 5);
   VoidCallback _walletUpdateListener;
 
+  /// Lottery contract versions available on this chain
+  Set<int> contractVersionsAvailable;
+
   OrchidWeb3Context._({
     this.web3,
     this.chain,
@@ -45,6 +50,11 @@ class OrchidWeb3Context {
     this.walletConnectProvider,
   }) : this.id = (contextId += 1) {
     log("context created: $id");
+  }
+
+  void _init() async {
+    contractVersionsAvailable = Set.unmodifiable(await _findContractVersions());
+
     _startPollingWallet();
   }
 
@@ -66,6 +76,8 @@ class OrchidWeb3Context {
       walletAddress: walletAddress,
     );
 
+    await context._init();
+
     return context;
   }
 
@@ -82,6 +94,9 @@ class OrchidWeb3Context {
       chain: Chains.chainFor(int.parse(walletConnectProvider.chainId)),
       walletAddress: walletAddress,
     );
+
+    await context._init();
+
     return context;
   }
 
@@ -92,6 +107,23 @@ class OrchidWeb3Context {
     return OrchidWallet(this, {nativeCurrency: nativeBalance});
   }
 
+  Future<Set<int>> _findContractVersions() async {
+    Set<int> set = {};
+
+    var code = await web3.getCode(OrchidContractV0.lotteryContractAddressV0);
+    if (code != "0x") {
+      set.add(0);
+    }
+
+    code = await web3.getCode(OrchidContractV1.lotteryContractAddressV1);
+    if (code != "0x") {
+      set.add(1);
+    }
+
+    return set;
+  }
+
+  /// Wallet addresses changed
   void onAccountsChanged(void Function(List<String> accounts) listener) {
     void invokeListener(List<String> accounts) {
       // log("XXX: context ($id) callback onAccountsChanged");
@@ -100,6 +132,7 @@ class OrchidWeb3Context {
         listener(accounts);
       }
     }
+
     if (ethereumProvider != null) {
       ethereumProvider.onAccountsChanged(invokeListener);
     } else {
@@ -107,6 +140,7 @@ class OrchidWeb3Context {
     }
   }
 
+  /// Provider chain changed
   void onChainChanged(void Function(int chainId) listener) {
     void invokeListener(int chainId) {
       // log("XXX: context ($id) callback onChainChanged");
@@ -115,6 +149,7 @@ class OrchidWeb3Context {
         listener(chainId);
       }
     }
+
     if (ethereumProvider != null) {
       ethereumProvider.onChainChanged(invokeListener);
     } else {

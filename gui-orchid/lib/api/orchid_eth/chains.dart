@@ -6,6 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'token_type.dart';
+import 'package:orchid/util/collections.dart';
 
 /*
 TODO: embed Chain data from https://chainid.network/chains.json
@@ -33,17 +34,28 @@ class Chains {
     return jsConfig.evalStringDefault('rpc', _defaultEthereumProviderUrl);
   }
 
-  // Ethereum
+  // Ganache Test
+  static const int GANACHE_TEST_CHAINID = 1337;
+  static Chain GanacheTest = Chain(
+    chainId: GANACHE_TEST_CHAINID,
+    name: "Ganache Test",
+    nativeCurrency: TokenTypes.TOK,
+    providerUrl: 'http://127.0.0.1:7545/',
+    iconPath: ethIconPath,
+  );
+
+  // Ethereum (ETH)
   static const int ETH_CHAINID = 1;
+  static const String ethIconPath = 'assets/svg/chains/ethereum-eth-logo.svg';
   static Chain Ethereum = Chain(
     chainId: ETH_CHAINID,
     name: "Ethereum",
     nativeCurrency: TokenTypes.ETH,
     providerUrl: defaultEthereumProviderUrl,
-    iconPath: 'assets/svg/chains/ethereum-eth-logo.svg',
+    iconPath: ethIconPath,
   );
 
-  // xDAI
+  // xDAI (xDAI)
   static const int XDAI_CHAINID = 100;
   static Chain xDAI = Chain(
     chainId: XDAI_CHAINID,
@@ -52,16 +64,6 @@ class Chains {
     // providerUrl: 'https://dai.poa.network',
     providerUrl: 'https://rpc.xdaichain.com/',
     iconPath: 'assets/svg/chains/xdai2.svg',
-  );
-
-  // Ganache
-  static const int GANACHE_TEST_CHAINID = 1337;
-  static Chain GanacheTest = Chain(
-    chainId: GANACHE_TEST_CHAINID,
-    name: "Ganache Test",
-    nativeCurrency: TokenTypes.TOK,
-    providerUrl: 'http://127.0.0.1:7545/',
-    iconPath: 'assets/svg/chains/ethereum-eth-logo.svg',
   );
 
   // Avalanch (AVAX)
@@ -97,28 +99,81 @@ class Chains {
     explorerUrl: 'https://polygonscan.com/',
   );
 
-  /*
-  TODO: We would need to estimate the L1 fees.
-  // Arbitrum One
+  // Optimism (OETH)
+  static const int OPTIMISM_CHAINID = 10;
+  static Chain Optimism = Chain(
+    chainId: OPTIMISM_CHAINID,
+    name: "Optimism Chain",
+    nativeCurrency: TokenTypes.OETH,
+    providerUrl: 'https://mainnet.optimism.io/',
+    iconPath: 'assets/svg/chains/optimism-logo.svg',
+    explorerUrl: 'https://optimistic.etherscan.io',
+    // Additional L1 fees.
+    hasNonstandardTransactionFees: true,
+  );
+
+  // Arbitrum One (AETH)
   static const int ARBITRUM_ONE_CHAINID = 42161;
   static Chain ArbitrumOne = Chain(
     chainId: ARBITRUM_ONE_CHAINID,
     name: "Arbitrum One",
-    nativeCurrency: TokenTypes.AETH,
+    nativeCurrency: TokenTypes.ARBITRUM_ETH,
     providerUrl: 'https://arb1.arbitrum.io/rpc/',
-    //iconPath: 'assets/svg/logo-xdai2.svg',
+    // TODO: missing real icon
+    iconPath: ethIconPath,
     explorerUrl: 'https://arbiscan.io/',
   );
-   */
 
-  static Map<int, Chain> map = {
-    Ethereum.chainId: Ethereum,
-    xDAI.chainId: xDAI,
-    Avalanche.chainId: Avalanche,
-    BinanceSmartChain.chainId: BinanceSmartChain,
-    Polygon.chainId: Polygon,
-    GanacheTest.chainId: GanacheTest,
-  };
+  // Aurora (NEAR)
+  static const int AURORA_CHAINID = 1313161554;
+  static Chain Aurora = Chain(
+    chainId: AURORA_CHAINID,
+    name: "Aurora Chain",
+    nativeCurrency: TokenTypes.AURORA_ETH,
+    providerUrl: 'https://mainnet.aurora.dev',
+    iconPath: 'assets/svg/chains/near-logo.svg',
+    // TODO: Missing explorer URL
+    explorerUrl: 'https://',
+    // Additional L1 fees.
+    hasNonstandardTransactionFees: true,
+  );
+
+  // Fantom (FTM)
+  static const int FANTOM_CHAINID = 250;
+  static Chain Fantom = Chain(
+    chainId: FANTOM_CHAINID,
+    name: "Fantom Chain",
+    nativeCurrency: TokenTypes.FTM,
+    providerUrl: 'https://rpc.ftm.tools',
+    iconPath: 'assets/svg/chains/fantom-token.svg',
+    explorerUrl: 'https://ftmscan.com',
+  );
+
+  // Telos (TLOS)
+  static const int TELOS_CHAINID = 40;
+  static Chain Telos = Chain(
+    chainId: TELOS_CHAINID,
+    name: "Telos Chain",
+    nativeCurrency: TokenTypes.TLOS,
+    providerUrl: 'https://mainnet.telos.net/evm',
+    // TODO: Missing real icon
+    iconPath: ethIconPath,
+    explorerUrl: 'https://teloscan.io',
+  );
+
+  static Map<int, Chain> map = [
+    GanacheTest,
+    Ethereum,
+    xDAI,
+    Avalanche,
+    BinanceSmartChain,
+    Polygon,
+    Optimism,
+    ArbitrumOne,
+    Aurora,
+    Fantom,
+    Telos,
+  ].toMap(withKey: (e) => e.chainId, withValue: (e) => e);
 
   static bool isKnown(int chainId) {
     return map[chainId] != null;
@@ -144,6 +199,11 @@ class Chain {
   /// Optional icon svg
   final String iconPath;
 
+  /// Indicates that transaction may incur additional fees outside the standard
+  /// gas fees.
+  // TODO: This should evolve into a description of how to estimate those fees.
+  final bool hasNonstandardTransactionFees;
+
   SvgPicture get icon {
     return SvgPicture.asset(iconPath);
   }
@@ -159,6 +219,7 @@ class Chain {
     this.requiredConfirmations = 1,
     this.iconPath,
     this.explorerUrl,
+    this.hasNonstandardTransactionFees = false,
   });
 
   Future<Token> getGasPrice({bool refresh = false}) {

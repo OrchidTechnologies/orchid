@@ -1,5 +1,10 @@
-FLUTTER=../../app-shared/flutter/bin/flutter
+#!/bin/sh
+
+#FLUTTER=../../app-shared/flutter/bin/flutter
+FLUTTER=flutter
+
 rm -rf build
+
 #$FLUTTER build web --web-renderer canvaskit --dart-define mock=true
 $FLUTTER build web --web-renderer canvaskit
 

@@ -58,6 +58,7 @@ flutter:
   assets:
     - assets/images/
     - assets/svg/
+    - assets/svg/chains/
 
 flutter_intl:
   enabled: true

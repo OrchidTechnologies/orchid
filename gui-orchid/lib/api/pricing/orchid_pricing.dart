@@ -8,7 +8,8 @@ import 'package:orchid/util/cacheable.dart';
 class OrchidPricing {
   static OrchidPricing _shared = OrchidPricing._init();
 
-  Cache<TokenType, double> cache = Cache(duration: Duration(seconds: 30), name: "pricing");
+  Cache<TokenType, double> cache =
+      Cache(duration: Duration(seconds: 30), name: "pricing");
 
   OrchidPricing._init();
 
@@ -18,6 +19,10 @@ class OrchidPricing {
 
   /// Return the price (USD/Token): tokens * Rate = USD
   Future<double> tokenToUsdRate(TokenType tokenType) async {
+    if (tokenType.exchangeRateSource == TokenTypes.NoExchangeRateSource) {
+      throw Exception('No exchange rate source for token: ${tokenType.symbol}');
+    }
+
     return cache.get(
         key: tokenType,
         producer: (tokenType) {
@@ -51,7 +56,10 @@ abstract class ExchangeRateSource {
 }
 
 class BinanceExchangeRateSource extends ExchangeRateSource {
-  /// Reverse the default <TOKEN>USDT pair ordering to USDT<TOKEN> and invert
+  /// A Binance lookup is normally <TOKEN>USDT:
+  /// https://api.binance.com/api/v3/avgPrice?symbol=ETHUSDT
+  ///
+  /// This flag reverses the pair ordering to USDT<TOKEN> and inverts
   /// the rate consistent with that. e.g. for DAI we must use 1/USDTDAI and
   /// not DAIUSDT since DAIUSDT was delisted.
   final bool inverted;

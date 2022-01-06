@@ -4,8 +4,11 @@ import 'package:orchid/util/units.dart';
 
 class OrchidContractV0 {
   // Lottery contract address on main net
-  static var lotteryContractAddressV0 =
-      '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1';
+  static var lotteryContractAddressV0 = '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1';
+
+  // TESTING: Ganache
+  // static var lotteryContractAddressV0 = '0x785883f0594F0347b1B2aF02257bd6198Eb4104A';
+  // static var oxtTokenContractAddress = '0xB4b5e4Ba41d7a0d41d8426C99cCCB090d8D2C3Ba';
 
   static String updateEventHashV0 =
       "0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc";

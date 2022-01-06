@@ -1,6 +1,10 @@
+import 'package:flutter/foundation.dart';
 
-Iterable<E> mapIndexed<E, T>(Iterable<T> items,
-    E Function(int index, T item) f) sync* {
+// Usage:
+// import 'package:orchid/util/collections.dart';
+
+Iterable<E> mapIndexed<E, T>(
+    Iterable<T> items, E Function(int index, T item) f) sync* {
   var index = 0;
 
   for (final item in items) {
@@ -18,5 +22,14 @@ extension ExtendedIterable<E> on Iterable<E> {
   void forEachIndexed(void Function(E e, int i) f) {
     var i = 0;
     forEach((e) => f(e, i++));
+  }
+}
+
+extension IterableToMap<K, V, E> on Iterable<E> {
+  Map<K, V> toMap<K, V>({
+    @required K Function(E e) withKey,
+    @required V Function(E e) withValue,
+  }) {
+    return {for (var e in this) withKey(e): withValue(e)};
   }
 }

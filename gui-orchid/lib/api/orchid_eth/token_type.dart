@@ -4,11 +4,14 @@ import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'chains.dart';
 
 class TokenTypes {
+  // Indicates that we do not have a source for pricing information for the token.
+  static const ExchangeRateSource NoExchangeRateSource = null;
+
+  static const ETHExchangeRateSource = BinanceExchangeRateSource();
   static const TokenType ETH = TokenType(
     name: 'ETH',
     symbol: 'ETH',
-    exchangeRateSource: BinanceExchangeRateSource(),
-    decimals: 18,
+    exchangeRateSource: ETHExchangeRateSource,
     chainId: Chains.ETH_CHAINID,
   );
 
@@ -17,56 +20,75 @@ class TokenTypes {
     name: 'OXT',
     symbol: 'OXT',
     exchangeRateSource: BinanceExchangeRateSource(),
-    decimals: 18,
     chainId: Chains.ETH_CHAINID,
   );
 
   static const TokenType XDAI = TokenType(
       name: 'xDAI',
       symbol: 'xDAI',
-      exchangeRateSource:
-          BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
-      decimals: 18,
+      exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'DAI'),
       chainId: Chains.XDAI_CHAINID);
 
   static const TokenType TOK = TokenType(
       name: 'TOK',
       symbol: 'TOK',
-      exchangeRateSource:
-          BinanceExchangeRateSource(symbolOverride: 'ETH', inverted: true),
-      decimals: 18,
+      exchangeRateSource: ETHExchangeRateSource,
       chainId: Chains.GANACHE_TEST_CHAINID);
 
   static const TokenType AVAX = TokenType(
       name: 'Avalanche',
       symbol: 'AVAX',
       exchangeRateSource: BinanceExchangeRateSource(),
-      decimals: 18,
       chainId: Chains.AVALANCHE_CHAINID);
 
   static const TokenType BNB = TokenType(
       name: 'BNB',
       symbol: 'BNB',
       exchangeRateSource: BinanceExchangeRateSource(),
-      decimals: 18,
       chainId: Chains.BSC_CHAINID);
 
   static const TokenType MATIC = TokenType(
       name: 'MATIC',
       symbol: 'MATIC',
       exchangeRateSource: BinanceExchangeRateSource(),
-      decimals: 18,
       chainId: Chains.POLYGON_CHAINID);
 
-/*
-  static const TokenType AETH = TokenType(
+  static const TokenType OETH = TokenType(
+      name: 'OETH',
+      symbol: 'OETH',
+      // OETH is ETH on L2
+      exchangeRateSource: ETHExchangeRateSource,
+      chainId: Chains.OPTIMISM_CHAINID);
+
+  // Aurora is an L2 on Near
+  static const TokenType AURORA_ETH = TokenType(
+      name: 'aETH',
+      symbol: 'aETH',
+      // aETH should ultimately track the price of ETH
+      exchangeRateSource: ETHExchangeRateSource,
+      chainId: Chains.AURORA_CHAINID);
+
+  static const TokenType ARBITRUM_ETH = TokenType(
     name: 'AETH',
     symbol: 'AETH',
-    exchangeRateSource: BinanceExchangeRateSource(),
-    decimals: 18,
+    // OETH is ETH on L2
+    exchangeRateSource: ETHExchangeRateSource,
     chainId: Chains.ARBITRUM_ONE_CHAINID,
   );
-   */
+
+  static const TokenType FTM = TokenType(
+    name: 'FTM',
+    symbol: 'FTM',
+    exchangeRateSource: BinanceExchangeRateSource(),
+    chainId: Chains.FANTOM_CHAINID,
+  );
+
+  static const TokenType TLOS = TokenType(
+    name: 'TLOS',
+    symbol: 'TLOS',
+    exchangeRateSource: NoExchangeRateSource,
+    chainId: Chains.TELOS_CHAINID,
+  );
 
 }
 
@@ -90,8 +112,8 @@ class TokenType {
     @required this.chainId,
     @required this.name,
     @required this.symbol,
-    @required this.decimals,
-    @required this.exchangeRateSource,
+    this.exchangeRateSource,
+    this.decimals = 18,
   });
 
   // Return 1eN where N is the decimal count.

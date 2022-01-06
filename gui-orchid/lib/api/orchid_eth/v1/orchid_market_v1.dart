@@ -24,7 +24,7 @@ class MarketConditionsV1 implements MarketConditions {
 
   static Future<MarketConditions> forPot(LotteryPot pot,
       {bool refresh = false}) async {
-    return forBalance(pot.balance, pot.deposit, refresh: refresh);
+    return forBalance(pot.balance, pot.effectiveDeposit, refresh: refresh);
   }
 
   static Future<MarketConditions> forBalance(Token balance, Token escrow,
