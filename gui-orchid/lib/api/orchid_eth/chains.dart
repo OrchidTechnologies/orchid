@@ -35,13 +35,14 @@ class Chains {
   }
 
   // Ganache Test
+  static const String unknownLogoPath = 'assets/svg/chains/unknown-token-logo.svg';
   static const int GANACHE_TEST_CHAINID = 1337;
   static Chain GanacheTest = Chain(
     chainId: GANACHE_TEST_CHAINID,
     name: "Ganache Test",
     nativeCurrency: TokenTypes.TOK,
     providerUrl: 'http://127.0.0.1:7545/',
-    iconPath: ethIconPath,
+    iconPath: unknownLogoPath,
   );
 
   // Ethereum (ETH)
@@ -120,7 +121,7 @@ class Chains {
     nativeCurrency: TokenTypes.ARBITRUM_ETH,
     providerUrl: 'https://arb1.arbitrum.io/rpc/',
     // TODO: missing real icon
-    iconPath: ethIconPath,
+    iconPath: unknownLogoPath,
     explorerUrl: 'https://arbiscan.io/',
   );
 
@@ -156,8 +157,7 @@ class Chains {
     name: "Telos Chain",
     nativeCurrency: TokenTypes.TLOS,
     providerUrl: 'https://mainnet.telos.net/evm',
-    // TODO: Missing real icon
-    iconPath: ethIconPath,
+    iconPath: 'assets/svg/chains/TLOS-logo.svg',
     explorerUrl: 'https://teloscan.io',
   );
 
