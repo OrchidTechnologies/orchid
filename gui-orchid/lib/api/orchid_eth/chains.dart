@@ -35,7 +35,8 @@ class Chains {
   }
 
   // Ganache Test
-  static const String unknownLogoPath = 'assets/svg/chains/unknown-token-logo.svg';
+  static const String unknownLogoPath =
+      'assets/svg/chains/unknown-token-logo.svg';
   static const int GANACHE_TEST_CHAINID = 1337;
   static Chain GanacheTest = Chain(
     chainId: GANACHE_TEST_CHAINID,
@@ -54,6 +55,7 @@ class Chains {
     nativeCurrency: TokenTypes.ETH,
     providerUrl: defaultEthereumProviderUrl,
     iconPath: ethIconPath,
+    supportsLogs: true,
   );
 
   // xDAI (xDAI)
@@ -65,6 +67,7 @@ class Chains {
     // providerUrl: 'https://dai.poa.network',
     providerUrl: 'https://rpc.xdaichain.com/',
     iconPath: 'assets/svg/chains/xdai2.svg',
+    supportsLogs: true,
   );
 
   // Avalanch (AVAX)
@@ -76,6 +79,7 @@ class Chains {
     providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
     iconPath: 'assets/svg/chains/avalanche-avax-logo.svg',
     explorerUrl: 'https://snowtrace.io/',
+    supportsLogs: true,
   );
 
   // Binance Smart Chain (BSC)
@@ -111,6 +115,7 @@ class Chains {
     explorerUrl: 'https://optimistic.etherscan.io',
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
+    supportsLogs: true,
   );
 
   // Arbitrum One (AETH)
@@ -137,6 +142,7 @@ class Chains {
     explorerUrl: 'https://',
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
+    supportsLogs: true,
   );
 
   // Fantom (FTM)
@@ -148,6 +154,7 @@ class Chains {
     providerUrl: 'https://rpc.ftm.tools',
     iconPath: 'assets/svg/chains/fantom-token.svg',
     explorerUrl: 'https://ftmscan.com',
+    supportsLogs: true,
   );
 
   // Telos (TLOS)
@@ -195,6 +202,7 @@ class Chain {
   final TokenType nativeCurrency;
   final String providerUrl;
   final int requiredConfirmations;
+  final bool supportsLogs;
 
   /// Optional icon svg
   final String iconPath;
@@ -220,6 +228,7 @@ class Chain {
     this.iconPath,
     this.explorerUrl,
     this.hasNonstandardTransactionFees = false,
+    this.supportsLogs = false,
   });
 
   Future<Token> getGasPrice({bool refresh = false}) {

@@ -111,8 +111,10 @@ class AccountStore extends ChangeNotifier {
       // Discover accounts for the active identity on supported V1 chains.
       StoredEthereumKey signer = await identity.get();
       try {
-        await _discoverV1Accounts(chain: Chains.xDAI, signer: signer);
-        await _discoverV1Accounts(chain: Chains.Avalanche, signer: signer);
+        // Small amount of data with high latency, let's do them in parallel.
+        await Future.wait(Chains.map.values.where((e) => e.supportsLogs).map(
+              (e) => _discoverV1Accounts(chain: e, signer: signer),
+            ));
         notifyListeners();
         log("account_store: After discovering v1 accounts: discovered = $discoveredAccounts");
       } catch (err) {
