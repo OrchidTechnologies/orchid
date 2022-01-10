@@ -72,7 +72,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
         Text(availableText).title,
         pady(24),
         LabeledTokenValueField(
-          labelWidth: 90,
+          labelWidth: 100,
           type: tokenType,
           controller: _withdrawBalanceField,
           label: "Withdraw" + ':',

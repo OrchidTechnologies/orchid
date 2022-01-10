@@ -1,4 +1,5 @@
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/util/units.dart';
 import 'package:flutter/foundation.dart';
@@ -38,7 +39,9 @@ class PricingV0 {
 
   PricingV0({
     DateTime date,
+    // dollars per eth
     @required double ethToUsdRate,
+    // dollars per oxt
     @required double oxtToUsdRate,
   }) {
     this.date = date ?? DateTime.now();
@@ -61,7 +64,9 @@ class PricingV0 {
   }
 
   OXT ethToOxt(ETH eth) {
-    return OXT.fromDouble(oxtToUsdRate / ethToUsdRate * eth.value);
+    // ($/eth) / ($/oxt)  = oxt/eth
+    var value = OXT.fromDouble(ethToUsdRate / oxtToUsdRate * eth.value);
+    return value;
   }
 
   @override

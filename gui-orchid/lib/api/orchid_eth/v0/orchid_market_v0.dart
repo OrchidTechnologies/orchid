@@ -61,11 +61,17 @@ class MarketConditionsV0 implements MarketConditions {
   static Future<CostToRedeemV0> getCostToRedeemTicketV0() async {
     // TODO: Add refresh option
     PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
-    GWEI gasPrice = GWEI.fromWei((await Chains.Ethereum.getGasPrice()).intValue);
-    ETH gasCostToRedeem =
+    GWEI gasPrice =
+        GWEI.fromWei((await Chains.Ethereum.getGasPrice()).intValue);
+    ETH ethGasCostToRedeem =
         (gasPrice * OrchidContractV0.gasCostToRedeemTicketV0).toEth();
-    OXT oxtCostToRedeem = pricing.ethToOxt(gasCostToRedeem);
-    return CostToRedeemV0(gasCostToRedeem, oxtCostToRedeem);
+    OXT oxtCostToRedeem = pricing.ethToOxt(ethGasCostToRedeem);
+    return CostToRedeemV0(ethGasCostToRedeem, oxtCostToRedeem);
+  }
+
+  @override
+  String toString() {
+    return 'MarketConditionsV0{ethGasCostToRedeem: $ethGasCostToRedeem, oxt costToRedeem: $costToRedeem, maxFaceValue: $maxFaceValue, efficiency: $efficiency, limitedByBalance: $limitedByBalance}';
   }
 }
 

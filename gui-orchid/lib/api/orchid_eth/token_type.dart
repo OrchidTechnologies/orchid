@@ -28,7 +28,8 @@ class TokenTypes {
   static const TokenType XDAI = TokenType(
       name: 'xDAI',
       symbol: 'xDAI',
-      exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'DAI'),
+      // Binance lists DAIUSDT but the value is bogus. The real pair is USDTDAI, so invert.
+      exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
       chainId: Chains.XDAI_CHAINID);
 
   static const TokenType TOK = TokenType(

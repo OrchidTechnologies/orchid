@@ -56,13 +56,12 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        pady(16),
         LabeledTokenValueField(
           type: tokenType,
           controller: _withdrawBalanceField,
           label: "Balance" + ':',
         ),
-        pady(24),
+        pady(4),
         LabeledTokenValueField(
           type: tokenType,
           controller: _withdrawEscrowField,

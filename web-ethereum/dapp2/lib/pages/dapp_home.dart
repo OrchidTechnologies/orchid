@@ -101,7 +101,6 @@ class _DappHomeState extends State<DappHome> {
   }
 
   void _accountDetailUpdated() {
-    // log("XXX: update account detail: ${_accountDetail}");
     setState(() {});
   }
 
