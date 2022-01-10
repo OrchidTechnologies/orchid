@@ -106,7 +106,6 @@ class _AccountCardState extends State<AccountCard>
       // unlock: BigInt.from( DateTime.now().subtract(Duration(days: 1)).millisecondsSinceEpoch / 1000),
     );
      */
-
     return widget.accountDetail?.lotteryPot;
   }
 
@@ -263,7 +262,7 @@ class _AccountCardState extends State<AccountCard>
     );
   }
 
-  AnimatedSwitcher _buildEfficiencyMeter(double efficiency) {
+  Widget _buildEfficiencyMeter(double efficiency) {
     return AnimatedSwitcher(
       duration: Duration(milliseconds: 500),
       child: Container(
@@ -383,7 +382,8 @@ class _AccountCardState extends State<AccountCard>
 
   Widget _buildExpandedDetail() {
     final depositText = pot?.effectiveDeposit?.formatCurrency(digits: 2) ?? "";
-    final efficiency = widget.accountDetail?.marketConditions?.efficiency ?? 0;
+    final efficiency =
+        widget.accountDetail?.marketConditions?.efficiency; // or null
     final chartModel = pot != null
         ? AccountBalanceChartTicketModel(
             pot, widget.accountDetail.transactions ?? [])
@@ -409,26 +409,32 @@ class _AccountCardState extends State<AccountCard>
             ],
           ),
           pady(16),
+
+          // efficiency chart
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(s.efficiency, style: OrchidText.body2),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  OrchidCircularEfficiencyIndicators.large(efficiency),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2.5),
-                    child: Text((efficiency * 100.0).toStringAsFixed(2) + '%',
-                        style: OrchidText.caption.copyWith(
-                            color: OrchidCircularEfficiencyIndicators
-                                .colorForEfficiency(efficiency))),
-                  )
-                ],
-              ),
+              efficiency != null
+                  ? Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        OrchidCircularEfficiencyIndicators.large(efficiency),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2.5),
+                          child: Text(
+                              (efficiency * 100.0).toStringAsFixed(2) + '%',
+                              style: OrchidText.caption.copyWith(
+                                  color: OrchidCircularEfficiencyIndicators
+                                      .colorForEfficiency(efficiency))),
+                        )
+                      ],
+                    )
+                  : SizedBox(height: 60),
             ],
           ),
+
           pady(32),
           if (chartModel != null)
             Row(

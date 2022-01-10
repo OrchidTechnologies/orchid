@@ -1,6 +1,8 @@
 import 'dart:math' as Math;
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
+import '../orchid_crypto.dart';
 import 'chains.dart';
 
 class TokenTypes {
@@ -15,12 +17,12 @@ class TokenTypes {
     chainId: Chains.ETH_CHAINID,
   );
 
-  // See class OXT.
-  static const TokenType OXT = TokenType(
+  static TokenType OXT = TokenType(
     name: 'OXT',
     symbol: 'OXT',
     exchangeRateSource: BinanceExchangeRateSource(),
     chainId: Chains.ETH_CHAINID,
+    erc20Address: OrchidContractV0.oxtContractAddress,
   );
 
   static const TokenType XDAI = TokenType(
@@ -89,10 +91,9 @@ class TokenTypes {
     exchangeRateSource: NoExchangeRateSource,
     chainId: Chains.TELOS_CHAINID,
   );
-
 }
 
-// ERC20 Token type
+// Token type
 // Note: Unfortunately Dart does not have a polyomorphic 'this' type so the
 // Note: token type cannot serve as a typesafe factory for the token subtypes
 // Note: as we (used to) do in the dapp. See token-specific Token subclasses for certain
@@ -104,6 +105,14 @@ class TokenType {
   final int decimals;
   final ExchangeRateSource exchangeRateSource;
 
+  /// The ERC20 contract address if this is a non-native token on its chain.
+  final EthereumAddress erc20Address;
+
+  /// Returns true if this token is the native (gas) token on its chain.
+  bool get isNative {
+    return erc20Address == null;
+  }
+
   Chain get chain {
     return Chains.chainFor(chainId);
   }
@@ -114,6 +123,7 @@ class TokenType {
     @required this.symbol,
     this.exchangeRateSource,
     this.decimals = 18,
+    this.erc20Address,
   });
 
   // Return 1eN where N is the decimal count.
@@ -124,6 +134,10 @@ class TokenType {
   // From the integer denomination value e.g. WEI for ETH
   Token fromInt(BigInt intValue) {
     return Token(this, intValue);
+  }
+
+  Token fromIntString(String s) {
+    return fromInt(BigInt.parse(s));
   }
 
   Token get zero {
@@ -265,7 +279,7 @@ class Token {
 
   static assertSameType(Token a, Token b) {
     if (a.type != b.type) {
-      throw AssertionError('Token type mismatch!: ${a.type}, ${b.type}');
+      throw AssertionError('Token type mismatch 2!: ${a.type}, ${b.type}');
     }
   }
 

@@ -71,7 +71,7 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
   }
 
   Future<Token> _fetchGasPrice(Chain chain) async {
-    log("Fetching gas price for chain: $chain");
+    logDetail("Fetching gas price for chain: $chain");
     String result =
         await _jsonRPC(url: chain.providerUrl, method: "eth_gasPrice");
     if (result.startsWith('0x')) {
@@ -135,7 +135,7 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
   // Note: this method's results are cached by the Account API
   Future<LotteryPot> getLotteryPot(
       {Chain chain, EthereumAddress funder, EthereumAddress signer}) async {
-    log("fetch pot V1 for: $funder, $signer, chain = $chain");
+    logDetail("fetch pot V1 for: $funder, $signer, chain = $chain");
 
     var address = AbiEncode.address;
     // construct the abi encoded eth_call

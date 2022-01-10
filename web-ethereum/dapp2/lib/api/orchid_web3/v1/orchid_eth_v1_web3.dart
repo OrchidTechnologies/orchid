@@ -12,12 +12,13 @@ import 'package:orchid/api/orchid_web3/v1/orchid_contract_web3_v1.dart';
 /// This API implements the read-only eth calls shared by the dapp and the app,
 /// overridding them to use the web3 context instead of default provider calls.
 /// @see the OrchidEthereumV1 factory.
+/// Note: This feels redundant but seems necessary?
 class OrchidEthereumV1Web3Impl implements OrchidEthereumV1 {
   final OrchidWeb3Context _context;
-  final Contract _lottery;
+  final Contract _lotteryContract;
 
   OrchidEthereumV1Web3Impl(this._context)
-      : this._lottery = OrchidContractWeb3V1(_context).contract();
+      : this._lotteryContract = OrchidContractWeb3V1(_context).contract();
 
   Future<Token> getGasPrice(Chain chain, {bool refresh = false}) async {
     if (chain != _context.chain) {
@@ -33,13 +34,13 @@ class OrchidEthereumV1Web3Impl implements OrchidEthereumV1 {
     if (chain != _context.chain) {
       throw Exception("incorrect chain for web3 provider: $chain, $_context");
     }
-    log('OrchidEthereumV1Web3Impl: get lottery pot');
+    logDetail('OrchidEthereumV1Web3Impl: get lottery pot');
     // "function read(IERC20 token, address funder, address signer) external view returns (uint256, uint256)",
     // struct Account {
     //         uint256 escrow_amount_;
     //         uint256 unlock_warned_;
     //     }
-    var result = await _lottery.call('read', [
+    var result = await _lotteryContract.call('read', [
       EthereumAddress.zero.toString(prefix: false),
       _context.walletAddress.toString(prefix: false),
       signer.toString(prefix: false),

@@ -229,7 +229,7 @@ class Account {
 
   @override
   String toString() {
-    return 'Account{identityUid: $signerKeyUid, chainId: $chainId, funder: $funder}';
+    return 'Account{signerKeyUid: $signerKeyUid, chainId: $chainId, version: $version, funder: $funder}';
   }
 }
 

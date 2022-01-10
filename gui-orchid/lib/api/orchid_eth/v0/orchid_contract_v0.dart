@@ -1,14 +1,45 @@
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/units.dart';
 
 class OrchidContractV0 {
-  // Lottery contract address on main net
-  static var lotteryContractAddressV0 = '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1';
+  // The final lottery V0 contract address on Ethereum main net.
+  static var _lotteryContractAddressV0 =
+      '0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1';
+  static var _testLotteryContractAddressV0 =
+      '0x785883f0594F0347b1B2aF02257bd6198Eb4104A';
 
-  // TESTING: Ganache
-  // static var lotteryContractAddressV0 = '0x785883f0594F0347b1B2aF02257bd6198Eb4104A';
-  // static var oxtTokenContractAddress = '0xB4b5e4Ba41d7a0d41d8426C99cCCB090d8D2C3Ba';
+  static var _oxtContractAddress = '0x4575f41308EC1483f3d399aa9a2826d74Da13Deb';
+  static var _testOXTContractAddress =
+      '0xB4b5e4Ba41d7a0d41d8426C99cCCB090d8D2C3Ba';
+
+  static String get lotteryContractAddressV0String {
+    if (OrchidUserParams().test) {
+      return _testLotteryContractAddressV0;
+    }
+    return OrchidUserConfig()
+        .getUserConfigJS()
+        .evalStringDefault("lottery0", _lotteryContractAddressV0);
+  }
+
+  static EthereumAddress get lotteryContractAddressV0 {
+    return EthereumAddress.from(lotteryContractAddressV0String);
+  }
+
+  static String get oxtContractAddressString {
+    if (OrchidUserParams().test) {
+      return _testOXTContractAddress;
+    }
+    return OrchidUserConfig()
+        .getUserConfigJS()
+        .evalStringDefault("oxt", _oxtContractAddress);
+  }
+
+  static EthereumAddress get oxtContractAddress {
+    return EthereumAddress.from(oxtContractAddressString);
+  }
 
   static String updateEventHashV0 =
       "0x3cd5941d0d99319105eba5f5393ed93c883f132d251e56819e516005c5e20dbc";

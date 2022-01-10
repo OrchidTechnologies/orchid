@@ -9,7 +9,19 @@ import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/pages/dapp_home.dart';
 
 // Provide the MaterialApp wrapper and localization context.
-class OrchidApp extends StatelessWidget {
+class OrchidApp extends StatefulWidget {
+  @override
+  State<OrchidApp> createState() => _OrchidAppState();
+}
+
+class _OrchidAppState extends State<OrchidApp> {
+  final homePage = OrchidAppNoTabs();
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  // }
+
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -29,9 +41,15 @@ class OrchidApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
-      home: OrchidAppNoTabs(),
       debugShowCheckedModeBanner: false,
       scrollBehavior: DragScrollBehavior(),
+      // Without this the root widget is created twice?
+      onGenerateInitialRoutes: (initialRoute) =>
+          [MaterialPageRoute(builder: (_) => homePage)],
+      onGenerateRoute: (settings) {
+        //log("generate route: $settings");
+        return MaterialPageRoute(builder: (_) => homePage);
+      },
     );
   }
 }
@@ -45,6 +63,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   @override
   void initState() {
     super.initState();
+    log("XXX: OrchidAppNoTabs init");
     initStateAsync();
   }
 
@@ -58,7 +77,8 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
     log("locale = $locale");
     var preferredSize = Size.fromHeight(kToolbarHeight);
     return Container(
-      decoration: BoxDecoration(gradient: OrchidGradients.blackGradientBackground),
+      decoration:
+          BoxDecoration(gradient: OrchidGradients.blackGradientBackground),
       child: Scaffold(
         /*
         appBar: PreferredSize(
@@ -89,8 +109,8 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
 class DragScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-    PointerDeviceKind.touch,
-    PointerDeviceKind.mouse,
-    PointerDeviceKind.stylus,
-  };
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+      };
 }

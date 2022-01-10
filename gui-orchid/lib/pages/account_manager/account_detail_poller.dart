@@ -37,7 +37,6 @@ abstract class AccountDetail {
 
 class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   final Account account;
-
   final Duration pollingPeriod;
 
   // The resolved signer address (non-async). Null until details are polled.
@@ -161,5 +160,10 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   void dispose() {
     cancel();
     super.dispose();
+  }
+
+  @override
+  String toString() {
+    return 'AccountDetailPoller{account: $account, lotteryPot: $lotteryPot, marketConditions: $marketConditions}';
   }
 }

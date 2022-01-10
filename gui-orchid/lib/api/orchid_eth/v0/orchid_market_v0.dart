@@ -34,7 +34,7 @@ class MarketConditionsV0 implements MarketConditions {
   // TODO: Add refresh option
   static Future<MarketConditionsV0> forBalanceV0(
       OXT balance, OXT escrow) async {
-    log("eth v0: Fetch market conditions");
+    // log("eth v0: Fetch market conditions");
     // TODO: Add refresh option
     var costToRedeem = await getCostToRedeemTicketV0();
     var limitedByBalance = balance.floatValue <= (escrow / 2.0).floatValue;

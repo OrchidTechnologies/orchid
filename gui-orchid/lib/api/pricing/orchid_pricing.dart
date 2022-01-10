@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/util/cacheable.dart';
 
+import '../orchid_platform.dart';
+
 /// Token Exchange rates
 class OrchidPricing {
   static OrchidPricing _shared = OrchidPricing._init();
@@ -82,10 +84,14 @@ class BinanceExchangeRateSource extends ExchangeRateSource {
   }
 
   Future<double> _getPrice(TokenType tokenType) async {
-    log("pricing: Binance fetching rate for: $tokenType");
+    logDetail("pricing: Binance fetching rate for: $tokenType");
     try {
-      var response = await http.get(_url(tokenType),
-          headers: {'Referer': 'https://account.orchid.com'});
+      var response = await http.get(
+        _url(tokenType),
+        headers: OrchidPlatform.isWeb
+            ? {}
+            : {'Referer': 'https://account.orchid.com'},
+      );
       if (response.statusCode != 200) {
         throw Exception("Error status code: ${response.statusCode}");
       }

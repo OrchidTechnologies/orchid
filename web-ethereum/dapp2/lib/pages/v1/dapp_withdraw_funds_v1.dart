@@ -1,46 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_web3/ethers.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/util/on_off.dart';
 import 'package:styled_text/styled_text.dart';
 
-import 'dapp_button.dart';
-import 'orchid_form_fields.dart';
+import '../dapp_button.dart';
+import '../orchid_form_fields.dart';
 
-class WithdrawFundsPane extends StatefulWidget {
+class WithdrawFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
-
-  // TODO: This will be available through context
-  // final OrchidWallet wallet;
-
   final LotteryPot pot;
-
   final EthereumAddress signer;
-  final VoidCallback onTransaction;
 
-  const WithdrawFundsPane({
+  const WithdrawFundsPaneV1({
     Key key,
     @required this.context,
     @required this.pot,
     @required this.signer,
-    @required this.onTransaction,
   }) : super(key: key);
 
   @override
-  _WithdrawFundsPaneState createState() => _WithdrawFundsPaneState();
+  _WithdrawFundsPaneV1State createState() => _WithdrawFundsPaneV1State();
 }
 
-class _WithdrawFundsPaneState extends State<WithdrawFundsPane> {
+class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
   final _withdrawBalanceField = TokenValueFieldController();
   bool _txPending = false;
 
@@ -198,7 +188,6 @@ class _WithdrawFundsPaneState extends State<WithdrawFundsPane> {
       _withdrawBalanceField.clear();
       _unlockDeposit = false;
       setState(() {});
-      widget.onTransaction();
     } catch (err) {
       log("Error on withdraw funds: $err");
     }

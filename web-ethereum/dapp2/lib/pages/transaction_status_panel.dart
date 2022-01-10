@@ -73,8 +73,8 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
           .getTransactionReceipt(widget.transactionHash);
     }
 
-    // Update listeners on change
-    if (_lastConfirmationCount != null && confirmations > _lastConfirmationCount) {
+    // Update listeners on first update or change in confirmation count.
+    if (_lastConfirmationCount == null || confirmations > _lastConfirmationCount) {
       widget.onTransactionUpdated();
     }
     _lastConfirmationCount = confirmations;

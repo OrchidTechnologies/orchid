@@ -9,30 +9,27 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/util/on_off.dart';
 
-import 'dapp_button.dart';
-import 'orchid_form_fields.dart';
+import '../dapp_button.dart';
+import '../orchid_form_fields.dart';
 
-class AdvancedFundsPane extends StatefulWidget {
+class AdvancedFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
   final LotteryPot pot;
   final EthereumAddress signer;
-  final VoidCallback onTransaction;
 
-  const AdvancedFundsPane({
+  const AdvancedFundsPaneV1({
     Key key,
     @required this.context,
     @required this.pot,
     @required this.signer,
-    @required this.onTransaction,
   }) : super(key: key);
 
   @override
-  _AdvancedFundsPaneState createState() => _AdvancedFundsPaneState();
+  _AdvancedFundsPaneV1State createState() => _AdvancedFundsPaneV1State();
 }
 
-class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
+class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
   final _balanceField = TokenValueFieldController();
   _AddWithdrawDirection _balanceFieldDirection = _AddWithdrawDirection.Add;
 
@@ -404,7 +401,6 @@ class _AdvancedFundsPaneState extends State<AdvancedFundsPane> {
       _warnedField.clear();
 
       setState(() {});
-      widget.onTransaction();
     } catch (err) {
       log("Error on edit funds: $err");
     }

@@ -8,16 +8,15 @@ class OrchidContractWeb3V0 {
 
   OrchidContractWeb3V0(this.context);
 
-  Contract contract() {
+  Contract lotteryContract() {
     return Contract(
-        OrchidContractV0.lotteryContractAddressV0, _lotteryAbi, context.web3);
+        OrchidContractV0.lotteryContractAddressV0String, _lotteryAbi, context.web3);
   }
 
   static List<String> _lotteryAbi = [
     "event Update(address indexed funder, address indexed signer, uint128 amount, uint128 escrow, uint256 unlock)",
     "event Create(address indexed funder, address indexed signer)",
     "event Bound(address indexed funder, address indexed signer)",
-
     "function look(address funder, address signer) external view returns (uint128, uint128, uint256, address, bytes32, bytes memory)",
     "function push(address signer, uint128 total, uint128 escrow)",
     "function move(address signer, uint128 amount)",

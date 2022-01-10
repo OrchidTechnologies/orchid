@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web3/flutter_web3.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
@@ -18,16 +20,15 @@ import 'package:orchid/orchid/orchid_logo.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
-import 'package:orchid/pages/dapp_withdraw_funds.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
+import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
 import 'package:orchid/util/on_off.dart';
+import 'package:orchid/util/units.dart';
 import 'account_manager/account_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
 import 'account_manager/account_detail_poller.dart';
-import 'dapp_add_funds.dart';
-import 'dapp_advanced_funds.dart';
 import 'dapp_button.dart';
+import 'v1/dapp_tabs_v1.dart';
 
 class DappHome extends StatefulWidget {
   const DappHome({Key key}) : super(key: key);
@@ -49,14 +50,14 @@ class _DappHomeState extends State<DappHome> {
 
   /// The contract version defaulted or selected by the user.
   /// Null if no contacts are available.
-  int _contractVersionSelected;
+  int _contractVersionSelectedValue;
 
-  int get contractVersionSelected {
-    return _contractVersionSelected;
+  int get _contractVersionSelected {
+    return _contractVersionSelectedValue;
   }
 
-  set contractVersionSelected(int version) {
-    _contractVersionSelected = version;
+  set _contractVersionSelected(int version) {
+    _contractVersionSelectedValue = version;
     _onContractVersionChanged(version);
   }
 
@@ -64,19 +65,19 @@ class _DappHomeState extends State<DappHome> {
   void initState() {
     super.initState();
     _signerField.addListener(_signerFieldChanged);
-    log("dapp home query = ${Uri.base.queryParameters}");
     _showWalletConnect = Uri.base.queryParameters["wc"] != null;
     initStateAsync();
   }
 
   void initStateAsync() async {
-    // TODO: TESTING
-    // await Future.delayed(Duration(seconds: 0), () {
-    //   _connectEthereum();
-    //   _signer =
-    //       EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
-    //   _signerField.text = _signer.toString();
-    // });
+    if (OrchidUserParams().test) {
+      await Future.delayed(Duration(seconds: 0), () {
+        _connectEthereum();
+        _signer =
+            EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
+        _signerField.text = _signer.toString();
+      });
+    }
   }
 
   bool get _connected {
@@ -100,6 +101,7 @@ class _DappHomeState extends State<DappHome> {
   }
 
   void _updateAccountDetail() {
+    // log("XXX: update account detail: ${_accountDetail}");
     setState(() {});
   }
 
@@ -111,22 +113,23 @@ class _DappHomeState extends State<DappHome> {
   }
 
   // TODO: replace this account detail management with a provider builder
+  // Start polling the correct account
   void _selectedAccountChanged() async {
     _clearAccountDetail();
     if (_signer != null && _web3Context?.walletAddress != null) {
       var account = Account.fromSignerAddress(
         signerAddress: _signer,
-        version: 1,
+        version: _contractVersionSelected,
         funder: _web3Context.walletAddress,
         chainId: _web3Context.chain.chainId,
       );
+      // log("XXX: selected account changed: $account");
       _accountDetail = AccountDetailPoller(
         account: account,
         pollingPeriod: Duration(seconds: 5),
       );
       _accountDetail.addListener(_updateAccountDetail);
       _accountDetail.startPolling();
-      log("accountDetail = $_accountDetail");
     }
     setState(() {});
   }
@@ -148,7 +151,7 @@ class _DappHomeState extends State<DappHome> {
           duration: Duration(seconds: 1),
           child: _connected
               ? Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
+                  padding: const EdgeInsets.only(top: 16.0, bottom: 4.0),
                   child: SizedBox(height: 40, child: _buildWalletPane()),
                 )
               : SizedBox(height: 48),
@@ -204,8 +207,6 @@ class _DappHomeState extends State<DappHome> {
                           Divider(color: Colors.white.withOpacity(0.3)),
                           pady(16),
                           _buildTabs(),
-                          // pady(16),
-                          // Divider(color: Colors.white.withOpacity(0.3)),
                         ],
                       ],
                     ),
@@ -219,6 +220,31 @@ class _DappHomeState extends State<DappHome> {
     );
   }
 
+  Widget _buildTabs() {
+    if (_contractVersionSelected == null) {
+      return Container();
+    }
+    switch (_contractVersionSelected) {
+      case 0:
+        return DappTabsV0(
+          web3Context: _web3Context,
+          signer: _signer,
+          accountDetail: _accountDetail,
+        );
+      case 1:
+        return DappTabsV1(
+          web3Context: _web3Context,
+          signer: _signer,
+          accountDetail: _accountDetail,
+        );
+      default:
+        throw Exception("unknown contract version");
+    }
+  }
+
+  // The transactions list monitors transaction progress of pending transactions.
+  // The individual transaction panels trigger refresh of the wallet and orchid
+  // account info here whenever they are added or updated.
   Widget _buildTransactionsList() {
     return StreamBuilder<List<String>>(
         stream: UserPreferences().transactions.stream(),
@@ -235,8 +261,7 @@ class _DappHomeState extends State<DappHome> {
                       transactionHash: tx,
                       onDismiss: _dismissTransaction,
                       onTransactionUpdated: () {
-                        _web3Context?.refresh();
-                        _accountDetail?.refresh();
+                        _refreshUserData();
                       },
                     ),
                   ))
@@ -251,91 +276,17 @@ class _DappHomeState extends State<DappHome> {
         });
   }
 
-  Widget _buildTabs() {
-    return SizedBox(
-      height: 1000,
-      child: DefaultTabController(
-        initialIndex: 0,
-        length: 3,
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: PreferredSize(
-            preferredSize: Size(double.infinity, 50),
-            child: AppBar(
-              backgroundColor: Colors.transparent,
-              bottom: TabBar(
-                indicatorColor: OrchidColors.tappable,
-                tabs: [
-                  Tab(child: Text("ADD FUNDS").button),
-                  Tab(child: Text("WITHDRAW FUNDS").button),
-                  Tab(child: Text("ADVANCED").button),
-                ],
-              ),
-            ),
-          ),
-          body: TabBarView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 24.0),
-                child: Center(
-                    child: SizedBox(
-                  width: 500,
-                  child: AddFundsPane(
-                    context: _web3Context,
-                    wallet: _web3Context.wallet,
-                    signer: _signer,
-                    onTransaction: () async {
-                      _accountDetail.refresh();
-                      setState(() {});
-                    },
-                  ),
-                )),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 24.0),
-                child: Center(
-                    child: SizedBox(
-                  width: 500,
-                  child: WithdrawFundsPane(
-                    context: _web3Context,
-                    pot: _accountDetail?.lotteryPot,
-                    signer: _signer,
-                    onTransaction: () async {
-                      _accountDetail.refresh();
-                      setState(() {});
-                    },
-                  ),
-                )),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 24.0),
-                child: Center(
-                    child: SizedBox(
-                  width: 500,
-                  child: AdvancedFundsPane(
-                    // the warn value is captured for the warn field
-                    key: Key(_accountDetail?.lotteryPot?.toString() ?? ''),
-                    context: _web3Context,
-                    pot: _accountDetail?.lotteryPot,
-                    signer: _signer,
-                    onTransaction: () async {
-                      _accountDetail.refresh();
-                      setState(() {});
-                    },
-                  ),
-                )),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  // Refresh the wallet and account balances
+  void _refreshUserData() {
+    _web3Context?.refresh();
+    _accountDetail?.refresh();
   }
 
   /// The row showing the chain, wallet balance, and wallet address.
   Widget _buildWalletPane() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 0, bottom: 1, right: 8),
@@ -344,8 +295,8 @@ class _DappHomeState extends State<DappHome> {
         ),
         padx(8),
         Text(_web3Context.chain.name).title,
-        padx(16),
-        _buildWalletBalance(),
+        padx(12),
+        _buildWalletBalances(),
         padx(32),
         OrchidCircularIdenticon(address: _web3Context.walletAddress, size: 24),
         padx(16),
@@ -361,12 +312,29 @@ class _DappHomeState extends State<DappHome> {
     );
   }
 
-  Widget _buildWalletBalance() {
-    if (_web3Context.wallet == null) {
+  Widget _buildWalletBalances() {
+    final wallet = _web3Context?.wallet;
+    if (wallet == null) {
       return Container();
     }
-    return SelectableText(_web3Context.wallet.balance.formatCurrency(),
-        style: OrchidText.title);
+    var showOxtBalance = wallet.oxtBalance != null;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        SelectableText(
+          wallet.balance.formatCurrency(),
+          style: OrchidText.title,
+          textAlign: TextAlign.right,
+        ),
+        if (showOxtBalance)
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0),
+            child: SelectableText(wallet.oxtBalance.formatCurrency(),
+                style: OrchidText.title, textAlign: TextAlign.right),
+          ),
+      ],
+    );
   }
 
   Widget _buildPasteSignerField() {
@@ -424,9 +392,12 @@ class _DappHomeState extends State<DappHome> {
     );
   }
 
+  Set<int> get versions {
+    return _web3Context?.contractVersionsAvailable;
+  }
+
   Widget _buildVersionSwitch() {
-    var versions = _web3Context?.contractVersionsAvailable;
-    if (_web3Context == null || versions == null) {
+    if (versions == null) {
       return Container();
     }
     var selectedVersion = _contractVersionSelected;
@@ -518,6 +489,8 @@ class _DappHomeState extends State<DappHome> {
 
   // Init a new context, disconnecting any old context and registering listeners
   void _setNewContex(OrchidWeb3Context web3Context) async {
+    log("XXX: New context: $web3Context");
+
     // Clear the old context, removing listeners and disposing of it properly.
     _web3Context?.disconnect();
 
@@ -537,40 +510,49 @@ class _DappHomeState extends State<DappHome> {
       setState(() {});
     });
 
-    log("new context: $web3Context");
     _web3Context = web3Context;
 
     // The context was replaced or updated. Check various attributes.
     // check the contract
     if (_web3Context != null) {
-      final versions = await _web3Context.contractVersionsAvailable;
-      if (versions.isEmpty) {
+      if (versions == null || versions.isEmpty) {
         return _noContract();
       }
     }
     _web3Context?.refresh();
 
-    _selectedAccountChanged();
+    // Default the contract version
+    if (versions != null) {
+      _contractVersionSelected =
+          _web3Context.contractVersionsAvailable.contains(1)
+              ? 1
+              : _web3Context.contractVersionsAvailable.contains(0)
+                  ? 0
+                  : null;
+    }
+    // XXX
+    if (OrchidUserParams().test) {
+      _contractVersionSelected = 0;
+    }
 
-    if (_web3Context != null) {
+    _setAppWeb3Provider();
+    _selectedAccountChanged();
+    setState(() {});
+  }
+
+  // For contracts that may exist on chains other than main net we ensure that
+  // all requests go through the web3 context.
+  void _setAppWeb3Provider() {
+    if (_web3Context != null && _contractVersionSelected > 0) {
       OrchidEthereumV1.setWeb3Provider(OrchidEthereumV1Web3Impl(_web3Context));
     } else {
       OrchidEthereumV1.setWeb3Provider(null);
     }
-
-    // Default the contract version
-    _contractVersionSelected =
-        _web3Context.contractVersionsAvailable.contains(1)
-            ? 1
-            : _web3Context.contractVersionsAvailable.contains(0)
-                ? 0
-                : null;
-
-    setState(() {});
   }
 
   /// Update on change of address or chain by rebuilding the web3 context.
   void _onAccountOrChainChange() async {
+    log("XXX: _onAccountOrChainChanged");
     if (_web3Context == null) {
       return;
     }
@@ -598,7 +580,10 @@ class _DappHomeState extends State<DappHome> {
   }
 
   void _onContractVersionChanged(int version) async {
-    // TODO:
+    _selectedAccountChanged();
+    _setAppWeb3Provider();
+    // Update the UI
+    setState(() {});
   }
 
   void _invalidChain() {

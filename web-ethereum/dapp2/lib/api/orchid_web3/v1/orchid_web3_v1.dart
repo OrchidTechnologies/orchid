@@ -14,8 +14,6 @@ class OrchidWeb3V1 {
   final OrchidWeb3Context context;
   final Contract _lottery;
 
-  final int version = 1;
-
   OrchidWeb3V1(this.context)
       : this._lottery = OrchidContractWeb3V1(context).contract();
 
@@ -31,18 +29,15 @@ class OrchidWeb3V1 {
     return context.chain.nativeCurrency;
   }
 
-  /// Transfer the int amount from the user to the specified lottery pot address.
-  /// If the total exceeds walletBalance the amount value is automatically reduced.
-  Future<String /*TransactionId*/ > orchidAddFunds(
-      {OrchidWallet wallet,
-      EthereumAddress signer,
-      Token addBalance,
-      Token addEscrow}) async {
-    var nativeCurrency = context.chain.nativeCurrency;
-    var walletBalance = wallet.balances[nativeCurrency];
-    if (walletBalance == null) {
-      throw Exception('Wallet balance not initialized: $wallet');
-    }
+  /// Transfer the amount from the user to the specified lottery pot address.
+  /// If the total exceeds walletBalance the balance value is reduced.
+  Future<List<String> /*TransactionId*/ > orchidAddFunds({
+    OrchidWallet wallet,
+    EthereumAddress signer,
+    Token addBalance,
+    Token addEscrow,
+  }) async {
+    var walletBalance = await context.wallet.getBalance();
 
     // Don't attempt to add more than the wallet balance.
     // This mitigates the potential for rounding errors in calculated amounts.
@@ -67,7 +62,7 @@ class OrchidWeb3V1 {
       retrieve: retrieve,
       totalPayable: totalPayable,
     );
-    return tx.hash;
+    return [tx.hash];
   }
 
   /// Withdraw funds by moving the specified withdrawEscrow amount from escrow
@@ -191,5 +186,4 @@ class OrchidWeb3V1 {
     );
     return tx;
   }
-
 }

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
@@ -10,11 +9,11 @@ import 'accounts_preferences.dart';
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
 
+  UserPreferences._internal();
+
   factory UserPreferences() {
     return _singleton;
   }
-
-  UserPreferences._internal();
 
   /// The shared instance, initialized by init()
   SharedPreferences _sharedPreferences;
@@ -184,6 +183,10 @@ class UserPreferences {
 
   void addTransaction(String txHash) {
     transactions.set(transactions.get() + [txHash]);
+  }
+
+  void addTransactions(List<String> txHashes) {
+    transactions.set(transactions.get() + txHashes);
   }
 
   void removeTransaction(String txHash) {

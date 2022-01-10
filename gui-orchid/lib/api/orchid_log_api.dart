@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:rxdart/rxdart.dart';
 
 void log(String text) {
   OrchidLogAPI.defaultLogAPI.write(text);
+}
+
+void logDetail(String text) {
+  log('[detail]: ' + text);
 }
 
 /// Work around log line length limits

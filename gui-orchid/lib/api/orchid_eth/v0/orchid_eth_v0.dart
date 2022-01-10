@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_eth/eth_rpc.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -16,6 +17,9 @@ class OrchidEthereumV0 {
   static int startBlock = 872000;
 
   static String get _rpc {
+    if (OrchidUserParams().test) {
+      return Chains.GanacheTest.providerUrl;
+    }
     return Chains.defaultEthereumProviderUrl;
   }
 
@@ -45,12 +49,12 @@ class OrchidEthereumV0 {
   */
   static Future<LotteryPot> getLotteryPot(
       EthereumAddress funder, EthereumAddress signer) async {
-    log("fetch pot V0 for: $funder, $signer, url = $_rpc");
+    logDetail("fetch pot V0 for: $funder, $signer, url = $_rpc");
 
     // construct the abi encoded eth_call
     var params = [
       {
-        "to": "${OrchidContractV0.lotteryContractAddressV0}",
+        "to": "${OrchidContractV0.lotteryContractAddressV0String}",
         "data": "0x${OrchidContractV0.lotteryLookMethodHash}"
             "${AbiEncode.address(funder)}"
             "${AbiEncode.address(signer)}"
@@ -137,7 +141,7 @@ class OrchidEthereumV0 {
     EthereumAddress funder,
     EthereumAddress signer,
   ) async {
-    log("fetch update events for: $funder, $signer, url = $_rpc");
+    // log("fetch update events for: $funder, $signer, url = $_rpc");
     var params = [
       {
         "topics": [

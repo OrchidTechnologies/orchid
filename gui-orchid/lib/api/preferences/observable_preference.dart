@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../orchid_log_api.dart';
 
 class ObservablePreference<T> {
   UserPreferenceKey key;
