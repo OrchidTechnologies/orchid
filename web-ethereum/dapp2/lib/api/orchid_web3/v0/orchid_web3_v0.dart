@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 
+import '../../orchid_budget_api.dart';
 import '../orchid_erc20.dart';
 import '../orchid_web3_context.dart';
 import 'orchid_contract_web3_v0.dart';
@@ -39,8 +40,8 @@ class OrchidWeb3V0 {
     Token addBalance,
     Token addEscrow,
   }) async {
-    _assertOXT(addBalance);
-    _assertOXT(addEscrow);
+    addBalance.assertType(TokenTypes.OXT);
+    addEscrow.assertType(TokenTypes.OXT);
     var walletBalance = await _oxt.getERC20Balance(wallet.address);
 
     // Don't attempt to add more than the wallet balance.
@@ -78,126 +79,99 @@ class OrchidWeb3V0 {
       ],
     );
     txHashes.add(tx.hash);
-
     return txHashes;
   }
 
-  /*
-  /// Transfer the int amount from the user to the specified lottery pot address.
-  /// If the total exceeds walletBalance the amount value is automatically reduced.
-  async orchidAddFunds(
-    funder: EthAddress, signer: EthAddress, amount: LotFunds, escrow: LotFunds, wallet: Wallet
-  ): Promise<string> {
-    //return fakeTx(false);
-
-    // If approvalHash is provided it will be supplied to the transaction monitor as part of a
-    // the composite Orchid transaction.
-    async function doFundTx(approvalHash: string | null) {
-      return new Promise<string>(function (resolve, reject) {
-        thisCapture.lotteryContract.methods.push(
-          signer,
-          total.intValue.toString(),
-          escrow.intValue.toString()
-        ).send({
-          from: funder,
-          gas: OrchidContractMainNetV0.lottery_push_max_gas,
-          gasPrice: gasPrice
-        })
-          .on("transactionHash", (hash: any) => {
-            console.log("doFundTx: Fund hash: ", hash);
-            OrchidAPI.shared().transactionMonitor.add(
-              new OrchidTransaction(new Date(), OrchidTransactionType.AddFunds, thisCapture.chainId,
-                approvalHash ? [approvalHash, hash] : [hash])
-            );
-          })
-          .on('confirmation', (confirmationNumber: any, receipt: any) => {
-            console.log("doFundTx: Fund confirmation", confirmationNumber, JSON.stringify(receipt));
-            // Wait for confirmations on the funding tx.
-            if (confirmationNumber >= thisCapture.requiredConfirmations) {
-              const hash = receipt['transactionHash'];
-              resolve(hash);
-            } else {
-              console.log("doFundTx: waiting for more confirmations...");
-            }
-          })
-          .on('error', (err: any) => {
-            console.log("doFundTx: Fund error: ", JSON.stringify(err));
-            reject(err['message']);
-          });
-      });
-    }
-
-    // Check allowance and skip approval if sufficient.
-    const oxtAllowance = this.fundsTokenType.fromIntString(
-      await this.tokenContract.methods.allowance(funder, OrchidContractMainNetV0.lottery_addr()).call());
-    let approvalHash = oxtAllowance.lt(total) ? await doApproveTx() : null;
-
-    // Introduce a short artificial delay before issuing the second tx
-    // Issue: We have had reports of problems where only one dialog is presented to the user.
-    // Issue: Trying this to see if it mitigates any race conditions in the wallet.
-    await new Promise(r => setTimeout(r, 1000));
-
-    // The UI monitors the funding tx.
-    return doFundTx(approvalHash);
-  }
-
-   */
-
-  /*
-  /// Withdraw funds by moving the specified withdrawEscrow amount from escrow
-  /// to balance in combination with retrieving the sum of withdrawBalance and
-  /// withdrawEscrow amount from balance to the current wallet.
-  /// If warnDeposit is true and the deposit is non-zero all remaining deposit
-  /// will be warned.
-  Future<String /*TransactionId*/ > orchidWithdrawFunds({
-    @required LotteryPot pot,
-    @required EthereumAddress signer,
-    @required Token withdrawBalance,
-    @required Token withdrawEscrow,
-    @required bool warnDeposit,
+  /// Withdraw from balance and escrow to the wallet address.
+  Future<String/*TransactionId*/ > orchidWithdrawFunds({
+    EthereumAddress wallet,
+    EthereumAddress signer,
+    LotteryPot pot,
+    Token withdrawBalance,
+    Token withdrawEscrow,
   }) async {
-    log("orchidWithdrawFunds: balance: $withdrawBalance, escrow: $withdrawEscrow, warn: $warnDeposit");
-
-    if (withdrawBalance > pot.balance) {
-      throw Exception('insufficient balance: $withdrawBalance, $pot');
-    }
-    if (withdrawEscrow > pot.warned) {
-      throw Exception('insufficient warned: $withdrawEscrow, $pot');
-    }
-    if (withdrawEscrow.gtZero() && pot.isLocked) {
-      throw Exception('pot locked: $withdrawEscrow, $pot');
+    withdrawBalance.assertType(TokenTypes.OXT);
+    withdrawEscrow.assertType(TokenTypes.OXT);
+    if (withdrawEscrow > pot.unlockedAmount) {
+      throw Exception(
+          'withdraw escrow exceeds unlocked: $withdrawEscrow, ${pot.unlockedAmount}');
     }
 
-    // Move the specified amount from deposit to balance
-    // This is capped at the warned amount.
-    var moveEscrowToBalanceAmount =
-        Token.min(withdrawEscrow, pot.warned).intValue;
-    // Withdraw the sum
-    var retrieve = Token.min(withdrawBalance, pot.balance).intValue +
-        moveEscrowToBalanceAmount;
-    // Warn more if desired
-    var warn = (warnDeposit && pot.deposit.gtZero())
-        ? pot.deposit.intValue
-        : BigInt.zero;
+    // Don't take more than the pot values. This check mitigates rounding errors.
+    withdrawBalance = Token.min(withdrawBalance, pot.balance);
+    withdrawEscrow = Token.min(withdrawEscrow, pot.unlockedAmount);
 
-    // This client does not specify a gas price. We will assume that an EIP-1559 wallet
-    // will do something appropriate.
+    final targetAddress = wallet;
+    final autoLock = true;
 
-    // positive adjust moves from balance to escrow
-    final moveBalanceToEscrowAmount = -moveEscrowToBalanceAmount;
-    TransactionResponse tx = await _editCall(
-      signer: signer,
-      adjust: moveBalanceToEscrowAmount,
-      warn: warn,
-      retrieve: retrieve,
+    log('withdrawFunds to: ${targetAddress} amount: ${withdrawBalance}, ${withdrawEscrow}');
+
+    // Do the withdraw call.
+    // pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow) external
+    var contract = _lotteryContract.connect(context.web3.getSigner());
+    TransactionResponse tx = await contract.send(
+      'pull',
+      [
+        signer.toString(),
+        targetAddress.toString(),
+        autoLock,
+        withdrawBalance.intValue.toString(),
+        withdrawEscrow.intValue.toString(),
+      ],
     );
     return tx.hash;
   }
-   */
 
-  void _assertOXT(Token token) {
-    if (token.type != TokenTypes.OXT) {
-      throw Exception("Token type is not OXT: $token");
-    }
+/*
+  /// Pull all funds and escrow, subject to lock time.
+  async orchidWithdrawFundsAndEscrow(pot: LotteryPot, targetAddress: EthAddress): Promise<string> {
+    console.log("withdrawFundsAndEscrow");
+    let autolock = true;
+    const funder = pot.signer.wallet.address;
+    const signer = pot.signer.address;
+    return this.evalOrchidTx(
+      this.lotteryContract.methods.yank(signer, targetAddress, autolock).send({
+        from: funder,
+        gas: OrchidContractMainNetV0.lottery_pull_all_max_gas
+      }), OrchidTransactionType.WithdrawFunds
+    );
   }
+
+  /// Move `amount` from balance to escrow, not exceeding `potBalance`.
+  async orchidMoveFundsToEscrow(
+    funder: EthAddress, signer: EthAddress, amount: LotFunds, potBalance: LotFunds): Promise<string> {
+    console.log(`moveFunds amount: ${amount.toString()}`);
+
+    // Don't take more than the pot balance. This check mitigates rounding errors.
+    amount = min(amount, potBalance);
+
+    return this.evalOrchidTx(
+      this.lotteryContract.methods.move(signer, amount.intValue.toString()).send({
+        from: funder,
+        gas: OrchidContractMainNetV0.lottery_move_max_gas,
+      }), OrchidTransactionType.MoveFundsToEscrow
+    );
+  }
+
+  async orchidLock(_: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string> {
+    return this.evalOrchidTx(
+      this.lotteryContract.methods.lock(signer).send({
+        from: funder,
+        gas: OrchidContractMainNetV0.lottery_lock_max_gas
+      }), OrchidTransactionType.Lock
+    );
+  }
+
+  /// Start the unlock / warn time period (one day in the future).
+  async orchidUnlock(_: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string> {
+    return this.evalOrchidTx(
+      this.lotteryContract.methods.warn(signer).send({
+        from: funder,
+        gas: OrchidContractMainNetV0.lottery_warn_max_gas
+      }), OrchidTransactionType.Unlock
+    );
+  }
+
+
+   */
 }

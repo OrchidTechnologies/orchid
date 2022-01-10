@@ -5,7 +5,6 @@ import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.da
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
@@ -22,8 +21,6 @@ import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
 import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
-import 'package:orchid/util/on_off.dart';
-import 'package:orchid/util/units.dart';
 import 'account_manager/account_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'account_manager/account_detail_poller.dart';
@@ -46,7 +43,6 @@ class _DappHomeState extends State<DappHome> {
 
   final _signerField = TextEditingController();
   final _scrollController = ScrollController();
-  var _showWalletConnect;
 
   /// The contract version defaulted or selected by the user.
   /// Null if no contacts are available.
@@ -61,11 +57,15 @@ class _DappHomeState extends State<DappHome> {
     _onContractVersionChanged(version);
   }
 
+  Set<int> get versions {
+    return _web3Context?.contractVersionsAvailable;
+  }
+
+
   @override
   void initState() {
     super.initState();
     _signerField.addListener(_signerFieldChanged);
-    _showWalletConnect = Uri.base.queryParameters["wc"] != null;
     initStateAsync();
   }
 
@@ -100,7 +100,7 @@ class _DappHomeState extends State<DappHome> {
     setState(() {});
   }
 
-  void _updateAccountDetail() {
+  void _accountDetailUpdated() {
     // log("XXX: update account detail: ${_accountDetail}");
     setState(() {});
   }
@@ -108,7 +108,7 @@ class _DappHomeState extends State<DappHome> {
   // TODO: replace this account detail management with a provider builder
   void _clearAccountDetail() {
     _accountDetail?.cancel();
-    _accountDetail?.removeListener(_updateAccountDetail);
+    _accountDetail?.removeListener(_accountDetailUpdated);
     _accountDetail = null;
   }
 
@@ -128,7 +128,7 @@ class _DappHomeState extends State<DappHome> {
         account: account,
         pollingPeriod: Duration(seconds: 5),
       );
-      _accountDetail.addListener(_updateAccountDetail);
+      _accountDetail.addListener(_accountDetailUpdated);
       _accountDetail.startPolling();
     }
     setState(() {});
@@ -276,12 +276,6 @@ class _DappHomeState extends State<DappHome> {
         });
   }
 
-  // Refresh the wallet and account balances
-  void _refreshUserData() {
-    _web3Context?.refresh();
-    _accountDetail?.refresh();
-  }
-
   /// The row showing the chain, wallet balance, and wallet address.
   Widget _buildWalletPane() {
     return Row(
@@ -363,6 +357,7 @@ class _DappHomeState extends State<DappHome> {
   }
 
   Row _buildConnectionButtons() {
+    final _showWalletConnect = OrchidUserParams().has('wc');
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -390,10 +385,6 @@ class _DappHomeState extends State<DappHome> {
         _buildVersionSwitch(),
       ],
     );
-  }
-
-  Set<int> get versions {
-    return _web3Context?.contractVersionsAvailable;
   }
 
   Widget _buildVersionSwitch() {
@@ -584,6 +575,12 @@ class _DappHomeState extends State<DappHome> {
     _setAppWeb3Provider();
     // Update the UI
     setState(() {});
+  }
+
+  // Refresh the wallet and account balances
+  void _refreshUserData() {
+    _web3Context?.refresh();
+    _accountDetail?.refresh();
   }
 
   void _invalidChain() {

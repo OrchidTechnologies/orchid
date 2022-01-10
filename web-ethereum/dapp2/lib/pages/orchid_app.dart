@@ -74,7 +74,6 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
     OrchidPlatform.staticLocale = locale;
-    log("locale = $locale");
     var preferredSize = Size.fromHeight(kToolbarHeight);
     return Container(
       decoration:

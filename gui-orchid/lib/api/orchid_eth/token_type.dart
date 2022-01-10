@@ -212,7 +212,7 @@ class Token {
   }
 
   Token subtract(Token other) {
-    assertType(other);
+    assertSameType(other);
     return type.fromInt(intValue - other.intValue);
   }
 
@@ -241,7 +241,7 @@ class Token {
   }
 
   Token add(Token other) {
-    assertType(other);
+    assertSameType(other);
     return type.fromInt(intValue + other.intValue);
   }
 
@@ -273,11 +273,17 @@ class Token {
     return intValue >= BigInt.zero;
   }
 
-  assertType(Token other) {
-    assertSameType(this, other);
+  void assertType(TokenType type) {
+    if (this.type != type) {
+      throw AssertionError('Token ${this} is not ${type}');
+    }
   }
 
-  static assertSameType(Token a, Token b) {
+  void assertSameType(Token other) {
+    assertSameTypes(this, other);
+  }
+
+  static assertSameTypes(Token a, Token b) {
     if (a.type != b.type) {
       throw AssertionError('Token type mismatch 2!: ${a.type}, ${b.type}');
     }
@@ -285,13 +291,13 @@ class Token {
 
   // Keeping these here to avoid overloading the math funcs
   static T min<T extends Token>(T a, T b) {
-    assertSameType(a, b);
+    assertSameTypes(a, b);
     return a.intValue < b.intValue ? a : b;
   }
 
   // Keeping these here to avoid overloading the math funcs
   static T max<T extends Token>(T a, T b) {
-    assertSameType(a, b);
+    assertSameTypes(a, b);
     return a.intValue > b.intValue ? a : b;
   }
 
