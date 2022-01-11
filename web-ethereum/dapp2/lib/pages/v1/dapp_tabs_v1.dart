@@ -42,6 +42,8 @@ class _DappTabsV1State extends State<DappTabsV1> {
 
   @override
   Widget build(BuildContext context) {
+    // var tabStyle = OrchidText.button.copyWith(fontSize: 16);
+    var tabStyle = OrchidText.button;
     return SizedBox(
       height: 1000,
       child: DefaultTabController(
@@ -56,9 +58,9 @@ class _DappTabsV1State extends State<DappTabsV1> {
               bottom: TabBar(
                 indicatorColor: OrchidColors.tappable,
                 tabs: [
-                  Tab(child: Text("ADD FUNDS").button),
-                  Tab(child: Text("WITHDRAW FUNDS").button),
-                  Tab(child: Text("ADVANCED").button),
+                  Tab(child: Text("ADD FUNDS", style: tabStyle)),
+                  Tab(child: Text("WITHDRAW FUNDS", style: tabStyle)),
+                  Tab(child: Text("ADVANCED", style: tabStyle)),
                 ],
               ),
             ),

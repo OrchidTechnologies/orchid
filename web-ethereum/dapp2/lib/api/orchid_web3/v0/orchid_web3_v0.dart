@@ -83,7 +83,7 @@ class OrchidWeb3V0 {
   }
 
   /// Withdraw from balance and escrow to the wallet address.
-  Future<String/*TransactionId*/ > orchidWithdrawFunds({
+  Future<String /*TransactionId*/ > orchidWithdrawFunds({
     EthereumAddress wallet,
     EthereumAddress signer,
     LotteryPot pot,
@@ -122,37 +122,31 @@ class OrchidWeb3V0 {
     return tx.hash;
   }
 
+  /// Withdraw from balance and escrow to the wallet address.
+  Future<String /*TransactionId*/ > orchidMoveBalanceToEscrow({
+    EthereumAddress signer,
+    LotteryPot pot,
+    Token moveAmount,
+  }) async {
+    moveAmount.assertType(TokenTypes.OXT);
+    if (moveAmount > pot.balance) {
+      throw Exception('Move amount exceeds balance: ${pot.balance}');
+    }
+
+    moveAmount = Token.min(moveAmount, pot.balance);
+
+    // Do the move call.
+    var contract = _lotteryContract.connect(context.web3.getSigner());
+    TransactionResponse tx = await contract.send(
+      'move',
+      [
+        signer.toString(),
+        moveAmount.intValue.toString(),
+      ],
+    );
+    return tx.hash;
+  }
 /*
-  /// Pull all funds and escrow, subject to lock time.
-  async orchidWithdrawFundsAndEscrow(pot: LotteryPot, targetAddress: EthAddress): Promise<string> {
-    console.log("withdrawFundsAndEscrow");
-    let autolock = true;
-    const funder = pot.signer.wallet.address;
-    const signer = pot.signer.address;
-    return this.evalOrchidTx(
-      this.lotteryContract.methods.yank(signer, targetAddress, autolock).send({
-        from: funder,
-        gas: OrchidContractMainNetV0.lottery_pull_all_max_gas
-      }), OrchidTransactionType.WithdrawFunds
-    );
-  }
-
-  /// Move `amount` from balance to escrow, not exceeding `potBalance`.
-  async orchidMoveFundsToEscrow(
-    funder: EthAddress, signer: EthAddress, amount: LotFunds, potBalance: LotFunds): Promise<string> {
-    console.log(`moveFunds amount: ${amount.toString()}`);
-
-    // Don't take more than the pot balance. This check mitigates rounding errors.
-    amount = min(amount, potBalance);
-
-    return this.evalOrchidTx(
-      this.lotteryContract.methods.move(signer, amount.intValue.toString()).send({
-        from: funder,
-        gas: OrchidContractMainNetV0.lottery_move_max_gas,
-      }), OrchidTransactionType.MoveFundsToEscrow
-    );
-  }
-
   async orchidLock(_: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string> {
     return this.evalOrchidTx(
       this.lotteryContract.methods.lock(signer).send({

@@ -140,6 +140,9 @@ class _DappHomeState extends State<DappHome> {
 
   @override
   Widget build(BuildContext context) {
+    // This must be wide enough to accommodate the tab names.
+    final mainColumnWidth = 650.0;
+
     return Column(
       children: [
         pady(32),
@@ -174,7 +177,7 @@ class _DappHomeState extends State<DappHome> {
                 controller: _scrollController,
                 child: Center(
                   child: SizedBox(
-                    width: 600,
+                    width: mainColumnWidth,
                     child: Column(
                       children: [
                         // logo
