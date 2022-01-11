@@ -207,7 +207,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       _buildCenteredTitle("Set Warned Amount"),
       pady(24),
       LabeledTokenValueField(
-        labelWidth: 120,
+        labelWidth: 220,
         type: tokenType,
         controller: _warnedField,
         label: "Amount" + ':',
@@ -439,7 +439,7 @@ class _AddWithdrawDropdown extends StatelessWidget {
         focusColor: OrchidColors.purple_menu,
       ),
       child: SizedBox(
-        width: 110,
+        width: 200,
         child: DropdownButton<_AddWithdrawDirection>(
           isExpanded: true,
           // make the width flexible

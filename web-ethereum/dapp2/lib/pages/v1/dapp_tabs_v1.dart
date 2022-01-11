@@ -97,7 +97,7 @@ class _DappTabsV1State extends State<DappTabsV1> {
                 padding: const EdgeInsets.only(top: 24.0),
                 child: Center(
                     child: SizedBox(
-                  width: 500,
+                  width: 650,
                   child: AdvancedFundsPaneV1(
                     // The warn value is captured statefully in the warn field
                     // Maybe find a cleaner way to deal with this.
