@@ -58,15 +58,16 @@ class Chains {
     supportsLogs: true,
   );
 
-  // xDAI (xDAI)
+  // Gnosis (xDAI)
+  // xDai Chain has been rebranded to Gnosis Chain
   static const int XDAI_CHAINID = 100;
   static Chain xDAI = Chain(
     chainId: XDAI_CHAINID,
-    name: "xDAI",
+    name: "Gnosis Chain",
     nativeCurrency: TokenTypes.XDAI,
     // providerUrl: 'https://dai.poa.network',
     providerUrl: 'https://rpc.xdaichain.com/',
-    iconPath: 'assets/svg/chains/xdai2.svg',
+    iconPath: 'assets/svg/chains/gnosis-white.svg',
     supportsLogs: true,
   );
 
