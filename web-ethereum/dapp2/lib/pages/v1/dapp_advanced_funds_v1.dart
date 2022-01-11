@@ -71,7 +71,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   @override
   Widget build(BuildContext context) {
-    if (pot?.balance == null) {
+    if (pot?.balance == null || wallet?.balance == null) {
       return Container();
     }
     var tokenType = pot.balance.type;
@@ -89,16 +89,13 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         // move
         ..._buildMoveFunds(tokenType),
 
-        pady(32),
+        pady(48),
         // warn
         ..._buildWarn(tokenType),
 
-        pady(32),
+        pady(48),
         // submit button
         _buildSubmitButton(),
-        pady(32),
-
-        // _buildInstructions(),
       ],
     );
   }
@@ -113,20 +110,33 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     );
   }
 
+  // TODO: pull the border off of the text fields and unify this along with sizing
+  Widget _addBorder(Widget widget) {
+    return Container(
+        decoration: BoxDecoration(
+          border: Border.all(width: 1.0, color: Colors.white),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 0, bottom: 6, left: 16, right: 8),
+          child: widget,
+        ));
+  }
+
   List<Widget> _buildBalanceForm(TokenType tokenType) {
     return [
       _buildCenteredTitle("Balance"),
       pady(24),
       Row(
         children: [
-          _AddWithdrawDropdown(
+          _addBorder(_AddWithdrawDropdown(
             value: _balanceFieldDirection,
             onChanged: (value) {
               setState(() {
                 _balanceFieldDirection = value;
               });
             },
-          ),
+          )),
           padx(16),
           Expanded(
             child: LabeledTokenValueField(
@@ -146,14 +156,14 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       pady(24),
       Row(
         children: [
-          _AddWithdrawDropdown(
+          _addBorder(_AddWithdrawDropdown(
             value: _depositFieldDirection,
             onChanged: (value) {
               setState(() {
                 _depositFieldDirection = value;
               });
             },
-          ),
+          )),
           padx(16),
           Expanded(
             child: LabeledTokenValueField(
@@ -173,14 +183,14 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       pady(24),
       Row(
         children: [
-          _MoveDirectionDropdown(
+          _addBorder(_MoveDirectionDropdown(
             value: _moveFieldDirection,
             onChanged: (value) {
               setState(() {
                 _moveFieldDirection = value;
               });
             },
-          ),
+          )),
           padx(16),
           Expanded(
             child: LabeledTokenValueField(
@@ -207,7 +217,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       _buildCenteredTitle("Set Warned Amount"),
       pady(24),
       LabeledTokenValueField(
-        labelWidth: 220,
+        labelWidth: 240,
         type: tokenType,
         controller: _warnedField,
         label: "Amount" + ':',

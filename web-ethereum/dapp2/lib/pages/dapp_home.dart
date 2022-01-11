@@ -526,9 +526,9 @@ class _DappHomeState extends State<DappHome> {
                   : null;
     }
     // XXX
-    if (OrchidUserParams().test) {
-      _contractVersionSelected = 0;
-    }
+    // if (OrchidUserParams().test) {
+    //   _contractVersionSelected = 0;
+    // }
 
     _setAppWeb3Provider();
     _selectedAccountChanged();
