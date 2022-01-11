@@ -67,7 +67,7 @@ class Chains {
     nativeCurrency: TokenTypes.XDAI,
     // providerUrl: 'https://dai.poa.network',
     providerUrl: 'https://rpc.xdaichain.com/',
-    iconPath: 'assets/svg/chains/gnosis-white.svg',
+    iconPath: 'assets/svg/chains/gnosis-chain-white.svg',
     supportsLogs: true,
   );
 
