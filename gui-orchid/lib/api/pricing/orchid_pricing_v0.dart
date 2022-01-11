@@ -21,8 +21,8 @@ class OrchidPricingAPIV0 {
   Future<PricingV0> getPricing() async {
     try {
       return PricingV0(
-        ethToUsdRate: await OrchidPricing().tokenToUsdRate(TokenTypes.ETH),
-        oxtToUsdRate: await OrchidPricing().tokenToUsdRate(TokenTypes.OXT),
+        ethPriceUSD: await OrchidPricing().usdPrice(TokenTypes.ETH),
+        oxtPriceUSD: await OrchidPricing().usdPrice(TokenTypes.OXT),
       );
     } catch (err) {
       print("Error fetching pricing: $err");
@@ -34,43 +34,45 @@ class OrchidPricingAPIV0 {
 /// Pricing captures exchange rates at a point in time and supports conversion.
 class PricingV0 {
   DateTime date;
-  double ethToUsdRate;
-  double oxtToUsdRate;
+  // dollars per eth
+  double ethPriceUSD;
+  // dollars per oxt
+  double oxtPriceUSD;
 
   PricingV0({
     DateTime date,
     // dollars per eth
-    @required double ethToUsdRate,
+    @required double ethPriceUSD,
     // dollars per oxt
-    @required double oxtToUsdRate,
+    @required double oxtPriceUSD,
   }) {
     this.date = date ?? DateTime.now();
-    this.ethToUsdRate = ethToUsdRate;
-    this.oxtToUsdRate = oxtToUsdRate;
+    this.ethPriceUSD = ethPriceUSD;
+    this.oxtPriceUSD = oxtPriceUSD;
   }
 
   USD toUSD(OXT oxt) {
     if (oxt == null) {
       return null;
     }
-    return USD(oxt.floatValue * oxtToUsdRate);
+    return USD(oxt.floatValue * oxtPriceUSD);
   }
 
   OXT toOXT(USD usd) {
     if (usd == null) {
       return null;
     }
-    return OXT.fromDouble(usd.value / oxtToUsdRate);
+    return OXT.fromDouble(usd.value / oxtPriceUSD);
   }
 
   OXT ethToOxt(ETH eth) {
     // ($/eth) / ($/oxt)  = oxt/eth
-    var value = OXT.fromDouble(ethToUsdRate / oxtToUsdRate * eth.value);
+    var value = OXT.fromDouble(ethPriceUSD / oxtPriceUSD * eth.value);
     return value;
   }
 
   @override
   String toString() {
-    return 'Pricing{date: $date, ethToUsdRate: $ethToUsdRate, oxtToUsdRate: $oxtToUsdRate}';
+    return 'PricingV0{date: $date, ethPriceUSD: $ethPriceUSD, oxtPriceUSD: $oxtPriceUSD}';
   }
 }
