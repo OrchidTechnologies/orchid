@@ -586,9 +586,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     if (_account.isV0) {
       PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
       var ethPriceText =
-          formatCurrency(1.0 / pricing?.ethToUsdRate, suffix: 'USD');
+          formatCurrency(1.0 / pricing?.ethPriceUSD, suffix: 'USD');
       var oxtPriceText =
-          formatCurrency(1.0 / pricing?.oxtToUsdRate, suffix: 'USD');
+          formatCurrency(1.0 / pricing?.oxtPriceUSD, suffix: 'USD');
       tokenPrices = [
         Text(s.ethPrice + " " + ethPriceText).body2,
         Text(s.oxtPrice + " " + oxtPriceText).body2,

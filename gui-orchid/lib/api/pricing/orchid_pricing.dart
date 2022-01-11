@@ -24,7 +24,7 @@ class OrchidPricing {
     return tokenToUsdRate(tokenType);
   }
 
-  /// (USD/Token): tokens * Rate = USD
+  /// (USD/Token): Tokens * Rate = USD
   Future<double> tokenToUsdRate(TokenType tokenType) async {
     if (tokenType.exchangeRateSource == TokenTypes.NoExchangeRateSource) {
       throw Exception('No exchange rate source for token: ${tokenType.symbol}');
@@ -36,6 +36,16 @@ class OrchidPricing {
           return tokenType.exchangeRateSource.tokenToUsdRate(tokenType);
         });
   }
+
+  /// (Token/USD): USD * Rate = Tokens
+  Future<double> usdToTokenRate(TokenType tokenType) async {
+    var rate = await tokenToUsdRate(tokenType);
+    if (rate == 0) {
+      throw Exception("invalid rate: $rate");
+    }
+    return 1.0 / rate;
+  }
+
 }
 
 abstract class ExchangeRateSource {
