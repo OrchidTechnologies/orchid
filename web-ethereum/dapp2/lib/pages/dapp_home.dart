@@ -61,7 +61,6 @@ class _DappHomeState extends State<DappHome> {
     return _web3Context?.contractVersionsAvailable;
   }
 
-
   @override
   void initState() {
     super.initState();
@@ -141,7 +140,7 @@ class _DappHomeState extends State<DappHome> {
   @override
   Widget build(BuildContext context) {
     // This must be wide enough to accommodate the tab names.
-    final mainColumnWidth = 650.0;
+    final mainColumnWidth = 800.0;
 
     return Column(
       children: [
@@ -334,27 +333,30 @@ class _DappHomeState extends State<DappHome> {
   }
 
   Widget _buildPasteSignerField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16.0),
-          child: Text("Orchid Identity:").title,
-        ),
-        pady(12),
-        OrchidTextField(
-          hintText: '0x...',
-          margin: EdgeInsets.zero,
-          controller: _signerField,
-          // readOnly: widget.readOnly(),
-          // enabled: widget.editable(),
-          // trailing: FlatButton(
-          //     color: Colors.transparent,
-          //     padding: EdgeInsets.zero,
-          //     child: Text(s.paste, style: OrchidText.button.purpleBright),
-          //     onPressed: _onPasteSignerAddress)
-        ),
-      ],
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: 500),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0),
+            child: Text("Orchid Identity:").title,
+          ),
+          pady(12),
+          OrchidTextField(
+            hintText: '0x...',
+            margin: EdgeInsets.zero,
+            controller: _signerField,
+            // readOnly: widget.readOnly(),
+            // enabled: widget.editable(),
+            // trailing: FlatButton(
+            //     color: Colors.transparent,
+            //     padding: EdgeInsets.zero,
+            //     child: Text(s.paste, style: OrchidText.button.purpleBright),
+            //     onPressed: _onPasteSignerAddress)
+          ),
+        ],
+      ),
     );
   }
 

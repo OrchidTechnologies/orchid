@@ -46,6 +46,7 @@ class _DappTabsV1State extends State<DappTabsV1> {
     var tabStyle = OrchidText.button;
     return SizedBox(
       height: 1000,
+      width: 650,
       child: DefaultTabController(
         initialIndex: 0,
         length: 3,
@@ -58,9 +59,9 @@ class _DappTabsV1State extends State<DappTabsV1> {
               bottom: TabBar(
                 indicatorColor: OrchidColors.tappable,
                 tabs: [
-                  Tab(child: Text("ADD FUNDS", style: tabStyle)),
-                  Tab(child: Text("WITHDRAW FUNDS", style: tabStyle)),
-                  Tab(child: Text("ADVANCED", style: tabStyle)),
+                  Tab(child: FittedBox(child: Text("ADD FUNDS", style: tabStyle))),
+                  Tab(child: FittedBox(child: Text("WITHDRAW FUNDS", style: tabStyle))),
+                  Tab(child: FittedBox(child: Text("ADVANCED", style: tabStyle))),
                 ],
               ),
             ),

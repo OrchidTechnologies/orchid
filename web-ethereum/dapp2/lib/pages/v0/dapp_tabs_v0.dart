@@ -7,6 +7,7 @@ import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import '../account_manager/account_detail_poller.dart';
 import '../dapp_add_funds.dart';
+import 'dapp_lock_warn_v0.dart';
 import 'dapp_move_funds_v0.dart';
 import 'dapp_withdraw_funds_v0.dart';
 
@@ -44,7 +45,7 @@ class _DappTabsV0State extends State<DappTabsV0> {
       height: 1000,
       child: DefaultTabController(
         initialIndex: 0,
-        length: 3,
+        length: 4,
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: PreferredSize(
@@ -54,9 +55,10 @@ class _DappTabsV0State extends State<DappTabsV0> {
               bottom: TabBar(
                 indicatorColor: OrchidColors.tappable,
                 tabs: [
-                  Tab(child: Text("ADD FUNDS", style: tabStyle)),
-                  Tab(child: Text("WITHDRAW FUNDS", style: tabStyle)),
-                  Tab(child: Text("MOVE FUNDS").button),
+                  Tab(child: FittedBox(child: Text("ADD FUNDS", style: tabStyle))),
+                  Tab(child: FittedBox(child: Text("WITHDRAW FUNDS", style: tabStyle))),
+                  Tab(child: FittedBox(child: Text("MOVE FUNDS").button)),
+                  Tab(child: FittedBox(child: Text("LOCK / UNLOCK").button)),
                 ],
               ),
             ),
@@ -99,6 +101,18 @@ class _DappTabsV0State extends State<DappTabsV0> {
                     signer: widget.signer,
                   ),
                 )),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0),
+                child: Center(
+                    child: SizedBox(
+                      width: 500,
+                      child: LockWarnPaneV0(
+                        context: widget.web3Context,
+                        pot: widget.accountDetail?.lotteryPot,
+                        signer: widget.signer,
+                      ),
+                    )),
               ),
             ],
           ),

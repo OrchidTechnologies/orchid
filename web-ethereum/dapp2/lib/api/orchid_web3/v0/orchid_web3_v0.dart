@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -146,26 +147,18 @@ class OrchidWeb3V0 {
     );
     return tx.hash;
   }
-/*
-  async orchidLock(_: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string> {
-    return this.evalOrchidTx(
-      this.lotteryContract.methods.lock(signer).send({
-        from: funder,
-        gas: OrchidContractMainNetV0.lottery_lock_max_gas
-      }), OrchidTransactionType.Lock
+
+  Future<String /*TransactionId*/ > orchidLockOrWarn({
+    @required bool isLock,
+    EthereumAddress signer,
+  }) async {
+    var contract = _lotteryContract.connect(context.web3.getSigner());
+    TransactionResponse tx = await contract.send(
+      isLock ? 'lock' : 'warn',
+      [
+        signer.toString(),
+      ],
     );
+    return tx.hash;
   }
-
-  /// Start the unlock / warn time period (one day in the future).
-  async orchidUnlock(_: LotteryPot, funder: EthAddress, signer: EthAddress): Promise<string> {
-    return this.evalOrchidTx(
-      this.lotteryContract.methods.warn(signer).send({
-        from: funder,
-        gas: OrchidContractMainNetV0.lottery_warn_max_gas
-      }), OrchidTransactionType.Unlock
-    );
-  }
-
-
-   */
 }
