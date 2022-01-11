@@ -344,6 +344,7 @@ class _DappHomeState extends State<DappHome> {
           ),
           pady(12),
           OrchidTextField(
+            height: 60,
             hintText: '0x...',
             margin: EdgeInsets.zero,
             controller: _signerField,

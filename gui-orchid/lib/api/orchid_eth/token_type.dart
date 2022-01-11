@@ -9,7 +9,8 @@ class TokenTypes {
   // Indicates that we do not have a source for pricing information for the token.
   static const ExchangeRateSource NoExchangeRateSource = null;
 
-  static const ETHExchangeRateSource = BinanceExchangeRateSource();
+  // Override the symbol to ETH so that ETH-equivalent tokens care share this.
+  static const ETHExchangeRateSource = BinanceExchangeRateSource(symbolOverride: 'ETH');
   static const TokenType ETH = TokenType(
     name: 'ETH',
     symbol: 'ETH',
