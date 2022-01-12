@@ -180,7 +180,7 @@ class Chains {
     ArbitrumOne,
     Aurora,
     Fantom,
-    Telos,
+    // Telos,
   ].toMap(withKey: (e) => e.chainId, withValue: (e) => e);
 
   static bool isKnown(int chainId) {
