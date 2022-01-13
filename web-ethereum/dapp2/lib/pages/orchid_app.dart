@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -16,11 +14,6 @@ class OrchidApp extends StatefulWidget {
 
 class _OrchidAppState extends State<OrchidApp> {
   final homePage = OrchidAppNoTabs();
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +35,7 @@ class _OrchidAppState extends State<OrchidApp> {
         primarySwatch: Colors.deepPurple,
       ),
       debugShowCheckedModeBanner: false,
-      scrollBehavior: DragScrollBehavior(),
+      // scrollBehavior: OrchidDesktopDragScrollBehavior(),
       // Without this the root widget is created twice?
       onGenerateInitialRoutes: (initialRoute) =>
           [MaterialPageRoute(builder: (_) => homePage)],
@@ -64,30 +57,16 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   void initState() {
     super.initState();
     log("XXX: OrchidAppNoTabs init");
-    initStateAsync();
   }
 
-  void initStateAsync() async {}
-
-  // If the hop is empty initialize it to defaults now.
   @override
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
     OrchidPlatform.staticLocale = locale;
-    var preferredSize = Size.fromHeight(kToolbarHeight);
     return Container(
       decoration:
           BoxDecoration(gradient: OrchidGradients.blackGradientBackground),
       child: Scaffold(
-        /*
-        appBar: PreferredSize(
-            preferredSize: preferredSize,
-            child: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              iconTheme: IconThemeData(color: Colors.white),
-            )),
-         */
         body: _body(),
         // extendBodyBehindAppBar: false,
         backgroundColor: Colors.transparent,
@@ -97,19 +76,6 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
 
   Widget _body() {
     return Center(child: DappHome());
-    // return Center(
-    //   child: ConstrainedBox(
-    //       constraints: BoxConstraints(maxWidth: 600), child: DappHome()),
-    // );
   }
 }
 
-// The default scroll behavior on desktop (with a mouse) does not support dragging.
-class DragScrollBehavior extends MaterialScrollBehavior {
-  @override
-  Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-      };
-}

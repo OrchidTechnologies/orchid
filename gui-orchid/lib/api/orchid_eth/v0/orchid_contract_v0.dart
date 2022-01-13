@@ -51,6 +51,8 @@ class OrchidContractV0 {
   static var lotteryLookMethodHash = '1554ad5d';
 
   static int gasCostToRedeemTicketV0 = 100000;
+  static int gasCostLotteryPush = 175000;
+  static int gasCostCreateAccount = gasCostLotteryPush;
 }
 
 enum OrchidTransactionTypeV0 {

@@ -34,8 +34,10 @@ class OrchidPricingAPIV0 {
 /// Pricing captures exchange rates at a point in time and supports conversion.
 class PricingV0 {
   DateTime date;
+
   // dollars per eth
   double ethPriceUSD;
+
   // dollars per oxt
   double oxtPriceUSD;
 
@@ -69,6 +71,11 @@ class PricingV0 {
     // ($/eth) / ($/oxt)  = oxt/eth
     var value = OXT.fromDouble(ethPriceUSD / oxtPriceUSD * eth.value);
     return value;
+  }
+
+  // Note: workaround until we get rid of ETH type.
+  OXT ethToOxtToken(Token eth) {
+    return ethToOxt(ETH.fromWei(eth.intValue));
   }
 
   @override

@@ -250,6 +250,7 @@ class StoredEthereumKeyRef {
     this.keyUid = keyUid;
   }
 
+  // TODO: Remove this dependency on UserPreferences
   // Resolve the reference
   Future<StoredEthereumKey> get() async {
     var keys = await UserPreferences().keys.get();

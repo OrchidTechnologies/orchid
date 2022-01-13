@@ -1,3 +1,7 @@
+import 'dart:ui';
+
+import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/util/hex.dart';
 
 /// This supports user supplied parameters via the URL parameters in the web
 /// context or conceivably via the CLI in the future.
@@ -24,6 +28,20 @@ class OrchidUserParams {
 
   String get(String name) {
     return params[name];
+  }
+
+  Color getColor(String name) {
+    var svalue = params[name];
+    if (svalue == null) {
+      return null;
+    }
+    try {
+
+      return Color(int.parse(Hex.remove0x(svalue), radix: 16));
+    } catch (err) {
+      log("Error in color: $err");
+      return null;
+    }
   }
 
   bool has(String name) {

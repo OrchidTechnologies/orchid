@@ -69,6 +69,31 @@ class MarketConditionsV0 implements MarketConditions {
     return CostToRedeemV0(ethGasCostToRedeem, oxtCostToRedeem);
   }
 
+  /// Determine the pot composition and gas required for the desired
+  /// efficiency and return the total tokens.
+  static Future<Token> getCostToCreateAccount({
+    double efficiency,
+    int tickets,
+  }) async {
+    if (efficiency < 0 || efficiency >= 1.0) {
+      throw Exception("invalid efficiency: $efficiency");
+    }
+    // Denominate all costs in OXT for the calcualtion.
+    final requiredTicketValue =
+        (await getCostToRedeemTicketV0()).oxtCostToRedeem / (1 - efficiency);
+    final requiredDeposit = requiredTicketValue * 2.0;
+    final requiredBalance = requiredTicketValue * tickets.toDouble();
+
+    final pricing = await OrchidPricingAPIV0().getPricing();
+    final gasPriceEth = await Chains.Ethereum.getGasPrice();
+    final gasPriceOxt = pricing.ethToOxtToken(gasPriceEth);
+    final requiredGas = gasPriceOxt *
+        OrchidContractV0.gasCostCreateAccount.toDouble();
+
+    log("XXX: getCostToCreateAccount V0: $requiredTicketValue, $requiredDeposit, $requiredBalance, $requiredGas");
+    return requiredDeposit + requiredBalance + requiredGas;
+  }
+
   @override
   String toString() {
     return 'MarketConditionsV0{ethGasCostToRedeem: $ethGasCostToRedeem, oxt costToRedeem: $costToRedeem, maxFaceValue: $maxFaceValue, efficiency: $efficiency, limitedByBalance: $limitedByBalance}';

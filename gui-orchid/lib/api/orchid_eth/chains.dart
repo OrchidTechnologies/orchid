@@ -40,7 +40,7 @@ class Chains {
   static const int GANACHE_TEST_CHAINID = 1337;
   static Chain GanacheTest = Chain(
     chainId: GANACHE_TEST_CHAINID,
-    name: "Ganache Test",
+    name: "Ganache",
     nativeCurrency: TokenTypes.TOK,
     providerUrl: 'http://127.0.0.1:7545/',
     iconPath: unknownLogoPath,
@@ -63,7 +63,7 @@ class Chains {
   static const int XDAI_CHAINID = 100;
   static Chain xDAI = Chain(
     chainId: XDAI_CHAINID,
-    name: "Gnosis Chain",
+    name: "Gnosis",
     nativeCurrency: TokenTypes.XDAI,
     // providerUrl: 'https://dai.poa.network',
     providerUrl: 'https://rpc.xdaichain.com/',
@@ -75,7 +75,7 @@ class Chains {
   static const int AVALANCHE_CHAINID = 43114;
   static Chain Avalanche = Chain(
     chainId: AVALANCHE_CHAINID,
-    name: "Avalanche Chain",
+    name: "Avalanche",
     nativeCurrency: TokenTypes.AVAX,
     providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
     iconPath: 'assets/svg/chains/avalanche-avax-logo.svg',
@@ -98,7 +98,7 @@ class Chains {
   static const int POLYGON_CHAINID = 137;
   static Chain Polygon = Chain(
     chainId: POLYGON_CHAINID,
-    name: "Polygon Chain",
+    name: "Polygon",
     nativeCurrency: TokenTypes.MATIC,
     providerUrl: 'https://polygon-rpc.com/',
     iconPath: 'assets/svg/chains/matic-token-icon1.svg',
@@ -109,7 +109,7 @@ class Chains {
   static const int OPTIMISM_CHAINID = 10;
   static Chain Optimism = Chain(
     chainId: OPTIMISM_CHAINID,
-    name: "Optimism Chain",
+    name: "Optimism",
     nativeCurrency: TokenTypes.OETH,
     providerUrl: 'https://mainnet.optimism.io/',
     iconPath: 'assets/svg/chains/optimism-logo.svg',
@@ -135,7 +135,7 @@ class Chains {
   static const int AURORA_CHAINID = 1313161554;
   static Chain Aurora = Chain(
     chainId: AURORA_CHAINID,
-    name: "Aurora Chain",
+    name: "Aurora",
     nativeCurrency: TokenTypes.AURORA_ETH,
     providerUrl: 'https://mainnet.aurora.dev',
     iconPath: 'assets/svg/chains/near-logo.svg',
@@ -150,7 +150,7 @@ class Chains {
   static const int FANTOM_CHAINID = 250;
   static Chain Fantom = Chain(
     chainId: FANTOM_CHAINID,
-    name: "Fantom Chain",
+    name: "Fantom",
     nativeCurrency: TokenTypes.FTM,
     providerUrl: 'https://rpc.ftm.tools',
     iconPath: 'assets/svg/chains/fantom-token.svg',
@@ -162,10 +162,10 @@ class Chains {
   static const int TELOS_CHAINID = 40;
   static Chain Telos = Chain(
     chainId: TELOS_CHAINID,
-    name: "Telos Chain",
+    name: "Telos",
     nativeCurrency: TokenTypes.TLOS,
     providerUrl: 'https://mainnet.telos.net/evm',
-    iconPath: 'assets/svg/chains/TLOS-logo.svg',
+    iconPath: 'assets/svg/chains/telos-tlos-logo.svg',
     explorerUrl: 'https://teloscan.io',
   );
 

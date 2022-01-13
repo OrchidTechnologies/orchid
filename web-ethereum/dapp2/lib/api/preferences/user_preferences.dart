@@ -4,7 +4,6 @@ import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../orchid_log_api.dart';
-import 'accounts_preferences.dart';
 
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
@@ -145,13 +144,6 @@ class UserPreferences {
         .setString(UserPreferenceKey.UserConfig.toString(), value);
   }
 
-  /// A list of account information indicating the active identity (signer key)
-  /// and the active account (funder and chainid) for that identity.
-  /// The order of this list is significant in that the first account designates
-  /// the active identity. The list should contain at most one account per identity.
-  ObservablePreference<List<Account>> activeAccounts =
-      ObservableAccountListPreference(UserPreferenceKey.ActiveAccounts);
-
   /// Add (set-wise) to the distinct set of discovered accounts.
   Future<void> addCachedDiscoveredAccounts(List<Account> accounts) async {
     if (accounts == null || accounts.isEmpty) {
@@ -232,7 +224,6 @@ class UserPreferences {
 enum UserPreferenceKey {
   UserConfig,
   Keys,
-  ActiveAccounts,
   CachedDiscoveredAccounts,
   Transactions,
 }

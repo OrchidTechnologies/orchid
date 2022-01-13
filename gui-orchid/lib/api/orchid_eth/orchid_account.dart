@@ -6,7 +6,6 @@ import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/cacheable.dart';
 import '../orchid_budget_api.dart';
 import 'orchid_market.dart';
@@ -168,22 +167,6 @@ class Account {
   ///
   /// End key methods
   ///
-
-  // Note: Used in migration from the old active account model
-  static Future<Account> get activeAccountLegacy async {
-    return _filterActiveAccountLegacyLogic(
-        UserPreferences().activeAccounts.get());
-  }
-
-  // Note: Used in migration from the old active account model
-  // Return the active account from the accounts list or null.
-  static Account _filterActiveAccountLegacyLogic(List<Account> accounts) {
-    return accounts == null ||
-            accounts.isEmpty ||
-            accounts[0].isIdentityPlaceholder
-        ? null
-        : accounts[0];
-  }
 
   /// Indicates that this account selects an identity but not yet a designated
   /// account for the identity.

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'orchid_log_api.dart';
 
@@ -52,6 +53,22 @@ class OrchidPlatform {
     }
   }
 
+  static final localizationsDelegates = [
+    S.delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
+
+  static Iterable<Locale> get supportedLocales {
+    return OrchidPlatform.languageOverride == null
+        ? S.supportedLocales
+        : [
+            Locale.fromSubtags(
+                languageCode: OrchidPlatform.languageOverrideCode,
+                countryCode: OrchidPlatform.languageOverrideCountry)
+          ];
+  }
+
   static bool get isLinux {
     try {
       return Platform.isLinux;
@@ -88,7 +105,7 @@ class OrchidPlatform {
     }
   }
 
-  static bool get isWeb{
+  static bool get isWeb {
     return kIsWeb;
   }
 
@@ -119,5 +136,4 @@ class OrchidPlatform {
       return "unknown";
     }
   }
-
 }
