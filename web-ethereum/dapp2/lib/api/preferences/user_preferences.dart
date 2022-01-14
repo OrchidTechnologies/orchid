@@ -4,6 +4,7 @@ import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../orchid_log_api.dart';
+import 'accounts_preferences.dart';
 
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();

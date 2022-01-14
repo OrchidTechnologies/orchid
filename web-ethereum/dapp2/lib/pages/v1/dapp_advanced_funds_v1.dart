@@ -89,7 +89,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         // move
         ..._buildMoveFunds(tokenType),
 
-        pady(48),
+        pady(32),
         // warn
         ..._buildWarn(tokenType),
 
@@ -125,7 +125,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   List<Widget> _buildBalanceForm(TokenType tokenType) {
     return [
-      _buildCenteredTitle("Balance"),
+      _buildTitle("Balance"),
       pady(24),
       Row(
         children: [
@@ -152,7 +152,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   List<Widget> _buildDepositForm(TokenType tokenType) {
     return [
-      _buildCenteredTitle("Deposit"),
+      _buildTitle("Deposit"),
       pady(24),
       Row(
         children: [
@@ -179,7 +179,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   List<Widget> _buildMoveFunds(TokenType tokenType) {
     return [
-      _buildCenteredTitle("Move"),
+      _buildTitle("Move"),
       pady(24),
       Row(
         children: [
@@ -214,10 +214,10 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         : "Now";
 
     return [
-      _buildCenteredTitle("Set Warned Amount"),
+      _buildTitle("Set Warned Amount"),
       pady(24),
       LabeledTokenValueField(
-        labelWidth: 240,
+        labelWidth: 260,
         type: tokenType,
         controller: _warnedField,
         label: "Amount" + ':',
@@ -238,13 +238,14 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     ];
   }
 
-  Row _buildCenteredTitle(String text) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(text).title,
-      ],
-    );
+  Widget _buildTitle(String text) {
+    return Text(text).title;
+    // return Row(
+    //   mainAxisAlignment: MainAxisAlignment.center,
+    //   children: [
+    //     Text(text).title,
+    //   ],
+    // );
   }
 
   Padding _divider() {
@@ -449,7 +450,7 @@ class _AddWithdrawDropdown extends StatelessWidget {
         focusColor: OrchidColors.purple_menu,
       ),
       child: SizedBox(
-        width: 200,
+        width: 220,
         child: DropdownButton<_AddWithdrawDirection>(
           isExpanded: true,
           // make the width flexible
@@ -459,13 +460,13 @@ class _AddWithdrawDropdown extends StatelessWidget {
           items: [
             DropdownMenuItem(
               child: Text(
-                "Add",
+                "ADD",
                 textAlign: TextAlign.right,
               ).button,
               value: _AddWithdrawDirection.Add,
             ),
             DropdownMenuItem(
-              child: Text("Withdraw").button,
+              child: Text("WITHDRAW").button,
               value: _AddWithdrawDirection.Withdraw,
             ),
           ],
@@ -496,7 +497,7 @@ class _MoveDirectionDropdown extends StatelessWidget {
         focusColor: OrchidColors.purple_menu,
       ),
       child: SizedBox(
-        width: 200,
+        width: 220,
         child: DropdownButton<_MoveDirection>(
           isExpanded: true,
           // make the width flexible
@@ -505,11 +506,11 @@ class _MoveDirectionDropdown extends StatelessWidget {
           value: value,
           items: [
             DropdownMenuItem(
-              child: Text("Balance to Deposit").button,
+              child: Text("BALANCE TO DEPOSIT").button,
               value: _MoveDirection.BalanceToDeposit,
             ),
             DropdownMenuItem(
-              child: Text("Deposit to Balance").button,
+              child: Text("DEPOSIT TO BALANCE").button,
               value: _MoveDirection.DepositToBalance,
             ),
           ],

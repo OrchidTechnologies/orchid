@@ -367,13 +367,13 @@ class _DappHomeState extends State<DappHome> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         DappButton(
-          text: "Connect",
+          text: "CONNECT",
           onPressed: _connected ? null : _connectEthereum,
         ),
         if (_showWalletConnect) ...[
           padx(24),
           DappButton(
-            text: "Wallet Connect",
+            text: "WALLET CONNECT",
             onPressed: _connected ? null : _connectWalletConnect,
             trailing: Padding(
               padding: const EdgeInsets.only(left: 10.0, right: 16.0),
@@ -383,7 +383,7 @@ class _DappHomeState extends State<DappHome> {
         ],
         padx(24),
         DappButton(
-          text: "Disconnect",
+          text: "DISCONNECT",
           onPressed: _connected ? _disconnect : null,
         ),
         padx(24),

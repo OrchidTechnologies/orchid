@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/orchid/orchid_action_button.dart';
 
 class DappButton extends StatelessWidget {
   final String text;
@@ -15,15 +15,10 @@ class DappButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var height = 42.0;
-    return Container(
-        height: height,
-        child: RoundedRectButton(
-          text: text,
-          textColor: Colors.black,
-          lineHeight: 1.2,
-          trailing: trailing,
-          onPressed: onPressed,
-        ));
+    return OrchidActionButton(
+      text: text,
+      onPressed: onPressed ?? () {},
+      enabled: onPressed != null,
+    );
   }
 }
