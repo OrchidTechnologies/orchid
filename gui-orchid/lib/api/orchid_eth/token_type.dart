@@ -93,6 +93,13 @@ class TokenTypes {
     exchangeRateSource: NoExchangeRateSource,
     chainId: Chains.TELOS_CHAINID,
   );
+
+  static const TokenType RBTC = TokenType(
+    name: 'RBTC',
+    symbol: 'RTBC',
+    exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'BTC'),
+    chainId: Chains.RSK_CHAINID,
+  );
 }
 
 // Token type

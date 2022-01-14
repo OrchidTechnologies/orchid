@@ -300,7 +300,7 @@ class _DappHomeState extends State<DappHome> {
             child: TapToCopyText(
               _web3Context.walletAddress.toString(),
               style: OrchidText.title,
-              overflow: TextOverflow.ellipsis,
+              // style: TextStyle(color: Colors.white),
               padding: EdgeInsets.zero,
             )),
       ],

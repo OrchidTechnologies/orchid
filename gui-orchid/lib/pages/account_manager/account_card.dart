@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/gradient_border.dart';
@@ -304,7 +305,6 @@ class _AccountCardState extends State<AccountCard>
             child: TapToCopyText(
               text,
               padding: EdgeInsets.zero,
-              overflow: TextOverflow.ellipsis,
               style: OrchidText.body2,
             ),
           ),

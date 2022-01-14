@@ -169,6 +169,17 @@ class Chains {
     explorerUrl: 'https://teloscan.io',
   );
 
+  static const int RSK_CHAINID = 30;
+  static Chain RSK = Chain(
+    chainId: RSK_CHAINID,
+    name: "RSK",
+    nativeCurrency: TokenTypes.RBTC,
+    //     "https://mycrypto.rsk.co"
+    providerUrl: 'https://public-node.rsk.co',
+    iconPath: 'assets/svg/chains/rsk-logo.svg',
+    explorerUrl: 'https://explorer.rsk.co',
+  );
+
   static Map<int, Chain> map = [
     GanacheTest,
     Ethereum,
@@ -180,6 +191,7 @@ class Chains {
     ArbitrumOne,
     Aurora,
     Fantom,
+    //RSK,
     // Telos,
   ].toMap(withKey: (e) => e.chainId, withValue: (e) => e);
 
