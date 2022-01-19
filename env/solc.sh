@@ -18,4 +18,4 @@ fi
 
 exec docker run -v "${cwd%/*}":/mnt ethereum/solc:"${version}" \
     "${flags[@]}" /mnt/"${PWD##*/}"/"${source}" \
-    --bin --overwrite --allow-paths . "$@"
+    --bin --metadata --overwrite --allow-paths . "$@"
