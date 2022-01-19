@@ -1,0 +1,35 @@
+# Orchid - WebRTC P2P VPN Market (on Ethereum)
+# Copyright (C) 2017-2020  The Orchid Authors
+
+# GNU Affero General Public License, Version 3 {{{ */
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# }}}
+
+
+args += --chain 1,ETH,https://cloudflare-eth.com/
+args += --chain 10,ETH,https://mainnet.optimism.io/
+args += --chain 30,BTC,http://galleon.saurik.com:8561/
+#args += --chain 40,TLOS,https://mainnet.telos.net/evm
+args += --chain 56,BNB,https://bsc-dataseed.binance.org/
+args += --chain 100,DAI,https://rpc.xdaichain.com/
+args += --chain 137,MATIC,https://polygon-rpc.com/
+#args += --chain 200,DAI,https://arbitrum.xdaichain.com/
+args += --chain 250,FTM,https://rpc.ftm.tools/
+#args += --chain 42161,ETH,https://arb1.arbitrum.io/rpc
+# https://github.com/celo-org/celo-blockchain/issues/1734
+# https://github.com/celo-org/celo-blockchain/issues/1737
+#args += --chain 42220,CELO,https://forno.celo.org/
+args += --chain 43114,AVAX,https://api.avax.network/ext/bc/C/rpc
+args += --chain 1313161554,ETH,https://mainnet.aurora.dev/

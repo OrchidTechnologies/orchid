@@ -181,6 +181,10 @@ class Chain :
         return chain_;
     }
 
+    bool operator <(const Chain &chain) const {
+        return chain_ < chain.chain_;
+    }
+
     bool operator ==(unsigned chain) const {
         return chain_ == chain;
     }

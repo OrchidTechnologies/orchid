@@ -220,7 +220,16 @@ void Print(std::ostream &body, const std::string &name, const Maybe<Report> &may
     body << "------------+---------+------------+-----------------\n";
 }
 
+template <typename Type_, typename Value_>
+auto &At(Type_ &&type, const Value_ &value) {
+    auto i(type.find(value));
+    orc_assert(i != type.end());
+    return *i;
+}
+
 int Main(int argc, const char *const argv[]) {
+    std::vector<std::string> chains;
+
     std::vector<std::string> openvpns;
     std::vector<std::string> wireguards;
 
@@ -245,9 +254,9 @@ int Main(int argc, const char *const argv[]) {
         ("secret", po::value<std::string>())
     ; options.add(group); }
 
-    { po::options_description group("external resources");
+    { po::options_description group("evm json/rpc server (required)");
     group.add_options()
-        ("rpc", po::value<std::string>()->default_value("http://127.0.0.1:8545/"), "ethereum json/rpc private API endpoint")
+        ("chain", po::value<std::vector<std::string>>(&chains), "like 1,ETH,https://cloudflare-eth.com/")
     ; options.add(group); }
 
     { po::options_description group("protocol testing");
@@ -275,14 +284,14 @@ int Main(int argc, const char *const argv[]) {
     //webrtc::field_trial::InitFieldTrialsFromString("WebRTC-DataChannel-Dcsctp/Enabled/");
 
     const unsigned milliseconds(60*1000);
-
     const S<Base> base(Break<Local>());
-    const Locator locator(args["rpc"].as<std::string>());
-    const auto chain(Wait(Chain::New({locator, base}, {}, 1)));
+
+    const auto markets(Wait(Market::All(milliseconds, base, chains)));
+    const auto ethereum(At(markets, 1).chain_);
 
     const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
-    const auto network(Break<Network>(chain, directory, location));
+    const auto network(Break<Network>(ethereum, directory, location));
 
     static const Address lottery0("0xb02396f06cc894834b7934ecf8c8e5ab5c1d12f1");
     static const Address lottery1("0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82");
@@ -290,11 +299,10 @@ int Main(int argc, const char *const argv[]) {
     const Address funder(args["funder"].as<std::string>());
     const auto secret(Bless<Secret>(args["secret"].as<std::string>()));
 
+    const auto oracle(Wait(Oracle(milliseconds, ethereum)));
+    const auto oxt(Wait(Token::OXT(milliseconds, ethereum)));
 
-    const auto oracle(Wait(Oracle(milliseconds, chain)));
-    const auto oxt(Wait(Token::OXT(milliseconds, chain)));
-    const auto bnb(Wait(Market::New(milliseconds, 56, base, "https://bsc-dataseed.binance.org/", "BNB")));
-
+    // prices {{{
     std::map<std::string, S<Updated<std::pair<Float, Float>>>> prices;
 
     prices.try_emplace("Coinbase", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
@@ -314,28 +322,29 @@ int Main(int argc, const char *const argv[]) {
         co_return *co_await Parallel(Huobi(*base, "ethusdt"), Huobi(*base, "oxtusdt"));
     }, "Huobi"))));
 
-    prices.try_emplace("Uniswap2", Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
-        const auto [eth, oxt] = *co_await Parallel(Uniswap2(*chain, Uniswap2USDCETH, Ten6), Uniswap2(*chain, Uniswap2OXTETH, 1));
+    prices.try_emplace("Uniswap2", Wait(Opened(Updating(milliseconds, [ethereum]() -> task<std::pair<Float, Float>> {
+        const auto [eth, oxt] = *co_await Parallel(Uniswap2(*ethereum, Uniswap2USDCETH, Ten6), Uniswap2(*ethereum, Uniswap2OXTETH, 1));
         co_return std::make_tuple(eth, eth / oxt);
     }, "Uniswap2"))));
 
-    prices.try_emplace("Uniswap3", Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
-        const auto [wei, oxt] = *co_await Parallel(Uniswap3(*chain, Uniswap3USDCETH, Ten6), Uniswap3(*chain, Uniswap3OXTETH, 1));
+    prices.try_emplace("Uniswap3", Wait(Opened(Updating(milliseconds, [ethereum]() -> task<std::pair<Float, Float>> {
+        const auto [wei, oxt] = *co_await Parallel(Uniswap3(*ethereum, Uniswap3USDCETH, Ten6), Uniswap3(*ethereum, Uniswap3OXTETH, 1));
         const auto eth(1 / wei / Ten18);
         co_return std::make_tuple(eth, eth * oxt);
     }, "Uniswap3"))));
 
-    prices.try_emplace("Chainlink", Wait(Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
-        co_return *co_await Parallel(Chainlink(*chain, ChainlinkETHUSD, 0, Ten8 * Ten18), Chainlink(*chain, ChainlinkOXTUSD, 0, Ten8 * Ten18));
+    prices.try_emplace("Chainlink", Wait(Opened(Updating(milliseconds, [ethereum]() -> task<std::pair<Float, Float>> {
+        co_return *co_await Parallel(Chainlink(*ethereum, ChainlinkETHUSD, 0, Ten8 * Ten18), Chainlink(*ethereum, ChainlinkOXTUSD, 0, Ten8 * Ten18));
     }, "Chainlink"))));
+    // }}}
 
 
     Exchange exchange(base);
 
 
-    const auto account(Wait(Opened(Updating(milliseconds, [chain, funder, signer = Address(Derive(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
+    const auto account(Wait(Opened(Updating(milliseconds, [ethereum, funder, signer = Address(Derive(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
         static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
-        const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(*chain, "latest", lottery0, uint256_t(90000), funder, signer);
+        const auto [balance, escrow, unlock, verify, codehash, shared] = co_await look.Call(*ethereum, "latest", lottery0, uint256_t(90000), funder, signer);
         co_return std::make_pair(balance, escrow);
     }, "Account"))));
 
@@ -386,7 +395,7 @@ int Main(int argc, const char *const argv[]) {
                 names.emplace_back(name);
                 tests.emplace_back(TestOrchid(base, name, network, provider, [&](BufferSink<Remote> &remote) -> task<Client &> {
                     co_return co_await Client0::Wire(remote, oracle, oxt, lottery0, secret, funder);
-                    //co_return co_await Client1::Wire(remote, oracle, dai, lottery1, secret, funder);
+                    //co_return co_await Client1::Wire(remote, oracle, At(markets, 43114), lottery1, secret, funder);
                 }));
             }
 

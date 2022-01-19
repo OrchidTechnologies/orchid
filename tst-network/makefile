@@ -19,6 +19,7 @@
 
 
 args := 
+include ../chains.mk
 args += --tls ../network.p12
 
 include env/target.mk

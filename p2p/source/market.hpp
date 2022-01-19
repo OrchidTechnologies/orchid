@@ -23,6 +23,8 @@
 #ifndef ORCHID_MARKET_HPP
 #define ORCHID_MARKET_HPP
 
+#include <set>
+
 #include "currency.hpp"
 #include "integer.hpp"
 #include "shared.hpp"
@@ -40,9 +42,25 @@ struct Market {
     const Currency currency_;
     const S<Updated<uint256_t>> bid_;
 
+
     static task<Market> New(unsigned milliseconds, S<Chain> chain, Currency currency);
-    static task<Market> New(unsigned milliseconds, uint256_t chain, const S<Base> &base, Locator locator, std::string currency);
+    static task<Market> New(unsigned milliseconds, const S<Base> &base, uint256_t chain, std::string currency, Locator locator);
+
+    static task<std::set<Market, std::less<>>> All(unsigned milliseconds, const S<Base> &base, const std::vector<std::string> &chains);
+
+
+    bool operator <(const Market &market) const {
+        return *chain_ < *market.chain_;
+    }
 };
+
+inline bool operator <(const uint256_t &chain, const Market &market) {
+    return chain < *market.chain_;
+}
+
+inline bool operator <(const Market &market, const uint256_t &chain) {
+    return *market.chain_ < chain;
+}
 
 }
 

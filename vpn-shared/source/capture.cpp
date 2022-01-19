@@ -715,7 +715,7 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network
         const auto provider(co_await network->Select(curator, heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000")));
         Locator locator(heap.eval<std::string>(hops + ".rpc"));
         std::string currency(heap.eval<std::string>(hops + ".currency"));
-        auto &client(co_await Client1::Wire(sunk, oracle, co_await Market::New(5*60*1000, chain, base, std::move(locator), std::move(currency)), lottery, secret, funder));
+        auto &client(co_await Client1::Wire(sunk, oracle, co_await Market::New(5*60*1000, base, chain, std::move(currency), std::move(locator)), lottery, secret, funder));
         co_await client.Open(provider, base);
 
     } else if (protocol == "openvpn") {

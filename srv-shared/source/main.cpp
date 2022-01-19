@@ -279,11 +279,7 @@ int Main(int argc, const char *const argv[]) {
         const auto recipient(args.count("recipient") == 0 ? Address(*executor) : Address(args["recipient"].as<std::string>()));
 
         const unsigned milliseconds(5*60*1000);
-
-        const auto markets(*co_await Parallel(Map([&](const std::string &market) -> task<Market> {
-            const auto [chain, currency, locator] = Split<3>(market, {','});
-            co_return co_await Market::New(milliseconds, uint256_t(chain.operator std::string()), base, locator.operator std::string(), currency.operator std::string());
-        }, chains)));
+        const auto markets(co_await Market::All(milliseconds, base, chains));
 
         for (const auto &market : markets) {
             const auto bid((*market.bid_)());

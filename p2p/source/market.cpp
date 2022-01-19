@@ -25,6 +25,7 @@
 #include "locator.hpp"
 #include "market.hpp"
 #include "parallel.hpp"
+#include "sequence.hpp"
 #include "updater.hpp"
 
 namespace orc {
@@ -35,10 +36,19 @@ task<Market> Market::New(unsigned milliseconds, S<Chain> chain, Currency currenc
     co_return Market{std::move(chain), std::move(currency), std::move(bid)};
 }
 
-task<Market> Market::New(unsigned milliseconds, uint256_t chain, const S<Base> &base, Locator locator, std::string currency) {
+task<Market> Market::New(unsigned milliseconds, const S<Base> &base, uint256_t chain, std::string currency, Locator locator) {
     auto [chain$, currency$] = *co_await Parallel(Chain::New({std::move(locator), base}, {}, chain),
         currency == "USD" ? Freebie(Currency::USD()) : Binance(milliseconds, base, std::move(currency)));
     co_return co_await New(milliseconds, std::move(chain$), std::move(currency$));
+}
+
+task<std::set<Market, std::less<>>> Market::All(unsigned milliseconds, const S<Base> &base, const std::vector<std::string> &chains) {
+    std::set<Market, std::less<>> markets;
+    *co_await Parallel(Map([&](const std::string &market) -> task<void> {
+        const auto [chain, currency, locator] = Split<3>(market, {','});
+        markets.emplace(co_await New(milliseconds, base, uint256_t(chain.operator std::string()), currency.operator std::string(), locator.operator std::string()));
+    }, chains));
+    co_return markets;
 }
 
 }
