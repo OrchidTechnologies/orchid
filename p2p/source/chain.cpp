@@ -288,11 +288,16 @@ Account::Account(const uint256_t &nonce, const uint256_t &balance) :
 {
 }
 
-Account::Account(const Block &block, const Json::Value &value) :
+Account::Account(const Json::Value &value) :
     nonce_(value["nonce"].asString()),
     balance_(value["balance"].asString()),
     storage_(Bless(value["storageHash"].asString())),
     code_(Bless(value["codeHash"].asString()))
+{
+}
+
+Account::Account(const Json::Value &value, const Block &block) :
+    Account(value)
 {
     const auto leaf(Verify(value["accountProof"], block.state_, HashK(Number<uint160_t>(value["address"].asString()))));
     if (leaf.scalar()) {

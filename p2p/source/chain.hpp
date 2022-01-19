@@ -101,7 +101,8 @@ struct Account final {
     const Brick<32> code_;
 
     Account(const uint256_t &nonce, const uint256_t &balance);
-    Account(const Block &block, const Json::Value &value);
+    Account(const Json::Value &value);
+    Account(const Json::Value &value, const Block &block);
 };
 
 struct Flags {
@@ -222,7 +223,7 @@ class Chain :
             co_return result;
         } else {
             const auto proof(co_await operator ()("eth_getProof", {contract, {Number<uint256_t>(std::forward<Args_>(args))...}, block.height_}));
-            std::tuple<Account, typename Result_<Args_>::type...> result(Account(block, proof));
+            std::tuple<Account, typename Result_<Args_>::type...> result(Account(proof, block));
             Number<uint256_t> root(proof["storageHash"].asString());
             Get<1, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
             co_return result;
@@ -254,7 +255,7 @@ class Chain :
             for (const auto &arg : args)
                 numbers.emplace_back(arg);
             const auto proof(co_await operator ()("eth_getProof", {contract, numbers, block.height_}));
-            std::tuple<Account, std::vector<uint256_t>> result(Account(block, proof));
+            std::tuple<Account, std::vector<uint256_t>> result(Account(proof, block));
             Number<uint256_t> root(proof["storageHash"].asString());
             auto storages(proof["storageProof"]);
             for (Json::Value::ArrayIndex e(Fit(args.size())), i(0); i != e; ++i)

@@ -246,6 +246,12 @@ static Locator _(std::string_view arg) {
 } };
 
 template <>
+struct Option<Any> {
+static Any _(const std::string &arg) {
+    return Parse(arg);
+} };
+
+template <>
 struct Option<S<Executor>> {
 static cppcoro::shared_task<S<Executor>> _(std::string_view arg) {
     if (boost::algorithm::starts_with(arg, "@")) {
@@ -295,6 +301,9 @@ auto Options(Args &args) {
     orc_assert(args.size() == sizeof...(Types_));
     return Options<Types_...>(args, std::index_sequence_for<Types_...>());
 }
+
+task<void> ScanState(const S<Chain> &chain, uint64_t height);
+task<void> ScanStorage(const S<Chain> &chain, uint64_t height, const Address &address);
 
 task<int> Main(int argc, const char *const argv[]) { try {
     Args args(argc - 1, argv + 1);
@@ -387,6 +396,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [height] = Options<uint64_t>(args);
         std::cout << co_await (*chain_)("eth_getBlockByNumber", {height, true}) << std::endl;
 
+    } else if (command == "block-rlp") {
+        const auto [height] = Options<uint64_t>(args);
+        std::cout << Str(co_await chain_->Call("debug_getBlockRlp", {unsigned(height)})) << std::endl;
+
     } else if (command == "bsc:transfer") {
         const auto [segwit, amount] = Options<std::string, uint256_t>(args);
         const auto recipient(FromSegwit(segwit));
@@ -416,13 +429,28 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [address] = Options<Address>(args);
         std::cout << (co_await chain_->Code(co_await block(), address)).hex() << std::endl;
 
+    } else if (command == "codehash") {
+        const auto [height, address] = Options<uint64_t, Address>(args);
+        Address contract;
+        std::cout << Str(co_await chain_->Call("eth_call", {Multi{
+            {"from", "0x0000000000000000000000000000000000000000"},
+            {"to", contract},
+            {"gas", uint64_t(90000)},
+            {"data", Number<uint256_t>(address.num())},
+        }, height, Multi{{contract.str(), Multi{{"code", "0x6000353f60005260206000f3"}}}}})) << std::endl;
+
     } else if (command == "create2") {
         auto [factory, salt, code, data] = Options<Address, uint256_t, Bytes, Bytes>(args);
         std::cout << Address(HashK(Tie(uint8_t(0xff), factory, salt, HashK(Tie(code, data)))).skip<12>().num<uint160_t>()) << std::endl;
 
+    } else if (command == "debug") {
+        const auto [block] = Options<Bytes32>(args);
+        const auto trace((co_await chain_->Call("debug_traceBlockByHash", {block, Multi{{"enableMemory", true}}})).as_array());
+        std::cout << Unparse(trace) << std::endl;
+
     } else if (command == "deploy") {
         auto [factory, amount, code, data] = Options<std::optional<Address>, uint256_t, Bytes, Bytes>(args);
-        std::cout << (co_await executor_->Send(*chain_, {}, factory, amount, Tie(code, data))).hex() << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {.gas = gas_}, factory, amount, Tie(code, data))).hex() << std::endl;
 
     } else if (command == "derive") {
         const auto [secret] = Options<Bytes32>(args);
@@ -650,7 +678,20 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [signature, message] = Options<Signature, Bytes>(args);
         std::cout << ToUncompressed(Recover(HashK(message), signature)).hex() << std::endl;
 
-    } else if (command == "rlp") {
+    } else if (command == "rlp-decode") {
+        const auto [data] = Options<Bytes>(args);
+        Window window(data);
+        const auto nested(Explode(window));
+        std::cout << nested.json();
+        if (!window.done())
+            std::cout << " " << window << std::endl;
+        std::cout << std::endl;
+
+    } else if (command == "rlp-encode") {
+        const auto [value] = Options<Any>(args);
+        std::cout << Strung(Implode(Nested(value))).hex(true) << std::endl;
+
+    } else if (command == "rlp-print") {
         const auto [data] = Options<Bytes>(args);
         Window window(data);
         const auto nested(Explode(window));
@@ -682,6 +723,27 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<Address, Bytes, Bytes32> deploy("deploy");
         static Address factory("0xe14b5ae0d1e8a4e9039d40e5bf203fd21e2f6241");
         std::cout << (co_await executor_->Send(*chain_, {.gas = 3000000}, factory, 0, deploy(code, salt))).hex() << std::endl;
+
+    } else if (command == "slot") {
+        auto [height, address, slot] = Options<uint64_t, Address, uint256_t>(args);
+        std::cout << Str(co_await chain_->Call("eth_getStorageAt", {address, slot, height})) << std::endl;
+
+    } else if (command == "slot-ex") {
+        auto [height, address, slot] = Options<uint64_t, Address, uint256_t>(args);
+        std::cout << Str(co_await chain_->Call("eth_call", {Multi{
+            {"from", "0x0000000000000000000000000000000000000000"},
+            {"to", address},
+            {"gas", uint64_t(90000)},
+            {"data", Number<uint256_t>(slot)},
+        }, height, Multi{{address.str(), Multi{{"code", "0x6000355460005260206000f3"}}}}})) << std::endl;
+
+    } else if (command == "state") {
+        const auto [height] = Options<uint64_t>(args);
+        co_await ScanState(chain_, height);
+
+    } else if (command == "storage") {
+        const auto [height, address] = Options<uint64_t, Address>(args);
+        co_await ScanStorage(chain_, height, address);
 
     } else if (command == "submit") {
         const auto [raw] = Options<Bytes>(args);

@@ -56,11 +56,13 @@ task<Response> Beast<Stream_>::Fetch(http::request<http::string_body> &request) 
     orc_block({ (void) co_await http::async_write(stream_, request, orc::Adapt()); },
         "writing http request");
 
-    Response response;
-    orc_block({ (void) co_await http::async_read(stream_, buffer_, response, orc::Adapt()); },
+    http::response_parser<http::string_body> parser;
+    parser.body_limit(-1);
+
+    orc_block({ (void) co_await http::async_read(stream_, buffer_, parser, orc::Adapt()); },
         "reading http response");
 
-    co_return response;
+    co_return parser.release();
 }
 
 }

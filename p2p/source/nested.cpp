@@ -24,6 +24,26 @@
 
 namespace orc {
 
+Nested::Nested(const Any &data) {
+    if (const auto array = data.if_array()) {
+        scalar_ = false;
+        for (auto i(array->begin()), e(array->end()); i != e; ++i)
+            array_.emplace_back(*i);
+    } else {
+        scalar_ = true;
+        value_ = Bless(data.as_string()).str();
+    }
+}
+
+Any Nested::json() const {
+    if (scalar_)
+        return boost::json::string(buf().hex(true));
+    Array array;
+    for (auto i(begin()), e(end()); i != e; ++i)
+        array.emplace_back(i->json());
+    return array;
+}
+
 void Nested::enc(std::string &data, size_t length) {
     if (length == 0)
         return;

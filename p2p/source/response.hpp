@@ -46,6 +46,11 @@ struct Response :
     Response(const Response &response) = delete;
     Response(Response &&response) = default;
 
+    Response(http::response<http::string_body> &&response) :
+        http::response<http::string_body>(response)
+    {
+    }
+
     std::string on(bool check) && {
         orc_assert_(check, "{ status: " << result() << ", body: ```" << body() << "``` }");
         return std::move(body());

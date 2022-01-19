@@ -48,18 +48,18 @@ bool Buffer::have(size_t value) const {
     }) || value == 0;
 }
 
+bool Buffer::done() const {
+    return each([&](const uint8_t *data, size_t size) {
+        return size == 0;
+    });
+}
+
 bool Buffer::zero() const {
     return each([&](const uint8_t *data, size_t size) {
         for (decltype(size) i(0); i != size; ++i)
             if (data[i] != 0)
                 return false;
         return true;
-    });
-}
-
-bool Buffer::done() const {
-    return each([&](const uint8_t *data, size_t size) {
-        return size == 0;
     });
 }
 
@@ -99,6 +99,8 @@ void Buffer::copy(uint8_t *data, size_t size) const {
         here += writ;
         return true;
     });
+
+    orc_assert(here == data + size);
 }
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
@@ -192,7 +194,12 @@ Beam::Beam(const Buffer &buffer) :
     buffer.copy(data_, size_);
 }
 
-static uint8_t Bless(char value) {
+char Hex(uint8_t value) {
+    // XXX: maybe I need to assert that value < 16 ;P
+    return char((value < 10 ? '0' : 'a' - 10) + value);
+}
+
+uint8_t Bless(char value) {
     if (value >= '0' && value <= '9')
         return value - '0';
     if (value >= 'a' && value <= 'f')
@@ -203,8 +210,10 @@ static uint8_t Bless(char value) {
 }
 
 void Bless(const std::string_view &value, Mutable &region) {
+    if (value == "0x0") return region.size(0);
+
     size_t size(value.size());
-    orc_assert_((size & 1) == 0, "odd-length hex data");
+    orc_assert_((size & 1) == 0, "odd-length hex data in \"" << value << "\"");
     size >>= 1;
 
     size_t offset;

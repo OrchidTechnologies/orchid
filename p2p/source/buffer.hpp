@@ -367,6 +367,9 @@ class Mutable :
     }
 };
 
+char Hex(uint8_t value);
+uint8_t Bless(char value);
+
 void Bless(const std::string_view &value, Mutable &region);
 
 class Segment final :

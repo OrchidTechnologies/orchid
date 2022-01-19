@@ -32,6 +32,7 @@
 #include "buffer.hpp"
 #include "integer.hpp"
 #include "jsonrpc.hpp"
+#include "notation.hpp"
 
 namespace orc {
 
@@ -49,6 +50,7 @@ std::string Stripped(Type_ value) {
 
 class Nested {
   protected:
+    // use a union or variant
     bool scalar_;
     mutable std::string value_;
     mutable std::vector<Nested> array_;
@@ -159,6 +161,8 @@ class Nested {
             array_.emplace_back(value);
     }
 
+    Nested(const Any &data);
+
     Nested(Nested &&rhs) noexcept :
         scalar_(rhs.scalar_),
         value_(std::move(rhs.value_)),
@@ -220,6 +224,13 @@ class Nested {
             boost::multiprecision::import_bits(value, value_.rbegin(), value_.rend(), 8, false);
         return value;
     }
+
+    bool zero() const {
+        orc_assert(scalar_);
+        return value_.empty();
+    }
+
+    Any json() const;
 
     void enc(std::string &data) const;
 };
