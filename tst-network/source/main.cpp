@@ -332,26 +332,6 @@ int Main(int argc, const char *const argv[]) {
 
     Exchange exchange(base);
 
-    const auto vwap(Wait(Opened(Updating(10*60*1000, [base, &exchange]() -> task<double> {
-        const auto horizon(boost::posix_time::second_clock::universal_time() - boost::posix_time::hours(24));
-
-        double volume(0);
-        double count(0);
-        for co_await (const auto &trade : exchange.list("products/OXT-USD/trades", {})) {
-            const auto price(To<double>(Str(trade.at("price"))));
-            const auto amount(To<double>(Str(trade.at("size"))));
-            const auto when(boost::posix_time::from_iso_extended_string(std::string(Span<const char>(Str(trade.at("time"))).clip('Z'))));
-            if (when < horizon) break;
-            volume += price * amount;
-            count += amount;
-            co_await Sleep(1);
-        }
-
-        const auto mean(volume / count);
-        std::cout << mean << std::endl;
-        co_return mean;
-    }, "OXT-VWAP"))));
-
 
     const auto account(Wait(Opened(Updating(milliseconds, [chain, funder, signer = Address(Derive(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
         static const Selector<std::tuple<uint128_t, uint128_t, uint256_t, Address, Bytes32, Bytes>, Address, Address> look("look");
@@ -436,8 +416,6 @@ int Main(int argc, const char *const argv[]) {
         for (const auto &[name, price] : prices) {
             const auto [eth, oxt] = (*price)();
             body << name << std::string(9 - name.size(), ' ') << ": $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18);
-            if (name == "Coinbase")
-                body << " $" << std::fixed << std::setprecision(5) << (*vwap)();
             body << "\n";
         }
         body << "\n";
@@ -539,12 +517,6 @@ int Main(int argc, const char *const argv[]) {
             {"jobRunID", Str(Parse(request.body()).at("id"))},
             {"data", Multi{{"price", median().str()}}},
         }));
-    });
-
-    site(http::verb::get, "/oxt24vwap", [&](Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, {
-            {"content-type", "text/plain"},
-        }, std::to_string((*vwap)()));
     });
 
     site(http::verb::get, "/version.txt", [&](Request request) -> task<Response> {
