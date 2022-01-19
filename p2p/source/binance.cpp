@@ -29,17 +29,17 @@
 
 namespace orc {
 
-task<Float> Binance(Base &base, const std::string &pair, const Float &adjust) {
+task<Float> Binance(Base &base, const std::string &pair, const Float &adjust) { orc_block({
     const auto response(co_await base.Fetch("GET", {{"https", "api.binance.com", "443"}, "/api/v3/avgPrice?symbol=" + pair}, {}, {}));
     const auto result(Parse(response.body()).as_object());
     if (response.result() == http::status::ok)
         co_return Float(Str(result.at("price"))) / adjust;
     else {
-        const auto code(Str(result.at("code")));
+        const auto code(Num<int64_t>(result.at("code")));
         const auto msg(Str(result.at("msg")));
         orc_throw(response.result() << "/" << code << ": " << msg);
     }
-}
+}, "checking " << pair << " on Binance"); }
 
 task<Currency> Binance(unsigned milliseconds, S<Base> base, std::string currency) {
     auto dollars([updated = co_await Opened(Updating(milliseconds, [base = std::move(base), pair = currency + "USDT"]() -> task<Float> {

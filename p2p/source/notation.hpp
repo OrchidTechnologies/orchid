@@ -202,8 +202,8 @@ inline std::string Str(const boost::string_view &value) {
     return std::string(value); }
 inline std::string Str(const boost::json::string &value) {
     return Str(value.operator boost::string_view()); }
-inline std::string Str(const Any &value) {
-    return Str(value.as_string()); }
+inline std::string Str(const Any &value) { orc_block({
+    return Str(value.as_string()); }, "casting " << value); }
 
 // XXX: this is dangerous and needs Fit
 template <typename Type_>
