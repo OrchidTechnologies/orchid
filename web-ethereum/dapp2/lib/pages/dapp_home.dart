@@ -24,6 +24,7 @@ import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
 import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/util/on_off.dart';
 import 'dapp_button.dart';
 import 'v1/dapp_tabs_v1.dart';
 
@@ -143,20 +144,32 @@ class _DappHomeState extends State<DappHome> {
     final mainColumnWidth = 800.0;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         pady(32),
         // connection buttons
-        _buildConnectionButtons(),
+        FittedBox(
+          child: _buildConnectionButtons(),
+          fit: BoxFit.scaleDown,
+        ).padx(8),
+
         // connection info
-        AnimatedSwitcher(
-          duration: Duration(seconds: 1),
-          child: _connected
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 16.0, bottom: 4.0),
-                  child: SizedBox(height: 40, child: _buildWalletPane()),
-                )
-              : SizedBox(height: 48),
-        ),
+        FittedBox(
+          child: AnimatedSwitcher(
+            duration: Duration(seconds: 1),
+            child: _connected
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 16.0, bottom: 4.0),
+                    child: SizedBox(height: 40, child: _buildWalletPane()),
+                  )
+                : SizedBox(
+                    height: 48,
+                    width:
+                        48, // why is this necessary to preserve overall padding?
+                  ),
+          ),
+          fit: BoxFit.scaleDown,
+        ).padx(8),
 
         // main info column
         Expanded(
@@ -207,7 +220,10 @@ class _DappHomeState extends State<DappHome> {
                         if (_connected && _signer != null) ...[
                           Divider(color: Colors.white.withOpacity(0.3)),
                           pady(16),
-                          _buildTabs(),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: _buildTabs(),
+                          ).padx(8),
                         ],
                       ],
                     ),
@@ -386,7 +402,7 @@ class _DappHomeState extends State<DappHome> {
           text: "DISCONNECT",
           onPressed: _connected ? _disconnect : null,
         ),
-        padx(24),
+        if (versions != null) padx(24),
         _buildVersionSwitch(),
       ],
     );

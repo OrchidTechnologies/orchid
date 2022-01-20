@@ -506,11 +506,15 @@ class _MoveDirectionDropdown extends StatelessWidget {
           value: value,
           items: [
             DropdownMenuItem(
-              child: Text("BALANCE TO DEPOSIT").button,
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text("BALANCE TO DEPOSIT").button),
               value: _MoveDirection.BalanceToDeposit,
             ),
             DropdownMenuItem(
-              child: Text("DEPOSIT TO BALANCE").button,
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text("DEPOSIT TO BALANCE").button),
               value: _MoveDirection.DepositToBalance,
             ),
           ],
