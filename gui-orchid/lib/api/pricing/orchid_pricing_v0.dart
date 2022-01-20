@@ -5,6 +5,7 @@ import 'package:orchid/util/units.dart';
 import 'package:flutter/foundation.dart';
 
 /// Token Exchange rates
+@deprecated
 class OrchidPricingAPIV0 {
   static OrchidPricingAPIV0 _shared = OrchidPricingAPIV0._init();
 
@@ -32,6 +33,7 @@ class OrchidPricingAPIV0 {
 }
 
 /// Pricing captures exchange rates at a point in time and supports conversion.
+@deprecated
 class PricingV0 {
   DateTime date;
 

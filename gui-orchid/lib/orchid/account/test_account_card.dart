@@ -3,9 +3,9 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/orchid/orchid_logo.dart';
-import 'package:orchid/pages/account_manager/account_detail_poller.dart';
 import 'package:orchid/util/test_app.dart';
 import 'account_card.dart';
+import 'account_detail_poller.dart';
 
 void main() {
   runApp(TestApp(scale: 1.0, content: _Test()));

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-
-import 'app_sizes.dart';
 
 /// A second level page reached through navigation.
 /// These pages have a title with a back button.

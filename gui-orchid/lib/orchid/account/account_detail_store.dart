@@ -3,6 +3,7 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 
 import 'account_detail_poller.dart';
 
+
 /// Hosts a pool of account detail pollers that is populated on-demand as
 /// individual accounts are requested by the get method.
 /// The store listens to all of its cached pollers and fires its account detail

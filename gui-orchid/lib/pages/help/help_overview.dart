@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_docs.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:orchid/orchid/orchid_colors.dart';

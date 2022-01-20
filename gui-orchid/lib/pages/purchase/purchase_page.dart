@@ -20,7 +20,7 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/loading.dart';
 import 'package:orchid/common/screen_orientation.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
 import 'package:orchid/orchid/orchid_colors.dart';

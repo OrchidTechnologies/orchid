@@ -150,6 +150,14 @@ class USD extends ScalarValue<double> {
     return USD(value * other);
   }
 
+  USD operator +(USD other) {
+    return USD(value + other.value);
+  }
+
+  USD operator -(USD other) {
+    return USD(value - other.value);
+  }
+
   USD operator *(double other) {
     return multiplyDouble(other);
   }
@@ -160,6 +168,14 @@ class USD extends ScalarValue<double> {
 
   USD operator /(double other) {
     return divideDouble(other);
+  }
+
+  String toFixedLocalized({int digits = 2}) {
+    return value.toStringAsFixed(digits);
+  }
+
+  String formatCurrency({int digits = 2}) {
+    return '\$' + this.toFixedLocalized(digits: digits);
   }
 }
 

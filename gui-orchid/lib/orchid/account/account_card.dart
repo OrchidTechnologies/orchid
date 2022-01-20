@@ -5,7 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/gradient_border.dart';
@@ -14,10 +13,11 @@ import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/util/units.dart';
-import 'account_detail_poller.dart';
-import '../../orchid/orchid_panel.dart';
-import '../../orchid/orchid_text.dart';
+import '../orchid_panel.dart';
+import '../orchid_text.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import 'account_detail_poller.dart';
 
 /// The account cards used on the account manager
 class AccountCard extends StatefulWidget {

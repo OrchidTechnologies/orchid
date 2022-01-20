@@ -10,7 +10,7 @@ import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/pages/settings/advanced_configuration_page.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:rxdart/rxdart.dart';

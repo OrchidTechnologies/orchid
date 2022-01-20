@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/util/cacheable.dart';
+import 'package:orchid/util/units.dart';
 
 import '../orchid_platform.dart';
 
@@ -17,6 +18,23 @@ class OrchidPricing {
 
   factory OrchidPricing() {
     return _shared;
+  }
+
+  /// The USD value of the token quantity.
+  Future<USD> tokenToUSD(Token token) async {
+    return USD(token.floatValue * await tokenToUsdRate(token.type));
+  }
+
+  /// Convert value of from token to equivalant USD value in 'to' token type.
+  Future<Token> tokenToToken(Token fromToken, TokenType toType) async {
+    return toType.fromDouble(
+        fromToken.floatValue * await tokenToTokenRate(fromToken.type, toType));
+  }
+
+  /// (toType / fromType): The conversion rate from fromType to toType
+  Future<double> tokenToTokenRate(TokenType fromType, TokenType toType) async {
+    // (to/usd) / (from/usd) = to/from
+    return await usdToTokenRate(toType) / await usdToTokenRate(fromType);
   }
 
   /// The USD price for the token. (USD/Token)
@@ -45,7 +63,6 @@ class OrchidPricing {
     }
     return 1.0 / rate;
   }
-
 }
 
 abstract class ExchangeRateSource {

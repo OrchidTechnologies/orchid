@@ -13,6 +13,8 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_copy_text.dart';
+import 'package:orchid/orchid/account/account_card.dart';
+import 'package:orchid/orchid/account/account_detail_poller.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_logo.dart';
@@ -21,9 +23,7 @@ import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
 import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
-import 'account_manager/account_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'account_manager/account_detail_poller.dart';
 import 'dapp_button.dart';
 import 'v1/dapp_tabs_v1.dart';
 

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/pages/account_manager/account_card.dart';
 import '../dapp_button.dart';
 
 class LockWarnPaneV0 extends StatefulWidget {

@@ -188,7 +188,7 @@ class Chains {
     BinanceSmartChain,
     Polygon,
     Optimism,
-    ArbitrumOne,
+    // ArbitrumOne,
     Aurora,
     Fantom,
     //RSK,

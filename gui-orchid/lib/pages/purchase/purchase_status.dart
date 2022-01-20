@@ -13,7 +13,7 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import '../../util/streams.dart';
+import '../../util/dispose.dart';
 
 class PurchaseStatus extends StatefulWidget {
   const PurchaseStatus({Key key}) : super(key: key);

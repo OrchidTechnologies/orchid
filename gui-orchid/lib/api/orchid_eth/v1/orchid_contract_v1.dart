@@ -38,9 +38,9 @@ class OrchidContractV1 {
   static int gasCostToRedeemTicket = 100000;
   static int lotteryMoveMaxGas = 175000;
   static int createAccountMaxGas = lotteryMoveMaxGas;
+  static int lotteryPullMaxGas = 150000;
+  static int lotteryWarnMaxGas = 50000;
 
-// static lottery_pull_amount_max_gas: number = 150000;
-// static lottery_pull_all_max_gas: number = 150000;
 // static lottery_lock_max_gas: number = 50000;
 // static lottery_warn_max_gas: number = 50000;
 // static lottery_move_max_gas: number = 175000;

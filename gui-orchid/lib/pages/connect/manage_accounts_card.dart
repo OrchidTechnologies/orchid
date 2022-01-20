@@ -6,7 +6,7 @@ import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/pages/account_manager/account_detail_store.dart';
+import 'package:orchid/orchid/account/account_detail_store.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';

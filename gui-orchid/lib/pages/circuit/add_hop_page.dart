@@ -8,7 +8,7 @@ import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/common/formatting.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import '../../common/app_sizes.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';

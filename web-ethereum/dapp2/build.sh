@@ -1,7 +1,6 @@
 #!/bin/sh
 
-#FLUTTER=../../app-shared/flutter/bin/flutter
-FLUTTER=flutter
+FLUTTER="${FLUTTER:-flutter}"
 
 rm -rf build
 

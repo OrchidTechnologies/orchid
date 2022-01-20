@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
+import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/util/units.dart';
 
 import '../../pricing/orchid_pricing_v0.dart';
@@ -60,18 +61,27 @@ class MarketConditionsV0 implements MarketConditions {
   // TODO: Add refresh option
   static Future<CostToRedeemV0> getCostToRedeemTicketV0() async {
     // TODO: Add refresh option
-    PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
     GWEI gasPrice =
         GWEI.fromWei((await Chains.Ethereum.getGasPrice()).intValue);
     ETH ethGasCostToRedeem =
         (gasPrice * OrchidContractV0.gasCostToRedeemTicketV0).toEth();
-    OXT oxtCostToRedeem = pricing.ethToOxt(ethGasCostToRedeem);
+
+    PricingV0 pricingV0 = await OrchidPricingAPIV0().getPricing();
+    OXT oxtCostToRedeem = pricingV0.ethToOxt(ethGasCostToRedeem);
+
+    // TODO: Migrate to v1
+    // Token oxtCostToRedeem2 = await OrchidPricing().tokenToToken(
+    //   TokenTypes.ETH.fromDouble(ethGasCostToRedeem.value),
+    //   TokenTypes.OXT,
+    // );
+
     return CostToRedeemV0(ethGasCostToRedeem, oxtCostToRedeem);
   }
 
   /// Determine the pot composition and gas required for the desired
   /// efficiency and return the total tokens.
-  static Future<Token> getCostToCreateAccount({
+  /*
+  static Future<Token> getPotStats({
     double efficiency,
     int tickets,
   }) async {
@@ -87,12 +97,13 @@ class MarketConditionsV0 implements MarketConditions {
     final pricing = await OrchidPricingAPIV0().getPricing();
     final gasPriceEth = await Chains.Ethereum.getGasPrice();
     final gasPriceOxt = pricing.ethToOxtToken(gasPriceEth);
-    final requiredGas = gasPriceOxt *
-        OrchidContractV0.gasCostCreateAccount.toDouble();
+    final requiredGas =
+        gasPriceOxt * OrchidContractV0.gasCostCreateAccount.toDouble();
 
     log("XXX: getCostToCreateAccount V0: $requiredTicketValue, $requiredDeposit, $requiredBalance, $requiredGas");
     return requiredDeposit + requiredBalance + requiredGas;
   }
+   */
 
   @override
   String toString() {

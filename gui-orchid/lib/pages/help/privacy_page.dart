@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_docs.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/plain_text_box.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 
 class PrivacyPage extends StatefulWidget {
   @override

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/pages/account_manager/account_detail_poller.dart';
+import 'package:orchid/orchid/account/account_detail_poller.dart';
 import 'package:orchid/orchid/orchid_logo.dart';
 import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/test_app.dart';

@@ -8,7 +8,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
-import 'package:orchid/util/streams.dart';
+import 'package:orchid/util/dispose.dart';
 
 typedef FunderSelectionCallback = void Function(FunderSelectionItem key);
 

@@ -12,14 +12,12 @@ class TokenTypes {
   // Override the symbol to ETH so that ETH-equivalent tokens care share this.
   static const ETHExchangeRateSource = BinanceExchangeRateSource(symbolOverride: 'ETH');
   static const TokenType ETH = TokenType(
-    name: 'ETH',
     symbol: 'ETH',
     exchangeRateSource: ETHExchangeRateSource,
     chainId: Chains.ETH_CHAINID,
   );
 
   static TokenType OXT = TokenType(
-    name: 'OXT',
     symbol: 'OXT',
     exchangeRateSource: BinanceExchangeRateSource(),
     chainId: Chains.ETH_CHAINID,
@@ -27,75 +25,64 @@ class TokenTypes {
   );
 
   static const TokenType XDAI = TokenType(
-      name: 'xDAI',
       symbol: 'xDAI',
       // Binance lists DAIUSDT but the value is bogus. The real pair is USDTDAI, so invert.
       exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
       chainId: Chains.XDAI_CHAINID);
 
   static const TokenType TOK = TokenType(
-      name: 'TOK',
       symbol: 'TOK',
       exchangeRateSource: ETHExchangeRateSource,
       chainId: Chains.GANACHE_TEST_CHAINID);
 
   static const TokenType AVAX = TokenType(
-      name: 'Avalanche',
       symbol: 'AVAX',
       exchangeRateSource: BinanceExchangeRateSource(),
       chainId: Chains.AVALANCHE_CHAINID);
 
   static const TokenType BNB = TokenType(
-      name: 'BNB',
       symbol: 'BNB',
       exchangeRateSource: BinanceExchangeRateSource(),
       chainId: Chains.BSC_CHAINID);
 
   static const TokenType MATIC = TokenType(
-      name: 'MATIC',
       symbol: 'MATIC',
       exchangeRateSource: BinanceExchangeRateSource(),
       chainId: Chains.POLYGON_CHAINID);
 
   static const TokenType OETH = TokenType(
-      name: 'OETH',
-      symbol: 'OETH',
+      symbol: 'ETH',
       // OETH is ETH on L2
       exchangeRateSource: ETHExchangeRateSource,
       chainId: Chains.OPTIMISM_CHAINID);
 
   // Aurora is an L2 on Near
   static const TokenType AURORA_ETH = TokenType(
-      name: 'aETH',
-      symbol: 'aETH',
+      symbol: 'ETH',
       // aETH should ultimately track the price of ETH
       exchangeRateSource: ETHExchangeRateSource,
       chainId: Chains.AURORA_CHAINID);
 
   static const TokenType ARBITRUM_ETH = TokenType(
-    name: 'AETH',
-    symbol: 'AETH',
-    // OETH is ETH on L2
+    symbol: 'ETH',
+    // AETH is ETH on L2
     exchangeRateSource: ETHExchangeRateSource,
     chainId: Chains.ARBITRUM_ONE_CHAINID,
   );
 
   static const TokenType FTM = TokenType(
-    name: 'FTM',
     symbol: 'FTM',
     exchangeRateSource: BinanceExchangeRateSource(),
     chainId: Chains.FANTOM_CHAINID,
   );
 
   static const TokenType TLOS = TokenType(
-    name: 'TLOS',
     symbol: 'TLOS',
     exchangeRateSource: NoExchangeRateSource,
     chainId: Chains.TELOS_CHAINID,
   );
 
   static const TokenType RBTC = TokenType(
-    name: 'RBTC',
     symbol: 'RTBC',
     exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'BTC'),
     chainId: Chains.RSK_CHAINID,
@@ -109,7 +96,6 @@ class TokenTypes {
 // Note: tokens such as OXT.
 class TokenType {
   final int chainId;
-  final String name;
   final String symbol;
   final int decimals;
   final ExchangeRateSource exchangeRateSource;
@@ -128,7 +114,6 @@ class TokenType {
 
   const TokenType({
     @required this.chainId,
-    @required this.name,
     @required this.symbol,
     this.exchangeRateSource,
     this.decimals = 18,
@@ -166,13 +151,12 @@ class TokenType {
       other is TokenType &&
           runtimeType == other.runtimeType &&
           chainId == other.chainId &&
-          name == other.name &&
           symbol == other.symbol &&
           decimals == other.decimals;
 
   @override
   int get hashCode =>
-      chainId.hashCode ^ name.hashCode ^ symbol.hashCode ^ decimals.hashCode;
+      chainId.hashCode ^ symbol.hashCode ^ decimals.hashCode;
 
   @override
   String toString() {

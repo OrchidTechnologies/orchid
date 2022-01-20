@@ -1,10 +1,9 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
+import 'package:flutter/rendering.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
+import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_urls.dart';
@@ -12,6 +11,8 @@ import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/collections.dart';
+import 'package:orchid/util/dispose.dart';
+import 'package:orchid/util/poller.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 
@@ -24,15 +25,13 @@ class OrchidWidgetHome extends StatefulWidget {
 
 class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
   List<_ChainModel> _chains = [];
-  Timer _timer;
+  var _disposal = [];
+  bool _showPricesUSD = false;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(Duration(seconds: 15), (timer) async {
-      _update();
-    });
-    _update();
+    Poller.call(_update).nowAndEvery(seconds: 15).dispose(_disposal);
   }
 
   void _update() async {
@@ -40,8 +39,8 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
         .where((e) => ![Chains.GanacheTest].contains(e))
         .map((e) => _ChainModel(
               chain: e,
-              token: e == Chains.Ethereum ? TokenTypes.OXT : e.nativeCurrency,
-              version: e == Chains.Ethereum ? 0 : 1,
+              fundsToken: e.nativeCurrency,
+              version: 1,
             ))
         .toList();
 
@@ -71,51 +70,113 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
 
     var chains = List<_ChainModel>.from(_chains);
     chains.sort((_ChainModel a, _ChainModel b) {
-      return ((a.costToCreateAccountUSD ?? 1e6)
-          .compareTo((b.costToCreateAccountUSD ?? 1e6)));
+      return ((a.totalCostToCreateAccount?.value ?? 1e6)
+          .compareTo((b.totalCostToCreateAccount?.value ?? 1e6)));
     });
 
-    return SizedBox(
-      width: 700,
-      height: 500,
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-                _buildHeaderRow([
-                  "Chain",
-                  "Token",
-                  "Price",
-                  "Create Account Cost",
-                ]).bottom(2),
-                Divider(color: Colors.white.withOpacity(1.0)),
-              ] +
-              chains
-                  .mapIndexed((e, i) =>
-                      _buildChainRow(e, last: i == chains.length - 1))
-                  .toList() +
-              [pady(24), text],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SizedBox(
+        width: _totalWidth,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+                  _buildHeaderRow(_columnTitles).bottom(2),
+                  Divider(color: Colors.white.withOpacity(1.0)),
+                ] +
+                chains
+                    .mapIndexed((e, i) =>
+                        _buildChainRow(e, last: i == chains.length - 1))
+                    .toList() +
+                [pady(24), text],
+          ),
         ),
       ),
     );
   }
 
+  final _columnTitles = [
+    "Chain",
+    "Token",
+    "Min Deposit",
+    "Min Balance",
+    "Fund Fee",
+    "Withdraw Fee"
+  ];
+  final _columnSizes = [215, 80, 135, 135, 110, 140];
+
+  double get _totalWidth {
+    return _columnSizes.reduce((value, element) => value + element).toDouble() +
+        80.0;
+  }
+
   Widget column(int i, {Widget child}) {
-    final sizes = [215, 80, 130, 220];
     return SizedBox(
-      width: sizes[i].toDouble(),
+      width: _columnSizes[i].toDouble(),
       child: child,
     );
   }
 
   Widget _buildHeaderRow(List<String> titles) {
-    return Row(
-      children:
-          titles.mapIndexed((e, i) => column(i, child: Text(e).title)).toList(),
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _showPricesUSD = !_showPricesUSD;
+                });
+              },
+              child: Text(_showPricesUSD ? "TOKEN VALUES" : "USD PRICES")
+                  .caption
+                  .tappable.right(32),
+            ),
+          ],
+        ),
+        pady(16),
+        Row(
+          children: titles
+              .mapIndexed((e, i) => column(i, child: Text(e).title.copyWith(textScaleFactor: 1)))
+              .toList(),
+        ),
+      ],
     );
   }
 
+  // Chain | Token | Min Deposit | Min Balance | Fund fee | Withdraw fee
   Widget _buildChainRow(_ChainModel model, {bool last = false}) {
+    final stats = model.stats;
+
+    final chainCell = Row(
+      children: [
+        SizedBox(height: 20, width: 20, child: model.chain.icon),
+        padx(16),
+        Text(model.chain.name).body2,
+      ],
+    );
+
+    final tokenCell = Text(model.fundsToken.symbol).body2;
+
+    Widget valueCell(Token token, USD tokenPrice) {
+      if (token == null || tokenPrice == null) {
+        return Container();
+      }
+      if (_showPricesUSD) {
+        return Text((tokenPrice * token.floatValue).formatCurrency()).body2;
+      } else {
+        return Text(token.toFixedLocalized()).body2;
+      }
+    }
+
+    final depositCell = valueCell(stats?.createDeposit, model.fundsTokenPrice);
+    final balanceCell = valueCell(stats?.createBalance, model.fundsTokenPrice);
+    final fundCell = valueCell(stats?.createGas, model.gasTokenPrice);
+    final withdrawCell = valueCell(stats?.withdrawGas, model.gasTokenPrice);
+
     return Tooltip(
       message: model.tooltipText,
       textStyle: OrchidText.body2.copyWith(height: 1.2),
@@ -123,36 +184,13 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
         children: [
           Row(
             children: [
-              column(
-                0,
-                child: Row(
-                  children: [
-                    SizedBox(height: 20, width: 20, child: model.chain.icon),
-                    padx(16),
-                    Text(model.chain.name).body2,
-                  ],
-                ),
-              ),
-              column(
-                1,
-                child: Text(model.token.symbol).body2,
-              ),
-              column(
-                2,
-                child: model.tokenPriceUSD != null
-                    ? Text('\$' + formatCurrency(model.tokenPriceUSD, digits: 2))
-                        .body2
-                    : Container(),
-              ),
-              column(
-                3,
-                child: model.costToCreateAccountUSD != null
-                    ? Text('\$' +
-                            formatCurrency(model.costToCreateAccountUSD,
-                                digits: 2))
-                        .body2
-                    : Container(),
-              ),
+              column(0, child: chainCell),
+              column(1, child: tokenCell),
+              column(2, child: depositCell),
+              column(3, child: balanceCell),
+              column(4, child: fundCell),
+              column(5, child: withdrawCell),
+              // Min Deposit | Min Balance | Fund fee | Withdraw fee
             ],
           ),
           if (!last) Divider(color: Colors.white.withOpacity(0.5)),
@@ -163,51 +201,55 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
 
   @override
   void dispose() {
-    _timer.cancel();
+    _disposal.dispose();
     super.dispose();
   }
 }
 
 class _ChainModel {
   static final targetEfficiency = 0.9;
-  static final targetTickets = 2;
+  static final targetTickets = 4;
 
   final Chain chain;
-  final TokenType token;
+  final TokenType fundsToken;
 
   /// The contract version for price calculations
   final int version;
 
-  double tokenPriceUSD;
-  double costToCreateAccountUSD;
+  PotStats stats;
+  USD totalCostToCreateAccount;
+  USD fundsTokenPrice;
+  USD gasTokenPrice;
 
   _ChainModel({
     @required this.chain,
-    @required this.token,
+    @required this.fundsToken,
     this.version = 1,
   });
 
   String get tooltipText {
-    return chain.name;
+    return "${chain.name} ${fundsToken.symbol}, total: ${totalCostToCreateAccount?.formatCurrency() ?? ''}";
   }
 
   Future<void> init() async {
-    tokenPriceUSD = await OrchidPricing().usdPrice(token);
     if (version == 1) {
-      costToCreateAccountUSD = (await MarketConditionsV1.getCostToCreateAccount(
-                  chain: chain,
-                  efficiency: targetEfficiency,
-                  tickets: targetTickets))
-              .floatValue *
-          tokenPriceUSD;
-      // log("XXX: chain = $chain, tokenPrice = $tokenPriceUSD, cost = $costToCreateAccountUSD");
+      stats = await MarketConditionsV1.getPotStats(
+          chain: chain, efficiency: targetEfficiency, tickets: targetTickets);
+
+      fundsTokenPrice = USD(await OrchidPricing().usdPrice(fundsToken));
+      gasTokenPrice = USD(await OrchidPricing().usdPrice(chain.nativeCurrency));
+      totalCostToCreateAccount = await OrchidPricing()
+              .tokenToUSD(stats.createBalance + stats.createDeposit) +
+          await OrchidPricing().tokenToUSD(stats.createGas);
     }
+    /*
     if (version == 0) {
-      costToCreateAccountUSD = (await MarketConditionsV0.getCostToCreateAccount(
+      costToCreateAccountUSD = (await MarketConditionsV0.getPotStats(
                   efficiency: targetEfficiency, tickets: targetTickets))
               .floatValue *
           tokenPriceUSD;
       // log("XXX: V0! tokenPrice = $tokenPriceUSD, cost = $costToCreateAccountUSD");
     }
+     */
   }
 }

@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
+import 'package:orchid/orchid/account/account_detail_poller.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/v1/dapp_withdraw_funds_v1.dart';
 import '../dapp_add_funds.dart';
 import 'dapp_advanced_funds_v1.dart';
-import '../account_manager/account_detail_poller.dart';
 
 /// The tabs for interacting with the V1 contract.
 class DappTabsV1 extends StatefulWidget {

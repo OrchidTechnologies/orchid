@@ -54,14 +54,17 @@ class MarketConditionsV1 implements MarketConditions {
       {bool refresh = false}) async {
     Token gasPrice =
         await OrchidEthereumV1().getGasPrice(chain, refresh: refresh);
-    //log("gas price for chain: ${chain.name} = ${gasPrice.intValue}");
+    return _getCostToRedeemTicketFor(gasPrice);
+  }
+
+  static Future<Token> _getCostToRedeemTicketFor(Token gasPrice) async {
     return gasPrice * OrchidContractV1.gasCostToRedeemTicket.toDouble();
   }
 
-  /// Determine the pot composition and gas required for the desired
-  /// efficiency and return the total tokens.
+  /// Given a desired efficiency and number of tickets, determine the required
+  /// pot composition and gas required to create the account.
   // TODO: If we use non-native tokens in the future with v1 we will have to update this.
-  static Future<Token> getCostToCreateAccount({
+  static Future<PotStats> getPotStats({
     Chain chain,
     double efficiency,
     int tickets,
@@ -69,14 +72,27 @@ class MarketConditionsV1 implements MarketConditions {
     if (efficiency < 0 || efficiency >= 1.0) {
       throw Exception("invalid efficiency: $efficiency");
     }
+    Token gasPrice = await OrchidEthereumV1().getGasPrice(chain);
+    if (gasPrice.isZero()) {
+      log("Warning: zero gas price for chain: $chain");
+    }
     final requiredTicketValue =
-        await getCostToRedeemTicket(chain) / (1 - efficiency);
+        await _getCostToRedeemTicketFor(gasPrice) / (1 - efficiency);
     final requiredDeposit = requiredTicketValue * 2.0;
     final requiredBalance = requiredTicketValue * tickets.toDouble();
     final requiredGas = await chain.getGasPrice() *
         OrchidContractV1.createAccountMaxGas.toDouble();
-    log("XXX: getCostToCreateAccount for ${chain.name}: $requiredTicketValue, $requiredDeposit, $requiredBalance, $requiredGas");
-    return requiredDeposit + requiredBalance + requiredGas;
+
+    return PotStats(
+      chain: chain,
+      version: 1,
+      efficiency: efficiency,
+      tickets: tickets,
+      createBalance: requiredBalance,
+      createDeposit: requiredDeposit,
+      createGas: requiredGas,
+      gasPrice: gasPrice,
+    );
   }
 
   @override
