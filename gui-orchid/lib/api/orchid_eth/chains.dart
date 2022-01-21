@@ -65,8 +65,8 @@ class Chains {
     chainId: XDAI_CHAINID,
     name: "Gnosis",
     nativeCurrency: TokenTypes.XDAI,
-    // providerUrl: 'https://dai.poa.network',
-    providerUrl: 'https://rpc.xdaichain.com/',
+    // providerUrl: 'https://rpc.xdaichain.com/',
+    providerUrl: 'https://rpc.gnosischain.com/',
     iconPath: 'assets/svg/chains/gnosis-chain-white.svg',
     supportsLogs: true,
   );
