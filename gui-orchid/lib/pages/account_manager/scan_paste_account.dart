@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
-import 'app_colors.dart';
+import '../../common/app_colors.dart';
 
 typedef ImportAccountCompletion = void Function(
     ParseOrchidIdentityResult result);

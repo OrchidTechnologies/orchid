@@ -1,5 +1,6 @@
 import 'dart:math' as Math;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import '../orchid_crypto.dart';
@@ -10,7 +11,8 @@ class TokenTypes {
   static const ExchangeRateSource NoExchangeRateSource = null;
 
   // Override the symbol to ETH so that ETH-equivalent tokens care share this.
-  static const ETHExchangeRateSource = BinanceExchangeRateSource(symbolOverride: 'ETH');
+  static const ETHExchangeRateSource =
+      BinanceExchangeRateSource(symbolOverride: 'ETH');
   static const TokenType ETH = TokenType(
     symbol: 'ETH',
     exchangeRateSource: ETHExchangeRateSource,
@@ -27,7 +29,8 @@ class TokenTypes {
   static const TokenType XDAI = TokenType(
       symbol: 'xDAI',
       // Binance lists DAIUSDT but the value is bogus. The real pair is USDTDAI, so invert.
-      exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
+      exchangeRateSource:
+          BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
       chainId: Chains.XDAI_CHAINID);
 
   static const TokenType TOK = TokenType(
@@ -99,6 +102,7 @@ class TokenType {
   final String symbol;
   final int decimals;
   final ExchangeRateSource exchangeRateSource;
+  final String _iconPath;
 
   /// The ERC20 contract address if this is a non-native token on its chain.
   final EthereumAddress erc20Address;
@@ -112,13 +116,23 @@ class TokenType {
     return Chains.chainFor(chainId);
   }
 
+  /// The asset path for the token icon or the chain icon if no token icon was supplied.
+  String get iconPath {
+    return _iconPath ?? chain.iconPath;
+  }
+
+  SvgPicture get icon {
+    return SvgPicture.asset(iconPath);
+  }
+
   const TokenType({
     @required this.chainId,
     @required this.symbol,
     this.exchangeRateSource,
     this.decimals = 18,
     this.erc20Address,
-  });
+    String iconPath,
+  }) : this._iconPath = iconPath;
 
   // Return 1eN where N is the decimal count.
   int get multiplier {
@@ -155,8 +169,7 @@ class TokenType {
           decimals == other.decimals;
 
   @override
-  int get hashCode =>
-      chainId.hashCode ^ symbol.hashCode ^ decimals.hashCode;
+  int get hashCode => chainId.hashCode ^ symbol.hashCode ^ decimals.hashCode;
 
   @override
   String toString() {

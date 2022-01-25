@@ -3,7 +3,7 @@ import 'package:orchid/api/configuration/orchid_user_config/orchid_account_impor
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_sizes.dart';
-import 'package:orchid/common/scan_paste_account.dart';
+import 'package:orchid/pages/account_manager/scan_paste_account.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';

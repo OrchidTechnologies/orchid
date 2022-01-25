@@ -216,8 +216,6 @@ class Chain {
   final String providerUrl;
   final int requiredConfirmations;
   final bool supportsLogs;
-
-  /// Optional icon svg
   final String iconPath;
 
   /// Indicates that transaction may incur additional fees outside the standard

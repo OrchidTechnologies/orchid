@@ -111,7 +111,7 @@ class BinanceExchangeRateSource extends ExchangeRateSource {
     logDetail("pricing: Binance fetching rate for: $tokenType");
     try {
       var response = await http.get(
-        _url(tokenType),
+        Uri.parse(_url(tokenType)),
         headers: OrchidPlatform.isWeb
             ? {}
             : {'Referer': 'https://account.orchid.com'},

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/util/images.dart';
 import 'package:orchid/util/location.dart';
 import 'package:orchid/common/path_dash.dart';
@@ -13,7 +14,7 @@ class WorldMapImage {
   final projectionType = MapProjectionType.Gall;
 
   /// Map asset and size
-  final asset = 'assets/images/3.0x/world_map.png';
+  final asset = OrchidAsset.image.world_map_3x;
   final double aspectRatio = 2459.0 / 1350.0;
 
   /// An normalized (0-1) offset for tweaking the map image to align
@@ -30,6 +31,8 @@ class WorldMapImage {
         return location.toMercatorProjection();
       case MapProjectionType.Gall:
         return location.toGallProjection();
+      default:
+        throw Exception();
     }
   }
 }
@@ -78,7 +81,7 @@ class _ConnectWorldMapState extends State<ConnectWorldMap>
     _drawRouteAnimation =
         CurvedAnimation(parent: _masterAnimController, curve: Interval(0, 0.5));
 
-    Images.loadImage('assets/images/3.0x/map_pin.png').then((image) {
+    Images.loadImage(OrchidAsset.image.map_pin_3x).then((image) {
       setState(() {
         this.pinImage = image;
         debugPrint("image loaded: $image");

@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:ethereum_address/ethereum_address.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/hex.dart';
@@ -13,7 +12,7 @@ import 'package:pointycastle/key_generators/ec_key_generator.dart';
 import 'package:pointycastle/src/utils.dart' as decode;
 import 'package:uuid/uuid.dart';
 import 'package:uuid/uuid_util.dart';
-import 'package:web3dart/credentials.dart';
+import 'package:web3dart/credentials.dart' as web3;
 import 'package:web3dart/crypto.dart';
 
 class Crypto {
@@ -208,8 +207,10 @@ class StoredEthereumKey {
     return list.firstWhere((key) => key.uid == uid, orElse: () => null);
   }
 
-  static StoredEthereumKey findByAddress(List<StoredEthereumKey> list, EthereumAddress signerAddress) {
-    return list.firstWhere((key) => key.address == signerAddress, orElse: () => null);
+  static StoredEthereumKey findByAddress(
+      List<StoredEthereumKey> list, EthereumAddress signerAddress) {
+    return list.firstWhere((key) => key.address == signerAddress,
+        orElse: () => null);
   }
 
   static StoredEthereumKey generate() {
@@ -314,7 +315,7 @@ class EthereumAddress {
       throw Exception("invalid bigint");
     }
     var raw = value.toRadixString(16).padLeft(40, '0');
-    var eip55 = checksumEthereumAddress(raw);
+    var eip55 = Web3DartUtils.eip55ChecksumEthereumAddress(raw);
     return (prefix ? eip55 : Hex.remove0x(eip55));
   }
 
@@ -332,7 +333,7 @@ class EthereumAddress {
       throw Exception("invalid, null");
     }
     // eip55 check
-    if (!isValidEthereumAddress(text)) {
+    if (!Web3DartUtils.isEip55ValidEthereumAddress(text)) {
       throw Exception("invalid eth address: $text");
     }
     text = Hex.remove0x(text);
@@ -362,8 +363,23 @@ class EthereumAddress {
 }
 
 class Web3DartUtils {
+  /// Converts an Ethereum address to a checksummed address (EIP-55).
+  static String eip55ChecksumEthereumAddress(String address) {
+    return web3.EthereumAddress.fromHex(address).hexEip55;
+  }
+
+  /// Returns true if the eth address is valid and conforms to the rules of EIP55.
+  static bool isEip55ValidEthereumAddress(String address) {
+    try {
+      web3.EthereumAddress.fromHex(address);
+    } catch (err) {
+      return false;
+    }
+    return true;
+  }
+
   static MsgSignature web3Sign(Uint8List payload, StoredEthereumKey key) {
-    final credentials = EthPrivateKey.fromHex(key.formatSecretFixed());
+    final credentials = web3.EthPrivateKey.fromHex(key.formatSecretFixed());
     //print("payload = ${hex.encode(payload)}");
     // Use web3 sign(), not web3 credentials.sign() which does a keccak256 on payload.
     return sign(payload, credentials.privateKey);

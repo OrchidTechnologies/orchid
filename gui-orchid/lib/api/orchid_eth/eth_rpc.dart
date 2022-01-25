@@ -38,7 +38,7 @@ class EthereumJsonRpc {
 
     // do the post
     var response = await http.post(
-      url,
+      Uri.parse(url),
       headers: headers,
       body: postBody,
     );

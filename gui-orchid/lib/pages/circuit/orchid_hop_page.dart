@@ -130,9 +130,11 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         _updatingAccounts = true;
       });
       AccountFinder().find((accounts) async {
-        setState(() {
-          _updatingAccounts = false;
-        });
+        if (mounted) {
+          setState(() {
+            _updatingAccounts = false;
+          });
+        }
       });
     }
   }

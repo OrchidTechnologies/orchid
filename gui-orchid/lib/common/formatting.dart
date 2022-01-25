@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-// TODO: Move to util
-
 Widget padx(double width) {
   return SizedBox(width: width);
 }

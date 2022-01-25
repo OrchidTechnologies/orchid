@@ -4,8 +4,6 @@ import 'package:orchid/api/orchid_docs.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:html/dom.dart' as dom;
-import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -39,16 +37,19 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
 
   Widget buildPage(BuildContext context) {
     return SafeArea(
-      child: Center(
-        child: Scrollbar(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[html(_helpText)],
-              ),
-            ),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          // highlightColor: OrchidColors.tappable,
+          scrollbarTheme: ScrollbarThemeData(
+            thumbColor:
+                MaterialStateProperty.all(Colors.white.withOpacity(0.4)),
+            // isAlwaysShown: true,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: html(_helpText),
           ),
         ),
       ),
@@ -58,22 +59,22 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
   // flutter_hmtl supports a subset of html: https://pub.dev/packages/flutter_html
   Widget html(String html) {
     return Html(
+      key: Key(html),
       data: html,
-      defaultTextStyle: OrchidText.body2,
-      linkStyle: OrchidText.body2.copyWith(color: OrchidColors.purple_bright),
-      onLinkTap: (url) {
+      onAnchorTap: (url, context, attributes, element) {
         launch(url, forceSafariVC: false);
       },
-      onImageTap: (src) {},
-      // This is our css :)
-      customTextStyle: (dom.Node node, TextStyle baseStyle) {
-        if (node is dom.Element) {
-          switch (node.localName) {
-            case 'h1': return baseStyle.merge(OrchidText.title.copyWith(fontSize: 24).copyWith(height: 1.0));
-            case 'h2': return baseStyle.merge(OrchidText.title.copyWith(height: 1.0));
-          }
-        }
-        return baseStyle;
+      style: {
+        'body': Style.fromTextStyle(OrchidText.body2),
+        // Note: This seems to be the only way to control the color of the bullet
+        // Note: It does not default to match the body text color.
+        'ul': Style.fromTextStyle(OrchidText.body2).copyWith(
+          listStyleType: ListStyleType.fromWidget(Text('•').body2),
+        ),
+        'a': Style.fromTextStyle(OrchidText.body2.linkStyle),
+        'h1': Style.fromTextStyle(
+            OrchidText.title.copyWith(fontSize: 24, height: 1.0)),
+        'h2': Style.fromTextStyle(OrchidText.title.copyWith(height: 1.0)),
       },
     );
   }

@@ -20,36 +20,34 @@ dependencies:
   barcode_scan: 2.0.2
   cupertino_icons: 1.0.2
   dartjsengine: 1.0.1
-  dotted_border: 1.0.7
+  dotted_border: 2.0.0+2
   email_validator: 2.0.1
-  ethereum_address: 1.0.1 # for EIP-55
   flare_flutter: 2.0.6
   flutter:
     sdk: flutter
   flutter_cupertino_localizations: 1.0.1
-  # XXX: our code is incompatible with 1.0+
-  flutter_html: 0.11.1
+  flutter_html: ^3.0.0-alpha.2
   flutter_localizations:
     sdk: flutter
   #flutter_secure_storage: 3.3.5 # XXX: macOS
-  flutter_svg: 0.19.3
+  flutter_svg: 1.0.3
   font_awesome_flutter: 9.0.0
-  http: 0.12.2 # XXX: web3dart
+  http: 0.13.4
   in_app_purchase:
     path: in_app_purchase
   intl: 0.17.0
-  jdenticon_dart: 1.2.1+1 # XXX: uuid (crypto)
+  jdenticon_dart: 2.0.0
   percent_indicator: 3.0.1
-  pointycastle: 1.0.2
+  pointycastle: 3.5.0
   provider: 5.0.0
   qr_flutter: 4.0.0
   rxdart: 0.25.0
-  shared_preferences: 2.0.5
+  shared_preferences: 2.0.12
   styled_text: 3.0.4
   sqflite: 2.0.0+3
   url_launcher: 6.0.3
-  uuid: 2.2.2 # XXX: web3dart
-  web3dart: 1.2.3
+  uuid: 3.0.5
+  web3dart: 2.3.3
   window_size:
     path: flutter-desktop-embedding/plugins/window_size
 
@@ -57,6 +55,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   pedantic: 1.11.0
+  #build_runner:
+  #flutter_gen_runner: 4.1.5
 
 flutter:
   generate: true
