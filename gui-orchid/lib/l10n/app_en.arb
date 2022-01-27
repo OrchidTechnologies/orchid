@@ -399,7 +399,7 @@
           }
       }
     },
-    "theFundsWillBeAvailableForWithdrawalInTime": "The funds will be available for withdrawal in ${time}.",
+    "theFundsWillBeAvailableForWithdrawalInTime": "The funds will be available for withdrawal in {time}.",
     "@theFundsWillBeAvailableForWithdrawalInTime": {
         "placeholders": {
             "time": {
