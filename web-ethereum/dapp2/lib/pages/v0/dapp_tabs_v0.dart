@@ -44,6 +44,7 @@ class _DappTabsV0State extends State<DappTabsV0> {
     var tabStyle = OrchidText.button;
     return SizedBox(
       height: 1000,
+      width: 700,
       child: DefaultTabController(
         initialIndex: 0,
         length: 4,
