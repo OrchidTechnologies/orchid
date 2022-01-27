@@ -39,7 +39,7 @@ class LotteryPot {
 
   String unlockInString() {
     var unlockIn = unlockTime.difference(DateTime.now());
-    return "${unlockIn.inHours}:${unlockIn.inMinutes.remainder(60)}:${(unlockIn.inSeconds.remainder(60))}";
+    return '${unlockIn.inHours}:${unlockIn.inMinutes.remainder(60)}:${(unlockIn.inSeconds.remainder(60))}';
   }
 
   /// The amount that can be withdrawn by moving any unlocked funds from deposit

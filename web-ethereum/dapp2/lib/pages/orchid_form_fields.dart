@@ -28,7 +28,7 @@ class LabeledTokenValueField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var tokenText = Text(type.symbol ?? "").button.height(1.5);
+    var tokenText = Text(type.symbol ?? '').button.height(1.5);
     return Row(
       children: [
         SizedBox(width: labelWidth ?? 80, child: Text(label ?? '').button),
@@ -61,7 +61,7 @@ class TokenValueFieldController implements Listenable {
       return null;
     }
     final text = _textController.text;
-    if (text == null || text == "") {
+    if (text == null || text == '') {
       return type.zero;
     }
     try {

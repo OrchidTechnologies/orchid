@@ -9,6 +9,7 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/v1/dapp_withdraw_funds_v1.dart';
 import '../dapp_add_funds.dart';
 import 'dapp_advanced_funds_v1.dart';
+import 'package:orchid/util/localization.dart';
 
 /// The tabs for interacting with the V1 contract.
 class DappTabsV1 extends StatefulWidget {
@@ -59,9 +60,9 @@ class _DappTabsV1State extends State<DappTabsV1> {
               bottom: TabBar(
                 indicatorColor: OrchidColors.tappable,
                 tabs: [
-                  Tab(child: FittedBox(child: Text("ADD FUNDS", style: tabStyle))),
-                  Tab(child: FittedBox(child: Text("WITHDRAW FUNDS", style: tabStyle))),
-                  Tab(child: FittedBox(child: Text("ADVANCED", style: tabStyle))),
+                  Tab(child: FittedBox(child: Text(s.addFunds, style: tabStyle))),
+                  Tab(child: FittedBox(child: Text(s.withdrawFunds, style: tabStyle))),
+                  Tab(child: FittedBox(child: Text(s.advanced, style: tabStyle))),
                 ],
               ),
             ),

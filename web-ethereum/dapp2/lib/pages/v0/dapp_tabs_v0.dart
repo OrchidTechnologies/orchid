@@ -10,6 +10,7 @@ import '../dapp_add_funds.dart';
 import 'dapp_lock_warn_v0.dart';
 import 'dapp_move_funds_v0.dart';
 import 'dapp_withdraw_funds_v0.dart';
+import 'package:orchid/util/localization.dart';
 
 /// The tabs for interacting with the V0 contract.
 class DappTabsV0 extends StatefulWidget {
@@ -55,10 +56,10 @@ class _DappTabsV0State extends State<DappTabsV0> {
               bottom: TabBar(
                 indicatorColor: OrchidColors.tappable,
                 tabs: [
-                  Tab(child: FittedBox(child: Text("ADD FUNDS", style: tabStyle))),
-                  Tab(child: FittedBox(child: Text("WITHDRAW FUNDS", style: tabStyle))),
-                  Tab(child: FittedBox(child: Text("MOVE FUNDS").button)),
-                  Tab(child: FittedBox(child: Text("LOCK / UNLOCK").button)),
+                  Tab(child: FittedBox(child: Text(s.addFunds, style: tabStyle))),
+                  Tab(child: FittedBox(child: Text(s.withdrawFunds, style: tabStyle))),
+                  Tab(child: FittedBox(child: Text(s.moveFunds).button)),
+                  Tab(child: FittedBox(child: Text(s.lockUnlock).button)),
                 ],
               ),
             ),

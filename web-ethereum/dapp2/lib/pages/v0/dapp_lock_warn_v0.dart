@@ -8,6 +8,7 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import '../dapp_button.dart';
+import 'package:orchid/util/localization.dart';
 
 class LockWarnPaneV0 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -45,10 +46,13 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
       return Container();
     }
     var statusText = pot.isUnlocked
-        ? "Your deposit of ${pot.warned.formatCurrency()} is unlocked."
-        : "Your deposit of ${pot.deposit.formatCurrency()} is ${pot.isUnlocking ? 'unlocking' : 'locked'}.";
+        ? s.yourDepositOfAmountIsUnlocked(pot.warned.formatCurrency())
+        : s.yourDepositOfAmountIsUnlockingOrUnlocked(
+            pot.deposit.formatCurrency(),
+            pot.isUnlocking ? s.unlocking : s.locked);
     statusText += pot.isUnlocking
-        ? "\nThe funds will be available for withdrawal in ${pot.unlockInString()}."
+        ? '\n' +
+            s.theFundsWillBeAvailableForWithdrawalInTime(pot.unlockInString())
         : '';
 
     return Column(
@@ -66,7 +70,7 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
           children: [
             if (pot.isUnlocked || pot.isUnlocking)
               DappButton(
-                  text: "LOCK DEPOSIT",
+                  text: s.lockDeposit,
                   onPressed: _formEnabled()
                       ? () {
                           _lockOrUnlock(lock: true);
@@ -74,7 +78,7 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
                       : null)
             else
               DappButton(
-                  text: "UNLOCK DEPOSIT",
+                  text: s.unlockDeposit,
                   onPressed: _formEnabled()
                       ? () {
                           _lockOrUnlock(lock: false);
@@ -102,7 +106,7 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
       UserPreferences().addTransaction(txHash);
       setState(() {});
     } catch (err) {
-      log("Error on move funds: $err");
+      log('Error on move funds: $err');
     }
     setState(() {
       _txPending = false;

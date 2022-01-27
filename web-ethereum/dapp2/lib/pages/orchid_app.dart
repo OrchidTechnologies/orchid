@@ -40,7 +40,7 @@ class _OrchidAppState extends State<OrchidApp> {
       onGenerateInitialRoutes: (initialRoute) =>
           [MaterialPageRoute(builder: (_) => homePage)],
       onGenerateRoute: (settings) {
-        //log("generate route: $settings");
+        //log('generate route: $settings');
         return MaterialPageRoute(builder: (_) => homePage);
       },
     );
@@ -56,7 +56,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   @override
   void initState() {
     super.initState();
-    log("XXX: OrchidAppNoTabs init");
+    log('XXX: OrchidAppNoTabs init');
   }
 
   @override

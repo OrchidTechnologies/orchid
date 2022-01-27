@@ -122,7 +122,6 @@ class _DappHomeState extends State<DappHome> {
         funder: _web3Context.walletAddress,
         chainId: _web3Context.chain.chainId,
       );
-      // log("XXX: selected account changed: $account");
       _accountDetail = AccountDetailPoller(
         account: account,
         pollingPeriod: Duration(seconds: 5),
@@ -255,7 +254,7 @@ class _DappHomeState extends State<DappHome> {
           accountDetail: _accountDetail,
         );
       default:
-        throw Exception("unknown contract version");
+        throw Exception('unknown contract version');
     }
   }
 
@@ -356,7 +355,7 @@ class _DappHomeState extends State<DappHome> {
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 16.0),
-            child: Text("Orchid Identity:").title,
+            child: Text(s.orchidIdentity + ':').title,
           ),
           pady(12),
           OrchidTextField(
@@ -383,13 +382,14 @@ class _DappHomeState extends State<DappHome> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         DappButton(
-          text: "CONNECT",
+          text: s.connect.toUpperCase(),
           onPressed: _connected ? null : _connectEthereum,
         ),
         if (_showWalletConnect) ...[
           padx(24),
           DappButton(
-            text: "WALLET CONNECT",
+            // 'WalletConnect' is a name, not a description
+            text: "WalletConnect",
             onPressed: _connected ? null : _connectWalletConnect,
             trailing: Padding(
               padding: const EdgeInsets.only(left: 10.0, right: 16.0),
@@ -399,7 +399,7 @@ class _DappHomeState extends State<DappHome> {
         ],
         padx(24),
         DappButton(
-          text: "DISCONNECT",
+          text: s.disconnect.toUpperCase(),
           onPressed: _connected ? _disconnect : null,
         ),
         if (versions != null) padx(24),
@@ -459,8 +459,8 @@ class _DappHomeState extends State<DappHome> {
     if (!Ethereum.isSupported) {
       AppDialogs.showAppDialog(
           context: context,
-          title: "No Wallet",
-          bodyText: "No Wallet or Browser not supported.");
+          title: s.noWallet,
+          bodyText: s.noWalletOrBrowserNotSupported);
       return;
     }
 
@@ -483,14 +483,14 @@ class _DappHomeState extends State<DappHome> {
     try {
       await wc.connect();
     } catch (err) {
-      log("wc connect, err = $err");
+      log('wc connect, err = $err');
       return;
     }
     if (!wc.connected) {
       AppDialogs.showAppDialog(
           context: context,
-          title: "Error",
-          bodyText: "Failed to connect to WalletConnect.");
+          title: s.error,
+          bodyText: s.failedToConnectToWalletconnect);
       return;
     }
 
@@ -501,22 +501,22 @@ class _DappHomeState extends State<DappHome> {
 
   // Init a new context, disconnecting any old context and registering listeners
   void _setNewContex(OrchidWeb3Context web3Context) async {
-    log("XXX: New context: $web3Context");
+    log('XXX: New context: $web3Context');
 
     // Clear the old context, removing listeners and disposing of it properly.
     _web3Context?.disconnect();
 
     // Register listeners on the new context
     web3Context?.onAccountsChanged((accounts) {
-      log("web3: accounts changed: $accounts");
+      log('web3: accounts changed: $accounts');
       _onAccountOrChainChange();
     });
     web3Context?.onChainChanged((chainId) {
-      log("web3: chain changed: $chainId");
+      log('web3: chain changed: $chainId');
       _onAccountOrChainChange();
     });
-    // _context?.onConnect(() { log("web3: connected"); });
-    // _context?.onDisconnect(() { log("web3: disconnected"); });
+    // _context?.onConnect(() { log('web3: connected'); });
+    // _context?.onDisconnect(() { log('web3: disconnected'); });
     web3Context?.onWalletUpdate(() {
       // Update the UI
       setState(() {});
@@ -564,7 +564,7 @@ class _DappHomeState extends State<DappHome> {
 
   /// Update on change of address or chain by rebuilding the web3 context.
   void _onAccountOrChainChange() async {
-    log("XXX: _onAccountOrChainChanged");
+    log('XXX: _onAccountOrChainChanged');
     if (_web3Context == null) {
       return;
     }
@@ -607,8 +607,8 @@ class _DappHomeState extends State<DappHome> {
   void _invalidChain() {
     AppDialogs.showAppDialog(
         context: context,
-        title: "Unknown Chain",
-        bodyText: "The Orchid Account Manager doesn't support this chain yet.");
+        title: s.unknownChain,
+        bodyText: s.theOrchidAccountManagerDoesntSupportThisChainYet);
 
     _setNewContex(null);
   }
@@ -616,9 +616,9 @@ class _DappHomeState extends State<DappHome> {
   void _noContract() {
     AppDialogs.showAppDialog(
         context: context,
-        title: "Orchid isn't on this chain",
+        title: s.orchidIsntOnThisChain,
         bodyText:
-            "The Orchid contract hasn't been deployed on this chain yet.");
+            s.theOrchidContractHasntBeenDeployedOnThisChainYet);
 
     _setNewContex(null);
   }

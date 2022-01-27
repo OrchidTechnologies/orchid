@@ -27,11 +27,11 @@ class _OrchidAppState extends State<OrchidApp> {
       debugShowCheckedModeBanner: false,
       // Without this the root widget is created twice?
       onGenerateInitialRoutes: (initialRoute) {
-        log("XXX: initialRoute: $initialRoute");
+        log('XXX: initialRoute: $initialRoute');
         return [MaterialPageRoute(builder: (_) => homePage)];
       },
       onGenerateRoute: (settings) {
-        log("XXX: generate route: $settings");
+        log('XXX: generate route: $settings');
         return MaterialPageRoute(builder: (_) => homePage);
       },
     );
@@ -49,7 +49,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
     OrchidPlatform.staticLocale = locale;
-    final color = OrchidUserParams().getColor("background_color");
+    final color = OrchidUserParams().getColor('background_color');
     return Container(
       color: color,
       decoration: color == null ? BoxDecoration(

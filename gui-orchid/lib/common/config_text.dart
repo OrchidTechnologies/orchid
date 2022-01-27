@@ -59,7 +59,7 @@ class ConfigLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Align(
         alignment: Alignment.centerLeft,
-        child: Text(text + ":",
+        child: Text(text + ':',
             style: AppText.textLabelStyle
                 .copyWith(fontSize: 20).white));
   }

@@ -16,8 +16,7 @@
         "type": "text",
         "placeholders": {
             "num": {
-                "type": "int",
-                "format": "compactLong"
+                "type": "int"
             }
         }
     },
@@ -176,7 +175,9 @@
     "minTicketsAvailableTickets": "Min Tickets available: {tickets}",
     "@minTicketsAvailableTickets": {
         "placeholders": {
-            "tickets": {}
+            "tickets": {
+                "type": "int"
+            }
         }
     },
     "transactionSentToBlockchain": "Transaction Sent To Blockchain",
@@ -227,7 +228,9 @@
     "averagePriceIsUSDPerGb": "Average price is {price} USD per GB",
     "@averagePriceIsUSDPerGb": {
         "placeholders": {
-            "price": {}
+            "price": {
+                "type": "String"
+            }
         }
     },
     "myOrchidConfig": "My Orchid Config",
@@ -312,5 +315,120 @@
     "weAddedAMethodToPurchaseAnOrchidAccountAnd": "We added a method to purchase an Orchid account and create a single hop circuit from the homescreen to shortcut the onboarding process.",
     "orchidIsUniqueAsAMultiHopOrOnion": "Orchid is unique as a multi-hop or onion routing client supporting multiple VPN protocols. You can set up your connection by chaining together hops from the supported protocols below.\n\nOne hop is like a regular VPN. Three hops (for advanced users) is the classic onion routing choice.  Zero hops allows traffic analysis without any VPN tunnel.",
     "deletingOpenVPNAndWireguardHopsWillLose": "Deleting OpenVPN and Wireguard hops will lose any associated credentials and connection configuration. Be sure to back up any information before continuing.",
-    "thisCannotBeUndoneToSaveThisIdentity": "This cannot be undone.  To save this identity hit cancel and use the Export option"
+    "thisCannotBeUndoneToSaveThisIdentity": "This cannot be undone.  To save this identity hit cancel and use the Export option",
+    "unlockTime": "Unlock Time",
+    "chooseChain": "Choose Chain",
+    "unlocking": "Unlocking",
+    "unlocked": "Unlocked",
+    "orchidTransaction": "Orchid Transaction",
+    "confirmations": "Confirmations",
+    "pending": "Pending...",
+    "txHash": "Tx Hash:",
+    "allOfYourFundsAreAvailableForWithdrawal": "All of your funds are available for withdrawal.",
+    "maxWithdrawOfYourTotalFundsCombinedFunds": "{maxWithdraw} of your {totalFunds} combined funds are currently available for withdrawal.",
+    "@maxWithdrawOfYourTotalFundsCombinedFunds": {
+        "placeholders": {
+            "maxWithdraw": {
+                "type": "String"
+            },
+            "totalFunds": {
+                "type": "String"
+            }
+        }
+    },
+    "alsoUnlockRemainingDeposit": "Also unlock remaining deposit",
+    "ifYouSpecifyLessThanTheFullAmountFundsWill": "If you specify less than the full amount funds will be drawn from your balance first.",
+    "forAdditionalOptionsSeeTheAdvancedPanel": "For additional options see the ADVANCED panel.",
+    "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "If you select the unlock deposit option this transaction will immediately withdraw the specified amount from your balance and also begin the unlock process for your remaining deposit.",
+    "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "Deposit funds are available for withdrawal 24 hours after unlocking.",
+    "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Withdraw funds from your Orchid Account to your current wallet.",
+    "withdrawAndUnlockFunds": "WITHDRAW AND UNLOCK FUNDS",
+    "withdrawFunds": "WITHDRAW FUNDS",
+    "withdraw": "Withdraw",
+    "submitTransaction": "SUBMIT TRANSACTION",
+    "move": "Move",
+    "now": "Now",
+    "amount": "Amount",
+    "available": "Available",
+    "select": "Select",
+    "add": "ADD",
+    "balanceToDeposit": "BALANCE TO DEPOSIT",
+    "depositToBalance": "DEPOSIT TO BALANCE",
+    "setWarnedAmount": "Set Warned Amount",
+    "addFundsToYourOrchidAccountBalanceAndorDeposit": "Add funds to your Orchid Account balance and/or deposit.",
+    "forGuidanceOnSizingYourAccountSee": "For guidance on sizing your account see <link>orchid.com</link>",
+    "currentTokenPreauthorizationAmount": "Current {tokenType} pre-authorization: {amount}",
+    "@currentTokenPreauthorizationAmount": {
+      "placeholders": {
+          "tokenType": {
+              "type": "String"
+          },
+          "amount": {
+              "type": "String"
+          }
+        }
+    },
+    "noWallet": "No Wallet",
+    "noWalletOrBrowserNotSupported": "No Wallet or Browser not supported.",
+    "error": "Error",
+    "failedToConnectToWalletconnect": "Failed to connect to WalletConnect.",
+    "unknownChain": "Unknown Chain",
+    "theOrchidAccountManagerDoesntSupportThisChainYet": "The Orchid Account Manager doesn't support this chain yet.",
+    "orchidIsntOnThisChain": "Orchid isn't on this chain.",
+    "theOrchidContractHasntBeenDeployedOnThisChainYet": "The Orchid contract hasn't been deployed on this chain yet.",
+    "moveFunds": "MOVE FUNDS",
+    "lockUnlock": "LOCK / UNLOCK",
+    "yourDepositOfAmountIsUnlocked": "Your deposit of {amount} is unlocked.",
+    "@yourDepositOfAmountIsUnlocked": {
+        "placeholders": {
+            "amount": {
+            "type": "String"
+        }
+      }
+    },
+    "unlocking": "unlocking",
+    "locked": "locked",
+    "yourDepositOfAmountIsUnlockingOrUnlocked": "Your deposit of {amount} is {unlockingOrUnlocked}.",
+    "@yourDepositOfAmountIsUnlockingOrUnlocked": {
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            },
+          "unlockingOrUnlocked": {
+              "type": "String"
+          }
+      }
+    },
+    "theFundsWillBeAvailableForWithdrawalInTime": "The funds will be available for withdrawal in ${time}.",
+    "@theFundsWillBeAvailableForWithdrawalInTime": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "lockDeposit": "LOCK DEPOSIT",
+    "unlockDeposit": "UNLOCK DEPOSIT",
+    "advanced": "ADVANCED",
+    "linklearnMoreAboutOrchidAccountslink": "<link>Learn more about Orchid Accounts</link>.",
+    "estimatedCostToCreateAnOrchidAccountWith": "Estimated cost to create an Orchid Account with an efficiency of {efficiency} and {num} tickets of value.",
+    "@estimatedCostToCreateAnOrchidAccountWith": {
+        "placeholders": {
+            "efficiency": {
+                "type": "String"
+            },
+            "num": {
+                "type": "int"
+            }
+        }
+    },
+    "chain": "Chain",
+    "token": "Token",
+    "minDeposit": "Min Deposit",
+    "minBalance": "Min Balance",
+    "fundFee": "Fund Fee",
+    "withdrawFee": "Withdraw Fee",
+    "tokenValues": "TOKEN VALUES",
+    "usdPrices": "USD PRICES",
+    "total": "Total"
 }

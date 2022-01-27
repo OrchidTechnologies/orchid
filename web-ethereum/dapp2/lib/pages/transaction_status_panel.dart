@@ -4,17 +4,13 @@ import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/common/formatting.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/util/on_off.dart';
+import 'package:orchid/util/localization.dart';
 
 class TransactionStatusPanel extends StatefulWidget {
-  // TODO: persist this with the tx hashes
-  final String description = "Orchid Transaction";
-
   final Function(String) onDismiss;
   final VoidCallback onTransactionUpdated;
 
@@ -74,7 +70,8 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
     }
 
     // Update listeners on first update or change in confirmation count.
-    if (_lastConfirmationCount == null || confirmations > _lastConfirmationCount) {
+    if (_lastConfirmationCount == null ||
+        confirmations > _lastConfirmationCount) {
       widget.onTransactionUpdated();
     }
     _lastConfirmationCount = confirmations;
@@ -123,13 +120,13 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
   // The spinner
   Column _buildProgressIndicator() {
     var message = _receipt != null
-        ? "Confirmations: ${_receipt.confirmations}"
-        : "Pending...";
+        ? s.confirmations + ': ${_receipt.confirmations}'
+        : s.pending;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text(widget.description ?? "").body1,
-        pady(16),
+        Text(s.orchidTransaction ?? '').body1,
+            pady(16),
         if (!_txComplete)
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
@@ -142,7 +139,7 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
                 width: 200,
                 child: Row(
                   children: [
-                    Text("Tx Hash: ").caption,
+                    Text(s.txHash).caption,
                     Expanded(
                       child: TapToCopyText(
                         _receipt.transactionHash,
@@ -154,13 +151,9 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
                   ],
                 )),
           ),
-        Text(message ?? "").caption,
+        Text(message ?? '').caption,
       ],
     );
-  }
-
-  S get s {
-    return S.of(context);
   }
 
   @override

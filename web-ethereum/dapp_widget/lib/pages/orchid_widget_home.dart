@@ -15,6 +15,7 @@ import 'package:orchid/util/dispose.dart';
 import 'package:orchid/util/poller.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
+import 'package:orchid/util/localization.dart';
 
 class OrchidWidgetHome extends StatefulWidget {
   const OrchidWidgetHome({Key key}) : super(key: key);
@@ -48,7 +49,7 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
       try {
         await e.init();
       } catch (err) {
-        log("Error in init chain model for ${e.chain.name}: $err");
+        log('Error in init chain model for ${e.chain.name}: $err');
       }
       setState(() {});
     }));
@@ -60,9 +61,11 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
     final text = StyledText(
       textAlign: TextAlign.center,
       style: OrchidText.caption,
-      text: "Estimated cost to create an Orchid Account with "
-          "an efficiency of ${_ChainModel.targetEfficiency * 100.0}% and "
-          "${_ChainModel.targetTickets} tickets of value.\n<link>Learn more about Orchid Accounts</link>.",
+      text: s.estimatedCostToCreateAnOrchidAccountWith(
+              '${_ChainModel.targetEfficiency * 100.0}%',
+              _ChainModel.targetTickets) +
+          '\n' +
+          s.linklearnMoreAboutOrchidAccountslink,
       tags: {
         'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),
       },
@@ -83,7 +86,7 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-                  _buildHeaderRow(_columnTitles).bottom(2),
+                  _buildHeaderRow(_columnTitles()).bottom(2),
                   Divider(color: Colors.white.withOpacity(1.0)),
                 ] +
                 chains
@@ -97,14 +100,16 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
     );
   }
 
-  final _columnTitles = [
-    "Chain",
-    "Token",
-    "Min Deposit",
-    "Min Balance",
-    "Fund Fee",
-    "Withdraw Fee"
-  ];
+  List<String> _columnTitles() {
+    return [
+      s.chain,
+      s.token,
+      s.minDeposit,
+      s.minBalance,
+      s.fundFee,
+      s.withdrawFee
+    ];
+  }
   final _columnSizes = [215, 80, 135, 135, 110, 140];
 
   double get _totalWidth {
@@ -131,16 +136,18 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
                   _showPricesUSD = !_showPricesUSD;
                 });
               },
-              child: Text(_showPricesUSD ? "TOKEN VALUES" : "USD PRICES")
+              child: Text(_showPricesUSD ? s.tokenValues : s.usdPrices)
                   .caption
-                  .tappable.right(32),
+                  .tappable
+                  .right(32),
             ),
           ],
         ),
         pady(16),
         Row(
           children: titles
-              .mapIndexed((e, i) => column(i, child: Text(e).title.copyWith(textScaleFactor: 1)))
+              .mapIndexed((e, i) =>
+                  column(i, child: Text(e).title.copyWith(textScaleFactor: 1)))
               .toList(),
         ),
       ],
@@ -178,7 +185,7 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
     final withdrawCell = valueCell(stats?.withdrawGas, model.gasTokenPrice);
 
     return Tooltip(
-      message: model.tooltipText,
+      message: model.tooltipText(context),
       textStyle: OrchidText.body2.copyWith(height: 1.2),
       child: Column(
         children: [
@@ -227,8 +234,10 @@ class _ChainModel {
     this.version = 1,
   });
 
-  String get tooltipText {
-    return "${chain.name} ${fundsToken.symbol}, total: ${totalCostToCreateAccount?.formatCurrency() ?? ''}";
+  String tooltipText(BuildContext context) {
+    return '${chain.name} ${fundsToken.symbol}, ' +
+        context.s.total +
+        ': ${totalCostToCreateAccount?.formatCurrency() ?? ''}';
   }
 
   Future<void> init() async {
@@ -248,7 +257,7 @@ class _ChainModel {
                   efficiency: targetEfficiency, tickets: targetTickets))
               .floatValue *
           tokenPriceUSD;
-      // log("XXX: V0! tokenPrice = $tokenPriceUSD, cost = $costToCreateAccountUSD");
+      // log('XXX: V0! tokenPrice = $tokenPriceUSD, cost = $costToCreateAccountUSD');
     }
      */
   }

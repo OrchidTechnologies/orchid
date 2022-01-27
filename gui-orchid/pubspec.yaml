@@ -84,5 +84,6 @@ flutter:
         - asset: assets/fonts/Baloo2-ExtraBold.ttf
           weight: 800
 
+# This is for the localizely intellij plugin
 flutter_intl:
-  enabled: true
+  enabled: false

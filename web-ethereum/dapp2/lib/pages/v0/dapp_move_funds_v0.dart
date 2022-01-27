@@ -7,9 +7,9 @@ import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
-
 import '../dapp_button.dart';
 import '../orchid_form_fields.dart';
+import 'package:orchid/util/localization.dart';
 
 class MoveFundsPaneV0 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -49,7 +49,7 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
       return Container();
     }
     var tokenType = TokenTypes.OXT;
-    var buttonTitle = "MOVE FUNDS";
+    var buttonTitle = s.moveFunds;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +57,7 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
         LabeledTokenValueField(
           type: tokenType,
           controller: _moveBalanceField,
-          label: "Balance to Deposit" + ':',
+          label: s.balanceToDeposit + ':',
           labelWidth: 180,
         ),
         pady(32),
@@ -98,7 +98,7 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
       _moveBalanceField.clear();
       setState(() {});
     } catch (err) {
-      log("Error on move funds: $err");
+      log('Error on move funds: $err');
     }
     setState(() {
       _txPending = false;

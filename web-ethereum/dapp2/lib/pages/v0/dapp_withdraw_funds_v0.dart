@@ -7,9 +7,9 @@ import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
-
 import '../dapp_button.dart';
 import '../orchid_form_fields.dart';
+import 'package:orchid/util/localization.dart';
 
 class WithdrawFundsPaneV0 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -51,7 +51,7 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
       return Container();
     }
     var tokenType = TokenTypes.OXT;
-    var buttonTitle = "WITHDRAW FUNDS";
+    var buttonTitle = s.withdrawFunds;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,13 +59,13 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
         LabeledTokenValueField(
           type: tokenType,
           controller: _withdrawBalanceField,
-          label: "Balance" + ':',
+          label: s.balance + ':',
         ),
         pady(4),
         LabeledTokenValueField(
           type: tokenType,
           controller: _withdrawEscrowField,
-          label: "Deposit" + ':',
+          label: s.deposit + ':',
         ),
         pady(32),
         Row(
@@ -115,7 +115,7 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
       _withdrawEscrowField.clear();
       setState(() {});
     } catch (err) {
-      log("Error on withdraw funds: $err");
+      log('Error on withdraw funds: $err');
     }
     setState(() {
       _txPending = false;

@@ -133,7 +133,7 @@ class OrchidPlatform {
       return Platform.operatingSystem;
     } catch (err) {
       log("exception fetching osname: $err");
-      return "unknown";
+      return 'unknown';
     }
   }
 }

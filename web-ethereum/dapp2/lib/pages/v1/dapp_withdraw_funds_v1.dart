@@ -10,9 +10,9 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:styled_text/styled_text.dart';
-
 import '../dapp_button.dart';
 import '../orchid_form_fields.dart';
+import 'package:orchid/util/localization.dart';
 
 class WithdrawFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -55,15 +55,16 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
     }
     var tokenType = pot.balance.type;
     var buttonTitle =
-        _unlockDeposit ? "WITHDRAW AND UNLOCK FUNDS" : "WITHDRAW FUNDS";
+    _unlockDeposit ? s.withdrawAndUnlockFunds : s.withdrawFunds;
 
     final totalFunds = pot.balance + pot.deposit;
     final maxWithdraw = pot.maxWithdrawable;
     final fullyUnlocked = maxWithdraw >= totalFunds;
 
     final availableText = fullyUnlocked
-        ? "All of your funds are available for withdrawal."
-        : "${maxWithdraw.formatCurrency()} of your ${totalFunds.formatCurrency()} combined funds are currently available for withdrawal.";
+        ? s.allOfYourFundsAreAvailableForWithdrawal
+        : s.maxWithdrawOfYourTotalFundsCombinedFunds(
+        maxWithdraw.formatCurrency(), totalFunds.formatCurrency());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +76,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
           labelWidth: 100,
           type: tokenType,
           controller: _withdrawBalanceField,
-          label: "Withdraw" + ':',
+          label: s.withdraw + ':',
         ),
         if (pot.deposit > pot.unlockedAmount)
           Padding(
@@ -100,7 +101,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
   Row _buildUnlockDepositCheckbox(BuildContext context) {
     return Row(
       children: [
-        Text("Also unlock remaining deposit: ").button.height(1.3),
+        Text(s.alsoUnlockRemainingDeposit + ': ').button.height(1.3),
         padx(8),
         Theme(
           data: Theme.of(context).copyWith(
@@ -120,28 +121,25 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
   }
 
   Widget _buildInstructions(bool fullyUnlocked) {
-
     final fullyUnlockedInstruction =
-        "If you specify less than the full amount funds will be drawn from your balance first."
-                '  ' +
-            "For additional options see the ADVANCED panel.";
+        s.ifYouSpecifyLessThanTheFullAmountFundsWill +
+            '  ' +
+            s.forAdditionalOptionsSeeTheAdvancedPanel;
 
     final partiallyUnlockedInstruction =
-        "If you specify less than the full amount funds will be drawn from your balance first."
-        '  '
-        "If you select the unlock deposit option this transaction will immediately "
-        "withdraw the specified amount from your balance and also begin the unlock process "
-        "for your remaining deposit."
-        '  '
-        "Deposit funds are available for withdrawal 24 hours after unlocking."
-        '  '
-        "For additional options see the ADVANCED panel.";
+        s.ifYouSpecifyLessThanTheFullAmountFundsWill +
+            '  ' +
+            s.ifYouSelectTheUnlockDepositOptionThisTransactionWill +
+            '  ' +
+            s.depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking +
+            '  ' +
+            s.forAdditionalOptionsSeeTheAdvancedPanel;
 
     return StyledText(
       style: OrchidText.caption,
       textAlign: TextAlign.center,
-      text: "Withdraw funds from your Orchid Account to your current wallet."
-              "  " +
+      text: s.withdrawFundsFromYourOrchidAccountToYourCurrentWallet +
+          '  ' +
           (fullyUnlocked
               ? fullyUnlockedInstruction
               : partiallyUnlockedInstruction),
@@ -167,7 +165,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
   void _withdrawFunds() async {
     // Cap total at max withdrawable.
     var totalWithdrawal =
-        Token.min(_withdrawBalanceField.value, pot.maxWithdrawable);
+    Token.min(_withdrawBalanceField.value, pot.maxWithdrawable);
     // first from the balance
     var withdrawBalance = Token.min(totalWithdrawal, pot.balance);
     // any remainder from the warned deposit
@@ -189,7 +187,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
       _unlockDeposit = false;
       setState(() {});
     } catch (err) {
-      log("Error on withdraw funds: $err");
+      log('Error on withdraw funds: $err');
     }
     setState(() {
       _txPending = false;

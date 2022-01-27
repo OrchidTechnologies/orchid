@@ -15,8 +15,7 @@ import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/util/units.dart';
 import '../orchid_panel.dart';
 import '../orchid_text.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
+import 'package:orchid/util/localization.dart';
 import 'account_detail_poller.dart';
 
 /// The account cards used on the account manager
@@ -56,7 +55,8 @@ class AccountCard extends StatefulWidget {
       return Image.asset('assets/images/eth_token_icon.png', fit: BoxFit.fill);
     }
     if (token == TokenTypes.XDAI) {
-      return SvgPicture.asset('assets/svg/chains/gnosis-token-xdai.svg', fit: BoxFit.fill);
+      return SvgPicture.asset('assets/svg/chains/gnosis-token-xdai.svg',
+          fit: BoxFit.fill);
     }
     if (token == TokenTypes.OXT) {
       return SvgPicture.asset('assets/svg/oxt_token_icon.svg',
@@ -208,8 +208,8 @@ class _AccountCardState extends State<AccountCard>
       return Container();
     }
 
-    // log("XXX: pot = $pot, unlocked = ${pot.isUnlocked}, warned int = ${pot.warned.intValue}");
-    // var unlockTimeStr = DateFormat("MM/dd/yyyy HH:mm:ss").format(pot.unlockTime);
+    // log('XXX: pot = $pot, unlocked = ${pot.isUnlocked}, warned int = ${pot.warned.intValue}');
+    // var unlockTimeStr = DateFormat('MM/dd/yyyy HH:mm:ss').format(pot.unlockTime);
     String unlockInStr = pot.unlockInString();
     return Column(
       children: [
@@ -219,7 +219,7 @@ class _AccountCardState extends State<AccountCard>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Unlocking:").body2,
+                  Text(s.unlocking + ':').body2,
                   Text(pot.warned.formatCurrency()).body2,
                 ],
               ),
@@ -227,10 +227,8 @@ class _AccountCardState extends State<AccountCard>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Unlock Time:").body2,
+                  Text(s.unlockTime + ':').body2,
                   Text(unlockInStr).body2,
-                  // Text("Unlock In:").body2,
-                  // Text(durationStr).body2,
                 ],
               ),
             ],
@@ -239,7 +237,7 @@ class _AccountCardState extends State<AccountCard>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Unlocked:").body2,
+              Text(s.unlocked + ':').body2,
               Text(pot.warned.formatCurrency()).body2,
             ],
           ),
@@ -274,7 +272,7 @@ class _AccountCardState extends State<AccountCard>
     return AnimatedSwitcher(
       duration: Duration(milliseconds: 500),
       child: SizedBox(
-          key: Key(tokenType?.toString() ?? "empty"),
+          key: Key(tokenType?.toString() ?? 'empty'),
           width: size,
           height: size,
           child: AccountCard.iconForTokenType(tokenType) ?? Container()),
@@ -375,7 +373,7 @@ class _AccountCardState extends State<AccountCard>
   }
 
   Widget _buildExpandedDetail() {
-    final depositText = pot?.effectiveDeposit?.formatCurrency(digits: 2) ?? "";
+    final depositText = pot?.effectiveDeposit?.formatCurrency(digits: 2) ?? '';
     final efficiency =
         widget.accountDetail?.marketConditions?.efficiency; // or null
     final chartModel = pot != null
@@ -491,9 +489,5 @@ class _AccountCardState extends State<AccountCard>
         ),
       ),
     );
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

@@ -12,6 +12,7 @@ import 'package:orchid/orchid/orchid_text.dart';
 
 import '../dapp_button.dart';
 import '../orchid_form_fields.dart';
+import 'package:orchid/util/localization.dart';
 
 class AdvancedFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -101,7 +102,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
   }
 
   Widget _buildSubmitButton() {
-    var buttonTitle = "SUBMIT TRANSACTION";
+    var buttonTitle = s.submitTransaction;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -125,7 +126,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   List<Widget> _buildBalanceForm(TokenType tokenType) {
     return [
-      _buildTitle("Balance"),
+      _buildTitle(s.balance),
       pady(24),
       Row(
         children: [
@@ -152,7 +153,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   List<Widget> _buildDepositForm(TokenType tokenType) {
     return [
-      _buildTitle("Deposit"),
+      _buildTitle(s.deposit),
       pady(24),
       Row(
         children: [
@@ -179,7 +180,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   List<Widget> _buildMoveFunds(TokenType tokenType) {
     return [
-      _buildTitle("Move"),
+      _buildTitle(s.move),
       pady(24),
       Row(
         children: [
@@ -211,16 +212,16 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         : pot.unlockTime;
     var unlockText = unlockTime.isAfter(DateTime.now())
         ? unlockTime.toLocal().toString()
-        : "Now";
+        : s.now;
 
     return [
-      _buildTitle("Set Warned Amount"),
+      _buildTitle(s.setWarnedAmount),
       pady(24),
       LabeledTokenValueField(
         labelWidth: 260,
         type: tokenType,
         controller: _warnedField,
-        label: "Amount" + ':',
+        label: s.amount + ':',
         onClear: _resetWarnedField,
       ),
       Visibility(
@@ -229,7 +230,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
           padding: const EdgeInsets.only(top: 8.0),
           child: Row(
             children: [
-              SizedBox(width: 110, child: Text("Available:").button),
+              SizedBox(width: 110, child: Text(s.available + ':').button),
               Text(unlockText).button,
             ],
           ),
@@ -413,7 +414,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
       setState(() {});
     } catch (err) {
-      log("Error on edit funds: $err");
+      log('Error on edit funds: $err');
     }
     setState(() {
       _txPending = false;
@@ -444,6 +445,7 @@ class _AddWithdrawDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.s;
     return Theme(
       data: Theme.of(context).copyWith(
         canvasColor: OrchidColors.dark_background,
@@ -454,19 +456,19 @@ class _AddWithdrawDropdown extends StatelessWidget {
         child: DropdownButton<_AddWithdrawDirection>(
           isExpanded: true,
           // make the width flexible
-          hint: Text("Select", style: OrchidText.button),
+          hint: Text(s.select, style: OrchidText.button),
           underline: Container(),
           value: value,
           items: [
             DropdownMenuItem(
               child: Text(
-                "ADD",
+                s.add,
                 textAlign: TextAlign.right,
               ).button,
               value: _AddWithdrawDirection.Add,
             ),
             DropdownMenuItem(
-              child: Text("WITHDRAW").button,
+              child: Text(s.withdraw).button,
               value: _AddWithdrawDirection.Withdraw,
             ),
           ],
@@ -491,6 +493,7 @@ class _MoveDirectionDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.s;
     return Theme(
       data: Theme.of(context).copyWith(
         canvasColor: OrchidColors.dark_background,
@@ -501,20 +504,20 @@ class _MoveDirectionDropdown extends StatelessWidget {
         child: DropdownButton<_MoveDirection>(
           isExpanded: true,
           // make the width flexible
-          hint: Text("Select", style: OrchidText.button),
+          hint: Text(s.select, style: OrchidText.button),
           underline: Container(),
           value: value,
           items: [
             DropdownMenuItem(
               child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text("BALANCE TO DEPOSIT").button),
+                  child: Text(s.balanceToDeposit).button),
               value: _MoveDirection.BalanceToDeposit,
             ),
             DropdownMenuItem(
               child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text("DEPOSIT TO BALANCE").button),
+                  child: Text(s.depositToBalance).button),
               value: _MoveDirection.DepositToBalance,
             ),
           ],

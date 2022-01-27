@@ -13,6 +13,7 @@ import 'package:styled_text/styled_text.dart';
 
 import 'dapp_button.dart';
 import 'orchid_form_fields.dart';
+import 'package:orchid/util/localization.dart';
 
 class AddFundsPane extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -72,27 +73,28 @@ class _AddFundsPaneState extends State<AddFundsPane> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (allowance != null && allowance.gtZero())
-          Text("Current ${widget.tokenType.symbol} Pre-Authorization: ${allowance.formatCurrency()}")
+          Text(s.currentTokenPreauthorizationAmount(
+                  widget.tokenType.symbol, allowance.formatCurrency()))
               .body2
               .bottom(16)
               .top(8),
         LabeledTokenValueField(
           type: widget.tokenType,
           controller: _addBalanceField,
-          label: "Balance" + ':',
+          label: s.balance + ':',
         ),
         pady(4),
         LabeledTokenValueField(
           type: widget.tokenType,
           controller: _addDepositField,
-          label: "Deposit" + ':',
+          label: s.deposit + ':',
         ),
         pady(24),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             DappButton(
-                text: "ADD FUNDS",
+                text: s.addFunds,
                 onPressed: _addFundsFormEnabled ? _addFunds : null),
           ],
         ),
@@ -106,8 +108,9 @@ class _AddFundsPaneState extends State<AddFundsPane> {
     return StyledText(
       style: OrchidText.caption,
       textAlign: TextAlign.center,
-      text: "Add funds to your Orchid Account balance and/or deposit."
-          "  For guidance on sizing your account see <link>orchid.com</link>",
+      text: s.addFundsToYourOrchidAccountBalanceAndorDeposit +
+          ' ' +
+          s.forGuidanceOnSizingYourAccountSee,
       tags: {
         'link':
             OrchidText.caption.linkStyle.link(OrchidUrls.partsOfOrchidAccount),
@@ -163,7 +166,7 @@ class _AddFundsPaneState extends State<AddFundsPane> {
       _addDepositField.clear();
       setState(() {});
     } catch (err, stack) {
-      log("Error on add funds: $err, $stack");
+      log('Error on add funds: $err, $stack');
     }
     setState(() {
       _txPending = false;

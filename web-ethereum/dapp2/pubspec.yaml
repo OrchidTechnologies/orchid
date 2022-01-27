@@ -75,7 +75,7 @@ flutter:
           weight: 800
 
 flutter_intl:
-  enabled: true
+  enabled: false
 
 # Not sure that these are working
 targets:
