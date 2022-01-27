@@ -386,7 +386,6 @@
         }
       }
     },
-    "unlocking": "unlocking",
     "locked": "locked",
     "yourDepositOfAmountIsUnlockingOrUnlocked": "Your deposit of {amount} is {unlockingOrUnlocked}.",
     "@yourDepositOfAmountIsUnlockingOrUnlocked": {
@@ -429,6 +428,5 @@
     "fundFee": "Fund Fee",
     "withdrawFee": "Withdraw Fee",
     "tokenValues": "TOKEN VALUES",
-    "usdPrices": "USD PRICES",
-    "total": "Total"
+    "usdPrices": "USD PRICES"
 }

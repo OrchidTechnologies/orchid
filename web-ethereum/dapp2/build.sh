@@ -1,6 +1,6 @@
 #!/bin/sh
 
-FLUTTER="${FLUTTER:-flutter}"
+FLUTTER="${FLUTTER:-$FLUTTER_STABLE}"
 
 rm -rf build
 
