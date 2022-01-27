@@ -1,7 +1,7 @@
 #!/bin/sh
 
-echo "Update this to allow for code shared with the dapp2"
-exit;
+echo "Update this for shared apps"
+exit
 
 cd $(dirname "$0")
 

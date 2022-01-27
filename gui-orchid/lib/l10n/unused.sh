@@ -3,7 +3,7 @@
 # Attempt to find unused strings in the generated localization file.
 #
 
-echo "update this per-app"
+echo "Update this for shared apps"
 exit
 
 cd $(dirname "$0")
