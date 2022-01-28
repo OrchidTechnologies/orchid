@@ -69,6 +69,7 @@ flutter:
     - assets/images/
     - assets/svg/
     - assets/svg/chains/
+    - assets/svg/tokens/
 
   fonts:
     - family: Baloo2

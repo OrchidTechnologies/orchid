@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/orchid/orchid_desktop_dragscroll.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:orchid/api/orchid_platform.dart';
@@ -39,14 +40,16 @@ class TestApp extends StatelessWidget {
                   countryCode: OrchidPlatform.languageOverrideCountry)
             ],
       home: Material(
-          child: Container(
-        decoration:
-            BoxDecoration(gradient: OrchidGradients.blackGradientBackground),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Transform.scale(scale: scale, child: content),
+        child: Container(
+          decoration:
+              BoxDecoration(gradient: OrchidGradients.blackGradientBackground),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Transform.scale(scale: scale, child: content),
+          ),
         ),
-      )),
+      ),
+      scrollBehavior: OrchidDesktopDragScrollBehavior(),
     );
   }
 }

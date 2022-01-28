@@ -1,5 +1,5 @@
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/util/units.dart';
 import 'package:flutter/foundation.dart';
@@ -22,8 +22,8 @@ class OrchidPricingAPIV0 {
   Future<PricingV0> getPricing() async {
     try {
       return PricingV0(
-        ethPriceUSD: await OrchidPricing().usdPrice(TokenTypes.ETH),
-        oxtPriceUSD: await OrchidPricing().usdPrice(TokenTypes.OXT),
+        ethPriceUSD: await OrchidPricing().usdPrice(Tokens.ETH),
+        oxtPriceUSD: await OrchidPricing().usdPrice(Tokens.OXT),
       );
     } catch (err) {
       print("Error fetching pricing: $err");

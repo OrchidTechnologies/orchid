@@ -1,96 +1,9 @@
 import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import '../orchid_crypto.dart';
 import 'chains.dart';
-
-class TokenTypes {
-  // Indicates that we do not have a source for pricing information for the token.
-  static const ExchangeRateSource NoExchangeRateSource = null;
-
-  // Override the symbol to ETH so that ETH-equivalent tokens care share this.
-  static const ETHExchangeRateSource =
-      BinanceExchangeRateSource(symbolOverride: 'ETH');
-  static const TokenType ETH = TokenType(
-    symbol: 'ETH',
-    exchangeRateSource: ETHExchangeRateSource,
-    chainId: Chains.ETH_CHAINID,
-  );
-
-  static TokenType OXT = TokenType(
-    symbol: 'OXT',
-    exchangeRateSource: BinanceExchangeRateSource(),
-    chainId: Chains.ETH_CHAINID,
-    erc20Address: OrchidContractV0.oxtContractAddress,
-  );
-
-  static const TokenType XDAI = TokenType(
-      symbol: 'xDAI',
-      // Binance lists DAIUSDT but the value is bogus. The real pair is USDTDAI, so invert.
-      exchangeRateSource:
-          BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
-      chainId: Chains.XDAI_CHAINID);
-
-  static const TokenType TOK = TokenType(
-      symbol: 'TOK',
-      exchangeRateSource: ETHExchangeRateSource,
-      chainId: Chains.GANACHE_TEST_CHAINID);
-
-  static const TokenType AVAX = TokenType(
-      symbol: 'AVAX',
-      exchangeRateSource: BinanceExchangeRateSource(),
-      chainId: Chains.AVALANCHE_CHAINID);
-
-  static const TokenType BNB = TokenType(
-      symbol: 'BNB',
-      exchangeRateSource: BinanceExchangeRateSource(),
-      chainId: Chains.BSC_CHAINID);
-
-  static const TokenType MATIC = TokenType(
-      symbol: 'MATIC',
-      exchangeRateSource: BinanceExchangeRateSource(),
-      chainId: Chains.POLYGON_CHAINID);
-
-  static const TokenType OETH = TokenType(
-      symbol: 'ETH',
-      // OETH is ETH on L2
-      exchangeRateSource: ETHExchangeRateSource,
-      chainId: Chains.OPTIMISM_CHAINID);
-
-  // Aurora is an L2 on Near
-  static const TokenType AURORA_ETH = TokenType(
-      symbol: 'ETH',
-      // aETH should ultimately track the price of ETH
-      exchangeRateSource: ETHExchangeRateSource,
-      chainId: Chains.AURORA_CHAINID);
-
-  static const TokenType ARBITRUM_ETH = TokenType(
-    symbol: 'ETH',
-    // AETH is ETH on L2
-    exchangeRateSource: ETHExchangeRateSource,
-    chainId: Chains.ARBITRUM_ONE_CHAINID,
-  );
-
-  static const TokenType FTM = TokenType(
-    symbol: 'FTM',
-    exchangeRateSource: BinanceExchangeRateSource(),
-    chainId: Chains.FANTOM_CHAINID,
-  );
-
-  static const TokenType TLOS = TokenType(
-    symbol: 'TLOS',
-    exchangeRateSource: NoExchangeRateSource,
-    chainId: Chains.TELOS_CHAINID,
-  );
-
-  static const TokenType RBTC = TokenType(
-    symbol: 'RTBC',
-    exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'BTC'),
-    chainId: Chains.RSK_CHAINID,
-  );
-}
 
 // Token type
 // Note: Unfortunately Dart does not have a polyomorphic 'this' type so the
@@ -102,7 +15,7 @@ class TokenType {
   final String symbol;
   final int decimals;
   final ExchangeRateSource exchangeRateSource;
-  final String _iconPath;
+  final String iconPath;
 
   /// The ERC20 contract address if this is a non-native token on its chain.
   final EthereumAddress erc20Address;
@@ -116,11 +29,6 @@ class TokenType {
     return Chains.chainFor(chainId);
   }
 
-  /// The asset path for the token icon or the chain icon if no token icon was supplied.
-  String get iconPath {
-    return _iconPath ?? chain.iconPath;
-  }
-
   SvgPicture get icon {
     return SvgPicture.asset(iconPath);
   }
@@ -131,8 +39,8 @@ class TokenType {
     this.exchangeRateSource,
     this.decimals = 18,
     this.erc20Address,
-    String iconPath,
-  }) : this._iconPath = iconPath;
+    @required this.iconPath,
+  });
 
   // Return 1eN where N is the decimal count.
   int get multiplier {

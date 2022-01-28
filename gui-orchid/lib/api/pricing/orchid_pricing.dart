@@ -1,4 +1,5 @@
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:orchid/api/orchid_log_api.dart';
@@ -44,7 +45,7 @@ class OrchidPricing {
 
   /// (USD/Token): Tokens * Rate = USD
   Future<double> tokenToUsdRate(TokenType tokenType) async {
-    if (tokenType.exchangeRateSource == TokenTypes.NoExchangeRateSource) {
+    if (tokenType.exchangeRateSource == Tokens.NoExchangeRateSource) {
       throw Exception('No exchange rate source for token: ${tokenType.symbol}');
     }
 

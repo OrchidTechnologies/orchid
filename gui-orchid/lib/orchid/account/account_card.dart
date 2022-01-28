@@ -48,25 +48,6 @@ class AccountCard extends StatefulWidget {
 
   @override
   _AccountCardState createState() => _AccountCardState();
-
-  // Allow some overrides for the icons in this context
-  static Widget iconForTokenType(TokenType token) {
-    if (token == TokenTypes.ETH) {
-      return Image.asset('assets/images/eth_token_icon.png', fit: BoxFit.fill);
-    }
-    if (token == TokenTypes.XDAI) {
-      return SvgPicture.asset('assets/svg/chains/gnosis-token-xdai.svg',
-          fit: BoxFit.fill);
-    }
-    if (token == TokenTypes.OXT) {
-      return SvgPicture.asset('assets/svg/oxt_token_icon.svg',
-          fit: BoxFit.fill);
-    }
-    if (token?.chain != null) {
-      return SvgPicture.asset(token.chain.iconPath, fit: BoxFit.fill);
-    }
-    return null;
-  }
 }
 
 class _AccountCardState extends State<AccountCard>
@@ -275,7 +256,7 @@ class _AccountCardState extends State<AccountCard>
           key: Key(tokenType?.toString() ?? 'empty'),
           width: size,
           height: size,
-          child: AccountCard.iconForTokenType(tokenType) ?? Container()),
+          child: tokenType?.icon ?? Container()),
     );
   }
 

@@ -1,6 +1,6 @@
-import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 
 class ScalarValue<T extends num> {
   final T value;
@@ -27,7 +27,7 @@ class ScalarValue<T extends num> {
 // Note: types in assignment and argument inference, totally breaking the
 // Note: type safety of having this subclass.
 class OXT extends Token {
-  OXT(BigInt value) : super(TokenTypes.OXT, value);
+  OXT(BigInt value) : super(Tokens.OXT, value);
 
   static OXT zero = OXT.fromInt(BigInt.zero);
 
@@ -36,11 +36,11 @@ class OXT extends Token {
   }
 
   static OXT fromDouble(double value) {
-    return cast(TokenTypes.OXT.fromDouble(value));
+    return cast(Tokens.OXT.fromDouble(value));
   }
 
   static OXT cast(Token token) {
-    if (token.type != TokenTypes.OXT) {
+    if (token.type != Tokens.OXT) {
       throw AssertionError('Token type mismatch!: $token');
     }
     return OXT(token.intValue);

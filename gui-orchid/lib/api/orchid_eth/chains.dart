@@ -5,8 +5,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'token_type.dart';
 import 'package:orchid/util/collections.dart';
+
+import 'tokens.dart';
 
 /*
 TODO: embed Chain data from https://chainid.network/chains.json
@@ -35,24 +38,22 @@ class Chains {
   }
 
   // Ganache Test
-  static const String unknownLogoPath =
-      'assets/svg/chains/unknown-token-logo.svg';
   static const int GANACHE_TEST_CHAINID = 1337;
   static Chain GanacheTest = Chain(
     chainId: GANACHE_TEST_CHAINID,
     name: "Ganache",
-    nativeCurrency: TokenTypes.TOK,
+    nativeCurrency: Tokens.TOK,
     providerUrl: 'http://127.0.0.1:7545/',
-    iconPath: unknownLogoPath,
+    iconPath: OrchidAssetChain.unknown_chain,
   );
 
   // Ethereum (ETH)
   static const int ETH_CHAINID = 1;
-  static const String ethIconPath = 'assets/svg/chains/ethereum-eth-logo.svg';
+  static String ethIconPath = OrchidAssetChain.ethereum_chain;
   static Chain Ethereum = Chain(
     chainId: ETH_CHAINID,
     name: "Ethereum",
-    nativeCurrency: TokenTypes.ETH,
+    nativeCurrency: Tokens.ETH,
     providerUrl: defaultEthereumProviderUrl,
     iconPath: ethIconPath,
     supportsLogs: true,
@@ -64,10 +65,10 @@ class Chains {
   static Chain xDAI = Chain(
     chainId: XDAI_CHAINID,
     name: "Gnosis",
-    nativeCurrency: TokenTypes.XDAI,
+    nativeCurrency: Tokens.XDAI,
     // providerUrl: 'https://rpc.xdaichain.com/',
     providerUrl: 'https://rpc.gnosischain.com/',
-    iconPath: 'assets/svg/chains/gnosis-chain-white.svg',
+    iconPath: OrchidAssetChain.gnossis_chain,
     supportsLogs: true,
   );
 
@@ -76,9 +77,9 @@ class Chains {
   static Chain Avalanche = Chain(
     chainId: AVALANCHE_CHAINID,
     name: "Avalanche",
-    nativeCurrency: TokenTypes.AVAX,
+    nativeCurrency: Tokens.AVAX,
     providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
-    iconPath: 'assets/svg/chains/avalanche-avax-logo.svg',
+    iconPath: OrchidAssetChain.avalanche_chain,
     explorerUrl: 'https://snowtrace.io/',
     supportsLogs: true,
   );
@@ -88,9 +89,9 @@ class Chains {
   static Chain BinanceSmartChain = Chain(
     chainId: BSC_CHAINID,
     name: "Binance Smart Chain",
-    nativeCurrency: TokenTypes.BNB,
+    nativeCurrency: Tokens.BNB,
     providerUrl: 'https://bsc-dataseed1.binance.org',
-    iconPath: 'assets/svg/chains/binance-coin-bnb-logo.svg',
+    iconPath: OrchidAssetChain.binance_smart_chain,
     explorerUrl: 'https://bscscan.com',
   );
 
@@ -99,9 +100,9 @@ class Chains {
   static Chain Polygon = Chain(
     chainId: POLYGON_CHAINID,
     name: "Polygon",
-    nativeCurrency: TokenTypes.MATIC,
+    nativeCurrency: Tokens.MATIC,
     providerUrl: 'https://polygon-rpc.com/',
-    iconPath: 'assets/svg/chains/matic-token-icon1.svg',
+    iconPath: OrchidAssetChain.polygon_chain,
     explorerUrl: 'https://polygonscan.com/',
   );
 
@@ -110,9 +111,9 @@ class Chains {
   static Chain Optimism = Chain(
     chainId: OPTIMISM_CHAINID,
     name: "Optimism",
-    nativeCurrency: TokenTypes.OETH,
+    nativeCurrency: Tokens.OETH,
     providerUrl: 'https://mainnet.optimism.io/',
-    iconPath: 'assets/svg/chains/optimism-logo.svg',
+    iconPath: OrchidAssetChain.optimism_chain,
     explorerUrl: 'https://optimistic.etherscan.io',
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
@@ -124,10 +125,10 @@ class Chains {
   static Chain ArbitrumOne = Chain(
     chainId: ARBITRUM_ONE_CHAINID,
     name: "Arbitrum One",
-    nativeCurrency: TokenTypes.ARBITRUM_ETH,
+    nativeCurrency: Tokens.ARBITRUM_ETH,
     providerUrl: 'https://arb1.arbitrum.io/rpc/',
-    // TODO: missing real icon
-    iconPath: unknownLogoPath,
+    // TODO: missing chain icon
+    iconPath: OrchidAssetChain.unknown_chain,
     explorerUrl: 'https://arbiscan.io/',
   );
 
@@ -136,9 +137,9 @@ class Chains {
   static Chain Aurora = Chain(
     chainId: AURORA_CHAINID,
     name: "Aurora",
-    nativeCurrency: TokenTypes.AURORA_ETH,
+    nativeCurrency: Tokens.AURORA_ETH,
     providerUrl: 'https://mainnet.aurora.dev',
-    iconPath: 'assets/svg/chains/near-logo.svg',
+    iconPath: OrchidAssetChain.near_aurora_chain,
     // TODO: Missing explorer URL
     explorerUrl: 'https://',
     // Additional L1 fees.
@@ -151,9 +152,9 @@ class Chains {
   static Chain Fantom = Chain(
     chainId: FANTOM_CHAINID,
     name: "Fantom",
-    nativeCurrency: TokenTypes.FTM,
+    nativeCurrency: Tokens.FTM,
     providerUrl: 'https://rpc.ftm.tools',
-    iconPath: 'assets/svg/chains/fantom-token.svg',
+    iconPath: OrchidAssetChain.fantom_chain,
     explorerUrl: 'https://ftmscan.com',
     supportsLogs: true,
   );
@@ -163,9 +164,9 @@ class Chains {
   static Chain Telos = Chain(
     chainId: TELOS_CHAINID,
     name: "Telos",
-    nativeCurrency: TokenTypes.TLOS,
+    nativeCurrency: Tokens.TLOS,
     providerUrl: 'https://mainnet.telos.net/evm',
-    iconPath: 'assets/svg/chains/telos-tlos-logo.svg',
+    iconPath: OrchidAssetChain.telos_chain,
     explorerUrl: 'https://teloscan.io',
   );
 
@@ -173,10 +174,9 @@ class Chains {
   static Chain RSK = Chain(
     chainId: RSK_CHAINID,
     name: "RSK",
-    nativeCurrency: TokenTypes.RBTC,
-    //     "https://mycrypto.rsk.co"
+    nativeCurrency: Tokens.RBTC,
     providerUrl: 'https://public-node.rsk.co',
-    iconPath: 'assets/svg/chains/rsk-logo.svg',
+    iconPath: OrchidAssetChain.rsk_chain,
     explorerUrl: 'https://explorer.rsk.co',
   );
 
@@ -188,10 +188,10 @@ class Chains {
     BinanceSmartChain,
     Polygon,
     Optimism,
-    // ArbitrumOne,
     Aurora,
     Fantom,
-    //RSK,
+    // ArbitrumOne,
+    // RSK,
     // Telos,
   ].toMap(withKey: (e) => e.chainId, withValue: (e) => e);
 

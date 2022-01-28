@@ -2,14 +2,12 @@
 // @formatter:off
 
 class OrchidAsset {
-  static final svg = const _Svg();
-  static final image = const _Images();
+  static final svg = const OrchidAssetSvg();
+  static final image = const OrchidAssetImage();
 }
 
-class _Svg {
-  const _Svg();
-
-  final chains = const _Chains();
+class OrchidAssetSvg {
+  const OrchidAssetSvg();
 
   final toggle_checked = 'assets/svg/toggle_checked.svg';
   final xdai = 'assets/svg/xdai.svg';
@@ -45,29 +43,8 @@ class _Svg {
   final privacy = 'assets/svg/privacy.svg';
 }
 
-class _Chains {
-  const _Chains();
-
-  final ethereum_eth_logo = 'assets/svg/chains/ethereum-eth-logo.svg';
-  final gnosis_chain_black = 'assets/svg/chains/gnosis-chain-black.svg';
-  final xdai2 = 'assets/svg/chains/xdai2.svg';
-  final rsk_logo = 'assets/svg/chains/rsk-logo.svg';
-  final bitcoin_btc_logo = 'assets/svg/chains/bitcoin-btc-logo.svg';
-  final matic_token_icon1 = 'assets/svg/chains/matic-token-icon1.svg';
-  final TLOS_logo = 'assets/svg/chains/TLOS-logo.svg';
-  final unknown_token_logo = 'assets/svg/chains/unknown-token-logo.svg';
-  final gnosis_chain_white = 'assets/svg/chains/gnosis-chain-white.svg';
-  final near_logo = 'assets/svg/chains/near-logo.svg';
-  final optimism_logo = 'assets/svg/chains/optimism-logo.svg';
-  final fantom_token = 'assets/svg/chains/fantom-token.svg';
-  final telos_tlos_logo = 'assets/svg/chains/telos-tlos-logo.svg';
-  final gnosis_token_xdai = 'assets/svg/chains/gnosis-token-xdai.svg';
-  final avalanche_avax_logo = 'assets/svg/chains/avalanche-avax-logo.svg';
-  final binance_coin_bnb_logo = 'assets/svg/chains/binance-coin-bnb-logo.svg';
-}
-
-class _Images {
-  const _Images();
+class OrchidAssetImage {
+  const OrchidAssetImage();
 
   final layer35 = 'assets/images/layer35.png';
   final illustration_2 = 'assets/images/illustration_2.png';
@@ -118,6 +95,69 @@ class _Images {
   final world_map_purp = 'assets/images/world_map_purp.png';
   final world_map_3x = 'assets/images/3.0x/world_map.png';
   final map_pin_3x = 'assets/images/3.0x/map_pin.png';
-  }
+}
+
+class OrchidAssetToken {
+  const OrchidAssetToken();
+
+  // These must be const for our usage in Tokens
+  static const unknown_token = 'assets/svg/tokens/unknown-token.svg';
+  static const avalanche_avax_token = 'assets/svg/tokens/avalanche-avax-token.svg';
+  static const binance_coin_bnb_token = 'assets/svg/tokens/binance-coin-bnb-token.svg';
+  // rsk chain is bitcoin
+  static const bitcoin_btc_token = 'assets/svg/tokens/bitcoin-btc-token.svg';
+  static const celo_token = 'assets/svg/tokens/celo-token.svg';
+  static const clover_clv_token = 'assets/svg/tokens/clover-clv-token.svg';
+  static const ethereum_classic_etc_token = 'assets/svg/tokens/ethereum-classic-etc-token.svg';
+  static const ethereum_eth_token = 'assets/svg/tokens/ethereum-eth-token.svg';
+  static const fantom_ftm_token = 'assets/svg/tokens/fantom-ftm-token.svg';
+  static const fuse_token = 'assets/svg/tokens/fuse-token.svg';
+  static const huobi_ht_token = 'assets/svg/tokens/huobi-ht-token.svg';
+  static const klay_token = 'assets/svg/tokens/klay-token.svg';
+  static const matic_token = 'assets/svg/tokens/matic-token.svg';
+  static const moonbeam_glmr_token = 'assets/svg/tokens/moonbeam-glmr-token.svg';
+  static const moonriver_movr_token = 'assets/svg/tokens/moonriver-movr-token.svg';
+  static const okt_token = 'assets/svg/tokens/okt-token.svg';
+  static const orchid_oxt_token = 'assets/svg/tokens/orchid-oxt-token.svg';
+  static const poa_token = 'assets/svg/tokens/poa-token.svg';
+  static const telos_tlos_token = 'assets/svg/tokens/telos-tlos-token.svg';
+  static const xdai_token = 'assets/svg/tokens/xdai-token.svg';
+}
+
+class OrchidAssetChain {
+  const OrchidAssetChain();
+
+  static const unknown_chain = 'assets/svg/chains/unknown-chain.svg';
+  static const avalanche_chain = OrchidAssetToken.avalanche_avax_token;
+  static const arbitrum_chain = 'assets/svg/chains/arbitrum-chain.svg';
+  static const binance_smart_chain = 'assets/svg/chains/binance-smart-chain.svg';
+  static const ethereum_chain = OrchidAssetToken.ethereum_eth_token;
+  static const fantom_chain = OrchidAssetToken.fantom_ftm_token;
+  static const gnossis_chain = 'assets/svg/chains/gnossis-chain.svg';
+  static const near_aurora_chain = 'assets/svg/chains/near-aurora-chain.svg';
+  static const neon_evm_chain = 'assets/svg/chains/neon-evm-chain.svg';
+  static const optimism_chain = 'assets/svg/chains/optimism-chain.svg';
+  static const polygon_chain = OrchidAssetToken.matic_token;
+  static const ronin_chain = 'assets/svg/chains/ronin-chain.svg';
+  static const rsk_chain = 'assets/svg/chains/rsk-chain.svg';
+  static const telos_chain = OrchidAssetToken.telos_tlos_token;
+
+  // final ethereum_eth_logo = 'assets/svg/chains/ethereum-eth-logo.svg';
+  // final gnosis_chain_black = 'assets/svg/chains/gnosis-chain-black.svg';
+  // final xdai2 = 'assets/svg/chains/xdai2.svg';
+  // final rsk_logo = 'assets/svg/chains/rsk-logo.svg';
+  // final bitcoin_btc_logo = 'assets/svg/chains/bitcoin-btc-logo.svg';
+  // final matic_token_icon1 = 'assets/svg/chains/matic-token-icon1.svg';
+  // final TLOS_logo = 'assets/svg/chains/TLOS-logo.svg';
+  // final unknown_token_logo = 'assets/svg/chains/unknown-token-logo.svg';
+  // final gnosis_chain_white = 'assets/svg/chains/gnosis-chain-white.svg';
+  // final near_logo = 'assets/svg/chains/near-logo.svg';
+  // final optimism_logo = 'assets/svg/chains/optimism-logo.svg';
+  // final fantom_token = 'assets/svg/chains/fantom-token.svg';
+  // final telos_tlos_logo = 'assets/svg/chains/telos-tlos-logo.svg';
+  // final gnosis_token_xdai = 'assets/svg/chains/gnosis-token-xdai.svg';
+  // final avalanche_avax_logo = 'assets/svg/chains/avalanche-avax-logo.svg';
+  // final binance_coin_bnb_logo = 'assets/svg/chains/binance-coin-bnb-logo.svg';
+}
 
 // @formatter:on

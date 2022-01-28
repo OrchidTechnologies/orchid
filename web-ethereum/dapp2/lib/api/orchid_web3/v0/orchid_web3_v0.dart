@@ -3,6 +3,7 @@ import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 
@@ -19,18 +20,18 @@ class OrchidWeb3V0 {
 
   OrchidWeb3V0(this.context)
       : this._lotteryContract = OrchidContractWeb3V0(context).lotteryContract(),
-        this._oxt = OrchidERC20(context: context, tokenType: TokenTypes.OXT);
+        this._oxt = OrchidERC20(context: context, tokenType: Tokens.OXT);
 
   Chain get chain {
     return context.chain;
   }
 
   TokenType get fundsTokenType {
-    return TokenTypes.OXT;
+    return Tokens.OXT;
   }
 
   TokenType get gasTokenType {
-    return TokenTypes.ETH;
+    return Tokens.ETH;
   }
 
   /// Transfer the int amount from the user to the specified lottery pot address.
@@ -41,8 +42,8 @@ class OrchidWeb3V0 {
     Token addBalance,
     Token addEscrow,
   }) async {
-    addBalance.assertType(TokenTypes.OXT);
-    addEscrow.assertType(TokenTypes.OXT);
+    addBalance.assertType(Tokens.OXT);
+    addEscrow.assertType(Tokens.OXT);
     var walletBalance = await _oxt.getERC20Balance(wallet.address);
 
     // Don't attempt to add more than the wallet balance.
@@ -91,8 +92,8 @@ class OrchidWeb3V0 {
     Token withdrawBalance,
     Token withdrawEscrow,
   }) async {
-    withdrawBalance.assertType(TokenTypes.OXT);
-    withdrawEscrow.assertType(TokenTypes.OXT);
+    withdrawBalance.assertType(Tokens.OXT);
+    withdrawEscrow.assertType(Tokens.OXT);
     if (withdrawEscrow > pot.unlockedAmount) {
       throw Exception(
           'withdraw escrow exceeds unlocked: $withdrawEscrow, ${pot.unlockedAmount}');
@@ -129,7 +130,7 @@ class OrchidWeb3V0 {
     LotteryPot pot,
     Token moveAmount,
   }) async {
-    moveAmount.assertType(TokenTypes.OXT);
+    moveAmount.assertType(Tokens.OXT);
     if (moveAmount > pot.balance) {
       throw Exception('Move amount exceeds balance: ${pot.balance}');
     }

@@ -71,8 +71,8 @@ class MarketConditionsV0 implements MarketConditions {
 
     // TODO: Migrate to v1
     // Token oxtCostToRedeem2 = await OrchidPricing().tokenToToken(
-    //   TokenTypes.ETH.fromDouble(ethGasCostToRedeem.value),
-    //   TokenTypes.OXT,
+    //   Tokens.ETH.fromDouble(ethGasCostToRedeem.value),
+    //   Tokens.OXT,
     // );
 
     return CostToRedeemV0(ethGasCostToRedeem, oxtCostToRedeem);

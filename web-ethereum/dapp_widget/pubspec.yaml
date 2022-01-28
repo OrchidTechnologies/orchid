@@ -40,6 +40,7 @@ flutter:
     - assets/images/
     - assets/svg/
     - assets/svg/chains/
+    - assets/svg/tokens/
 
 flutter_intl:
   enabled: false

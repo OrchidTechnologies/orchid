@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
@@ -48,7 +48,7 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
     if (pot?.balance == null) {
       return Container();
     }
-    var tokenType = TokenTypes.OXT;
+    var tokenType = Tokens.OXT;
     var buttonTitle = s.moveFunds;
 
     return Column(
