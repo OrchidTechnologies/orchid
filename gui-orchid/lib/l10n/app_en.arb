@@ -428,5 +428,10 @@
   "fundFee": "Fund Fee",
   "withdrawFee": "Withdraw Fee",
   "tokenValues": "TOKEN VALUES",
-  "usdPrices": "USD PRICES"
+  "usdPrices": "USD PRICES",
+  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "Setting a warned deposit amount begins the 24 hour waiting period required to withdraw deposit funds.",
+  "duringThisPeriodTheFundsAreNotAvailableAsA": "During this period the funds are not available as a valid deposit on the Orchid network.",
+  "fundsMayBeRelockedAtAnyTimeByReducingThe": "Funds may be re-locked at any time by reducing the warned amount.",
+  "warn": "Warn",
+  "totalWarnedAmount": "Total Warned Amount"
 }

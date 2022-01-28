@@ -121,6 +121,7 @@ class OrchidWeb3V1 {
   /// If adjustAmount is positive funds move from balance to deposit;
   /// If adjustAmount is negative funds move from deposit to balance.
   /// warnAmount may be positive or negative to indicate a change in the warned amount.
+  /// Note that when funds are recovered from deposit the warned amount is automatically decreased.
   Future<String /*TransactionId*/ > orchidEditFunds({
     @required OrchidWallet wallet,
     @required EthereumAddress signer,

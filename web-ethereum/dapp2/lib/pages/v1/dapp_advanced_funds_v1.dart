@@ -97,6 +97,15 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         pady(48),
         // submit button
         _buildSubmitButton(),
+
+        pady(32),
+        Text(
+          s.settingAWarnedDepositAmountBeginsThe24HourWaiting +
+              ' ' +
+              s.duringThisPeriodTheFundsAreNotAvailableAsA +
+              ' ' +
+              s.fundsMayBeRelockedAtAnyTimeByReducingThe,
+        ).caption.center,
       ],
     );
   }
@@ -215,13 +224,13 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         : s.now;
 
     return [
-      _buildTitle(s.setWarnedAmount),
+      _buildTitle(s.warn),
       pady(24),
       LabeledTokenValueField(
         labelWidth: 260,
         type: tokenType,
         controller: _warnedField,
-        label: s.amount + ':',
+        label: s.totalWarnedAmount + ':',
         onClear: _resetWarnedField,
       ),
       Visibility(
@@ -235,7 +244,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
             ],
           ),
         ),
-      )
+      ),
     ];
   }
 
