@@ -70,5 +70,5 @@ generate
 
 outfile=lib/orchid/orchid_asset.dart
 run > $outfile
-echo "Generated to: $outfile"
+#echo "Generated to: $outfile"
 
