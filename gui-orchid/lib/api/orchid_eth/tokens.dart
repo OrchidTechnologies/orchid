@@ -15,7 +15,7 @@ class Tokens {
     symbol: 'ETH',
     exchangeRateSource: ETHExchangeRateSource,
     chainId: Chains.ETH_CHAINID,
-    iconPath: OrchidAssetToken.ethereum_eth_token,
+    iconPath: OrchidAssetSvgToken.ethereum_eth_token_path,
   );
 
   static TokenType OXT = TokenType(
@@ -23,7 +23,7 @@ class Tokens {
     exchangeRateSource: BinanceExchangeRateSource(),
     chainId: Chains.ETH_CHAINID,
     erc20Address: OrchidContractV0.oxtContractAddress,
-    iconPath: OrchidAssetToken.orchid_oxt_token,
+    iconPath: OrchidAssetSvgToken.orchid_oxt_token_path,
   );
 
   static const TokenType XDAI = TokenType(
@@ -32,35 +32,35 @@ class Tokens {
     exchangeRateSource:
         BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
     chainId: Chains.XDAI_CHAINID,
-    iconPath: OrchidAssetToken.xdai_token,
+    iconPath: OrchidAssetSvgToken.xdai_token_path,
   );
 
   static const TokenType TOK = TokenType(
     symbol: 'TOK',
     exchangeRateSource: ETHExchangeRateSource,
     chainId: Chains.GANACHE_TEST_CHAINID,
-    iconPath: OrchidAssetToken.unknown_token,
+    iconPath: OrchidAssetSvgToken.unknown_token_path,
   );
 
   static const TokenType AVAX = TokenType(
     symbol: 'AVAX',
     exchangeRateSource: BinanceExchangeRateSource(),
     chainId: Chains.AVALANCHE_CHAINID,
-    iconPath: OrchidAssetToken.avalanche_avax_token,
+    iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
   );
 
   static const TokenType BNB = TokenType(
     symbol: 'BNB',
     exchangeRateSource: BinanceExchangeRateSource(),
     chainId: Chains.BSC_CHAINID,
-    iconPath: OrchidAssetToken.binance_coin_bnb_token,
+    iconPath: OrchidAssetSvgToken.binance_coin_bnb_token_path,
   );
 
   static const TokenType MATIC = TokenType(
     symbol: 'MATIC',
     exchangeRateSource: BinanceExchangeRateSource(),
     chainId: Chains.POLYGON_CHAINID,
-    iconPath: OrchidAssetToken.matic_token,
+    iconPath: OrchidAssetSvgToken.matic_token_path,
   );
 
   static const TokenType OETH = TokenType(
@@ -68,7 +68,7 @@ class Tokens {
     // OETH is ETH on L2
     exchangeRateSource: ETHExchangeRateSource,
     chainId: Chains.OPTIMISM_CHAINID,
-    iconPath: OrchidAssetToken.ethereum_eth_token,
+    iconPath: OrchidAssetSvgToken.ethereum_eth_token_path,
   );
 
   // Aurora is an L2 on Near
@@ -77,7 +77,7 @@ class Tokens {
     // aETH should ultimately track the price of ETH
     exchangeRateSource: ETHExchangeRateSource,
     chainId: Chains.AURORA_CHAINID,
-    iconPath: OrchidAssetToken.ethereum_eth_token,
+    iconPath: OrchidAssetSvgToken.ethereum_eth_token_path,
   );
 
   static const TokenType ARBITRUM_ETH = TokenType(
@@ -85,27 +85,27 @@ class Tokens {
     // AETH is ETH on L2
     exchangeRateSource: ETHExchangeRateSource,
     chainId: Chains.ARBITRUM_ONE_CHAINID,
-    iconPath: OrchidAssetToken.ethereum_eth_token,
+    iconPath: OrchidAssetSvgToken.ethereum_eth_token_path,
   );
 
   static const TokenType FTM = TokenType(
     symbol: 'FTM',
     exchangeRateSource: BinanceExchangeRateSource(),
     chainId: Chains.FANTOM_CHAINID,
-    iconPath: OrchidAssetToken.fantom_ftm_token,
+    iconPath: OrchidAssetSvgToken.fantom_ftm_token_path,
   );
 
   static const TokenType TLOS = TokenType(
     symbol: 'TLOS',
     exchangeRateSource: NoExchangeRateSource,
     chainId: Chains.TELOS_CHAINID,
-    iconPath: OrchidAssetToken.telos_tlos_token,
+    iconPath: OrchidAssetSvgToken.telos_tlos_token_path,
   );
 
   static const TokenType RBTC = TokenType(
     symbol: 'RTBC',
     exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'BTC'),
     chainId: Chains.RSK_CHAINID,
-    iconPath: OrchidAssetToken.bitcoin_btc_token,
+    iconPath: OrchidAssetSvgToken.bitcoin_btc_token_path,
   );
 }

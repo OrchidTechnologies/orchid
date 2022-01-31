@@ -11,6 +11,7 @@ import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
@@ -153,13 +154,13 @@ class _LoggingPageState extends State<LoggingPage> {
                         padding: const EdgeInsets.all(0),
                         child: RoundTitledRaisedImageButton(
                             title: s.copy,
-                            imageName: 'assets/images/business.png',
+                            imageName: OrchidAssetImage.business_path,
                             onPressed: _onCopyButton)),
                     Padding(
                         padding: const EdgeInsets.only(left: 0, right: 0),
                         child: RoundTitledRaisedImageButton(
                             title: s.clear,
-                            imageName: 'assets/images/business.png',
+                            imageName: OrchidAssetImage.business_path,
                             onPressed: _confirmDelete)),
                   ],
                 ),

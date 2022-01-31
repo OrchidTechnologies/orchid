@@ -17,6 +17,7 @@ import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/orchid/account/account_store.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
@@ -205,7 +206,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         highlightColor: OrchidColors.purple_menu,
       ),
       child: PopupMenuButton<_IdentitySelectorMenuItem>(
-        icon: SvgPicture.asset('assets/svg/settings_gear.svg'),
+        icon: OrchidAsset.svg.settings_gear,
         initialValue: _selectedIdentity != null
             ? _IdentitySelectorMenuItem(identity: _selectedIdentity)
             : null,

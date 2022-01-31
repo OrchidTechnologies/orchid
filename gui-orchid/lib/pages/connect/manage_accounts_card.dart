@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/account/account_detail_store.dart';
@@ -205,7 +206,7 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
         return OrchidCircularIdenticon(
           image: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: SvgPicture.asset('assets/svg/openvpn.svg'),
+            child: OrchidAsset.svg.openvpn,
           ),
           fade: selected ? 1.0 : fade,
         );
@@ -214,7 +215,7 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
         return OrchidCircularIdenticon(
           image: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: SvgPicture.asset('assets/svg/wireguard.svg'),
+            child: OrchidAsset.svg.wireguard,
           ),
           fade: selected ? 1.0 : fade,
         );

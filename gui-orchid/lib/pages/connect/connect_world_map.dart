@@ -14,7 +14,7 @@ class WorldMapImage {
   final projectionType = MapProjectionType.Gall;
 
   /// Map asset and size
-  final asset = OrchidAsset.image.world_map_3x;
+  final asset = OrchidAssetImage3x.world_map_path;
   final double aspectRatio = 2459.0 / 1350.0;
 
   /// An normalized (0-1) offset for tweaking the map image to align
@@ -81,7 +81,7 @@ class _ConnectWorldMapState extends State<ConnectWorldMap>
     _drawRouteAnimation =
         CurvedAnimation(parent: _masterAnimController, curve: Interval(0, 0.5));
 
-    Images.loadImage(OrchidAsset.image.map_pin_3x).then((image) {
+    Images.loadImage(OrchidAssetImage3x.map_pin_path).then((image) {
       setState(() {
         this.pinImage = image;
         debugPrint("image loaded: $image");

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 
 class TrafficEmptyView extends StatelessWidget {
@@ -32,8 +33,7 @@ class TrafficEmptyView extends StatelessWidget {
                                 Spacer(flex: 1),
                                 Visibility(
                                   visible: orientation == Orientation.portrait,
-                                  child: SvgPicture.asset(
-                                      'assets/svg/inspector_icon.svg'),
+                                  child: OrchidAsset.svg.inspector_icon,
                                 ),
                                 Spacer(flex: 1),
                                 Text(

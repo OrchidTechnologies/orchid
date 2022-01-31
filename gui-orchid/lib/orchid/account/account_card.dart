@@ -13,6 +13,7 @@ import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/util/units.dart';
+import '../orchid_asset.dart';
 import '../orchid_panel.dart';
 import '../orchid_text.dart';
 import 'package:orchid/util/localization.dart';
@@ -461,10 +462,10 @@ class _AccountCardState extends State<AccountCard>
             child: (checked
                 ? Padding(
                     padding: const EdgeInsets.only(left: 5, bottom: 5),
-                    child: SvgPicture.asset('assets/svg/toggle_checked.svg',
+                    child: SvgPicture.asset(OrchidAssetSvg.toggle_checked_path,
                         width: 25, height: 25, fit: BoxFit.scaleDown),
                   )
-                : SvgPicture.asset('assets/svg/toggle_unchecked.svg',
+                : SvgPicture.asset(OrchidAssetSvg.toggle_unchecked_path,
                     width: 20, height: 20, fit: BoxFit.scaleDown)),
           ),
         ),

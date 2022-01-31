@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/common/app_sizes.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_desktop_dragscroll.dart';
 import 'package:orchid/pages/app_routes.dart';
@@ -67,7 +68,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
       onPressed: () {
         Navigator.pushNamed(context, AppRoutes.traffic);
       },
-      child: SvgPicture.asset('assets/svg/traffic.svg'),
+      child: OrchidAsset.svg.traffic,
     );
   }
 

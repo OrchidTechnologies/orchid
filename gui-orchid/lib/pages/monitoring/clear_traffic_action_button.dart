@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 
 import '../../common/app_colors.dart';
 import '../../common/app_text.dart';
@@ -30,7 +31,7 @@ class ClearTrafficActionButton extends StatelessWidget {
             child: Opacity(
               opacity: enabled ? 1.0 : 0.3,
               child: TextButton(
-                child: SvgPicture.asset('assets/svg/delete_icon.svg',
+                child: SvgPicture.asset(OrchidAssetSvg.delete_icon_path,
                     width: 24, height: 24),
                 onPressed: enabled
                     ? () {
@@ -48,7 +49,8 @@ class ClearTrafficActionButton extends StatelessWidget {
     AppDialogs.showConfirmationDialog(
         context: context,
         title: s.clearAllAnalysisData,
-        bodyText: s.thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData,
+        bodyText:
+            s.thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData,
         cancelText: s.cancelButtonTitle.toUpperCase(),
         actionText: s.clearAll,
         commitAction: () async {

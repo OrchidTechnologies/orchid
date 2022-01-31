@@ -11,6 +11,7 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
@@ -304,13 +305,13 @@ class CircuitPageState extends State<CircuitPage>
       case HopProtocol.Orchid:
         break;
       case HopProtocol.OpenVPN:
-        icon =
-            SvgPicture.asset('assets/svg/openvpn.svg', width: 38, height: 38);
+        icon = SvgPicture.asset(OrchidAssetSvg.openvpn_path,
+            width: 38, height: 38);
         text = Text(s.openVPNHop).title;
         break;
       case HopProtocol.WireGuard:
-        icon =
-            SvgPicture.asset('assets/svg/wireguard.svg', width: 40, height: 40);
+        icon = SvgPicture.asset(OrchidAssetSvg.wireguard_path,
+            width: 40, height: 40);
         text = Text(s.wireguardHop).title;
         break;
     }

@@ -10,6 +10,7 @@ import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:flutter/services.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
@@ -115,7 +116,7 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
         text: s.scan,
         spacing: 6,
         trailing: showIcons
-            ? Image.asset("assets/images/scan.png", color: Colors.white)
+            ? Image.asset(OrchidAssetImage.scan_path, color: Colors.white)
             : SizedBox(),
         textColor: Colors.white,
         backgroundColor: AppColors.teal_3,

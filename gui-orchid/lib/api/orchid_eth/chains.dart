@@ -44,12 +44,12 @@ class Chains {
     name: "Ganache",
     nativeCurrency: Tokens.TOK,
     providerUrl: 'http://127.0.0.1:7545/',
-    iconPath: OrchidAssetChain.unknown_chain,
+    iconPath: OrchidAssetSvgChain.unknown_chain_path,
   );
 
   // Ethereum (ETH)
   static const int ETH_CHAINID = 1;
-  static String ethIconPath = OrchidAssetChain.ethereum_chain;
+  static String ethIconPath = OrchidAssetSvgToken.ethereum_eth_token_path;
   static Chain Ethereum = Chain(
     chainId: ETH_CHAINID,
     name: "Ethereum",
@@ -68,7 +68,7 @@ class Chains {
     nativeCurrency: Tokens.XDAI,
     // providerUrl: 'https://rpc.xdaichain.com/',
     providerUrl: 'https://rpc.gnosischain.com/',
-    iconPath: OrchidAssetChain.gnossis_chain,
+    iconPath: OrchidAssetSvgChain.gnossis_chain_path,
     supportsLogs: true,
   );
 
@@ -79,7 +79,7 @@ class Chains {
     name: "Avalanche",
     nativeCurrency: Tokens.AVAX,
     providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
-    iconPath: OrchidAssetChain.avalanche_chain,
+    iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
     explorerUrl: 'https://snowtrace.io/',
     supportsLogs: true,
   );
@@ -91,7 +91,7 @@ class Chains {
     name: "Binance Smart Chain",
     nativeCurrency: Tokens.BNB,
     providerUrl: 'https://bsc-dataseed1.binance.org',
-    iconPath: OrchidAssetChain.binance_smart_chain,
+    iconPath: OrchidAssetSvgChain.binance_smart_chain_path,
     explorerUrl: 'https://bscscan.com',
   );
 
@@ -102,7 +102,7 @@ class Chains {
     name: "Polygon",
     nativeCurrency: Tokens.MATIC,
     providerUrl: 'https://polygon-rpc.com/',
-    iconPath: OrchidAssetChain.polygon_chain,
+    iconPath: OrchidAssetSvgToken.matic_token_path,
     explorerUrl: 'https://polygonscan.com/',
   );
 
@@ -113,7 +113,7 @@ class Chains {
     name: "Optimism",
     nativeCurrency: Tokens.OETH,
     providerUrl: 'https://mainnet.optimism.io/',
-    iconPath: OrchidAssetChain.optimism_chain,
+    iconPath: OrchidAssetSvgChain.optimism_chain_path,
     explorerUrl: 'https://optimistic.etherscan.io',
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
@@ -128,7 +128,7 @@ class Chains {
     nativeCurrency: Tokens.ARBITRUM_ETH,
     providerUrl: 'https://arb1.arbitrum.io/rpc/',
     // TODO: missing chain icon
-    iconPath: OrchidAssetChain.unknown_chain,
+    iconPath: OrchidAssetSvgChain.unknown_chain_path,
     explorerUrl: 'https://arbiscan.io/',
   );
 
@@ -139,7 +139,7 @@ class Chains {
     name: "Aurora",
     nativeCurrency: Tokens.AURORA_ETH,
     providerUrl: 'https://mainnet.aurora.dev',
-    iconPath: OrchidAssetChain.near_aurora_chain,
+    iconPath: OrchidAssetSvgChain.near_aurora_chain_path,
     // TODO: Missing explorer URL
     explorerUrl: 'https://',
     // Additional L1 fees.
@@ -154,7 +154,7 @@ class Chains {
     name: "Fantom",
     nativeCurrency: Tokens.FTM,
     providerUrl: 'https://rpc.ftm.tools',
-    iconPath: OrchidAssetChain.fantom_chain,
+    iconPath: OrchidAssetSvgToken.fantom_ftm_token_path,
     explorerUrl: 'https://ftmscan.com',
     supportsLogs: true,
   );
@@ -166,7 +166,7 @@ class Chains {
     name: "Telos",
     nativeCurrency: Tokens.TLOS,
     providerUrl: 'https://mainnet.telos.net/evm',
-    iconPath: OrchidAssetChain.telos_chain,
+    iconPath: OrchidAssetSvgToken.telos_tlos_token_path,
     explorerUrl: 'https://teloscan.io',
   );
 
@@ -176,7 +176,7 @@ class Chains {
     name: "RSK",
     nativeCurrency: Tokens.RBTC,
     providerUrl: 'https://public-node.rsk.co',
-    iconPath: OrchidAssetChain.rsk_chain,
+    iconPath: OrchidAssetSvgChain.rsk_chain_path,
     explorerUrl: 'https://explorer.rsk.co',
   );
 

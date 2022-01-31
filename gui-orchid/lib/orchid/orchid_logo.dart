@@ -90,7 +90,7 @@ class NeonOrchidLogo extends StatelessWidget {
           if (showBackground)
             Opacity(
                 opacity: _backgroundGlowAnim.transform(light),
-                child: Image.asset(OrchidAsset.image.Background_Glow)),
+                child: OrchidAsset.image.background_glow),
           Stack(
             alignment: Alignment.center,
             children: [
@@ -98,11 +98,11 @@ class NeonOrchidLogo extends StatelessWidget {
                 offset: Offset(0, _offsetAnim.transform(offset) * crtSpacing),
                 child: Opacity(
                     opacity: _neonGlowAnim.transform(light),
-                    child: Image.asset(OrchidAsset.image.CRT_Lines_blue)),
+                    child: OrchidAsset.image.crt_lines_blue),
               ),
               Opacity(
                   opacity: _crtAnim.transform(light),
-                  child: Image.asset(OrchidAsset.image.CRT_Lines_purple)),
+                  child: OrchidAsset.image.crt_lines_purple),
               Transform.translate(
                 offset: Offset(-12, -22),
                 child: Stack(
@@ -110,11 +110,11 @@ class NeonOrchidLogo extends StatelessWidget {
                   children: [
                     Opacity(
                         opacity: _neonGlowAnim.transform(light),
-                        child: Image.asset(OrchidAsset.image.logo_glow)),
+                        child: OrchidAsset.image.logo_glow),
                     Opacity(
                         opacity: _neonAnim.transform(light),
-                        child: Image.asset(OrchidAsset.image.Logo_Neon_Stroke)),
-                    Image.asset(OrchidAsset.image.Logo_Outline),
+                        child: OrchidAsset.image.logo_neon_stroke),
+                    OrchidAsset.image.logo_outline,
                   ],
                 ),
               ),

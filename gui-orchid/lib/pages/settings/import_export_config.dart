@@ -10,6 +10,7 @@ import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/pages/settings/advanced_configuration_page.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -158,8 +159,8 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
           decoration: BoxDecoration(
               border: Border.all(width: 1, color: Colors.black54)),
           child: widget.mode == ImportExportMode.Export
-              ? SvgPicture.asset("assets/svg/qr_scan.svg")
-              : SvgPicture.asset("assets/svg/scan.svg"),
+              ? OrchidAsset.svg.qr_scan
+              : OrchidAsset.svg.scan,
         ),
         onPressed: _doQRCodeAction);
   }
