@@ -55,7 +55,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
     }
     var tokenType = pot.balance.type;
     var buttonTitle =
-    _unlockDeposit ? s.withdrawAndUnlockFunds : s.withdrawFunds;
+        _unlockDeposit ? s.withdrawAndUnlockFunds : s.withdrawFunds;
 
     final totalFunds = pot.balance + pot.deposit;
     final maxWithdraw = pot.maxWithdrawable;
@@ -64,7 +64,8 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
     final availableText = fullyUnlocked
         ? s.allOfYourFundsAreAvailableForWithdrawal
         : s.maxWithdrawOfYourTotalFundsCombinedFunds(
-        maxWithdraw.formatCurrency(), totalFunds.formatCurrency());
+            maxWithdraw.formatCurrency(locale: context.locale),
+            totalFunds.formatCurrency(locale: context.locale));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +166,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
   void _withdrawFunds() async {
     // Cap total at max withdrawable.
     var totalWithdrawal =
-    Token.min(_withdrawBalanceField.value, pot.maxWithdrawable);
+        Token.min(_withdrawBalanceField.value, pot.maxWithdrawable);
     // first from the balance
     var withdrawBalance = Token.min(totalWithdrawal, pot.balance);
     // any remainder from the warned deposit

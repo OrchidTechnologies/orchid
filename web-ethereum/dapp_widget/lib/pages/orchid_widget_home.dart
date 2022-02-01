@@ -110,6 +110,7 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
       s.withdrawFee
     ];
   }
+
   final _columnSizes = [215, 80, 135, 135, 110, 140];
 
   double get _totalWidth {
@@ -173,9 +174,11 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
         return Container();
       }
       if (_showPricesUSD) {
-        return Text((tokenPrice * token.floatValue).formatCurrency()).body2;
+        return Text((tokenPrice * token.floatValue)
+                .formatCurrency(locale: context.locale))
+            .body2;
       } else {
-        return Text(token.toFixedLocalized()).body2;
+        return Text(token.toFixedLocalized(locale: context.locale)).body2;
       }
     }
 
@@ -237,7 +240,7 @@ class _ChainModel {
   String tooltipText(BuildContext context) {
     return '${chain.name} ${fundsToken.symbol}, ' +
         context.s.total +
-        ': ${totalCostToCreateAccount?.formatCurrency() ?? ''}';
+        ': ${totalCostToCreateAccount?.formatCurrency(locale: context.locale) ?? ''}';
   }
 
   Future<void> init() async {

@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
@@ -170,22 +173,24 @@ class USD extends ScalarValue<double> {
     return divideDouble(other);
   }
 
-  String toFixedLocalized({int digits = 2}) {
-    return value.toStringAsFixed(digits);
-  }
-
-  String formatCurrency({int digits = 2}) {
-    return '\$' + this.toFixedLocalized(digits: digits);
+  String formatCurrency({@required Locale locale, int digits = 2}) {
+    return '\$' + _formatCurrency(this.value, locale: locale, digits: digits);
   }
 }
 
 /// Format a currency to default two digits of precision with an optional suffix
 /// and null behavior.
 String formatCurrency(num value,
-    {String suffix, int digits = 2, String ifNull = "...", String locale}) {
+    {String suffix,
+    int digits = 2,
+    String ifNull = "...",
+    @required Locale locale}) {
   if (value == null) {
     return ifNull;
   }
-  return NumberFormat("#0." + "0" * digits, locale).format(value) +
+  return NumberFormat("#0." + "0" * digits, locale?.toLanguageTag())
+          .format(value) +
       (suffix != null ? " $suffix" : "");
 }
+
+final _formatCurrency = formatCurrency;

@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import '../orchid_crypto.dart';
 import 'chains.dart';
+import 'package:orchid/util/units.dart' as units;
 
 // Token type
 // Note: Unfortunately Dart does not have a polyomorphic 'this' type so the
@@ -96,13 +97,14 @@ class Token {
     return intValue.toDouble() / type.multiplier;
   }
 
-  String toFixedLocalized({int digits = 4}) {
-    return floatValue.toStringAsFixed(digits);
+  /// No token symbol
+  String toFixedLocalized({@required Locale locale, int digits = 4}) {
+    return units.formatCurrency(floatValue, locale: locale, digits: digits);
   }
 
-  // Format as currency with the symbol suffixed
-  String formatCurrency({int digits = 4}) {
-    return this.toFixedLocalized(digits: digits) + " ${type.symbol}";
+  /// Format as value with the symbol suffixed
+  String formatCurrency({@required Locale locale, int digits = 4}) {
+    return units.formatCurrency(floatValue, locale: locale, digits: digits, suffix: type.symbol);
   }
 
   Token multiplyInt(int other) {

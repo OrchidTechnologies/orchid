@@ -17,6 +17,7 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
+import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
@@ -384,21 +385,21 @@ class _WelcomePanelState extends State<WelcomePanel> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(s.vpnCredits).body2,
-              Text(formatCurrency(credits)).body2,
+              Text(formatCurrency(credits, locale: context.locale)).body2,
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(s.blockchainFee).body2,
-              Text('+ ' + formatCurrency(fee)).body2,
+              Text('+ ' + formatCurrency(fee, locale: context.locale)).body2,
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(s.promotion, style: OrchidText.body2.blueHightlight),
-              Text('- ' + formatCurrency(promo),
+              Text('- ' + formatCurrency(promo, locale: context.locale),
                   style: OrchidText.body2.blueHightlight),
             ],
           ),
@@ -407,7 +408,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(s.total.toUpperCase()).subtitle,
-              Text(formatCurrency(total)).subtitle,
+              Text(formatCurrency(total, locale: context.locale)).subtitle,
             ],
           )
         ],

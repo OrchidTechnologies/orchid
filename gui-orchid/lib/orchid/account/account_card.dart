@@ -202,7 +202,7 @@ class _AccountCardState extends State<AccountCard>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(s.unlocking + ':').body2,
-                  Text(pot.warned.formatCurrency()).body2,
+                  Text(pot.warned.formatCurrency(locale: context.locale)).body2,
                 ],
               ),
               pady(16),
@@ -220,7 +220,7 @@ class _AccountCardState extends State<AccountCard>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(s.unlocked + ':').body2,
-              Text(pot.warned.formatCurrency()).body2,
+              Text(pot.warned.formatCurrency(locale: context.locale)).body2,
             ],
           ),
         /*
@@ -350,12 +350,12 @@ class _AccountCardState extends State<AccountCard>
   // Return the text or null
   String _balanceText() {
     return widget.accountDetail == null
-        ? formatCurrency(0.0, digits: 2)
-        : (pot?.balance?.formatCurrency(digits: 2));
+        ? formatCurrency(0.0, locale: context.locale, digits: 2)
+        : (pot?.balance?.formatCurrency(locale: context.locale, digits: 2));
   }
 
   Widget _buildExpandedDetail() {
-    final depositText = pot?.effectiveDeposit?.formatCurrency(digits: 2) ?? '';
+    final depositText = pot?.effectiveDeposit?.formatCurrency(locale: context.locale, digits: 2) ?? '';
     final efficiency =
         widget.accountDetail?.marketConditions?.efficiency; // or null
     final chartModel = pot != null

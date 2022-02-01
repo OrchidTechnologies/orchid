@@ -11,6 +11,7 @@ import 'package:orchid/orchid/account/account_detail_store.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
+import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/units.dart';
 import '../../orchid/orchid_circular_identicon.dart';
 import '../../orchid/orchid_panel.dart';
@@ -268,8 +269,9 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
         signerAddress == null ? s.noAccountSelected : signerAddress.toString();
     final textWidth = signerAddress == null ? null : 120.0;
     final balanceText = signerAddress == null
-        ? formatCurrency(0.0, digits: 2)
-        : (_selectedAccount.lotteryPot?.balance?.formatCurrency(digits: 2) ??
+        ? formatCurrency(0.0, locale: context.locale, digits: 2)
+        : (_selectedAccount.lotteryPot?.balance
+                ?.formatCurrency(digits: 2, locale: context.locale) ??
             "...");
     final efficiency = _selectedAccount?.marketConditions?.efficiency;
     var showBadge = (_selectedAccount?.marketConditions?.efficiency ?? 1.0) <

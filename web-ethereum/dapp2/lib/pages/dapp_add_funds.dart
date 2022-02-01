@@ -74,7 +74,7 @@ class _AddFundsPaneState extends State<AddFundsPane> {
       children: [
         if (allowance != null && allowance.gtZero())
           Text(s.currentTokenPreauthorizationAmount(
-                  widget.tokenType.symbol, allowance.formatCurrency()))
+                  widget.tokenType.symbol, allowance.formatCurrency(locale: context.locale)))
               .body2
               .bottom(16)
               .top(8),

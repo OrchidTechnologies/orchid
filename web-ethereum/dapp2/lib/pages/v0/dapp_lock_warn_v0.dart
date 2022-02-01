@@ -46,9 +46,9 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
       return Container();
     }
     var statusText = pot.isUnlocked
-        ? s.yourDepositOfAmountIsUnlocked(pot.warned.formatCurrency())
+        ? s.yourDepositOfAmountIsUnlocked(pot.warned.formatCurrency(locale: context.locale))
         : s.yourDepositOfAmountIsUnlockingOrUnlocked(
-            pot.deposit.formatCurrency(),
+            pot.deposit.formatCurrency(locale: context.locale),
             pot.isUnlocking ? s.unlocking : s.locked);
     statusText += pot.isUnlocking
         ? '\n' +

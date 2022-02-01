@@ -31,6 +31,7 @@ import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/pages/circuit/chain_selection.dart';
+import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
@@ -356,7 +357,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             child: Text(s.balance +
                 ': ' +
                 formatCurrency(utx.update.endBalance.floatValue,
-                    suffix: 'OXT')),
+                    locale: context.locale, suffix: 'OXT')),
           ),
           padx(8),
           Flexible(child: Text(utx.tx.transactionHash.substring(0, 8) + '...'))
@@ -515,8 +516,11 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildAccountBalance() {
-    var balanceText = _lotteryPot?.balance?.formatCurrency() ?? '...';
-    var depositText = _lotteryPot?.effectiveDeposit?.formatCurrency() ?? '...';
+    var balanceText =
+        _lotteryPot?.balance?.formatCurrency(locale: context.locale) ?? '...';
+    var depositText =
+        _lotteryPot?.effectiveDeposit?.formatCurrency(locale: context.locale) ??
+            '...';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -587,10 +591,10 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     List<Widget> tokenPrices;
     if (_account.isV0) {
       PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
-      var ethPriceText =
-          formatCurrency(1.0 / pricing?.ethPriceUSD, suffix: 'USD');
-      var oxtPriceText =
-          formatCurrency(1.0 / pricing?.oxtPriceUSD, suffix: 'USD');
+      var ethPriceText = formatCurrency(1.0 / pricing?.ethPriceUSD,
+          locale: context.locale, suffix: 'USD');
+      var oxtPriceText = formatCurrency(1.0 / pricing?.oxtPriceUSD,
+          locale: context.locale, suffix: 'USD');
       tokenPrices = [
         Text(s.ethPrice + " " + ethPriceText).body2,
         Text(s.oxtPrice + " " + oxtPriceText).body2,
@@ -598,7 +602,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     } else {
       var tokenType = _account.chain.nativeCurrency;
       var tokenPrice = await OrchidPricing().tokenToUsdRate(tokenType);
-      var priceText = formatCurrency(tokenPrice, suffix: 'USD');
+      var priceText =
+          formatCurrency(tokenPrice, locale: context.locale, suffix: 'USD');
       tokenPrices = [
         Text(tokenType.symbol + ' ' + "Price" + ': ' + priceText).body2,
       ];
@@ -606,20 +611,23 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
     // Show gas prices as "GWEI" regardless of token type.
     var gasPriceGwei = gasPrice.multiplyDouble(1e9);
-    var gasPriceText = formatCurrency(gasPriceGwei.floatValue, suffix: 'GWEI');
+    var gasPriceText = formatCurrency(gasPriceGwei.floatValue,
+        locale: context.locale, suffix: 'GWEI');
 
-    String maxFaceValueText = _marketConditions.maxFaceValue.formatCurrency();
-    String costToRedeemText = _marketConditions.costToRedeem.formatCurrency();
+    String maxFaceValueText =
+        _marketConditions.maxFaceValue.formatCurrency(locale: context.locale);
+    String costToRedeemText =
+        _marketConditions.costToRedeem.formatCurrency(locale: context.locale);
 
     bool ticketUnderwater = _marketConditions.costToRedeem.floatValue >=
         _marketConditions.maxFaceValue.floatValue;
 
     String limitedByText = _marketConditions.limitedByBalance
         ? s.yourMaxTicketValueIsCurrentlyLimitedByYourBalance +
-            " ${_lotteryPot.balance.formatCurrency()}.  " +
+            " ${_lotteryPot.balance.formatCurrency(locale: context.locale)}.  " +
             s.considerAddingOxtToYourAccountBalance
         : s.yourMaxTicketValueIsCurrentlyLimitedByYourDeposit +
-            " ${_lotteryPot.deposit.formatCurrency()}.  " +
+            " ${_lotteryPot.deposit.formatCurrency(locale: context.locale)}.  " +
             s.considerAddingOxtToYourDepositOrMovingFundsFrom;
 
     String limitedByTitleText = _marketConditions.limitedByBalance
