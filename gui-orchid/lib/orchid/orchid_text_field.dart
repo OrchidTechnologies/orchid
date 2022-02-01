@@ -91,7 +91,8 @@ class OrchidTextField extends StatelessWidget {
                       : null,
                   inputFormatters: numeric
                       ? <TextInputFormatter>[
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                          // include comma as decimal separator
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                         ]
                       : null,
                 ),

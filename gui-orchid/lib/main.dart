@@ -19,13 +19,7 @@ void main() async {
   if (OrchidPlatform.isApple || OrchidPlatform.isAndroid) {
     OrchidPurchaseAPI().initStoreListener();
   }
-  var languageOverride =
-      (const String.fromEnvironment('language', defaultValue: null)) ??
-          OrchidUserConfig().getUserConfigJS().evalStringDefault("lang", null);
-  if (languageOverride != null &&
-      OrchidPlatform.hasLanguage(languageOverride)) {
-    OrchidPlatform.languageOverride = languageOverride;
-  }
+  OrchidPlatform.initLanguageOverride();
   if (OrchidPlatform.isMacOS) {
     print("main: Setting window size");
     setWindowFrame(Rect.fromLTWH(100, 100, 414, 890));

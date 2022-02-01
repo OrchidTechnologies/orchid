@@ -65,7 +65,10 @@ class TokenValueFieldController implements Listenable {
       return type.zero;
     }
     try {
-      var value = double.parse(text);
+      var value = double.parse(
+        // Allow comma as decimal separator for localization
+        text.replaceAll(',', '.'),
+      );
       return type.fromDouble(value);
     } catch (err) {
       return null;
