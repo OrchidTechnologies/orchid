@@ -178,6 +178,11 @@ class USD extends ScalarValue<double> {
   }
 }
 
+String toFixedLocalized(num value,
+    {int digits = 2, String ifNull = "...", @required Locale locale}) {
+  return formatCurrency(value, locale: locale, ifNull: ifNull, digits: digits);
+}
+
 /// Format a currency to default two digits of precision with an optional suffix
 /// and null behavior.
 String formatCurrency(num value,

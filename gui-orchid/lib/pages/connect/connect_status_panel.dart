@@ -51,7 +51,8 @@ class ConnectStatusPanel extends StatelessWidget {
         icon: SvgPicture.asset(OrchidAssetSvg.gauge_icon_path,
             width: 40, height: 35, color: Colors.white),
         text: bandwidthAvailableGB != null
-            ? bandwidthAvailableGB.toStringAsFixed(1)
+            ? toFixedLocalized(bandwidthAvailableGB,
+                locale: context.locale, digits: 1)
             : '...',
         subtext: s.gb);
   }

@@ -355,7 +355,9 @@ class _AccountCardState extends State<AccountCard>
   }
 
   Widget _buildExpandedDetail() {
-    final depositText = pot?.effectiveDeposit?.formatCurrency(locale: context.locale, digits: 2) ?? '';
+    final depositText = pot?.effectiveDeposit
+            ?.formatCurrency(locale: context.locale, digits: 2) ??
+        '';
     final efficiency =
         widget.accountDetail?.marketConditions?.efficiency; // or null
     final chartModel = pot != null
@@ -398,7 +400,9 @@ class _AccountCardState extends State<AccountCard>
                         Padding(
                           padding: const EdgeInsets.only(top: 2.5),
                           child: Text(
-                              (efficiency * 100.0).toStringAsFixed(2) + '%',
+                              toFixedLocalized(efficiency * 100.0,
+                                      locale: context.locale, digits: 2) +
+                                  '%',
                               style: OrchidText.caption.copyWith(
                                   color: OrchidCircularEfficiencyIndicators
                                       .colorForEfficiency(efficiency))),
