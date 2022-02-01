@@ -399,10 +399,7 @@ class _AccountCardState extends State<AccountCard>
                         OrchidCircularEfficiencyIndicators.large(efficiency),
                         Padding(
                           padding: const EdgeInsets.only(top: 2.5),
-                          child: Text(
-                              toFixedLocalized(efficiency * 100.0,
-                                      locale: context.locale, digits: 2) +
-                                  '%',
+                          child: Text('${(efficiency * 100.0).round()}%',
                               style: OrchidText.caption.copyWith(
                                   color: OrchidCircularEfficiencyIndicators
                                       .colorForEfficiency(efficiency))),
