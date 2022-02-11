@@ -1,13 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_sizes.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
+import 'package:orchid/orchid/orchid_desktop_dragscroll.dart';
 import 'package:orchid/pages/app_routes.dart';
 import 'package:orchid/pages/side_drawer.dart';
 import 'connect/connect_page.dart';
@@ -18,25 +17,15 @@ class OrchidApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'Orchid',
-      localizationsDelegates: [
-        S.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: OrchidPlatform.languageOverride == null
-          ? S.supportedLocales
-          : [
-              Locale.fromSubtags(
-                  languageCode: OrchidPlatform.languageOverrideCode,
-                  countryCode: OrchidPlatform.languageOverrideCountry)
-            ],
+      localizationsDelegates: OrchidPlatform.localizationsDelegates,
+      supportedLocales: OrchidPlatform.supportedLocales,
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
       home: OrchidAppNoTabs(),
       debugShowCheckedModeBanner: false,
       routes: AppRoutes.routes,
-      scrollBehavior: DragScrollBehavior(),
+      scrollBehavior: OrchidDesktopDragScrollBehavior(),
     );
   }
 }
@@ -48,19 +37,9 @@ class OrchidAppNoTabs extends StatefulWidget {
 
 class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   @override
-  void initState() {
-    super.initState();
-    initStateAsync();
-  }
-
-  void initStateAsync() async {}
-
-  // If the hop is empty initialize it to defaults now.
-  @override
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
     OrchidPlatform.staticLocale = locale;
-    log("locale = $locale");
     var preferredSize = Size.fromHeight(kToolbarHeight);
     return Container(
       decoration:
@@ -89,7 +68,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
       onPressed: () {
         Navigator.pushNamed(context, AppRoutes.traffic);
       },
-      child: SvgPicture.asset('assets/svg/traffic.svg'),
+      child: OrchidAsset.svg.traffic,
     );
   }
 
@@ -97,14 +76,4 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   Widget _body() {
     return AppSize.constrainMaxSizeDefaults(ConnectPage());
   }
-}
-
-// The default scroll behavior on desktop (with a mouse) does not support dragging.
-class DragScrollBehavior extends MaterialScrollBehavior {
-  @override
-  Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-      };
 }

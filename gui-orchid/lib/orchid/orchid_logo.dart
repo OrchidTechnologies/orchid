@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'orchid_asset.dart';
+
 /// A wrapper that controls an AnimationController with logic for the logo.
 class NeonOrchidLogoController {
   final TickerProvider vsync;
@@ -88,7 +90,7 @@ class NeonOrchidLogo extends StatelessWidget {
           if (showBackground)
             Opacity(
                 opacity: _backgroundGlowAnim.transform(light),
-                child: Image.asset('assets/images/Background_Glow.png')),
+                child: OrchidAsset.image.background_glow),
           Stack(
             alignment: Alignment.center,
             children: [
@@ -96,11 +98,11 @@ class NeonOrchidLogo extends StatelessWidget {
                 offset: Offset(0, _offsetAnim.transform(offset) * crtSpacing),
                 child: Opacity(
                     opacity: _neonGlowAnim.transform(light),
-                    child: Image.asset('assets/images/CRT_Lines_blue.png')),
+                    child: OrchidAsset.image.crt_lines_blue),
               ),
               Opacity(
                   opacity: _crtAnim.transform(light),
-                  child: Image.asset('assets/images/CRT_Lines_purple.png')),
+                  child: OrchidAsset.image.crt_lines_purple),
               Transform.translate(
                 offset: Offset(-12, -22),
                 child: Stack(
@@ -108,12 +110,11 @@ class NeonOrchidLogo extends StatelessWidget {
                   children: [
                     Opacity(
                         opacity: _neonGlowAnim.transform(light),
-                        child: Image.asset('assets/images/logo_glow.png')),
+                        child: OrchidAsset.image.logo_glow),
                     Opacity(
                         opacity: _neonAnim.transform(light),
-                        child:
-                            Image.asset('assets/images/Logo_Neon_Stroke.png')),
-                    Image.asset('assets/images/Logo_Outline.png'),
+                        child: OrchidAsset.image.logo_neon_stroke),
+                    OrchidAsset.image.logo_outline,
                   ],
                 ),
               ),

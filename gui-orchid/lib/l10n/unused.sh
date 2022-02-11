@@ -3,6 +3,9 @@
 # Attempt to find unused strings in the generated localization file.
 #
 
+echo "Update this for shared apps"
+exit
+
 cd $(dirname "$0")
 
 gen=../../.dart_tool/flutter_gen/gen_l10n/app_localizations.dart 

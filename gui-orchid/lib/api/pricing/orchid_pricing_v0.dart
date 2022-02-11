@@ -1,9 +1,11 @@
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/util/units.dart';
 import 'package:flutter/foundation.dart';
 
 /// Token Exchange rates
+@deprecated
 class OrchidPricingAPIV0 {
   static OrchidPricingAPIV0 _shared = OrchidPricingAPIV0._init();
 
@@ -20,8 +22,8 @@ class OrchidPricingAPIV0 {
   Future<PricingV0> getPricing() async {
     try {
       return PricingV0(
-        ethToUsdRate: await OrchidPricing().tokenToUsdRate(TokenTypes.ETH),
-        oxtToUsdRate: await OrchidPricing().tokenToUsdRate(TokenTypes.OXT),
+        ethPriceUSD: await OrchidPricing().usdPrice(Tokens.ETH),
+        oxtPriceUSD: await OrchidPricing().usdPrice(Tokens.OXT),
       );
     } catch (err) {
       print("Error fetching pricing: $err");
@@ -31,41 +33,55 @@ class OrchidPricingAPIV0 {
 }
 
 /// Pricing captures exchange rates at a point in time and supports conversion.
+@deprecated
 class PricingV0 {
   DateTime date;
-  double ethToUsdRate;
-  double oxtToUsdRate;
+
+  // dollars per eth
+  double ethPriceUSD;
+
+  // dollars per oxt
+  double oxtPriceUSD;
 
   PricingV0({
     DateTime date,
-    @required double ethToUsdRate,
-    @required double oxtToUsdRate,
+    // dollars per eth
+    @required double ethPriceUSD,
+    // dollars per oxt
+    @required double oxtPriceUSD,
   }) {
     this.date = date ?? DateTime.now();
-    this.ethToUsdRate = ethToUsdRate;
-    this.oxtToUsdRate = oxtToUsdRate;
+    this.ethPriceUSD = ethPriceUSD;
+    this.oxtPriceUSD = oxtPriceUSD;
   }
 
   USD toUSD(OXT oxt) {
     if (oxt == null) {
       return null;
     }
-    return USD(oxt.floatValue * oxtToUsdRate);
+    return USD(oxt.floatValue * oxtPriceUSD);
   }
 
   OXT toOXT(USD usd) {
     if (usd == null) {
       return null;
     }
-    return OXT.fromDouble(usd.value / oxtToUsdRate);
+    return OXT.fromDouble(usd.value / oxtPriceUSD);
   }
 
   OXT ethToOxt(ETH eth) {
-    return OXT.fromDouble(oxtToUsdRate / ethToUsdRate * eth.value);
+    // ($/eth) / ($/oxt)  = oxt/eth
+    var value = OXT.fromDouble(ethPriceUSD / oxtPriceUSD * eth.value);
+    return value;
+  }
+
+  // Note: workaround until we get rid of ETH type.
+  OXT ethToOxtToken(Token eth) {
+    return ethToOxt(ETH.fromWei(eth.intValue));
   }
 
   @override
   String toString() {
-    return 'Pricing{date: $date, ethToUsdRate: $ethToUsdRate, oxtToUsdRate: $oxtToUsdRate}';
+    return 'PricingV0{date: $date, ethPriceUSD: $ethPriceUSD, oxtPriceUSD: $oxtPriceUSD}';
   }
 }

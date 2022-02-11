@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'app_text.dart';
 
 /// Instructional text with vertically arranged image, title, and body.
 /// Optionally hides itself in landscape mode.

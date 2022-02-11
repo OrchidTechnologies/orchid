@@ -86,8 +86,10 @@ class AccountChart extends StatelessWidget {
           //           efficiency)),
           // ),
           _buildTicketsAvailableLineChart(chartModel,
-              color: OrchidCircularEfficiencyIndicators.colorForEfficiency(
-                  efficiency)),
+              color: efficiency == null
+                  ? Colors.white
+                  : OrchidCircularEfficiencyIndicators.colorForEfficiency(
+                      efficiency)),
         ],
       ),
     );

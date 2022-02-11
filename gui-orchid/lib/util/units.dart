@@ -1,6 +1,9 @@
-import 'dart:math' as math;
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 
 class ScalarValue<T extends num> {
   final T value;
@@ -27,18 +30,20 @@ class ScalarValue<T extends num> {
 // Note: types in assignment and argument inference, totally breaking the
 // Note: type safety of having this subclass.
 class OXT extends Token {
-  OXT(BigInt value) : super(TokenTypes.OXT, value);
+  OXT(BigInt value) : super(Tokens.OXT, value);
+
+  static OXT zero = OXT.fromInt(BigInt.zero);
 
   static OXT fromInt(BigInt keiki) {
     return OXT(keiki);
   }
 
   static OXT fromDouble(double value) {
-    return cast(TokenTypes.OXT.fromDouble(value));
+    return cast(Tokens.OXT.fromDouble(value));
   }
 
   static OXT cast(Token token) {
-    if (token.type != TokenTypes.OXT) {
+    if (token.type != Tokens.OXT) {
       throw AssertionError('Token type mismatch!: $token');
     }
     return OXT(token.intValue);
@@ -90,6 +95,7 @@ class OXT extends Token {
   }
 }
 
+// TODO: Convert to Token
 class ETH extends ScalarValue<double> {
   const ETH(double value) : super(value);
 
@@ -112,6 +118,7 @@ class ETH extends ScalarValue<double> {
   }
 }
 
+// TODO: Base on int token
 class GWEI extends ScalarValue<double> {
   const GWEI(double value) : super(value);
 
@@ -146,6 +153,14 @@ class USD extends ScalarValue<double> {
     return USD(value * other);
   }
 
+  USD operator +(USD other) {
+    return USD(value + other.value);
+  }
+
+  USD operator -(USD other) {
+    return USD(value - other.value);
+  }
+
   USD operator *(double other) {
     return multiplyDouble(other);
   }
@@ -157,15 +172,30 @@ class USD extends ScalarValue<double> {
   USD operator /(double other) {
     return divideDouble(other);
   }
+
+  String formatCurrency({@required Locale locale, int digits = 2}) {
+    return '\$' + _formatCurrency(this.value, locale: locale, digits: digits);
+  }
+}
+
+String toFixedLocalized(num value,
+    {int digits = 2, String ifNull = "...", @required Locale locale}) {
+  return formatCurrency(value, locale: locale, ifNull: ifNull, digits: digits);
 }
 
 /// Format a currency to default two digits of precision with an optional suffix
 /// and null behavior.
 String formatCurrency(num value,
-    {String suffix, int digits = 2, String ifNull = "...", String locale}) {
+    {String suffix,
+    int digits = 2,
+    String ifNull = "...",
+    @required Locale locale}) {
   if (value == null) {
     return ifNull;
   }
-  return NumberFormat("#0." + "0" * digits, locale).format(value) +
+  return NumberFormat("#0." + "0" * digits, locale?.toLanguageTag())
+          .format(value) +
       (suffix != null ? " $suffix" : "");
 }
+
+final _formatCurrency = formatCurrency;

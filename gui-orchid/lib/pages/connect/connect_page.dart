@@ -19,8 +19,8 @@ import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/pages/account_manager/account_detail_poller.dart';
-import 'package:orchid/pages/account_manager/account_finder.dart';
+import 'package:orchid/orchid/account/account_detail_poller.dart';
+import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/pages/circuit/circuit_utils.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
@@ -34,7 +34,7 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
-import 'package:orchid/util/streams.dart';
+import 'package:orchid/util/dispose.dart';
 import 'package:orchid/util/units.dart';
 
 import 'connect_status_panel.dart';
@@ -594,7 +594,7 @@ class _ConnectPageState extends State<ConnectPage>
   // If this is an existing user with no multi-hop circuit and an active
   // account, migrate it to a 1-hop config.
   Future<void> _migrateActiveAccountTo1Hop() async {
-    var activeAccount = await Account.activeAccountLegacy;
+    var activeAccount = await activeAccountLegacy;
     if (activeAccount != null) {
       log("migration: User has no hops and a legacy active account: migrating.");
       await CircuitUtils.defaultCircuitIfNeededFrom(activeAccount);
@@ -603,6 +603,23 @@ class _ConnectPageState extends State<ConnectPage>
       await UserPreferences().activeAccounts.set([]);
     }
   }
+
+  // Note: Used in migration from the old active account model
+  static Future<Account> get activeAccountLegacy async {
+    return _filterActiveAccountLegacyLogic(
+        UserPreferences().activeAccounts.get());
+  }
+
+  // Note: Used in migration from the old active account model
+  // Return the active account from the accounts list or null.
+  static Account _filterActiveAccountLegacyLogic(List<Account> accounts) {
+    return accounts == null ||
+        accounts.isEmpty ||
+        accounts[0].isIdentityPlaceholder
+        ? null
+        : accounts[0];
+  }
+
 
   Future<void> _createFirstIdentity() async {
     log("first launch: Do first launch activities.");

@@ -1,10 +1,11 @@
-FLUTTER=../../app-shared/flutter/bin/flutter
+#!/bin/sh
+
+FLUTTER="${FLUTTER:-$FLUTTER_STABLE}"
+
 rm -rf build
+
 #$FLUTTER build web --web-renderer canvaskit --dart-define mock=true
 $FLUTTER build web --web-renderer canvaskit
-
-# remove base tag
-sed -i '' 's/<base href="\/">//' build/web/index.html
 
 # move js to hash named file
 uuid=$(uuidgen)

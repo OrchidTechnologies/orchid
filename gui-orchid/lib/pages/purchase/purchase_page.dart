@@ -20,13 +20,15 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/loading.dart';
 import 'package:orchid/common/screen_orientation.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:in_app_purchase/store_kit_wrappers.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
@@ -191,7 +193,7 @@ class _PurchasePageState extends State<PurchasePage> {
     final titleStyle = OrchidText.medium_24_050;
     var payPerUse = s.payPerUseVpnService;
     var price = (_bandwidthPrice != null && !MockOrchidAPI.hidePrices)
-        ? "\$" + formatCurrency(_bandwidthPrice.value)
+        ? "\$" + formatCurrency(_bandwidthPrice.value, locale: context.locale)
         : "...";
     var currentAvgVPNPrice = s.averagePriceIsUSDPerGb(price);
     var notASub = s.notASubscriptionCreditsDontExpire;
@@ -203,12 +205,19 @@ class _PurchasePageState extends State<PurchasePage> {
         Text(payPerUse, style: titleStyle),
         pady(27),
         _buildIconRow(
-            SvgPicture.asset('assets/svg/price.svg'), currentAvgVPNPrice),
-        pady(8),
-        _buildIconRow(SvgPicture.asset('assets/svg/access_time.svg'), notASub),
+          OrchidAsset.svg.price,
+          currentAvgVPNPrice,
+        ),
         pady(8),
         _buildIconRow(
-            SvgPicture.asset('assets/svg/share.svg'), shareAccountWith),
+          OrchidAsset.svg.access_time,
+          notASub,
+        ),
+        pady(8),
+        _buildIconRow(
+          OrchidAsset.svg.share,
+          shareAccountWith,
+        ),
         pady(12),
       ],
     );
@@ -545,12 +554,12 @@ class _PurchasePageState extends State<PurchasePage> {
                             textAlign: TextAlign.right,
                           ),
                           Text(
-                            '+ ' + formatCurrency(fee),
+                            '+ ' + formatCurrency(fee, locale: context.locale),
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),
                           Text(
-                            '- ' + formatCurrency(promo),
+                            '- ' + formatCurrency(promo, locale: context.locale),
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),
@@ -600,7 +609,7 @@ class _PurchasePageState extends State<PurchasePage> {
     log("iap: purchase page: showing error, rateLimitExceeded: $rateLimitExceeded");
 
     // Clear any error tx
-    var tx = await PacTransaction.shared.get();
+    var tx = PacTransaction.shared.get();
     if ((tx != null && tx.state == PacTransactionState.Error) ||
         rateLimitExceeded) {
       log("iap: clearing error tx");

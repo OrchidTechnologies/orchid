@@ -2,7 +2,9 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'configuration/orchid_user_config/orchid_user_config.dart';
 import 'orchid_log_api.dart';
 
 /// Support overriding the platform for testing.
@@ -14,6 +16,17 @@ class OrchidPlatform {
   /// If non-null this is a language code with optional country code, e.g.
   /// en or en_US
   static String languageOverride;
+
+  /// Fetch any language override from the environment or user config.
+  static void initLanguageOverride() {
+    var languageOverride = (const String.fromEnvironment('language',
+            defaultValue: null)) ??
+        OrchidUserConfig().getUserConfigJS().evalStringDefault("lang", null);
+    if (languageOverride != null &&
+        OrchidPlatform.hasLanguage(languageOverride)) {
+      OrchidPlatform.languageOverride = languageOverride;
+    }
+  }
 
   /// Get the language code fro the language override
   static String get languageOverrideCode {
@@ -52,6 +65,22 @@ class OrchidPlatform {
     }
   }
 
+  static final localizationsDelegates = [
+    S.delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
+
+  static Iterable<Locale> get supportedLocales {
+    return OrchidPlatform.languageOverride == null
+        ? S.supportedLocales
+        : [
+            Locale.fromSubtags(
+                languageCode: OrchidPlatform.languageOverrideCode,
+                countryCode: OrchidPlatform.languageOverrideCountry)
+          ];
+  }
+
   static bool get isLinux {
     try {
       return Platform.isLinux;
@@ -88,7 +117,7 @@ class OrchidPlatform {
     }
   }
 
-  static bool get isWeb{
+  static bool get isWeb {
     return kIsWeb;
   }
 
@@ -116,8 +145,7 @@ class OrchidPlatform {
       return Platform.operatingSystem;
     } catch (err) {
       log("exception fetching osname: $err");
-      return "unknown";
+      return 'unknown';
     }
   }
-
 }

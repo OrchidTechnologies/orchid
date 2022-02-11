@@ -1,4 +1,3 @@
-library flare_flutter;
 import 'dart:ui';
 
 class PathTrim {

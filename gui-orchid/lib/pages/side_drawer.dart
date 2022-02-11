@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_colors.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
@@ -61,7 +62,7 @@ class _SideDrawerState extends State<SideDrawer> {
               padding: EdgeInsets.zero,
               margin: EdgeInsets.zero,
               child: SvgPicture.asset(
-                'assets/svg/orchid_logo_side.svg',
+                OrchidAssetSvg.orchid_logo_side_path,
                 width: 100,
                 height: 112,
               ),
@@ -75,7 +76,7 @@ class _SideDrawerState extends State<SideDrawer> {
             children: <Widget>[
               SideDrawerTile(
                   title: s.trafficAnalysis,
-                  svgName: 'assets/svg/traffic.svg',
+                  svgName: OrchidAssetSvg.traffic_path,
                   showDetail: true,
                   hoffset: 4.0,
                   onPressed: () {
@@ -83,7 +84,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   }),
               SideDrawerTile(
                   title: s.accountManager,
-                  svgName: 'assets/svg/payments.svg',
+                  svgName: OrchidAssetSvg.payments_path,
                   showDetail: true,
                   hoffset: 4.0,
                   onPressed: () {
@@ -91,7 +92,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   }),
               SideDrawerTile(
                   title: s.circuitBuilder,
-                  svgName: 'assets/svg/hops_icon.svg',
+                  svgName: OrchidAssetSvg.hops_icon_path,
                   showDetail: true,
                   hoffset: 2.5,
                   onPressed: () {
@@ -99,7 +100,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   }),
               SideDrawerTile(
                   title: s.settings,
-                  svgName: 'assets/svg/settings_gear.svg',
+                  svgName: OrchidAssetSvg.settings_gear_path,
                   showDetail: true,
                   hoffset: 2.0,
                   onPressed: () {
@@ -115,7 +116,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   }),
               SideDrawerTile(
                   title: s.privacyPolicy,
-                  svgName: 'assets/svg/privacy.svg',
+                  svgName: OrchidAssetSvg.privacy_path,
                   showDetail: true,
                   hoffset: 2.0,
                   onPressed: () {
@@ -123,7 +124,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   }),
               SideDrawerTile(
                   title: s.openSourceLicenses,
-                  svgName: 'assets/svg/document.svg',
+                  svgName: OrchidAssetSvg.document_path,
                   showDetail: true,
                   hoffset: 3.0,
                   onPressed: () {

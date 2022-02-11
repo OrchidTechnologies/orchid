@@ -27,15 +27,19 @@ class EthereumJsonRpc {
 
     // json null params should not be quoted
     postBody = postBody.replaceAll('"null"', 'null');
-    log("jsonRPC to $url: postbody = $postBody");
+    logDetail("jsonRPC to $url: postbody = $postBody");
+
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+    };
+    if (!OrchidPlatform.isWeb) {
+      headers['Referer'] = 'https://account.orchid.com';
+    }
 
     // do the post
     var response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Referer': 'https://account.orchid.com',
-      },
+      Uri.parse(url),
+      headers: headers,
       body: postBody,
     );
 

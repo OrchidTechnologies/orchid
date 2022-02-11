@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/help/open_source_page.dart';
 import 'package:orchid/pages/help/privacy_page.dart';
-import 'package:orchid/pages/onboarding/onboarding_vpn_permission_page.dart';
-import 'package:orchid/pages/onboarding/walkthrough_pages.dart';
 import 'package:orchid/pages/settings/advanced_configuration_page.dart';
 import 'package:orchid/pages/settings/manage_config_page.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
@@ -49,8 +47,6 @@ class AppRoutes {
     privacy: (context) => PrivacyPage(),
     open_source: (context) => OpenSourcePage(),
     legal: (context) => LegalPage(),
-    onboarding_walkthrough: (context) => WalkthroughPages(),
-    onboarding_vpn_permission: (context) => OnboardingVPNPermissionPage(),
     circuit: (context) => CircuitPage(),
     traffic: (context) => TrafficView(),
     manage_config: (context) => ManageConfigPage(),

@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 
 import '../../common/app_text.dart';
 
@@ -97,7 +98,7 @@ class HopTile extends StatelessWidget {
   static Padding buildFlowDivider({EdgeInsetsGeometry padding}) {
     return Padding(
       padding: padding ?? const EdgeInsets.only(top: 16, bottom: 16),
-      child: Image.asset("assets/images/path.png"),
+      child: OrchidAsset.image.path,
     );
   }
 
@@ -126,7 +127,8 @@ class HopTile extends StatelessWidget {
           ],
         ),
         leading: svgName != null
-            ? SvgPicture.asset(svgName, width: 24, height: 24, color: Colors.white)
+            ? SvgPicture.asset(svgName,
+                width: 24, height: 24, color: Colors.white)
             : image,
         trailing: trailing ??
             Row(

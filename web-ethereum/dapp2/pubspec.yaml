@@ -38,7 +38,7 @@ dependencies:
   qr_flutter: 4.0.0
   rxdart: 0.25.0
   shared_preferences: 2.0.5
-  styled_text: 3.0.4+1
+  styled_text: 4.0.0
   #sqflite: 2.0.0+3
   url_launcher: 6.0.3
   uuid: 2.2.2 # XXX: web3dart
@@ -58,9 +58,25 @@ flutter:
   assets:
     - assets/images/
     - assets/svg/
+    - assets/svg/chains/
+    - assets/svg/tokens/
+
+  fonts:
+    - family: Baloo2
+      fonts:
+        - asset: assets/fonts/Baloo2-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Baloo2-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Baloo2-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Baloo2-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Baloo2-ExtraBold.ttf
+          weight: 800
 
 flutter_intl:
-  enabled: true
+  enabled: false
 
 # Not sure that these are working
 targets:

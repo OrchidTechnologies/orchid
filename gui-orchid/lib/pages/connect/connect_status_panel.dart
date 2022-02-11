@@ -4,9 +4,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/units.dart';
 
 import '../app_routes.dart';
@@ -46,10 +48,11 @@ class ConnectStatusPanel extends StatelessWidget {
     var s = S.of(context);
     // await Navigator.pushNamed(context, AppRoutes.identity);
     return _buildPanel(
-        icon: SvgPicture.asset('assets/svg/gauge_icon.svg',
+        icon: SvgPicture.asset(OrchidAssetSvg.gauge_icon_path,
             width: 40, height: 35, color: Colors.white),
         text: bandwidthAvailableGB != null
-            ? bandwidthAvailableGB.toStringAsFixed(1)
+            ? toFixedLocalized(bandwidthAvailableGB,
+                locale: context.locale, digits: 1)
             : '...',
         subtext: s.gb);
   }
@@ -57,10 +60,10 @@ class ConnectStatusPanel extends StatelessWidget {
   Widget _buildUSDPanel(BuildContext context) {
     var s = S.of(context);
     var price = (bandwidthPrice != null && !MockOrchidAPI.hidePrices)
-        ? '\$' + formatCurrency(bandwidthPrice.value)
+        ? '\$' + formatCurrency(bandwidthPrice.value, locale: context.locale)
         : '...';
     return _buildPanel(
-        icon: SvgPicture.asset('assets/svg/dollars_icon.svg',
+        icon: SvgPicture.asset(OrchidAssetSvg.dollars_icon_path,
             width: 40, height: 40, color: Colors.white),
         text: price,
         subtext: s.usdgb);
@@ -73,7 +76,7 @@ class ConnectStatusPanel extends StatelessWidget {
         Navigator.pushNamed(context, AppRoutes.circuit);
       },
       child: _buildPanel(
-          icon: SvgPicture.asset('assets/svg/hops_icon.svg',
+          icon: SvgPicture.asset(OrchidAssetSvg.hops_icon_path,
               width: 40, height: 25, color: Colors.white),
           text: circuitHops == null ? '' : "$circuitHops" + ' ' + s.hop,
           // No pluralization

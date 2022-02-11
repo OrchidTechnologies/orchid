@@ -12,16 +12,13 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid/orchid_scroll.dart';
 import 'package:collection/collection.dart';
 import 'package:orchid/common/screen_orientation.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/common/wrapped_switch.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:rxdart/rxdart.dart';
 
-import '../../common/app_colors.dart';
-import '../../common/app_text.dart';
 import 'clear_traffic_action_button.dart';
 import 'traffic_empty_view.dart';
 import 'traffic_view_detail.dart';

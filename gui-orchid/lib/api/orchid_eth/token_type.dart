@@ -1,97 +1,46 @@
 import 'dart:math' as Math;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
+import '../orchid_crypto.dart';
 import 'chains.dart';
+import 'package:orchid/util/units.dart' as units;
 
-class TokenTypes {
-  static const TokenType ETH = TokenType(
-    name: 'ETH',
-    symbol: 'ETH',
-    exchangeRateSource: BinanceExchangeRateSource(),
-    decimals: 18,
-    chainId: Chains.ETH_CHAINID,
-  );
-
-  // See class OXT.
-  static const TokenType OXT = TokenType(
-    name: 'OXT',
-    symbol: 'OXT',
-    exchangeRateSource: BinanceExchangeRateSource(),
-    decimals: 18,
-    chainId: Chains.ETH_CHAINID,
-  );
-
-  static const TokenType XDAI = TokenType(
-      name: 'xDAI',
-      symbol: 'xDAI',
-      exchangeRateSource:
-          BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
-      decimals: 18,
-      chainId: Chains.XDAI_CHAINID);
-
-  static const TokenType TOK = TokenType(
-      name: 'TOK',
-      symbol: 'TOK',
-      exchangeRateSource:
-          BinanceExchangeRateSource(symbolOverride: 'ETH', inverted: true),
-      decimals: 18,
-      chainId: Chains.GANACHE_TEST_CHAINID);
-
-  static const TokenType AVAX = TokenType(
-      name: 'Avalanche',
-      symbol: 'AVAX',
-      exchangeRateSource: BinanceExchangeRateSource(),
-      decimals: 18,
-      chainId: Chains.AVALANCHE_CHAINID);
-
-  static const TokenType BNB = TokenType(
-      name: 'BNB',
-      symbol: 'BNB',
-      exchangeRateSource: BinanceExchangeRateSource(),
-      decimals: 18,
-      chainId: Chains.BSC_CHAINID);
-
-  static const TokenType MATIC = TokenType(
-      name: 'MATIC',
-      symbol: 'MATIC',
-      exchangeRateSource: BinanceExchangeRateSource(),
-      decimals: 18,
-      chainId: Chains.POLYGON_CHAINID);
-
-/*
-  static const TokenType AETH = TokenType(
-    name: 'AETH',
-    symbol: 'AETH',
-    exchangeRateSource: BinanceExchangeRateSource(),
-    decimals: 18,
-    chainId: Chains.ARBITRUM_ONE_CHAINID,
-  );
-   */
-
-}
-
-// ERC20 Token type
+// Token type
 // Note: Unfortunately Dart does not have a polyomorphic 'this' type so the
 // Note: token type cannot serve as a typesafe factory for the token subtypes
 // Note: as we (used to) do in the dapp. See token-specific Token subclasses for certain
 // Note: tokens such as OXT.
 class TokenType {
   final int chainId;
-  final String name;
   final String symbol;
   final int decimals;
   final ExchangeRateSource exchangeRateSource;
+  final String iconPath;
+
+  /// The ERC20 contract address if this is a non-native token on its chain.
+  final EthereumAddress erc20Address;
+
+  /// Returns true if this token is the native (gas) token on its chain.
+  bool get isNative {
+    return erc20Address == null;
+  }
 
   Chain get chain {
     return Chains.chainFor(chainId);
   }
 
+  SvgPicture get icon {
+    return SvgPicture.asset(iconPath);
+  }
+
   const TokenType({
     @required this.chainId,
-    @required this.name,
     @required this.symbol,
-    @required this.decimals,
-    @required this.exchangeRateSource,
+    this.exchangeRateSource,
+    this.decimals = 18,
+    this.erc20Address,
+    @required this.iconPath,
   });
 
   // Return 1eN where N is the decimal count.
@@ -102,6 +51,10 @@ class TokenType {
   // From the integer denomination value e.g. WEI for ETH
   Token fromInt(BigInt intValue) {
     return Token(this, intValue);
+  }
+
+  Token fromIntString(String s) {
+    return fromInt(BigInt.parse(s));
   }
 
   Token get zero {
@@ -121,13 +74,11 @@ class TokenType {
       other is TokenType &&
           runtimeType == other.runtimeType &&
           chainId == other.chainId &&
-          name == other.name &&
           symbol == other.symbol &&
           decimals == other.decimals;
 
   @override
-  int get hashCode =>
-      chainId.hashCode ^ name.hashCode ^ symbol.hashCode ^ decimals.hashCode;
+  int get hashCode => chainId.hashCode ^ symbol.hashCode ^ decimals.hashCode;
 
   @override
   String toString() {
@@ -146,13 +97,14 @@ class Token {
     return intValue.toDouble() / type.multiplier;
   }
 
-  String toFixedLocalized({int digits = 4}) {
-    return floatValue.toStringAsFixed(digits);
+  /// No token symbol
+  String toFixedLocalized({@required Locale locale, int digits = 4}) {
+    return units.formatCurrency(floatValue, locale: locale, digits: digits);
   }
 
-  // Format as currency with the symbol suffixed
-  String formatCurrency({int digits = 4}) {
-    return this.toFixedLocalized(digits: digits) + " ${type.symbol}";
+  /// Format as value with the symbol suffixed
+  String formatCurrency({@required Locale locale, int digits = 4}) {
+    return units.formatCurrency(floatValue, locale: locale, digits: digits, suffix: type.symbol);
   }
 
   Token multiplyInt(int other) {
@@ -176,7 +128,7 @@ class Token {
   }
 
   Token subtract(Token other) {
-    assertType(other);
+    assertSameType(other);
     return type.fromInt(intValue - other.intValue);
   }
 
@@ -205,7 +157,7 @@ class Token {
   }
 
   Token add(Token other) {
-    assertType(other);
+    assertSameType(other);
     return type.fromInt(intValue + other.intValue);
   }
 
@@ -237,25 +189,31 @@ class Token {
     return intValue >= BigInt.zero;
   }
 
-  assertType(Token other) {
-    assertSameType(this, other);
+  void assertType(TokenType type) {
+    if (this.type != type) {
+      throw AssertionError('Token ${this} is not ${type}');
+    }
   }
 
-  static assertSameType(Token a, Token b) {
+  void assertSameType(Token other) {
+    assertSameTypes(this, other);
+  }
+
+  static assertSameTypes(Token a, Token b) {
     if (a.type != b.type) {
-      throw AssertionError('Token type mismatch!: ${a.type}, ${b.type}');
+      throw AssertionError('Token type mismatch 2!: ${a.type}, ${b.type}');
     }
   }
 
   // Keeping these here to avoid overloading the math funcs
   static T min<T extends Token>(T a, T b) {
-    assertSameType(a, b);
+    assertSameTypes(a, b);
     return a.intValue < b.intValue ? a : b;
   }
 
   // Keeping these here to avoid overloading the math funcs
   static T max<T extends Token>(T a, T b) {
-    assertSameType(a, b);
+    assertSameTypes(a, b);
     return a.intValue > b.intValue ? a : b;
   }
 

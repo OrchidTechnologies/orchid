@@ -415,7 +415,7 @@ class OrchidPACServer {
     // Do the http post
     var postBody = jsonEncode(params);
     logWrapped("iap: posting to $url, json = $postBody");
-    var response = await http.post(url,
+    var response = await http.post(Uri.parse(url),
         headers: {
           "Content-Type": "application/json; charset=utf-8",
           "Accept-Language": clientLocale,

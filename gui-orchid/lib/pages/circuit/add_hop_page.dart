@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/common/formatting.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import '../../common/app_sizes.dart';
 import 'hop_editor.dart';
 import 'model/circuit_hop.dart';
@@ -64,48 +65,27 @@ class _AddHopPageState extends State<AddHopPage> {
                     ),
                     pady(24),
 
-                    // Link Account
-                    /*
-                    _divider(),
-                    _buildHopChoice(
-                        text: s.linkAnOrchidAccount,
-                        onTap: () {
-                          return showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return ScanOrPasteDialog(
-                                  onImportAccount:
-                                      (ParseOrchidIdentityResult result) async {
-                                    var hop = await OrchidVPNConfigV0
-                                        .importAccountAsHop(result.account);
-                                    widget.onAddFlowComplete(hop);
-                                  },
-                                  v0Only: true,
-                                );
-                              });
-                        },
-                        imageName: 'assets/images/scan.png'),
-                     */
-
                     // Account Chooser
                     // if (!OrchidPlatform.isApple) ...[
                     pady(24),
                     _buildHopChoice(
-                        text: s.useAnOrchidAccount,
-                        onTap: () {
-                          _addHopType(HopProtocol.Orchid);
-                        },
-                        imageName: 'assets/images/logo_small_purple.png'),
+                      text: s.useAnOrchidAccount,
+                      onTap: () {
+                        _addHopType(HopProtocol.Orchid);
+                      },
+                      imageName: OrchidAssetImage.logo_small_purple_path,
+                    ),
                     // ],
 
                     // OVPN Subscription
                     pady(24),
                     _buildHopChoice(
-                        text: s.enterOpenvpnConfig,
-                        onTap: () {
-                          _addHopType(HopProtocol.OpenVPN);
-                        },
-                        svgName: 'assets/svg/openvpn.svg'),
+                      text: s.enterOpenvpnConfig,
+                      onTap: () {
+                        _addHopType(HopProtocol.OpenVPN);
+                      },
+                      svgName: OrchidAssetSvg.openvpn_path,
+                    ),
 
                     // WireGuard
                     pady(24),
@@ -114,7 +94,7 @@ class _AddHopPageState extends State<AddHopPage> {
                       onTap: () {
                         _addHopType(HopProtocol.WireGuard);
                       },
-                      svgName: 'assets/svg/wireguard.svg',
+                      svgName: OrchidAssetSvg.wireguard_path,
                     ),
 
                     pady(96),

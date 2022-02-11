@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
@@ -10,11 +9,11 @@ import 'accounts_preferences.dart';
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
 
+  UserPreferences._internal();
+
   factory UserPreferences() {
     return _singleton;
   }
-
-  UserPreferences._internal();
 
   /// The shared instance, initialized by init()
   SharedPreferences _sharedPreferences;
@@ -146,13 +145,6 @@ class UserPreferences {
         .setString(UserPreferenceKey.UserConfig.toString(), value);
   }
 
-  /// A list of account information indicating the active identity (signer key)
-  /// and the active account (funder and chainid) for that identity.
-  /// The order of this list is significant in that the first account designates
-  /// the active identity. The list should contain at most one account per identity.
-  ObservablePreference<List<Account>> activeAccounts =
-      ObservableAccountListPreference(UserPreferenceKey.ActiveAccounts);
-
   /// Add (set-wise) to the distinct set of discovered accounts.
   Future<void> addCachedDiscoveredAccounts(List<Account> accounts) async {
     if (accounts == null || accounts.isEmpty) {
@@ -184,6 +176,10 @@ class UserPreferences {
 
   void addTransaction(String txHash) {
     transactions.set(transactions.get() + [txHash]);
+  }
+
+  void addTransactions(List<String> txHashes) {
+    transactions.set(transactions.get() + txHashes);
   }
 
   void removeTransaction(String txHash) {
@@ -229,7 +225,6 @@ class UserPreferences {
 enum UserPreferenceKey {
   UserConfig,
   Keys,
-  ActiveAccounts,
   CachedDiscoveredAccounts,
   Transactions,
 }

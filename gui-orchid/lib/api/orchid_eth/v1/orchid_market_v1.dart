@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import '../chains.dart';
@@ -24,7 +25,7 @@ class MarketConditionsV1 implements MarketConditions {
 
   static Future<MarketConditions> forPot(LotteryPot pot,
       {bool refresh = false}) async {
-    return forBalance(pot.balance, pot.deposit, refresh: refresh);
+    return forBalance(pot.balance, pot.effectiveDeposit, refresh: refresh);
   }
 
   static Future<MarketConditions> forBalance(Token balance, Token escrow,
@@ -53,8 +54,45 @@ class MarketConditionsV1 implements MarketConditions {
       {bool refresh = false}) async {
     Token gasPrice =
         await OrchidEthereumV1().getGasPrice(chain, refresh: refresh);
-    //log("gas price for chain: ${chain.name} = ${gasPrice.intValue}");
+    return _getCostToRedeemTicketFor(gasPrice);
+  }
+
+  static Future<Token> _getCostToRedeemTicketFor(Token gasPrice) async {
     return gasPrice * OrchidContractV1.gasCostToRedeemTicket.toDouble();
+  }
+
+  /// Given a desired efficiency and number of tickets, determine the required
+  /// pot composition and gas required to create the account.
+  // TODO: If we use non-native tokens in the future with v1 we will have to update this.
+  static Future<PotStats> getPotStats({
+    Chain chain,
+    double efficiency,
+    int tickets,
+  }) async {
+    if (efficiency < 0 || efficiency >= 1.0) {
+      throw Exception("invalid efficiency: $efficiency");
+    }
+    Token gasPrice = await OrchidEthereumV1().getGasPrice(chain);
+    if (gasPrice.isZero()) {
+      log("Warning: zero gas price for chain: $chain");
+    }
+    final requiredTicketValue =
+        await _getCostToRedeemTicketFor(gasPrice) / (1 - efficiency);
+    final requiredDeposit = requiredTicketValue * 2.0;
+    final requiredBalance = requiredTicketValue * tickets.toDouble();
+    final requiredGas = await chain.getGasPrice() *
+        OrchidContractV1.createAccountMaxGas.toDouble();
+
+    return PotStats(
+      chain: chain,
+      version: 1,
+      efficiency: efficiency,
+      tickets: tickets,
+      createBalance: requiredBalance,
+      createDeposit: requiredDeposit,
+      createGas: requiredGas,
+      gasPrice: gasPrice,
+    );
   }
 
   @override

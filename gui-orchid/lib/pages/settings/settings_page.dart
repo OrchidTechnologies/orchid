@@ -10,12 +10,11 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
-import 'package:orchid/pages/account_manager/account_finder.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
 import 'package:orchid/common/screen_orientation.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 
 import '../app_routes.dart';
 

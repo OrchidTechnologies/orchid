@@ -7,7 +7,7 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
-import 'package:orchid/util/streams.dart';
+import 'package:orchid/util/dispose.dart';
 
 typedef KeySelectionCallback = void Function(KeySelectionItem key);
 

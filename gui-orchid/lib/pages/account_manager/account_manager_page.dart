@@ -13,30 +13,31 @@ import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/orchid/account/account_card.dart';
+import 'package:orchid/orchid/account/account_finder.dart';
+import 'package:orchid/orchid/account/account_store.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/pages/account_manager/account_detail_store.dart';
-import 'package:orchid/common/scan_paste_dialog.dart';
+import 'package:orchid/orchid/account/account_detail_store.dart';
+import 'package:orchid/pages/account_manager/scan_paste_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_copy_text.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
-import 'package:orchid/util/streams.dart';
+import 'package:orchid/util/dispose.dart';
 import 'package:orchid/util/strings.dart';
 import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_sizes.dart';
 import '../app_routes.dart';
-import 'account_card.dart';
-import 'account_finder.dart';
-import 'account_store.dart';
 import 'account_view_model.dart';
 import 'export_identity_dialog.dart';
 
@@ -205,7 +206,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         highlightColor: OrchidColors.purple_menu,
       ),
       child: PopupMenuButton<_IdentitySelectorMenuItem>(
-        icon: SvgPicture.asset('assets/svg/settings_gear.svg'),
+        icon: OrchidAsset.svg.settings_gear,
         initialValue: _selectedIdentity != null
             ? _IdentitySelectorMenuItem(identity: _selectedIdentity)
             : null,

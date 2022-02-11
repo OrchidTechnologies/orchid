@@ -43,7 +43,7 @@ class OrchidRoutingStatus {
     var client = HttpUnixClient(socketPath);
     try {
       // log("status: checking /connected: client = $client");
-      var response = await client.get("/connected");
+      var response = await client.get(Uri(path: "/connected"));
       bool newConnectionStatus = (response.body ?? "").toLowerCase() == "true";
       //log("status: newConnectionStatus = $newConnectionStatus");
       if (newConnectionStatus != connected.value) {

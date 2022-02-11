@@ -60,7 +60,7 @@ class _ChainSelectionDropdownState extends State<ChainSelectionDropdown> {
               focusColor: OrchidColors.purple_menu,
             ),
             child: DropdownButton<Chain>(
-              hint: Text("Choose Chain", style: OrchidText.button),
+              hint: Text(s.chooseChain, style: OrchidText.button),
               isExpanded: true,
               icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
               underline: Container(),

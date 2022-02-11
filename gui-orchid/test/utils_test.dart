@@ -107,12 +107,12 @@ void main() {
         return 42;
       };
       Cache<TokenType, int> cache = Cache(duration: Duration(seconds: 2));
-      await cache.get(key: TokenTypes.ETH, producer: func);
-      await cache.get(key: TokenTypes.ETH, producer: func);
-      await cache.get(key: TokenTypes.ETH, producer: func);
+      await cache.get(key: Tokens.ETH, producer: func);
+      await cache.get(key: Tokens.ETH, producer: func);
+      await cache.get(key: Tokens.ETH, producer: func);
       await Future.delayed(Duration(seconds: 2));
-      await cache.get(key: TokenTypes.ETH, producer: func);
-      await cache.get(key: TokenTypes.ETH, producer: func);
+      await cache.get(key: Tokens.ETH, producer: func);
+      await cache.get(key: Tokens.ETH, producer: func);
     });
 
     //

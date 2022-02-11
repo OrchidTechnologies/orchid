@@ -2,9 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_web3/flutter_web3.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
+import 'package:orchid/api/orchid_web3/orchid_erc20.dart';
+import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
 
 import '../orchid_log_api.dart';
 
@@ -37,6 +43,9 @@ class OrchidWeb3Context {
   Duration _pollWalletPeriod = Duration(seconds: 5);
   VoidCallback _walletUpdateListener;
 
+  /// Lottery contract versions available on this chain
+  Set<int> contractVersionsAvailable;
+
   OrchidWeb3Context._({
     this.web3,
     this.chain,
@@ -45,6 +54,10 @@ class OrchidWeb3Context {
     this.walletConnectProvider,
   }) : this.id = (contextId += 1) {
     log("context created: $id");
+  }
+
+  Future<void> _init() async {
+    contractVersionsAvailable = Set.unmodifiable(await _findContractVersions());
     _startPollingWallet();
   }
 
@@ -66,6 +79,8 @@ class OrchidWeb3Context {
       walletAddress: walletAddress,
     );
 
+    await context._init();
+
     return context;
   }
 
@@ -82,16 +97,62 @@ class OrchidWeb3Context {
       chain: Chains.chainFor(int.parse(walletConnectProvider.chainId)),
       walletAddress: walletAddress,
     );
+
+    await context._init();
+
     return context;
   }
 
-  Future<OrchidWallet> getWallet() async {
-    var nativeCurrency = chain.nativeCurrency;
-    var nativeBalance =
-        nativeCurrency.fromInt(await web3.getBalance(walletAddress.toString()));
-    return OrchidWallet(this, {nativeCurrency: nativeBalance});
+  /// Fetch the native token balance for
+  Future<Token> getBalance() async {
+    return chain.nativeCurrency
+        .fromInt(await web3.getBalance(walletAddress.toString()));
   }
 
+  Future<OrchidWallet> getWallet() async {
+    Map<TokenType, Token> balances = {};
+    Map<TokenType, Token> allowances = {};
+
+    balances[chain.nativeCurrency] = await getBalance();
+
+    // TODO: If we support other erc20 (non-native) token choices in future we will
+    // TODO: need to generalize this to specify the set that the wallet should
+    // TODO: display for a given chain.
+    // Also find the OXT balance if on main net or test
+    if (chain.isEthereum || OrchidUserParams().test) {
+      try {
+        var oxt = OrchidERC20(context: this, tokenType: Tokens.OXT);
+        balances[Tokens.OXT] = await oxt.getERC20Balance(walletAddress);
+        allowances[Tokens.OXT] = await oxt.getERC20Allowance(
+            owner: walletAddress,
+            spender: OrchidContractV0.lotteryContractAddressV0);
+      } catch (err) {
+        log("Error: Unable to find erc20 balance: $err");
+      }
+    }
+
+    return OrchidWallet(
+        context: this, balances: balances, allowances: allowances);
+  }
+
+  Future<Set<int>> _findContractVersions() async {
+    Set<int> set = {};
+
+    var code =
+        await web3.getCode(OrchidContractV0.lotteryContractAddressV0String);
+    if (code != "0x") {
+      set.add(0);
+    }
+
+    code = await web3.getCode(OrchidContractV1.lotteryContractAddressV1);
+    if (code != "0x") {
+      set.add(1);
+    }
+
+    return set;
+  }
+
+  /// Wallet addresses changed
   void onAccountsChanged(void Function(List<String> accounts) listener) {
     void invokeListener(List<String> accounts) {
       // log("XXX: context ($id) callback onAccountsChanged");
@@ -100,6 +161,7 @@ class OrchidWeb3Context {
         listener(accounts);
       }
     }
+
     if (ethereumProvider != null) {
       ethereumProvider.onAccountsChanged(invokeListener);
     } else {
@@ -107,6 +169,7 @@ class OrchidWeb3Context {
     }
   }
 
+  /// Provider chain changed
   void onChainChanged(void Function(int chainId) listener) {
     void invokeListener(int chainId) {
       // log("XXX: context ($id) callback onChainChanged");
@@ -115,6 +178,7 @@ class OrchidWeb3Context {
         listener(chainId);
       }
     }
+
     if (ethereumProvider != null) {
       ethereumProvider.onChainChanged(invokeListener);
     } else {
@@ -194,9 +258,15 @@ class OrchidWallet {
 
   Map<TokenType, Token> balances;
 
-  OrchidWallet(this.context, [Map<TokenType, Token> balance]) {
-    this.balances = balance ?? {};
-  }
+  // Allowances for any erc20 tokens tracked.
+  Map<TokenType, Token> allowances;
+
+  OrchidWallet({
+    this.context,
+    Map<TokenType, Token> balances,
+    Map<TokenType, Token> allowances,
+  })  : this.balances = balances ?? {},
+        this.allowances = allowances ?? {};
 
   EthereumAddress get address {
     return context.walletAddress;
@@ -207,8 +277,21 @@ class OrchidWallet {
     return balances[context.chain.nativeCurrency];
   }
 
+  /// Fetch the native token balance for
+  Future<Token> getBalance() async {
+    return context.getBalance();
+  }
+
+  Token get oxtBalance {
+    return balances[Tokens.OXT];
+  }
+
   Token balanceOf(TokenType type) {
     return balances[type];
+  }
+
+  Token allowanceOf(TokenType type) {
+    return allowances[type];
   }
 
   @override

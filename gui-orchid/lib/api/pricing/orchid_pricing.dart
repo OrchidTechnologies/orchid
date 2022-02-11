@@ -1,14 +1,19 @@
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/util/cacheable.dart';
+import 'package:orchid/util/units.dart';
+
+import '../orchid_platform.dart';
 
 /// Token Exchange rates
 class OrchidPricing {
   static OrchidPricing _shared = OrchidPricing._init();
 
-  Cache<TokenType, double> cache = Cache(duration: Duration(seconds: 30), name: "pricing");
+  Cache<TokenType, double> cache =
+      Cache(duration: Duration(seconds: 30), name: "pricing");
 
   OrchidPricing._init();
 
@@ -16,8 +21,34 @@ class OrchidPricing {
     return _shared;
   }
 
-  /// Return the price (USD/Token): tokens * Rate = USD
+  /// The USD value of the token quantity.
+  Future<USD> tokenToUSD(Token token) async {
+    return USD(token.floatValue * await tokenToUsdRate(token.type));
+  }
+
+  /// Convert value of from token to equivalant USD value in 'to' token type.
+  Future<Token> tokenToToken(Token fromToken, TokenType toType) async {
+    return toType.fromDouble(
+        fromToken.floatValue * await tokenToTokenRate(fromToken.type, toType));
+  }
+
+  /// (toType / fromType): The conversion rate from fromType to toType
+  Future<double> tokenToTokenRate(TokenType fromType, TokenType toType) async {
+    // (to/usd) / (from/usd) = to/from
+    return await usdToTokenRate(toType) / await usdToTokenRate(fromType);
+  }
+
+  /// The USD price for the token. (USD/Token)
+  Future<double> usdPrice(TokenType tokenType) async {
+    return tokenToUsdRate(tokenType);
+  }
+
+  /// (USD/Token): Tokens * Rate = USD
   Future<double> tokenToUsdRate(TokenType tokenType) async {
+    if (tokenType.exchangeRateSource == Tokens.NoExchangeRateSource) {
+      throw Exception('No exchange rate source for token: ${tokenType.symbol}');
+    }
+
     return cache.get(
         key: tokenType,
         producer: (tokenType) {
@@ -25,6 +56,7 @@ class OrchidPricing {
         });
   }
 
+  /// (Token/USD): USD * Rate = Tokens
   Future<double> usdToTokenRate(TokenType tokenType) async {
     var rate = await tokenToUsdRate(tokenType);
     if (rate == 0) {
@@ -51,7 +83,10 @@ abstract class ExchangeRateSource {
 }
 
 class BinanceExchangeRateSource extends ExchangeRateSource {
-  /// Reverse the default <TOKEN>USDT pair ordering to USDT<TOKEN> and invert
+  /// A Binance lookup is normally <TOKEN>USDT:
+  /// https://api.binance.com/api/v3/avgPrice?symbol=ETHUSDT
+  ///
+  /// This flag reverses the pair ordering to USDT<TOKEN> and inverts
   /// the rate consistent with that. e.g. for DAI we must use 1/USDTDAI and
   /// not DAIUSDT since DAIUSDT was delisted.
   final bool inverted;
@@ -74,10 +109,14 @@ class BinanceExchangeRateSource extends ExchangeRateSource {
   }
 
   Future<double> _getPrice(TokenType tokenType) async {
-    log("pricing: Binance fetching rate for: $tokenType");
+    logDetail("pricing: Binance fetching rate for: $tokenType");
     try {
-      var response = await http.get(_url(tokenType),
-          headers: {'Referer': 'https://account.orchid.com'});
+      var response = await http.get(
+        Uri.parse(_url(tokenType)),
+        headers: OrchidPlatform.isWeb
+            ? {}
+            : {'Referer': 'https://account.orchid.com'},
+      );
       if (response.statusCode != 200) {
         throw Exception("Error status code: ${response.statusCode}");
       }

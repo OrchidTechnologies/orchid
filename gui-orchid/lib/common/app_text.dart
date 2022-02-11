@@ -187,12 +187,5 @@ class AppText {
       fontFamily: 'SFProText-Regular',
       height: 20.0 / 15.0);
 
-  static LinkTextSpan buildLearnMoreLinkTextSpan(BuildContext context) {
-    return LinkTextSpan(
-      text: S.of(context).learnMore,
-      style: AppText.linkStyle.copyWith(fontSize: 15),
-      url: OrchidUrls.partsOfOrchidAccount,
-    );
-  }
 }
 

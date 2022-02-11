@@ -1,9 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
-import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';
@@ -11,22 +13,27 @@ import 'package:styled_text/styled_text.dart';
 
 import 'dapp_button.dart';
 import 'orchid_form_fields.dart';
+import 'package:orchid/util/localization.dart';
 
 class AddFundsPane extends StatefulWidget {
   final OrchidWeb3Context context;
-
-  // TODO: This will be available through context
-  final OrchidWallet wallet;
-
   final EthereumAddress signer;
-  final VoidCallback onTransaction;
+  final TokenType tokenType;
+
+  // Callback to add the funds
+  final Future<List<String>> Function({
+    OrchidWallet wallet,
+    EthereumAddress signer,
+    Token addBalance,
+    Token addEscrow,
+  }) addFunds;
 
   const AddFundsPane({
     Key key,
     @required this.context,
-    @required this.wallet,
     @required this.signer,
-    @required this.onTransaction,
+    @required this.tokenType,
+    @required this.addFunds,
   }) : super(key: key);
 
   @override
@@ -39,7 +46,12 @@ class _AddFundsPaneState extends State<AddFundsPane> {
   bool _txPending = false;
 
   OrchidWallet get wallet {
-    return widget.wallet;
+    return widget.context.wallet;
+  }
+
+  // The wallet balance of the configured token type
+  Token get walletBalance {
+    return wallet?.balanceOf(widget.tokenType);
   }
 
   @override
@@ -53,30 +65,36 @@ class _AddFundsPaneState extends State<AddFundsPane> {
 
   @override
   Widget build(BuildContext context) {
-    if (wallet?.balance == null) {
+    if (walletBalance == null) {
       return Container();
     }
-    var tokenType = wallet.balance.type;
+    var allowance = wallet.allowanceOf(widget.tokenType);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (allowance != null && allowance.gtZero())
+          Text(s.currentTokenPreauthorizationAmount(
+                  widget.tokenType.symbol, allowance.formatCurrency(locale: context.locale)))
+              .body2
+              .bottom(16)
+              .top(8),
         LabeledTokenValueField(
-          type: tokenType,
+          type: widget.tokenType,
           controller: _addBalanceField,
-          label: "Balance" + ':',
+          label: s.balance + ':',
         ),
         pady(4),
         LabeledTokenValueField(
-          type: tokenType,
+          type: widget.tokenType,
           controller: _addDepositField,
-          label: "Deposit" + ':',
+          label: s.deposit + ':',
         ),
         pady(24),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             DappButton(
-                text: "ADD FUNDS",
+                text: s.addFunds,
                 onPressed: _addFundsFormEnabled ? _addFunds : null),
           ],
         ),
@@ -90,8 +108,9 @@ class _AddFundsPaneState extends State<AddFundsPane> {
     return StyledText(
       style: OrchidText.caption,
       textAlign: TextAlign.center,
-      text: "Add funds to your Orchid Account balance and/or deposit."
-          "  For guidance on sizing your account see <link>orchid.com</link>",
+      text: s.addFundsToYourOrchidAccountBalanceAndorDeposit +
+          ' ' +
+          s.forGuidanceOnSizingYourAccountSee,
       tags: {
         'link':
             OrchidText.caption.linkStyle.link(OrchidUrls.partsOfOrchidAccount),
@@ -106,12 +125,12 @@ class _AddFundsPaneState extends State<AddFundsPane> {
 
   bool get _addBalanceFieldValid {
     var value = _addBalanceField.value;
-    return value != null && value < wallet.balance;
+    return value != null && value < walletBalance;
   }
 
   bool get _addDepositFieldValid {
     var value = _addDepositField.value;
-    return value != null && value < wallet.balance;
+    return value != null && value < walletBalance;
   }
 
   bool get _addFundsFormEnabled {
@@ -120,7 +139,7 @@ class _AddFundsPaneState extends State<AddFundsPane> {
     }
     if (_addBalanceFieldValid && _addDepositFieldValid) {
       var total = _addBalanceField.value + _addDepositField.value;
-      return total > wallet.balance.type.zero && total <= wallet.balance;
+      return total > walletBalance.type.zero && total <= walletBalance;
     }
     return false;
   }
@@ -133,19 +152,21 @@ class _AddFundsPaneState extends State<AddFundsPane> {
       _txPending = true;
     });
     try {
-      var txHash = await OrchidWeb3V1(widget.context).orchidAddFunds(
+      var txHashes = await widget.addFunds(
         wallet: wallet,
         signer: widget.signer,
         addBalance: _addBalanceField.value,
         addEscrow: _addDepositField.value,
       );
-      UserPreferences().addTransaction(txHash);
+
+      // Persisting the transaction(s) will update the UI elsewhere.
+      UserPreferences().addTransactions(txHashes);
+
       _addBalanceField.clear();
       _addDepositField.clear();
       setState(() {});
-      widget.onTransaction();
-    } catch (err) {
-      log("Error on add funds: $err");
+    } catch (err, stack) {
+      log('Error on add funds: $err, $stack');
     }
     setState(() {
       _txPending = false;

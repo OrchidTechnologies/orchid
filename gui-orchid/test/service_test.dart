@@ -94,24 +94,24 @@ void main() async {
       // discontinued pair ordering
       var rate1 = await BinanceExchangeRateSource(
               symbolOverride: 'DAI', inverted: false)
-          .tokenToUsdRate(TokenTypes.XDAI);
+          .tokenToUsdRate(Tokens.XDAI);
       var rate2 =
           await BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true)
-              .tokenToUsdRate(TokenTypes.XDAI);
+              .tokenToUsdRate(Tokens.XDAI);
       print("$rate1, $rate2");
     });
 
     test('get Binance exchange rates 2', () async {
-      var price = await OrchidPricing().tokenToUsdRate(TokenTypes.XDAI);
+      var price = await OrchidPricing().tokenToUsdRate(Tokens.XDAI);
       // get again cached
-      price = await OrchidPricing().tokenToUsdRate(TokenTypes.XDAI);
+      price = await OrchidPricing().tokenToUsdRate(Tokens.XDAI);
       print("xdai to usd = $price");
     });
 
     test('get Binance exchange rates 3', () async {
-      var price = await OrchidPricing().tokenToUsdRate(TokenTypes.ETH);
+      var price = await OrchidPricing().tokenToUsdRate(Tokens.ETH);
       print("eth to usd = $price");
-      price = await OrchidPricing().tokenToUsdRate(TokenTypes.OXT);
+      price = await OrchidPricing().tokenToUsdRate(Tokens.OXT);
       print("oxt to usd = $price");
     });
 

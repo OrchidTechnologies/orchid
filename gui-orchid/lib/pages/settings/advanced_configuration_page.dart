@@ -7,7 +7,7 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
-import 'package:orchid/common/titled_page_base.dart';
+import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
