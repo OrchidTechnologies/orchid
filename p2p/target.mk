@@ -146,30 +146,17 @@ endif
 
 pwd/secp256k1 := $(pwd)/secp256k1
 source += $(pwd/secp256k1)/src/secp256k1.c
+source += $(pwd/secp256k1)/src/precomputed_ecmult.c
+source += $(pwd/secp256k1)/src/precomputed_ecmult_gen.c
 cflags += -I$(pwd/secp256k1)/include
 
 cflags/$(pwd/secp256k1)/ += -I$(pwd/secp256k1)
 cflags/$(pwd/secp256k1)/ += -I$(pwd/secp256k1)/src
-cflags/$(pwd/secp256k1)/ += -include $(pwd/secp256k1)/../field.h
 cflags/$(pwd/secp256k1)/ += -Wno-unused-function
-
-$(output)/gen_context: $(pwd/secp256k1)/src/gen_context.c
-	gcc -o $@ $< -I$(pwd/secp256k1) -DECMULT_GEN_PREC_BITS=4
-
-$(pwd/secp256k1)/src/ecmult_static_context.h: $(output)/gen_context
-	cd $(pwd/secp256k1) && $(CURDIR)/$(output)/gen_context
-
-$(call depend,$(pwd/secp256k1)/src/secp256k1.c.o,$(pwd/secp256k1)/src/ecmult_static_context.h)
 
 cflags += -DENABLE_MODULE_RECOVERY
 cflags += -DENABLE_MODULE_ECDH
-cflags += -DUSE_ECMULT_STATIC_PRECOMPUTATION
-cflags += -DUSE_FIELD_INV_BUILTIN
-cflags += -DUSE_NUM_NONE
-cflags += -DUSE_SCALAR_INV_BUILTIN
 cflags += -DECMULT_WINDOW_SIZE=15
-
-# XXX: this is also passed to gen_context above
 cflags += -DECMULT_GEN_PREC_BITS=4
 
 

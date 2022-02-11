@@ -41,3 +41,4 @@ chacks/$(pwd)/webrtc/api/task_queue/task_queue_base.cc += s/defined(WEBRTC_POSIX
 chacks/$(pwd)/webrtc/rtc_base/synchronization/yield_policy.cc += s/defined(WEBRTC_POSIX)/1/g
 
 source += $(pwd)/webrtc/rtc_base/win32.cc
+source += $(pwd)/webrtc/rtc_base/win/windows_version.cc

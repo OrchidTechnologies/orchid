@@ -162,9 +162,6 @@ struct P {
     }
 };
 
-struct SctpDataChannel$buffered_amount_ { typedef uint64_t (webrtc::SctpDataChannel::*type); };
-template struct Pirate<SctpDataChannel$buffered_amount_, &webrtc::SctpDataChannel::buffered_amount_>;
-
 struct SctpDataChannel$SendDataMessage { typedef bool (webrtc::SctpDataChannel::*type)(const webrtc::DataBuffer &, bool); };
 template struct Pirate<SctpDataChannel$SendDataMessage, &webrtc::SctpDataChannel::SendDataMessage>;
 
@@ -211,9 +208,8 @@ task<void> Channel::Send(const Buffer &data) {
         if (sctp->state() != webrtc::DataChannelInterface::kOpen)
             return;
 #if 0
-        sctp->*Loot<SctpDataChannel$buffered_amount_>::pointer += size;
         if (!(sctp->*Loot<SctpDataChannel$SendDataMessage>::pointer)({buffer, true}, false))
-            sctp->*Loot<SctpDataChannel$buffered_amount_>::pointer -= size;
+            return;
 #else
         const auto provider(sctp->*Loot<SctpDataChannel$provider_>::pointer);
         cricket::SendDataResult result;

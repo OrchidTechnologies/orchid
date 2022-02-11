@@ -87,6 +87,7 @@ Boring::Boring(BufferDrain &drain, const S<Base> &base, uint32_t local, const Ho
     base_(base),
     local_(local),
     remote_(remote),
+    // XXX: note that future versions of boringtun might require "" as preshared_key
     wireguard_(new_tunnel(secret.c_str(), common.c_str(), 0, 0, [](const char *message) {
         Log() << "WireGuard: " << message << std::endl;
     }, TRACE))

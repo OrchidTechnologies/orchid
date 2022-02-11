@@ -121,8 +121,9 @@ class Transport :
             });
 
             orc_assert(config_.remote_list);
-            const auto remote(config_.remote_list->first_item());
-            orc_assert(remote != nullptr);
+            const auto &remotes(*config_.remote_list);
+            orc_assert(remotes.defined());
+            const auto remote(remotes.get_item(0));
 
             const auto endpoints(co_await base_->Resolve(remote->server_host, remote->server_port));
             for (const auto &endpoint : endpoints) {

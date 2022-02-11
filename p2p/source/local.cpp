@@ -127,7 +127,7 @@ rtc::Thread &Local::Thread() {
 }
 
 rtc::BasicPacketSocketFactory &Local::Factory() {
-    static rtc::BasicPacketSocketFactory factory(&Thread());
+    static rtc::BasicPacketSocketFactory factory(Thread().socketserver());
     return factory;
 }
 

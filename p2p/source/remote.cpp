@@ -553,7 +553,7 @@ rtc::Thread &Remote::Thread() {
 }
 
 rtc::BasicPacketSocketFactory &Remote::Factory() {
-    static rtc::BasicPacketSocketFactory factory(&Thread());
+    static rtc::BasicPacketSocketFactory factory(Thread().socketserver());
     return factory;
 }
 

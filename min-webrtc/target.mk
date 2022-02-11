@@ -64,8 +64,12 @@ webrtc += $(pwd)/webrtc/common_video/h264/pps_parser.cc
 webrtc += $(pwd)/webrtc/common_video/h264/sps_parser.cc
 webrtc += $(pwd)/webrtc/common_video/h264/sps_vui_rewriter.cc
 
+webrtc += $(pwd)/webrtc/logging/rtc_event_log/encoder/bit_writer.cc
+webrtc += $(pwd)/webrtc/logging/rtc_event_log/encoder/var_int.cc
+
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/ice_logger.cc
 webrtc += $(pwd)/webrtc/logging/rtc_event_log/rtc_stream_config.cc
+
 webrtc += $(wildcard $(pwd)/webrtc/logging/rtc_event_log/events/*.cc)
 
 webrtc += $(filter-out \

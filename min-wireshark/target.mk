@@ -107,6 +107,7 @@ source += $(wireshark)
 cflags += -I$(pwd)/extra
 cflags += -iquote$(pwd)/extra
 cflags += -I$(pwd/wireshark)
+cflags += -I$(pwd/wireshark)/include
 
 cflags/$(pwd/wireshark)/ += -D'DATA_DIR=""'
 cflags/$(pwd/wireshark)/ += -D'EXTCAP_DIR=""'

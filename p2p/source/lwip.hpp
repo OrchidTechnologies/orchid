@@ -13,21 +13,22 @@
 
 #include <array>
 #include <memory>
-#include <set>
+#include <unordered_map>
 #include <vector>
 
 #include "rtc_base/async_resolver.h"
 #include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/socket_server.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
-
-using namespace rtc;
 
 namespace orc {
 
 typedef int SOCKET;
+
+using namespace rtc;
 
 // Event constants for the Dispatcher class.
 enum DispatcherEvent {
@@ -44,7 +45,6 @@ class Dispatcher {
  public:
   virtual ~Dispatcher() = default;
   virtual uint32_t GetRequestedEvents() = 0;
-  virtual void OnPreEvent(uint32_t ff) = 0;
   virtual void OnEvent(uint32_t ff, int err) = 0;
   virtual int GetDescriptor() = 0;
   virtual bool IsDescriptorClosed() = 0;
@@ -74,18 +74,29 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   // The number of events to process with one call to "epoll_wait".
   static constexpr size_t kNumEpollEvents = 128;
 
-  typedef std::set<Dispatcher*> DispatcherSet;
-
-  void AddRemovePendingDispatchers() RTC_EXCLUSIVE_LOCKS_REQUIRED(crit_);
-
   bool WaitSelect(int cms, bool process_io);
-  DispatcherSet dispatchers_ RTC_GUARDED_BY(crit_);
-  DispatcherSet pending_add_dispatchers_ RTC_GUARDED_BY(crit_);
-  DispatcherSet pending_remove_dispatchers_ RTC_GUARDED_BY(crit_);
-  bool processing_dispatchers_ RTC_GUARDED_BY(crit_) = false;
+  // uint64_t keys are used to uniquely identify a dispatcher in order to avoid
+  // the ABA problem during the epoll loop (a dispatcher being destroyed and
+  // replaced by one with the same address).
+  uint64_t next_dispatcher_key_ RTC_GUARDED_BY(crit_) = 0;
+  std::unordered_map<uint64_t, Dispatcher*> dispatcher_by_key_
+      RTC_GUARDED_BY(crit_);
+  // Reverse lookup necessary for removals/updates.
+  std::unordered_map<Dispatcher*, uint64_t> key_by_dispatcher_
+      RTC_GUARDED_BY(crit_);
+  // A list of dispatcher keys that we're interested in for the current
+  // select() or WSAWaitForMultipleEvents() loop. Again, used to avoid the ABA
+  // problem (a socket being destroyed and a new one created with the same
+  // handle, erroneously receiving the events from the destroyed socket).
+  //
+  // Kept as a member variable just for efficiency.
+  std::vector<uint64_t> current_dispatcher_keys_;
   Signaler* signal_wakeup_;  // Assigned in constructor only
   RecursiveCriticalSection crit_;
   bool fWait_;
+  // Are we currently in a select()/epoll()/WSAWaitForMultipleEvents loop?
+  // Used for a DCHECK, because we don't support reentrant waiting.
+  bool waiting_ = false;
 };
 
 class LwipSocket : public Socket, public sigslot::has_slots<> {
@@ -161,8 +172,8 @@ class LwipSocket : public Socket, public sigslot::has_slots<> {
   SOCKET s_;
   bool udp_;
   int family_ = 0;
-  RecursiveCriticalSection crit_;
-  int error_ RTC_GUARDED_BY(crit_);
+  mutable webrtc::Mutex mutex_;
+  int error_ RTC_GUARDED_BY(mutex_);
   ConnState state_;
   AsyncResolver* resolver_;
 
@@ -189,7 +200,6 @@ class SocketDispatcher : public Dispatcher, public LwipSocket {
   bool IsDescriptorClosed() override;
 
   uint32_t GetRequestedEvents() override;
-  void OnPreEvent(uint32_t ff) override;
   void OnEvent(uint32_t ff, int err) override;
 
   int Close() override;

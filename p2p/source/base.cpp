@@ -45,13 +45,9 @@ Base::Base(const char *type, U<rtc::NetworkManager> manager) :
 
 Base::~Base() = default;
 
-struct Thread_ { typedef rtc::Thread *(rtc::BasicPacketSocketFactory::*type); };
-template struct Pirate<Thread_, &rtc::BasicPacketSocketFactory::thread_>;
-
 U<cricket::PortAllocator> Base::Allocator() {
     auto &factory(Factory());
-    const auto thread(factory.*Loot<Thread_>::pointer);
-    return thread->Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
+    return Thread().Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
         return std::make_unique<cricket::BasicPortAllocator>(manager_.get(), &factory);
     });
 }
