@@ -15,7 +15,6 @@ import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/util/localization.dart';
-import 'package:orchid/util/on_off.dart';
 import '../../common/app_colors.dart';
 
 typedef ImportAccountCompletion = void Function(
@@ -93,24 +92,12 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
                 ),
                 child: Image.asset(OrchidAssetImage.scan_path,
                     color: OrchidColors.tappable),
-                onPressed: _pasteCode,
+                onPressed: _scanCode,
               ),
             ),
         ],
       ),
     );
-  }
-
-  TitleIconButton _buildScanButton(bool showIcons) {
-    return TitleIconButton(
-        text: s.scan,
-        spacing: 6,
-        trailing: showIcons
-            ? Image.asset(OrchidAssetImage.scan_path, color: Colors.white)
-            : SizedBox(),
-        textColor: Colors.white,
-        backgroundColor: AppColors.teal_3,
-        onPressed: _scanCode);
   }
 
   void _scanCode() async {
