@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/util/on_off.dart';
 import '../../common/app_colors.dart';
 import '../../common/app_text.dart';
 import 'hop_editor.dart';
@@ -49,10 +51,8 @@ class _CuratorEditorState extends State<CuratorEditorPage> {
     return Row(
       children: <Widget>[
         Container(
-          width: 80,
-          child: Text(s.curator+":",
-              style: AppText.textLabelStyle
-                  .copyWith(fontSize: 20, color: AppColors.neutral_1)),
+          width: 90,
+          child: Text(s.curator+":").title,
         ),
         Expanded(
             child: OrchidTextField(

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/on_off.dart';
 
 /// A styled text field with an optional custom trailing component.
 class OrchidTextField extends StatelessWidget {
@@ -44,6 +46,32 @@ class OrchidTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     var textStyle = OrchidText.body2.copyWith(height: 1.5);
     var hasValue = controller.text != '';
+
+    final suffixIcon = hasValue && !readOnly
+        ? IconButton(
+            onPressed: onClear ?? controller.clear,
+            icon: Padding(
+              padding: const EdgeInsets.only(right: 4.0),
+              child: Icon(Icons.clear,
+                  color: Colors.white.withOpacity(0.5), size: 20),
+            ),
+          )
+        : null;
+
+    // TODO: Moving the paste/scan button into the field suffix area along with
+    // TODO: the clear button causes all kinds of alignment problems.
+    // TODO: We should probably just reserve space with the suffix and overlay
+    // TODO: the buttons with a stack.
+    /*
+    final suffix = Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          suffixIcon,
+          trailing != null ? trailing : SizedBox.shrink(),
+        ]).top(10).bottom(10);
+     */
+
     return Container(
         height: height,
         margin: margin ??
@@ -65,6 +93,7 @@ class OrchidTextField extends StatelessWidget {
                   onChanged: null,
                   focusNode: null,
                   decoration: InputDecoration(
+                    isDense: true,
                     contentPadding: EdgeInsets.only(
                         top: 24, bottom: 20, left: 16, right: 16),
                     border: InputBorder.none,
@@ -73,17 +102,8 @@ class OrchidTextField extends StatelessWidget {
                         color: Colors.white.withOpacity(0.3)),
                     enabledBorder: textFieldEnabledBorder,
                     focusedBorder: textFieldFocusedBorder,
-                    suffixIcon: hasValue
-                        ? IconButton(
-                            onPressed: onClear ?? controller.clear,
-                            icon: Padding(
-                              padding: const EdgeInsets.only(right: 4.0),
-                              child: Icon(Icons.clear,
-                                  color: Colors.white.withOpacity(0.5),
-                                  size: 20),
-                            ),
-                          )
-                        : null,
+                    // suffix: suffix,
+                    suffixIcon: suffixIcon,
                   ),
                   cursorColor: Colors.white,
                   keyboardType: numeric

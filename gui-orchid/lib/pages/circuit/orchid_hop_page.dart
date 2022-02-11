@@ -30,6 +30,7 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
+import 'package:orchid/pages/account_manager/scan_paste_account.dart';
 import 'package:orchid/pages/circuit/chain_selection.dart';
 import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/units.dart';
@@ -42,14 +43,12 @@ import 'hop_editor.dart';
 import 'key_selection.dart';
 import 'model/circuit_hop.dart';
 import 'model/orchid_hop.dart';
+import 'orchid_account_entry.dart';
 
 /// Create / edit / view an Orchid Hop
+// The OrchidHopEditor operates in a "settings"-like fashion and allows
+// editing certain elements of the hop (e.g. curator) even when in "View" mode.
 class OrchidHopPage extends HopEditor<OrchidHop> {
-  // The OrchidHopEditor operates in a "settings"-like fashion and allows
-  // editing certain elements of the hop even when in "View" mode.  This flag
-  // disables these features.
-  bool disabled = false;
-
   OrchidHopPage(
       {@required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
       : super(
@@ -62,13 +61,8 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
 }
 
 class _OrchidHopPageState extends State<OrchidHopPage> {
-  var _pastedFunderField = TextEditingController();
-  Chain _pastedFunderChainselection;
+  Account _selectedAccount;
   var _curatorField = TextEditingController();
-  KeySelectionItem _initialSelectedKeyItem;
-  KeySelectionItem _selectedKeyItem;
-  FunderSelectionItem _initialSelectedFunderItem;
-  FunderSelectionItem _selectedFunderItem;
 
   bool _showBalance = false;
   LotteryPot _lotteryPot; // initially null
@@ -78,8 +72,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   Timer _balanceTimer;
   bool _balancePollInProgress = false;
   bool _showMarketStatsAlert = false;
-
-  bool _updatingAccounts = false;
 
   @override
   void initState() {
@@ -93,30 +85,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     // If the hop is empty initialize it to defaults now.
     if (_hop == null) {
       widget.editableHop.update(OrchidHop.from(_hop,
-          curator: await UserPreferences().getDefaultCurator() ??
+          curator: UserPreferences().getDefaultCurator() ??
               OrchidHop.appDefaultCurator));
     }
 
-    // Init the UI from the supplied hop
-    setState(() {
-      _curatorField.text = _hop?.curator;
-
-      _initialSelectedKeyItem =
-          _hop?.keyRef != null ? KeySelectionItem(keyRef: _hop.keyRef) : null;
-
-      _initialSelectedFunderItem = _hop?.funder != null
-          ? FunderSelectionItem(funderAccount: _hop.account)
-          : null;
-
-      _selectedKeyItem = _initialSelectedKeyItem;
-    });
-
-    if (widget.editable()) {
-      _pastedFunderField.addListener(_textFieldChanged);
-    }
-
     // init balance and account details polling
-    if (widget.readOnly() && await UserPreferences().getQueryBalances()) {
+    if (widget.readOnly() && UserPreferences().getQueryBalances()) {
       setState(() {
         _showBalance = true;
       });
@@ -124,19 +98,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         _pollBalanceAndAccountDetails();
       });
       _pollBalanceAndAccountDetails(); // kick one off immediately
-    }
-
-    if (widget.create) {
-      setState(() {
-        _updatingAccounts = true;
-      });
-      AccountFinder().find((accounts) async {
-        if (mounted) {
-          setState(() {
-            _updatingAccounts = false;
-          });
-        }
-      });
     }
   }
 
@@ -146,14 +107,35 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     _updateHop();
   }
 
+  // Migrating to OrchidAccountEntry
+  KeySelectionItem get _initialSelectedKeyItem {
+    return _hop?.keyRef != null ? KeySelectionItem(keyRef: _hop.keyRef) : null;
+  }
+
+  // Migrating to OrchidAccountEntry
+  KeySelectionItem get _selectedKeyItem {
+    return _initialSelectedKeyItem;
+  }
+
+  // Migrating to OrchidAccountEntry
+  FunderSelectionItem get _initialSelectedFunderItem {
+    return _hop?.funder != null
+        ? FunderSelectionItem(funderAccount: _hop.account)
+        : null;
+  }
+
+  // Migrating to OrchidAccountEntry
+  FunderSelectionItem get _selectedFunderItem {
+    return _initialSelectedFunderItem;
+  }
+
   @override
   Widget build(BuildContext context) {
-    var formValid = _funderValid() && _keyRefValid();
     return TapClearsFocus(
       child: TitledPage(
         title: s.orchidHop,
         actions: widget.mode == HopEditorMode.Create
-            ? [widget.buildSaveButton(context, _onSave, isValid: formValid)]
+            ? [widget.buildSaveButton(context, _onSave, isValid: _formValid())]
             : [],
         child: SafeArea(
           child: SingleChildScrollView(
@@ -203,25 +185,31 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           ),
           text,
           pady(16),
-          LinkText(
-            s.takeMeToTheAccountManager,
-            style: OrchidText.body1.linkStyle,
-            onTapped: () {
-              Navigator.of(context).push(new MaterialPageRoute(
-                  builder: (context) => AccountManagerPage()));
+          _buildAccountManagerLinkText(),
+
+          // The identity and funder selections
+          OrchidAccountEntry(
+            onChange: (Account account) {
+              log("XXX: _selectedAccount = $account");
+              setState(() {
+                _selectedAccount = account;
+              });
             },
           ),
           pady(24),
-          _buildAccountDetails(),
-          pady(24),
-          if (_updatingAccounts)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: _buildUpdatingAccounts(),
-            ),
-          pady(24),
         ],
       ),
+    );
+  }
+
+  LinkText _buildAccountManagerLinkText() {
+    return LinkText(
+      s.takeMeToTheAccountManager,
+      style: OrchidText.body1.linkStyle,
+      onTapped: () {
+        Navigator.of(context).push(
+            new MaterialPageRoute(builder: (context) => AccountManagerPage()));
+      },
     );
   }
 
@@ -239,7 +227,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           _buildSection(
               title: s.curation,
               child: _buildCuration(),
-              onDetail: !widget.disabled ? _editCurator : null),
+              onDetail: _editCurator),
           pady(36),
         ],
       ),
@@ -372,33 +360,16 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     ]);
   }
 
-  Widget _buildUpdatingAccounts() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SizedBox(
-            width: 20,
-            height: 20,
-            child: OrchidCircularProgressIndicator(
-              value: null, // indeterminate animation
-            )),
-        padx(16),
-        Text(s.updatingAccounts,
-            style: OrchidText.caption.copyWith(height: 1.7)),
-      ],
-    );
-  }
-
   // Build the signer key entry dropdown selector
   Widget _buildSelectSignerField() {
+    final _keyRefValid = _formValid();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
           s.orchidIdentity + ':',
           style: OrchidText.title.copyWith(
-              color:
-                  _keyRefValid() ? OrchidColors.valid : OrchidColors.invalid),
+              color: _keyRefValid ? OrchidColors.valid : OrchidColors.invalid),
         ),
         pady(8),
         Row(
@@ -408,7 +379,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                   key: ValueKey(_initialSelectedKeyItem.toString()),
                   enabled: widget.editable(),
                   initialSelection: _initialSelectedKeyItem,
-                  onSelection: _onKeySelected),
+                  onSelection: (_) {}),
             ),
             // Copy key button
             Visibility(
@@ -426,16 +397,15 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   /// Select a funder account address for the selected signer identity
   Column _buildSelectFunderField() {
+    final _funderValid = _formValid();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(s.funderAccount + ':',
             style: OrchidText.title.copyWith(
-                color: _funderValid()
-                    ? OrchidColors.valid
-                    : OrchidColors.invalid)),
+                color:
+                    _funderValid ? OrchidColors.valid : OrchidColors.invalid)),
         pady(widget.readOnly() ? 4 : 8),
-
         Row(
           children: <Widget>[
             Expanded(
@@ -446,59 +416,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                   enabled: widget.editable(),
                   initialSelection:
                       _selectedFunderItem ?? _initialSelectedFunderItem,
-                  onSelection: _onFunderSelected),
+                  onSelection: (_) {}),
             ),
           ],
         ),
-
-        // Show the paste funder field if the user has selected the option
-        Visibility(
-          visible: widget.editable() &&
-              _selectedFunderItem?.option ==
-                  FunderSelectionDropdown.pasteKeyOption,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 24),
-            child: _buildPasteFunderField(),
-          ),
-        )
       ],
     );
-  }
-
-  Column _buildPasteFunderField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        OrchidTextField(
-          hintText: '0x...',
-          margin: EdgeInsets.zero,
-          padding: EdgeInsets.zero,
-          controller: _pastedFunderField,
-          readOnly: widget.readOnly(),
-          enabled: widget.editable(),
-          trailing: widget.editable()
-              ? FlatButton(
-                  color: Colors.transparent,
-                  padding: EdgeInsets.zero,
-                  child: Icon(Icons.paste, color: OrchidColors.tappable),
-                  onPressed: _onPasteFunderAddressButton)
-              : null,
-        ),
-        pady(24),
-        ChainSelectionDropdown(
-          onSelection: (chain) {
-            setState(() {
-              _pastedFunderChainselection = chain;
-            });
-          },
-        ),
-      ],
-    );
-  }
-
-  void _onPasteFunderAddressButton() async {
-    ClipboardData data = await Clipboard.getData('text/plain');
-    _pastedFunderField.text = data.text;
   }
 
   Widget _buildAccountBalanceAndChart() {
@@ -688,51 +611,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     _curatorField.text = _hop?.curator;
   }
 
-  void _onKeySelected(KeySelectionItem key) {
-    setState(() {
-      _selectedKeyItem = key;
-      _selectedFunderItem = null;
-      _pastedFunderField.text = null;
-    });
-    // clear the keyboard
-    FocusScope.of(context).requestFocus(new FocusNode());
-  }
-
-  void _onFunderSelected(FunderSelectionItem funder) {
-    setState(() {
-      _selectedFunderItem = funder;
-    });
-    // clear the keyboard
-    FocusScope.of(context).requestFocus(new FocusNode());
-  }
-
-  void _textFieldChanged() {
-    setState(() {}); // Update validation
-  }
-
-  bool _keyRefValid() {
-    // invalid selection
-    if (_selectedKeyItem == null) {
-      return false;
-    }
-    // key value selected
-    if (_selectedKeyItem.keyRef != null) {
-      return true;
-    }
-    return false;
-  }
-
-  bool _funderValid() {
-    return (_selectedFunderItem != null &&
-            _selectedFunderItem.option !=
-                FunderSelectionDropdown.pasteKeyOption) ||
-        _pastedFunderAndChainValid() ||
-        widget.readOnly();
-  }
-
-  bool _pastedFunderAndChainValid() {
-    return EthereumAddress.isValid(_pastedFunderField.text) &&
-        _pastedFunderChainselection != null;
+  bool _formValid() {
+    return _selectedAccount != null;
   }
 
   // Note: Called whenever setState() is invoked. We should probably make this explicit.
@@ -740,29 +620,19 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     if (!widget.editable()) {
       return;
     }
-    EthereumAddress funder;
-    int chainId;
-    int version;
-    try {
-      var account = _selectedFunderItem?.account;
-      funder = account?.funder ?? EthereumAddress.from(_pastedFunderField.text);
-      chainId = account?.chainId ?? _pastedFunderChainselection.chainId;
-
-      // Note: Currently inferring contract version from chain selection here.
-      version =
-          account?.version ?? (_pastedFunderChainselection.isEthereum ? 0 : 1);
-    } catch (err) {
-      funder = null; // don't update it
+    if (_selectedAccount == null) {
+      return;
     }
+
     // The selected key ref may be null here in the case of the generate
     // or import options.  In those cases the key will be filled in upon save.
     widget.editableHop.update(
       OrchidHop.from(
         widget.editableHop.value?.hop,
-        keyRef: _selectedKeyItem?.keyRef,
-        funder: funder,
-        chainId: chainId,
-        version: version,
+        keyRef: _selectedAccount.signerKeyRef,
+        funder: _selectedAccount.funder,
+        chainId: _selectedAccount.chainId,
+        version: _selectedAccount.version,
       ),
     );
   }
@@ -798,7 +668,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   void dispose() {
     super.dispose();
     ScreenOrientation.reset();
-    _pastedFunderField.removeListener(_textFieldChanged);
     _balanceTimer?.cancel();
   }
 

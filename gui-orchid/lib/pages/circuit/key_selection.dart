@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
@@ -38,7 +39,7 @@ class KeySelectionDropdown extends StatefulWidget {
 }
 
 class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
-  List<StoredEthereumKey> _keys = [];
+  List<StoredEthereumKey> _keys; // initially null
   KeySelectionItem _selectedItem;
   List<StreamSubscription> _subs = [];
 
@@ -58,7 +59,7 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
     UserPreferences().keys.stream().listen((keys) {
       setState(() {
         this._keys = keys;
-        if (_selectedItem != null &&
+        if (_selectedItem?.keyRef != null &&
             !_keys.contains(_selectedItem.keyRef.getFrom(keys))) {
           _selectedItem = null;
           widget.onSelection(null);
@@ -87,10 +88,9 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
             child: DropdownButton<KeySelectionItem>(
               hint: Text(s.chooseIdentity).button,
               isExpanded: true,
-              icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
+              // icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
               underline: Container(),
-              // suppress the underline
-              value: _selectedItem,
+              value: _keys != null ? _selectedItem : null,
               items: _getDropdownItems(),
               onChanged: (KeySelectionItem item) {
                 setState(() {
@@ -107,21 +107,6 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
 
   List<DropdownMenuItem<KeySelectionItem>> _getDropdownItems() {
     List<DropdownMenuItem<KeySelectionItem>> items = [];
-
-    // Add the fixed options
-    /*
-    items.addAll([
-      DropdownMenuItem<KeySelectionItem>(
-        value: KeySelectionItem(option: KeySelectionDropdown.generateKeyOption),
-        child:
-            Text(KeySelectionDropdown.generateKeyOption.displayName(context)),
-      ),
-      DropdownMenuItem<KeySelectionItem>(
-        value: KeySelectionItem(option: KeySelectionDropdown.importKeyOption),
-        child: Text(KeySelectionDropdown.importKeyOption.displayName(context)),
-      )
-    ]);
-     */
 
     if (_keys != null) {
       items.addAll(_keys.map((key) {
@@ -146,6 +131,20 @@ class _KeySelectionDropdownState extends State<KeySelectionDropdown> {
             ));
       }).toList());
     }
+
+    // Add the fixed options
+    items.addAll([
+      // DropdownMenuItem<KeySelectionItem>(
+      //   value: KeySelectionItem(option: KeySelectionDropdown.generateKeyOption),
+      //   child:
+      //       Text(KeySelectionDropdown.generateKeyOption.displayName(context)),
+      // ),
+      DropdownMenuItem<KeySelectionItem>(
+        value: KeySelectionItem(option: KeySelectionDropdown.importKeyOption),
+        child: Text(KeySelectionDropdown.importKeyOption.displayName(context))
+            .button,
+      )
+    ]);
 
     return items;
   }

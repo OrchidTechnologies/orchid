@@ -221,10 +221,10 @@ abstract class OrchidPurchaseAPI {
     var pacs = [
       PAC(
         productId: OrchidPurchaseAPI.productIdPrefix + '.' + 'pactier4',
-        localCurrencyCode: "EUR",
-        localCurrencySymbol: '€',
-        // localCurrencyCode: "USD",
-        // localCurrencySymbol: '\$',
+        // localCurrencyCode: "EUR",
+        // localCurrencySymbol: '€',
+        localCurrencyCode: "USD",
+        localCurrencySymbol: '\$',
         localPrice: price,
         usdPriceExact: USD(price),
       ),

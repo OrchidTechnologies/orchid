@@ -65,6 +65,13 @@ class OrchidPlatform {
     }
   }
 
+  static bool doesNotSupportScanning = OrchidPlatform.isMacOS ||
+      OrchidPlatform.isWeb ||
+      OrchidPlatform.isWindows ||
+      OrchidPlatform.isLinux;
+
+  static bool supportsScanning = !doesNotSupportScanning;
+
   static final localizationsDelegates = [
     S.delegate,
     GlobalMaterialLocalizations.delegate,

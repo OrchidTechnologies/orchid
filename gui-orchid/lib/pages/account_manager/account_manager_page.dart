@@ -22,6 +22,7 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/account/account_detail_store.dart';
+import 'package:orchid/pages/account_manager/scan_paste_account.dart';
 import 'package:orchid/pages/account_manager/scan_paste_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
@@ -29,6 +30,7 @@ import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
+import 'package:orchid/pages/circuit/orchid_account_entry.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
@@ -127,7 +129,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
     // Open the import dialog after the UI has rendered.
     if (widget.openToImport) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _importIdentity());
+      WidgetsBinding.instance.addPostFrameCallback((_) => _importAccount());
     }
 
     // Open the purchase dialog (once) after the account info has loaded.
@@ -232,17 +234,20 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               [
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(action: _newIdentity),
-                    child: Text(s.newWord, style: style)),
+                    child: Text("New Identity", style: style)),
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(action: _importIdentity),
-                    child: Text(s.import, style: style)),
+                    child: Text("Import Identity", style: style)),
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(action: _exportIdentity),
-                    child: Text(s.export, style: style)),
+                    child: Text("Export Identity", style: style)),
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(
                         action: _confirmDeleteIdentity),
-                    child: Text(s.delete, style: style))
+                    child: Text("Delete Identity", style: style)),
+                PopupMenuItem<_IdentitySelectorMenuItem>(
+                    value: _IdentitySelectorMenuItem(action: _importAccount),
+                    child: Text("Import Account", style: style)),
               ];
         },
       ),
@@ -266,6 +271,53 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
+  void _importAccount() {
+    // State used by the dialog
+    Account _accountToImport;
+
+    final onPressed = (BuildContext context) async {
+      await UserPreferences().addCachedDiscoveredAccounts([_accountToImport]);
+      setState(() {
+        _accountToImport = null;
+      }); // Trigger a UI refresh
+      // dismiss the dialog
+      Navigator.pop(context);
+    };
+
+    AppDialogs.showAppDialog(
+      context: context,
+      showActions: false,
+      // This stateful builder allows this dialog to rebuild in response to setstate
+      // on the _accountToImport in the parent.
+      body: StatefulBuilder(builder: (context, setState) {
+        return SizedBox(
+            // Width here is effectively a max width and prevents dialog resizing
+            width: 370,
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  Text(s.importAccount).title,
+                  OrchidAccountEntry(
+                    onChange: (account) {
+                      setState(() {
+                        log("XXX: onChange = $account");
+                        _accountToImport = account;
+                      });
+                    },
+                    initialKeySelection: _selectedIdentity?.ref(),
+                  ),
+                  OrchidActionButton(
+                    text: s.importAccount.toUpperCase(),
+                    enabled: _accountToImport != null,
+                    onPressed: () => onPressed(context),
+                  ),
+                ],
+              ),
+            ));
+      }),
+    );
+  }
+
   void _newIdentity() async {
     var identity = StoredEthereumKey.generate();
     await UserPreferences().addKey(identity);
@@ -277,6 +329,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     _setSelectedIdentity(_chooseDefaultIdentity(_identities));
   }
 
+  // Import a signer key (identity)
   void _exportIdentity() async {
     var identity = _selectedIdentity;
     if (identity == null) {
@@ -315,8 +368,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       return;
     }
 
+    // Check if the identity is currently used in an Orchid hop
     List<String> activeKeyUids = await OrchidHop.getInUseKeyUids();
-
     if (activeKeyUids.contains(identity.uid)) {
       await AppDialogs.showAppDialog(
           context: context,

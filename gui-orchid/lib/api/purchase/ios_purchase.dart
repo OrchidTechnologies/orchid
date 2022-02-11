@@ -107,14 +107,14 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
               // with the purchased state when connectivity is restored.
               log("iap: failed due to network connectivity. Expect another update.");
               // Show the transaction in progress.
-              var pacTx = await PacTransaction.shared.get();
+              var pacTx = PacTransaction.shared.get();
               pacTx.state = PacTransactionState.InProgress;
               pacTx.save();
               break;
             default:
               // Unknown error.
               log("iap: IAP Failed, ${tx.toString()} error: type=${tx.error.runtimeType}, code=${tx.error.code}, userInfo=${tx.error.userInfo}, domain=${tx.error.domain}");
-              var pacTx = await PacTransaction.shared.get();
+              var pacTx = PacTransaction.shared.get();
               pacTx.error("IAP failed, reason unknown.").save();
               break;
           }
@@ -126,7 +126,7 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
 
         case SKPaymentTransactionStateWrapper.unspecified:
           log("iap: transaction in unknown state: $tx, ${tx.error}");
-          var pacTx = await PacTransaction.shared.get();
+          var pacTx = PacTransaction.shared.get();
           pacTx.error("iap failed: unknown state").save();
           break;
       }

@@ -92,7 +92,7 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
     Chain chain,
     EthereumAddress signer,
   ) async {
-    log("fetch create events for: $signer, url = ${chain.providerUrl}");
+    logDetail("fetch create events for: $signer, url = ${chain.providerUrl}");
     var startBlock = 0; // per chain
     var params = [
       {

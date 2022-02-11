@@ -75,7 +75,7 @@ class AccountStore extends ChangeNotifier {
     cachedAccounts = cached
         .where((account) => account.signerKeyUid == identity.keyUid)
         .toList();
-    log("account_store: loaded cached discovered accounts: "
+    logDetail("account_store: loaded cached discovered accounts: "
         "cached = $cached, filtered = $cachedAccounts");
     notifyListeners();
   }
@@ -104,7 +104,7 @@ class AccountStore extends ChangeNotifier {
   Future<AccountStore> _discoverAccounts() async {
     // Discover new accounts for this identity
     if (discoverAccounts) {
-      log("account_store: Discovering accounts");
+      logDetail("account_store: Discovering accounts");
 
       discoveredAccounts = [];
 
@@ -116,7 +116,7 @@ class AccountStore extends ChangeNotifier {
               (e) => _discoverV1Accounts(chain: e, signer: signer),
             ));
         notifyListeners();
-        log("account_store: After discovering v1 accounts: discovered = $discoveredAccounts");
+        logDetail("account_store: After discovering v1 accounts: discovered = $discoveredAccounts");
       } catch (err) {
         log("account_store: Error in v1 account discovery: $err");
       }
@@ -132,7 +132,7 @@ class AccountStore extends ChangeNotifier {
 
       // Add any newly discovered accounts to the persistent cache
       if (discoveredAccounts.isNotEmpty) {
-        log("account_store: Saving discovered accounts: $discoveredAccounts");
+        logDetail("account_store: Saving discovered accounts: $discoveredAccounts");
         await UserPreferences().addCachedDiscoveredAccounts(discoveredAccounts);
       }
     }
@@ -146,7 +146,7 @@ class AccountStore extends ChangeNotifier {
     try {
       var found = await OrchidEthereumV1()
           .discoverAccounts(chain: chain, signer: signer);
-      log("account_store: events found ${found.length} accounts on: ${chain.name}");
+      logDetail("account_store: events found ${found.length} accounts on: ${chain.name}");
       discoveredAccounts += found;
     } catch (err) {
       log("account_store: Error discovering accounts on ${chain.name}: $err");

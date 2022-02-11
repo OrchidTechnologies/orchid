@@ -64,7 +64,7 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
     }
     if (purchasesResult.responseCode != BillingResponse.ok) {
       log("iap: Error: purchase result response code: ${purchasesResult.responseCode}");
-      (await PacTransaction.shared.get())
+      (PacTransaction.shared.get())
           .error("iap failed 1: responseCode = ${purchasesResult.responseCode}")
           .save();
       return;
@@ -73,7 +73,7 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
     var purchases = purchasesResult.purchasesList;
     if (purchases.length > 1) {
       log("iap: unexpected multiple purchases. Clearing: $purchases");
-      (await PacTransaction.shared.get()).error("iap failed 2").save();
+      (PacTransaction.shared.get()).error("iap failed 2").save();
       for (PurchaseWrapper purchase in purchases) {
         await _billingClient.consumeAsync(purchase.purchaseToken);
       }
@@ -81,7 +81,7 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
     }
     if (purchases.isEmpty) {
       log("iap: unexpected purchase empty.");
-      (await PacTransaction.shared.get()).error("iap failed 3").save();
+      (PacTransaction.shared.get()).error("iap failed 3").save();
       return;
     }
     var purchase = purchases.first;
@@ -99,7 +99,7 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
           .advancePACTransactionsWithReceipt(receipt, ReceiptType.android);
     } else {
       log("iap: consumeAsync returned error: ${result.responseCode}");
-      (await PacTransaction.shared.get()).error("iap failed 4").save();
+      (PacTransaction.shared.get()).error("iap failed 4").save();
     }
   }
 

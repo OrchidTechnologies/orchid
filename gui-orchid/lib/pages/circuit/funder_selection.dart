@@ -9,6 +9,7 @@ import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/util/dispose.dart';
+import 'package:orchid/util/localization.dart';
 
 typedef FunderSelectionCallback = void Function(FunderSelectionItem key);
 
@@ -18,10 +19,10 @@ class FunderSelectionDropdown extends StatefulWidget {
   final bool enabled;
   final StoredEthereumKeyRef signer;
 
-  // Fixed options
-  static final pasteKeyOption =
+  // Fixed menu options
+  static final pasteAddressOption =
       FunderSelectionMenuOption(displayStringGenerator: (context) {
-    return S.of(context).pasteAddress;
+    return context.s.pasteAddress;
   });
 
   FunderSelectionDropdown({
@@ -51,7 +52,7 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
   }
 
   void initStateAsync() async {
-    _signer = await widget.signer.get();
+    _signer = await widget.signer?.get();
 
     // Load accounts, listening for updates
     UserPreferences().cachedDiscoveredAccounts.stream().listen((cached) {
@@ -147,9 +148,9 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
     items.addAll([
       DropdownMenuItem<FunderSelectionItem>(
         value:
-            FunderSelectionItem(option: FunderSelectionDropdown.pasteKeyOption),
+            FunderSelectionItem(option: FunderSelectionDropdown.pasteAddressOption),
         child: Text(
-          FunderSelectionDropdown.pasteKeyOption.displayName(context),
+          FunderSelectionDropdown.pasteAddressOption.displayName(context),
           style: OrchidText.button,
         ),
       ),
@@ -180,7 +181,7 @@ class FunderSelectionMenuOption {
   FunderSelectionMenuOption({this.displayStringGenerator});
 }
 
-/// An item in the key selection drop down list.
+/// An item in the funder selection drop down list.
 /// Holds either an account (representing the funder) or a selection option.
 class FunderSelectionItem {
   Account account;

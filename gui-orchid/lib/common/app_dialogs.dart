@@ -9,7 +9,7 @@ class AppDialogs {
   /// Show a styled Orchid app dialog with title, body, OK button, and optional link to settings.
   static Future<void> showAppDialog({
     @required BuildContext context,
-    @required String title,
+    String title,
     String bodyText,
     Widget body,
     bool linkSettings = false,
@@ -28,7 +28,7 @@ class AppDialogs {
           // insetPadding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(16.0))),
-          title: Text(title, style: OrchidText.title),
+          title: title != null ? Text(title, style: OrchidText.title) : null,
           content: body ?? Text(bodyText ?? '', style: OrchidText.body2),
           actions: <Widget>[
             if (linkSettings)

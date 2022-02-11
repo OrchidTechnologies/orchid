@@ -96,6 +96,7 @@ class OXT extends Token {
 }
 
 // TODO: Convert to Token
+@deprecated
 class ETH extends ScalarValue<double> {
   const ETH(double value) : super(value);
 
@@ -118,7 +119,7 @@ class ETH extends ScalarValue<double> {
   }
 }
 
-// TODO: Base on int token
+@deprecated
 class GWEI extends ScalarValue<double> {
   const GWEI(double value) : super(value);
 

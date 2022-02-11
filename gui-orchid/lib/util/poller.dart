@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 
-/**
+/*
     Poller.call(foo).every(seconds: 5).dispose(disposal);
     Poller.call(foo).nowAndEvery(seconds: 5).dispose(disposal);
  */
@@ -36,7 +36,6 @@ class Poller {
   }
 
   void _poll(_) {
-    log("XXX: calling poll: $func");
     func();
   }
 

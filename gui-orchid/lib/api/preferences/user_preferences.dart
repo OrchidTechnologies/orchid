@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
@@ -219,9 +220,12 @@ class UserPreferences {
     if (accounts == null || accounts.isEmpty) {
       return;
     }
+    if (accounts.contains(null)) {
+      throw Exception('null account in add to cache');
+    }
     var cached = cachedDiscoveredAccounts.get();
     cached.addAll(accounts);
-    cachedDiscoveredAccounts.set(cached);
+    return cachedDiscoveredAccounts.set(cached);
   }
 
   /// A set of accounts previously discovered for user identities

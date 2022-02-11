@@ -60,6 +60,7 @@ class AccountFinder {
     return _restart();
   }
 
+  /// Find accounts for all keys on all chains that support eth_getLogs.
   /// If a poll interval has been set this method will search until one or more accounts
   /// are found after a complete scan of all supported chains.  The callback will be executed
   /// once and the finder will be cancelled.

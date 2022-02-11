@@ -14,6 +14,8 @@ import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/util/localization.dart';
+import 'package:orchid/util/on_off.dart';
 import '../../common/app_colors.dart';
 
 typedef ImportAccountCompletion = void Function(
@@ -55,59 +57,47 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          if (!widget.pasteOnly) ...[
-            _buildScanButton(showIcons),
-            pady(32),
-          ],
           _buildPasteField(showIcons),
+          pady(32),
+          OrchidImportButton(
+              enabled: _pastedCodeValid, onPressed: _parsePastedCode),
         ],
       ),
     );
   }
 
   Widget _buildPasteField(bool showIcons) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: 200,
-          child: OrchidTextField(
-              hintText: '0x...',
-              margin: EdgeInsets.zero,
-              padding: EdgeInsets.zero,
-              controller: _pasteField,
-              trailing: Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: TextButton(
-                    style: TextButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: Text(s.paste, style: OrchidText.button.purpleBright),
-                    onPressed: _pasteCode),
-              )),
-        ),
-        padx(16),
-        SizedBox(
-          width: 50,
-          height: 52,
-          child: TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: _pastedCodeValid
-                  ? OrchidColors.enabled
-                  : OrchidColors.disabled,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(8.0))),
-              // side: BorderSide(width: 2, color: Colors.white),
+    return OrchidTextField(
+      hintText: '0x...',
+      margin: EdgeInsets.zero,
+      padding: EdgeInsets.zero,
+      controller: _pasteField,
+      trailing: Row(
+        children: [
+          SizedBox(
+            width: 48,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.only(left: 20.0),
+              ),
+              child: Icon(Icons.paste, color: OrchidColors.tappable),
+              onPressed: _pasteCode,
             ),
-            child: Text(
-              s.ok,
-              style: TextStyle().black,
-            ),
-            onPressed: _pastedCodeValid ? _parsePastedCode : null,
           ),
-        ),
-      ],
+          if (!widget.pasteOnly)
+            SizedBox(
+              width: 48,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.only(left: 16.0),
+                ),
+                child: Image.asset(OrchidAssetImage.scan_path,
+                    color: OrchidColors.tappable),
+                onPressed: _pasteCode,
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -205,5 +195,37 @@ class _ScanOrPasteOrchidAccountState extends State<ScanOrPasteOrchidAccount> {
 
   S get s {
     return S.of(context);
+  }
+}
+
+class OrchidImportButton extends StatelessWidget {
+  const OrchidImportButton({
+    Key key,
+    @required this.enabled,
+    @required this.onPressed,
+  }) : super(key: key);
+
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 100,
+      height: 52,
+      child: TextButton(
+        style: TextButton.styleFrom(
+          backgroundColor:
+              enabled ? OrchidColors.enabled : OrchidColors.disabled,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8.0))),
+          // side: BorderSide(width: 2, color: Colors.white),
+        ),
+        child: Text(
+          context.s.import.toUpperCase(),
+        ).button.black,
+        onPressed: enabled ? onPressed : null,
+      ),
+    );
   }
 }
