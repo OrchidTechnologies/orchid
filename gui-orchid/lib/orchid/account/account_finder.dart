@@ -73,7 +73,7 @@ class AccountFinder {
 
   void _poll(_) async {
     log("account finder: polling for accounts");
-    var keys = await UserPreferences().keys.get();
+    var keys = UserPreferences().keys.get();
     Set<Account> found = {};
     for (var key in keys) {
       try {

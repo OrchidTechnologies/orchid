@@ -282,6 +282,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       }); // Trigger a UI refresh
       // dismiss the dialog
       Navigator.pop(context);
+      _accountStore.refresh();
     };
 
     AppDialogs.showAppDialog(
