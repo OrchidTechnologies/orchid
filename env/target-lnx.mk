@@ -109,7 +109,8 @@ windres/$(1) := false
 endef
 $(each)
 
-more/armhf += -march=armv6 -D__ARM_MAX_ARCH__=8
+# XXX: v8 requires armv6k for the "yield" instruction
+more/armhf += -march=armv6k -D__ARM_MAX_ARCH__=8
 
 ifeq ($(distro),)
 ifneq ($(centos/$(machine)),)

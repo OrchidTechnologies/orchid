@@ -89,6 +89,7 @@ cflags += -I$(pwd)/sqlite_modern_cpp/hdr
 
 source += $(wildcard $(pwd)/yaml-cpp/src/*.cpp)
 cflags += -I$(pwd)/yaml-cpp/include
+cflags += -DYAML_CPP_STATIC_DEFINE
 
 
 source += $(pwd)/soralog/src/group.cpp

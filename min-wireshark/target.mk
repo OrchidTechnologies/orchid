@@ -37,9 +37,11 @@ ifeq ($(target),and)
 cflags/$(pwd/wireshark)/wsutil/privileges.c += -D'endpwent()='
 cflags/$(pwd/wireshark)/wsutil/privileges.c += -D'endgrent()='
 
+# XXX: wsutil/ws_getopt uses mblen. maybe filter out everywhere?
 # XXX: ws_pipe uses getdtablesize(), which
 # is a broken API not supported on Android
 wireshark := $(filter-out \
+    %/ws_getopt.c \
     %/ws_pipe.c \
 ,$(wireshark))
 endif
