@@ -29,3 +29,9 @@ cflags/$(pwd)/v8/ += -Wno-ignored-attributes
 
 cflags += -include $(pwd/v8)/../extra.hpp
 lflags += -ldbghelp
+
+# XXX: these should come from mingw. I'm still using an old version... maybe update?
+cflags/$(pwd/v8)/src/base/platform/platform-win32.cc += -DMEM_COALESCE_PLACEHOLDERS=0x00000001
+cflags/$(pwd/v8)/src/base/platform/platform-win32.cc += -DMEM_PRESERVE_PLACEHOLDER=0x00000002
+cflags/$(pwd/v8)/src/base/platform/platform-win32.cc += -DMEM_REPLACE_PLACEHOLDER=0x00004000
+cflags/$(pwd/v8)/src/base/platform/platform-win32.cc += -DMEM_RESERVE_PLACEHOLDER=0x00040000
