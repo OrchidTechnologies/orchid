@@ -21,8 +21,6 @@ head[env/libcxxabi]=origin/release_90
 head[app-shared/flutter]=2.2.3
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
-# boringtun is stuck?! https://github.com/cloudflare/boringtun/issues/211
-
 # fmt is stuck by soralog before 841aad95b42704ea77e3eb05a2cbb075dc5b1137
 # fmt broke on April Fools' with 15c10b0c666d274b378cf63429babfa202623db4
 # fmt fixed did not fix it until 69bdc20a3c1271b58f0d052ffc6b2466c44ef649
