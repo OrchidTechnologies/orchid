@@ -20,7 +20,7 @@
 
 args += --chain 1,ETH,https://cloudflare-eth.com/
 args += --chain 10,ETH,https://mainnet.optimism.io/
-args += --chain 30,BTC,http://galleon.saurik.com:8561/
+args += --chain 30,BTC,https://public-node.rsk.co/
 #args += --chain 40,TLOS,https://mainnet.telos.net/evm
 args += --chain 56,BNB,https://bsc-dataseed.binance.org/
 args += --chain 100,DAI,https://rpc.xdaichain.com/
