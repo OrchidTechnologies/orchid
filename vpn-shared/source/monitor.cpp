@@ -255,7 +255,7 @@ std::string get_tree_field(epan_dissect_t *edt, const char *field)
         if (!finfo->value.ftype->val_to_string_repr) {
             continue;
         }
-        int fs_len = fvalue_string_repr_len(&finfo->value, FTREPR_DISPLAY, finfo->hfinfo->display);
+        int fs_len = finfo->value.ftype->len_string_repr(&finfo->value, FTREPR_DISPLAY, finfo->hfinfo->display);
         std::string field_value;
         field_value.resize(fs_len);
         finfo->value.ftype->val_to_string_repr(&finfo->value, FTREPR_DISPLAY, finfo->hfinfo->display, &field_value[0], fs_len + 1);
