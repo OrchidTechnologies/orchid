@@ -372,7 +372,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "approve") {
         const auto [token, recipient, amount] = Options<Address, Address, uint256_t>(args);
         static Selector<bool, Address, uint256_t> approve("approve");
-        std::cout << (co_await executor_->Send(*chain_, {}, token, 0, approve(recipient, amount))).hex() << std::endl;
+        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, token, 0, approve(recipient, amount))).hex() << std::endl;
 
     } else if (command == "avax") {
         // https://docs.avax.network/build/references/cryptographic-primitives
