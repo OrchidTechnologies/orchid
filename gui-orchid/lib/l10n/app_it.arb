@@ -16,8 +16,7 @@
     "type": "text",
     "placeholders": {
       "num": {
-        "type": "int",
-        "format": "compactLong"
+        "type": "int"
       }
     }
   },
@@ -176,7 +175,9 @@
   "minTicketsAvailableTickets": "Ticket minimi disponibili: {tickets}",
   "@minTicketsAvailableTickets": {
     "placeholders": {
-      "tickets": {}
+      "tickets": {
+        "type": "int"
+      }
     }
   },
   "transactionSentToBlockchain": "Transazione inviata alla blockchain",
@@ -227,7 +228,9 @@
   "averagePriceIsUSDPerGb": "Il prezzo medio è {price} USD per GB",
   "@averagePriceIsUSDPerGb": {
     "placeholders": {
-      "price": {}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "myOrchidConfig": "La mia configurazione di Orchid",
@@ -312,5 +315,123 @@
   "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Abbiamo aggiunto un metodo per acquistare un account Orchid e creare un singolo circuito hop dalla schermata iniziale per semplificare il processo di onboarding.",
   "orchidIsUniqueAsAMultiHopOrOnion": "Orchid è un client multi-hop o di instradamento a cipolla esclusivo che supporta più protocolli VPN. Puoi configurare la connessione concatenando gli hop dai seguenti protocolli supportati.\n\nUn hop è come una normale VPN. Tre hop (per utenti avanzati) è la classica scelta di instradamento a cipolla. Zero hop consente l'analisi del traffico senza tunnel VPN.",
   "deletingOpenVPNAndWireguardHopsWillLose": "L'eliminazione degli hop OpenVPN e Wireguard comporterà la cancellazione di tutte le credenziali associate e della configurazione della connessione. Assicurati di eseguire il backup di tutte le informazioni prima di continuare.",
-  "thisCannotBeUndoneToSaveThisIdentity": "Questa operazione è irreversibile. Per salvare questa identità, premi Annulla e usa l'opzione Esporta"
+  "thisCannotBeUndoneToSaveThisIdentity": "Questa operazione è irreversibile. Per salvare questa identità, premi Annulla e usa l'opzione Esporta",
+  "unlockTime": "Durata sblocco",
+  "chooseChain": "Scegli catena",
+  "unlocking": "sblocco",
+  "unlocked": "Sbloccato",
+  "orchidTransaction": "Transazione Orchid",
+  "confirmations": "Conferme",
+  "pending": "In sospeso...",
+  "txHash": "Hash Tx:",
+  "allOfYourFundsAreAvailableForWithdrawal": "Tutti i tuoi fondi sono disponibili per il prelievo.",
+  "maxWithdrawOfYourTotalFundsCombinedFunds": "{maxWithdraw} dei tuoi {totalFunds} di fondi combinati sono attualmente disponibili per il prelievo.",
+  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
+    "placeholders": {
+      "maxWithdraw": {
+        "type": "String"
+      },
+      "totalFunds": {
+        "type": "String"
+      }
+    }
+  },
+  "alsoUnlockRemainingDeposit": "Sblocca anche il deposito residuo",
+  "ifYouSpecifyLessThanTheFullAmountFundsWill": "Se specifichi un importo inferiore all'importo totale, i fondi verranno prelevati prima dal tuo saldo.",
+  "forAdditionalOptionsSeeTheAdvancedPanel": "Per ulteriori opzioni, consulta il pannello AVANZATE.",
+  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "Se selezioni l'opzione di sblocco del deposito, con questa transazione preleverai immediatamente l'importo specificato dal tuo saldo e verrà avviato anche il processo di sblocco del deposito residuo.",
+  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "I fondi di deposito sono disponibili per il prelievo 24 ore dopo lo sblocco.",
+  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Preleva fondi dal tuo account Orchid al tuo wallet attuale.",
+  "withdrawAndUnlockFunds": "PRELEVA E SBLOCCA FONDI",
+  "withdrawFunds": "PRELEVA FONDI",
+  "withdraw": "Preleva",
+  "submitTransaction": "INVIA TRANSAZIONE",
+  "move": "Sposta",
+  "now": "Ora",
+  "amount": "Quantità",
+  "available": "Disponibile",
+  "select": "Seleziona",
+  "add": "AGGIUNGI",
+  "balanceToDeposit": "DA SALDO A DEPOSITO",
+  "depositToBalance": "DA DEPOSITO A SALDO",
+  "setWarnedAmount": "Imposta importo limite",
+  "addFundsToYourOrchidAccountBalanceAndorDeposit": "Aggiungi fondi al saldo e/o al deposito del tuo account Orchid.",
+  "forGuidanceOnSizingYourAccountSee": "Per indicazioni sul dimensionamento del tuo account, visita <link>orchid.com</link>",
+  "currentTokenPreauthorizationAmount": "Preautorizzazione corrente di {tokenType}: {amount}",
+  "@currentTokenPreauthorizationAmount": {
+    "placeholders": {
+      "tokenType": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noWallet": "Nessun wallet",
+  "noWalletOrBrowserNotSupported": "Nessun wallet o browser non supportato.",
+  "error": "Errore",
+  "failedToConnectToWalletconnect": "Impossibile connettersi a WalletConnect.",
+  "unknownChain": "Catena sconosciuta",
+  "theOrchidAccountManagerDoesntSupportThisChainYet": "La gestione account di Orchid non supporta ancora questa catena.",
+  "orchidIsntOnThisChain": "Orchid non è presente in questa catena.",
+  "theOrchidContractHasntBeenDeployedOnThisChainYet": "Il contratto Orchid non è ancora stato distribuito in questa catena.",
+  "moveFunds": "SPOSTA FONDI",
+  "lockUnlock": "BLOCCA/SBLOCCA",
+  "yourDepositOfAmountIsUnlocked": "Il tuo deposito di {amount} è sbloccato.",
+  "@yourDepositOfAmountIsUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "locked": "bloccato",
+  "yourDepositOfAmountIsUnlockingOrUnlocked": "Il tuo deposito di {amount} è {unlockingOrUnlocked}.",
+  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "unlockingOrUnlocked": {
+        "type": "String"
+      }
+    }
+  },
+  "theFundsWillBeAvailableForWithdrawalInTime": "I fondi saranno disponibili per il prelievo tra ${time}.",
+  "@theFundsWillBeAvailableForWithdrawalInTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lockDeposit": "BLOCCA DEPOSITO",
+  "unlockDeposit": "SBLOCCA DEPOSITO",
+  "advanced": "AVANZATE",
+  "linklearnMoreAboutOrchidAccountslink": "<link>Scopri di più sugli account Orchid</link>.",
+  "estimatedCostToCreateAnOrchidAccountWith": "Costo stimato per creare un account Orchid con un'efficienza di {efficiency} e {num} ticket di valore.",
+  "@estimatedCostToCreateAnOrchidAccountWith": {
+    "placeholders": {
+      "efficiency": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      }
+    }
+  },
+  "chain": "Catena",
+  "token": "Token",
+  "minDeposit": "Deposito min",
+  "minBalance": "Saldo min",
+  "fundFee": "Commissione fondo",
+  "withdrawFee": "Commissione prelievo",
+  "tokenValues": "VALORI TOKEN",
+  "usdPrices": "PREZZI USD",
+  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "L'impostazione di un importo di deposito limite avvia il periodo di attesa di 24 ore necessario per prelevare i fondi del deposito.",
+  "duringThisPeriodTheFundsAreNotAvailableAsA": "Durante questo periodo, i fondi non sono disponibili come deposito valido sulla rete Orchid.",
+  "fundsMayBeRelockedAtAnyTimeByReducingThe": "I fondi possono essere nuovamente bloccati in qualsiasi momento riducendo l'importo limite.",
+  "warn": "Limite",
+  "totalWarnedAmount": "Importo limite totale"
 }

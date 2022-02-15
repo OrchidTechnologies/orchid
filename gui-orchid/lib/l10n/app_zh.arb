@@ -16,8 +16,7 @@
     "type": "text",
     "placeholders": {
       "num": {
-        "type": "int",
-        "format": "compactLong"
+        "type": "int"
       }
     }
   },
@@ -176,7 +175,9 @@
   "minTicketsAvailableTickets": "可用的最低使用价值：{tickets}",
   "@minTicketsAvailableTickets": {
     "placeholders": {
-      "tickets": {}
+      "tickets": {
+        "type": "int"
+      }
     }
   },
   "transactionSentToBlockchain": "交易已发送到区块链",
@@ -227,7 +228,9 @@
   "averagePriceIsUSDPerGb": "平均价格为每 GB {price} 美元",
   "@averagePriceIsUSDPerGb": {
     "placeholders": {
-      "price": {}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "myOrchidConfig": "我的 Orchid 配置",
@@ -312,5 +315,123 @@
   "weAddedAMethodToPurchaseAnOrchidAccountAnd": "我们增加了一种购买 Orchid 帐户的方法，并从主页创建单跃点线路，方便您更快上手。",
   "orchidIsUniqueAsAMultiHopOrOnion": "Orchid 是一个独一无二的多跃点或洋葱路由客户端，支持多种 VPN 协议。您可以将以下受支持协议中的跃点链接在一起来建立连接。\n\n一个跃点就像一个普通的 VPN。选择三个跃点（用于高级用户）即是经典的洋葱路由。如果是零跃点，则允许在没有任何 VPN 隧道的情况下进行流量分析。",
   "deletingOpenVPNAndWireguardHopsWillLose": "删除 OpenVPN 和 Wireguard 跃点将丢失任何关联的凭据和连接配置。在继续之前，请务必备份所有信息。",
-  "thisCannotBeUndoneToSaveThisIdentity": "此操作无法撤消。要保存此 ID，请点击“取消”并使用“导出”选项"
+  "thisCannotBeUndoneToSaveThisIdentity": "此操作无法撤消。要保存此 ID，请点击“取消”并使用“导出”选项",
+  "unlockTime": "解锁时间",
+  "chooseChain": "选择链",
+  "unlocking": "解锁",
+  "unlocked": "已解锁",
+  "orchidTransaction": "Orchid 交易",
+  "confirmations": "确认",
+  "pending": "待定...",
+  "txHash": "交易哈希值：",
+  "allOfYourFundsAreAvailableForWithdrawal": "您的所有资金均可提取。",
+  "maxWithdrawOfYourTotalFundsCombinedFunds": "您的 {totalFunds} 综合资金中目前有 {maxWithdraw} 可以提取。",
+  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
+    "placeholders": {
+      "maxWithdraw": {
+        "type": "String"
+      },
+      "totalFunds": {
+        "type": "String"
+      }
+    }
+  },
+  "alsoUnlockRemainingDeposit": "同时解锁剩余存款",
+  "ifYouSpecifyLessThanTheFullAmountFundsWill": "如果您指定的金额少于总金额，资金将首先从您的余额中提取。",
+  "forAdditionalOptionsSeeTheAdvancedPanel": "其他选项详见“高级”面板。",
+  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "如果您选择“解锁存款”选项，此交易将立即从您的余额中提取指定金额，并针对您剩余的存款启动解锁程序。",
+  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "在解锁之后，存款资金可在 24 小时内提取。",
+  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "从您的 Orchid 帐户提取资金到当前钱包。",
+  "withdrawAndUnlockFunds": "提取并解锁资金",
+  "withdrawFunds": "提取资金",
+  "withdraw": "提取",
+  "submitTransaction": "提交交易",
+  "move": "转移",
+  "now": "现在",
+  "amount": "金额",
+  "available": "可用",
+  "select": "选择",
+  "add": "添加",
+  "balanceToDeposit": "余额至存款",
+  "depositToBalance": "存款至余额",
+  "setWarnedAmount": "设置警告金额",
+  "addFundsToYourOrchidAccountBalanceAndorDeposit": "将资金添加到您的 Orchid 帐户余额和/或存款中。",
+  "forGuidanceOnSizingYourAccountSee": "有关帐户金额大小的指南，详见 <link>orchid.com</link>",
+  "currentTokenPreauthorizationAmount": "当前{tokenType}预授权：{amount}",
+  "@currentTokenPreauthorizationAmount": {
+    "placeholders": {
+      "tokenType": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noWallet": "无钱包",
+  "noWalletOrBrowserNotSupported": "无钱包或浏览器不受支持。",
+  "error": "错误",
+  "failedToConnectToWalletconnect": "无法连接 WalletConnect。",
+  "unknownChain": "未知链",
+  "theOrchidAccountManagerDoesntSupportThisChainYet": "Orchid 帐户管理器尚不支持此链。",
+  "orchidIsntOnThisChain": "Orchid 未入驻此链！",
+  "theOrchidContractHasntBeenDeployedOnThisChainYet": "此链尚未部署 Orchid 合约。",
+  "moveFunds": "转移资金",
+  "lockUnlock": "锁定 / 解锁",
+  "yourDepositOfAmountIsUnlocked": "您的 {amount}存款已解锁。",
+  "@yourDepositOfAmountIsUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "locked": "已锁定",
+  "yourDepositOfAmountIsUnlockingOrUnlocked": "您的 {amount}存款已{unlockingOrUnlocked}。",
+  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "unlockingOrUnlocked": {
+        "type": "String"
+      }
+    }
+  },
+  "theFundsWillBeAvailableForWithdrawalInTime": "资金可以在 ${time} 内提取。",
+  "@theFundsWillBeAvailableForWithdrawalInTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lockDeposit": "锁定存款",
+  "unlockDeposit": "解锁存款",
+  "advanced": "高级",
+  "linklearnMoreAboutOrchidAccountslink": "<link>了解更多有关 Orchid 帐户的信息</link>。",
+  "estimatedCostToCreateAnOrchidAccountWith": "创建一个效率为 {efficiency}、价值为 {num} 个彩币的 Orchid 帐户。",
+  "@estimatedCostToCreateAnOrchidAccountWith": {
+    "placeholders": {
+      "efficiency": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      }
+    }
+  },
+  "chain": "区块链",
+  "token": "通证",
+  "minDeposit": "最低存款",
+  "minBalance": "最低余额",
+  "fundFee": "资金费",
+  "withdrawFee": "提取费",
+  "tokenValues": "通证价值",
+  "usdPrices": "美元价",
+  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "设置警告存款金额将会开启一个用于提取存款资金的 24 小时等待期，",
+  "duringThisPeriodTheFundsAreNotAvailableAsA": "在该等待期内，资金不可作为 Orchid 网络中的有效存款。",
+  "fundsMayBeRelockedAtAnyTimeByReducingThe": "通过减少警告金额可以随时重新锁定资金。",
+  "warn": "警告",
+  "totalWarnedAmount": "警告总金额"
 }

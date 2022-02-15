@@ -16,8 +16,7 @@
     "type": "text",
     "placeholders": {
       "num": {
-        "type": "int",
-        "format": "compactLong"
+        "type": "int"
       }
     }
   },
@@ -176,7 +175,9 @@
   "minTicketsAvailableTickets": "Tiket minimum yang tersedia: {tickets}",
   "@minTicketsAvailableTickets": {
     "placeholders": {
-      "tickets": {}
+      "tickets": {
+        "type": "int"
+      }
     }
   },
   "transactionSentToBlockchain": "Transaksi dikirim ke blockchain",
@@ -227,7 +228,9 @@
   "averagePriceIsUSDPerGb": "Harga rata-rata adalah {price} USD per GB",
   "@averagePriceIsUSDPerGb": {
     "placeholders": {
-      "price": {}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "myOrchidConfig": "Konfigurasi Orchid saya",
@@ -312,5 +315,123 @@
   "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Kami telah menambahkan cara untuk membeli akun Orchid dan membuat sirkuit dengan hop tunggal dari layar beranda untuk mempersingkat proses pengenalan.",
   "orchidIsUniqueAsAMultiHopOrOnion": "Orchid bersifat unik sebagai klien perutean berlapis atau multi-hop karena mendukung banyak protokol VPN. Anda dapat mengatur koneksi Anda dengan menggabungkan berbagai hop dari protokol yang didukung di bawah ini.\n\nSatu hop itu seperti VPN biasa. Tiga hop (bagi pengguna tingkat lanjut) adalah pilihan klasik untuk perutean berlapis. Nol hop memungkinkan analisis lalu lintas tanpa tunnel VPN apa pun.",
   "deletingOpenVPNAndWireguardHopsWillLose": "Menghapus hop OpenVPN dan WireGuard akan menghilangkan kredensial dan konfigurasi koneksi yang terkait. Pastikan Anda telah membuat cadangan untuk informasi tersebut sebelum melanjutkan.",
-  "thisCannotBeUndoneToSaveThisIdentity": "Tindakan ini tidak dapat dibatalkan. Untuk menyimpan identitas ini, tekan Batal dan gunakan opsi Ekspor"
+  "thisCannotBeUndoneToSaveThisIdentity": "Tindakan ini tidak dapat dibatalkan. Untuk menyimpan identitas ini, tekan Batal dan gunakan opsi Ekspor",
+  "unlockTime": "Waktu sampai terbuka",
+  "chooseChain": "Pilih rantai",
+  "unlocking": "sedang dibuka",
+  "unlocked": "Terbuka",
+  "orchidTransaction": "Transaksi Orchid",
+  "confirmations": "Konfirmasi",
+  "pending": "Tertunda...",
+  "txHash": "Hash Tx:",
+  "allOfYourFundsAreAvailableForWithdrawal": "Semua dana Anda tersedia untuk ditarik.",
+  "maxWithdrawOfYourTotalFundsCombinedFunds": "{maxWithdraw} dari {totalFunds} dana gabungan Anda tersedia untuk ditarik saat ini.",
+  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
+    "placeholders": {
+      "maxWithdraw": {
+        "type": "String"
+      },
+      "totalFunds": {
+        "type": "String"
+      }
+    }
+  },
+  "alsoUnlockRemainingDeposit": "Juga buka kunci deposito tersisa",
+  "ifYouSpecifyLessThanTheFullAmountFundsWill": "Jika kurang dari jumlah total ditentukan, dana akan ditarik dari saldo Anda lebih dahulu.",
+  "forAdditionalOptionsSeeTheAdvancedPanel": "Untuk opsi tambahan, lihat panel LANJUTAN.",
+  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "Jika Anda memilih opsi buka kunci deposito, transaksi ini akan segera menarik jumlah yang ditentukan dari saldo Anda dan juga memulai proses pembukaan kunci untuk deposito tersisa Anda.",
+  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "Dana deposito tersedia untuk ditarik 24 jam setelah pembukaan kunci.",
+  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Tarik dana dari akun Orchid ke dompet yang Anda gunakan saat ini.",
+  "withdrawAndUnlockFunds": "TARIK DAN BUKA KUNCI DANA",
+  "withdrawFunds": "TARIK DANA",
+  "withdraw": "Tarik mata uang",
+  "submitTransaction": "KIRIM TRANSAKSI",
+  "move": "Pindah",
+  "now": "Sekarang",
+  "amount": "Jumlah",
+  "available": "Tersedia",
+  "select": "Pilih",
+  "add": "TAMBAH",
+  "balanceToDeposit": "SALDO KE DEPOSITO",
+  "depositToBalance": "DEPOSITO KE SALDO",
+  "setWarnedAmount": "Tetapkan jumlah yang diperingatkan",
+  "addFundsToYourOrchidAccountBalanceAndorDeposit": "Tambahkan dana ke saldo dan/atau deposito akun Orchid Anda.",
+  "forGuidanceOnSizingYourAccountSee": "Untuk panduan ukuran akun, kunjungi <link>orchid.com</link>",
+  "currentTokenPreauthorizationAmount": "Pra-otorisasi {tokenType} saat ini: {amount}",
+  "@currentTokenPreauthorizationAmount": {
+    "placeholders": {
+      "tokenType": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noWallet": "Tidak ada dompet",
+  "noWalletOrBrowserNotSupported": "Tidak ada dompet atau browser tidak didukung.",
+  "error": "Kesalahan",
+  "failedToConnectToWalletconnect": "Gagal terhubung ke WalletConnect.",
+  "unknownChain": "Rantai tidak diketahui",
+  "theOrchidAccountManagerDoesntSupportThisChainYet": "Pengelola akun Orchid belum mendukung rantai ini.",
+  "orchidIsntOnThisChain": "Orchid tidak ada pada rantai ini.",
+  "theOrchidContractHasntBeenDeployedOnThisChainYet": "Kontrak Orchid belum diterapkan pada rantai ini.",
+  "moveFunds": "PINDAHKAN DANA",
+  "lockUnlock": "KUNCI / BUKA KUNCI",
+  "yourDepositOfAmountIsUnlocked": "Deposito Anda {amount} terbuka.",
+  "@yourDepositOfAmountIsUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "locked": "terkunci",
+  "yourDepositOfAmountIsUnlockingOrUnlocked": "Deposito Anda {amount} {unlockingOrUnlocked}.",
+  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "unlockingOrUnlocked": {
+        "type": "String"
+      }
+    }
+  },
+  "theFundsWillBeAvailableForWithdrawalInTime": "Dana akan tersedia untuk ditarik dalam ${time}.",
+  "@theFundsWillBeAvailableForWithdrawalInTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lockDeposit": "KUNCI DEPOSITO",
+  "unlockDeposit": "BUKA KUNCI DEPOSITO",
+  "advanced": "LANJUTAN",
+  "linklearnMoreAboutOrchidAccountslink": "<link>Pelajari lebih lanjut tentang akun Orchid</link>.",
+  "estimatedCostToCreateAnOrchidAccountWith": "Biaya yang diperkirakan untuk membuat akun Orchid dengan efisiensi {efficiency} dan {num} tiket nilai.",
+  "@estimatedCostToCreateAnOrchidAccountWith": {
+    "placeholders": {
+      "efficiency": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      }
+    }
+  },
+  "chain": "Rantai",
+  "token": "Token",
+  "minDeposit": "Deposito min.",
+  "minBalance": "Saldo min.",
+  "fundFee": "Biaya pendanaan",
+  "withdrawFee": "Biaya penarikan",
+  "tokenValues": "NILAI TOKEN",
+  "usdPrices": "HARGA USD",
+  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "Menetapkan jumlah deposito yang diperingatkan memulai masa tunggu 24 jam yang diperlukan untuk menarik dana deposito.",
+  "duringThisPeriodTheFundsAreNotAvailableAsA": "Selama periode ini, dana tidak tersedia sebagai deposito valid di jaringan Orchid.",
+  "fundsMayBeRelockedAtAnyTimeByReducingThe": "Dana dapat dikunci kembali kapan saja dengan mengurangi jumlah yang diperingatkan.",
+  "warn": "Peringatkan",
+  "totalWarnedAmount": "Jumlah total yang diperingatkan"
 }

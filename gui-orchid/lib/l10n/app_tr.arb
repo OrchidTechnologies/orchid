@@ -16,8 +16,7 @@
     "type": "text",
     "placeholders": {
       "num": {
-        "type": "int",
-        "format": "compactLong"
+        "type": "int"
       }
     }
   },
@@ -176,7 +175,9 @@
   "minTicketsAvailableTickets": "Minimum mevcut Bilet: {tickets}",
   "@minTicketsAvailableTickets": {
     "placeholders": {
-      "tickets": {}
+      "tickets": {
+        "type": "int"
+      }
     }
   },
   "transactionSentToBlockchain": "İşlem Blokzincir'e gönderildi",
@@ -227,7 +228,9 @@
   "averagePriceIsUSDPerGb": "Ortalama fiyat GB başına {price} USD'dir",
   "@averagePriceIsUSDPerGb": {
     "placeholders": {
-      "price": {}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "myOrchidConfig": "Orchid Yapılandırmam",
@@ -312,5 +315,123 @@
   "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Başlangıç süresini kısaltmak için bir Orchid hesabı satın almak ve ana ekrandan tek bir atlama devresi oluşturmak için bir yöntem ekledik.",
   "orchidIsUniqueAsAMultiHopOrOnion": "Orchid, birden fazla VPN protokolünü destekleyen bir çoklu atlama ya da soğan yönlendirmesi istemcisiyle eşsizdir. Aşağıdaki desteklenen protokollerden atlamaları bir araya getirerek bağlantınızı kurabilirsiniz.\n\nTek atlama, normal bir VPN gibidir. Üç atlama (gelişmiş kullanıcılar için) klasik soğan yönlendirmesi seçimidir. Sıfır atlama, herhangi bir VPN tüneli kullanmadan trafik analizine izin verir.",
   "deletingOpenVPNAndWireguardHopsWillLose": "OpenVPN ve Wireguard atlamalarını silmek, ilişkili tüm giriş bilgilerinin ve bağlantı yapılandırmalarının kaybedilmesine neden olur. Devam etmeden önce tüm bilgileri yedeklediğinizden emin olun.",
-  "thisCannotBeUndoneToSaveThisIdentity": "Bu işlem geri alınamaz. Bu kimliği kaydetmek için İptal'i seçin ve Dışarı Aktar seçeneğini kullanın"
+  "thisCannotBeUndoneToSaveThisIdentity": "Bu işlem geri alınamaz. Bu kimliği kaydetmek için İptal'i seçin ve Dışarı Aktar seçeneğini kullanın",
+  "unlockTime": "Kilit Açılma Zamanı",
+  "chooseChain": "Zincir Seç",
+  "unlocking": "kilit açılma",
+  "unlocked": "Kilit açıldı",
+  "orchidTransaction": "Orchid İşlemi",
+  "confirmations": "Doğrulamalar",
+  "pending": "Sürüyor...",
+  "txHash": "İşlem Hash'i:",
+  "allOfYourFundsAreAvailableForWithdrawal": "Fonlarınızın tümü çekme işlemi için hazır.",
+  "maxWithdrawOfYourTotalFundsCombinedFunds": "{totalFunds} toplam fondan {maxWithdraw} kadarı şu anda çekilebilir.",
+  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
+    "placeholders": {
+      "maxWithdraw": {
+        "type": "String"
+      },
+      "totalFunds": {
+        "type": "String"
+      }
+    }
+  },
+  "alsoUnlockRemainingDeposit": "Kalan depozitonun da kilidi açılsın",
+  "ifYouSpecifyLessThanTheFullAmountFundsWill": "Toplam tutardan daha azını belirtirseniz fonlarınız ilk olarak bakiyeden çekilecek.",
+  "forAdditionalOptionsSeeTheAdvancedPanel": "Ek seçenekler için GELİŞMİŞ paneline bakın.",
+  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "Depozitonun kilidini açma seçeneğini seçerseniz bu işlem hemen belirtilen tutarı bakiyenizden çekecek ve kalan depozitonuz için de kilit açma işlemini başlatacak.",
+  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "Depozito fonlar, kilit açıldıktan 24 saat sonra çekilebilir.",
+  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Orchid Hesabınızdan mevcut cüzdanınıza fonlarınızı çekin.",
+  "withdrawAndUnlockFunds": "FONLARIN KİLİDİNİ AÇ VE ÇEK",
+  "withdrawFunds": "FONLARI ÇEK",
+  "withdraw": "Çek",
+  "submitTransaction": "İŞLEMİ GÖNDER",
+  "move": "Eylem",
+  "now": "Şimdi",
+  "amount": "Tutar",
+  "available": "Mevcut",
+  "select": "Seç",
+  "add": "EKLE",
+  "balanceToDeposit": "BAKİYEDEN DEPOZİTOYA",
+  "depositToBalance": "DEPOZİTODAN BAKİYEYE",
+  "setWarnedAmount": "Uyarı Tutarı Ayarla",
+  "addFundsToYourOrchidAccountBalanceAndorDeposit": "Orchid Hesabı bakiyenize fon ekleyin ve/veya yatırın.",
+  "forGuidanceOnSizingYourAccountSee": "Hesabınızı kalibre etmede rehberlik almak için <link>orchid.com</link> adresine göz atın",
+  "currentTokenPreauthorizationAmount": "Mevcut {tokenType} ön provizyon: {amount}",
+  "@currentTokenPreauthorizationAmount": {
+    "placeholders": {
+      "tokenType": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noWallet": "Cüzdan Yok",
+  "noWalletOrBrowserNotSupported": "Cüzdan Yok ya da Tarayıcı Desteklenmiyor.",
+  "error": "Hata",
+  "failedToConnectToWalletconnect": "WalletConnect'e bağlanılamadı.",
+  "unknownChain": "Bilinmeyen Zincir",
+  "theOrchidAccountManagerDoesntSupportThisChainYet": "Orchid Hesap Yöneticisi bu zinciri henüz desteklemiyor.",
+  "orchidIsntOnThisChain": "Orchid bu zincirde değil.",
+  "theOrchidContractHasntBeenDeployedOnThisChainYet": "Orchid sözleşmesi bu zincirde henüz bulunmuyor.",
+  "moveFunds": "FONLARI TAŞI",
+  "lockUnlock": "KİLİTLE / KİLİDİNİ AÇ",
+  "yourDepositOfAmountIsUnlocked": "{amount} tutarındaki depozitonuzun kilidi açıldı.",
+  "@yourDepositOfAmountIsUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "locked": "kilitli",
+  "yourDepositOfAmountIsUnlockingOrUnlocked": "{amount} tutarındaki depozitonuzun {unlockingOrUnlocked}.",
+  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "unlockingOrUnlocked": {
+        "type": "String"
+      }
+    }
+  },
+  "theFundsWillBeAvailableForWithdrawalInTime": "Fonlar ${time} içinde çekilebilecek.",
+  "@theFundsWillBeAvailableForWithdrawalInTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lockDeposit": "DEPOZİTOYU KİLİTLE",
+  "unlockDeposit": "DEPOZİTONUN KİLİDİNİ AÇ",
+  "advanced": "GELİŞMİŞ",
+  "linklearnMoreAboutOrchidAccountslink": "<link>Orchid Hesapları hakkında daha fazla bilgi edinin</link>.",
+  "estimatedCostToCreateAnOrchidAccountWith": "{efficiency} verimle ve {num} bilet değeriyle bir Orchid Hesabı açmanın ortalama maliyeti.",
+  "@estimatedCostToCreateAnOrchidAccountWith": {
+    "placeholders": {
+      "efficiency": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      }
+    }
+  },
+  "chain": "Zincir",
+  "token": "Jeton",
+  "minDeposit": "Min. Depozito",
+  "minBalance": "Min. Bakiye",
+  "fundFee": "Fon Ücreti",
+  "withdrawFee": "Çekim Ücreti",
+  "tokenValues": "JETON DEĞERLERİ",
+  "usdPrices": "USD FİYATLARI",
+  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "Bir uyarı depozito tutarı ayarlamak, depozito fonlarını çekmek için gerekli olan 24 saatlik bekleme sürecini başlatır.",
+  "duringThisPeriodTheFundsAreNotAvailableAsA": "Bu süreçte fonlar, Orchid ağında geçerli bir depozito olarak sayılmayacaktır.",
+  "fundsMayBeRelockedAtAnyTimeByReducingThe": "Fonlar, uyarı tutarı azaltılarak dilediğiniz zaman yeniden kilitlenebilir.",
+  "warn": "Uyarı",
+  "totalWarnedAmount": "Toplam Uyarı Tutarı"
 }

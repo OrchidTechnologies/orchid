@@ -16,8 +16,7 @@
     "type": "text",
     "placeholders": {
       "num": {
-        "type": "int",
-        "format": "compactLong"
+        "type": "int"
       }
     }
   },
@@ -176,7 +175,9 @@
   "minTicketsAvailableTickets": "न्यूनतम टिकट उपलब्ध हैं: {tickets}",
   "@minTicketsAvailableTickets": {
     "placeholders": {
-      "tickets": {}
+      "tickets": {
+        "type": "int"
+      }
     }
   },
   "transactionSentToBlockchain": "लेन-देन को ब्लाॉकचेइन को भेज दिया गया है",
@@ -227,7 +228,9 @@
   "averagePriceIsUSDPerGb": "औसत मूल्य {price} अमेरिकी डॉलर प्रति जीबी है",
   "@averagePriceIsUSDPerGb": {
     "placeholders": {
-      "price": {}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "myOrchidConfig": "मेरा ऑर्किड कॉन्फिग",
@@ -312,5 +315,123 @@
   "weAddedAMethodToPurchaseAnOrchidAccountAnd": "हमने होमस्क्रीन से ही एक ऑर्किड खाता खरीदने और एक अकेले हॉप परिपथ निर्मित करने की विधि जोड़ी है ताकि ऑनबोर्डिंग प्रक्रिया को अधिक छोटा बनाया जा सके।",
   "orchidIsUniqueAsAMultiHopOrOnion": "ऑर्किड एक अद्वितीय मल्टी-हॉप या अनियन परिपथन ग्राहक समर्थक एकाधिक वीपीएन प्रोटोकॉल है। अब नीचे के समर्थित प्रोटोकॉलों में से हॉपों को शृंखलित करके अपने कनेक्शन को सेटअप कर सकते हैं।\n\nएक हॉप किसी भी सामान्य वीपीएन के समान है। तीन हॉप (उन्नत उपयोगकर्ताओं के लिए) क्लासिक अनियन परिपथन विकल्प है। शून्य हॉप बिना वीपीएन सुरंग के यातायात के विश्लेषण की सुविधा प्रदान करते हैं।",
   "deletingOpenVPNAndWireguardHopsWillLose": "ओपन-वीपीएन और वायरगार्ड हॉपों को हटाने से आप उनसे संबंधित सभी क्रिडेन्शियल और कनेक्शन कॉन्फिगरेशन को खो देंगे। आगे बढ़ने से पहले सभी जानकारियों का बैंक-अप ले लें।",
-  "thisCannotBeUndoneToSaveThisIdentity": "इसे पलटा नहीं जा सकेगा। इस पहचान को सहेजने के लिए रद्द करें को दबाएँ और निर्यात करें विकल्प का उपयोग करें।"
+  "thisCannotBeUndoneToSaveThisIdentity": "इसे पलटा नहीं जा सकेगा। इस पहचान को सहेजने के लिए रद्द करें को दबाएँ और निर्यात करें विकल्प का उपयोग करें।",
+  "unlockTime": "अनलॉक समय",
+  "chooseChain": "शृखला चुनें",
+  "unlocking": "अनलॉक कर रहे हैं",
+  "unlocked": "अनलॉक कर दिया",
+  "orchidTransaction": "ऑर्किड लेन-देन",
+  "confirmations": "पुष्टियाँ",
+  "pending": "लंबित...",
+  "txHash": "लेन-देन हैश:",
+  "allOfYourFundsAreAvailableForWithdrawal": "आपकी पूरी निधि आहरण के लिए उपलब्ध है।",
+  "maxWithdrawOfYourTotalFundsCombinedFunds": "आपकी {totalFunds} समेकित निधि में से {maxWithdraw} फिलहाल आहरण के लिए उपलब्ध है।",
+  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
+    "placeholders": {
+      "maxWithdraw": {
+        "type": "String"
+      },
+      "totalFunds": {
+        "type": "String"
+      }
+    }
+  },
+  "alsoUnlockRemainingDeposit": "बाकी के निक्षेप को भी अनलॉक करें",
+  "ifYouSpecifyLessThanTheFullAmountFundsWill": "यदि आप पूर्ण राशि से कम राशि निर्दिष्ट करेंगे, तो पहले आपकी शेष राशि से निधि आहरित की जाएगी।",
+  "forAdditionalOptionsSeeTheAdvancedPanel": "अतिरिक्त विकल्पों के लिए उन्न पैनल देखें।",
+  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "यदि आप निक्षेप को अनलॉक करें विकल्प को चुनेंगे, तो यह लेन-देन तुरंत निर्दिष्ट राशि को आपकी शेष राशि से आहरित कर देगा और साथ ही आपके बाकी के निक्षेप को अनलॉक करने की प्रक्रिया को भी शुरू कर देगा।",
+  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "निक्षेप निधियाँ अनलॉक होने के 24 घंटे बाद आहरण के लिए उपलब्ध हो जाती हैं।",
+  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "अपने ऑर्किड खाते से अपने वर्तमान वॉलेट में निधियाँ आहरित करें।",
+  "withdrawAndUnlockFunds": "निधियाँ आहरित और अनलॉक करें",
+  "withdrawFunds": "निधियाँ आहरित करें",
+  "withdraw": "आहरित करें",
+  "submitTransaction": "लेन-देन जमा करें",
+  "move": "स्थानांतरित करें",
+  "now": "अभी",
+  "amount": "राशि",
+  "available": "उपलब्ध",
+  "select": "चुनें",
+  "add": "जोड़ें",
+  "balanceToDeposit": "जमा करने के लिए शेष",
+  "depositToBalance": "शेष में जमा करें",
+  "setWarnedAmount": "चेतावनी राशि सेट करें",
+  "addFundsToYourOrchidAccountBalanceAndorDeposit": "अपने ऑर्किड खाता शेष में निधियाँ जोड़ें और/या जमा करें।",
+  "forGuidanceOnSizingYourAccountSee": "अपने खाते का आमाप निर्धारित करने में मार्गदर्शन पाने के लिए <link>orchid.com</link> देखें",
+  "currentTokenPreauthorizationAmount": "वर्तमान {tokenType} पूर्व-प्राधिकरण: {amount}",
+  "@currentTokenPreauthorizationAmount": {
+    "placeholders": {
+      "tokenType": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noWallet": "कोई वॉलेट नहीं है",
+  "noWalletOrBrowserNotSupported": "कोई वॉलेट नहीं है या ब्राउजर समर्थित नहीं है।",
+  "error": "त्रुटि",
+  "failedToConnectToWalletconnect": "वॉलेटकनेक्ट से जुड़ नहीं सकें।",
+  "unknownChain": "अज्ञात शृंखला",
+  "theOrchidAccountManagerDoesntSupportThisChainYet": "ऑर्किड खाता प्रबंधक अभी इस शृंखला को समर्थित नहीं करता है।",
+  "orchidIsntOnThisChain": "ऑर्किड इस शृंखला में मौजूद नहीं है।",
+  "theOrchidContractHasntBeenDeployedOnThisChainYet": "ऑर्किड अनुबंध को इस शृंखला में अभी परिनियोजित नहीं किया गया है।",
+  "moveFunds": "निधियों को स्थानांतरित करें",
+  "lockUnlock": "लॉक / अनलॉक करें",
+  "yourDepositOfAmountIsUnlocked": "{amount} के आपके निक्षेप को अनलॉक किया गया।",
+  "@yourDepositOfAmountIsUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "locked": "लॉक किया गया",
+  "yourDepositOfAmountIsUnlockingOrUnlocked": "{amount} के आपके निक्षेप को {unlockingOrUnlocked} किया गया।",
+  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "unlockingOrUnlocked": {
+        "type": "String"
+      }
+    }
+  },
+  "theFundsWillBeAvailableForWithdrawalInTime": "यह निधि आहरण के लिए ${time} को उपलब्ध हो जाएगी।",
+  "@theFundsWillBeAvailableForWithdrawalInTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lockDeposit": "निक्षेप को लॉक करें",
+  "unlockDeposit": "निक्षेप को अनलॉक करें",
+  "advanced": "उन्नत",
+  "linklearnMoreAboutOrchidAccountslink": "<link>ऑर्किड खातों के बारे में अधिक जानें</link>।",
+  "estimatedCostToCreateAnOrchidAccountWith": "{efficiency} की कार्यदक्षता और {num} मूल्य के टिकटों के साथ एक ऑर्किड खाता निर्मित करने की अनुमानित लागत।",
+  "@estimatedCostToCreateAnOrchidAccountWith": {
+    "placeholders": {
+      "efficiency": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      }
+    }
+  },
+  "chain": "शृंखला",
+  "token": "टोकन",
+  "minDeposit": "न्यूनतम निक्षेप",
+  "minBalance": "न्यूनतम शेष",
+  "fundFee": "निधि शुल्क",
+  "withdrawFee": "आहरण शुल्क",
+  "tokenValues": "टोकन मान",
+  "usdPrices": "अमेरिकी डॉलर में कीमतें",
+  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "एक चेतावनी-युक्त निक्षेप राशि सेट करना निक्षेप राशि को आहरित करने के लिए आवश्यक 24 घंटे की प्रतीक्षा अवधि का आरंभ करता है।",
+  "duringThisPeriodTheFundsAreNotAvailableAsA": "इस अवधि के दौरान निधियाँ ऑर्किड नेटवर्क पर एक मान्य निक्षेप के रूप में उपलब्ध नहीं रहती हैं।",
+  "fundsMayBeRelockedAtAnyTimeByReducingThe": "चेतावनी राशि को कम करके निधियों को किसी भी समय पुनः लॉक किया जा सकता है।",
+  "warn": "चेतावनी",
+  "totalWarnedAmount": "कुल चेतावनी राशि"
 }

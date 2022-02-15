@@ -16,8 +16,7 @@
     "type": "text",
     "placeholders": {
       "num": {
-        "type": "int",
-        "format": "compactLong"
+        "type": "int"
       }
     }
   },
@@ -176,7 +175,9 @@
   "minTicketsAvailableTickets": "利用可能な最小チケット：{tickets}",
   "@minTicketsAvailableTickets": {
     "placeholders": {
-      "tickets": {}
+      "tickets": {
+        "type": "int"
+      }
     }
   },
   "transactionSentToBlockchain": "ブロックチェーンに送信されたトランザクション",
@@ -227,7 +228,9 @@
   "averagePriceIsUSDPerGb": "平均価格は 1GB あたり {price} 米ドルです",
   "@averagePriceIsUSDPerGb": {
     "placeholders": {
-      "price": {}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "myOrchidConfig": "Orchid の設定",
@@ -312,5 +315,123 @@
   "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Orchid アカウントを購入し、ホーム画面からシングル ホップ回路を作成してオンボーディング プロセスを短縮する方法を追加しました。",
   "orchidIsUniqueAsAMultiHopOrOnion": "Orchid は、複数の VPN プロトコルをサポートするマルチホップまたはクラシック オニオン ルーティング クライアントとしてユニークです。以下のサポートされているプロトコルからのホップをチェーン化することにより、接続をセットアップできます。\n\n1 ホップは通常の VPN のようなものです。 3 ホップ (上級ユーザー向け) は、オニオン ルーティングの選択肢です。0 ホップにより、VPN トンネルなしでトラフィック分析が可能になります。",
   "deletingOpenVPNAndWireguardHopsWillLose": "OpenVPN および Wireguard ホップを削除すると、関連する資格情報と接続構成が失われます。続行する前に、必ず情報をバックアップしてください。",
-  "thisCannotBeUndoneToSaveThisIdentity": "これは、元に戻すことはできません。このアイデンティティを保存するには、[キャンセル] をクリックして、[エクスポート] オプションを使用します"
+  "thisCannotBeUndoneToSaveThisIdentity": "これは、元に戻すことはできません。このアイデンティティを保存するには、[キャンセル] をクリックして、[エクスポート] オプションを使用します",
+  "unlockTime": "ロック解除時間",
+  "chooseChain": "チェーンを選択",
+  "unlocking": "ロック解除",
+  "unlocked": "ロック解除されています",
+  "orchidTransaction": "Orchid トランザクション",
+  "confirmations": "確認",
+  "pending": "保留中...",
+  "txHash": "Tx ハッシュ：",
+  "allOfYourFundsAreAvailableForWithdrawal": "あなたの資金はすべて引き出し可能です。",
+  "maxWithdrawOfYourTotalFundsCombinedFunds": "現在、合計資金 {totalFunds} のうち {maxWithdraw} を引き出すことができます。",
+  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
+    "placeholders": {
+      "maxWithdraw": {
+        "type": "String"
+      },
+      "totalFunds": {
+        "type": "String"
+      }
+    }
+  },
+  "alsoUnlockRemainingDeposit": "残りの預金のロックを解除",
+  "ifYouSpecifyLessThanTheFullAmountFundsWill": "全額より少ない金額を指定した場合、最初に残高から資金が引き出されます。",
+  "forAdditionalOptionsSeeTheAdvancedPanel": "追加のオプションについては、詳細パネルを参照してください。",
+  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "預金のロック解除オプションを選択した場合、このトランザクションは指定された金額を残高からすぐに引き出し、残りの預金のロック解除プロセスも開始します。",
+  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "預金の資金は、ロックを解除してから 24 時間後に引き出すことができます。",
+  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "あなたの Orchid アカウントから現在のウォレットに資金を引き出します。",
+  "withdrawAndUnlockFunds": "資金を引き出しロック解除",
+  "withdrawFunds": "資金を引き出す",
+  "withdraw": "引き出し",
+  "submitTransaction": "トランザクションを送信",
+  "move": "移動",
+  "now": "今",
+  "amount": "金額",
+  "available": "利用可能",
+  "select": "選択",
+  "add": "追加",
+  "balanceToDeposit": "残高から預金へ",
+  "depositToBalance": "預金から残高へ",
+  "setWarnedAmount": "警告額を設定",
+  "addFundsToYourOrchidAccountBalanceAndorDeposit": "Orchid アカウントおよび/または預金に資金を追加します。",
+  "forGuidanceOnSizingYourAccountSee": "アカウントのサイズ設定については、<link>orchid.com</link> をご覧ください。",
+  "currentTokenPreauthorizationAmount": "現在の {tokenType} 事前承認：{amount}",
+  "@currentTokenPreauthorizationAmount": {
+    "placeholders": {
+      "tokenType": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noWallet": "ウォレットがありません",
+  "noWalletOrBrowserNotSupported": "ウォレットがないか、ブラウザがサポートされていません。",
+  "error": "エラー",
+  "failedToConnectToWalletconnect": "WalletConnect に接続できませんでした。",
+  "unknownChain": "不明なチェーン",
+  "theOrchidAccountManagerDoesntSupportThisChainYet": "Orchid アカウント マネージャーは、まだこのチェーンをサポートしていません。",
+  "orchidIsntOnThisChain": "Orchid はこのチェーンにはありません。",
+  "theOrchidContractHasntBeenDeployedOnThisChainYet": "Orchid の契約は、まだこのチェーンに展開されていません。",
+  "moveFunds": "資金を移動",
+  "lockUnlock": "ロック / ロック解除",
+  "yourDepositOfAmountIsUnlocked": "預金 {amount} のロックが解除されます。",
+  "@yourDepositOfAmountIsUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "locked": "ロックされています",
+  "yourDepositOfAmountIsUnlockingOrUnlocked": "預金 {amount} は{unlockingOrUnlocked}。",
+  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "unlockingOrUnlocked": {
+        "type": "String"
+      }
+    }
+  },
+  "theFundsWillBeAvailableForWithdrawalInTime": "資金は ${time} で引き出し可能になります。",
+  "@theFundsWillBeAvailableForWithdrawalInTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lockDeposit": "預金をロック",
+  "unlockDeposit": "預金のロックを解除",
+  "advanced": "詳細設定",
+  "linklearnMoreAboutOrchidAccountslink": "<link>Orchid アカウントについての詳細を見る</link>",
+  "estimatedCostToCreateAnOrchidAccountWith": "{efficiency} の効率と {num} 枚のチケットの価値を持つ Orchid アカウントを作成するための推定コスト。",
+  "@estimatedCostToCreateAnOrchidAccountWith": {
+    "placeholders": {
+      "efficiency": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      }
+    }
+  },
+  "chain": "チェーン",
+  "token": "トークン",
+  "minDeposit": "最低預金額",
+  "minBalance": "最低残高",
+  "fundFee": "資金手数料",
+  "withdrawFee": "引き出し手数料",
+  "tokenValues": "トークン価値",
+  "usdPrices": "USD 価格",
+  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "警告預金額を設定すると、預金資金を引き出すために必要な 24 時間の待機期間が始まります。",
+  "duringThisPeriodTheFundsAreNotAvailableAsA": "この期間中、資金は Orchid ネットワークの有効な預金として利用できません。",
+  "fundsMayBeRelockedAtAnyTimeByReducingThe": "警告額を減らすことにより、いつでも資金を再ロックすることができます。",
+  "warn": "警告",
+  "totalWarnedAmount": "合計警告額"
 }

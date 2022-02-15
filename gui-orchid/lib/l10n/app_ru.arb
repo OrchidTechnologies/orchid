@@ -16,8 +16,7 @@
     "type": "text",
     "placeholders": {
       "num": {
-        "type": "int",
-        "format": "compactLong"
+        "type": "int"
       }
     }
   },
@@ -176,7 +175,9 @@
   "minTicketsAvailableTickets": "Мин. заявки доступны: {tickets}",
   "@minTicketsAvailableTickets": {
     "placeholders": {
-      "tickets": {}
+      "tickets": {
+        "type": "int"
+      }
     }
   },
   "transactionSentToBlockchain": "Транзакция отправлена в блокчейн",
@@ -227,7 +228,9 @@
   "averagePriceIsUSDPerGb": "Средняя цена составляет {price} долл. США за ГБ",
   "@averagePriceIsUSDPerGb": {
     "placeholders": {
-      "price": {}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "myOrchidConfig": "Моя конфигурация Orchid",
@@ -312,5 +315,123 @@
   "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Мы добавили возможность купить учетную запись Orchid и создать цепь с одним подключением прямо с главного экрана, чтобы вы могли быстрее начать работу.",
   "orchidIsUniqueAsAMultiHopOrOnion": "Orchid — уникальный клиент для нескольких подключений и «луковой» маршрутизации; он поддерживает различные VPN-протоколы. Вы можете сами объединить несколько подключений в цепь с помощью поддерживаемых протоколов ниже.\n\nОдно подключение аналогично простой VPN-сети. Три подключения (для продвинутых пользователей) — классическая «луковая» маршрутизация. Если не используется ни одно подключение, то трафик не проходит по VPN-туннелю и открыт для просмотра.",
   "deletingOpenVPNAndWireguardHopsWillLose": "Удалив подключения OpenVPN и Wireguard, вы потеряете сопутствующие учетные данные и конфигурацию подключения. Не забудьте перед этим сохранить всю нужную информацию.",
-  "thisCannotBeUndoneToSaveThisIdentity": "Это действие невозможно отменить. Чтобы сохранить идентификатор, выберите «Отмена» и воспользуйтесь функцией «Экспорт»"
+  "thisCannotBeUndoneToSaveThisIdentity": "Это действие невозможно отменить. Чтобы сохранить идентификатор, выберите «Отмена» и воспользуйтесь функцией «Экспорт»",
+  "unlockTime": "Срок раблокировки",
+  "chooseChain": "Выберите цепь",
+  "unlocking": "разблокировка",
+  "unlocked": "Розблокированы",
+  "orchidTransaction": "Транзакция Orchid",
+  "confirmations": "Подтверждения",
+  "pending": "Ожидание...",
+  "txHash": "Хэш транз.:",
+  "allOfYourFundsAreAvailableForWithdrawal": "Все ваши средства доступны для вывода.",
+  "maxWithdrawOfYourTotalFundsCombinedFunds": "В данный момент для вывода доступны {maxWithdraw} (всего у вас {totalFunds}).",
+  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
+    "placeholders": {
+      "maxWithdraw": {
+        "type": "String"
+      },
+      "totalFunds": {
+        "type": "String"
+      }
+    }
+  },
+  "alsoUnlockRemainingDeposit": "Также разблокировать оставшийся депозит",
+  "ifYouSpecifyLessThanTheFullAmountFundsWill": "Если вы укажете не всю сумму, средства будут в первую очередь списываться с вашего баланса.",
+  "forAdditionalOptionsSeeTheAdvancedPanel": "Другие варианты см. на вкладке ДОПОЛНИТЕЛЬНО.",
+  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "Если вы выберете вариант разблокировки депозита, указанная сумма немедленно спишется с вашего баланса и запустится процесс разблокировки оставшегося депозита.",
+  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "Средства на депозите можно будет вывести через 24 часа после разблокировки.",
+  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Вывод средств с вашего счета Orchid на текущий кошелек.",
+  "withdrawAndUnlockFunds": "ВЫВОД И РАЗБЛОКИРОВКА СРЕДСТВ",
+  "withdrawFunds": "ВЫВОД СРЕДСТВ",
+  "withdraw": "Вывести",
+  "submitTransaction": "ПОДТВЕРДИТЬ ТРАНЗАКЦИЮ",
+  "move": "Переместить",
+  "now": "Сейчас",
+  "amount": "Сумма",
+  "available": "Доступно",
+  "select": "Выбрать",
+  "add": "ДОБАВИТЬ",
+  "balanceToDeposit": "С БАЛАНСА НА ДЕПОЗИТ",
+  "depositToBalance": "С ДЕПОЗИТА НА БАЛАНС",
+  "setWarnedAmount": "Задать сумму предупреждения",
+  "addFundsToYourOrchidAccountBalanceAndorDeposit": "Добавить средства на баланс и/или депозит счета Orchid.",
+  "forGuidanceOnSizingYourAccountSee": "Рекомендации по размещению сумм на счету вы найдете на сайте <link>orchid.com</link>",
+  "currentTokenPreauthorizationAmount": "Текущая предавторизация ({tokenType}): {amount}",
+  "@currentTokenPreauthorizationAmount": {
+    "placeholders": {
+      "tokenType": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noWallet": "Кошелек не указан",
+  "noWalletOrBrowserNotSupported": "Не указан кошелек или не поддерживается браузер.",
+  "error": "Ошибка",
+  "failedToConnectToWalletconnect": "Не удалось подключиться к WalletConnect.",
+  "unknownChain": "Неизвестная цепь",
+  "theOrchidAccountManagerDoesntSupportThisChainYet": "Менеджер аккаунтов Orchid пока не поддерживает эту цепь.",
+  "orchidIsntOnThisChain": "Эта цепь недоступна в Orchid.",
+  "theOrchidContractHasntBeenDeployedOnThisChainYet": "Контракт Orchid пока не размещен в этой цепи.",
+  "moveFunds": "ПЕРЕМЕСТИТЬ СРЕДСТВА",
+  "lockUnlock": "БЛОКИРОВАТЬ / РАЗБЛОКИРОВАТЬ",
+  "yourDepositOfAmountIsUnlocked": "Ваш депозит ({amount}) разблокирован.",
+  "@yourDepositOfAmountIsUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "locked": "заблокирован",
+  "yourDepositOfAmountIsUnlockingOrUnlocked": "Ваш депозит ({amount}) {unlockingOrUnlocked}.",
+  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "unlockingOrUnlocked": {
+        "type": "String"
+      }
+    }
+  },
+  "theFundsWillBeAvailableForWithdrawalInTime": "Средства можно будет вывести через ${time}.",
+  "@theFundsWillBeAvailableForWithdrawalInTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lockDeposit": "БЛОКИРОВАТЬ ДЕПОЗИТ",
+  "unlockDeposit": "РАЗБЛОКИРОВАТЬ ДЕПОЗИТ",
+  "advanced": "ДОПОЛНИТЕЛЬНО",
+  "linklearnMoreAboutOrchidAccountslink": "<link>Подробнее об учетных записях Orchid</link>.",
+  "estimatedCostToCreateAnOrchidAccountWith": "Примерная стоимость создания учетной записи Orchid с эффективностью {efficiency} и {num} билетами.",
+  "@estimatedCostToCreateAnOrchidAccountWith": {
+    "placeholders": {
+      "efficiency": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      }
+    }
+  },
+  "chain": "Цепь",
+  "token": "Токен",
+  "minDeposit": "Мин. депозит",
+  "minBalance": "Мин. баланс",
+  "fundFee": "Комиссия за пополнение",
+  "withdrawFee": "Комиссия за вывод",
+  "tokenValues": "ЗНАЧЕНИЯ ТОКЕНОВ",
+  "usdPrices": "ЦЕНЫ В ДОЛЛ. США",
+  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "Указав сумму предупреждения, вы не сможете вывести средства с депозита в течение 24 часов.",
+  "duringThisPeriodTheFundsAreNotAvailableAsA": "В течение этого времени средства не будут доступны в качестве депозита в сети Orchid.",
+  "fundsMayBeRelockedAtAnyTimeByReducingThe": "Чтобы повторно заблокировать средство, уменьшите сумму предупреждения в любое время.",
+  "warn": "Предупреждение",
+  "totalWarnedAmount": "Общая сумма предупреждения"
 }
