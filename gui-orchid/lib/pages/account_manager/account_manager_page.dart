@@ -22,8 +22,8 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/account/account_detail_store.dart';
-import 'package:orchid/pages/account_manager/scan_paste_account.dart';
-import 'package:orchid/pages/account_manager/scan_paste_dialog.dart';
+import 'package:orchid/pages/account_manager/scan_paste_identity.dart';
+import 'package:orchid/pages/account_manager/scan_paste_identity_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_copy_text.dart';
@@ -255,7 +255,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   }
 
   void _importIdentity() {
-    ScanOrPasteDialog.show(
+    ScanOrPasteIdentityDialog.show(
       context: context,
       onImportAccount: (ParseOrchidIdentityResult result) async {
         if (result != null) {
@@ -266,6 +266,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
           // Support onboarding by prodding the account finder if it exists
           AccountFinder.shared?.refresh();
+          _accountStore.refresh();
         }
       },
     );
@@ -277,12 +278,18 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
     final onPressed = (BuildContext context) async {
       await UserPreferences().addCachedDiscoveredAccounts([_accountToImport]);
+
+      // Set the identity and refresh
+      _setSelectedIdentity(await _accountToImport.signerKey);
+
       setState(() {
         _accountToImport = null;
-      }); // Trigger a UI refresh
+      });
       // dismiss the dialog
       Navigator.pop(context);
-      _accountStore.refresh();
+
+      // Support onboarding by prodding the account finder if it exists
+      AccountFinder.shared?.refresh();
     };
 
     AppDialogs.showAppDialog(
