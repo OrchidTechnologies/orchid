@@ -1,437 +1,445 @@
 {
-  "@@locale": "it",
-  "@newHop": {
-    "description": "New network hop"
-  },
-  "orchidHop": "Hop Orchid",
-  "@orchidHop": {
-    "description": "Orchid network hop"
-  },
-  "orchidDisabled": "Orchid disabilitata",
-  "trafficMonitoringOnly": "Solo monitoraggio del traffico",
-  "orchidConnecting": "Orchid si sta connettendo",
-  "orchidDisconnecting": "Orchid si sta disconnettendo",
-  "numHopsConfigured": "{num, plural, =0{Nessun hop configurato} =1{Un hop configurato} =2{Due hop configurati} other{{num} hop configurati}}",
-  "@numHopsConfigured": {
-    "type": "text",
-    "placeholders": {
-      "num": {
-        "type": "int"
-      }
-    }
-  },
-  "delete": "Elimina",
-  "orchid": "Orchid",
-  "openVPN": "OpenVPN",
-  "hops": "Hop",
-  "@hops": {
-    "description": "Network hops"
-  },
-  "traffic": "Traffico",
-  "@traffic": {
-    "description": "Network traffic"
-  },
-  "curation": "Cura",
-  "signerKey": "Chiave del firmatario",
-  "copy": "Copia",
-  "paste": "Incolla",
-  "deposit": "Deposito",
-  "curator": "Curatore",
-  "ok": "OK",
-  "settingsButtonTitle": "IMPOSTAZIONI",
-  "confirmThisAction": "Conferma questa azione",
-  "cancelButtonTitle": "ANNULLA",
-  "changesWillTakeEffectInstruction": "Le modifiche avranno effetto al riavvio della VPN.",
-  "saved": "Salvato",
-  "configurationSaved": "Configurazione salvata",
-  "whoops": "Ups",
-  "configurationFailedInstruction": "Impossibile salvare la configurazione. Per favore, controlla la sintassi e riprova.",
-  "addHop": "Aggiungi hop",
-  "scan": "Scansiona",
-  "invalidQRCode": "QR code non valido",
-  "theQRCodeYouScannedDoesNot": "Il QR code scansionato non contiene una configurazione valida dell'account.",
-  "invalidCode": "Codice non valido",
-  "theCodeYouPastedDoesNot": "Il codice incollato non contiene una configurazione valida dell'account.",
-  "openVPNHop": "Hop OpenVPN",
-  "username": "Nome utente",
-  "password": "Password",
-  "config": "Conﬁg",
-  "pasteYourOVPN": "Incolla qui il tuo file OVPN Config",
-  "enterYourCredentials": "Inserisci le tue credenziali",
-  "enterLoginInformationInstruction": "Inserisci sopra i dati di accesso per il tuo provider VPN. Incolla, quindi, il contenuto del file OVPN Config del provider nel campo fornito.",
-  "save": "Salva",
-  "help": "Aiuto",
-  "privacyPolicy": "Informativa sulla privacy",
-  "openSourceLicenses": "Licenze open source",
-  "settings": "Impostazioni",
-  "version": "Versione",
-  "noVersion": "Nessuna versione",
-  "orchidOverview": "Panoramica di Orchid",
-  "defaultCurator": "Curatore predefinito",
-  "queryBalances": "Controlla saldo",
-  "reset": "Reimposta",
-  "manageConfiguration": "Gestisci configurazione",
-  "warningThesefeature": "Attenzione: queste funzionalità sono destinate solo agli utenti esperti. Per favore, leggi tutte le istruzioni.",
-  "exportHopsConfiguration": "Esporta configurazione hops",
-  "export": "Esporta",
-  "warningExportedConfiguration": "Attenzione: la configurazione esportata include i secrets della chiave privata del firmatario degli hops esportati. Rivelando le chiavi private rischi di perdere tutti i fondi negli account Orchid associati.",
-  "importHopsConfiguration": "Importa configurazione hops",
-  "import": "Importa",
-  "warningImportedConfiguration": "Attenzione: la configurazione importata sostituirà tutti gli hops esistenti che hai creato nell'app. Le chiavi del firmatario precedentemente generate o importate in questo dispositivo verranno mantenute e rimarranno accessibili per la creazione di nuovi hops; tuttavia, tutte le altre configurazioni, inclusa la configurazione dell'hop OpenVPN, andranno perse.",
-  "configuration": "Conﬁgurazione",
-  "saveButtonTitle": "SALVA",
-  "search": "Cerca",
-  "newContent": "Nuovo contenuto",
-  "clear": "Cancella",
-  "connectionDetail": "Dettaglio connessione",
-  "host": "Host",
-  "time": "Ora",
-  "sourcePort": "Porta di origine",
-  "destination": "Destinazione",
-  "destinationPort": "Porta di destinazione",
-  "generateNewKey": "Genera nuova chiave",
-  "importKey": "Importa chiave",
-  "nothingToDisplayYet": "Ancora nulla da mostrare. Il traffico verrà visualizzato qui quando c'è qualcosa da mostrare.",
-  "disconnecting": "Disconnettendo...",
-  "connecting": "Connettendo...",
-  "pushToConnect": "Premi per connetterti.",
-  "orchidIsRunning": "Orchid è in funzione!",
-  "pacPurchaseWaiting": "AUA Acquisto in attesa",
-  "retry": "Riprova",
-  "getHelpResolvingIssue": "Ottieni assistenza per risolvere il problema.",
-  "copyDebugInfo": "Copia informazioni di debug",
-  "contactOrchid": "Contatta Orchid",
-  "remove": "Rimuovi",
-  "deleteTransaction": "Elimina transazione",
-  "clearThisInProgressTransactionExplain": "Cancella questa transazione in corso. Questa operazione non prevede il rimborso dell'acquisto in-app. Per risolvere il problema, contatta Orchid.",
-  "preparingPurchase": "Preparando acquisto",
-  "retryingPurchasedPAC": "Riprovando AUA acquistato",
-  "retryPurchasedPAC": "Riprova AUA acquistato",
-  "purchaseError": "Errore di acquisto",
-  "thereWasAnErrorInPurchasingContact": "Errore durante l'acquisto. Per favore, contatta il supporto di Orchid.",
-  "importAnOrchidAccount": "Importa un account Orchid",
-  "buyCredits": "Acquista crediti",
-  "@gb": {
-    "description": "Gigabytes"
-  },
-  "@ofTraffic": {
-    "description": "GB of traffic"
-  },
-  "linkAnOrchidAccount": "Collega account Orchid",
-  "weAreSorryButThisPurchaseWouldExceedTheDaily": "Siamo spiacenti, questo acquisto supererebbe il limite di acquisto giornaliero per i crediti di accesso. Per favore, riprova più tardi.",
-  "marketStats": "Statistiche di mercato",
-  "balanceTooLow": "Saldo troppo basso",
-  "depositSizeTooSmall": "Importo del deposito insufficiente",
-  "yourMaxTicketValueIsCurrentlyLimitedByYourBalance": "Il tuo valore massimo di ticket è attualmente limitato dal tuo saldo di",
-  "yourMaxTicketValueIsCurrentlyLimitedByYourDeposit": "Il tuo valore massimo di ticket è attualmente limitato dal tuo deposito di",
-  "considerAddingOxtToYourAccountBalance": "Si ritiene opportuno aggiungere OXT al saldo del tuo account.",
-  "considerAddingOxtToYourDepositOrMovingFundsFrom": "Si ritiene opportuno aggiungere OXT al tuo deposito o di spostare i fondi dal tuo saldo al tuo deposito.",
-  "prices": "Prezzi",
-  "ticketValue": "Valore del ticket",
-  "costToRedeem": "Costo per riscattare:",
-  "viewTheDocsForHelpOnThisIssue": "Consulta la documentazione per assistenza su questo problema.",
-  "goodForBrowsingAndLightActivity": "Ideale per la semplice navigazione e per le attività meno complesse",
-  "learnMore": "Ulteriori informazioni.",
-  "connect": "Resta in contatto",
-  "disconnect": "Disconnetti",
-  "wireguardHop": "Hop WireGuard®️",
-  "pasteYourWireguardConfigFileHere": "Incolla qui il tuo file WireGuard®️ Config",
-  "pasteTheCredentialInformationForYourWireguardProviderIntoThe": "Incolla le informazioni delle credenziali del tuo provider WireGuard®️ nel campo sopra.",
-  "wireguard": "WireGuard®️",
-  "clearAllLogData": "Cancella tutti i dati di registro?",
-  "thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "Questo registro di debug non è persistente e viene cancellato quando chiudi l'app.",
-  "itMayContainSecretOrPersonallyIdentifyingInformation": "Può contenere informazioni segrete o informazioni di identificazione personale.",
-  "loggingEnabled": "Registrazione abilitata",
-  "cancel": "ANNULLA",
-  "logging": "Registrando",
-  "loading": "Caricamento...",
-  "ethPrice": "Prezzo ETH:",
-  "oxtPrice": "Prezzo OXT:",
-  "gasPrice": "Prezzo GAS:",
-  "maxFaceValue": "Valore nominale massimo:",
-  "confirmDelete": "Conferma eliminazione",
-  "enterOpenvpnConfig": "Inserisci OpenVPN Config",
-  "enterWireguardConfig": "Inserisci WireGuard®️ Config",
-  "starting": "Avvio...",
-  "legal": "Legale",
-  "whatsNewInOrchid": "Novità di Orchid",
-  "orchidIsOnXdai": "Orchid è su xDai!",
-  "youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "Ora puoi acquistare crediti Orchid su xDai! Inizia ad utilizzare la VPN al costo di un caffè.",
-  "xdaiAccountsForPastPurchases": "Account xDai per acquisti precedenti",
-  "forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "Per tutti gli acquisti in-app effettuati prima di oggi, i fondi xDai sono stati aggiunti alla stessa chiave dell'account. Offriamo noi la connessione!",
-  "newInterface": "Nuova interfaccia",
-  "accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "Gli account sono ora organizzati in base all'indirizzo Orchid al quale sono associati.",
-  "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Visualizza il saldo attivo del tuo account e il costo della larghezza di banda sulla schermata iniziale.",
-  "seeOrchidcomForHelp": "Per assistenza, visita orchid.com.",
-  "payPerUseVpnService": "Servizio VPN a consumo, si paga solo l'effettivo utilizzo",
-  "notASubscriptionCreditsDontExpire": "Nessun abbonamento, i crediti non scadono",
-  "shareAccountWithUnlimitedDevices": "Condividi l'account con un numero illimitato di dispositivi",
-  "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Lo Store di Orchid non è momentaneamente disponibile. Per favore, controlla di nuovo tra qualche minuto.",
-  "talkingToPacServer": "Comunicando con il server dell'account Orchid",
-  "advancedConfiguration": "Configurazione avanzata",
-  "newWord": "Nuovo",
-  "copied": "Copiato",
-  "efficiency": "Efficienza",
-  "minTicketsAvailableTickets": "Ticket minimi disponibili: {tickets}",
-  "@minTicketsAvailableTickets": {
-    "placeholders": {
-      "tickets": {
-        "type": "int"
-      }
-    }
-  },
-  "transactionSentToBlockchain": "Transazione inviata alla blockchain",
-  "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "Il tuo acquisto è stato completato ed è in corso di elaborazione sulla blockchain di xDai, il quale può richiedere fino a un minuto, a volte più a lungo. Trascina verso il basso per aggiornare e il nuovo saldo verrà visualizzato di seguito.",
-  "copyReceipt": "Copia ricevuta",
-  "manageAccounts": "Gestisci account",
-  "configurationManagement": "Gestione configurazione",
-  "exportThisOrchidKey": "Esporta questa chiave Orchid",
-  "aQrCodeAndTextForAllTheOrchidAccounts": "Di seguito sono riportati un QR code e un testo per tutti gli account Orchid associati a questa chiave.",
-  "importThisKeyOnAnotherDeviceToShareAllThe": "Importa questa chiave in un altro dispositivo per condividere tutti gli account Orchid associati a questa identità Orchid.",
-  "orchidAccountInUse": "Account Orchid in uso",
-  "thisOrchidAccountIsInUseAndCannotBeDeleted": "Questo account Orchid è in uso e non può essere eliminato.",
-  "pullToRefresh": "Trascina verso il basso per aggiornare.",
-  "balance": "Saldo",
-  "active": "Attivo",
-  "pasteAnOrchidKeyFromTheClipboardToImportAll": "Incolla una chiave Orchid dagli appunti per importare tutti gli account Orchid associati a tale chiave.",
-  "scanOrPasteAnOrchidKeyFromTheClipboardTo": "Scansiona o incolla una chiave Orchid dagli appunti per importare tutti gli account Orchid associati a tale chiave.",
-  "account": "Account",
-  "transactions": "Transazioni",
-  "weRecommendBackingItUp": "Ti consigliamo di <link>effettuare il backup</link>.",
-  "copiedOrchidIdentity": "Identità Orchid copiata",
-  "thisIsNotAWalletAddress": "Questo non è un indirizzo di portafoglio valido.",
-  "doNotSendTokensToThisAddress": "Non inviare monete a questo indirizzo.",
-  "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "La tua Identità Orchid ti riconosce sulla rete in modo univoco.",
-  "learnMoreAboutYourLinkorchidIdentitylink": "Ulteriori informazioni sulla tua <link>Identità Orchid</link>.",
-  "analyzingYourConnections": "Analisi delle tue connessioni in corso",
-  "analyzeYourConnections": "Analizza le tue connessioni",
-  "networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "L'analisi della rete utilizza le funzioni VPN del tuo dispositivo per acquisire i pacchetti di rete e analizzare il tuo traffico.",
-  "networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "L'analisi della rete richiede autorizzazioni della VPN ma, da sola, non protegge i tuoi dati o nasconde il tuo indirizzo IP.",
-  "toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Per ottenere i benefici della privacy di rete, è necessario configurare e attivare una connessione VPN dalla schermata iniziale.",
-  "turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "Attivando questa funzionalità, l'applicazione di Orchid avrà un consumo elevato della batteria.",
-  "useAnOrchidAccount": "Utilizza un account Orchid",
-  "pasteAddress": "Incolla indirizzo",
-  "chooseAddress": "Scegli indirizzo",
-  "chooseAnOrchidAccountToUseWithThisHop": "Scegli un account Orchid da utilizzare con questo hop.",
-  "ifYouDontSeeYourAccountBelowYouCanUse": "Se non riesci a visualizzare, di seguito, il tuo account, puoi utilizzare il Gestore Account per importare, acquistare o creare un nuovo account.",
-  "selectAnOrchidAccount": "Seleziona un account Orchid",
-  "takeMeToTheAccountManager": "Vai al Gestore Account",
-  "funderAccount": "Account finanziatore",
-  "orchidRunningAndAnalyzing": "Orchid è in esecuzione e sta effettuando l'analisi",
-  "startingVpn": "(Avvio VPN in corso)",
-  "disconnectingVpn": "(Disconnessione della VPN in corso)",
-  "orchidAnalyzingTraffic": "Orchid sta analizzando il traffico",
-  "vpnConnectedButNotRouting": "(VPN connessa ma senza routing)",
-  "restarting": "Riavvio in corso",
-  "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "Per modificare lo stato di monitoraggio è necessario riavviare la VPN, il che potrebbe interrompere brevemente la protezione della tua privacy.",
-  "confirmRestart": "Conferma riavvio",
-  "averagePriceIsUSDPerGb": "Il prezzo medio è {price} USD per GB",
-  "@averagePriceIsUSDPerGb": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "myOrchidConfig": "La mia configurazione di Orchid",
-  "noAccountSelected": "Nessun account selezionato",
-  "inactive": "Inattivo",
-  "tickets": "Ticket",
-  "accounts": "Account",
-  "orchidIdentity": "Identità Orchid",
-  "addFunds": "AGGIUNGI FONDI",
-  "gb": "GB",
-  "usdgb": "USD/GB",
-  "hop": "Hop",
-  "circuit": "Circuito",
-  "clearAllAnalysisData": "Vuoi cancellare tutti i dati delle analisi?",
-  "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "Verranno cancellati tutti i dati di connessione al traffico analizzati in precedenza.",
-  "clearAll": "CANCELLA TUTTO",
-  "stopAnalysis": "INTERROMPI ANALISI",
-  "startAnalysis": "AVVIA ANALISI",
-  "orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "Gli account Orchid includono assistenza clienti 24x7, dispositivi illimitati e sono supportati dalla <link2>criptovaluta Dai</link2>.",
-  "purchasedAccountsConnectExclusivelyToOur": "Gli account acquistati si connettono esclusivamente ai nostri <link1>provider preferiti</link1>.",
-  "refundPolicyCoveredByAppStores": "Politica di rimborso coperta dagli app store.",
-  "orchidIsUnableToDisplayInappPurchasesAtThisTime": "Orchid non al momento è in grado di visualizzare gli acquisti in-app.",
-  "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "Verifica che il dispositivo supporti e sia configurato per gli acquisti in-app.",
-  "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "Verifica che il dispositivo supporti e sia configurato per gli acquisti in-app o utilizzi il nostro sistema di <link>gestione degli account</link> decentralizzato.",
-  "buy": "ACQUISTA",
-  "gbApproximately12": "12 GB (circa)",
-  "gbApproximately60": "60 GB (circa)",
-  "gbApproximately240": "240 GB (circa)",
-  "idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "Dimensioni ideali per l'uso individuale a medio termine che include la navigazione e lo streaming leggero.",
-  "mostPopular": "Più popolare!",
-  "bandwidthheavyLongtermUsageOrSharedAccounts": "Account condivisi o utilizzo a lungo termine con larghezza di banda elevata.",
-  "total": "Totale",
-  "pausingAllTraffic": "Sospendo tutto il traffico...",
-  "queryingEthereumForARandom": "Eseguo query su Ethereum per un provider casuale...",
-  "quickFundAnAccount": "Finanzia rapidamente un account!",
-  "accountFound": "Account trovato",
-  "weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "Abbiamo trovato un account associato alle tue identità e creato un singolo circuito Orchid hop per lo stesso. Ora puoi utilizzare la VPN.",
-  "welcomeToOrchid": "Ti diamo il benvenuto su Orchid!",
-  "fundYourAccount": "Finanzia il tuo account",
-  "processing": "Elaboro...",
-  "subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "Servizio VPN decentralizzato e open source, senza abbonamento, con pagamento in base al consumo.",
-  "getStartedFor1": "INIZIA A {smallAmount}",
-  "@getStartedFor1": {
-    "placeholders": {
-      "smallAmount": {
-        "type": "String"
-      }
-    }
-  },
-  "importAccount": "Importa Account",
-  "illDoThisLater": "Lo farò dopo",
-  "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Collegati automaticamente a uno dei <link1>provider preferiti</link1> della rete acquistando crediti VPN per finanziare il tuo account Orchid condivisibile e ricaricabile.",
-  "confirmPurchase": "CONFERMA ACQUISTO",
-  "orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Gli account Orchid utilizzano crediti VPN supportati dalla <link>criptovaluta xDAI</link>, includono assistenza clienti 24x7, condivisione illimitata dei dispositivi e sono coperti dalle politiche di rimborso dell'app store.",
-  "yourPurchaseIsInProgress": "Il tuo acquisto è in corso.",
-  "thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "L'elaborazione di questo acquisto richiede più tempo del previsto ed è possibile che si sia verificato un errore.",
-  "thisMayTakeAMinute": "L'operazione potrebbe richiedere qualche minuto...",
-  "vpnCredits": "Crediti VPN",
-  "blockchainFee": "Commissione blockchain",
-  "promotion": "Promozione",
-  "showInAccountManager": "Mostra in Gestione account",
-  "deleteThisOrchidIdentity": "Elimina questa identità Orchid",
-  "chooseIdentity": "Scegli identità",
-  "updatingAccounts": "Aggiorno gli account",
-  "trafficAnalysis": "Analisi del traffico",
-  "accountManager": "Gestione account",
-  "circuitBuilder": "Generatore di circuiti",
-  "exitHop": "Hop di uscita",
-  "entryHop": "Hop di entrata",
-  "addNewHop": "AGGIUNGI NUOVO HOP",
-  "newCircuitBuilder": "Nuovo Generatore di circuiti!",
-  "youCanNowPayForAMultihopOrchidCircuitWith": "Ora puoi pagare un circuito Orchid multi-hop con xDAI. L'interfaccia multi-hop supporta gli account xDAI e OXT Orchid e supporta sempre le configurazioni OpenVPN e WireGuard che possono essere combinate in un instradamento a cipolla.",
-  "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "Gestisci la tua connessione dal Generatore di circuiti anziché da Gestione account. Tutte le connessioni ora utilizzano un circuito con zero o più hop. Qualsiasi configurazione esistente è stata migrata al Generatore di circuiti.",
-  "quickStartFor1": "Avvio rapido con {smallAmount}",
-  "@quickStartFor1": {
-    "placeholders": {
-      "smallAmount": {
-        "type": "String"
-      }
-    }
-  },
-  "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Abbiamo aggiunto un metodo per acquistare un account Orchid e creare un singolo circuito hop dalla schermata iniziale per semplificare il processo di onboarding.",
-  "orchidIsUniqueAsAMultiHopOrOnion": "Orchid è un client multi-hop o di instradamento a cipolla esclusivo che supporta più protocolli VPN. Puoi configurare la connessione concatenando gli hop dai seguenti protocolli supportati.\n\nUn hop è come una normale VPN. Tre hop (per utenti avanzati) è la classica scelta di instradamento a cipolla. Zero hop consente l'analisi del traffico senza tunnel VPN.",
-  "deletingOpenVPNAndWireguardHopsWillLose": "L'eliminazione degli hop OpenVPN e Wireguard comporterà la cancellazione di tutte le credenziali associate e della configurazione della connessione. Assicurati di eseguire il backup di tutte le informazioni prima di continuare.",
-  "thisCannotBeUndoneToSaveThisIdentity": "Questa operazione è irreversibile. Per salvare questa identità, premi Annulla e usa l'opzione Esporta",
-  "unlockTime": "Durata sblocco",
-  "chooseChain": "Scegli catena",
-  "unlocking": "sblocco",
-  "unlocked": "Sbloccato",
-  "orchidTransaction": "Transazione Orchid",
-  "confirmations": "Conferme",
-  "pending": "In sospeso...",
-  "txHash": "Hash Tx:",
-  "allOfYourFundsAreAvailableForWithdrawal": "Tutti i tuoi fondi sono disponibili per il prelievo.",
-  "maxWithdrawOfYourTotalFundsCombinedFunds": "{maxWithdraw} dei tuoi {totalFunds} di fondi combinati sono attualmente disponibili per il prelievo.",
-  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
-    "placeholders": {
-      "maxWithdraw": {
-        "type": "String"
-      },
-      "totalFunds": {
-        "type": "String"
-      }
-    }
-  },
-  "alsoUnlockRemainingDeposit": "Sblocca anche il deposito residuo",
-  "ifYouSpecifyLessThanTheFullAmountFundsWill": "Se specifichi un importo inferiore all'importo totale, i fondi verranno prelevati prima dal tuo saldo.",
-  "forAdditionalOptionsSeeTheAdvancedPanel": "Per ulteriori opzioni, consulta il pannello AVANZATE.",
-  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "Se selezioni l'opzione di sblocco del deposito, con questa transazione preleverai immediatamente l'importo specificato dal tuo saldo e verrà avviato anche il processo di sblocco del deposito residuo.",
-  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "I fondi di deposito sono disponibili per il prelievo 24 ore dopo lo sblocco.",
-  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Preleva fondi dal tuo account Orchid al tuo wallet attuale.",
-  "withdrawAndUnlockFunds": "PRELEVA E SBLOCCA FONDI",
-  "withdrawFunds": "PRELEVA FONDI",
-  "withdraw": "Preleva",
-  "submitTransaction": "INVIA TRANSAZIONE",
-  "move": "Sposta",
-  "now": "Ora",
-  "amount": "Quantità",
-  "available": "Disponibile",
-  "select": "Seleziona",
-  "add": "AGGIUNGI",
-  "balanceToDeposit": "DA SALDO A DEPOSITO",
-  "depositToBalance": "DA DEPOSITO A SALDO",
-  "setWarnedAmount": "Imposta importo limite",
-  "addFundsToYourOrchidAccountBalanceAndorDeposit": "Aggiungi fondi al saldo e/o al deposito del tuo account Orchid.",
-  "forGuidanceOnSizingYourAccountSee": "Per indicazioni sul dimensionamento del tuo account, visita <link>orchid.com</link>",
-  "currentTokenPreauthorizationAmount": "Preautorizzazione corrente di {tokenType}: {amount}",
-  "@currentTokenPreauthorizationAmount": {
-    "placeholders": {
-      "tokenType": {
-        "type": "String"
-      },
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "noWallet": "Nessun wallet",
-  "noWalletOrBrowserNotSupported": "Nessun wallet o browser non supportato.",
-  "error": "Errore",
-  "failedToConnectToWalletconnect": "Impossibile connettersi a WalletConnect.",
-  "unknownChain": "Catena sconosciuta",
-  "theOrchidAccountManagerDoesntSupportThisChainYet": "La gestione account di Orchid non supporta ancora questa catena.",
-  "orchidIsntOnThisChain": "Orchid non è presente in questa catena.",
-  "theOrchidContractHasntBeenDeployedOnThisChainYet": "Il contratto Orchid non è ancora stato distribuito in questa catena.",
-  "moveFunds": "SPOSTA FONDI",
-  "lockUnlock": "BLOCCA/SBLOCCA",
-  "yourDepositOfAmountIsUnlocked": "Il tuo deposito di {amount} è sbloccato.",
-  "@yourDepositOfAmountIsUnlocked": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "locked": "bloccato",
-  "yourDepositOfAmountIsUnlockingOrUnlocked": "Il tuo deposito di {amount} è {unlockingOrUnlocked}.",
-  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      },
-      "unlockingOrUnlocked": {
-        "type": "String"
-      }
-    }
-  },
-  "theFundsWillBeAvailableForWithdrawalInTime": "I fondi saranno disponibili per il prelievo tra ${time}.",
-  "@theFundsWillBeAvailableForWithdrawalInTime": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "lockDeposit": "BLOCCA DEPOSITO",
-  "unlockDeposit": "SBLOCCA DEPOSITO",
-  "advanced": "AVANZATE",
-  "linklearnMoreAboutOrchidAccountslink": "<link>Scopri di più sugli account Orchid</link>.",
-  "estimatedCostToCreateAnOrchidAccountWith": "Costo stimato per creare un account Orchid con un'efficienza di {efficiency} e {num} ticket di valore.",
-  "@estimatedCostToCreateAnOrchidAccountWith": {
-    "placeholders": {
-      "efficiency": {
-        "type": "String"
-      },
-      "num": {
-        "type": "int"
-      }
-    }
-  },
-  "chain": "Catena",
-  "token": "Token",
-  "minDeposit": "Deposito min",
-  "minBalance": "Saldo min",
-  "fundFee": "Commissione fondo",
-  "withdrawFee": "Commissione prelievo",
-  "tokenValues": "VALORI TOKEN",
-  "usdPrices": "PREZZI USD",
-  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "L'impostazione di un importo di deposito limite avvia il periodo di attesa di 24 ore necessario per prelevare i fondi del deposito.",
-  "duringThisPeriodTheFundsAreNotAvailableAsA": "Durante questo periodo, i fondi non sono disponibili come deposito valido sulla rete Orchid.",
-  "fundsMayBeRelockedAtAnyTimeByReducingThe": "I fondi possono essere nuovamente bloccati in qualsiasi momento riducendo l'importo limite.",
-  "warn": "Limite",
-  "totalWarnedAmount": "Importo limite totale"
+	"@@locale": "it",
+	"@newHop": {
+		"description": "New network hop"
+	},
+	"orchidHop": "Hop Orchid",
+	"@orchidHop": {
+		"description": "Orchid network hop"
+	},
+	"orchidDisabled": "Orchid disabilitata",
+	"trafficMonitoringOnly": "Solo monitoraggio del traffico",
+	"orchidConnecting": "Orchid si sta connettendo",
+	"orchidDisconnecting": "Orchid si sta disconnettendo",
+	"numHopsConfigured": "{num, plural, =0{Nessun hop configurato} =1{Un hop configurato} =2{Due hop configurati} other{{num} hop configurati}}",
+	"@numHopsConfigured": {
+		"type": "text",
+		"placeholders": {
+			"num": {
+				"type": "int"
+			}
+		}
+	},
+	"delete": "Elimina",
+	"orchid": "Orchid",
+	"openVPN": "OpenVPN",
+	"hops": "Hop",
+	"@hops": {
+		"description": "Network hops"
+	},
+	"traffic": "Traffico",
+	"@traffic": {
+		"description": "Network traffic"
+	},
+	"curation": "Cura",
+	"signerKey": "Chiave del firmatario",
+	"copy": "Copia",
+	"paste": "Incolla",
+	"deposit": "Deposito",
+	"curator": "Curatore",
+	"ok": "OK",
+	"settingsButtonTitle": "IMPOSTAZIONI",
+	"confirmThisAction": "Conferma questa azione",
+	"cancelButtonTitle": "ANNULLA",
+	"changesWillTakeEffectInstruction": "Le modifiche avranno effetto al riavvio della VPN.",
+	"saved": "Salvato",
+	"configurationSaved": "Configurazione salvata",
+	"whoops": "Ups",
+	"configurationFailedInstruction": "Impossibile salvare la configurazione. Per favore, controlla la sintassi e riprova.",
+	"addHop": "Aggiungi hop",
+	"scan": "Scansiona",
+	"invalidQRCode": "QR code non valido",
+	"theQRCodeYouScannedDoesNot": "Il QR code scansionato non contiene una configurazione valida dell'account.",
+	"invalidCode": "Codice non valido",
+	"theCodeYouPastedDoesNot": "Il codice incollato non contiene una configurazione valida dell'account.",
+	"openVPNHop": "Hop OpenVPN",
+	"username": "Nome utente",
+	"password": "Password",
+	"config": "Conﬁg",
+	"pasteYourOVPN": "Incolla qui il tuo file OVPN Config",
+	"enterYourCredentials": "Inserisci le tue credenziali",
+	"enterLoginInformationInstruction": "Inserisci sopra i dati di accesso per il tuo provider VPN. Incolla, quindi, il contenuto del file OVPN Config del provider nel campo fornito.",
+	"save": "Salva",
+	"help": "Aiuto",
+	"privacyPolicy": "Informativa sulla privacy",
+	"openSourceLicenses": "Licenze open source",
+	"settings": "Impostazioni",
+	"version": "Versione",
+	"noVersion": "Nessuna versione",
+	"orchidOverview": "Panoramica di Orchid",
+	"defaultCurator": "Curatore predefinito",
+	"queryBalances": "Controlla saldo",
+	"reset": "Reimposta",
+	"manageConfiguration": "Gestisci configurazione",
+	"warningThesefeature": "Attenzione: queste funzionalità sono destinate solo agli utenti esperti. Per favore, leggi tutte le istruzioni.",
+	"exportHopsConfiguration": "Esporta configurazione hops",
+	"export": "Esporta",
+	"warningExportedConfiguration": "Attenzione: la configurazione esportata include i secrets della chiave privata del firmatario degli hops esportati. Rivelando le chiavi private rischi di perdere tutti i fondi negli account Orchid associati.",
+	"importHopsConfiguration": "Importa configurazione hops",
+	"import": "Importa",
+	"warningImportedConfiguration": "Attenzione: la configurazione importata sostituirà tutti gli hops esistenti che hai creato nell'app. Le chiavi del firmatario precedentemente generate o importate in questo dispositivo verranno mantenute e rimarranno accessibili per la creazione di nuovi hops; tuttavia, tutte le altre configurazioni, inclusa la configurazione dell'hop OpenVPN, andranno perse.",
+	"configuration": "Conﬁgurazione",
+	"saveButtonTitle": "SALVA",
+	"search": "Cerca",
+	"newContent": "Nuovo contenuto",
+	"clear": "Cancella",
+	"connectionDetail": "Dettaglio connessione",
+	"host": "Host",
+	"time": "Ora",
+	"sourcePort": "Porta di origine",
+	"destination": "Destinazione",
+	"destinationPort": "Porta di destinazione",
+	"generateNewKey": "Genera nuova chiave",
+	"importKey": "Importa chiave",
+	"nothingToDisplayYet": "Ancora nulla da mostrare. Il traffico verrà visualizzato qui quando c'è qualcosa da mostrare.",
+	"disconnecting": "Disconnettendo...",
+	"connecting": "Connettendo...",
+	"pushToConnect": "Premi per connetterti.",
+	"orchidIsRunning": "Orchid è in funzione!",
+	"pacPurchaseWaiting": "AUA Acquisto in attesa",
+	"retry": "Riprova",
+	"getHelpResolvingIssue": "Ottieni assistenza per risolvere il problema.",
+	"copyDebugInfo": "Copia informazioni di debug",
+	"contactOrchid": "Contatta Orchid",
+	"remove": "Rimuovi",
+	"deleteTransaction": "Elimina transazione",
+	"clearThisInProgressTransactionExplain": "Cancella questa transazione in corso. Questa operazione non prevede il rimborso dell'acquisto in-app. Per risolvere il problema, contatta Orchid.",
+	"preparingPurchase": "Preparando acquisto",
+	"retryingPurchasedPAC": "Riprovando AUA acquistato",
+	"retryPurchasedPAC": "Riprova AUA acquistato",
+	"purchaseError": "Errore di acquisto",
+	"thereWasAnErrorInPurchasingContact": "Errore durante l'acquisto. Per favore, contatta il supporto di Orchid.",
+	"importAnOrchidAccount": "Importa un account Orchid",
+	"buyCredits": "Acquista crediti",
+	"@gb": {
+		"description": "Gigabytes"
+	},
+	"@ofTraffic": {
+		"description": "GB of traffic"
+	},
+	"linkAnOrchidAccount": "Collega account Orchid",
+	"weAreSorryButThisPurchaseWouldExceedTheDaily": "Siamo spiacenti, questo acquisto supererebbe il limite di acquisto giornaliero per i crediti di accesso. Per favore, riprova più tardi.",
+	"marketStats": "Statistiche di mercato",
+	"balanceTooLow": "Saldo troppo basso",
+	"depositSizeTooSmall": "Importo del deposito insufficiente",
+	"yourMaxTicketValueIsCurrentlyLimitedByYourBalance": "Il tuo valore massimo di ticket è attualmente limitato dal tuo saldo di",
+	"yourMaxTicketValueIsCurrentlyLimitedByYourDeposit": "Il tuo valore massimo di ticket è attualmente limitato dal tuo deposito di",
+	"considerAddingOxtToYourAccountBalance": "Si ritiene opportuno aggiungere OXT al saldo del tuo account.",
+	"considerAddingOxtToYourDepositOrMovingFundsFrom": "Si ritiene opportuno aggiungere OXT al tuo deposito o di spostare i fondi dal tuo saldo al tuo deposito.",
+	"prices": "Prezzi",
+	"ticketValue": "Valore del ticket",
+	"costToRedeem": "Costo per riscattare:",
+	"viewTheDocsForHelpOnThisIssue": "Consulta la documentazione per assistenza su questo problema.",
+	"goodForBrowsingAndLightActivity": "Ideale per la semplice navigazione e per le attività meno complesse",
+	"learnMore": "Ulteriori informazioni.",
+	"connect": "Resta in contatto",
+	"disconnect": "Disconnetti",
+	"wireguardHop": "Hop WireGuard®️",
+	"pasteYourWireguardConfigFileHere": "Incolla qui il tuo file WireGuard®️ Config",
+	"pasteTheCredentialInformationForYourWireguardProviderIntoThe": "Incolla le informazioni delle credenziali del tuo provider WireGuard®️ nel campo sopra.",
+	"wireguard": "WireGuard®️",
+	"clearAllLogData": "Cancella tutti i dati di registro?",
+	"thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "Questo registro di debug non è persistente e viene cancellato quando chiudi l'app.",
+	"itMayContainSecretOrPersonallyIdentifyingInformation": "Può contenere informazioni segrete o informazioni di identificazione personale.",
+	"loggingEnabled": "Registrazione abilitata",
+	"cancel": "ANNULLA",
+	"logging": "Registrando",
+	"loading": "Caricamento...",
+	"ethPrice": "Prezzo ETH:",
+	"oxtPrice": "Prezzo OXT:",
+	"gasPrice": "Prezzo GAS:",
+	"maxFaceValue": "Valore nominale massimo:",
+	"confirmDelete": "Conferma eliminazione",
+	"enterOpenvpnConfig": "Inserisci OpenVPN Config",
+	"enterWireguardConfig": "Inserisci WireGuard®️ Config",
+	"starting": "Avvio...",
+	"legal": "Legale",
+	"whatsNewInOrchid": "Novità di Orchid",
+	"orchidIsOnXdai": "Orchid è su xDai!",
+	"youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "Ora puoi acquistare crediti Orchid su xDai! Inizia ad utilizzare la VPN al costo di un caffè.",
+	"xdaiAccountsForPastPurchases": "Account xDai per acquisti precedenti",
+	"forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "Per tutti gli acquisti in-app effettuati prima di oggi, i fondi xDai sono stati aggiunti alla stessa chiave dell'account. Offriamo noi la connessione!",
+	"newInterface": "Nuova interfaccia",
+	"accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "Gli account sono ora organizzati in base all'indirizzo Orchid al quale sono associati.",
+	"seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Visualizza il saldo attivo del tuo account e il costo della larghezza di banda sulla schermata iniziale.",
+	"seeOrchidcomForHelp": "Per assistenza, visita orchid.com.",
+	"payPerUseVpnService": "Servizio VPN a consumo, si paga solo l'effettivo utilizzo",
+	"notASubscriptionCreditsDontExpire": "Nessun abbonamento, i crediti non scadono",
+	"shareAccountWithUnlimitedDevices": "Condividi l'account con un numero illimitato di dispositivi",
+	"theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Lo Store di Orchid non è momentaneamente disponibile. Per favore, controlla di nuovo tra qualche minuto.",
+	"talkingToPacServer": "Comunicando con il server dell'account Orchid",
+	"advancedConfiguration": "Configurazione avanzata",
+	"newWord": "Nuovo",
+	"copied": "Copiato",
+	"efficiency": "Efficienza",
+	"minTicketsAvailableTickets": "Ticket minimi disponibili: {tickets}",
+	"@minTicketsAvailableTickets": {
+		"placeholders": {
+			"tickets": {
+				"type": "int"
+			}
+		}
+	},
+	"transactionSentToBlockchain": "Transazione inviata alla blockchain",
+	"yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "Il tuo acquisto è stato completato ed è in corso di elaborazione sulla blockchain di xDai, il quale può richiedere fino a un minuto, a volte più a lungo. Trascina verso il basso per aggiornare e il nuovo saldo verrà visualizzato di seguito.",
+	"copyReceipt": "Copia ricevuta",
+	"manageAccounts": "Gestisci account",
+	"configurationManagement": "Gestione configurazione",
+	"exportThisOrchidKey": "Esporta questa chiave Orchid",
+	"aQrCodeAndTextForAllTheOrchidAccounts": "Di seguito sono riportati un QR code e un testo per tutti gli account Orchid associati a questa chiave.",
+	"importThisKeyOnAnotherDeviceToShareAllThe": "Importa questa chiave in un altro dispositivo per condividere tutti gli account Orchid associati a questa identità Orchid.",
+	"orchidAccountInUse": "Account Orchid in uso",
+	"thisOrchidAccountIsInUseAndCannotBeDeleted": "Questo account Orchid è in uso e non può essere eliminato.",
+	"pullToRefresh": "Trascina verso il basso per aggiornare.",
+	"balance": "Saldo",
+	"active": "Attivo",
+	"pasteAnOrchidKeyFromTheClipboardToImportAll": "Incolla una chiave Orchid dagli appunti per importare tutti gli account Orchid associati a tale chiave.",
+	"scanOrPasteAnOrchidKeyFromTheClipboardTo": "Scansiona o incolla una chiave Orchid dagli appunti per importare tutti gli account Orchid associati a tale chiave.",
+	"account": "Account",
+	"transactions": "Transazioni",
+	"weRecommendBackingItUp": "Ti consigliamo di <link>effettuare il backup</link>.",
+	"copiedOrchidIdentity": "Identità Orchid copiata",
+	"thisIsNotAWalletAddress": "Questo non è un indirizzo di portafoglio valido.",
+	"doNotSendTokensToThisAddress": "Non inviare monete a questo indirizzo.",
+	"yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "La tua Identità Orchid ti riconosce sulla rete in modo univoco.",
+	"learnMoreAboutYourLinkorchidIdentitylink": "Ulteriori informazioni sulla tua <link>Identità Orchid</link>.",
+	"analyzingYourConnections": "Analisi delle tue connessioni in corso",
+	"analyzeYourConnections": "Analizza le tue connessioni",
+	"networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "L'analisi della rete utilizza le funzioni VPN del tuo dispositivo per acquisire i pacchetti di rete e analizzare il tuo traffico.",
+	"networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "L'analisi della rete richiede autorizzazioni della VPN ma, da sola, non protegge i tuoi dati o nasconde il tuo indirizzo IP.",
+	"toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Per ottenere i benefici della privacy di rete, è necessario configurare e attivare una connessione VPN dalla schermata iniziale.",
+	"turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "Attivando questa funzionalità, l'applicazione di Orchid avrà un consumo elevato della batteria.",
+	"useAnOrchidAccount": "Utilizza un account Orchid",
+	"pasteAddress": "Incolla indirizzo",
+	"chooseAddress": "Scegli indirizzo",
+	"chooseAnOrchidAccountToUseWithThisHop": "Scegli un account Orchid da utilizzare con questo hop.",
+	"ifYouDontSeeYourAccountBelowYouCanUse": "Se non riesci a visualizzare, di seguito, il tuo account, puoi utilizzare il Gestore Account per importare, acquistare o creare un nuovo account.",
+	"selectAnOrchidAccount": "Seleziona un account Orchid",
+	"takeMeToTheAccountManager": "Vai al Gestore Account",
+	"funderAccount": "Account finanziatore",
+	"orchidRunningAndAnalyzing": "Orchid è in esecuzione e sta effettuando l'analisi",
+	"startingVpn": "(Avvio VPN in corso)",
+	"disconnectingVpn": "(Disconnessione della VPN in corso)",
+	"orchidAnalyzingTraffic": "Orchid sta analizzando il traffico",
+	"vpnConnectedButNotRouting": "(VPN connessa ma senza routing)",
+	"restarting": "Riavvio in corso",
+	"changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "Per modificare lo stato di monitoraggio è necessario riavviare la VPN, il che potrebbe interrompere brevemente la protezione della tua privacy.",
+	"confirmRestart": "Conferma riavvio",
+	"averagePriceIsUSDPerGb": "Il prezzo medio è {price} USD per GB",
+	"@averagePriceIsUSDPerGb": {
+		"placeholders": {
+			"price": {
+				"type": "String"
+			}
+		}
+	},
+	"myOrchidConfig": "La mia configurazione di Orchid",
+	"noAccountSelected": "Nessun account selezionato",
+	"inactive": "Inattivo",
+	"tickets": "Ticket",
+	"accounts": "Account",
+	"orchidIdentity": "Identità Orchid",
+	"addFunds": "AGGIUNGI FONDI",
+	"gb": "GB",
+	"usdgb": "USD/GB",
+	"hop": "Hop",
+	"circuit": "Circuito",
+	"clearAllAnalysisData": "Vuoi cancellare tutti i dati delle analisi?",
+	"thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "Verranno cancellati tutti i dati di connessione al traffico analizzati in precedenza.",
+	"clearAll": "CANCELLA TUTTO",
+	"stopAnalysis": "INTERROMPI ANALISI",
+	"startAnalysis": "AVVIA ANALISI",
+	"orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "Gli account Orchid includono assistenza clienti 24x7, dispositivi illimitati e sono supportati dalla <link2>criptovaluta Dai</link2>.",
+	"purchasedAccountsConnectExclusivelyToOur": "Gli account acquistati si connettono esclusivamente ai nostri <link1>provider preferiti</link1>.",
+	"refundPolicyCoveredByAppStores": "Politica di rimborso coperta dagli app store.",
+	"orchidIsUnableToDisplayInappPurchasesAtThisTime": "Orchid non al momento è in grado di visualizzare gli acquisti in-app.",
+	"pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "Verifica che il dispositivo supporti e sia configurato per gli acquisti in-app.",
+	"pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "Verifica che il dispositivo supporti e sia configurato per gli acquisti in-app o utilizzi il nostro sistema di <link>gestione degli account</link> decentralizzato.",
+	"buy": "ACQUISTA",
+	"gbApproximately12": "12 GB (circa)",
+	"gbApproximately60": "60 GB (circa)",
+	"gbApproximately240": "240 GB (circa)",
+	"idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "Dimensioni ideali per l'uso individuale a medio termine che include la navigazione e lo streaming leggero.",
+	"mostPopular": "Più popolare!",
+	"bandwidthheavyLongtermUsageOrSharedAccounts": "Account condivisi o utilizzo a lungo termine con larghezza di banda elevata.",
+	"total": "Totale",
+	"pausingAllTraffic": "Sospendo tutto il traffico...",
+	"queryingEthereumForARandom": "Eseguo query su Ethereum per un provider casuale...",
+	"quickFundAnAccount": "Finanzia rapidamente un account!",
+	"accountFound": "Account trovato",
+	"weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "Abbiamo trovato un account associato alle tue identità e creato un singolo circuito Orchid hop per lo stesso. Ora puoi utilizzare la VPN.",
+	"welcomeToOrchid": "Ti diamo il benvenuto su Orchid!",
+	"fundYourAccount": "Finanzia il tuo account",
+	"processing": "Elaboro...",
+	"subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "Servizio VPN decentralizzato e open source, senza abbonamento, con pagamento in base al consumo.",
+	"getStartedFor1": "INIZIA A {smallAmount}",
+	"@getStartedFor1": {
+		"placeholders": {
+			"smallAmount": {
+				"type": "String"
+			}
+		}
+	},
+	"importAccount": "Importa Account",
+	"illDoThisLater": "Lo farò dopo",
+	"connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Collegati automaticamente a uno dei <link1>provider preferiti</link1> della rete acquistando crediti VPN per finanziare il tuo account Orchid condivisibile e ricaricabile.",
+	"confirmPurchase": "CONFERMA ACQUISTO",
+	"orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Gli account Orchid utilizzano crediti VPN supportati dalla <link>criptovaluta xDAI</link>, includono assistenza clienti 24x7, condivisione illimitata dei dispositivi e sono coperti dalle politiche di rimborso dell'app store.",
+	"yourPurchaseIsInProgress": "Il tuo acquisto è in corso.",
+	"thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "L'elaborazione di questo acquisto richiede più tempo del previsto ed è possibile che si sia verificato un errore.",
+	"thisMayTakeAMinute": "L'operazione potrebbe richiedere qualche minuto...",
+	"vpnCredits": "Crediti VPN",
+	"blockchainFee": "Commissione blockchain",
+	"promotion": "Promozione",
+	"showInAccountManager": "Mostra in Gestione account",
+	"deleteThisOrchidIdentity": "Elimina questa identità Orchid",
+	"chooseIdentity": "Scegli identità",
+	"updatingAccounts": "Aggiorno gli account",
+	"trafficAnalysis": "Analisi del traffico",
+	"accountManager": "Gestione account",
+	"circuitBuilder": "Generatore di circuiti",
+	"exitHop": "Hop di uscita",
+	"entryHop": "Hop di entrata",
+	"addNewHop": "AGGIUNGI NUOVO HOP",
+	"newCircuitBuilder": "Nuovo Generatore di circuiti!",
+	"youCanNowPayForAMultihopOrchidCircuitWith": "Ora puoi pagare un circuito Orchid multi-hop con xDAI. L'interfaccia multi-hop supporta gli account xDAI e OXT Orchid e supporta sempre le configurazioni OpenVPN e WireGuard che possono essere combinate in un instradamento a cipolla.",
+	"manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "Gestisci la tua connessione dal Generatore di circuiti anziché da Gestione account. Tutte le connessioni ora utilizzano un circuito con zero o più hop. Qualsiasi configurazione esistente è stata migrata al Generatore di circuiti.",
+	"quickStartFor1": "Avvio rapido con {smallAmount}",
+	"@quickStartFor1": {
+		"placeholders": {
+			"smallAmount": {
+				"type": "String"
+			}
+		}
+	},
+	"weAddedAMethodToPurchaseAnOrchidAccountAnd": "Abbiamo aggiunto un metodo per acquistare un account Orchid e creare un singolo circuito hop dalla schermata iniziale per semplificare il processo di onboarding.",
+	"orchidIsUniqueAsAMultiHopOrOnion": "Orchid è un client multi-hop o di instradamento a cipolla esclusivo che supporta più protocolli VPN. Puoi configurare la connessione concatenando gli hop dai seguenti protocolli supportati.\n\nUn hop è come una normale VPN. Tre hop (per utenti avanzati) è la classica scelta di instradamento a cipolla. Zero hop consente l'analisi del traffico senza tunnel VPN.",
+	"deletingOpenVPNAndWireguardHopsWillLose": "L'eliminazione degli hop OpenVPN e Wireguard comporterà la cancellazione di tutte le credenziali associate e della configurazione della connessione. Assicurati di eseguire il backup di tutte le informazioni prima di continuare.",
+	"thisCannotBeUndoneToSaveThisIdentity": "Questa operazione è irreversibile. Per salvare questa identità, premi Annulla e usa l'opzione Esporta",
+	"unlockTime": "Durata sblocco",
+	"chooseChain": "Scegli catena",
+	"unlocking": "sblocco",
+	"unlocked": "Sbloccato",
+	"orchidTransaction": "Transazione Orchid",
+	"confirmations": "Conferme",
+	"pending": "In sospeso...",
+	"txHash": "Hash Tx:",
+	"allOfYourFundsAreAvailableForWithdrawal": "Tutti i tuoi fondi sono disponibili per il prelievo.",
+	"maxWithdrawOfYourTotalFundsCombinedFunds": "{maxWithdraw} dei tuoi {totalFunds} di fondi combinati sono attualmente disponibili per il prelievo.",
+	"@maxWithdrawOfYourTotalFundsCombinedFunds": {
+		"placeholders": {
+			"maxWithdraw": {
+				"type": "String"
+			},
+			"totalFunds": {
+				"type": "String"
+			}
+		}
+	},
+	"alsoUnlockRemainingDeposit": "Sblocca anche il deposito residuo",
+	"ifYouSpecifyLessThanTheFullAmountFundsWill": "Se specifichi un importo inferiore all'importo totale, i fondi verranno prelevati prima dal tuo saldo.",
+	"forAdditionalOptionsSeeTheAdvancedPanel": "Per ulteriori opzioni, consulta il pannello AVANZATE.",
+	"ifYouSelectTheUnlockDepositOptionThisTransactionWill": "Se selezioni l'opzione di sblocco del deposito, con questa transazione preleverai immediatamente l'importo specificato dal tuo saldo e verrà avviato anche il processo di sblocco del deposito residuo.",
+	"depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "I fondi di deposito sono disponibili per il prelievo 24 ore dopo lo sblocco.",
+	"withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Preleva fondi dal tuo account Orchid al tuo wallet attuale.",
+	"withdrawAndUnlockFunds": "PRELEVA E SBLOCCA FONDI",
+	"withdrawFunds": "PRELEVA FONDI",
+	"withdraw": "Preleva",
+	"submitTransaction": "INVIA TRANSAZIONE",
+	"move": "Sposta",
+	"now": "Ora",
+	"amount": "Quantità",
+	"available": "Disponibile",
+	"select": "Seleziona",
+	"add": "AGGIUNGI",
+	"balanceToDeposit": "DA SALDO A DEPOSITO",
+	"depositToBalance": "DA DEPOSITO A SALDO",
+	"setWarnedAmount": "Imposta importo limite",
+	"addFundsToYourOrchidAccountBalanceAndorDeposit": "Aggiungi fondi al saldo e/o al deposito del tuo account Orchid.",
+	"forGuidanceOnSizingYourAccountSee": "Per indicazioni sul dimensionamento del tuo account, visita <link>orchid.com</link>",
+	"currentTokenPreauthorizationAmount": "Preautorizzazione corrente di {tokenType}: {amount}",
+	"@currentTokenPreauthorizationAmount": {
+		"placeholders": {
+			"tokenType": {
+				"type": "String"
+			},
+			"amount": {
+				"type": "String"
+			}
+		}
+	},
+	"noWallet": "Nessun wallet",
+	"noWalletOrBrowserNotSupported": "Nessun wallet o browser non supportato.",
+	"error": "Errore",
+	"failedToConnectToWalletconnect": "Impossibile connettersi a WalletConnect.",
+	"unknownChain": "Catena sconosciuta",
+	"theOrchidAccountManagerDoesntSupportThisChainYet": "La gestione account di Orchid non supporta ancora questa catena.",
+	"orchidIsntOnThisChain": "Orchid non è presente in questa catena.",
+	"theOrchidContractHasntBeenDeployedOnThisChainYet": "Il contratto Orchid non è ancora stato distribuito in questa catena.",
+	"moveFunds": "SPOSTA FONDI",
+	"lockUnlock": "BLOCCA/SBLOCCA",
+	"yourDepositOfAmountIsUnlocked": "Il tuo deposito di {amount} è sbloccato.",
+	"@yourDepositOfAmountIsUnlocked": {
+		"placeholders": {
+			"amount": {
+				"type": "String"
+			}
+		}
+	},
+	"locked": "bloccato",
+	"yourDepositOfAmountIsUnlockingOrUnlocked": "Il tuo deposito di {amount} è {unlockingOrUnlocked}.",
+	"@yourDepositOfAmountIsUnlockingOrUnlocked": {
+		"placeholders": {
+			"amount": {
+				"type": "String"
+			},
+			"unlockingOrUnlocked": {
+				"type": "String"
+			}
+		}
+	},
+	"theFundsWillBeAvailableForWithdrawalInTime": "I fondi saranno disponibili per il prelievo tra ${time}.",
+	"@theFundsWillBeAvailableForWithdrawalInTime": {
+		"placeholders": {
+			"time": {
+				"type": "String"
+			}
+		}
+	},
+	"lockDeposit": "BLOCCA DEPOSITO",
+	"unlockDeposit": "SBLOCCA DEPOSITO",
+	"advanced": "AVANZATE",
+	"linklearnMoreAboutOrchidAccountslink": "<link>Scopri di più sugli account Orchid</link>.",
+	"estimatedCostToCreateAnOrchidAccountWith": "Costo stimato per creare un account Orchid con un'efficienza di {efficiency} e {num} ticket di valore.",
+	"@estimatedCostToCreateAnOrchidAccountWith": {
+		"placeholders": {
+			"efficiency": {
+				"type": "String"
+			},
+			"num": {
+				"type": "int"
+			}
+		}
+	},
+	"chain": "Catena",
+	"token": "Token",
+	"minDeposit": "Deposito min",
+	"minBalance": "Saldo min",
+	"fundFee": "Commissione fondo",
+	"withdrawFee": "Commissione prelievo",
+	"tokenValues": "VALORI TOKEN",
+	"usdPrices": "PREZZI USD",
+	"settingAWarnedDepositAmountBeginsThe24HourWaiting": "L'impostazione di un importo di deposito limite avvia il periodo di attesa di 24 ore necessario per prelevare i fondi del deposito.",
+	"duringThisPeriodTheFundsAreNotAvailableAsA": "Durante questo periodo, i fondi non sono disponibili come deposito valido sulla rete Orchid.",
+	"fundsMayBeRelockedAtAnyTimeByReducingThe": "I fondi possono essere nuovamente bloccati in qualsiasi momento riducendo l'importo limite.",
+	"warn": "Limite",
+	"totalWarnedAmount": "Importo limite totale",
+	"contract": "Contrarre",
+	"deleteIdentity": "Elimina identità",
+	"exportIdentity": "Esporta identità",
+	"funderAddress": "Indirizzo del finanziatore",
+	"importIdentity": "Importa identità",
+	"importOrchidIdentity": "Importa identità orchidea",
+	"newIdentity": "Nuova identità",
+	"txFee": "Tariffa Tx"
 }

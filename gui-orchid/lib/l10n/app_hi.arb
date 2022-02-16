@@ -1,437 +1,445 @@
 {
-  "@@locale": "hi",
-  "@newHop": {
-    "description": "New network hop"
-  },
-  "orchidHop": "ऑर्किड हॉप",
-  "@orchidHop": {
-    "description": "Orchid network hop"
-  },
-  "orchidDisabled": "ऑर्किड को अक्षम किया गया",
-  "trafficMonitoringOnly": "केवल यातात पर निगरानी",
-  "orchidConnecting": "ऑर्किड कनेकट कर रहा है",
-  "orchidDisconnecting": "ऑर्किड डिसकनेक्ट हो रह है",
-  "numHopsConfigured": "{num, plural, =0{कोई भी हॉप कॉन्फिगर नहीं किए गए हैं} =1{एक हॉप कॉन्फिगर किया गया है} =2{दो हॉप कॉन्फिगर किए गए हैं} other{{num} हॉप कॉन्फिगर किए गए हैं}}",
-  "@numHopsConfigured": {
-    "type": "text",
-    "placeholders": {
-      "num": {
-        "type": "int"
-      }
-    }
-  },
-  "delete": "हटाएँ",
-  "orchid": "ऑर्किड",
-  "openVPN": "मुक्त-वीपीएन",
-  "hops": "हॉप",
-  "@hops": {
-    "description": "Network hops"
-  },
-  "traffic": "यातायात",
-  "@traffic": {
-    "description": "Network traffic"
-  },
-  "curation": "क्यूरेशन",
-  "signerKey": "साइनर कुंजी",
-  "copy": "कॉपी करें",
-  "paste": "चिपकाएँ",
-  "deposit": "जमा",
-  "curator": "क्यूरेटर",
-  "ok": "ठीक है",
-  "settingsButtonTitle": "सेटिंग",
-  "confirmThisAction": "इस कार्य की पुष्टि करें",
-  "cancelButtonTitle": "रद्द करें",
-  "changesWillTakeEffectInstruction": "परिवर्तन तक दिखाई देंगे जब वीपीएन को दुबारा शुरू किया जाएगा।",
-  "saved": "सहेज लिया",
-  "configurationSaved": "कॉन्फिगरेशन को सहेज लिया गया",
-  "whoops": "शाबाश",
-  "configurationFailedInstruction": "कॉन्फिगरेशन को सहेजा नहीं जा सका। कृपया उसके वाक्य-विन्यास को जाँचें और दुबारा कोशिश करें।",
-  "addHop": "हॉप जोड़ें",
-  "scan": "स्कैन करें",
-  "invalidQRCode": "अमान्य क्यूआर कोड",
-  "theQRCodeYouScannedDoesNot": "आपने जिस क्यूआर कोड को स्कैन किया है, उसमें एक मान्य खाता कॉन्फिगरेशन नहीं है।",
-  "invalidCode": "अमान्य कोड",
-  "theCodeYouPastedDoesNot": "आपने जो कोड चिपकाया है, उसमें एक मान्य खाता कॉन्फिगरेशन नहीं है।",
-  "openVPNHop": "मुक्त-वीपीएन हॉप",
-  "username": "उपयोगकर्ता नाम",
-  "password": "पासवर्ड",
-  "config": "कॉन्फिग",
-  "pasteYourOVPN": "अपनी ओवीपीएन कॉन्फिग फाइल को यहाँ चिपकाएँ",
-  "enterYourCredentials": "अपने प्रत्यायन दर्ज करें",
-  "enterLoginInformationInstruction": "ऊपर अपने वीपीएन प्रदाता के लिए लॉगिन जानकारी दर्ज करें। फिर अपने प्रदाता की ओपनवीपीएन कॉन्फिग फाइल की सामग्री को प्रदान किए गए स्थान में चिपकाएँ।",
-  "save": "सहेजें",
-  "help": "मदद",
-  "privacyPolicy": "गोपनीयता नीति",
-  "openSourceLicenses": "मुक्त स्रोत लाइसेंस",
-  "settings": "सेटिंग",
-  "version": "संस्करण",
-  "noVersion": "कोई संस्करण नहीं है",
-  "orchidOverview": "ऑर्किड सारांश",
-  "defaultCurator": "डिफॉल्ट क्यूरेटर",
-  "queryBalances": "शेष राशि के बारे में पूछें",
-  "reset": "रीसेट करें",
-  "manageConfiguration": "कॉन्फिगरेशन को प्रबंधित करें",
-  "warningThesefeature": "चेतावनी: ये सुविधाएँ केवल उन्नत उपयोगकर्ताओं के लिए हैं।  कृपया सभी निर्देशों को पढ़ें।",
-  "exportHopsConfiguration": "हॉप्स कॉन्फिगरेशन को निर्यात करें",
-  "export": "निर्यात करें",
-  "warningExportedConfiguration": "चेतावनी: निर्यात कॉन्फिगरेशन में निर्यात किए गए हॉपों के लिए साइनर निजी कुंजी रहस्य शामिल हैं।  निजी कुंजियों का खुलासा करने पर आप आर्किड खातों से जुड़ी सभी निधियों को जोखिम में डाल देंगे।",
-  "importHopsConfiguration": "हॉप कॉन्फिगरेशन आयात करें",
-  "import": "आयात करें",
-  "warningImportedConfiguration": "चेतावनी: आयातित कॉन्फिगरेशन आपके द्वारा ऐप में बनाए गए सभी मौजूदा हॉपों का स्थान ले लेगा।  इस उपकरण पर पहले से उत्पन्न या आयातित सिग्नर कुंजी को बनाए रखा जाएगा और नए हॉप बनाने के लिए वह सुलभ रहेगा, हालांकि ओपनवीपीएन हॉप कॉन्फिगरेशन सहित अन्य सभी कॉन्फिगरेशन खो जाएँगे।",
-  "configuration": "कॉन्फिगरेशन",
-  "saveButtonTitle": "सहेजें",
-  "search": "खोजें",
-  "newContent": "नई सामग्री",
-  "clear": "साफ करें",
-  "connectionDetail": "कनेक्शन विवरण",
-  "host": "मेजबान",
-  "time": "समय",
-  "sourcePort": "स्रोत पोर्ट",
-  "destination": "गंतव्य",
-  "destinationPort": "गंतव्य पोर्ट",
-  "generateNewKey": "नई कुंजी निर्मित करें",
-  "importKey": "कुंजी आयात करें",
-  "nothingToDisplayYet": "अभी दिखाने के लिए कुछ भी नहीं है। जब कुछ दिखाने के लिए होगा, तब यातायात यहाँ दिखाई देगा।",
-  "disconnecting": "डिसकनेक्ट कर रहे हैं...",
-  "connecting": "कनेक्ट कर रहे हैं...",
-  "pushToConnect": "कनेक्ट करने के लिए पुश करें।",
-  "orchidIsRunning": "ऑर्किड चल रहा है!",
-  "pacPurchaseWaiting": "खरीद प्रतीक्षा में है",
-  "retry": "दुबारा कोशिश करें",
-  "getHelpResolvingIssue": "इस समस्या को सुलटाने के लिए मदद पाएँ।",
-  "copyDebugInfo": "डीबग जानकारी को कॉपी करें",
-  "contactOrchid": "ऑर्किड से संपर्क करें",
-  "remove": "हटाएँ",
-  "deleteTransaction": "लेन-देन को हटाएँ",
-  "clearThisInProgressTransactionExplain": "इस चालू लेन-देन को साफ करें। इससे आपके इन-एप खरीद के लिए धन-वापसी नहीं होगी। इस मामले को सुलटाने के लिए आपको ऑर्किड से संपर्क करना होगा।",
-  "preparingPurchase": "खरीद की तैयारी कर रहे हैं",
-  "retryingPurchasedPAC": "खरीदने की दुबारा कोशिश कर रहे हैं",
-  "retryPurchasedPAC": "खरीदने की दुबारा कोशिश करें",
-  "purchaseError": "खरीद त्रुटि",
-  "thereWasAnErrorInPurchasingContact": "खरीदे समय एक त्रुटि हुई। कृपया ऑर्किड समर्थन से संपर्क करें।",
-  "importAnOrchidAccount": "एक ऑर्किड खाता आयात करें",
-  "buyCredits": "क्रेडिट खरीदें",
-  "@gb": {
-    "description": "Gigabytes"
-  },
-  "@ofTraffic": {
-    "description": "GB of traffic"
-  },
-  "linkAnOrchidAccount": "ऑर्किड खाते को लिंक करें",
-  "weAreSorryButThisPurchaseWouldExceedTheDaily": "हमें खेद है लेकिन यह खरीद एक्सेस क्रेडिट के लिए दैनिक खरीद सीमा से अधिक होगी।  कृपया बाद में दुबारा कोशिश करें।",
-  "marketStats": "बाजर के आँकड़े",
-  "balanceTooLow": "शेष राशि बहुत कम है",
-  "depositSizeTooSmall": "जमा राशि की मात्रा बहुत कम है",
-  "yourMaxTicketValueIsCurrentlyLimitedByYourBalance": "आपका अधिकतम टिकट मूल्य वर्तमान में आपकी शेष राशि द्वारा सीमित है",
-  "yourMaxTicketValueIsCurrentlyLimitedByYourDeposit": "आपका अधिकतम टिकट मूल्य वर्तमान में आपकी जमा राशि से सीमित है",
-  "considerAddingOxtToYourAccountBalance": "अपने खाते की शेष राशि में ओएक्सटी जोड़ने पर विचार करें।",
-  "considerAddingOxtToYourDepositOrMovingFundsFrom": "अपनी जमा राशि में ओएक्सटी जोड़ने या अपनी शेष राशि से धन ले जाने पर विचार करें ।",
-  "prices": "कीमतें",
-  "ticketValue": "टिकट मूल्य",
-  "costToRedeem": "भुनाने की लागत:",
-  "viewTheDocsForHelpOnThisIssue": "इस मुद्दे पर मदद के लिए दस्तावेजों को देखें।",
-  "goodForBrowsingAndLightActivity": "ब्राउस करने और हल्की गतिविधि के लिए अच्छा है",
-  "learnMore": "ज्यादा जानें।",
-  "connect": "कनेक्ट करें",
-  "disconnect": "डिसकनेक्ट करें",
-  "wireguardHop": "वायर-गार्ड®️ हॉप",
-  "pasteYourWireguardConfigFileHere": "अपने वायर-गार्ड®️ कॉन्फिग को यहाँ चिपकाएँ",
-  "pasteTheCredentialInformationForYourWireguardProviderIntoThe": "अपने वायरगार्ड के®️ प्रदाता के लिए क्रेडेंशियल जानकारी को ऊपर की जगह में चिपकाएँ।",
-  "wireguard": "वायर-गार्ड®️",
-  "clearAllLogData": "सभी लॉग डेटा को साफ करें?",
-  "thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "ऐप छोड़ते समय यह डिबग लॉग बना नहीं रहेगा और मिट जाएगा।",
-  "itMayContainSecretOrPersonallyIdentifyingInformation": "उसमें रहस्य या निजी पहचान को संभव बनाने वाली जानकारी हो सकती है।",
-  "loggingEnabled": "लॉगिन सक्षम कर दिया गया",
-  "cancel": "रद्द करें",
-  "logging": "लॉग कर रहे हैं",
-  "loading": "लोड कर रहे हैं...",
-  "ethPrice": "ईटीएच मूल्य:",
-  "oxtPrice": "ऑक्सटी मूल्य:",
-  "gasPrice": "नेटवर्क शुल्क:",
-  "maxFaceValue": "अधिकतम अंकित मूल्य:",
-  "confirmDelete": "हटाने की पुष्टि करें",
-  "enterOpenvpnConfig": "ओपनवीपीएन कॉन्फिग दर्ज करें",
-  "enterWireguardConfig": "वायर-गार्ड®️ कॉन्फिग दर्ज करें",
-  "starting": "शुरू कर रहे हैं...",
-  "legal": "कानूनी",
-  "whatsNewInOrchid": "ऑर्किड में क्या नया है",
-  "orchidIsOnXdai": "ऑर्किड एक्स-डाई में आ गया है!",
-  "youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "अब आप एक्स-डाई में ऑर्किड क्रेडिट खरीद सकते हैं! $1 जितने कम दामों पर वीपीएन का उपयोग करना शुरू करें।",
-  "xdaiAccountsForPastPurchases": "पिछली खरीदों के लिए एक्स-डाई खाते",
-  "forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "आज से पहले की गई किसी भी इन-एप खरीद के लिए, एक्स-डाई निधियों को उसी खाता-कुंजी में जोड़ दिया गया है। बैंडविड्थ हमारी बदौलत!",
-  "newInterface": "नया इंटरफेस",
-  "accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "अब खाते उनसे संबंधित ऑर्किड पते के तहत व्यवस्थित किए गए हैं।",
-  "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "होम स्क्रीन पर अपने सक्रिय खाते की शेष राशि और बैंडविड्थ दाम देखें।",
-  "seeOrchidcomForHelp": "मदद के लिए orchid.com देखें।",
-  "payPerUseVpnService": "उपयोग के अनुसार भुगतान करें वीपीएन सेवा",
-  "notASubscriptionCreditsDontExpire": "सदस्यता नहीं है, क्रेडिट कभी समाप्त नहीं होते",
-  "shareAccountWithUnlimitedDevices": "खाते को असंख्य उपकरणों के साथ साझा करें",
-  "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "ऑर्किड स्टोर अस्थायी रूप से उपलब्ध नहीं है। चंद मिनटों के बाद दुबारा कोशिश करें।",
-  "talkingToPacServer": "ऑर्किड खाता सर्वर के साथ बात कर रहे हैं",
-  "advancedConfiguration": "उन्नत विन्यास",
-  "newWord": "नया",
-  "copied": "कॉपी कर लिया",
-  "efficiency": "कार्यदक्षता",
-  "minTicketsAvailableTickets": "न्यूनतम टिकट उपलब्ध हैं: {tickets}",
-  "@minTicketsAvailableTickets": {
-    "placeholders": {
-      "tickets": {
-        "type": "int"
-      }
-    }
-  },
-  "transactionSentToBlockchain": "लेन-देन को ब्लाॉकचेइन को भेज दिया गया है",
-  "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "आपकी खरीद पूरी हो गई है और इसे अब एक्स-डाई द्वारा प्रक्रमित किया जा रहा है, जिसमें एक मिनट का या कभी-कभी उससे ज्यादा समय लग सकता है। ताजा करने के लिए नीचे खीचें और अद्यतित शेष राशि के साथ आपका खाता नीचे दिखाई देगा।",
-  "copyReceipt": "पावती को कॉपी करें",
-  "manageAccounts": "खातों को प्रबंधित करें",
-  "configurationManagement": "विन्यास प्रबंधन",
-  "exportThisOrchidKey": "इस ऑर्किड कुंजी को निर्यात करें",
-  "aQrCodeAndTextForAllTheOrchidAccounts": "नीचे इस कुंजी के साथ संबंधित सभी ऑर्किड खातों के लिए एक क्यूआर कोड और पाठ दिया गया है।",
-  "importThisKeyOnAnotherDeviceToShareAllThe": "इस ऑर्किड अस्मिता से संबंधित सभी ऑर्किड खातों को साझा करने के लिए इस कुंजी को दूसरे उपकरण में आयाता करें।",
-  "orchidAccountInUse": "ऑर्कड खाता उपयोग में है",
-  "thisOrchidAccountIsInUseAndCannotBeDeleted": "इस ऑर्किड खाते का उपयोग हो रहा है और उसे हटाया नहीं जा सकता है।",
-  "pullToRefresh": "ताजा करने के लिए खींचें।",
-  "balance": "शेष",
-  "active": "सक्रिय",
-  "pasteAnOrchidKeyFromTheClipboardToImportAll": "उस कुंजी से संबंधित सभी ऑर्किड खातों को आयात करने के लिए क्लिपबोर्ड से इस ऑर्किड कुंजी को चिपकाएँ।",
-  "scanOrPasteAnOrchidKeyFromTheClipboardTo": "उस कुंजी से संबंधित सभी ऑर्किड खातों को आयात करने के लिए क्लिपबोर्ड से स्कैन करें या ऑर्किड कुंजी को चिपकाएँ।",
-  "account": "खाता",
-  "transactions": "लेन-देन",
-  "weRecommendBackingItUp": "हमारा सुझाव है कि <link>इसका बैक-अप ले लें</link>।",
-  "copiedOrchidIdentity": "ऑर्किड पहचान को कॉपी कर लिया",
-  "thisIsNotAWalletAddress": "यह वॉलेट का पता नहीं है।",
-  "doNotSendTokensToThisAddress": "इस पते को टोकन नहीं भेजें।",
-  "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "आपकी ऑर्किड पहचान आपको नेटवर्क पर अद्वितीय रूप से पहचानती है।",
-  "learnMoreAboutYourLinkorchidIdentitylink": "अपनी <link>ऑर्किड पहचान</link> के बारे में अधिक जानें।",
-  "analyzingYourConnections": "आपके कनेक्शनों का विश्लेषण कर रहे हैं",
-  "analyzeYourConnections": "अपने कनेक्शनों का विश्लेषण करें",
-  "networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "नेटवर्क विश्लेषण आपके डिवाइस की वीपीएन सुविधा का उपयोग करके पैकटों को ग्रहण करता है और आपकी यातायात का विश्लेषण करता है।",
-  "networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "नेटवर्क विश्लेषण के लिए वीपीएन अनुमतियों की आवश्यकता होती है, लेकिन यह अपने आप में आपके डेटा की रक्षा नहीं करता है, नही आपके आईपी पते को छिपाता है।",
-  "toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "नेटवर्क गोपनीयता का लाभ लेने के लिए आपको मुख्य स्क्रीन से वीपीएन कनेक्शन को कॉन्फिगर करके उसे सक्रिय करना होगा।",
-  "turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "इस सुविधा को चालू करने पर ऑर्किड द्वारा बैटरी का उपयोग बढ़ जाएगा।",
-  "useAnOrchidAccount": "एक ऑर्किड खाते का उपयोग करें",
-  "pasteAddress": "पते को चिपकाएँ",
-  "chooseAddress": "पता चुनें",
-  "chooseAnOrchidAccountToUseWithThisHop": "इस हॉप के साथ उपयोग करने के लिए एक ऑर्किड खाता चुनें।",
-  "ifYouDontSeeYourAccountBelowYouCanUse": "यदि आपको नीचे अपना खाता नहीं दिखें, तो आप खाता प्रबंधक का उपयोग करके एक नए खाते का आयात कर सकते हैं, उसे खरीद सकते हैं या उसे निर्मित कर सकते हैं।",
-  "selectAnOrchidAccount": "एक ऑर्किड खाता चुनें",
-  "takeMeToTheAccountManager": "मुझे खाता प्रबंधक के पास ले जाएँ",
-  "funderAccount": "निधिदाता खाता",
-  "orchidRunningAndAnalyzing": "ऑर्किड चल रहा है और विश्लेषण कर रहा है",
-  "startingVpn": "(वीपीएन को शुरू कर रहे हैं)",
-  "disconnectingVpn": "(वीपीएन को अलग कर रहे हैं)",
-  "orchidAnalyzingTraffic": "ऑर्किड यातायात का विश्लेषण कर रहा है",
-  "vpnConnectedButNotRouting": "(वीपीएन जुड़ गया है लेकिन वह रूटिंग नहीं कर रहा है)",
-  "restarting": "पुनरारंभ कर रहे हैं",
-  "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "निगरानी की स्थिति को बदलने के लिए वीपीएन को दुबारा चालू करना होगा, जिससे कुछ समय के लिए गोपनीय रक्षण में बाधा आएगी।",
-  "confirmRestart": "पुनरारंभ की पुष्टि करें",
-  "averagePriceIsUSDPerGb": "औसत मूल्य {price} अमेरिकी डॉलर प्रति जीबी है",
-  "@averagePriceIsUSDPerGb": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "myOrchidConfig": "मेरा ऑर्किड कॉन्फिग",
-  "noAccountSelected": "कोई खाता नहीं चुना गया है",
-  "inactive": "निष्क्रिय",
-  "tickets": "टिकट",
-  "accounts": "खाते",
-  "orchidIdentity": "ऑर्किड पहचान",
-  "addFunds": "निधियाँ जोड़ें",
-  "gb": "जीबी",
-  "usdgb": "USD/GB",
-  "hop": "हॉप",
-  "circuit": "परिपथ",
-  "clearAllAnalysisData": "सभी विश्लेषण डेटा को साफ करें?",
-  "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "इस कार्रवाई से पहले के सभी यातायात कनेक्शन विश्लेषण आँकड़े साफ हो जाएँगे।",
-  "clearAll": "सबको साफ करें",
-  "stopAnalysis": "विश्लेषण रोकें",
-  "startAnalysis": "विश्लेषण शुरू करें",
-  "orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "आर्किड खातों में 24/7 ग्राहक समर्थन और असीमित डिवाइस शामिल हैं और वह <link2>डाय क्रिप्टो-मुद्रा</link2>द्वारा समर्थित है।",
-  "purchasedAccountsConnectExclusivelyToOur": "खरीदे गए खाते अनन्य रूप से हमारे <link1>प्राथमिकतापूर्ण प्रदाताओं से</link1> कनेक्ट होते हैं।",
-  "refundPolicyCoveredByAppStores": "ऐप स्टोर की धनवापसी नीति।",
-  "orchidIsUnableToDisplayInappPurchasesAtThisTime": "ऑर्किड इस समय ऐप में से की गई खरीदारियों को दर्शा नहीं पा रहा है।",
-  "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "कृपया पुष्टि करें कि यह डिवाइस ऐप से खरीदारी का समर्थन करता है और उसे इसके लिए कॉन्फिगर किया गया है।",
-  "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "कृपया पुष्टि करें कि यह डिवाइस ऐप से खरीदारी को समर्थित करता है और उसे इसके लिए कॉन्फिगर किया गया है, अथवा हमारे विकेंद्रीकृत <link>खाता प्रबंधन</link> प्रणाली का उपयोग करें।",
-  "buy": "खरीदें",
-  "gbApproximately12": "12जीबी (लगभग)",
-  "gbApproximately60": "60जीबी (लगभग)",
-  "gbApproximately240": "240जीबी (लगभग)",
-  "idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "मध्यम अवधि के व्यक्तिगत उपयोग हेतु, जिसमें ब्राउजिंग और हल्की स्ट्रीमिंग शामिल है, यह आदर्श आमाप है",
-  "mostPopular": "सबसे ज्यादा लोकप्रिय!",
-  "bandwidthheavyLongtermUsageOrSharedAccounts": "बैंडविड्थ का बहुत अधिक उपयोग करने वाला दीर्घकालिक उपयोग या साझे खाते।",
-  "total": "कुल",
-  "pausingAllTraffic": "सभी यातायात को अस्थायी तौर पर रोक रहे हैं...",
-  "queryingEthereumForARandom": "एक यादृच्छिक प्रदाता के लिए इथेरियम से पूछताछ कर रहे हैं...",
-  "quickFundAnAccount": "खाते में तेजी से पैसा डालें!",
-  "accountFound": "खाता मिला",
-  "weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "हमें आपकी पहचानों से संबंधित एक खाता मिला और उसके लिए हमने एक अकेला हॉप ऑर्किड परिपथ निर्मित किया। अब आप वीपीएन का उपयोग करने के लिए तैयार हैं।",
-  "welcomeToOrchid": "ऑर्किड में आपका स्वागत है!",
-  "fundYourAccount": "अपने खाते में पैसा डालें",
-  "processing": "संसाधित किया जा रहा है...",
-  "subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "सदस्यता-मुक्त, उपयोग करते हुए भुगतान किया जाने वाला, विकेंद्रीकृत, मुक्त स्रोत वीपीएन सेवा।",
-  "getStartedFor1": "{smallAmount} से शुरुआत करें",
-  "@getStartedFor1": {
-    "placeholders": {
-      "smallAmount": {
-        "type": "String"
-      }
-    }
-  },
-  "importAccount": "खाते को आयातित करें",
-  "illDoThisLater": "मैं यह बाद में कर लूँगा",
-  "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "अपने साझा करने योग्य, पुनर्भरण योग्य ऑर्किड खाते के लिए वीपीएन क्रेडिट खरीदकर नेटवर्क के <link1>पसंदीदा प्रदाताओं</link1> में से किसी एक के साथ अपने आप कनेक्ट हो जाएँ।",
-  "confirmPurchase": "खरीद की पुष्टि करें",
-  "orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "ऑर्किड खाते <link>xडीएआई क्रिप्टो-मुद्रा</link> द्वारा समर्थित वीपीएन क्रेडिटों का उपयोग करते हैं। इनमें शामिल हैं 24/7 ग्राहक समर्थन और असीमित डिवाइस साझाकरण। ये ऐप स्टोर धन-वापसी नीतियों के तहत आते हैं।",
-  "yourPurchaseIsInProgress": "आपकी खरीद जारी है।",
-  "thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "इस खरीद में अपेक्षा से अधिक समय लग रहा है। संभव है कि इसमें त्रुटि आ गई हो।",
-  "thisMayTakeAMinute": "इसमें एक मिनट लगेगा...",
-  "vpnCredits": "वीपीएन क्रेडिट",
-  "blockchainFee": "ब्लॉकचेइन शुल्क",
-  "promotion": "प्रोमोशन",
-  "showInAccountManager": "खाता प्रबंधक में दिखाएँ",
-  "deleteThisOrchidIdentity": "इस ऑर्किड पहचान को हटाएँ",
-  "chooseIdentity": "पहचान चुनें",
-  "updatingAccounts": "खातों को अद्यतित कर रहे हैं",
-  "trafficAnalysis": "यातायात का विश्लेषण",
-  "accountManager": "खाता प्रबंधक",
-  "circuitBuilder": "परिपथ निर्माता",
-  "exitHop": "हॉप से बाहर निकलें",
-  "entryHop": "हॉप में प्रवेश करें",
-  "addNewHop": "नया हॉप जोड़ें",
-  "newCircuitBuilder": "नया परिपथ निर्माता!",
-  "youCanNowPayForAMultihopOrchidCircuitWith": "अब आप xडीएआई से मल्टी-हॉप ऑर्किड परिपथ के लिए भुगतान कर सकते हैं। मल्टी-हॉप इंटरफेस अब xडीएआई और ओएक्सटी ऑर्किड खातों का समर्थन करता है और अब भी ओपन-वीपीएन और वायरगार्ड कॉन्फिगों का समर्थन करता है, जिन्हें एक साथ पिरोकर एक ऑनियन पथ बनाया जा सकता है।",
-  "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "खाता प्रबंधक की जगह अपने कनेक्शन का प्रबंधन परिपथ निर्माता से करें। अब सभी कनेक्शन शून्य या इससे अधिक हॉपों का उपयोग करने परिपथ का उपयोग करते हैं। मौजूद कॉन्फिगरेशन को परिपर्थ निर्माता में स्थानांतरित कर दिया गया है।",
-  "quickStartFor1": "{smallAmount} के लिए त्वरित शुरुआत",
-  "@quickStartFor1": {
-    "placeholders": {
-      "smallAmount": {
-        "type": "String"
-      }
-    }
-  },
-  "weAddedAMethodToPurchaseAnOrchidAccountAnd": "हमने होमस्क्रीन से ही एक ऑर्किड खाता खरीदने और एक अकेले हॉप परिपथ निर्मित करने की विधि जोड़ी है ताकि ऑनबोर्डिंग प्रक्रिया को अधिक छोटा बनाया जा सके।",
-  "orchidIsUniqueAsAMultiHopOrOnion": "ऑर्किड एक अद्वितीय मल्टी-हॉप या अनियन परिपथन ग्राहक समर्थक एकाधिक वीपीएन प्रोटोकॉल है। अब नीचे के समर्थित प्रोटोकॉलों में से हॉपों को शृंखलित करके अपने कनेक्शन को सेटअप कर सकते हैं।\n\nएक हॉप किसी भी सामान्य वीपीएन के समान है। तीन हॉप (उन्नत उपयोगकर्ताओं के लिए) क्लासिक अनियन परिपथन विकल्प है। शून्य हॉप बिना वीपीएन सुरंग के यातायात के विश्लेषण की सुविधा प्रदान करते हैं।",
-  "deletingOpenVPNAndWireguardHopsWillLose": "ओपन-वीपीएन और वायरगार्ड हॉपों को हटाने से आप उनसे संबंधित सभी क्रिडेन्शियल और कनेक्शन कॉन्फिगरेशन को खो देंगे। आगे बढ़ने से पहले सभी जानकारियों का बैंक-अप ले लें।",
-  "thisCannotBeUndoneToSaveThisIdentity": "इसे पलटा नहीं जा सकेगा। इस पहचान को सहेजने के लिए रद्द करें को दबाएँ और निर्यात करें विकल्प का उपयोग करें।",
-  "unlockTime": "अनलॉक समय",
-  "chooseChain": "शृखला चुनें",
-  "unlocking": "अनलॉक कर रहे हैं",
-  "unlocked": "अनलॉक कर दिया",
-  "orchidTransaction": "ऑर्किड लेन-देन",
-  "confirmations": "पुष्टियाँ",
-  "pending": "लंबित...",
-  "txHash": "लेन-देन हैश:",
-  "allOfYourFundsAreAvailableForWithdrawal": "आपकी पूरी निधि आहरण के लिए उपलब्ध है।",
-  "maxWithdrawOfYourTotalFundsCombinedFunds": "आपकी {totalFunds} समेकित निधि में से {maxWithdraw} फिलहाल आहरण के लिए उपलब्ध है।",
-  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
-    "placeholders": {
-      "maxWithdraw": {
-        "type": "String"
-      },
-      "totalFunds": {
-        "type": "String"
-      }
-    }
-  },
-  "alsoUnlockRemainingDeposit": "बाकी के निक्षेप को भी अनलॉक करें",
-  "ifYouSpecifyLessThanTheFullAmountFundsWill": "यदि आप पूर्ण राशि से कम राशि निर्दिष्ट करेंगे, तो पहले आपकी शेष राशि से निधि आहरित की जाएगी।",
-  "forAdditionalOptionsSeeTheAdvancedPanel": "अतिरिक्त विकल्पों के लिए उन्न पैनल देखें।",
-  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "यदि आप निक्षेप को अनलॉक करें विकल्प को चुनेंगे, तो यह लेन-देन तुरंत निर्दिष्ट राशि को आपकी शेष राशि से आहरित कर देगा और साथ ही आपके बाकी के निक्षेप को अनलॉक करने की प्रक्रिया को भी शुरू कर देगा।",
-  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "निक्षेप निधियाँ अनलॉक होने के 24 घंटे बाद आहरण के लिए उपलब्ध हो जाती हैं।",
-  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "अपने ऑर्किड खाते से अपने वर्तमान वॉलेट में निधियाँ आहरित करें।",
-  "withdrawAndUnlockFunds": "निधियाँ आहरित और अनलॉक करें",
-  "withdrawFunds": "निधियाँ आहरित करें",
-  "withdraw": "आहरित करें",
-  "submitTransaction": "लेन-देन जमा करें",
-  "move": "स्थानांतरित करें",
-  "now": "अभी",
-  "amount": "राशि",
-  "available": "उपलब्ध",
-  "select": "चुनें",
-  "add": "जोड़ें",
-  "balanceToDeposit": "जमा करने के लिए शेष",
-  "depositToBalance": "शेष में जमा करें",
-  "setWarnedAmount": "चेतावनी राशि सेट करें",
-  "addFundsToYourOrchidAccountBalanceAndorDeposit": "अपने ऑर्किड खाता शेष में निधियाँ जोड़ें और/या जमा करें।",
-  "forGuidanceOnSizingYourAccountSee": "अपने खाते का आमाप निर्धारित करने में मार्गदर्शन पाने के लिए <link>orchid.com</link> देखें",
-  "currentTokenPreauthorizationAmount": "वर्तमान {tokenType} पूर्व-प्राधिकरण: {amount}",
-  "@currentTokenPreauthorizationAmount": {
-    "placeholders": {
-      "tokenType": {
-        "type": "String"
-      },
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "noWallet": "कोई वॉलेट नहीं है",
-  "noWalletOrBrowserNotSupported": "कोई वॉलेट नहीं है या ब्राउजर समर्थित नहीं है।",
-  "error": "त्रुटि",
-  "failedToConnectToWalletconnect": "वॉलेटकनेक्ट से जुड़ नहीं सकें।",
-  "unknownChain": "अज्ञात शृंखला",
-  "theOrchidAccountManagerDoesntSupportThisChainYet": "ऑर्किड खाता प्रबंधक अभी इस शृंखला को समर्थित नहीं करता है।",
-  "orchidIsntOnThisChain": "ऑर्किड इस शृंखला में मौजूद नहीं है।",
-  "theOrchidContractHasntBeenDeployedOnThisChainYet": "ऑर्किड अनुबंध को इस शृंखला में अभी परिनियोजित नहीं किया गया है।",
-  "moveFunds": "निधियों को स्थानांतरित करें",
-  "lockUnlock": "लॉक / अनलॉक करें",
-  "yourDepositOfAmountIsUnlocked": "{amount} के आपके निक्षेप को अनलॉक किया गया।",
-  "@yourDepositOfAmountIsUnlocked": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "locked": "लॉक किया गया",
-  "yourDepositOfAmountIsUnlockingOrUnlocked": "{amount} के आपके निक्षेप को {unlockingOrUnlocked} किया गया।",
-  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      },
-      "unlockingOrUnlocked": {
-        "type": "String"
-      }
-    }
-  },
-  "theFundsWillBeAvailableForWithdrawalInTime": "यह निधि आहरण के लिए ${time} को उपलब्ध हो जाएगी।",
-  "@theFundsWillBeAvailableForWithdrawalInTime": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "lockDeposit": "निक्षेप को लॉक करें",
-  "unlockDeposit": "निक्षेप को अनलॉक करें",
-  "advanced": "उन्नत",
-  "linklearnMoreAboutOrchidAccountslink": "<link>ऑर्किड खातों के बारे में अधिक जानें</link>।",
-  "estimatedCostToCreateAnOrchidAccountWith": "{efficiency} की कार्यदक्षता और {num} मूल्य के टिकटों के साथ एक ऑर्किड खाता निर्मित करने की अनुमानित लागत।",
-  "@estimatedCostToCreateAnOrchidAccountWith": {
-    "placeholders": {
-      "efficiency": {
-        "type": "String"
-      },
-      "num": {
-        "type": "int"
-      }
-    }
-  },
-  "chain": "शृंखला",
-  "token": "टोकन",
-  "minDeposit": "न्यूनतम निक्षेप",
-  "minBalance": "न्यूनतम शेष",
-  "fundFee": "निधि शुल्क",
-  "withdrawFee": "आहरण शुल्क",
-  "tokenValues": "टोकन मान",
-  "usdPrices": "अमेरिकी डॉलर में कीमतें",
-  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "एक चेतावनी-युक्त निक्षेप राशि सेट करना निक्षेप राशि को आहरित करने के लिए आवश्यक 24 घंटे की प्रतीक्षा अवधि का आरंभ करता है।",
-  "duringThisPeriodTheFundsAreNotAvailableAsA": "इस अवधि के दौरान निधियाँ ऑर्किड नेटवर्क पर एक मान्य निक्षेप के रूप में उपलब्ध नहीं रहती हैं।",
-  "fundsMayBeRelockedAtAnyTimeByReducingThe": "चेतावनी राशि को कम करके निधियों को किसी भी समय पुनः लॉक किया जा सकता है।",
-  "warn": "चेतावनी",
-  "totalWarnedAmount": "कुल चेतावनी राशि"
+	"@@locale": "hi",
+	"@newHop": {
+		"description": "New network hop"
+	},
+	"orchidHop": "ऑर्किड हॉप",
+	"@orchidHop": {
+		"description": "Orchid network hop"
+	},
+	"orchidDisabled": "ऑर्किड को अक्षम किया गया",
+	"trafficMonitoringOnly": "केवल यातात पर निगरानी",
+	"orchidConnecting": "ऑर्किड कनेकट कर रहा है",
+	"orchidDisconnecting": "ऑर्किड डिसकनेक्ट हो रह है",
+	"numHopsConfigured": "{num, plural, =0{कोई भी हॉप कॉन्फिगर नहीं किए गए हैं} =1{एक हॉप कॉन्फिगर किया गया है} =2{दो हॉप कॉन्फिगर किए गए हैं} other{{num} हॉप कॉन्फिगर किए गए हैं}}",
+	"@numHopsConfigured": {
+		"type": "text",
+		"placeholders": {
+			"num": {
+				"type": "int"
+			}
+		}
+	},
+	"delete": "हटाएँ",
+	"orchid": "ऑर्किड",
+	"openVPN": "मुक्त-वीपीएन",
+	"hops": "हॉप",
+	"@hops": {
+		"description": "Network hops"
+	},
+	"traffic": "यातायात",
+	"@traffic": {
+		"description": "Network traffic"
+	},
+	"curation": "क्यूरेशन",
+	"signerKey": "साइनर कुंजी",
+	"copy": "कॉपी करें",
+	"paste": "चिपकाएँ",
+	"deposit": "जमा",
+	"curator": "क्यूरेटर",
+	"ok": "ठीक है",
+	"settingsButtonTitle": "सेटिंग",
+	"confirmThisAction": "इस कार्य की पुष्टि करें",
+	"cancelButtonTitle": "रद्द करें",
+	"changesWillTakeEffectInstruction": "परिवर्तन तक दिखाई देंगे जब वीपीएन को दुबारा शुरू किया जाएगा।",
+	"saved": "सहेज लिया",
+	"configurationSaved": "कॉन्फिगरेशन को सहेज लिया गया",
+	"whoops": "शाबाश",
+	"configurationFailedInstruction": "कॉन्फिगरेशन को सहेजा नहीं जा सका। कृपया उसके वाक्य-विन्यास को जाँचें और दुबारा कोशिश करें।",
+	"addHop": "हॉप जोड़ें",
+	"scan": "स्कैन करें",
+	"invalidQRCode": "अमान्य क्यूआर कोड",
+	"theQRCodeYouScannedDoesNot": "आपने जिस क्यूआर कोड को स्कैन किया है, उसमें एक मान्य खाता कॉन्फिगरेशन नहीं है।",
+	"invalidCode": "अमान्य कोड",
+	"theCodeYouPastedDoesNot": "आपने जो कोड चिपकाया है, उसमें एक मान्य खाता कॉन्फिगरेशन नहीं है।",
+	"openVPNHop": "मुक्त-वीपीएन हॉप",
+	"username": "उपयोगकर्ता नाम",
+	"password": "पासवर्ड",
+	"config": "कॉन्फिग",
+	"pasteYourOVPN": "अपनी ओवीपीएन कॉन्फिग फाइल को यहाँ चिपकाएँ",
+	"enterYourCredentials": "अपने प्रत्यायन दर्ज करें",
+	"enterLoginInformationInstruction": "ऊपर अपने वीपीएन प्रदाता के लिए लॉगिन जानकारी दर्ज करें। फिर अपने प्रदाता की ओपनवीपीएन कॉन्फिग फाइल की सामग्री को प्रदान किए गए स्थान में चिपकाएँ।",
+	"save": "सहेजें",
+	"help": "मदद",
+	"privacyPolicy": "गोपनीयता नीति",
+	"openSourceLicenses": "मुक्त स्रोत लाइसेंस",
+	"settings": "सेटिंग",
+	"version": "संस्करण",
+	"noVersion": "कोई संस्करण नहीं है",
+	"orchidOverview": "ऑर्किड सारांश",
+	"defaultCurator": "डिफॉल्ट क्यूरेटर",
+	"queryBalances": "शेष राशि के बारे में पूछें",
+	"reset": "रीसेट करें",
+	"manageConfiguration": "कॉन्फिगरेशन को प्रबंधित करें",
+	"warningThesefeature": "चेतावनी: ये सुविधाएँ केवल उन्नत उपयोगकर्ताओं के लिए हैं।  कृपया सभी निर्देशों को पढ़ें।",
+	"exportHopsConfiguration": "हॉप्स कॉन्फिगरेशन को निर्यात करें",
+	"export": "निर्यात करें",
+	"warningExportedConfiguration": "चेतावनी: निर्यात कॉन्फिगरेशन में निर्यात किए गए हॉपों के लिए साइनर निजी कुंजी रहस्य शामिल हैं।  निजी कुंजियों का खुलासा करने पर आप आर्किड खातों से जुड़ी सभी निधियों को जोखिम में डाल देंगे।",
+	"importHopsConfiguration": "हॉप कॉन्फिगरेशन आयात करें",
+	"import": "आयात करें",
+	"warningImportedConfiguration": "चेतावनी: आयातित कॉन्फिगरेशन आपके द्वारा ऐप में बनाए गए सभी मौजूदा हॉपों का स्थान ले लेगा।  इस उपकरण पर पहले से उत्पन्न या आयातित सिग्नर कुंजी को बनाए रखा जाएगा और नए हॉप बनाने के लिए वह सुलभ रहेगा, हालांकि ओपनवीपीएन हॉप कॉन्फिगरेशन सहित अन्य सभी कॉन्फिगरेशन खो जाएँगे।",
+	"configuration": "कॉन्फिगरेशन",
+	"saveButtonTitle": "सहेजें",
+	"search": "खोजें",
+	"newContent": "नई सामग्री",
+	"clear": "साफ करें",
+	"connectionDetail": "कनेक्शन विवरण",
+	"host": "मेजबान",
+	"time": "समय",
+	"sourcePort": "स्रोत पोर्ट",
+	"destination": "गंतव्य",
+	"destinationPort": "गंतव्य पोर्ट",
+	"generateNewKey": "नई कुंजी निर्मित करें",
+	"importKey": "कुंजी आयात करें",
+	"nothingToDisplayYet": "अभी दिखाने के लिए कुछ भी नहीं है। जब कुछ दिखाने के लिए होगा, तब यातायात यहाँ दिखाई देगा।",
+	"disconnecting": "डिसकनेक्ट कर रहे हैं...",
+	"connecting": "कनेक्ट कर रहे हैं...",
+	"pushToConnect": "कनेक्ट करने के लिए पुश करें।",
+	"orchidIsRunning": "ऑर्किड चल रहा है!",
+	"pacPurchaseWaiting": "खरीद प्रतीक्षा में है",
+	"retry": "दुबारा कोशिश करें",
+	"getHelpResolvingIssue": "इस समस्या को सुलटाने के लिए मदद पाएँ।",
+	"copyDebugInfo": "डीबग जानकारी को कॉपी करें",
+	"contactOrchid": "ऑर्किड से संपर्क करें",
+	"remove": "हटाएँ",
+	"deleteTransaction": "लेन-देन को हटाएँ",
+	"clearThisInProgressTransactionExplain": "इस चालू लेन-देन को साफ करें। इससे आपके इन-एप खरीद के लिए धन-वापसी नहीं होगी। इस मामले को सुलटाने के लिए आपको ऑर्किड से संपर्क करना होगा।",
+	"preparingPurchase": "खरीद की तैयारी कर रहे हैं",
+	"retryingPurchasedPAC": "खरीदने की दुबारा कोशिश कर रहे हैं",
+	"retryPurchasedPAC": "खरीदने की दुबारा कोशिश करें",
+	"purchaseError": "खरीद त्रुटि",
+	"thereWasAnErrorInPurchasingContact": "खरीदे समय एक त्रुटि हुई। कृपया ऑर्किड समर्थन से संपर्क करें।",
+	"importAnOrchidAccount": "एक ऑर्किड खाता आयात करें",
+	"buyCredits": "क्रेडिट खरीदें",
+	"@gb": {
+		"description": "Gigabytes"
+	},
+	"@ofTraffic": {
+		"description": "GB of traffic"
+	},
+	"linkAnOrchidAccount": "ऑर्किड खाते को लिंक करें",
+	"weAreSorryButThisPurchaseWouldExceedTheDaily": "हमें खेद है लेकिन यह खरीद एक्सेस क्रेडिट के लिए दैनिक खरीद सीमा से अधिक होगी।  कृपया बाद में दुबारा कोशिश करें।",
+	"marketStats": "बाजर के आँकड़े",
+	"balanceTooLow": "शेष राशि बहुत कम है",
+	"depositSizeTooSmall": "जमा राशि की मात्रा बहुत कम है",
+	"yourMaxTicketValueIsCurrentlyLimitedByYourBalance": "आपका अधिकतम टिकट मूल्य वर्तमान में आपकी शेष राशि द्वारा सीमित है",
+	"yourMaxTicketValueIsCurrentlyLimitedByYourDeposit": "आपका अधिकतम टिकट मूल्य वर्तमान में आपकी जमा राशि से सीमित है",
+	"considerAddingOxtToYourAccountBalance": "अपने खाते की शेष राशि में ओएक्सटी जोड़ने पर विचार करें।",
+	"considerAddingOxtToYourDepositOrMovingFundsFrom": "अपनी जमा राशि में ओएक्सटी जोड़ने या अपनी शेष राशि से धन ले जाने पर विचार करें ।",
+	"prices": "कीमतें",
+	"ticketValue": "टिकट मूल्य",
+	"costToRedeem": "भुनाने की लागत:",
+	"viewTheDocsForHelpOnThisIssue": "इस मुद्दे पर मदद के लिए दस्तावेजों को देखें।",
+	"goodForBrowsingAndLightActivity": "ब्राउस करने और हल्की गतिविधि के लिए अच्छा है",
+	"learnMore": "ज्यादा जानें।",
+	"connect": "कनेक्ट करें",
+	"disconnect": "डिसकनेक्ट करें",
+	"wireguardHop": "वायर-गार्ड®️ हॉप",
+	"pasteYourWireguardConfigFileHere": "अपने वायर-गार्ड®️ कॉन्फिग को यहाँ चिपकाएँ",
+	"pasteTheCredentialInformationForYourWireguardProviderIntoThe": "अपने वायरगार्ड के®️ प्रदाता के लिए क्रेडेंशियल जानकारी को ऊपर की जगह में चिपकाएँ।",
+	"wireguard": "वायर-गार्ड®️",
+	"clearAllLogData": "सभी लॉग डेटा को साफ करें?",
+	"thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "ऐप छोड़ते समय यह डिबग लॉग बना नहीं रहेगा और मिट जाएगा।",
+	"itMayContainSecretOrPersonallyIdentifyingInformation": "उसमें रहस्य या निजी पहचान को संभव बनाने वाली जानकारी हो सकती है।",
+	"loggingEnabled": "लॉगिन सक्षम कर दिया गया",
+	"cancel": "रद्द करें",
+	"logging": "लॉग कर रहे हैं",
+	"loading": "लोड कर रहे हैं...",
+	"ethPrice": "ईटीएच मूल्य:",
+	"oxtPrice": "ऑक्सटी मूल्य:",
+	"gasPrice": "नेटवर्क शुल्क:",
+	"maxFaceValue": "अधिकतम अंकित मूल्य:",
+	"confirmDelete": "हटाने की पुष्टि करें",
+	"enterOpenvpnConfig": "ओपनवीपीएन कॉन्फिग दर्ज करें",
+	"enterWireguardConfig": "वायर-गार्ड®️ कॉन्फिग दर्ज करें",
+	"starting": "शुरू कर रहे हैं...",
+	"legal": "कानूनी",
+	"whatsNewInOrchid": "ऑर्किड में क्या नया है",
+	"orchidIsOnXdai": "ऑर्किड एक्स-डाई में आ गया है!",
+	"youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "अब आप एक्स-डाई में ऑर्किड क्रेडिट खरीद सकते हैं! $1 जितने कम दामों पर वीपीएन का उपयोग करना शुरू करें।",
+	"xdaiAccountsForPastPurchases": "पिछली खरीदों के लिए एक्स-डाई खाते",
+	"forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "आज से पहले की गई किसी भी इन-एप खरीद के लिए, एक्स-डाई निधियों को उसी खाता-कुंजी में जोड़ दिया गया है। बैंडविड्थ हमारी बदौलत!",
+	"newInterface": "नया इंटरफेस",
+	"accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "अब खाते उनसे संबंधित ऑर्किड पते के तहत व्यवस्थित किए गए हैं।",
+	"seeYourActiveAccountBalanceAndBandwidthCostOnThe": "होम स्क्रीन पर अपने सक्रिय खाते की शेष राशि और बैंडविड्थ दाम देखें।",
+	"seeOrchidcomForHelp": "मदद के लिए orchid.com देखें।",
+	"payPerUseVpnService": "उपयोग के अनुसार भुगतान करें वीपीएन सेवा",
+	"notASubscriptionCreditsDontExpire": "सदस्यता नहीं है, क्रेडिट कभी समाप्त नहीं होते",
+	"shareAccountWithUnlimitedDevices": "खाते को असंख्य उपकरणों के साथ साझा करें",
+	"theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "ऑर्किड स्टोर अस्थायी रूप से उपलब्ध नहीं है। चंद मिनटों के बाद दुबारा कोशिश करें।",
+	"talkingToPacServer": "ऑर्किड खाता सर्वर के साथ बात कर रहे हैं",
+	"advancedConfiguration": "उन्नत विन्यास",
+	"newWord": "नया",
+	"copied": "कॉपी कर लिया",
+	"efficiency": "कार्यदक्षता",
+	"minTicketsAvailableTickets": "न्यूनतम टिकट उपलब्ध हैं: {tickets}",
+	"@minTicketsAvailableTickets": {
+		"placeholders": {
+			"tickets": {
+				"type": "int"
+			}
+		}
+	},
+	"transactionSentToBlockchain": "लेन-देन को ब्लाॉकचेइन को भेज दिया गया है",
+	"yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "आपकी खरीद पूरी हो गई है और इसे अब एक्स-डाई द्वारा प्रक्रमित किया जा रहा है, जिसमें एक मिनट का या कभी-कभी उससे ज्यादा समय लग सकता है। ताजा करने के लिए नीचे खीचें और अद्यतित शेष राशि के साथ आपका खाता नीचे दिखाई देगा।",
+	"copyReceipt": "पावती को कॉपी करें",
+	"manageAccounts": "खातों को प्रबंधित करें",
+	"configurationManagement": "विन्यास प्रबंधन",
+	"exportThisOrchidKey": "इस ऑर्किड कुंजी को निर्यात करें",
+	"aQrCodeAndTextForAllTheOrchidAccounts": "नीचे इस कुंजी के साथ संबंधित सभी ऑर्किड खातों के लिए एक क्यूआर कोड और पाठ दिया गया है।",
+	"importThisKeyOnAnotherDeviceToShareAllThe": "इस ऑर्किड अस्मिता से संबंधित सभी ऑर्किड खातों को साझा करने के लिए इस कुंजी को दूसरे उपकरण में आयाता करें।",
+	"orchidAccountInUse": "ऑर्कड खाता उपयोग में है",
+	"thisOrchidAccountIsInUseAndCannotBeDeleted": "इस ऑर्किड खाते का उपयोग हो रहा है और उसे हटाया नहीं जा सकता है।",
+	"pullToRefresh": "ताजा करने के लिए खींचें।",
+	"balance": "शेष",
+	"active": "सक्रिय",
+	"pasteAnOrchidKeyFromTheClipboardToImportAll": "उस कुंजी से संबंधित सभी ऑर्किड खातों को आयात करने के लिए क्लिपबोर्ड से इस ऑर्किड कुंजी को चिपकाएँ।",
+	"scanOrPasteAnOrchidKeyFromTheClipboardTo": "उस कुंजी से संबंधित सभी ऑर्किड खातों को आयात करने के लिए क्लिपबोर्ड से स्कैन करें या ऑर्किड कुंजी को चिपकाएँ।",
+	"account": "खाता",
+	"transactions": "लेन-देन",
+	"weRecommendBackingItUp": "हमारा सुझाव है कि <link>इसका बैक-अप ले लें</link>।",
+	"copiedOrchidIdentity": "ऑर्किड पहचान को कॉपी कर लिया",
+	"thisIsNotAWalletAddress": "यह वॉलेट का पता नहीं है।",
+	"doNotSendTokensToThisAddress": "इस पते को टोकन नहीं भेजें।",
+	"yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "आपकी ऑर्किड पहचान आपको नेटवर्क पर अद्वितीय रूप से पहचानती है।",
+	"learnMoreAboutYourLinkorchidIdentitylink": "अपनी <link>ऑर्किड पहचान</link> के बारे में अधिक जानें।",
+	"analyzingYourConnections": "आपके कनेक्शनों का विश्लेषण कर रहे हैं",
+	"analyzeYourConnections": "अपने कनेक्शनों का विश्लेषण करें",
+	"networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "नेटवर्क विश्लेषण आपके डिवाइस की वीपीएन सुविधा का उपयोग करके पैकटों को ग्रहण करता है और आपकी यातायात का विश्लेषण करता है।",
+	"networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "नेटवर्क विश्लेषण के लिए वीपीएन अनुमतियों की आवश्यकता होती है, लेकिन यह अपने आप में आपके डेटा की रक्षा नहीं करता है, नही आपके आईपी पते को छिपाता है।",
+	"toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "नेटवर्क गोपनीयता का लाभ लेने के लिए आपको मुख्य स्क्रीन से वीपीएन कनेक्शन को कॉन्फिगर करके उसे सक्रिय करना होगा।",
+	"turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "इस सुविधा को चालू करने पर ऑर्किड द्वारा बैटरी का उपयोग बढ़ जाएगा।",
+	"useAnOrchidAccount": "एक ऑर्किड खाते का उपयोग करें",
+	"pasteAddress": "पते को चिपकाएँ",
+	"chooseAddress": "पता चुनें",
+	"chooseAnOrchidAccountToUseWithThisHop": "इस हॉप के साथ उपयोग करने के लिए एक ऑर्किड खाता चुनें।",
+	"ifYouDontSeeYourAccountBelowYouCanUse": "यदि आपको नीचे अपना खाता नहीं दिखें, तो आप खाता प्रबंधक का उपयोग करके एक नए खाते का आयात कर सकते हैं, उसे खरीद सकते हैं या उसे निर्मित कर सकते हैं।",
+	"selectAnOrchidAccount": "एक ऑर्किड खाता चुनें",
+	"takeMeToTheAccountManager": "मुझे खाता प्रबंधक के पास ले जाएँ",
+	"funderAccount": "निधिदाता खाता",
+	"orchidRunningAndAnalyzing": "ऑर्किड चल रहा है और विश्लेषण कर रहा है",
+	"startingVpn": "(वीपीएन को शुरू कर रहे हैं)",
+	"disconnectingVpn": "(वीपीएन को अलग कर रहे हैं)",
+	"orchidAnalyzingTraffic": "ऑर्किड यातायात का विश्लेषण कर रहा है",
+	"vpnConnectedButNotRouting": "(वीपीएन जुड़ गया है लेकिन वह रूटिंग नहीं कर रहा है)",
+	"restarting": "पुनरारंभ कर रहे हैं",
+	"changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "निगरानी की स्थिति को बदलने के लिए वीपीएन को दुबारा चालू करना होगा, जिससे कुछ समय के लिए गोपनीय रक्षण में बाधा आएगी।",
+	"confirmRestart": "पुनरारंभ की पुष्टि करें",
+	"averagePriceIsUSDPerGb": "औसत मूल्य {price} अमेरिकी डॉलर प्रति जीबी है",
+	"@averagePriceIsUSDPerGb": {
+		"placeholders": {
+			"price": {
+				"type": "String"
+			}
+		}
+	},
+	"myOrchidConfig": "मेरा ऑर्किड कॉन्फिग",
+	"noAccountSelected": "कोई खाता नहीं चुना गया है",
+	"inactive": "निष्क्रिय",
+	"tickets": "टिकट",
+	"accounts": "खाते",
+	"orchidIdentity": "ऑर्किड पहचान",
+	"addFunds": "निधियाँ जोड़ें",
+	"gb": "जीबी",
+	"usdgb": "USD/GB",
+	"hop": "हॉप",
+	"circuit": "परिपथ",
+	"clearAllAnalysisData": "सभी विश्लेषण डेटा को साफ करें?",
+	"thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "इस कार्रवाई से पहले के सभी यातायात कनेक्शन विश्लेषण आँकड़े साफ हो जाएँगे।",
+	"clearAll": "सबको साफ करें",
+	"stopAnalysis": "विश्लेषण रोकें",
+	"startAnalysis": "विश्लेषण शुरू करें",
+	"orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "आर्किड खातों में 24/7 ग्राहक समर्थन और असीमित डिवाइस शामिल हैं और वह <link2>डाय क्रिप्टो-मुद्रा</link2>द्वारा समर्थित है।",
+	"purchasedAccountsConnectExclusivelyToOur": "खरीदे गए खाते अनन्य रूप से हमारे <link1>प्राथमिकतापूर्ण प्रदाताओं से</link1> कनेक्ट होते हैं।",
+	"refundPolicyCoveredByAppStores": "ऐप स्टोर की धनवापसी नीति।",
+	"orchidIsUnableToDisplayInappPurchasesAtThisTime": "ऑर्किड इस समय ऐप में से की गई खरीदारियों को दर्शा नहीं पा रहा है।",
+	"pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "कृपया पुष्टि करें कि यह डिवाइस ऐप से खरीदारी का समर्थन करता है और उसे इसके लिए कॉन्फिगर किया गया है।",
+	"pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "कृपया पुष्टि करें कि यह डिवाइस ऐप से खरीदारी को समर्थित करता है और उसे इसके लिए कॉन्फिगर किया गया है, अथवा हमारे विकेंद्रीकृत <link>खाता प्रबंधन</link> प्रणाली का उपयोग करें।",
+	"buy": "खरीदें",
+	"gbApproximately12": "12जीबी (लगभग)",
+	"gbApproximately60": "60जीबी (लगभग)",
+	"gbApproximately240": "240जीबी (लगभग)",
+	"idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "मध्यम अवधि के व्यक्तिगत उपयोग हेतु, जिसमें ब्राउजिंग और हल्की स्ट्रीमिंग शामिल है, यह आदर्श आमाप है",
+	"mostPopular": "सबसे ज्यादा लोकप्रिय!",
+	"bandwidthheavyLongtermUsageOrSharedAccounts": "बैंडविड्थ का बहुत अधिक उपयोग करने वाला दीर्घकालिक उपयोग या साझे खाते।",
+	"total": "कुल",
+	"pausingAllTraffic": "सभी यातायात को अस्थायी तौर पर रोक रहे हैं...",
+	"queryingEthereumForARandom": "एक यादृच्छिक प्रदाता के लिए इथेरियम से पूछताछ कर रहे हैं...",
+	"quickFundAnAccount": "खाते में तेजी से पैसा डालें!",
+	"accountFound": "खाता मिला",
+	"weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "हमें आपकी पहचानों से संबंधित एक खाता मिला और उसके लिए हमने एक अकेला हॉप ऑर्किड परिपथ निर्मित किया। अब आप वीपीएन का उपयोग करने के लिए तैयार हैं।",
+	"welcomeToOrchid": "ऑर्किड में आपका स्वागत है!",
+	"fundYourAccount": "अपने खाते में पैसा डालें",
+	"processing": "संसाधित किया जा रहा है...",
+	"subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "सदस्यता-मुक्त, उपयोग करते हुए भुगतान किया जाने वाला, विकेंद्रीकृत, मुक्त स्रोत वीपीएन सेवा।",
+	"getStartedFor1": "{smallAmount} से शुरुआत करें",
+	"@getStartedFor1": {
+		"placeholders": {
+			"smallAmount": {
+				"type": "String"
+			}
+		}
+	},
+	"importAccount": "खाते को आयातित करें",
+	"illDoThisLater": "मैं यह बाद में कर लूँगा",
+	"connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "अपने साझा करने योग्य, पुनर्भरण योग्य ऑर्किड खाते के लिए वीपीएन क्रेडिट खरीदकर नेटवर्क के <link1>पसंदीदा प्रदाताओं</link1> में से किसी एक के साथ अपने आप कनेक्ट हो जाएँ।",
+	"confirmPurchase": "खरीद की पुष्टि करें",
+	"orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "ऑर्किड खाते <link>xडीएआई क्रिप्टो-मुद्रा</link> द्वारा समर्थित वीपीएन क्रेडिटों का उपयोग करते हैं। इनमें शामिल हैं 24/7 ग्राहक समर्थन और असीमित डिवाइस साझाकरण। ये ऐप स्टोर धन-वापसी नीतियों के तहत आते हैं।",
+	"yourPurchaseIsInProgress": "आपकी खरीद जारी है।",
+	"thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "इस खरीद में अपेक्षा से अधिक समय लग रहा है। संभव है कि इसमें त्रुटि आ गई हो।",
+	"thisMayTakeAMinute": "इसमें एक मिनट लगेगा...",
+	"vpnCredits": "वीपीएन क्रेडिट",
+	"blockchainFee": "ब्लॉकचेइन शुल्क",
+	"promotion": "प्रोमोशन",
+	"showInAccountManager": "खाता प्रबंधक में दिखाएँ",
+	"deleteThisOrchidIdentity": "इस ऑर्किड पहचान को हटाएँ",
+	"chooseIdentity": "पहचान चुनें",
+	"updatingAccounts": "खातों को अद्यतित कर रहे हैं",
+	"trafficAnalysis": "यातायात का विश्लेषण",
+	"accountManager": "खाता प्रबंधक",
+	"circuitBuilder": "परिपथ निर्माता",
+	"exitHop": "हॉप से बाहर निकलें",
+	"entryHop": "हॉप में प्रवेश करें",
+	"addNewHop": "नया हॉप जोड़ें",
+	"newCircuitBuilder": "नया परिपथ निर्माता!",
+	"youCanNowPayForAMultihopOrchidCircuitWith": "अब आप xडीएआई से मल्टी-हॉप ऑर्किड परिपथ के लिए भुगतान कर सकते हैं। मल्टी-हॉप इंटरफेस अब xडीएआई और ओएक्सटी ऑर्किड खातों का समर्थन करता है और अब भी ओपन-वीपीएन और वायरगार्ड कॉन्फिगों का समर्थन करता है, जिन्हें एक साथ पिरोकर एक ऑनियन पथ बनाया जा सकता है।",
+	"manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "खाता प्रबंधक की जगह अपने कनेक्शन का प्रबंधन परिपथ निर्माता से करें। अब सभी कनेक्शन शून्य या इससे अधिक हॉपों का उपयोग करने परिपथ का उपयोग करते हैं। मौजूद कॉन्फिगरेशन को परिपर्थ निर्माता में स्थानांतरित कर दिया गया है।",
+	"quickStartFor1": "{smallAmount} के लिए त्वरित शुरुआत",
+	"@quickStartFor1": {
+		"placeholders": {
+			"smallAmount": {
+				"type": "String"
+			}
+		}
+	},
+	"weAddedAMethodToPurchaseAnOrchidAccountAnd": "हमने होमस्क्रीन से ही एक ऑर्किड खाता खरीदने और एक अकेले हॉप परिपथ निर्मित करने की विधि जोड़ी है ताकि ऑनबोर्डिंग प्रक्रिया को अधिक छोटा बनाया जा सके।",
+	"orchidIsUniqueAsAMultiHopOrOnion": "ऑर्किड एक अद्वितीय मल्टी-हॉप या अनियन परिपथन ग्राहक समर्थक एकाधिक वीपीएन प्रोटोकॉल है। अब नीचे के समर्थित प्रोटोकॉलों में से हॉपों को शृंखलित करके अपने कनेक्शन को सेटअप कर सकते हैं।\n\nएक हॉप किसी भी सामान्य वीपीएन के समान है। तीन हॉप (उन्नत उपयोगकर्ताओं के लिए) क्लासिक अनियन परिपथन विकल्प है। शून्य हॉप बिना वीपीएन सुरंग के यातायात के विश्लेषण की सुविधा प्रदान करते हैं।",
+	"deletingOpenVPNAndWireguardHopsWillLose": "ओपन-वीपीएन और वायरगार्ड हॉपों को हटाने से आप उनसे संबंधित सभी क्रिडेन्शियल और कनेक्शन कॉन्फिगरेशन को खो देंगे। आगे बढ़ने से पहले सभी जानकारियों का बैंक-अप ले लें।",
+	"thisCannotBeUndoneToSaveThisIdentity": "इसे पलटा नहीं जा सकेगा। इस पहचान को सहेजने के लिए रद्द करें को दबाएँ और निर्यात करें विकल्प का उपयोग करें।",
+	"unlockTime": "अनलॉक समय",
+	"chooseChain": "शृखला चुनें",
+	"unlocking": "अनलॉक कर रहे हैं",
+	"unlocked": "अनलॉक कर दिया",
+	"orchidTransaction": "ऑर्किड लेन-देन",
+	"confirmations": "पुष्टियाँ",
+	"pending": "लंबित...",
+	"txHash": "लेन-देन हैश:",
+	"allOfYourFundsAreAvailableForWithdrawal": "आपकी पूरी निधि आहरण के लिए उपलब्ध है।",
+	"maxWithdrawOfYourTotalFundsCombinedFunds": "आपकी {totalFunds} समेकित निधि में से {maxWithdraw} फिलहाल आहरण के लिए उपलब्ध है।",
+	"@maxWithdrawOfYourTotalFundsCombinedFunds": {
+		"placeholders": {
+			"maxWithdraw": {
+				"type": "String"
+			},
+			"totalFunds": {
+				"type": "String"
+			}
+		}
+	},
+	"alsoUnlockRemainingDeposit": "बाकी के निक्षेप को भी अनलॉक करें",
+	"ifYouSpecifyLessThanTheFullAmountFundsWill": "यदि आप पूर्ण राशि से कम राशि निर्दिष्ट करेंगे, तो पहले आपकी शेष राशि से निधि आहरित की जाएगी।",
+	"forAdditionalOptionsSeeTheAdvancedPanel": "अतिरिक्त विकल्पों के लिए उन्न पैनल देखें।",
+	"ifYouSelectTheUnlockDepositOptionThisTransactionWill": "यदि आप निक्षेप को अनलॉक करें विकल्प को चुनेंगे, तो यह लेन-देन तुरंत निर्दिष्ट राशि को आपकी शेष राशि से आहरित कर देगा और साथ ही आपके बाकी के निक्षेप को अनलॉक करने की प्रक्रिया को भी शुरू कर देगा।",
+	"depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "निक्षेप निधियाँ अनलॉक होने के 24 घंटे बाद आहरण के लिए उपलब्ध हो जाती हैं।",
+	"withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "अपने ऑर्किड खाते से अपने वर्तमान वॉलेट में निधियाँ आहरित करें।",
+	"withdrawAndUnlockFunds": "निधियाँ आहरित और अनलॉक करें",
+	"withdrawFunds": "निधियाँ आहरित करें",
+	"withdraw": "आहरित करें",
+	"submitTransaction": "लेन-देन जमा करें",
+	"move": "स्थानांतरित करें",
+	"now": "अभी",
+	"amount": "राशि",
+	"available": "उपलब्ध",
+	"select": "चुनें",
+	"add": "जोड़ें",
+	"balanceToDeposit": "जमा करने के लिए शेष",
+	"depositToBalance": "शेष में जमा करें",
+	"setWarnedAmount": "चेतावनी राशि सेट करें",
+	"addFundsToYourOrchidAccountBalanceAndorDeposit": "अपने ऑर्किड खाता शेष में निधियाँ जोड़ें और/या जमा करें।",
+	"forGuidanceOnSizingYourAccountSee": "अपने खाते का आमाप निर्धारित करने में मार्गदर्शन पाने के लिए <link>orchid.com</link> देखें",
+	"currentTokenPreauthorizationAmount": "वर्तमान {tokenType} पूर्व-प्राधिकरण: {amount}",
+	"@currentTokenPreauthorizationAmount": {
+		"placeholders": {
+			"tokenType": {
+				"type": "String"
+			},
+			"amount": {
+				"type": "String"
+			}
+		}
+	},
+	"noWallet": "कोई वॉलेट नहीं है",
+	"noWalletOrBrowserNotSupported": "कोई वॉलेट नहीं है या ब्राउजर समर्थित नहीं है।",
+	"error": "त्रुटि",
+	"failedToConnectToWalletconnect": "वॉलेटकनेक्ट से जुड़ नहीं सकें।",
+	"unknownChain": "अज्ञात शृंखला",
+	"theOrchidAccountManagerDoesntSupportThisChainYet": "ऑर्किड खाता प्रबंधक अभी इस शृंखला को समर्थित नहीं करता है।",
+	"orchidIsntOnThisChain": "ऑर्किड इस शृंखला में मौजूद नहीं है।",
+	"theOrchidContractHasntBeenDeployedOnThisChainYet": "ऑर्किड अनुबंध को इस शृंखला में अभी परिनियोजित नहीं किया गया है।",
+	"moveFunds": "निधियों को स्थानांतरित करें",
+	"lockUnlock": "लॉक / अनलॉक करें",
+	"yourDepositOfAmountIsUnlocked": "{amount} के आपके निक्षेप को अनलॉक किया गया।",
+	"@yourDepositOfAmountIsUnlocked": {
+		"placeholders": {
+			"amount": {
+				"type": "String"
+			}
+		}
+	},
+	"locked": "लॉक किया गया",
+	"yourDepositOfAmountIsUnlockingOrUnlocked": "{amount} के आपके निक्षेप को {unlockingOrUnlocked} किया गया।",
+	"@yourDepositOfAmountIsUnlockingOrUnlocked": {
+		"placeholders": {
+			"amount": {
+				"type": "String"
+			},
+			"unlockingOrUnlocked": {
+				"type": "String"
+			}
+		}
+	},
+	"theFundsWillBeAvailableForWithdrawalInTime": "यह निधि आहरण के लिए ${time} को उपलब्ध हो जाएगी।",
+	"@theFundsWillBeAvailableForWithdrawalInTime": {
+		"placeholders": {
+			"time": {
+				"type": "String"
+			}
+		}
+	},
+	"lockDeposit": "निक्षेप को लॉक करें",
+	"unlockDeposit": "निक्षेप को अनलॉक करें",
+	"advanced": "उन्नत",
+	"linklearnMoreAboutOrchidAccountslink": "<link>ऑर्किड खातों के बारे में अधिक जानें</link>।",
+	"estimatedCostToCreateAnOrchidAccountWith": "{efficiency} की कार्यदक्षता और {num} मूल्य के टिकटों के साथ एक ऑर्किड खाता निर्मित करने की अनुमानित लागत।",
+	"@estimatedCostToCreateAnOrchidAccountWith": {
+		"placeholders": {
+			"efficiency": {
+				"type": "String"
+			},
+			"num": {
+				"type": "int"
+			}
+		}
+	},
+	"chain": "शृंखला",
+	"token": "टोकन",
+	"minDeposit": "न्यूनतम निक्षेप",
+	"minBalance": "न्यूनतम शेष",
+	"fundFee": "निधि शुल्क",
+	"withdrawFee": "आहरण शुल्क",
+	"tokenValues": "टोकन मान",
+	"usdPrices": "अमेरिकी डॉलर में कीमतें",
+	"settingAWarnedDepositAmountBeginsThe24HourWaiting": "एक चेतावनी-युक्त निक्षेप राशि सेट करना निक्षेप राशि को आहरित करने के लिए आवश्यक 24 घंटे की प्रतीक्षा अवधि का आरंभ करता है।",
+	"duringThisPeriodTheFundsAreNotAvailableAsA": "इस अवधि के दौरान निधियाँ ऑर्किड नेटवर्क पर एक मान्य निक्षेप के रूप में उपलब्ध नहीं रहती हैं।",
+	"fundsMayBeRelockedAtAnyTimeByReducingThe": "चेतावनी राशि को कम करके निधियों को किसी भी समय पुनः लॉक किया जा सकता है।",
+	"warn": "चेतावनी",
+	"totalWarnedAmount": "कुल चेतावनी राशि",
+	"contract": "अनुबंध",
+	"deleteIdentity": "पहचान हटाएं",
+	"exportIdentity": "निर्यात पहचान",
+	"funderAddress": "निधि का पता",
+	"importIdentity": "आयात पहचान",
+	"importOrchidIdentity": "आर्किड पहचान आयात करें",
+	"newIdentity": "नई पहचान",
+	"txFee": "टीएक्स शुल्क"
 }

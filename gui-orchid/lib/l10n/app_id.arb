@@ -1,437 +1,445 @@
 {
-  "@@locale": "id",
-  "@newHop": {
-    "description": "New network hop"
-  },
-  "orchidHop": "Hop Orchid",
-  "@orchidHop": {
-    "description": "Orchid network hop"
-  },
-  "orchidDisabled": "Orchid dinonaktifkan",
-  "trafficMonitoringOnly": "Pemantauan lalu lintas saja",
-  "orchidConnecting": "Menghubungkan ke Orchid",
-  "orchidDisconnecting": "Memutuskan dari Orchid",
-  "numHopsConfigured": "{num, plural, =0{Tidak ada hop yang dikonfigurasi} =1{Satu hop dikonfigurasi} =2{Dua hop dikonfigurasi} other{{num} hop dikonfigurasi}}",
-  "@numHopsConfigured": {
-    "type": "text",
-    "placeholders": {
-      "num": {
-        "type": "int"
-      }
-    }
-  },
-  "delete": "Hapus",
-  "orchid": "Orchid",
-  "openVPN": "OpenVPN",
-  "hops": "Hop",
-  "@hops": {
-    "description": "Network hops"
-  },
-  "traffic": "Lalu lintas",
-  "@traffic": {
-    "description": "Network traffic"
-  },
-  "curation": "Kurasi",
-  "signerKey": "Kunci penanda tangan",
-  "copy": "Salin",
-  "paste": "Tempel",
-  "deposit": "Deposito",
-  "curator": "Kurator",
-  "ok": "Oke",
-  "settingsButtonTitle": "PENGATURAN",
-  "confirmThisAction": "Konfirmasi tindakan ini",
-  "cancelButtonTitle": "Batal",
-  "changesWillTakeEffectInstruction": "Perubahan akan diterapkan saat VPN dinyalakan kembali.",
-  "saved": "Disimpan",
-  "configurationSaved": "Konfigurasi tersimpan",
-  "whoops": "Maaf",
-  "configurationFailedInstruction": "Konfigurasi gagal disimpan. Silakan periksa sintaksisnya, lalu coba lagi.",
-  "addHop": "Tambahkan hop",
-  "scan": "Pindai",
-  "invalidQRCode": "Kode QR tidak valid",
-  "theQRCodeYouScannedDoesNot": "Kode QR yang dipindai tidak memiliki konfigurasi akun yang valid.",
-  "invalidCode": "Kode tidak valid",
-  "theCodeYouPastedDoesNot": "Kode yang dimasukan tidak memiliki konfigurasi akun yang valid.",
-  "openVPNHop": "Hop OpenVPN",
-  "username": "Nama pengguna",
-  "password": "Kata sandi",
-  "config": "Konfigurasi",
-  "pasteYourOVPN": "Tempel berkas konfigurasi OVPN di sini",
-  "enterYourCredentials": "Masukkan kredensial Anda",
-  "enterLoginInformationInstruction": "Masukkan informasi akses ke penyedia VPN Anda di atas. Kemudian tempelkan isi berkas konfigurasi OpenVPN penyedia Anda di kotak yang telah disediakan.",
-  "save": "Simpan",
-  "help": "Bantuan",
-  "privacyPolicy": "Kebijakan Privasi",
-  "openSourceLicenses": "Lisensi Open Source",
-  "settings": "Pengaturan",
-  "version": "Versi",
-  "noVersion": "Tidak ada versi",
-  "orchidOverview": "Ringkasan Orchid",
-  "defaultCurator": "Kurator standar",
-  "queryBalances": "Minta info saldo",
-  "reset": "Atur ulang",
-  "manageConfiguration": "Kelola konfigurasi",
-  "warningThesefeature": "Peringatan: Fitur ini hanya ditujukan bagi pengguna tingkat lanjut. Silakan baca semua petunjuk.",
-  "exportHopsConfiguration": "Ekspor konfigurasi hop",
-  "export": "Ekspor",
-  "warningExportedConfiguration": "Peringatan: Konfigurasi yang diekspor memuat rahasia kunci privat penanda tangan untuk hop yang diekspor. Menyingkapkan kunci privat dapat mengakibatkan hilangnya semua dana pada akun Orchid yang terkait.",
-  "importHopsConfiguration": "Impor konfigurasi hop",
-  "import": "Impor",
-  "warningImportedConfiguration": "Peringatan: Konfigurasi yang diimpor akan menggantikan semua hop yang telah Anda buat di aplikasi ini. Kunci penanda tangan yang dibuat sebelumnya atau diimpor pada perangkat ini akan dipertahankan dan tetap dapat diakses untuk membuat hop baru. Namun konfigurasi lainnya, termasuk konfigurasi hop OpenVPN, akan hilang.",
-  "configuration": "Konfigurasi",
-  "saveButtonTitle": "SIMPAN",
-  "search": "Telusuri",
-  "newContent": "Konten baru",
-  "clear": "Kosongkan",
-  "connectionDetail": "Detail koneksi",
-  "host": "Hos",
-  "time": "Waktu",
-  "sourcePort": "Porta sumber",
-  "destination": "Destinasi",
-  "destinationPort": "Porta destinasi",
-  "generateNewKey": "Buat kunci baru",
-  "importKey": "Impor kunci",
-  "nothingToDisplayYet": "Tidak ada yang ditampilkan. Lalu lintas akan muncul di sini ketika ada sesuatu untuk ditampilkan.",
-  "disconnecting": "Memutuskan...",
-  "connecting": "Menghubungkan...",
-  "pushToConnect": "Tekan untuk terhubung.",
-  "orchidIsRunning": "Orchid sedang berjalan!",
-  "pacPurchaseWaiting": "Pembelian ditunggu",
-  "retry": "Coba lagi",
-  "getHelpResolvingIssue": "Dapatkan bantuan untuk menyelesaikan masalah ini.",
-  "copyDebugInfo": "Salin info debug",
-  "contactOrchid": "Hubungi Orchid",
-  "remove": "Hapus",
-  "deleteTransaction": "Hapus transaksi",
-  "clearThisInProgressTransactionExplain": "Bersihkan transaksi yang sedang berlangsung. Tindakan ini tidak akan mengembalikan dana transaksi pembelian dalam aplikasi. Silahkan hubungi Orchid untuk menyelesaikan masalah ini.",
-  "preparingPurchase": "Mempersiapkan pembelian",
-  "retryingPurchasedPAC": "Mencoba ulang pembelian",
-  "retryPurchasedPAC": "Coba ulang pembelian",
-  "purchaseError": "Kesalahan pembelian",
-  "thereWasAnErrorInPurchasingContact": "Terjadi kesalahan dalam proses pembelian. Silakan hubungi Dukungan Orchid.",
-  "importAnOrchidAccount": "Impor akun Orchid",
-  "buyCredits": "Beli kredit",
-  "@gb": {
-    "description": "Gigabytes"
-  },
-  "@ofTraffic": {
-    "description": "GB of traffic"
-  },
-  "linkAnOrchidAccount": "Hubungkan akun Orchid",
-  "weAreSorryButThisPurchaseWouldExceedTheDaily": "Maaf, pembelian tidak dapat dilanjutkan karena akan melebihi batas pembelian harian untuk kredit akses. Silakan coba lagi nanti.",
-  "marketStats": "Statistik pasar",
-  "balanceTooLow": "Saldo tidak mencukupi",
-  "depositSizeTooSmall": "Jumlah deposito terlalu kecil",
-  "yourMaxTicketValueIsCurrentlyLimitedByYourBalance": "Nilai tiket maksimum Anda saat ini dibatasi oleh saldo Anda:",
-  "yourMaxTicketValueIsCurrentlyLimitedByYourDeposit": "Nilai tiket maksimum Anda saat ini dibatasi oleh deposito Anda:",
-  "considerAddingOxtToYourAccountBalance": "Pertimbangkan untuk menambahkan OXT ke saldo akun Anda.",
-  "considerAddingOxtToYourDepositOrMovingFundsFrom": "Pertimbangkan untuk menambahkan OXT ke deposito Anda, atau pindahkan dana dari saldo Anda ke deposito Anda.",
-  "prices": "Harga",
-  "ticketValue": "Nilai tiket",
-  "costToRedeem": "Biaya untuk penukaran:",
-  "viewTheDocsForHelpOnThisIssue": "Lihat dokumen untuk bantuan tentang masalah ini.",
-  "goodForBrowsingAndLightActivity": "Cocok untuk penjelajahan web dan aktivitas ringan",
-  "learnMore": "Pelajari lebih lanjut.",
-  "connect": "Terhubung",
-  "disconnect": "Putuskan",
-  "wireguardHop": "Hop WireGuard®️",
-  "pasteYourWireguardConfigFileHere": "Tempel berkas konfigurasi WireGuard®️ Anda di sini",
-  "pasteTheCredentialInformationForYourWireguardProviderIntoThe": "Tempel informasi kredensial untuk penyedia WireGuard®️ Anda ke bidang di atas.",
-  "wireguard": "WireGuard®️",
-  "clearAllLogData": "Bersihkan semua data log?",
-  "thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "Log debug ini hanya sementara dan dibersihkan saat keluar dari aplikasi.",
-  "itMayContainSecretOrPersonallyIdentifyingInformation": "Dapat berisi informasi rahasia atau identifikasi pribadi.",
-  "loggingEnabled": "Pengelogan diaktifkan",
-  "cancel": "Batal",
-  "logging": "Mengelog",
-  "loading": "Memuat ...",
-  "ethPrice": "Harga ETH:",
-  "oxtPrice": "Harga OXT:",
-  "gasPrice": "Biaya transaksi Gas:",
-  "maxFaceValue": "Nilai nominal maksimum:",
-  "confirmDelete": "Konfirmasi penghapusan",
-  "enterOpenvpnConfig": "Masukkan konfigurasi OpenVPN",
-  "enterWireguardConfig": "Masukkan konfigurasi WireGuard®️",
-  "starting": "Memulai...",
-  "legal": "Hukum",
-  "whatsNewInOrchid": "Apa yang baru di Orchid",
-  "orchidIsOnXdai": "Orchid ada di xDai!",
-  "youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "Anda sekarang dapat membeli kredit Orchid di xDai! Mulai gunakan VPN seharga AS$1 saja.",
-  "xdaiAccountsForPastPurchases": "Akun xDai untuk pembelian sebelumnya",
-  "forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "Dana xDai telah ditambahkan ke kunci akun yang sama untuk setiap pembelian dalam aplikasi yang dilakukan sebelum hari ini. Hadiah kami untuk Anda!",
-  "newInterface": "Antarmuka baru",
-  "accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "Akun sekarang diatur dalam alamat Orchid yang terkait dengannya.",
-  "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Lihat saldo aktif dan biaya bandwidth di layar beranda.",
-  "seeOrchidcomForHelp": "Buka orchid.com untuk bantuan.",
-  "payPerUseVpnService": "Layanan VPN bayar sesuai penggunaan",
-  "notASubscriptionCreditsDontExpire": "Bukan langganan, kredit tidak kedaluwarsa",
-  "shareAccountWithUnlimitedDevices": "Berbagi akun dengan perangkat tanpa batas",
-  "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Toko Orchid tidak tersedia untuk sementara waktu. Silakan periksa kembali dalam beberapa menit.",
-  "talkingToPacServer": "Berkomunikasi dengan server akun Orchid",
-  "advancedConfiguration": "Konfigurasi tingkat lanjut",
-  "newWord": "Baru",
-  "copied": "Disalin",
-  "efficiency": "Efisiensi",
-  "minTicketsAvailableTickets": "Tiket minimum yang tersedia: {tickets}",
-  "@minTicketsAvailableTickets": {
-    "placeholders": {
-      "tickets": {
-        "type": "int"
-      }
-    }
-  },
-  "transactionSentToBlockchain": "Transaksi dikirim ke blockchain",
-  "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "Pembelian Anda selesai dan sedang diproses oleh blockchain xDai dengan estimasi waktu sekitar satu menit atau lebih. Tarik ke bawah untuk menyegarkan dan akun Anda dengan saldo yang diperbarui akan muncul di bawah ini.",
-  "copyReceipt": "Salin tanda terima",
-  "manageAccounts": "Kelola akun",
-  "configurationManagement": "Manajemen konfigurasi",
-  "exportThisOrchidKey": "Ekspor kunci Orchid ini",
-  "aQrCodeAndTextForAllTheOrchidAccounts": "Kode QR dan teks untuk semua akun Orchid yang terkait dengan kunci ini tertera di bawah.",
-  "importThisKeyOnAnotherDeviceToShareAllThe": "Impor kunci ini pada perangkat lain untuk membagikan semua akun Orchid yang terkait dengan identitas Orchid ini.",
-  "orchidAccountInUse": "Akun Orchid sedang digunakan",
-  "thisOrchidAccountIsInUseAndCannotBeDeleted": "Akun Orchid ini sedang digunakan dan tidak dapat dihapus.",
-  "pullToRefresh": "Tarik untuk menyegarkan.",
-  "balance": "Saldo",
-  "active": "Aktif",
-  "pasteAnOrchidKeyFromTheClipboardToImportAll": "Tempel kunci Orchid dari papan klip untuk mengimpor semua akun Orchid yang terkait dengan kunci tersebut.",
-  "scanOrPasteAnOrchidKeyFromTheClipboardTo": "Pindai atau tempel kunci Orchid dari papan klip untuk mengimpor semua akun Orchid yang terkait dengan kunci tersebut.",
-  "account": "Akun",
-  "transactions": "Transaksi",
-  "weRecommendBackingItUp": "Kami sarankan untuk <link>membuat cadangannya</link>.",
-  "copiedOrchidIdentity": "Identitas Orchid yang disalin",
-  "thisIsNotAWalletAddress": "Ini bukan alamat dompet.",
-  "doNotSendTokensToThisAddress": "Jangan kirim token ke alamat ini.",
-  "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "Identitas Orchid Anda secara unik mengidentifikasi Anda pada jaringan.",
-  "learnMoreAboutYourLinkorchidIdentitylink": "Pelajari lebih lanjut tentang <link>Identitas Orchid</link> Anda.",
-  "analyzingYourConnections": "Menganalisa koneksi Anda",
-  "analyzeYourConnections": "Analisa koneksi Anda",
-  "networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "Analisis jaringan menggunakan kemampuan VPN perangkat Anda untuk menangkap paket dan menganalisa lalu lintas Anda.",
-  "networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "Analisis jaringan memerlukan izin VPN, tetapi tidak dengan sendirinya melindungi data atau menyembunyikan alamat IP Anda.",
-  "toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Untuk mendapatkan manfaat privasi jaringan, Anda harus mengkonfigurasi dan mengaktifkan koneksi VPN dari layar beranda.",
-  "turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "Menyalakan fitur ini akan meningkatkan penggunaan baterai aplikasi Orchid.",
-  "useAnOrchidAccount": "Gunakan akun Orchid",
-  "pasteAddress": "Tempel alamat",
-  "chooseAddress": "Pilih alamat",
-  "chooseAnOrchidAccountToUseWithThisHop": "Pilih akun Orchid yang akan digunakan dengan hop ini.",
-  "ifYouDontSeeYourAccountBelowYouCanUse": "Jika akun Anda tidak terlihat di bawah ini, Anda dapat menggunakan pengelola akun untuk mengimpor, membeli, atau membuat akun baru.",
-  "selectAnOrchidAccount": "Pilih akun Orchid",
-  "takeMeToTheAccountManager": "Buka pengelola akun",
-  "funderAccount": "Akun penyandang dana",
-  "orchidRunningAndAnalyzing": "Orchid berjalan dan menganalisa",
-  "startingVpn": "(Memulai VPN)",
-  "disconnectingVpn": "(Memutuskan VPN)",
-  "orchidAnalyzingTraffic": "Orchid menganalisa lalu lintas",
-  "vpnConnectedButNotRouting": "(VPN terhubung tetapi tanpa perutean)",
-  "restarting": "Memulai ulang",
-  "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "Untuk mengubah status pemantauan, VPN perlu dimulai ulang, yang dapat mengganggu perlindungan privasi untuk sesaat.",
-  "confirmRestart": "Konfirmasi mulai ulang",
-  "averagePriceIsUSDPerGb": "Harga rata-rata adalah {price} USD per GB",
-  "@averagePriceIsUSDPerGb": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "myOrchidConfig": "Konfigurasi Orchid saya",
-  "noAccountSelected": "Tidak ada akun yang dipilih",
-  "inactive": "Tidak aktif",
-  "tickets": "Tiket",
-  "accounts": "Akun",
-  "orchidIdentity": "Identitas Orchid",
-  "addFunds": "TAMBAH DANA",
-  "gb": "GB",
-  "usdgb": "USD/GB",
-  "hop": "Hop",
-  "circuit": "Sirkuit",
-  "clearAllAnalysisData": "Hapus semua data analisis?",
-  "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "Tindakan ini akan menghapus semua data lalu lintas koneksi yang pernah dianalisa sebelumnya.",
-  "clearAll": "HAPUS SEMUA",
-  "stopAnalysis": "HENTIKAN ANALISIS",
-  "startAnalysis": "MULAI ANALISIS",
-  "orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "Akun Orchid menyediakan layanan bantuan pelanggan 24/7, tanpa batasan jumlah perangkat, dan didukung oleh <link2>mata uang kripto xDai</link2>.",
-  "purchasedAccountsConnectExclusivelyToOur": "Akun yang dibeli terhubung secara eksklusif ke <link1>penyedia pilihan</link1> kami.",
-  "refundPolicyCoveredByAppStores": "Kebijakan pengembalian dana dicakup oleh toko aplikasi.",
-  "orchidIsUnableToDisplayInappPurchasesAtThisTime": "Orchid tidak dapat menampilkan pembelian dalam aplikasi untuk saat ini.",
-  "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "Harap konfirmasi bahwa perangkat ini mendukung dan terkonfigurasi untuk pembelian dalam aplikasi.",
-  "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "Harap konfirmasi bahwa perangkat ini mendukung dan terkonfigurasi untuk pembelian dalam aplikasi, atau gunakan sistem <link>manajemen akun </link> terdesentralisasi kami.",
-  "buy": "BELI",
-  "gbApproximately12": "12GB (kira-kira)",
-  "gbApproximately60": "60GB (kira-kira)",
-  "gbApproximately240": "240GB (kira-kira)",
-  "idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "Cocok untuk penggunaan individu jangka menengah yang mencakup penjelajahan dan streaming ringan.",
-  "mostPopular": "Paling populer!",
-  "bandwidthheavyLongtermUsageOrSharedAccounts": "Penggunaan bandwidth berat, jangka panjang, atau akun bersama.",
-  "total": "Total",
-  "pausingAllTraffic": "Menjeda semua lalu lintas...",
-  "queryingEthereumForARandom": "Meminta Ethereum untuk penyedia acak...",
-  "quickFundAnAccount": "Danai akun dengan cepat!",
-  "accountFound": "Akun ditemukan",
-  "weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "Kami menemukan akun yang terkait dengan identitas Anda dan telah membuat sirkuit Orchid dengan hop tunggal untuk akun tersebut. Anda sekarang siap menggunakan VPN.",
-  "welcomeToOrchid": "Selamat datang di Orchid!",
-  "fundYourAccount": "Danai akun Anda",
-  "processing": "Memproses...",
-  "subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "Bebas langganan, bayar sesuai penggunaan, terdesentralisasi, layanan VPN sumber terbuka.",
-  "getStartedFor1": "MULAI CUMA DENGAN {smallAmount}",
-  "@getStartedFor1": {
-    "placeholders": {
-      "smallAmount": {
-        "type": "String"
-      }
-    }
-  },
-  "importAccount": "Impor Akun",
-  "illDoThisLater": "Lain kali",
-  "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Terhubung secara otomatis ke salah satu <link1>penyedia pilihan</link1> jaringan dengan membeli kredit VPN untuk mendanai akun Orchid Anda yang dapat dibagikan dan diisi ulang.",
-  "confirmPurchase": "KONFIRMASI PEMBELIAN",
-  "orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Akun Orchid menggunakan kredit VPN yang didukung oleh <link>mata uang kripto xDAI</link>, menyediakan layanan bantuan pelanggan 24/7, memungkinkan Anda berbagi perangkat tanpa batas, dan dilindungi kebijakan pengembalian dana toko aplikasi.",
-  "yourPurchaseIsInProgress": "Pembelian Anda sedang diproses.",
-  "thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "Pembelian ini membutuhkan waktu lebih lama dari yang diperkirakan dan mungkin telah terjadi kesalahan.",
-  "thisMayTakeAMinute": "Dapat memakan waktu satu menit...",
-  "vpnCredits": "Kredit VPN",
-  "blockchainFee": "Biaya blockchain",
-  "promotion": "Promosi",
-  "showInAccountManager": "Tampilkan di pengelola akun",
-  "deleteThisOrchidIdentity": "Hapus identitas Orchid ini",
-  "chooseIdentity": "Pilih identitas",
-  "updatingAccounts": "Memperbarui akun",
-  "trafficAnalysis": "Analisis lalu lintas",
-  "accountManager": "Pengelola akun",
-  "circuitBuilder": "Pembuat sirkuit",
-  "exitHop": "Hop keluar",
-  "entryHop": "Hop masuk",
-  "addNewHop": "TAMBAHKAN HOP BARU",
-  "newCircuitBuilder": "Pembuat sirkuit baru!",
-  "youCanNowPayForAMultihopOrchidCircuitWith": "Anda sekarang dapat membayar untuk sirkuit Orchid multi-hop dengan xDAI. Antarmuka multi-hop sekarang mendukung akun xDAI dan OXT Orchid, dan masih mendukung konfigurasi OpenVPN dan WireGuard yang dapat dirangkai menjadi rute berlapis.",
-  "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "Kelola koneksi Anda dari pembuat sirkuit, bukan dari pengelola akun. Semua koneksi sekarang menggunakan sirkuit dengan nol hop atau lebih banyak hop. Setiap konfigurasi yang ada telah dimigrasikan ke pembuat sirkuit.",
-  "quickStartFor1": "Mulai cepat cuma dengan {smallAmount}",
-  "@quickStartFor1": {
-    "placeholders": {
-      "smallAmount": {
-        "type": "String"
-      }
-    }
-  },
-  "weAddedAMethodToPurchaseAnOrchidAccountAnd": "Kami telah menambahkan cara untuk membeli akun Orchid dan membuat sirkuit dengan hop tunggal dari layar beranda untuk mempersingkat proses pengenalan.",
-  "orchidIsUniqueAsAMultiHopOrOnion": "Orchid bersifat unik sebagai klien perutean berlapis atau multi-hop karena mendukung banyak protokol VPN. Anda dapat mengatur koneksi Anda dengan menggabungkan berbagai hop dari protokol yang didukung di bawah ini.\n\nSatu hop itu seperti VPN biasa. Tiga hop (bagi pengguna tingkat lanjut) adalah pilihan klasik untuk perutean berlapis. Nol hop memungkinkan analisis lalu lintas tanpa tunnel VPN apa pun.",
-  "deletingOpenVPNAndWireguardHopsWillLose": "Menghapus hop OpenVPN dan WireGuard akan menghilangkan kredensial dan konfigurasi koneksi yang terkait. Pastikan Anda telah membuat cadangan untuk informasi tersebut sebelum melanjutkan.",
-  "thisCannotBeUndoneToSaveThisIdentity": "Tindakan ini tidak dapat dibatalkan. Untuk menyimpan identitas ini, tekan Batal dan gunakan opsi Ekspor",
-  "unlockTime": "Waktu sampai terbuka",
-  "chooseChain": "Pilih rantai",
-  "unlocking": "sedang dibuka",
-  "unlocked": "Terbuka",
-  "orchidTransaction": "Transaksi Orchid",
-  "confirmations": "Konfirmasi",
-  "pending": "Tertunda...",
-  "txHash": "Hash Tx:",
-  "allOfYourFundsAreAvailableForWithdrawal": "Semua dana Anda tersedia untuk ditarik.",
-  "maxWithdrawOfYourTotalFundsCombinedFunds": "{maxWithdraw} dari {totalFunds} dana gabungan Anda tersedia untuk ditarik saat ini.",
-  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
-    "placeholders": {
-      "maxWithdraw": {
-        "type": "String"
-      },
-      "totalFunds": {
-        "type": "String"
-      }
-    }
-  },
-  "alsoUnlockRemainingDeposit": "Juga buka kunci deposito tersisa",
-  "ifYouSpecifyLessThanTheFullAmountFundsWill": "Jika kurang dari jumlah total ditentukan, dana akan ditarik dari saldo Anda lebih dahulu.",
-  "forAdditionalOptionsSeeTheAdvancedPanel": "Untuk opsi tambahan, lihat panel LANJUTAN.",
-  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "Jika Anda memilih opsi buka kunci deposito, transaksi ini akan segera menarik jumlah yang ditentukan dari saldo Anda dan juga memulai proses pembukaan kunci untuk deposito tersisa Anda.",
-  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "Dana deposito tersedia untuk ditarik 24 jam setelah pembukaan kunci.",
-  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Tarik dana dari akun Orchid ke dompet yang Anda gunakan saat ini.",
-  "withdrawAndUnlockFunds": "TARIK DAN BUKA KUNCI DANA",
-  "withdrawFunds": "TARIK DANA",
-  "withdraw": "Tarik mata uang",
-  "submitTransaction": "KIRIM TRANSAKSI",
-  "move": "Pindah",
-  "now": "Sekarang",
-  "amount": "Jumlah",
-  "available": "Tersedia",
-  "select": "Pilih",
-  "add": "TAMBAH",
-  "balanceToDeposit": "SALDO KE DEPOSITO",
-  "depositToBalance": "DEPOSITO KE SALDO",
-  "setWarnedAmount": "Tetapkan jumlah yang diperingatkan",
-  "addFundsToYourOrchidAccountBalanceAndorDeposit": "Tambahkan dana ke saldo dan/atau deposito akun Orchid Anda.",
-  "forGuidanceOnSizingYourAccountSee": "Untuk panduan ukuran akun, kunjungi <link>orchid.com</link>",
-  "currentTokenPreauthorizationAmount": "Pra-otorisasi {tokenType} saat ini: {amount}",
-  "@currentTokenPreauthorizationAmount": {
-    "placeholders": {
-      "tokenType": {
-        "type": "String"
-      },
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "noWallet": "Tidak ada dompet",
-  "noWalletOrBrowserNotSupported": "Tidak ada dompet atau browser tidak didukung.",
-  "error": "Kesalahan",
-  "failedToConnectToWalletconnect": "Gagal terhubung ke WalletConnect.",
-  "unknownChain": "Rantai tidak diketahui",
-  "theOrchidAccountManagerDoesntSupportThisChainYet": "Pengelola akun Orchid belum mendukung rantai ini.",
-  "orchidIsntOnThisChain": "Orchid tidak ada pada rantai ini.",
-  "theOrchidContractHasntBeenDeployedOnThisChainYet": "Kontrak Orchid belum diterapkan pada rantai ini.",
-  "moveFunds": "PINDAHKAN DANA",
-  "lockUnlock": "KUNCI / BUKA KUNCI",
-  "yourDepositOfAmountIsUnlocked": "Deposito Anda {amount} terbuka.",
-  "@yourDepositOfAmountIsUnlocked": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "locked": "terkunci",
-  "yourDepositOfAmountIsUnlockingOrUnlocked": "Deposito Anda {amount} {unlockingOrUnlocked}.",
-  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      },
-      "unlockingOrUnlocked": {
-        "type": "String"
-      }
-    }
-  },
-  "theFundsWillBeAvailableForWithdrawalInTime": "Dana akan tersedia untuk ditarik dalam ${time}.",
-  "@theFundsWillBeAvailableForWithdrawalInTime": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "lockDeposit": "KUNCI DEPOSITO",
-  "unlockDeposit": "BUKA KUNCI DEPOSITO",
-  "advanced": "LANJUTAN",
-  "linklearnMoreAboutOrchidAccountslink": "<link>Pelajari lebih lanjut tentang akun Orchid</link>.",
-  "estimatedCostToCreateAnOrchidAccountWith": "Biaya yang diperkirakan untuk membuat akun Orchid dengan efisiensi {efficiency} dan {num} tiket nilai.",
-  "@estimatedCostToCreateAnOrchidAccountWith": {
-    "placeholders": {
-      "efficiency": {
-        "type": "String"
-      },
-      "num": {
-        "type": "int"
-      }
-    }
-  },
-  "chain": "Rantai",
-  "token": "Token",
-  "minDeposit": "Deposito min.",
-  "minBalance": "Saldo min.",
-  "fundFee": "Biaya pendanaan",
-  "withdrawFee": "Biaya penarikan",
-  "tokenValues": "NILAI TOKEN",
-  "usdPrices": "HARGA USD",
-  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "Menetapkan jumlah deposito yang diperingatkan memulai masa tunggu 24 jam yang diperlukan untuk menarik dana deposito.",
-  "duringThisPeriodTheFundsAreNotAvailableAsA": "Selama periode ini, dana tidak tersedia sebagai deposito valid di jaringan Orchid.",
-  "fundsMayBeRelockedAtAnyTimeByReducingThe": "Dana dapat dikunci kembali kapan saja dengan mengurangi jumlah yang diperingatkan.",
-  "warn": "Peringatkan",
-  "totalWarnedAmount": "Jumlah total yang diperingatkan"
+	"@@locale": "id",
+	"@newHop": {
+		"description": "New network hop"
+	},
+	"orchidHop": "Hop Orchid",
+	"@orchidHop": {
+		"description": "Orchid network hop"
+	},
+	"orchidDisabled": "Orchid dinonaktifkan",
+	"trafficMonitoringOnly": "Pemantauan lalu lintas saja",
+	"orchidConnecting": "Menghubungkan ke Orchid",
+	"orchidDisconnecting": "Memutuskan dari Orchid",
+	"numHopsConfigured": "{num, plural, =0{Tidak ada hop yang dikonfigurasi} =1{Satu hop dikonfigurasi} =2{Dua hop dikonfigurasi} other{{num} hop dikonfigurasi}}",
+	"@numHopsConfigured": {
+		"type": "text",
+		"placeholders": {
+			"num": {
+				"type": "int"
+			}
+		}
+	},
+	"delete": "Hapus",
+	"orchid": "Orchid",
+	"openVPN": "OpenVPN",
+	"hops": "Hop",
+	"@hops": {
+		"description": "Network hops"
+	},
+	"traffic": "Lalu lintas",
+	"@traffic": {
+		"description": "Network traffic"
+	},
+	"curation": "Kurasi",
+	"signerKey": "Kunci penanda tangan",
+	"copy": "Salin",
+	"paste": "Tempel",
+	"deposit": "Deposito",
+	"curator": "Kurator",
+	"ok": "Oke",
+	"settingsButtonTitle": "PENGATURAN",
+	"confirmThisAction": "Konfirmasi tindakan ini",
+	"cancelButtonTitle": "Batal",
+	"changesWillTakeEffectInstruction": "Perubahan akan diterapkan saat VPN dinyalakan kembali.",
+	"saved": "Disimpan",
+	"configurationSaved": "Konfigurasi tersimpan",
+	"whoops": "Maaf",
+	"configurationFailedInstruction": "Konfigurasi gagal disimpan. Silakan periksa sintaksisnya, lalu coba lagi.",
+	"addHop": "Tambahkan hop",
+	"scan": "Pindai",
+	"invalidQRCode": "Kode QR tidak valid",
+	"theQRCodeYouScannedDoesNot": "Kode QR yang dipindai tidak memiliki konfigurasi akun yang valid.",
+	"invalidCode": "Kode tidak valid",
+	"theCodeYouPastedDoesNot": "Kode yang dimasukan tidak memiliki konfigurasi akun yang valid.",
+	"openVPNHop": "Hop OpenVPN",
+	"username": "Nama pengguna",
+	"password": "Kata sandi",
+	"config": "Konfigurasi",
+	"pasteYourOVPN": "Tempel berkas konfigurasi OVPN di sini",
+	"enterYourCredentials": "Masukkan kredensial Anda",
+	"enterLoginInformationInstruction": "Masukkan informasi akses ke penyedia VPN Anda di atas. Kemudian tempelkan isi berkas konfigurasi OpenVPN penyedia Anda di kotak yang telah disediakan.",
+	"save": "Simpan",
+	"help": "Bantuan",
+	"privacyPolicy": "Kebijakan Privasi",
+	"openSourceLicenses": "Lisensi Open Source",
+	"settings": "Pengaturan",
+	"version": "Versi",
+	"noVersion": "Tidak ada versi",
+	"orchidOverview": "Ringkasan Orchid",
+	"defaultCurator": "Kurator standar",
+	"queryBalances": "Minta info saldo",
+	"reset": "Atur ulang",
+	"manageConfiguration": "Kelola konfigurasi",
+	"warningThesefeature": "Peringatan: Fitur ini hanya ditujukan bagi pengguna tingkat lanjut. Silakan baca semua petunjuk.",
+	"exportHopsConfiguration": "Ekspor konfigurasi hop",
+	"export": "Ekspor",
+	"warningExportedConfiguration": "Peringatan: Konfigurasi yang diekspor memuat rahasia kunci privat penanda tangan untuk hop yang diekspor. Menyingkapkan kunci privat dapat mengakibatkan hilangnya semua dana pada akun Orchid yang terkait.",
+	"importHopsConfiguration": "Impor konfigurasi hop",
+	"import": "Impor",
+	"warningImportedConfiguration": "Peringatan: Konfigurasi yang diimpor akan menggantikan semua hop yang telah Anda buat di aplikasi ini. Kunci penanda tangan yang dibuat sebelumnya atau diimpor pada perangkat ini akan dipertahankan dan tetap dapat diakses untuk membuat hop baru. Namun konfigurasi lainnya, termasuk konfigurasi hop OpenVPN, akan hilang.",
+	"configuration": "Konfigurasi",
+	"saveButtonTitle": "SIMPAN",
+	"search": "Telusuri",
+	"newContent": "Konten baru",
+	"clear": "Kosongkan",
+	"connectionDetail": "Detail koneksi",
+	"host": "Hos",
+	"time": "Waktu",
+	"sourcePort": "Porta sumber",
+	"destination": "Destinasi",
+	"destinationPort": "Porta destinasi",
+	"generateNewKey": "Buat kunci baru",
+	"importKey": "Impor kunci",
+	"nothingToDisplayYet": "Tidak ada yang ditampilkan. Lalu lintas akan muncul di sini ketika ada sesuatu untuk ditampilkan.",
+	"disconnecting": "Memutuskan...",
+	"connecting": "Menghubungkan...",
+	"pushToConnect": "Tekan untuk terhubung.",
+	"orchidIsRunning": "Orchid sedang berjalan!",
+	"pacPurchaseWaiting": "Pembelian ditunggu",
+	"retry": "Coba lagi",
+	"getHelpResolvingIssue": "Dapatkan bantuan untuk menyelesaikan masalah ini.",
+	"copyDebugInfo": "Salin info debug",
+	"contactOrchid": "Hubungi Orchid",
+	"remove": "Hapus",
+	"deleteTransaction": "Hapus transaksi",
+	"clearThisInProgressTransactionExplain": "Bersihkan transaksi yang sedang berlangsung. Tindakan ini tidak akan mengembalikan dana transaksi pembelian dalam aplikasi. Silahkan hubungi Orchid untuk menyelesaikan masalah ini.",
+	"preparingPurchase": "Mempersiapkan pembelian",
+	"retryingPurchasedPAC": "Mencoba ulang pembelian",
+	"retryPurchasedPAC": "Coba ulang pembelian",
+	"purchaseError": "Kesalahan pembelian",
+	"thereWasAnErrorInPurchasingContact": "Terjadi kesalahan dalam proses pembelian. Silakan hubungi Dukungan Orchid.",
+	"importAnOrchidAccount": "Impor akun Orchid",
+	"buyCredits": "Beli kredit",
+	"@gb": {
+		"description": "Gigabytes"
+	},
+	"@ofTraffic": {
+		"description": "GB of traffic"
+	},
+	"linkAnOrchidAccount": "Hubungkan akun Orchid",
+	"weAreSorryButThisPurchaseWouldExceedTheDaily": "Maaf, pembelian tidak dapat dilanjutkan karena akan melebihi batas pembelian harian untuk kredit akses. Silakan coba lagi nanti.",
+	"marketStats": "Statistik pasar",
+	"balanceTooLow": "Saldo tidak mencukupi",
+	"depositSizeTooSmall": "Jumlah deposito terlalu kecil",
+	"yourMaxTicketValueIsCurrentlyLimitedByYourBalance": "Nilai tiket maksimum Anda saat ini dibatasi oleh saldo Anda:",
+	"yourMaxTicketValueIsCurrentlyLimitedByYourDeposit": "Nilai tiket maksimum Anda saat ini dibatasi oleh deposito Anda:",
+	"considerAddingOxtToYourAccountBalance": "Pertimbangkan untuk menambahkan OXT ke saldo akun Anda.",
+	"considerAddingOxtToYourDepositOrMovingFundsFrom": "Pertimbangkan untuk menambahkan OXT ke deposito Anda, atau pindahkan dana dari saldo Anda ke deposito Anda.",
+	"prices": "Harga",
+	"ticketValue": "Nilai tiket",
+	"costToRedeem": "Biaya untuk penukaran:",
+	"viewTheDocsForHelpOnThisIssue": "Lihat dokumen untuk bantuan tentang masalah ini.",
+	"goodForBrowsingAndLightActivity": "Cocok untuk penjelajahan web dan aktivitas ringan",
+	"learnMore": "Pelajari lebih lanjut.",
+	"connect": "Terhubung",
+	"disconnect": "Putuskan",
+	"wireguardHop": "Hop WireGuard®️",
+	"pasteYourWireguardConfigFileHere": "Tempel berkas konfigurasi WireGuard®️ Anda di sini",
+	"pasteTheCredentialInformationForYourWireguardProviderIntoThe": "Tempel informasi kredensial untuk penyedia WireGuard®️ Anda ke bidang di atas.",
+	"wireguard": "WireGuard®️",
+	"clearAllLogData": "Bersihkan semua data log?",
+	"thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "Log debug ini hanya sementara dan dibersihkan saat keluar dari aplikasi.",
+	"itMayContainSecretOrPersonallyIdentifyingInformation": "Dapat berisi informasi rahasia atau identifikasi pribadi.",
+	"loggingEnabled": "Pengelogan diaktifkan",
+	"cancel": "Batal",
+	"logging": "Mengelog",
+	"loading": "Memuat ...",
+	"ethPrice": "Harga ETH:",
+	"oxtPrice": "Harga OXT:",
+	"gasPrice": "Biaya transaksi Gas:",
+	"maxFaceValue": "Nilai nominal maksimum:",
+	"confirmDelete": "Konfirmasi penghapusan",
+	"enterOpenvpnConfig": "Masukkan konfigurasi OpenVPN",
+	"enterWireguardConfig": "Masukkan konfigurasi WireGuard®️",
+	"starting": "Memulai...",
+	"legal": "Hukum",
+	"whatsNewInOrchid": "Apa yang baru di Orchid",
+	"orchidIsOnXdai": "Orchid ada di xDai!",
+	"youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "Anda sekarang dapat membeli kredit Orchid di xDai! Mulai gunakan VPN seharga AS$1 saja.",
+	"xdaiAccountsForPastPurchases": "Akun xDai untuk pembelian sebelumnya",
+	"forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "Dana xDai telah ditambahkan ke kunci akun yang sama untuk setiap pembelian dalam aplikasi yang dilakukan sebelum hari ini. Hadiah kami untuk Anda!",
+	"newInterface": "Antarmuka baru",
+	"accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "Akun sekarang diatur dalam alamat Orchid yang terkait dengannya.",
+	"seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Lihat saldo aktif dan biaya bandwidth di layar beranda.",
+	"seeOrchidcomForHelp": "Buka orchid.com untuk bantuan.",
+	"payPerUseVpnService": "Layanan VPN bayar sesuai penggunaan",
+	"notASubscriptionCreditsDontExpire": "Bukan langganan, kredit tidak kedaluwarsa",
+	"shareAccountWithUnlimitedDevices": "Berbagi akun dengan perangkat tanpa batas",
+	"theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Toko Orchid tidak tersedia untuk sementara waktu. Silakan periksa kembali dalam beberapa menit.",
+	"talkingToPacServer": "Berkomunikasi dengan server akun Orchid",
+	"advancedConfiguration": "Konfigurasi tingkat lanjut",
+	"newWord": "Baru",
+	"copied": "Disalin",
+	"efficiency": "Efisiensi",
+	"minTicketsAvailableTickets": "Tiket minimum yang tersedia: {tickets}",
+	"@minTicketsAvailableTickets": {
+		"placeholders": {
+			"tickets": {
+				"type": "int"
+			}
+		}
+	},
+	"transactionSentToBlockchain": "Transaksi dikirim ke blockchain",
+	"yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "Pembelian Anda selesai dan sedang diproses oleh blockchain xDai dengan estimasi waktu sekitar satu menit atau lebih. Tarik ke bawah untuk menyegarkan dan akun Anda dengan saldo yang diperbarui akan muncul di bawah ini.",
+	"copyReceipt": "Salin tanda terima",
+	"manageAccounts": "Kelola akun",
+	"configurationManagement": "Manajemen konfigurasi",
+	"exportThisOrchidKey": "Ekspor kunci Orchid ini",
+	"aQrCodeAndTextForAllTheOrchidAccounts": "Kode QR dan teks untuk semua akun Orchid yang terkait dengan kunci ini tertera di bawah.",
+	"importThisKeyOnAnotherDeviceToShareAllThe": "Impor kunci ini pada perangkat lain untuk membagikan semua akun Orchid yang terkait dengan identitas Orchid ini.",
+	"orchidAccountInUse": "Akun Orchid sedang digunakan",
+	"thisOrchidAccountIsInUseAndCannotBeDeleted": "Akun Orchid ini sedang digunakan dan tidak dapat dihapus.",
+	"pullToRefresh": "Tarik untuk menyegarkan.",
+	"balance": "Saldo",
+	"active": "Aktif",
+	"pasteAnOrchidKeyFromTheClipboardToImportAll": "Tempel kunci Orchid dari papan klip untuk mengimpor semua akun Orchid yang terkait dengan kunci tersebut.",
+	"scanOrPasteAnOrchidKeyFromTheClipboardTo": "Pindai atau tempel kunci Orchid dari papan klip untuk mengimpor semua akun Orchid yang terkait dengan kunci tersebut.",
+	"account": "Akun",
+	"transactions": "Transaksi",
+	"weRecommendBackingItUp": "Kami sarankan untuk <link>membuat cadangannya</link>.",
+	"copiedOrchidIdentity": "Identitas Orchid yang disalin",
+	"thisIsNotAWalletAddress": "Ini bukan alamat dompet.",
+	"doNotSendTokensToThisAddress": "Jangan kirim token ke alamat ini.",
+	"yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "Identitas Orchid Anda secara unik mengidentifikasi Anda pada jaringan.",
+	"learnMoreAboutYourLinkorchidIdentitylink": "Pelajari lebih lanjut tentang <link>Identitas Orchid</link> Anda.",
+	"analyzingYourConnections": "Menganalisa koneksi Anda",
+	"analyzeYourConnections": "Analisa koneksi Anda",
+	"networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "Analisis jaringan menggunakan kemampuan VPN perangkat Anda untuk menangkap paket dan menganalisa lalu lintas Anda.",
+	"networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "Analisis jaringan memerlukan izin VPN, tetapi tidak dengan sendirinya melindungi data atau menyembunyikan alamat IP Anda.",
+	"toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Untuk mendapatkan manfaat privasi jaringan, Anda harus mengkonfigurasi dan mengaktifkan koneksi VPN dari layar beranda.",
+	"turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "Menyalakan fitur ini akan meningkatkan penggunaan baterai aplikasi Orchid.",
+	"useAnOrchidAccount": "Gunakan akun Orchid",
+	"pasteAddress": "Tempel alamat",
+	"chooseAddress": "Pilih alamat",
+	"chooseAnOrchidAccountToUseWithThisHop": "Pilih akun Orchid yang akan digunakan dengan hop ini.",
+	"ifYouDontSeeYourAccountBelowYouCanUse": "Jika akun Anda tidak terlihat di bawah ini, Anda dapat menggunakan pengelola akun untuk mengimpor, membeli, atau membuat akun baru.",
+	"selectAnOrchidAccount": "Pilih akun Orchid",
+	"takeMeToTheAccountManager": "Buka pengelola akun",
+	"funderAccount": "Akun penyandang dana",
+	"orchidRunningAndAnalyzing": "Orchid berjalan dan menganalisa",
+	"startingVpn": "(Memulai VPN)",
+	"disconnectingVpn": "(Memutuskan VPN)",
+	"orchidAnalyzingTraffic": "Orchid menganalisa lalu lintas",
+	"vpnConnectedButNotRouting": "(VPN terhubung tetapi tanpa perutean)",
+	"restarting": "Memulai ulang",
+	"changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "Untuk mengubah status pemantauan, VPN perlu dimulai ulang, yang dapat mengganggu perlindungan privasi untuk sesaat.",
+	"confirmRestart": "Konfirmasi mulai ulang",
+	"averagePriceIsUSDPerGb": "Harga rata-rata adalah {price} USD per GB",
+	"@averagePriceIsUSDPerGb": {
+		"placeholders": {
+			"price": {
+				"type": "String"
+			}
+		}
+	},
+	"myOrchidConfig": "Konfigurasi Orchid saya",
+	"noAccountSelected": "Tidak ada akun yang dipilih",
+	"inactive": "Tidak aktif",
+	"tickets": "Tiket",
+	"accounts": "Akun",
+	"orchidIdentity": "Identitas Orchid",
+	"addFunds": "TAMBAH DANA",
+	"gb": "GB",
+	"usdgb": "USD/GB",
+	"hop": "Hop",
+	"circuit": "Sirkuit",
+	"clearAllAnalysisData": "Hapus semua data analisis?",
+	"thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "Tindakan ini akan menghapus semua data lalu lintas koneksi yang pernah dianalisa sebelumnya.",
+	"clearAll": "HAPUS SEMUA",
+	"stopAnalysis": "HENTIKAN ANALISIS",
+	"startAnalysis": "MULAI ANALISIS",
+	"orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "Akun Orchid menyediakan layanan bantuan pelanggan 24/7, tanpa batasan jumlah perangkat, dan didukung oleh <link2>mata uang kripto xDai</link2>.",
+	"purchasedAccountsConnectExclusivelyToOur": "Akun yang dibeli terhubung secara eksklusif ke <link1>penyedia pilihan</link1> kami.",
+	"refundPolicyCoveredByAppStores": "Kebijakan pengembalian dana dicakup oleh toko aplikasi.",
+	"orchidIsUnableToDisplayInappPurchasesAtThisTime": "Orchid tidak dapat menampilkan pembelian dalam aplikasi untuk saat ini.",
+	"pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "Harap konfirmasi bahwa perangkat ini mendukung dan terkonfigurasi untuk pembelian dalam aplikasi.",
+	"pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "Harap konfirmasi bahwa perangkat ini mendukung dan terkonfigurasi untuk pembelian dalam aplikasi, atau gunakan sistem <link>manajemen akun </link> terdesentralisasi kami.",
+	"buy": "BELI",
+	"gbApproximately12": "12GB (kira-kira)",
+	"gbApproximately60": "60GB (kira-kira)",
+	"gbApproximately240": "240GB (kira-kira)",
+	"idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "Cocok untuk penggunaan individu jangka menengah yang mencakup penjelajahan dan streaming ringan.",
+	"mostPopular": "Paling populer!",
+	"bandwidthheavyLongtermUsageOrSharedAccounts": "Penggunaan bandwidth berat, jangka panjang, atau akun bersama.",
+	"total": "Total",
+	"pausingAllTraffic": "Menjeda semua lalu lintas...",
+	"queryingEthereumForARandom": "Meminta Ethereum untuk penyedia acak...",
+	"quickFundAnAccount": "Danai akun dengan cepat!",
+	"accountFound": "Akun ditemukan",
+	"weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "Kami menemukan akun yang terkait dengan identitas Anda dan telah membuat sirkuit Orchid dengan hop tunggal untuk akun tersebut. Anda sekarang siap menggunakan VPN.",
+	"welcomeToOrchid": "Selamat datang di Orchid!",
+	"fundYourAccount": "Danai akun Anda",
+	"processing": "Memproses...",
+	"subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "Bebas langganan, bayar sesuai penggunaan, terdesentralisasi, layanan VPN sumber terbuka.",
+	"getStartedFor1": "MULAI CUMA DENGAN {smallAmount}",
+	"@getStartedFor1": {
+		"placeholders": {
+			"smallAmount": {
+				"type": "String"
+			}
+		}
+	},
+	"importAccount": "Impor Akun",
+	"illDoThisLater": "Lain kali",
+	"connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Terhubung secara otomatis ke salah satu <link1>penyedia pilihan</link1> jaringan dengan membeli kredit VPN untuk mendanai akun Orchid Anda yang dapat dibagikan dan diisi ulang.",
+	"confirmPurchase": "KONFIRMASI PEMBELIAN",
+	"orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Akun Orchid menggunakan kredit VPN yang didukung oleh <link>mata uang kripto xDAI</link>, menyediakan layanan bantuan pelanggan 24/7, memungkinkan Anda berbagi perangkat tanpa batas, dan dilindungi kebijakan pengembalian dana toko aplikasi.",
+	"yourPurchaseIsInProgress": "Pembelian Anda sedang diproses.",
+	"thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "Pembelian ini membutuhkan waktu lebih lama dari yang diperkirakan dan mungkin telah terjadi kesalahan.",
+	"thisMayTakeAMinute": "Dapat memakan waktu satu menit...",
+	"vpnCredits": "Kredit VPN",
+	"blockchainFee": "Biaya blockchain",
+	"promotion": "Promosi",
+	"showInAccountManager": "Tampilkan di pengelola akun",
+	"deleteThisOrchidIdentity": "Hapus identitas Orchid ini",
+	"chooseIdentity": "Pilih identitas",
+	"updatingAccounts": "Memperbarui akun",
+	"trafficAnalysis": "Analisis lalu lintas",
+	"accountManager": "Pengelola akun",
+	"circuitBuilder": "Pembuat sirkuit",
+	"exitHop": "Hop keluar",
+	"entryHop": "Hop masuk",
+	"addNewHop": "TAMBAHKAN HOP BARU",
+	"newCircuitBuilder": "Pembuat sirkuit baru!",
+	"youCanNowPayForAMultihopOrchidCircuitWith": "Anda sekarang dapat membayar untuk sirkuit Orchid multi-hop dengan xDAI. Antarmuka multi-hop sekarang mendukung akun xDAI dan OXT Orchid, dan masih mendukung konfigurasi OpenVPN dan WireGuard yang dapat dirangkai menjadi rute berlapis.",
+	"manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "Kelola koneksi Anda dari pembuat sirkuit, bukan dari pengelola akun. Semua koneksi sekarang menggunakan sirkuit dengan nol hop atau lebih banyak hop. Setiap konfigurasi yang ada telah dimigrasikan ke pembuat sirkuit.",
+	"quickStartFor1": "Mulai cepat cuma dengan {smallAmount}",
+	"@quickStartFor1": {
+		"placeholders": {
+			"smallAmount": {
+				"type": "String"
+			}
+		}
+	},
+	"weAddedAMethodToPurchaseAnOrchidAccountAnd": "Kami telah menambahkan cara untuk membeli akun Orchid dan membuat sirkuit dengan hop tunggal dari layar beranda untuk mempersingkat proses pengenalan.",
+	"orchidIsUniqueAsAMultiHopOrOnion": "Orchid bersifat unik sebagai klien perutean berlapis atau multi-hop karena mendukung banyak protokol VPN. Anda dapat mengatur koneksi Anda dengan menggabungkan berbagai hop dari protokol yang didukung di bawah ini.\n\nSatu hop itu seperti VPN biasa. Tiga hop (bagi pengguna tingkat lanjut) adalah pilihan klasik untuk perutean berlapis. Nol hop memungkinkan analisis lalu lintas tanpa tunnel VPN apa pun.",
+	"deletingOpenVPNAndWireguardHopsWillLose": "Menghapus hop OpenVPN dan WireGuard akan menghilangkan kredensial dan konfigurasi koneksi yang terkait. Pastikan Anda telah membuat cadangan untuk informasi tersebut sebelum melanjutkan.",
+	"thisCannotBeUndoneToSaveThisIdentity": "Tindakan ini tidak dapat dibatalkan. Untuk menyimpan identitas ini, tekan Batal dan gunakan opsi Ekspor",
+	"unlockTime": "Waktu sampai terbuka",
+	"chooseChain": "Pilih rantai",
+	"unlocking": "sedang dibuka",
+	"unlocked": "Terbuka",
+	"orchidTransaction": "Transaksi Orchid",
+	"confirmations": "Konfirmasi",
+	"pending": "Tertunda...",
+	"txHash": "Hash Tx:",
+	"allOfYourFundsAreAvailableForWithdrawal": "Semua dana Anda tersedia untuk ditarik.",
+	"maxWithdrawOfYourTotalFundsCombinedFunds": "{maxWithdraw} dari {totalFunds} dana gabungan Anda tersedia untuk ditarik saat ini.",
+	"@maxWithdrawOfYourTotalFundsCombinedFunds": {
+		"placeholders": {
+			"maxWithdraw": {
+				"type": "String"
+			},
+			"totalFunds": {
+				"type": "String"
+			}
+		}
+	},
+	"alsoUnlockRemainingDeposit": "Juga buka kunci deposito tersisa",
+	"ifYouSpecifyLessThanTheFullAmountFundsWill": "Jika kurang dari jumlah total ditentukan, dana akan ditarik dari saldo Anda lebih dahulu.",
+	"forAdditionalOptionsSeeTheAdvancedPanel": "Untuk opsi tambahan, lihat panel LANJUTAN.",
+	"ifYouSelectTheUnlockDepositOptionThisTransactionWill": "Jika Anda memilih opsi buka kunci deposito, transaksi ini akan segera menarik jumlah yang ditentukan dari saldo Anda dan juga memulai proses pembukaan kunci untuk deposito tersisa Anda.",
+	"depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "Dana deposito tersedia untuk ditarik 24 jam setelah pembukaan kunci.",
+	"withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Tarik dana dari akun Orchid ke dompet yang Anda gunakan saat ini.",
+	"withdrawAndUnlockFunds": "TARIK DAN BUKA KUNCI DANA",
+	"withdrawFunds": "TARIK DANA",
+	"withdraw": "Tarik mata uang",
+	"submitTransaction": "KIRIM TRANSAKSI",
+	"move": "Pindah",
+	"now": "Sekarang",
+	"amount": "Jumlah",
+	"available": "Tersedia",
+	"select": "Pilih",
+	"add": "TAMBAH",
+	"balanceToDeposit": "SALDO KE DEPOSITO",
+	"depositToBalance": "DEPOSITO KE SALDO",
+	"setWarnedAmount": "Tetapkan jumlah yang diperingatkan",
+	"addFundsToYourOrchidAccountBalanceAndorDeposit": "Tambahkan dana ke saldo dan/atau deposito akun Orchid Anda.",
+	"forGuidanceOnSizingYourAccountSee": "Untuk panduan ukuran akun, kunjungi <link>orchid.com</link>",
+	"currentTokenPreauthorizationAmount": "Pra-otorisasi {tokenType} saat ini: {amount}",
+	"@currentTokenPreauthorizationAmount": {
+		"placeholders": {
+			"tokenType": {
+				"type": "String"
+			},
+			"amount": {
+				"type": "String"
+			}
+		}
+	},
+	"noWallet": "Tidak ada dompet",
+	"noWalletOrBrowserNotSupported": "Tidak ada dompet atau browser tidak didukung.",
+	"error": "Kesalahan",
+	"failedToConnectToWalletconnect": "Gagal terhubung ke WalletConnect.",
+	"unknownChain": "Rantai tidak diketahui",
+	"theOrchidAccountManagerDoesntSupportThisChainYet": "Pengelola akun Orchid belum mendukung rantai ini.",
+	"orchidIsntOnThisChain": "Orchid tidak ada pada rantai ini.",
+	"theOrchidContractHasntBeenDeployedOnThisChainYet": "Kontrak Orchid belum diterapkan pada rantai ini.",
+	"moveFunds": "PINDAHKAN DANA",
+	"lockUnlock": "KUNCI / BUKA KUNCI",
+	"yourDepositOfAmountIsUnlocked": "Deposito Anda {amount} terbuka.",
+	"@yourDepositOfAmountIsUnlocked": {
+		"placeholders": {
+			"amount": {
+				"type": "String"
+			}
+		}
+	},
+	"locked": "terkunci",
+	"yourDepositOfAmountIsUnlockingOrUnlocked": "Deposito Anda {amount} {unlockingOrUnlocked}.",
+	"@yourDepositOfAmountIsUnlockingOrUnlocked": {
+		"placeholders": {
+			"amount": {
+				"type": "String"
+			},
+			"unlockingOrUnlocked": {
+				"type": "String"
+			}
+		}
+	},
+	"theFundsWillBeAvailableForWithdrawalInTime": "Dana akan tersedia untuk ditarik dalam ${time}.",
+	"@theFundsWillBeAvailableForWithdrawalInTime": {
+		"placeholders": {
+			"time": {
+				"type": "String"
+			}
+		}
+	},
+	"lockDeposit": "KUNCI DEPOSITO",
+	"unlockDeposit": "BUKA KUNCI DEPOSITO",
+	"advanced": "LANJUTAN",
+	"linklearnMoreAboutOrchidAccountslink": "<link>Pelajari lebih lanjut tentang akun Orchid</link>.",
+	"estimatedCostToCreateAnOrchidAccountWith": "Biaya yang diperkirakan untuk membuat akun Orchid dengan efisiensi {efficiency} dan {num} tiket nilai.",
+	"@estimatedCostToCreateAnOrchidAccountWith": {
+		"placeholders": {
+			"efficiency": {
+				"type": "String"
+			},
+			"num": {
+				"type": "int"
+			}
+		}
+	},
+	"chain": "Rantai",
+	"token": "Token",
+	"minDeposit": "Deposito min.",
+	"minBalance": "Saldo min.",
+	"fundFee": "Biaya pendanaan",
+	"withdrawFee": "Biaya penarikan",
+	"tokenValues": "NILAI TOKEN",
+	"usdPrices": "HARGA USD",
+	"settingAWarnedDepositAmountBeginsThe24HourWaiting": "Menetapkan jumlah deposito yang diperingatkan memulai masa tunggu 24 jam yang diperlukan untuk menarik dana deposito.",
+	"duringThisPeriodTheFundsAreNotAvailableAsA": "Selama periode ini, dana tidak tersedia sebagai deposito valid di jaringan Orchid.",
+	"fundsMayBeRelockedAtAnyTimeByReducingThe": "Dana dapat dikunci kembali kapan saja dengan mengurangi jumlah yang diperingatkan.",
+	"warn": "Peringatkan",
+	"totalWarnedAmount": "Jumlah total yang diperingatkan",
+	"contract": "Kontrak",
+	"deleteIdentity": "Hapus Identitas",
+	"exportIdentity": "Ekspor Identitas",
+	"funderAddress": "Alamat pemberi dana",
+	"importIdentity": "Impor Identitas",
+	"importOrchidIdentity": "Impor Identitas Anggrek",
+	"newIdentity": "Identitas Baru",
+	"txFee": "Tx Biaya"
 }

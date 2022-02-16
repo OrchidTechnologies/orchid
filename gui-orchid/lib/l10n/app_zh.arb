@@ -1,437 +1,445 @@
 {
-  "@@locale": "zh",
-  "@newHop": {
-    "description": "New network hop"
-  },
-  "orchidHop": "Orchid 跃点",
-  "@orchidHop": {
-    "description": "Orchid network hop"
-  },
-  "orchidDisabled": "Orchid 已禁用",
-  "trafficMonitoringOnly": "仅进行流量监控",
-  "orchidConnecting": "正在连接 Orchid",
-  "orchidDisconnecting": "正在断开连接 Orchid",
-  "numHopsConfigured": "{num, plural, =0{未配置跃点} =1{一个已配置跃点} =2{二个已配置跃点} other{{num} 个已配置跃点}}",
-  "@numHopsConfigured": {
-    "type": "text",
-    "placeholders": {
-      "num": {
-        "type": "int"
-      }
-    }
-  },
-  "delete": "删除",
-  "orchid": "Orchid",
-  "openVPN": "OpenVPN",
-  "hops": "跃点",
-  "@hops": {
-    "description": "Network hops"
-  },
-  "traffic": "流量",
-  "@traffic": {
-    "description": "Network traffic"
-  },
-  "curation": "数据监管",
-  "signerKey": "签名者密钥",
-  "copy": "复制",
-  "paste": "粘贴",
-  "deposit": "存款",
-  "curator": "数据提供者",
-  "ok": "好",
-  "settingsButtonTitle": "设置",
-  "confirmThisAction": "确认此操作",
-  "cancelButtonTitle": "取消",
-  "changesWillTakeEffectInstruction": "重新启动 VPN 后，更改将随之生效。",
-  "saved": "已保存",
-  "configurationSaved": "配置已保存",
-  "whoops": "糟糕",
-  "configurationFailedInstruction": "无法保存配置，请重试。",
-  "addHop": "添加跃点",
-  "scan": "扫描",
-  "invalidQRCode": "无效二维码",
-  "theQRCodeYouScannedDoesNot": "您扫描的二维码未包含有效帐户配置。",
-  "invalidCode": "无效代码",
-  "theCodeYouPastedDoesNot": "您粘贴的代码未包含有效帐户配置。",
-  "openVPNHop": "OpenVPN 跃点",
-  "username": "用户名",
-  "password": "密码",
-  "config": "配置",
-  "pasteYourOVPN": "请在此处粘贴 OVPN 配置",
-  "enterYourCredentials": "输入您的凭据",
-  "enterLoginInformationInstruction": "输入以上 VPN 提供商的登录信息，然后粘贴提供商的 OpenVPN 配置文件内容至所提供的字段中。",
-  "save": "保存",
-  "help": "帮助",
-  "privacyPolicy": "隐私政策",
-  "openSourceLicenses": "开源许可",
-  "settings": "设置",
-  "version": "版本",
-  "noVersion": "无版本",
-  "orchidOverview": "Orchid 概述",
-  "defaultCurator": "默认数据提供人",
-  "queryBalances": "查询余额",
-  "reset": "重置",
-  "manageConfiguration": "管理配置",
-  "warningThesefeature": "警告： 这些功能仅适用于高级用户。 请阅读所有说明。",
-  "exportHopsConfiguration": "导出跃点配置",
-  "export": "导出",
-  "warningExportedConfiguration": "警告： 导出的配置包括已导出跃点的签名者私钥。 泄露私钥可能导致您损失相关 Orchid 帐户中的所有资金。",
-  "importHopsConfiguration": "导入跃点配置",
-  "import": "导入",
-  "warningImportedConfiguration": "警告： 导入的配置将替换您在应用中创建的任何现有跃点。 以前在此设备上生成或导入的签名者密钥将保留，且仍然可用于创建新跃点，但所有其他配置（包括 OpenVPN 跃点配置）都将丢失。",
-  "configuration": "配置",
-  "saveButtonTitle": "保存",
-  "search": "搜索",
-  "newContent": "新内容",
-  "clear": "清除",
-  "connectionDetail": "连接详情",
-  "host": "主机",
-  "time": "时间",
-  "sourcePort": "源端口",
-  "destination": "目的地",
-  "destinationPort": "目的端口",
-  "generateNewKey": "生成新密钥",
-  "importKey": "导入密钥",
-  "nothingToDisplayYet": "尚无内容可供显示。存在可显示内容时，将于此处显示流量。",
-  "disconnecting": "断开连接...",
-  "connecting": "连接中",
-  "pushToConnect": "按下即可连接。",
-  "orchidIsRunning": "兰花正在运行中！",
-  "pacPurchaseWaiting": "购买等待",
-  "retry": "重试",
-  "getHelpResolvingIssue": "获取解决此问题的帮助。",
-  "copyDebugInfo": "复制调试信息",
-  "contactOrchid": "联系兰花",
-  "remove": "去掉",
-  "deleteTransaction": "删除交易",
-  "clearThisInProgressTransactionExplain": "清除正在进行的操作。或无法退还您的应用内购买。您必须与Orchid联系以解决问题。",
-  "preparingPurchase": "准备购买",
-  "retryingPurchasedPAC": "重试购买中",
-  "retryPurchasedPAC": "重试购买",
-  "purchaseError": "购买错误",
-  "thereWasAnErrorInPurchasingContact": "购买时出错。请联系兰花支持。",
-  "importAnOrchidAccount": "导入兰花帐户",
-  "buyCredits": "购买积分",
-  "@gb": {
-    "description": "Gigabytes"
-  },
-  "@ofTraffic": {
-    "description": "GB of traffic"
-  },
-  "linkAnOrchidAccount": "关联兰花帐户",
-  "weAreSorryButThisPurchaseWouldExceedTheDaily": "很抱歉，这次购买将超出访问积分的每日购买限额。请稍后再试。",
-  "marketStats": "市场统计",
-  "balanceTooLow": "低余额",
-  "depositSizeTooSmall": "存款额太小",
-  "yourMaxTicketValueIsCurrentlyLimitedByYourBalance": "您的最高使用价值目前受您的余额限制",
-  "yourMaxTicketValueIsCurrentlyLimitedByYourDeposit": "您的最高使用价值目前受您的存款限制",
-  "considerAddingOxtToYourAccountBalance": "考虑将OXT添加到您的帐户余额中。",
-  "considerAddingOxtToYourDepositOrMovingFundsFrom": "考虑将OXT添加到您的存款中，或将资金从余额中转移到您的存款中。",
-  "prices": "价格",
-  "ticketValue": "使用价值",
-  "costToRedeem": "兑换费用：",
-  "viewTheDocsForHelpOnThisIssue": "查看文档以获取相关问题的帮助。",
-  "goodForBrowsingAndLightActivity": "适合网页浏览和低带宽活动",
-  "learnMore": "了解更多……",
-  "connect": "连接",
-  "disconnect": "断开",
-  "wireguardHop": "WireGuard Hop",
-  "pasteYourWireguardConfigFileHere": "在此处粘贴您的WireGuard配置文件",
-  "pasteTheCredentialInformationForYourWireguardProviderIntoThe": "将WireGuard提供程序的凭据信息粘贴到上面的字段中。",
-  "wireguard": "线路保护",
-  "clearAllLogData": "清除所有日志数据？",
-  "thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "该日志调试为非永久性，并且在退出应用程序时会清除。",
-  "itMayContainSecretOrPersonallyIdentifyingInformation": "它或包含隐私或个人识别信息。",
-  "loggingEnabled": "启用记录",
-  "cancel": "取消",
-  "logging": "记录中",
-  "loading": "载入中......",
-  "ethPrice": "ETH价格：",
-  "oxtPrice": "OXT价格：",
-  "gasPrice": "gas费用：",
-  "maxFaceValue": "最大面值：",
-  "confirmDelete": "确认删除",
-  "enterOpenvpnConfig": "输入 OpenVPN Config",
-  "enterWireguardConfig": "输入WireGuard®️ Config",
-  "starting": "启动中...",
-  "legal": "法律事项",
-  "whatsNewInOrchid": "Orchid 更新摘要",
-  "orchidIsOnXdai": "Orchid 已入驻 xDai！",
-  "youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "您现在可以在 xDai 上购买 Orchid 积分！只需 1 美元即可开始使用 VPN。",
-  "xdaiAccountsForPastPurchases": "xDai 帐户亦可用于过去的购买",
-  "forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "针对今天之前进行的任何应用内购买，xDai 资金已添加到同一帐户密钥中。请安心使用带宽！",
-  "newInterface": "新界面",
-  "accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "现在，帐户于其关联的 Orchid 地址下进行管理。",
-  "seeYourActiveAccountBalanceAndBandwidthCostOnThe": "请在主页界面上查看您的活动帐户余额和带宽费用。",
-  "seeOrchidcomForHelp": "请登录 orchid.com 查看帮助。",
-  "payPerUseVpnService": "按使用付费 VPN 服务",
-  "notASubscriptionCreditsDontExpire": "无需订阅，且积分不会过期",
-  "shareAccountWithUnlimitedDevices": "可以在无限数量的设备上共享帐户",
-  "theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Orchid Store 暂时不可用。请于几分钟后查看。",
-  "talkingToPacServer": "正在与 Orchid 帐户服务器通信中",
-  "advancedConfiguration": "高级配置",
-  "newWord": "新",
-  "copied": "已复制",
-  "efficiency": "效率",
-  "minTicketsAvailableTickets": "可用的最低使用价值：{tickets}",
-  "@minTicketsAvailableTickets": {
-    "placeholders": {
-      "tickets": {
-        "type": "int"
-      }
-    }
-  },
-  "transactionSentToBlockchain": "交易已发送到区块链",
-  "yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "您已完成购买，现在由 xDai 区块链处理，这可能需要一分钟，有时甚至需要更长时间。请下拉刷新，下方将显示余额更新后的帐户。",
-  "copyReceipt": "复制回执",
-  "manageAccounts": "管理帐户",
-  "configurationManagement": "配置管理",
-  "exportThisOrchidKey": "导出此 Orchid 密钥",
-  "aQrCodeAndTextForAllTheOrchidAccounts": "以下请见与此密钥关联的所有 Orchid 帐户的二维码和文本。",
-  "importThisKeyOnAnotherDeviceToShareAllThe": "在另一台设备上导入此密钥，以在与此 Orchid ID 关联的所有 Orchid 帐户中共享。",
-  "orchidAccountInUse": "在用的 Orchid 帐户",
-  "thisOrchidAccountIsInUseAndCannotBeDeleted": "此 Orchid 帐户正在使用中，无法删除。",
-  "pullToRefresh": "下拉刷新。",
-  "balance": "余额",
-  "active": "活动",
-  "pasteAnOrchidKeyFromTheClipboardToImportAll": "从剪贴板上粘贴 Orchid 密钥，以导入与该密钥关联的所有 Orchid 帐户。",
-  "scanOrPasteAnOrchidKeyFromTheClipboardTo": "扫描或粘贴剪贴板上的 Orchid 密钥，以导入与该密钥关联的所有 Orchid 帐户。",
-  "account": "帐户",
-  "transactions": "交易",
-  "weRecommendBackingItUp": "我们建议您<link>备份</link>。",
-  "copiedOrchidIdentity": "已复制 Orchid ID",
-  "thisIsNotAWalletAddress": "这不是一个钱包地址。",
-  "doNotSendTokensToThisAddress": "不要将代币发送到此地址。",
-  "yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "您的 Orchid ID 是网络上识别您的唯一信息。",
-  "learnMoreAboutYourLinkorchidIdentitylink": "了解更多关于您的 <link>Orchid ID</link> 的信息。",
-  "analyzingYourConnections": "正在分析连接数据",
-  "analyzeYourConnections": "分析连接数据",
-  "networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "网络分析使用您设备的 VPN 设施捕获数据包并分析您的流量。",
-  "networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "网络分析需要 VPN 权限，但其本身并不能保护您的数据或隐藏您的 IP 地址。",
-  "toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "要获得网络隐私保护，您必须从主页界面配置并激活 VPN 连接。",
-  "turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "打开此功能将增加 Orchid 应用的电池耗电量。",
-  "useAnOrchidAccount": "使用 Orchid 帐户",
-  "pasteAddress": "粘贴地址",
-  "chooseAddress": "选择地址",
-  "chooseAnOrchidAccountToUseWithThisHop": "选择用于此跃点的 Orchid 帐户。",
-  "ifYouDontSeeYourAccountBelowYouCanUse": "如果在下面没有看到您的帐户，可使用帐户管理器导入、购买或创建一个新帐户。",
-  "selectAnOrchidAccount": "选择 Orchid 帐户",
-  "takeMeToTheAccountManager": "前往“帐户管理器”",
-  "funderAccount": "出资人帐户",
-  "orchidRunningAndAnalyzing": "Orchid 正在运行及分析",
-  "startingVpn": "（正在启动 VPN）",
-  "disconnectingVpn": "（正在断开 VPN）",
-  "orchidAnalyzingTraffic": "Orchid 正在分析流量",
-  "vpnConnectedButNotRouting": "（VPN 已连接但未路由）",
-  "restarting": "正在进行重启",
-  "changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "更改监控状态需要重新启动 VPN，这可能会短暂中断隐私保护。",
-  "confirmRestart": "确认重新启动",
-  "averagePriceIsUSDPerGb": "平均价格为每 GB {price} 美元",
-  "@averagePriceIsUSDPerGb": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "myOrchidConfig": "我的 Orchid 配置",
-  "noAccountSelected": "未选择帐户",
-  "inactive": "非活跃",
-  "tickets": "彩币",
-  "accounts": "帐户",
-  "orchidIdentity": "Orchid ID",
-  "addFunds": "充值",
-  "gb": "GB",
-  "usdgb": "美元/GB",
-  "hop": "跃点",
-  "circuit": "线路",
-  "clearAllAnalysisData": "清除所有分析数据？",
-  "thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "此操作将清除所有先前分析的流量连接数据。",
-  "clearAll": "全部清除",
-  "stopAnalysis": "停止分析",
-  "startAnalysis": "开始分析",
-  "orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "Orchid 帐户提供 7 天/24 小时客户支持，不限设备数量，并支持 <link2>xDai 加密货币</link2>。",
-  "purchasedAccountsConnectExclusivelyToOur": "已购买的帐户将仅连接到我们的<link1>首选提供商</link1>。",
-  "refundPolicyCoveredByAppStores": "应用商店提供退款政策。",
-  "orchidIsUnableToDisplayInappPurchasesAtThisTime": "Orchid 目前无法显示 App 内购买功能。",
-  "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "请确认此设备支持 App 内购买功能并经过适当配置。",
-  "pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "请确认此设备支持 App 内购买功能并经过适当配置，或者使用我们去中心化的<link>帐户管理</link>系统。",
-  "buy": "购买",
-  "gbApproximately12": "12GB（近似值）",
-  "gbApproximately60": "60GB（近似值）",
-  "gbApproximately240": "240GB（近似值）",
-  "idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "非常适合中期个人使用，包括网络浏览和轻度流媒体使用。",
-  "mostPopular": "最受欢迎！",
-  "bandwidthheavyLongtermUsageOrSharedAccounts": "适合带宽要求大、长期使用或共享帐户。",
-  "total": "合计",
-  "pausingAllTraffic": "暂停所有流量...",
-  "queryingEthereumForARandom": "查询以太坊以获取随机提供商...",
-  "quickFundAnAccount": "快速为帐户充值！",
-  "accountFound": "已找到帐户",
-  "weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "我们找到了一个与您的 ID 相关联的帐户，并为其创建了一个单跃点 Orchid 线路。您现在可以开始使用 VPN。",
-  "welcomeToOrchid": "欢迎使用 Orchid！",
-  "fundYourAccount": "为您的帐户充值",
-  "processing": "正在处理...",
-  "subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "VPN 服务：免订阅、按需付费、去中心化、开源。",
-  "getStartedFor1": "仅需 {smallAmount} 即可开始体验",
-  "@getStartedFor1": {
-    "placeholders": {
-      "smallAmount": {
-        "type": "String"
-      }
-    }
-  },
-  "importAccount": "导入帐户",
-  "illDoThisLater": "暂时跳过",
-  "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Orchid 帐户可共享、可再充值，您可以购买 VPN 积分来充值，以便自动连接到网络<link1>首选提供商</link1>。",
-  "confirmPurchase": "确认购买",
-  "orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Orchid 帐户使用由 <link>xDAI 加密货币</link>提供支持的 VPN 积分，并提供 7 天/24 小时客户支持、无限设备共享和应用商店退款政策保障。",
-  "yourPurchaseIsInProgress": "您的购买正在处理中。",
-  "thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "此次购买的处理时间比预期的更长，可能遇到了错误。",
-  "thisMayTakeAMinute": "请稍候...",
-  "vpnCredits": "VPN 积分",
-  "blockchainFee": "区块链费用",
-  "promotion": "促销",
-  "showInAccountManager": "在“帐户管理器”中显示",
-  "deleteThisOrchidIdentity": "删除此 Orchid ID",
-  "chooseIdentity": "选择 ID",
-  "updatingAccounts": "正在更新帐户",
-  "trafficAnalysis": "流量分析",
-  "accountManager": "帐户管理器",
-  "circuitBuilder": "线路生成器",
-  "exitHop": "出口跃点",
-  "entryHop": "入口跃点",
-  "addNewHop": "添加新跃点",
-  "newCircuitBuilder": "新的线路生成器！",
-  "youCanNowPayForAMultihopOrchidCircuitWith": "您现在可以使用 xDAI 支付多跃点 Orchid 线路的费用。多跃点界面现在支持 xDAI 和 OXT Orchid 帐户，并且仍然支持 OpenVPN 和 WireGuard 配置，它们可以串起来形成一个“洋葱路由”。",
-  "manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "您可以从“线路生成器”而非“帐户管理器”中管理您的连接。所有连接现在都使用零或多跃点的线路。任何现有配置都已迁移到“线路生成器”。",
-  "quickStartFor1": "仅需 {smallAmount} 即可快速开启体验之旅",
-  "@quickStartFor1": {
-    "placeholders": {
-      "smallAmount": {
-        "type": "String"
-      }
-    }
-  },
-  "weAddedAMethodToPurchaseAnOrchidAccountAnd": "我们增加了一种购买 Orchid 帐户的方法，并从主页创建单跃点线路，方便您更快上手。",
-  "orchidIsUniqueAsAMultiHopOrOnion": "Orchid 是一个独一无二的多跃点或洋葱路由客户端，支持多种 VPN 协议。您可以将以下受支持协议中的跃点链接在一起来建立连接。\n\n一个跃点就像一个普通的 VPN。选择三个跃点（用于高级用户）即是经典的洋葱路由。如果是零跃点，则允许在没有任何 VPN 隧道的情况下进行流量分析。",
-  "deletingOpenVPNAndWireguardHopsWillLose": "删除 OpenVPN 和 Wireguard 跃点将丢失任何关联的凭据和连接配置。在继续之前，请务必备份所有信息。",
-  "thisCannotBeUndoneToSaveThisIdentity": "此操作无法撤消。要保存此 ID，请点击“取消”并使用“导出”选项",
-  "unlockTime": "解锁时间",
-  "chooseChain": "选择链",
-  "unlocking": "解锁",
-  "unlocked": "已解锁",
-  "orchidTransaction": "Orchid 交易",
-  "confirmations": "确认",
-  "pending": "待定...",
-  "txHash": "交易哈希值：",
-  "allOfYourFundsAreAvailableForWithdrawal": "您的所有资金均可提取。",
-  "maxWithdrawOfYourTotalFundsCombinedFunds": "您的 {totalFunds} 综合资金中目前有 {maxWithdraw} 可以提取。",
-  "@maxWithdrawOfYourTotalFundsCombinedFunds": {
-    "placeholders": {
-      "maxWithdraw": {
-        "type": "String"
-      },
-      "totalFunds": {
-        "type": "String"
-      }
-    }
-  },
-  "alsoUnlockRemainingDeposit": "同时解锁剩余存款",
-  "ifYouSpecifyLessThanTheFullAmountFundsWill": "如果您指定的金额少于总金额，资金将首先从您的余额中提取。",
-  "forAdditionalOptionsSeeTheAdvancedPanel": "其他选项详见“高级”面板。",
-  "ifYouSelectTheUnlockDepositOptionThisTransactionWill": "如果您选择“解锁存款”选项，此交易将立即从您的余额中提取指定金额，并针对您剩余的存款启动解锁程序。",
-  "depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "在解锁之后，存款资金可在 24 小时内提取。",
-  "withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "从您的 Orchid 帐户提取资金到当前钱包。",
-  "withdrawAndUnlockFunds": "提取并解锁资金",
-  "withdrawFunds": "提取资金",
-  "withdraw": "提取",
-  "submitTransaction": "提交交易",
-  "move": "转移",
-  "now": "现在",
-  "amount": "金额",
-  "available": "可用",
-  "select": "选择",
-  "add": "添加",
-  "balanceToDeposit": "余额至存款",
-  "depositToBalance": "存款至余额",
-  "setWarnedAmount": "设置警告金额",
-  "addFundsToYourOrchidAccountBalanceAndorDeposit": "将资金添加到您的 Orchid 帐户余额和/或存款中。",
-  "forGuidanceOnSizingYourAccountSee": "有关帐户金额大小的指南，详见 <link>orchid.com</link>",
-  "currentTokenPreauthorizationAmount": "当前{tokenType}预授权：{amount}",
-  "@currentTokenPreauthorizationAmount": {
-    "placeholders": {
-      "tokenType": {
-        "type": "String"
-      },
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "noWallet": "无钱包",
-  "noWalletOrBrowserNotSupported": "无钱包或浏览器不受支持。",
-  "error": "错误",
-  "failedToConnectToWalletconnect": "无法连接 WalletConnect。",
-  "unknownChain": "未知链",
-  "theOrchidAccountManagerDoesntSupportThisChainYet": "Orchid 帐户管理器尚不支持此链。",
-  "orchidIsntOnThisChain": "Orchid 未入驻此链！",
-  "theOrchidContractHasntBeenDeployedOnThisChainYet": "此链尚未部署 Orchid 合约。",
-  "moveFunds": "转移资金",
-  "lockUnlock": "锁定 / 解锁",
-  "yourDepositOfAmountIsUnlocked": "您的 {amount}存款已解锁。",
-  "@yourDepositOfAmountIsUnlocked": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "locked": "已锁定",
-  "yourDepositOfAmountIsUnlockingOrUnlocked": "您的 {amount}存款已{unlockingOrUnlocked}。",
-  "@yourDepositOfAmountIsUnlockingOrUnlocked": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      },
-      "unlockingOrUnlocked": {
-        "type": "String"
-      }
-    }
-  },
-  "theFundsWillBeAvailableForWithdrawalInTime": "资金可以在 ${time} 内提取。",
-  "@theFundsWillBeAvailableForWithdrawalInTime": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "lockDeposit": "锁定存款",
-  "unlockDeposit": "解锁存款",
-  "advanced": "高级",
-  "linklearnMoreAboutOrchidAccountslink": "<link>了解更多有关 Orchid 帐户的信息</link>。",
-  "estimatedCostToCreateAnOrchidAccountWith": "创建一个效率为 {efficiency}、价值为 {num} 个彩币的 Orchid 帐户。",
-  "@estimatedCostToCreateAnOrchidAccountWith": {
-    "placeholders": {
-      "efficiency": {
-        "type": "String"
-      },
-      "num": {
-        "type": "int"
-      }
-    }
-  },
-  "chain": "区块链",
-  "token": "通证",
-  "minDeposit": "最低存款",
-  "minBalance": "最低余额",
-  "fundFee": "资金费",
-  "withdrawFee": "提取费",
-  "tokenValues": "通证价值",
-  "usdPrices": "美元价",
-  "settingAWarnedDepositAmountBeginsThe24HourWaiting": "设置警告存款金额将会开启一个用于提取存款资金的 24 小时等待期，",
-  "duringThisPeriodTheFundsAreNotAvailableAsA": "在该等待期内，资金不可作为 Orchid 网络中的有效存款。",
-  "fundsMayBeRelockedAtAnyTimeByReducingThe": "通过减少警告金额可以随时重新锁定资金。",
-  "warn": "警告",
-  "totalWarnedAmount": "警告总金额"
+	"@@locale": "zh",
+	"@newHop": {
+		"description": "New network hop"
+	},
+	"orchidHop": "Orchid 跃点",
+	"@orchidHop": {
+		"description": "Orchid network hop"
+	},
+	"orchidDisabled": "Orchid 已禁用",
+	"trafficMonitoringOnly": "仅进行流量监控",
+	"orchidConnecting": "正在连接 Orchid",
+	"orchidDisconnecting": "正在断开连接 Orchid",
+	"numHopsConfigured": "{num, plural, =0{未配置跃点} =1{一个已配置跃点} =2{二个已配置跃点} other{{num} 个已配置跃点}}",
+	"@numHopsConfigured": {
+		"type": "text",
+		"placeholders": {
+			"num": {
+				"type": "int"
+			}
+		}
+	},
+	"delete": "删除",
+	"orchid": "Orchid",
+	"openVPN": "OpenVPN",
+	"hops": "跃点",
+	"@hops": {
+		"description": "Network hops"
+	},
+	"traffic": "流量",
+	"@traffic": {
+		"description": "Network traffic"
+	},
+	"curation": "数据监管",
+	"signerKey": "签名者密钥",
+	"copy": "复制",
+	"paste": "粘贴",
+	"deposit": "存款",
+	"curator": "数据提供者",
+	"ok": "好",
+	"settingsButtonTitle": "设置",
+	"confirmThisAction": "确认此操作",
+	"cancelButtonTitle": "取消",
+	"changesWillTakeEffectInstruction": "重新启动 VPN 后，更改将随之生效。",
+	"saved": "已保存",
+	"configurationSaved": "配置已保存",
+	"whoops": "糟糕",
+	"configurationFailedInstruction": "无法保存配置，请重试。",
+	"addHop": "添加跃点",
+	"scan": "扫描",
+	"invalidQRCode": "无效二维码",
+	"theQRCodeYouScannedDoesNot": "您扫描的二维码未包含有效帐户配置。",
+	"invalidCode": "无效代码",
+	"theCodeYouPastedDoesNot": "您粘贴的代码未包含有效帐户配置。",
+	"openVPNHop": "OpenVPN 跃点",
+	"username": "用户名",
+	"password": "密码",
+	"config": "配置",
+	"pasteYourOVPN": "请在此处粘贴 OVPN 配置",
+	"enterYourCredentials": "输入您的凭据",
+	"enterLoginInformationInstruction": "输入以上 VPN 提供商的登录信息，然后粘贴提供商的 OpenVPN 配置文件内容至所提供的字段中。",
+	"save": "保存",
+	"help": "帮助",
+	"privacyPolicy": "隐私政策",
+	"openSourceLicenses": "开源许可",
+	"settings": "设置",
+	"version": "版本",
+	"noVersion": "无版本",
+	"orchidOverview": "Orchid 概述",
+	"defaultCurator": "默认数据提供人",
+	"queryBalances": "查询余额",
+	"reset": "重置",
+	"manageConfiguration": "管理配置",
+	"warningThesefeature": "警告： 这些功能仅适用于高级用户。 请阅读所有说明。",
+	"exportHopsConfiguration": "导出跃点配置",
+	"export": "导出",
+	"warningExportedConfiguration": "警告： 导出的配置包括已导出跃点的签名者私钥。 泄露私钥可能导致您损失相关 Orchid 帐户中的所有资金。",
+	"importHopsConfiguration": "导入跃点配置",
+	"import": "导入",
+	"warningImportedConfiguration": "警告： 导入的配置将替换您在应用中创建的任何现有跃点。 以前在此设备上生成或导入的签名者密钥将保留，且仍然可用于创建新跃点，但所有其他配置（包括 OpenVPN 跃点配置）都将丢失。",
+	"configuration": "配置",
+	"saveButtonTitle": "保存",
+	"search": "搜索",
+	"newContent": "新内容",
+	"clear": "清除",
+	"connectionDetail": "连接详情",
+	"host": "主机",
+	"time": "时间",
+	"sourcePort": "源端口",
+	"destination": "目的地",
+	"destinationPort": "目的端口",
+	"generateNewKey": "生成新密钥",
+	"importKey": "导入密钥",
+	"nothingToDisplayYet": "尚无内容可供显示。存在可显示内容时，将于此处显示流量。",
+	"disconnecting": "断开连接...",
+	"connecting": "连接中",
+	"pushToConnect": "按下即可连接。",
+	"orchidIsRunning": "兰花正在运行中！",
+	"pacPurchaseWaiting": "购买等待",
+	"retry": "重试",
+	"getHelpResolvingIssue": "获取解决此问题的帮助。",
+	"copyDebugInfo": "复制调试信息",
+	"contactOrchid": "联系兰花",
+	"remove": "去掉",
+	"deleteTransaction": "删除交易",
+	"clearThisInProgressTransactionExplain": "清除正在进行的操作。或无法退还您的应用内购买。您必须与Orchid联系以解决问题。",
+	"preparingPurchase": "准备购买",
+	"retryingPurchasedPAC": "重试购买中",
+	"retryPurchasedPAC": "重试购买",
+	"purchaseError": "购买错误",
+	"thereWasAnErrorInPurchasingContact": "购买时出错。请联系兰花支持。",
+	"importAnOrchidAccount": "导入兰花帐户",
+	"buyCredits": "购买积分",
+	"@gb": {
+		"description": "Gigabytes"
+	},
+	"@ofTraffic": {
+		"description": "GB of traffic"
+	},
+	"linkAnOrchidAccount": "关联兰花帐户",
+	"weAreSorryButThisPurchaseWouldExceedTheDaily": "很抱歉，这次购买将超出访问积分的每日购买限额。请稍后再试。",
+	"marketStats": "市场统计",
+	"balanceTooLow": "低余额",
+	"depositSizeTooSmall": "存款额太小",
+	"yourMaxTicketValueIsCurrentlyLimitedByYourBalance": "您的最高使用价值目前受您的余额限制",
+	"yourMaxTicketValueIsCurrentlyLimitedByYourDeposit": "您的最高使用价值目前受您的存款限制",
+	"considerAddingOxtToYourAccountBalance": "考虑将OXT添加到您的帐户余额中。",
+	"considerAddingOxtToYourDepositOrMovingFundsFrom": "考虑将OXT添加到您的存款中，或将资金从余额中转移到您的存款中。",
+	"prices": "价格",
+	"ticketValue": "使用价值",
+	"costToRedeem": "兑换费用：",
+	"viewTheDocsForHelpOnThisIssue": "查看文档以获取相关问题的帮助。",
+	"goodForBrowsingAndLightActivity": "适合网页浏览和低带宽活动",
+	"learnMore": "了解更多……",
+	"connect": "连接",
+	"disconnect": "断开",
+	"wireguardHop": "WireGuard Hop",
+	"pasteYourWireguardConfigFileHere": "在此处粘贴您的WireGuard配置文件",
+	"pasteTheCredentialInformationForYourWireguardProviderIntoThe": "将WireGuard提供程序的凭据信息粘贴到上面的字段中。",
+	"wireguard": "线路保护",
+	"clearAllLogData": "清除所有日志数据？",
+	"thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "该日志调试为非永久性，并且在退出应用程序时会清除。",
+	"itMayContainSecretOrPersonallyIdentifyingInformation": "它或包含隐私或个人识别信息。",
+	"loggingEnabled": "启用记录",
+	"cancel": "取消",
+	"logging": "记录中",
+	"loading": "载入中......",
+	"ethPrice": "ETH价格：",
+	"oxtPrice": "OXT价格：",
+	"gasPrice": "gas费用：",
+	"maxFaceValue": "最大面值：",
+	"confirmDelete": "确认删除",
+	"enterOpenvpnConfig": "输入 OpenVPN Config",
+	"enterWireguardConfig": "输入WireGuard®️ Config",
+	"starting": "启动中...",
+	"legal": "法律事项",
+	"whatsNewInOrchid": "Orchid 更新摘要",
+	"orchidIsOnXdai": "Orchid 已入驻 xDai！",
+	"youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "您现在可以在 xDai 上购买 Orchid 积分！只需 1 美元即可开始使用 VPN。",
+	"xdaiAccountsForPastPurchases": "xDai 帐户亦可用于过去的购买",
+	"forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "针对今天之前进行的任何应用内购买，xDai 资金已添加到同一帐户密钥中。请安心使用带宽！",
+	"newInterface": "新界面",
+	"accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "现在，帐户于其关联的 Orchid 地址下进行管理。",
+	"seeYourActiveAccountBalanceAndBandwidthCostOnThe": "请在主页界面上查看您的活动帐户余额和带宽费用。",
+	"seeOrchidcomForHelp": "请登录 orchid.com 查看帮助。",
+	"payPerUseVpnService": "按使用付费 VPN 服务",
+	"notASubscriptionCreditsDontExpire": "无需订阅，且积分不会过期",
+	"shareAccountWithUnlimitedDevices": "可以在无限数量的设备上共享帐户",
+	"theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Orchid Store 暂时不可用。请于几分钟后查看。",
+	"talkingToPacServer": "正在与 Orchid 帐户服务器通信中",
+	"advancedConfiguration": "高级配置",
+	"newWord": "新",
+	"copied": "已复制",
+	"efficiency": "效率",
+	"minTicketsAvailableTickets": "可用的最低使用价值：{tickets}",
+	"@minTicketsAvailableTickets": {
+		"placeholders": {
+			"tickets": {
+				"type": "int"
+			}
+		}
+	},
+	"transactionSentToBlockchain": "交易已发送到区块链",
+	"yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "您已完成购买，现在由 xDai 区块链处理，这可能需要一分钟，有时甚至需要更长时间。请下拉刷新，下方将显示余额更新后的帐户。",
+	"copyReceipt": "复制回执",
+	"manageAccounts": "管理帐户",
+	"configurationManagement": "配置管理",
+	"exportThisOrchidKey": "导出此 Orchid 密钥",
+	"aQrCodeAndTextForAllTheOrchidAccounts": "以下请见与此密钥关联的所有 Orchid 帐户的二维码和文本。",
+	"importThisKeyOnAnotherDeviceToShareAllThe": "在另一台设备上导入此密钥，以在与此 Orchid ID 关联的所有 Orchid 帐户中共享。",
+	"orchidAccountInUse": "在用的 Orchid 帐户",
+	"thisOrchidAccountIsInUseAndCannotBeDeleted": "此 Orchid 帐户正在使用中，无法删除。",
+	"pullToRefresh": "下拉刷新。",
+	"balance": "余额",
+	"active": "活动",
+	"pasteAnOrchidKeyFromTheClipboardToImportAll": "从剪贴板上粘贴 Orchid 密钥，以导入与该密钥关联的所有 Orchid 帐户。",
+	"scanOrPasteAnOrchidKeyFromTheClipboardTo": "扫描或粘贴剪贴板上的 Orchid 密钥，以导入与该密钥关联的所有 Orchid 帐户。",
+	"account": "帐户",
+	"transactions": "交易",
+	"weRecommendBackingItUp": "我们建议您<link>备份</link>。",
+	"copiedOrchidIdentity": "已复制 Orchid ID",
+	"thisIsNotAWalletAddress": "这不是一个钱包地址。",
+	"doNotSendTokensToThisAddress": "不要将代币发送到此地址。",
+	"yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "您的 Orchid ID 是网络上识别您的唯一信息。",
+	"learnMoreAboutYourLinkorchidIdentitylink": "了解更多关于您的 <link>Orchid ID</link> 的信息。",
+	"analyzingYourConnections": "正在分析连接数据",
+	"analyzeYourConnections": "分析连接数据",
+	"networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "网络分析使用您设备的 VPN 设施捕获数据包并分析您的流量。",
+	"networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "网络分析需要 VPN 权限，但其本身并不能保护您的数据或隐藏您的 IP 地址。",
+	"toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "要获得网络隐私保护，您必须从主页界面配置并激活 VPN 连接。",
+	"turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "打开此功能将增加 Orchid 应用的电池耗电量。",
+	"useAnOrchidAccount": "使用 Orchid 帐户",
+	"pasteAddress": "粘贴地址",
+	"chooseAddress": "选择地址",
+	"chooseAnOrchidAccountToUseWithThisHop": "选择用于此跃点的 Orchid 帐户。",
+	"ifYouDontSeeYourAccountBelowYouCanUse": "如果在下面没有看到您的帐户，可使用帐户管理器导入、购买或创建一个新帐户。",
+	"selectAnOrchidAccount": "选择 Orchid 帐户",
+	"takeMeToTheAccountManager": "前往“帐户管理器”",
+	"funderAccount": "出资人帐户",
+	"orchidRunningAndAnalyzing": "Orchid 正在运行及分析",
+	"startingVpn": "（正在启动 VPN）",
+	"disconnectingVpn": "（正在断开 VPN）",
+	"orchidAnalyzingTraffic": "Orchid 正在分析流量",
+	"vpnConnectedButNotRouting": "（VPN 已连接但未路由）",
+	"restarting": "正在进行重启",
+	"changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "更改监控状态需要重新启动 VPN，这可能会短暂中断隐私保护。",
+	"confirmRestart": "确认重新启动",
+	"averagePriceIsUSDPerGb": "平均价格为每 GB {price} 美元",
+	"@averagePriceIsUSDPerGb": {
+		"placeholders": {
+			"price": {
+				"type": "String"
+			}
+		}
+	},
+	"myOrchidConfig": "我的 Orchid 配置",
+	"noAccountSelected": "未选择帐户",
+	"inactive": "非活跃",
+	"tickets": "彩币",
+	"accounts": "帐户",
+	"orchidIdentity": "Orchid ID",
+	"addFunds": "充值",
+	"gb": "GB",
+	"usdgb": "美元/GB",
+	"hop": "跃点",
+	"circuit": "线路",
+	"clearAllAnalysisData": "清除所有分析数据？",
+	"thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "此操作将清除所有先前分析的流量连接数据。",
+	"clearAll": "全部清除",
+	"stopAnalysis": "停止分析",
+	"startAnalysis": "开始分析",
+	"orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "Orchid 帐户提供 7 天/24 小时客户支持，不限设备数量，并支持 <link2>xDai 加密货币</link2>。",
+	"purchasedAccountsConnectExclusivelyToOur": "已购买的帐户将仅连接到我们的<link1>首选提供商</link1>。",
+	"refundPolicyCoveredByAppStores": "应用商店提供退款政策。",
+	"orchidIsUnableToDisplayInappPurchasesAtThisTime": "Orchid 目前无法显示 App 内购买功能。",
+	"pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "请确认此设备支持 App 内购买功能并经过适当配置。",
+	"pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "请确认此设备支持 App 内购买功能并经过适当配置，或者使用我们去中心化的<link>帐户管理</link>系统。",
+	"buy": "购买",
+	"gbApproximately12": "12GB（近似值）",
+	"gbApproximately60": "60GB（近似值）",
+	"gbApproximately240": "240GB（近似值）",
+	"idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "非常适合中期个人使用，包括网络浏览和轻度流媒体使用。",
+	"mostPopular": "最受欢迎！",
+	"bandwidthheavyLongtermUsageOrSharedAccounts": "适合带宽要求大、长期使用或共享帐户。",
+	"total": "合计",
+	"pausingAllTraffic": "暂停所有流量...",
+	"queryingEthereumForARandom": "查询以太坊以获取随机提供商...",
+	"quickFundAnAccount": "快速为帐户充值！",
+	"accountFound": "已找到帐户",
+	"weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "我们找到了一个与您的 ID 相关联的帐户，并为其创建了一个单跃点 Orchid 线路。您现在可以开始使用 VPN。",
+	"welcomeToOrchid": "欢迎使用 Orchid！",
+	"fundYourAccount": "为您的帐户充值",
+	"processing": "正在处理...",
+	"subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "VPN 服务：免订阅、按需付费、去中心化、开源。",
+	"getStartedFor1": "仅需 {smallAmount} 即可开始体验",
+	"@getStartedFor1": {
+		"placeholders": {
+			"smallAmount": {
+				"type": "String"
+			}
+		}
+	},
+	"importAccount": "导入帐户",
+	"illDoThisLater": "暂时跳过",
+	"connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Orchid 帐户可共享、可再充值，您可以购买 VPN 积分来充值，以便自动连接到网络<link1>首选提供商</link1>。",
+	"confirmPurchase": "确认购买",
+	"orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Orchid 帐户使用由 <link>xDAI 加密货币</link>提供支持的 VPN 积分，并提供 7 天/24 小时客户支持、无限设备共享和应用商店退款政策保障。",
+	"yourPurchaseIsInProgress": "您的购买正在处理中。",
+	"thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "此次购买的处理时间比预期的更长，可能遇到了错误。",
+	"thisMayTakeAMinute": "请稍候...",
+	"vpnCredits": "VPN 积分",
+	"blockchainFee": "区块链费用",
+	"promotion": "促销",
+	"showInAccountManager": "在“帐户管理器”中显示",
+	"deleteThisOrchidIdentity": "删除此 Orchid ID",
+	"chooseIdentity": "选择 ID",
+	"updatingAccounts": "正在更新帐户",
+	"trafficAnalysis": "流量分析",
+	"accountManager": "帐户管理器",
+	"circuitBuilder": "线路生成器",
+	"exitHop": "出口跃点",
+	"entryHop": "入口跃点",
+	"addNewHop": "添加新跃点",
+	"newCircuitBuilder": "新的线路生成器！",
+	"youCanNowPayForAMultihopOrchidCircuitWith": "您现在可以使用 xDAI 支付多跃点 Orchid 线路的费用。多跃点界面现在支持 xDAI 和 OXT Orchid 帐户，并且仍然支持 OpenVPN 和 WireGuard 配置，它们可以串起来形成一个“洋葱路由”。",
+	"manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "您可以从“线路生成器”而非“帐户管理器”中管理您的连接。所有连接现在都使用零或多跃点的线路。任何现有配置都已迁移到“线路生成器”。",
+	"quickStartFor1": "仅需 {smallAmount} 即可快速开启体验之旅",
+	"@quickStartFor1": {
+		"placeholders": {
+			"smallAmount": {
+				"type": "String"
+			}
+		}
+	},
+	"weAddedAMethodToPurchaseAnOrchidAccountAnd": "我们增加了一种购买 Orchid 帐户的方法，并从主页创建单跃点线路，方便您更快上手。",
+	"orchidIsUniqueAsAMultiHopOrOnion": "Orchid 是一个独一无二的多跃点或洋葱路由客户端，支持多种 VPN 协议。您可以将以下受支持协议中的跃点链接在一起来建立连接。\n\n一个跃点就像一个普通的 VPN。选择三个跃点（用于高级用户）即是经典的洋葱路由。如果是零跃点，则允许在没有任何 VPN 隧道的情况下进行流量分析。",
+	"deletingOpenVPNAndWireguardHopsWillLose": "删除 OpenVPN 和 Wireguard 跃点将丢失任何关联的凭据和连接配置。在继续之前，请务必备份所有信息。",
+	"thisCannotBeUndoneToSaveThisIdentity": "此操作无法撤消。要保存此 ID，请点击“取消”并使用“导出”选项",
+	"unlockTime": "解锁时间",
+	"chooseChain": "选择链",
+	"unlocking": "解锁",
+	"unlocked": "已解锁",
+	"orchidTransaction": "Orchid 交易",
+	"confirmations": "确认",
+	"pending": "待定...",
+	"txHash": "交易哈希值：",
+	"allOfYourFundsAreAvailableForWithdrawal": "您的所有资金均可提取。",
+	"maxWithdrawOfYourTotalFundsCombinedFunds": "您的 {totalFunds} 综合资金中目前有 {maxWithdraw} 可以提取。",
+	"@maxWithdrawOfYourTotalFundsCombinedFunds": {
+		"placeholders": {
+			"maxWithdraw": {
+				"type": "String"
+			},
+			"totalFunds": {
+				"type": "String"
+			}
+		}
+	},
+	"alsoUnlockRemainingDeposit": "同时解锁剩余存款",
+	"ifYouSpecifyLessThanTheFullAmountFundsWill": "如果您指定的金额少于总金额，资金将首先从您的余额中提取。",
+	"forAdditionalOptionsSeeTheAdvancedPanel": "其他选项详见“高级”面板。",
+	"ifYouSelectTheUnlockDepositOptionThisTransactionWill": "如果您选择“解锁存款”选项，此交易将立即从您的余额中提取指定金额，并针对您剩余的存款启动解锁程序。",
+	"depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "在解锁之后，存款资金可在 24 小时内提取。",
+	"withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "从您的 Orchid 帐户提取资金到当前钱包。",
+	"withdrawAndUnlockFunds": "提取并解锁资金",
+	"withdrawFunds": "提取资金",
+	"withdraw": "提取",
+	"submitTransaction": "提交交易",
+	"move": "转移",
+	"now": "现在",
+	"amount": "金额",
+	"available": "可用",
+	"select": "选择",
+	"add": "添加",
+	"balanceToDeposit": "余额至存款",
+	"depositToBalance": "存款至余额",
+	"setWarnedAmount": "设置警告金额",
+	"addFundsToYourOrchidAccountBalanceAndorDeposit": "将资金添加到您的 Orchid 帐户余额和/或存款中。",
+	"forGuidanceOnSizingYourAccountSee": "有关帐户金额大小的指南，详见 <link>orchid.com</link>",
+	"currentTokenPreauthorizationAmount": "当前{tokenType}预授权：{amount}",
+	"@currentTokenPreauthorizationAmount": {
+		"placeholders": {
+			"tokenType": {
+				"type": "String"
+			},
+			"amount": {
+				"type": "String"
+			}
+		}
+	},
+	"noWallet": "无钱包",
+	"noWalletOrBrowserNotSupported": "无钱包或浏览器不受支持。",
+	"error": "错误",
+	"failedToConnectToWalletconnect": "无法连接 WalletConnect。",
+	"unknownChain": "未知链",
+	"theOrchidAccountManagerDoesntSupportThisChainYet": "Orchid 帐户管理器尚不支持此链。",
+	"orchidIsntOnThisChain": "Orchid 未入驻此链！",
+	"theOrchidContractHasntBeenDeployedOnThisChainYet": "此链尚未部署 Orchid 合约。",
+	"moveFunds": "转移资金",
+	"lockUnlock": "锁定 / 解锁",
+	"yourDepositOfAmountIsUnlocked": "您的 {amount}存款已解锁。",
+	"@yourDepositOfAmountIsUnlocked": {
+		"placeholders": {
+			"amount": {
+				"type": "String"
+			}
+		}
+	},
+	"locked": "已锁定",
+	"yourDepositOfAmountIsUnlockingOrUnlocked": "您的 {amount}存款已{unlockingOrUnlocked}。",
+	"@yourDepositOfAmountIsUnlockingOrUnlocked": {
+		"placeholders": {
+			"amount": {
+				"type": "String"
+			},
+			"unlockingOrUnlocked": {
+				"type": "String"
+			}
+		}
+	},
+	"theFundsWillBeAvailableForWithdrawalInTime": "资金可以在 ${time} 内提取。",
+	"@theFundsWillBeAvailableForWithdrawalInTime": {
+		"placeholders": {
+			"time": {
+				"type": "String"
+			}
+		}
+	},
+	"lockDeposit": "锁定存款",
+	"unlockDeposit": "解锁存款",
+	"advanced": "高级",
+	"linklearnMoreAboutOrchidAccountslink": "<link>了解更多有关 Orchid 帐户的信息</link>。",
+	"estimatedCostToCreateAnOrchidAccountWith": "创建一个效率为 {efficiency}、价值为 {num} 个彩币的 Orchid 帐户。",
+	"@estimatedCostToCreateAnOrchidAccountWith": {
+		"placeholders": {
+			"efficiency": {
+				"type": "String"
+			},
+			"num": {
+				"type": "int"
+			}
+		}
+	},
+	"chain": "区块链",
+	"token": "通证",
+	"minDeposit": "最低存款",
+	"minBalance": "最低余额",
+	"fundFee": "资金费",
+	"withdrawFee": "提取费",
+	"tokenValues": "通证价值",
+	"usdPrices": "美元价",
+	"settingAWarnedDepositAmountBeginsThe24HourWaiting": "设置警告存款金额将会开启一个用于提取存款资金的 24 小时等待期，",
+	"duringThisPeriodTheFundsAreNotAvailableAsA": "在该等待期内，资金不可作为 Orchid 网络中的有效存款。",
+	"fundsMayBeRelockedAtAnyTimeByReducingThe": "通过减少警告金额可以随时重新锁定资金。",
+	"warn": "警告",
+	"totalWarnedAmount": "警告总金额",
+	"contract": "合同",
+	"deleteIdentity": "删除身份",
+	"exportIdentity": "导出身份",
+	"funderAddress": "资助者地址",
+	"importIdentity": "导入身份",
+	"importOrchidIdentity": "导入兰花身份",
+	"newIdentity": "新身份",
+	"txFee": "交易费"
 }
