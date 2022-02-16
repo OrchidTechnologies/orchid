@@ -344,7 +344,7 @@ class OrchidPACServer {
     // Do the post
     var responseJson;
     try {
-      responseJson = await _postJson(method: "store_status", paramsIn: {});
+      responseJson = await _postJson(method: 'store_status', paramsIn: {});
     } catch (err, stack) {
       log("iap: pac server status response error: $err, $stack");
       return PACStoreStatus.down;
@@ -417,8 +417,8 @@ class OrchidPACServer {
     logWrapped("iap: posting to $url, json = $postBody");
     var response = await http.post(Uri.parse(url),
         headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Accept-Language": clientLocale,
+          'Content-Type': 'application/json; charset=utf-8',
+          'Accept-Language': clientLocale,
         },
         body: postBody);
 

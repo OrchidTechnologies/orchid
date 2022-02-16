@@ -9,6 +9,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/on_off.dart';
 import 'loading.dart';
 import 'formatting.dart';
 
@@ -16,6 +17,7 @@ class AccountChart extends StatelessWidget {
   final LotteryPot lotteryPot;
   final double efficiency;
   final List<OrchidUpdateTransactionV0> transactions;
+  final bool alignEnd;
 
   // Efficiency alert
   final bool alert;
@@ -26,6 +28,7 @@ class AccountChart extends StatelessWidget {
     @required this.efficiency,
     @required this.transactions,
     this.alert = false,
+    this.alignEnd = false,
   }) : super(key: key);
 
   @override
@@ -51,16 +54,27 @@ class AccountChart extends StatelessWidget {
         pady(16),
         // Show the tickets available / used line
         if (chartModel != null)
-          Column(
-            children: [
-              buildTicketsAvailableLineChart(chartModel, efficiency),
-              pady(16),
-              Text(
-                S.of(context).minTicketsAvailableTickets(
-                    chartModel.availableTicketsCurrentMax),
-              ).caption,
-            ],
-          ),
+          buildTicketsAvailable(context, chartModel, efficiency, false),
+      ],
+    );
+  }
+
+  static Widget buildTicketsAvailable(
+    BuildContext context,
+    AccountBalanceChartTicketModel chartModel,
+    double efficiency,
+    bool alignEnd,
+  ) {
+    return Column(
+      crossAxisAlignment:
+          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.center,
+      children: [
+        if (chartModel.availableTicketsCurrentMax > 0)
+          buildTicketsAvailableLineChart(chartModel, efficiency).bottom(16),
+        Text(
+          S.of(context).minTicketsAvailableTickets(
+              chartModel.availableTicketsCurrentMax),
+        ).caption,
       ],
     );
   }
@@ -76,7 +90,6 @@ class AccountChart extends StatelessWidget {
       height: 4,
       child: Stack(
         fit: StackFit.expand,
-        // alignment: Alignment.center,
         children: [
           // TODO: Why is this blur not working?
           // ImageFiltered(

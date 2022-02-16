@@ -47,7 +47,6 @@ class _ScanOrPasteIdentityDialogState extends State<ScanOrPasteIdentityDialog> {
     S s = S.of(context);
     double screenWidth = MediaQuery.of(context).size.width;
     final pasteOnly = OrchidPlatform.doesNotSupportScanning;
-    var titleText = s.importAnOrchidAccount;
     var bodyText = pasteOnly
         ? s.pasteAnOrchidKeyFromTheClipboardToImportAll
         : s.scanOrPasteAnOrchidKeyFromTheClipboardTo;
@@ -68,7 +67,7 @@ class _ScanOrPasteIdentityDialogState extends State<ScanOrPasteIdentityDialog> {
                     children: <Widget>[
                       RichText(
                           text: TextSpan(
-                              text: titleText, style: OrchidText.title)),
+                              text: s.importOrchidIdentity, style: OrchidText.title)),
                     ],
                   ).right(16),
                 ),

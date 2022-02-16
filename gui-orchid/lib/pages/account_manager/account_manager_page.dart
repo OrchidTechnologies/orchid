@@ -234,20 +234,20 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               [
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(action: _newIdentity),
-                    child: Text("New Identity", style: style)),
+                    child: Text(s.newIdentity, style: style)),
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(action: _importIdentity),
-                    child: Text("Import Identity", style: style)),
+                    child: Text(s.importIdentity, style: style)),
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(action: _exportIdentity),
-                    child: Text("Export Identity", style: style)),
+                    child: Text(s.exportIdentity, style: style)),
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(
                         action: _confirmDeleteIdentity),
-                    child: Text("Delete Identity", style: style)),
+                    child: Text(s.deleteIdentity, style: style)),
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(action: _importAccount),
-                    child: Text("Import Account", style: style)),
+                    child: Text(s.importAccount, style: style)),
               ];
         },
       ),

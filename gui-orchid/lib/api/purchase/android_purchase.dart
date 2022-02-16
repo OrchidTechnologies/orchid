@@ -34,16 +34,16 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
       _billingClient.enablePendingPurchases();
       var billingResult = await _billingClient.startConnection(
           onBillingServiceDisconnected: () {
-        log("iap: billing client disconnected");
+        log('iap: billing client disconnected');
       });
 
       if (billingResult.responseCode == BillingResponse.ok) {
-        log("iap: billing client setup done");
+        log('iap: billing client setup done');
       } else {
-        log("iap: Failed to init billing client: ${billingResult.responseCode}");
+        log('iap: Failed to init billing client: ${billingResult.responseCode}');
       }
     } catch (err) {
-      log("iap: error initializing billing client: $err");
+      log('iap: error initializing billing client: $err');
     }
   }
 
@@ -51,55 +51,55 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
   Future<void> purchaseImpl(PAC pac) async {
     var billingResultWrapper =
         await _billingClient.launchBillingFlow(sku: pac.productId);
-    log("iap: billing result response = ${billingResultWrapper.responseCode}");
+    log('iap: billing result response = ${billingResultWrapper.responseCode}');
   }
 
   void _onPurchaseResult(PurchasesResultWrapper purchasesResult) async {
-    log("iap: purchase result: $purchasesResult");
+    log('iap: purchase result: $purchasesResult');
 
     if (purchasesResult.responseCode == BillingResponse.userCanceled) {
-      log("iap: was cancelled");
+      log('iap: was cancelled');
       PacTransaction.shared.clear();
       return;
     }
     if (purchasesResult.responseCode != BillingResponse.ok) {
-      log("iap: Error: purchase result response code: ${purchasesResult.responseCode}");
+      log('iap: Error: purchase result response code: ${purchasesResult.responseCode}');
       (PacTransaction.shared.get())
-          .error("iap failed 1: responseCode = ${purchasesResult.responseCode}")
+          .error('iap failed 1: responseCode = ${purchasesResult.responseCode}')
           .save();
       return;
     }
 
     var purchases = purchasesResult.purchasesList;
     if (purchases.length > 1) {
-      log("iap: unexpected multiple purchases. Clearing: $purchases");
-      (PacTransaction.shared.get()).error("iap failed 2").save();
+      log('iap: unexpected multiple purchases. Clearing: $purchases');
+      (PacTransaction.shared.get()).error('iap failed 2').save();
       for (PurchaseWrapper purchase in purchases) {
         await _billingClient.consumeAsync(purchase.purchaseToken);
       }
       return;
     }
     if (purchases.isEmpty) {
-      log("iap: unexpected purchase empty.");
-      (PacTransaction.shared.get()).error("iap failed 3").save();
+      log('iap: unexpected purchase empty.');
+      (PacTransaction.shared.get()).error('iap failed 3').save();
       return;
     }
     var purchase = purchases.first;
-    log("iap: handling purchase: ${purchase.originalJson}");
-    log("iap: purchase package name: ${purchase.packageName}");
+    log('iap: handling purchase: ${purchase.originalJson}');
+    log('iap: purchase package name: ${purchase.packageName}');
 
-    // Acknowledge / "consume" the purchase: If this is not completed the
+    // Acknowledge / 'consume' the purchase: If this is not completed the
     // user will be refunded after a period of time.
     var result = await _billingClient.consumeAsync(purchase.purchaseToken);
     if (result.responseCode == BillingResponse.ok) {
-      log("iap: consumeAsync returned ok. Passing receipt.");
+      log('iap: consumeAsync returned ok. Passing receipt.');
       // Get the receipt
       var receipt = purchase.purchaseToken;
       await OrchidPACServer()
           .advancePACTransactionsWithReceipt(receipt, ReceiptType.android);
     } else {
-      log("iap: consumeAsync returned error: ${result.responseCode}");
-      (PacTransaction.shared.get()).error("iap failed 4").save();
+      log('iap: consumeAsync returned error: ${result.responseCode}');
+      (PacTransaction.shared.get()).error('iap failed 4').save();
     }
   }
 
@@ -109,23 +109,23 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
       return OrchidPurchaseAPI.mockPacs();
     }
     // if (productsCached != null && !refresh) {
-    //   log("iap: returning cached products");
+    //   log('iap: returning cached products');
     //   return productsCached;
     // }
 
     var skuList = OrchidPurchaseAPI.pacProductIds;
-    log("iap: product ids requested: $skuList");
+    log('iap: product ids requested: $skuList');
 
     var skuDetailsResponse = await _billingClient.querySkuDetails(
         skuType: SkuType.inapp, skusList: skuList);
-    log("iap: sku query billing result: ${skuDetailsResponse.billingResult}");
-    log("iap: sku details list: ${skuDetailsResponse.skuDetailsList}");
+    log('iap: sku query billing result: ${skuDetailsResponse.billingResult}');
+    log('iap: sku details list: ${skuDetailsResponse.skuDetailsList}');
 
     var toPAC = (SkuDetailsWrapper prod) {
       double localizedPrice = prod.originalPriceAmountMicros / 1e6;
       String currencyCode = prod.priceCurrencyCode;
       String currencySymbol = prod.price[0];
-      log("iap: originalPriceAmountMicros=${prod.originalPriceAmountMicros}, currencyCode=${prod.priceCurrencyCode}, currencySymbol=${prod.price[0]}");
+      log('iap: originalPriceAmountMicros=${prod.originalPriceAmountMicros}, currencyCode=${prod.priceCurrencyCode}, currencySymbol=${prod.price[0]}');
       var productId = prod.sku;
       return PAC(
         productId: productId,
@@ -139,7 +139,7 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
     var pacs = skuDetailsResponse.skuDetailsList.map(toPAC).toList();
     Map<String, PAC> products = {for (var pac in pacs) pac.productId: pac};
     //productsCached = products;
-    log("iap: returning products: $products");
+    log('iap: returning products: $products');
     return products;
   }
 }

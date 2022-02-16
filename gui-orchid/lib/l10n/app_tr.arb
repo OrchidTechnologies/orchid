@@ -280,7 +280,7 @@
       }
     }
   },
-  "importAccount": "HESAP İÇE AKTARMA",
+  "importAccount": "Hesap içe Aktarma",
   "illDoThisLater": "Bunu daha sonra yapacağım",
   "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Paylaşılabilir, yeniden doldurulabilir Orchid hesabınızı VPN kredileri satın alarak fonlamak için ağın <link1>tercih edilen sağlayıcılarından</link1> birine otomatik olarak bağlanın.",
   "confirmPurchase": "SATIN ALMAYI ONAYLA",

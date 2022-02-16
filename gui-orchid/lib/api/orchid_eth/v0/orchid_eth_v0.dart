@@ -38,11 +38,11 @@ class OrchidEthereumV0 {
     Example:
     curl https://cloudflare-eth.com -H 'Content-Type: application/json' --data
       '{"jsonrpc":"2.0",
-        "method":"eth_call",
+        "method":'eth_call',
         "params":[{
            "to": "0x38cf68E1d19a0b2d2Ba73865E4c85aA1A544C1BF",
            "data": "0x1554ad5d000000000000000000000000405bc10e04e3f487e9925ad5815e4406d78b769e00000000000000000000000040797C3fa232ff87d59e2c3241448C5AC8537D07"},
-           "latest"],
+           'latest'],
         "id":1}'
     Result:
     {"jsonrpc":"2.0","id":1,"result":"0x000000000000000000000000000000000000000000000002b5e3af16b18800000000000000000000000000000000000000000000000000008ac7230489e800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000"}
@@ -59,11 +59,11 @@ class OrchidEthereumV0 {
             "${AbiEncode.address(funder)}"
             "${AbiEncode.address(signer)}"
       },
-      "latest"
+      'latest'
     ];
 
-    String result = await _jsonRpc(method: "eth_call", params: params);
-    if (!result.startsWith("0x")) {
+    String result = await _jsonRpc(method: 'eth_call', params: params);
+    if (!result.startsWith('0x')) {
       log("Error result: $result");
       throw Exception();
     }
@@ -104,7 +104,7 @@ class OrchidEthereumV0 {
       String transactionHash) async {
     var params = [transactionHash];
     return OrchidTransactionV0.fromJsonRpcResult(
-        await _jsonRpc(method: "eth_getTransactionByHash", params: params));
+        await _jsonRpc(method: 'eth_getTransactionByHash', params: params));
   }
 
   /*
@@ -152,7 +152,7 @@ class OrchidEthereumV0 {
         "fromBlock": "0x" + startBlock.toRadixString(16)
       }
     ];
-    dynamic results = await _jsonRpc(method: "eth_getLogs", params: params);
+    dynamic results = await _jsonRpc(method: 'eth_getLogs', params: params);
     List<OrchidUpdateEventV0> events =
         results.map<OrchidUpdateEventV0>((var result) {
       return OrchidUpdateEventV0.fromJsonRpcResult(result);
@@ -174,7 +174,7 @@ class OrchidEthereumV0 {
         "fromBlock": "0x" + startBlock.toRadixString(16)
       }
     ];
-    dynamic results = await _jsonRpc(method: "eth_getLogs", params: params);
+    dynamic results = await _jsonRpc(method: 'eth_getLogs', params: params);
     List<OrchidCreateEventV0> events =
         results.map<OrchidCreateEventV0>((var result) {
       return OrchidCreateEventV0.fromJsonRpcResult(result);

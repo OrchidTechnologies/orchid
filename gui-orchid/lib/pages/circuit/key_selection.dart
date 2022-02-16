@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
@@ -24,7 +23,7 @@ class KeySelectionDropdown extends StatefulWidget {
   });
   static final importKeyOption =
       KeySelectionMenuOption(displayStringGenerator: (context) {
-    return S.of(context).importKey;
+    return S.of(context).importIdentity;
   });
 
   KeySelectionDropdown(

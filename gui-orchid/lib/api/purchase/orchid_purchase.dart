@@ -84,7 +84,7 @@ abstract class OrchidPurchaseAPI {
         log("iap: mock purchase, advance with receipt");
         // The receipt may be overridden for testing with pac.receipt
         OrchidPACServer()
-            .advancePACTransactionsWithReceipt("mock receipt", ReceiptType.ios);
+            .advancePACTransactionsWithReceipt('mock receipt', ReceiptType.ios);
       });
       return;
     }

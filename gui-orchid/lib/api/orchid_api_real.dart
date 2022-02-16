@@ -13,7 +13,7 @@ import 'orchid_log_api.dart';
 
 class RealOrchidAPI implements OrchidAPI {
   static final RealOrchidAPI _singleton = RealOrchidAPI._internal();
-  static const _platform = const MethodChannel("orchid.com/feedback");
+  static const _platform = const MethodChannel('orchid.com/feedback');
 
   factory RealOrchidAPI() {
     return _singleton;

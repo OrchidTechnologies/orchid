@@ -190,7 +190,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(s.funderAccount + ':',
+        Text(s.funderAddress + ':',
             style: OrchidText.title.copyWith(
                 color: _funderValid()
                     ? OrchidColors.valid

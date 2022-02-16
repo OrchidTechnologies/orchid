@@ -364,7 +364,8 @@ class _AccountCardState extends State<AccountCard>
         ? AccountBalanceChartTicketModel(
             pot, widget.accountDetail.transactions ?? [])
         : null;
-    final versionText = widget.accountDetail?.account?.version.toString() ?? '';
+    final version = widget.accountDetail?.account?.version;
+    final versionText = version != null ? 'V$version' : '';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40.0),
@@ -389,7 +390,7 @@ class _AccountCardState extends State<AccountCard>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(s.version, style: OrchidText.body2),
+              Text(s.contract, style: OrchidText.body2),
               Text(versionText, style: OrchidText.body2),
             ],
           ),
@@ -423,10 +424,11 @@ class _AccountCardState extends State<AccountCard>
           if (chartModel != null)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(s.tickets, style: OrchidText.body2),
-                AccountChart.buildTicketsAvailableLineChart(
-                    chartModel, efficiency)
+                AccountChart.buildTicketsAvailable(
+                    context, chartModel, efficiency, true)
               ],
             ),
           if (showLockStatus) ...[

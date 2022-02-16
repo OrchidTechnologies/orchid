@@ -56,7 +56,7 @@ class UserSecureStorage {
 
   Future<void> setPurchaseRateHistory(PurchaseRateHistory history) async {
     log(
-        "iap: saving rate history, ${history.purchases.length} items totalling: ${history.sum()}");
+        'iap: saving rate history, ${history.purchases.length} items totalling: ${history.sum()}');
     // TODO: Stand-in until we have support for MacOS
     // final storage = FlutterSecureStorage();
     final storage = NonSecureStorage();

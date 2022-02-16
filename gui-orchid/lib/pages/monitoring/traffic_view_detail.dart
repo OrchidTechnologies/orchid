@@ -28,7 +28,7 @@ class _TrafficViewDetailState extends State<TrafficViewDetail> {
         ? flow.dst_addr
         : flow.hostname;
     var date =
-        DateFormat("MM/dd/yyyy HH:mm:ss.SSS").format(flow.start.toLocal());
+        DateFormat('MM/dd/yyyy HH:mm:ss.SSS').format(flow.start.toLocal());
     var protocolColor = TrafficView.colorForProtocol(flow.protocol);
     return TitledPage(
         title: s.connectionDetail,

@@ -270,9 +270,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       children: [
         Flexible(
           child: Column(
-            // mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            // mainAxisSize: MainAxisSize.max,
             children: <Widget>[
               // Balance and Deposit
               Visibility(

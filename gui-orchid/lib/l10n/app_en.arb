@@ -280,7 +280,7 @@
       }
     }
   },
-  "importAccount": "IMPORT ACCOUNT",
+  "importAccount": "Import Account",
   "illDoThisLater": "I'll do this later",
   "connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Connect automatically to one of the network’s <link1>preferred providers</link1> by purchasing VPN credits to fund your shareable, refillable Orchid account.",
   "confirmPurchase": "CONFIRM PURCHASE",
@@ -433,5 +433,13 @@
   "duringThisPeriodTheFundsAreNotAvailableAsA": "During this period the funds are not available as a valid deposit on the Orchid network.",
   "fundsMayBeRelockedAtAnyTimeByReducingThe": "Funds may be re-locked at any time by reducing the warned amount.",
   "warn": "Warn",
-  "totalWarnedAmount": "Total Warned Amount"
+  "totalWarnedAmount": "Total Warned Amount",
+  "newIdentity": "New Identity",
+  "importIdentity": "Import Identity",
+  "exportIdentity": "Export Identity",
+  "deleteIdentity": "Delete Identity",
+  "importOrchidIdentity": "Import Orchid Identity",
+  "funderAddress": "Funder Address",
+  "contract": "Contract",
+  "txFee": "Tx Fee"
 }

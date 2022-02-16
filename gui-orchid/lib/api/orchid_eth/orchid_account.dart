@@ -142,7 +142,7 @@ class Account {
   StoredEthereumKeyRef get signerKeyRef {
     if (signerKeyUid == null) {
       throw Exception(
-          "Account does not resolve to a stored key: $resolvedSignerAddress");
+          'Account does not resolve to a stored key: $resolvedSignerAddress');
     }
 
     return StoredEthereumKeyRef(this.signerKeyUid);

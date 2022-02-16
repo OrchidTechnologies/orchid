@@ -21,7 +21,7 @@ class OrchidPlatform {
   static void initLanguageOverride() {
     var languageOverride = (const String.fromEnvironment('language',
             defaultValue: null)) ??
-        OrchidUserConfig().getUserConfigJS().evalStringDefault("lang", null);
+        OrchidUserConfig().getUserConfigJS().evalStringDefault('lang', null);
     if (languageOverride != null &&
         OrchidPlatform.hasLanguage(languageOverride)) {
       OrchidPlatform.languageOverride = languageOverride;
