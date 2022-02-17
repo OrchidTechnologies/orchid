@@ -257,7 +257,7 @@ class _AccountCardState extends State<AccountCard>
           key: Key(tokenType?.toString() ?? 'empty'),
           width: size,
           height: size,
-          child: tokenType?.icon ?? Container()),
+          child: tokenType?.chain?.icon ?? Container()),
     );
   }
 
