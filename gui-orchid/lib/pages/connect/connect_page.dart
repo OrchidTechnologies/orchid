@@ -80,8 +80,9 @@ class _ConnectPageState extends State<ConnectPage>
     return _circuitHops > 0;
   }
 
-  // _hasCircuit here waits for the UI to load
-  bool get _showWelcomePane => _hasDefaultIdentity && !_hasAccounts;
+  // Show the welcome pane if the user has a default (singular) identity key
+  // and no (cached) accounts have yet been created on it. (_hasAccounts is initially null).
+  bool get _showWelcomePane => _hasDefaultIdentity && _hasAccounts == false;
 
   // User toggle for display of the panel
   bool _showWelcomePaneMinimized = false;
@@ -121,7 +122,7 @@ class _ConnectPageState extends State<ConnectPage>
     return _defaultIdentity != null;
   }
 
-  // True if there are cached accounts for any identity
+  // True if there are cached accounts for any identity (initially null)
   bool _hasAccounts;
 
   @override
@@ -226,6 +227,7 @@ class _ConnectPageState extends State<ConnectPage>
 
     // Monitor identities
     UserPreferences().keys.stream().listen((keys) async {
+      log("XXX: keys = $keys");
       setState(() {
         _defaultIdentity = (keys ?? []).length == 1 ? keys.first : null;
       });
@@ -236,6 +238,7 @@ class _ConnectPageState extends State<ConnectPage>
         .cachedDiscoveredAccounts
         .stream()
         .listen((accounts) async {
+      log("XXX: cachedDiscoveredAccounts = $accounts");
       setState(() {
         _hasAccounts = accounts.isNotEmpty;
       });
@@ -244,6 +247,15 @@ class _ConnectPageState extends State<ConnectPage>
 
   @override
   Widget build(BuildContext context) {
+    try {
+      log("XXX: first launch: "
+          "_hasDefaultIdentity = $_hasDefaultIdentity, "
+          "_hasAccounts == $_hasAccounts, "
+          "_showWelcomePane = $_showWelcomePane");
+    } catch (err) {
+      log("first launch: Error should not happen: $err");
+    }
+
     return Stack(
       children: <Widget>[
         if (!isReallyShort)
@@ -502,9 +514,9 @@ class _ConnectPageState extends State<ConnectPage>
 
     var lastVersion = await _getReleaseVersionWithOverride();
 
-    log("connect: first launch check.");
+    log("first launch: check.");
     if (lastVersion.isFirstLaunch) {
-      log("connect: first launch");
+      log("first launch: is first launch");
       await _doFirstLaunchActivities();
     } else {
       // show any release notes since the last viewed
@@ -614,12 +626,11 @@ class _ConnectPageState extends State<ConnectPage>
   // Return the active account from the accounts list or null.
   static Account _filterActiveAccountLegacyLogic(List<Account> accounts) {
     return accounts == null ||
-        accounts.isEmpty ||
-        accounts[0].isIdentityPlaceholder
+            accounts.isEmpty ||
+            accounts[0].isIdentityPlaceholder
         ? null
         : accounts[0];
   }
-
 
   Future<void> _createFirstIdentity() async {
     log("first launch: Do first launch activities.");
