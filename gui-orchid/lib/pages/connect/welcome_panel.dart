@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
@@ -81,12 +82,16 @@ class _WelcomePanelState extends State<WelcomePanel> {
     });
 
     _dollarPAC = await OrchidPurchaseAPI.getDollarPAC();
+    if (_dollarPAC == null) {
+      log("(first launch) welcome pane: Can't find dollar pac product.");
+    }
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.identity == null || _state == null || _dollarPAC == null) {
+    if (widget.identity == null || _state == null) {
+      log("(first launch) welcome pane: not ready: ${widget.identity}, $_state");
       return Container();
     }
     return Padding(
@@ -220,14 +225,17 @@ class _WelcomePanelState extends State<WelcomePanel> {
               .center,
         ),
         pady(40),
-        OrchidActionButton(
-          enabled: true,
-          text: s.getStartedFor1(_dollarPAC?.localDisplayPrice ?? ''),
-          onPressed: () {
-            setState(() {
-              _state = WelcomePanelState.confirm;
-            });
-          },
+        Visibility(
+          visible: _dollarPAC != null,
+          child: OrchidActionButton(
+            enabled: true,
+            text: s.getStartedFor1(_dollarPAC?.localDisplayPrice ?? ''),
+            onPressed: () {
+              setState(() {
+                _state = WelcomePanelState.confirm;
+              });
+            },
+          ),
         ),
         pady(16),
         _buildOutlineButton(
@@ -364,7 +372,8 @@ class _WelcomePanelState extends State<WelcomePanel> {
 
   Widget _buildConfirmPurchaseDetails({@required PAC pac}) {
     if (pac == null) {
-      throw Exception("welcome panel: pac null");
+      log("welcome panel: pac null");
+      return Text("...");
     }
     var credits = pac.localPrice;
     var fee = pac.localPrice * 0.3;

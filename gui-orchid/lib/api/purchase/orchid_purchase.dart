@@ -205,7 +205,7 @@ abstract class OrchidPurchaseAPI {
       Map<String, PAC> pacs = await OrchidPurchaseAPI().requestProducts();
       return pacs[OrchidPurchaseAPI.pacTierDollarProductId];
     } catch (err) {
-      log("welcome panel: error requesting products purchase: $err");
+      log("iap: error requesting products purchase: $err");
       throw err;
     }
   }
