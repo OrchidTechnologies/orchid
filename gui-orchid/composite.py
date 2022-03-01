@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import itertools
 import re
 import os
@@ -5,7 +7,7 @@ import csv
 import json
 import logging
 
-magickpath = '/cygdrive/c/Progra~1/ImageMagick-7.1.0-Q16-HDRI/magick.exe'
+magickpath = ''
 
 logging.basicConfig(level="DEBUG", format='%(asctime)s: %(message)s')
 
@@ -37,7 +39,7 @@ def exec(cmd):
    return code, result
 
 
-with open('composite_worklist.json') as f:
+with open('/'.join(os.path.realpath(__file__).split('/')[0:-1]) + '/composite_worklist.json') as f:
    worklist = json.loads(f.read())
 
 mocks = worklist['device_mocks']

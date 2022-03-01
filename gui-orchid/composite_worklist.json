@@ -8,46 +8,47 @@
           "background": "phone1.png",
           "mock": {
              "template_name": "iphone_12_pro_left",
-             "screencap": "caps/iphone_12_pro_connect_false_%lang%.png",
-             "placement": "-scale 35% -geometry +0+150"
+             "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
+             "placement": "-scale 35% -geometry +0+220"
           },
-          "annotation": {
-            "message": "get_started",
+          "annotations": [
+          {
+            "message": "unblock",
+            "style": "h1",
             "size": "1242x600",
-            "location": "+0-1000"
+            "location": "+120+120"
+          },
+          {
+            "message": "websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+300"
+          },
+          {
+            "message": "unblock_websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+170"
           }
+          ]
         },
         "iphone_1242x2688_2": {
           "resolution": "1242x2688",
           "background": "phone2.png",
           "mock": {
              "template_name": "iphone_12_pro_right",
-             "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
+             "screencap": "caps/iphone_12_pro_purchase_false_%lang%.png",
              "placement": "-scale 35% -geometry +0-150"
           },
           "annotation": {
-            "message": "open_source",
+            "message": "no_subscriptions",
             "size": "1242x600",
-            "location": "+0+1000"
+            "location": "+0+1040"
           }
         },
         "iphone_1242x2688_3": {
           "resolution": "1242x2688",
           "background": "phone3.png",
-          "mock": {
-             "template_name": "iphone_12_pro_straight",
-             "screencap": "caps/iphone_12_pro_purchase_false_%lang%.png",
-             "placement": "-scale 53% -geometry +0-150"
-          },
-          "annotation": {
-            "message": "no_subscriptions",
-            "size": "1242x600",
-            "location": "+0+1000"
-          }
-        },
-        "iphone_1242x2688_4": {
-          "resolution": "1242x2688",
-          "background": "phone4.png",
           "mock": {
              "template_name": "iphone_12_pro_straight",
              "screencap": "caps/iphone_12_pro_accounts_false_%lang%.png",
@@ -56,7 +57,21 @@
           "annotation": {
             "message": "crypto_accounts",
             "size": "1242x600",
-            "location": "+0-1000"
+            "location": "+0-1040"
+          }
+        },
+        "iphone_1242x2688_4": {
+          "resolution": "1242x2688",
+          "background": "phone4.png",
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_circuit_true_%lang%.png",
+             "placement": "-scale 53% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "multi_hop",
+            "size": "1242x600",
+            "location": "+0+1040"
           }
         },
         "iphone_1242x2688_5": {
@@ -65,25 +80,26 @@
           "mock": {
              "template_name": "iphone_12_pro_straight",
              "screencap": "caps/iphone_12_pro_traffic_false_%lang%.png",
-             "placement": "-scale 53% -geometry +0-150"
+             "placement": "-scale 53% -geometry +0+150"
           },
           "annotation": {
             "message": "monitor_connection",
             "size": "1242x600",
-            "location": "+0+1000"
+            "location": "+0-1040"
           }
         },
         "iphone_1242x2688_6": {
           "resolution": "1242x2688",
           "background": "phone6.png",
-          "graphic": {
-             "file": "bg/logo.png",
-             "placement": "-geometry +0-325"
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_connect_false_%lang%.png",
+             "placement": "-scale 53% -geometry +0-150"
           },
           "annotation": {
-            "message": "not_product",
+            "message": "open_source",
             "size": "1242x600",
-            "location": "+0+1000"
+            "location": "+0+1040"
           }
         }
       }
@@ -96,36 +112,37 @@
           "background": "phone_sm1.png",
           "mock": {
              "template_name": "iphone_12_pro_left",
-             "screencap": "caps/iphone_12_pro_connect_false_%lang%.png",
-             "placement": "-scale 30% -geometry +0+150"
+             "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
+             "placement": "-scale 30% -geometry +0+170"
           },
-          "annotation": {
-            "message": "get_started",
+          "annotations": [
+          {
+            "message": "unblock",
+            "style": "h1",
             "size": "1242x600",
-            "location": "+0-800"
+            "location": "+120+55"
+          },
+          {
+            "message": "websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+225"
+          },
+          {
+            "message": "unblock_websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+100"
           }
+          ]
         },
         "iphone_1242x2208_2": {
           "resolution": "1242x2208",
           "background": "phone_sm2.png",
           "mock": {
              "template_name": "iphone_12_pro_right",
-             "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
-             "placement": "-scale 30% -geometry +0-150"
-          },
-          "annotation": {
-            "message": "open_source",
-            "size": "1242x600",
-            "location": "+0+800"
-          }
-        },
-        "iphone_1242x2208_3": {
-          "resolution": "1242x2208",
-          "background": "phone_sm3.png",
-          "mock": {
-             "template_name": "iphone_12_pro_straight",
              "screencap": "caps/iphone_12_pro_purchase_false_%lang%.png",
-             "placement": "-scale 43% -geometry +0-150"
+             "placement": "-scale 30% -geometry +0-160"
           },
           "annotation": {
             "message": "no_subscriptions",
@@ -133,9 +150,9 @@
             "location": "+0+880"
           }
         },
-        "iphone_1242x2208_4": {
+        "iphone_1242x2208_3": {
           "resolution": "1242x2208",
-          "background": "phone_sm4.png",
+          "background": "phone_sm3.png",
           "mock": {
              "template_name": "iphone_12_pro_straight",
              "screencap": "caps/iphone_12_pro_accounts_false_%lang%.png",
@@ -147,29 +164,44 @@
             "location": "+0-880"
           }
         },
+        "iphone_1242x2208_4": {
+          "resolution": "1242x2208",
+          "background": "phone_sm4.png",
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_circuit_true_%lang%.png",
+             "placement": "-scale 43% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "multi_hop",
+            "size": "1242x600",
+            "location": "+0+880"
+          }
+        },
         "iphone_1242x2208_5": {
           "resolution": "1242x2208",
           "background": "phone_sm5.png",
           "mock": {
              "template_name": "iphone_12_pro_straight",
              "screencap": "caps/iphone_12_pro_traffic_false_%lang%.png",
-             "placement": "-scale 43% -geometry +0-150"
+             "placement": "-scale 43% -geometry +0+150"
           },
           "annotation": {
             "message": "monitor_connection",
             "size": "1242x600",
-            "location": "+0+880"
+            "location": "+0-880"
           }
         },
         "iphone_1242x2208_6": {
           "resolution": "1242x2208",
           "background": "phone_sm6.png",
-          "graphic": {
-             "file": "bg/logo.png",
-             "placement": "-geometry +0-325"
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_connect_false_%lang%.png",
+             "placement": "-scale 43% -geometry +0-150"
           },
           "annotation": {
-            "message": "not_product",
+            "message": "open_source",
             "size": "1242x600",
             "location": "+0+880"
           }
@@ -185,38 +217,50 @@
           "mocks": [
             {
               "template_name": "mac",
-              "screencap": "caps/iphone_12_pro_connect_false_%lang%.png",
+              "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
               "placement": "-scale 75% -geometry +174-94"
             },
             {
               "template_name": "mac",
-              "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
+              "screencap": "caps/iphone_12_pro_purchase_false_%lang%.png",
               "placement": "-scale 75% -geometry +900+112"
             }
           ],
           "annotations": [
             {
-              "message": "get_started",
+              "message": "unblock",
               "size": "2880x1800",
-              "location": "+100-640",
-              "style": "headline_ljust"
+              "location": "+160+200",
+              "style": "h1"
             },
             {
-              "message": "open_source",
+              "message": "websites_easily",
               "size": "2880x1800",
-              "location": "+200-140",
-              "style": "bullet"
+              "location": "+160+370",
+              "style": "h2"
+            },
+            {
+              "message": "unblock_websites_easily",
+              "style": "h2",
+              "size": "1242x600",
+              "location": "+160+170"
             },
             {
               "message": "no_subscriptions",
               "size": "2880x1800",
-              "location": "+200+100",
+              "location": "+160-80",
+              "style": "bullet"
+            },
+            {
+              "message": "multi_hop",
+              "size": "2880x1800",
+              "location": "+160+170",
               "style": "bullet"
             },
             {
               "message": "monitor_connection",
               "size": "2880x1800",
-              "location": "+200+380",
+              "location": "+160+420",
               "style": "bullet"
             }
           ]
@@ -227,45 +271,46 @@
           "mocks": [
             {
               "template_name": "mac",
-              "screencap": "caps/iphone_12_pro_purchase_false_%lang%.png",
+              "screencap": "caps/iphone_12_pro_accounts_false_%lang%.png",
               "placement": "-scale 75% -geometry +174+112"
             },
             {
               "template_name": "mac",
-              "screencap": "caps/iphone_12_pro_accounts_false_%lang%.png",
+              "screencap": "caps/iphone_12_pro_circuit_true_%lang%.png",
               "placement": "-scale 75% -geometry +900-94"
             }
           ],
           "annotation": {
-            "message": "no_subscriptions",
+            "message": "multi_hop",
             "size": "1242x600",
-            "location": "-700+00"
+            "location": "-800+00"
           }
         },
         "mac_3": {
           "resolution": "2880x1800",
           "background": "mac_3.png",
-          "mock": {
+          "mocks": [
+          {
              "template_name": "mac",
              "screencap": "caps/iphone_12_pro_traffic_false_%lang%.png",
-             "placement": "-scale 75% -geometry -320-0"
+             "placement": "-scale 75% -geometry +174-94"
           },
-          "graphic": {
-             "file": "bg/logo.png",
-             "placement": "-geometry +700-200 -scale 80%"
-          },
+          {
+             "template_name": "mac",
+             "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
+             "placement": "-scale 75% -geometry +900+112"
+          }
+          ],
           "annotations": [
             {
               "message": "monitor_connection",
-              "size": "2880x1800",
-              "location": "-1070+0",
-              "style": "headline_sm"
+              "size": "1242x600",
+              "location": "-800-300"
             },
             {
-              "message": "not_product",
-              "size": "2880x1800",
-              "location": "+700+680",
-              "style": "headline_sm"
+              "message": "open_source",
+              "size": "1242x600",
+              "location": "-800+0"
             }
           ]
         }
@@ -279,30 +324,43 @@
           "background": "ipad1.png",
           "mock": {
              "template_name": "ipad_12_pro_left",
-             "screencap": "caps/ipad_pro_12_9_connect_false_%lang%.png",
-             "placement": "-scale 80% -geometry +0+150"
+             "screencap": "caps/ipad_pro_12_9_connect_true_%lang%.png",
+             "placement": "-scale 80% -geometry +0+230"
           },
-          "annotation": {
-            "message": "get_started",
-            "size": "2048x600",
-            "style": "default_big_ljust",
-            "location": "+200-1005",
-            "fontset": "default"
+          "annotations": [
+          {
+            "message": "unblock",
+            "style": "h1_ipad",
+            "size": "1242x600",
+            "location": "+200+100"
+          },
+          {
+            "message": "websites_easily",
+            "style": "h2_ipad",
+            "size": "1242x600",
+            "location": "+200+300"
+          },
+          {
+            "message": "unblock_websites_easily",
+            "style": "h2_ipad",
+            "size": "1242x600",
+            "location": "+200+120"
           }
+          ]
         },
         "ipad_2": {
           "resolution": "2048x2732",
           "background": "ipad2.png",
           "mock": {
              "template_name": "ipad_12_pro_right",
-             "screencap": "caps/ipad_pro_12_9_connect_true_%lang%.png",
+             "screencap": "caps/ipad_pro_12_9_purchase_false_%lang%.png",
              "placement": "-scale 80% -geometry +0-150"
           },
           "annotation": {
-            "message": "open_source",
+            "message": "no_subscriptions",
             "size": "2048x600",
             "style": "rjust",
-            "location": "+60+1005",
+            "location": "+0+1060",
             "style": "default_big",
             "fontset": "default"
           }
@@ -312,11 +370,11 @@
           "background": "ipad3.png",
           "mock": {
              "template_name": "ipad_12_pro_straight",
-             "screencap": "caps/ipad_pro_12_9_purchase_false_%lang%.png",
+             "screencap": "caps/ipad_pro_12_9_accounts_false_%lang%.png",
              "placement": "-scale 80% -geometry +0+150"
           },
           "annotation": {
-            "message": "no_subscriptions",
+            "message": "crypto_accounts",
             "size": "2048x600",
             "style": "default_big",
             "location": "+0-1000",
@@ -328,14 +386,14 @@
           "background": "ipad4.png",
           "mock": {
              "template_name": "ipad_12_pro_straight",
-             "screencap": "caps/ipad_pro_12_9_purchase_false_%lang%.png",
+             "screencap": "caps/ipad_pro_12_9_circuit_true_%lang%.png",
              "placement": "-scale 80% -geometry +0-150"
           },
           "annotation": {
-            "message": "crypto_accounts",
+            "message": "multi_hop",
             "size": "2048x600",
             "style": "default_big",
-            "location": "+0+1000",
+            "location": "+0+1060",
             "fontset": "default"
           }
         },
@@ -344,7 +402,7 @@
           "background": "ipad5.png",
           "mock": {
              "template_name": "ipad_12_pro_straight",
-             "screencap": "caps/ipad_pro_12_9_purchase_false_%lang%.png",
+             "screencap": "caps/ipad_pro_12_9_traffic_false_%lang%.png",
              "placement": "-scale 80% -geometry +0+150"
           },
           "annotation": {
@@ -358,14 +416,15 @@
         "ipad_6": {
           "resolution": "2048x2732",
           "background": "ipad6.png",
-          "graphic": {
-             "file": "bg/logo.png",
-             "placement": "-geometry +0-325"
+          "mock": {
+             "template_name": "ipad_12_pro_straight",
+             "screencap": "caps/ipad_pro_12_9_connect_true_%lang%.png",
+             "placement": "-scale 80% -geometry +0-150"
           },
           "annotation": {
-            "message": "not_product",
+            "message": "open_source",
             "size": "2048x600",
-            "location": "+0+1000",
+            "location": "+0+1060",
             "style": "default_big",
             "fontset": "default"
           }
@@ -380,27 +439,43 @@
           "background": "phone1.png",
           "mock": {
              "template_name": "pixel_4_left",
-             "screencap": "caps/pixel_4_connect_false_%lang%.png",
+             "screencap": "caps/pixel_4_connect_true_%lang%.png",
              "placement": "-scale 35% -geometry +0+150"
           },
-          "annotation": {
-            "message": "get_started_just",
+          "annotations": [
+          {
+            "message": "unblock",
+            "style": "h1",
             "size": "1242x600",
-            "location": "+0-1000"
+            "location": "+120+100"
+          },
+          {
+            "message": "websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+270"
+          },
+          {
+            "message": "unblock_websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+120"
           }
+        ]
         },
         "android_1080x1920_2": {
           "resolution": "1080x1920",
           "background": "phone2.png",
           "mock": {
              "template_name": "pixel_4_right",
-             "screencap": "caps/pixel_4_connect_true_%lang%.png",
+             "screencap": "caps/pixel_4_purchase_false_%lang%.png",
              "placement": "-scale 35% -geometry +0-150"
           },
           "annotation": {
-            "message": "open_source",
+            "message": "no_subscriptions",
+            "style": "default_sm",
             "size": "1242x600",
-            "location": "+0+1000"
+            "location": "+0+1080"
           }
         },
         "android_1080x1920_3": {
@@ -408,13 +483,14 @@
           "background": "phone3.png",
           "mock": {
              "template_name": "pixel_4_straight",
-             "screencap": "caps/pixel_4_purchase_false_%lang%.png",
-             "placement": "-scale 53% -geometry +0-150"
+             "screencap": "caps/pixel_4_accounts_false_%lang%.png",
+             "placement": "-scale 53% -geometry +0+150"
           },
           "annotation": {
-            "message": "no_subscriptions",
+            "message": "crypto_accounts",
+            "style": "default_sm",
             "size": "1242x600",
-            "location": "+0+1000"
+            "location": "+0-1080"
           }
         },
         "android_1080x1920_4": {
@@ -423,12 +499,13 @@
           "mock": {
              "template_name": "pixel_4_straight",
              "screencap": "caps/pixel_4_accounts_false_%lang%.png",
-             "placement": "-scale 53% -geometry +0+150"
+             "placement": "-scale 53% -geometry +0-150"
           },
           "annotation": {
-            "message": "crypto_accounts",
+            "message": "multi_hop",
+            "style": "default_sm",
             "size": "1242x600",
-            "location": "+0-1000"
+            "location": "+0+1080"
           }
         },
         "android_1080x1920_5": {
@@ -437,25 +514,28 @@
           "mock": {
              "template_name": "pixel_4_straight",
              "screencap": "caps/pixel_4_traffic_false_%lang%.png",
-             "placement": "-scale 53% -geometry +0-150"
+             "placement": "-scale 53% -geometry +0+150"
           },
           "annotation": {
             "message": "monitor_connection",
+            "style": "default_sm",
             "size": "1242x600",
-            "location": "+0+1000"
+            "location": "+0-1080"
           }
         },
         "android_1080x1920_6": {
           "resolution": "1080x1920",
           "background": "phone6.png",
-          "graphic": {
-             "file": "bg/logo.png",
-             "placement": "-geometry +0-325"
+          "mock": {
+             "template_name": "pixel_4_straight",
+             "screencap": "caps/pixel_4_connect_false_%lang%.png",
+             "placement": "-scale 53% -geometry +0-150"
           },
           "annotation": {
-            "message": "not_product",
+            "message": "open_source",
+            "style": "default_sm",
             "size": "1242x600",
-            "location": "+0+1000"
+            "location": "+0+1080"
           }
         },
         "android_feature_1024x500": {
@@ -465,66 +545,101 @@
             {
               "template_name": "pixel_4_left",
               "screencap": "caps/pixel_4_purchase_false_%lang%.png",
-              "placement": "-scale 9.1% -geometry +144+84"
+              "placement": "-scale 9.1% -geometry +114+74"
             },
             {
               "template_name": "pixel_4_right",
               "screencap": "caps/pixel_4_connect_true_%lang%.png",
-              "placement": "-scale 9.1% -geometry +350+10"
+              "placement": "-scale 9.1% -geometry +320+30"
             }
           ],
           "annotations": [
             {
-              "message": "get_started_just",
-              "size": "1024x500",
-              "location": "+75+35",
-              "style": "mini"
+              "message": "unblock",
+              "style": "mini_head",
+              "size": "1242x600",
+              "location": "+75+40"
             },
             {
-              "message": "crypto_accounts",
-              "size": "1024x500",
-              "location": "+100+150",
-              "style": "bullet_mini"
+              "message": "websites_easily",
+              "style": "mini",
+              "size": "1242x600",
+              "location": "+75+94"
+            },
+            {
+              "message": "unblock_websites_easily",
+              "style": "mini",
+              "size": "1242x600",
+              "location": "+75+50"
             },
             {
               "message": "no_subscriptions",
               "size": "1024x500",
-              "location": "+100+250",
+              "location": "+75+170",
+              "style": "bullet_mini"
+            },
+            {
+              "message": "crypto_accounts",
+              "size": "1024x500",
+              "location": "+75+260",
               "style": "bullet_mini"
             },
             {
               "message": "open_source",
               "size": "1024x500",
-              "location": "+100+350",
+              "location": "+75+370",
               "style": "bullet_mini"
             }
           ]
         }
       }
     }
+
   },
   "fontsets": {
     "default": {
-        "en": "font/Baloo2-Regular.ttf",
+        "en": "font/Baloo2-SemiBold.ttf",
         "zh": "font/NotoSansSC-Regular.otf",
-        "fr": "font/Baloo2-Regular.ttf",
-        "hi": "font/Baloo2-Regular.ttf",
-        "id": "font/Baloo2-Regular.ttf",
-        "it": "font/Baloo2-Regular.ttf",
-        "ja": "font/MPLUSRounded1c-Regular.ttf",
+        "fr": "font/Baloo2-SemiBold.ttf",
+        "hi": "font/Baloo2-SemiBold.ttf",
+        "id": "font/Baloo2-SemiBold.ttf",
+        "it": "font/Baloo2-SemiBold.ttf",
+        "ja": "font/KiwiMaru-Medium.ttf",
         "ko": "font/Jua-Regular.ttf",
-        "br": "font/Baloo2-Regular.ttf",
-        "pt": "font/Baloo2-Regular.ttf",
+        "br": "font/Baloo2-SemiBold.ttf",
+        "pt": "font/Baloo2-SemiBold.ttf",
         "ru": "font/MPLUSRounded1c-Regular.ttf",
-        "es": "font/Baloo2-Regular.ttf",
-        "tr": "font/Baloo2-Regular.ttf",
+        "es": "font/Baloo2-SemiBold.ttf",
+        "tr": "font/Baloo2-SemiBold.ttf",
         "styles": {
-          "default": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 90",
+          "default": "-fill white -stroke white -strokewidth 1 -interline-spacing -55 -pointsize 90",
+          "default_sm": "-fill white -stroke white -strokewidth 1 -interline-spacing -45 -pointsize 84",
+          "default_sm_zh": "-fill white -stroke white -strokewidth 1 -interline-spacing -20 -pointsize 84",
+          "default_fr": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 84",
+          "default_pt": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 84",
           "default_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 90",
-          "default_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -35 -pointsize 90",
+          "default_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -35 -pointsize 84",
           "default_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 90",
-          "default_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 90",
+          "default_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 80",
           "default_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 90",
+          "h1": "-fill white -stroke white -strokewidth 4 -interline-spacing -55 -pointsize 160 -gravity northwest",
+          "h1_hi": "-fill white -stroke white -strokewidth 4 -interline-spacing -55 -pointsize 160 -gravity northwest",
+          "h1_ru": "-fill white -stroke white -strokewidth 4 -interline-spacing -55 -pointsize 160 -gravity northwest",
+          "h2": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 110 -gravity northwest",
+          "h2_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 110 -gravity northwest",
+          "h2_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -20 -pointsize 90 -gravity northwest",
+          "h2_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 120 -gravity northwest",
+          "h2_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 90 -gravity northwest",
+          "h2_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 120 -gravity northwest",
+          "h2_fr": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 90 -gravity northwest",
+          "h2_pt": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 100 -gravity northwest",
+          "h2_tr": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 100 -gravity northwest",
+          "h1_ipad": "-fill white -stroke white -strokewidth 4 -interline-spacing -55 -pointsize 200 -gravity northwest",
+          "h2_ipad": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 140 -gravity northwest",
+          "h2_ipad_es": "-fill white -stroke white -strokewidth 2 -interline-spacing -35 -pointsize 140 -gravity northwest",
+          "h2_ipad_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 140 -gravity northwest",
+          "h2_ipad_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 140 -gravity northwest",
+          "h2_ipad_tr": "-fill white -stroke white -strokewidth 2 -interline-spacing -75 -pointsize 140 -gravity northwest",
           "headline_ljust": "-fill white -stroke white -strokewidth 3 -interline-spacing -50 -pointsize 100 -gravity west",
           "headline_ljust_hi": "-fill white -stroke white -strokewidth 3 -interline-spacing -40 -pointsize 100 -gravity west",
           "headline_ljust_ja": "-fill white -stroke white -strokewidth 3 -interline-spacing -35 -pointsize 100 -gravity west",
@@ -542,25 +657,34 @@
           "bullet_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -35 -pointsize 75 -gravity west",
           "bullet_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 75 -gravity west",
           "bullet_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 75 -gravity west",
-          "bullet_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 75 -gravity west",
-          "mini": "-fill white -stroke white -strokewidth 2 -interline-spacing -30 -pointsize 45 -gravity northwest",
-          "mini_es": "-fill white -stroke white -strokewidth 2 -interline-spacing -30 -pointsize 35 -gravity northwest",
-          "mini_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -30 -pointsize 45 -gravity northwest",
-          "mini_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -30 -pointsize 45 -gravity northwest",
-          "mini_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -30 -pointsize 45 -gravity northwest",
+          "bullet_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -20 -pointsize 75 -gravity west",
+          "mini": "-fill white -stroke white -strokewidth 1 -interline-spacing -30 -pointsize 45 -gravity northwest",
+          "mini_head": "-fill white -stroke white -strokewidth 1 -interline-spacing -30 -pointsize 55 -gravity northwest",
+          "mini_head_es": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 50 -gravity northwest",
+          "mini_head_id": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 58 -gravity northwest",
+          "mini_head_it": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 60 -gravity northwest",
+          "mini_head_pt": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 56 -gravity northwest",
+          "mini_es": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 35 -gravity northwest",
+          "mini_fr": "-fill white -stroke white -strokewidth 1 -interline-spacing -30 -pointsize 35 -gravity northwest",
+          "mini_hi": "-fill white -stroke white -strokewidth 1 -interline-spacing -30 -pointsize 45 -gravity northwest",
+          "mini_id": "-fill white -stroke white -strokewidth 1 -interline-spacing -30 -pointsize 36 -gravity northwest",
+          "mini_ja": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 34 -gravity northwest",
+          "mini_ru": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 35 -gravity northwest",
           "mini_ko": "-fill white -stroke white -strokewidth 1 -interline-spacing -2 -pointsize 45 -gravity northwest",
-          "mini_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -30 -pointsize 45 -gravity northwest",
-          "bullet_mini": "-fill white -stroke white -strokewidth 2 -interline-spacing -15 -pointsize 30 -gravity northwest",
-          "bullet_mini_es": "-fill white -stroke white -strokewidth 2 -interline-spacing -15 -pointsize 25 -gravity northwest",
-          "bullet_mini_fr": "-fill white -stroke white -strokewidth 2 -interline-spacing -15 -pointsize 25 -gravity northwest",
+          "mini_pt": "-fill white -stroke white -strokewidth 1 -interline-spacing -2 -pointsize 38 -gravity northwest",
+          "mini_zh": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 45 -gravity northwest",
+          "mini_tr": "-fill white -stroke white -strokewidth 1 -interline-spacing -25 -pointsize 36 -gravity northwest",
+          "bullet_mini": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 30 -gravity northwest",
+          "bullet_mini_es": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 25 -gravity northwest",
+          "bullet_mini_fr": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 25 -gravity northwest",
           "bullet_mini_hi": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 25 -gravity northwest",
           "bullet_mini_id": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 25 -gravity northwest",
-          "bullet_mini_it": "-fill white -stroke white -strokewidth 2 -interline-spacing -15 -pointsize 27 -gravity northwest",
-          "bullet_mini_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 30 -gravity northwest",
+          "bullet_mini_it": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 27 -gravity northwest",
+          "bullet_mini_ja": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 28 -gravity northwest",
           "bullet_mini_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -15 -pointsize 30 -gravity northwest",
           "bullet_mini_ko": "-fill white -stroke white -strokewidth 1 -interline-spacing -1 -pointsize 30 -gravity northwest",
           "bullet_mini_tr": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 25 -gravity northwest",
-          "bullet_mini_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -15 -pointsize 30 -gravity northwest",
+          "bullet_mini_zh": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 30 -gravity northwest",
           "default_big": "-fill white -stroke white -strokewidth 2 -interline-spacing -75 -pointsize 120",
           "default_big_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -50 -pointsize 120",
           "default_big_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 120",
@@ -583,35 +707,50 @@
     }
   },
   "messages": {
-    "get_started_just": {
-      "en": "Get started\\nfor just \\$1",
-      "zh": "1美金即可启用",
-      "fr": "Commencez avec \\n1 euro seulement",
-      "hi": "सस्ते में शुरू करें",
-      "id": "Mulailah dengan harga\\nyang aman di kantong",
-      "it": "Inizia al\\ncosto di un caffè",
-      "ja": "安価に始める\\nことが可能",
-      "ko": "저렴한 가격에\\n사용해보세요.",
-      "br": "Começar com o preço\\nmais baixo",
-      "pt": "Podes começar pelo\\npreço de uma imperial",
-      "ru": "Начни , заплатив меньше\\nчем за чашку кофе !",
-      "es": "¡Comienza por\\nun precio\\neconómico!",
-      "tr": "Ucuz bir\nşekilde başlayın"
+    "unblock": {
+      "en": "Unblock",
+      "zh": "",
+      "fr": "Débloquez",
+      "hi": "",
+      "id": "Buka blokir",
+      "it": "Sblocca",
+      "ja": "",
+      "ko": "",
+      "br": "Desbloqueie",
+      "pt": "Desbloqueie",
+      "ru": "",
+      "es": "Desbloquea",
+      "tr": ""
     },
-    "get_started": {
-      "en": "Get started\\nwith just a tap",
-      "zh": "1美金即可启用",
-      "fr": "Commencez avec \\n1 euro seulement",
-      "hi": "सस्ते में शुरू करें",
-      "id": "Mulailah dengan harga\\nyang aman di kantong",
-      "it": "Inizia al\\ncosto di un caffè",
-      "ja": "安価に始める\\nことが可能",
-      "ko": "저렴한 가격에\\n사용해보세요.",
-      "br": "Começar com o preço\\nmais baixo",
-      "pt": "Podes começar pelo\\npreço de uma imperial",
-      "ru": "Начни , заплатив меньше\\nчем за чашку кофе !",
-      "es": "¡Comienza por\\nun precio\\neconómico!",
-      "tr": "Ucuz bir\nşekilde başlayın"
+    "websites_easily": {
+      "en": "websites easily",
+      "zh": "",
+      "fr": "facilement des sites Web",
+      "hi": "",
+      "id": "situs dengan mudah",
+      "it": "facilmente i siti web",
+      "ja": "",
+      "ko": "",
+      "br": "sites facilmente",
+      "pt": "websites facilmente",
+      "ru": "",
+      "es": "sitios web fácilmente",
+      "tr": ""
+    },
+    "unblock_websites_easily": {
+      "en": "",
+      "zh": "轻松解除\\n被封锁的网站",
+      "fr": "",
+      "hi": "वेबसाइटों को आसानी से\\nअनब्लॉक करेे",
+      "id": "",
+      "it": "",
+      "ja": "Web サイトのブロックを\\n簡単に解除",
+      "ko": "간편하게 웹사이트 \\n차단을 해제하세요",
+      "br": "",
+      "pt": "",
+      "ru": "Удобная разблокировка\\nнедоступных сайтов",
+      "es": "",
+      "tr": "İnternet sitelerinin\\nengelini kolayca\\nkaldırın"
     },
     "open_source": {
         "en": "Open source\\nand no tracking",
@@ -658,6 +797,21 @@
         "es": "Utiliza cuentas respaldadas\\npor criptomonedas para\\npagar el servicio VPN",
         "tr": "VPN servisi için kripto\\ntabanlı hesaplar ile\\nödeme yapabilirsiniz"
       },
+      "multi_hop": {
+        "en": "Build multi-hop circuits\\nusing different accounts",
+        "zh": "使用不同帐户\\n打造多跃点线路",
+        "fr": "Créez des circuits multi-bonds\\nà l'aide de plusieurs comptes",
+        "hi": "अलग-अलग खातों का उपयोग करके\\nमल्टी-बॉप परिपथ निर्मित करेें",
+        "id": "Buat sirkuit multi-hop\\ndengan akun yang berbeda",
+        "it": "Crea circuiti multi-hop\\ncon diversi account",
+        "ja": "異なるアカウントを使用して\\nマルチホップ回路を構築",
+        "ko": "여러 개의 계정을 사용해\\n멀티-홉 서킷을 구축하세요",
+        "br": "Construa circuitos multi-hop\\nusando contas diferentes",
+        "pt": "Crie circuitos com vários hops\\nao utilizar contas diferentes",
+        "ru": "Создавайте цепи\\nмультиподключения\\nс несколькими аккаунтами",
+        "es": "Crea circuitos multi-hop\\nusando diferentes cuentas",
+        "tr": "Farklı hesapları kullanarak\\n çoklu ağ atlaması\\ndevreleri oluşturun"
+      },
       "monitor_connection": {
         "en": "Monitor your\\ndevice\\'s connection",
         "zh": "随时监控您\\n的硬件连接",
@@ -697,7 +851,7 @@
       "distort_to": ["363,209", "1338,5354", "3165,4897", "2152,198"]
     },
     "iphone_12_pro_straight": {
-      "distort_to": ["300,220", "300,3742", "2035,3742", "2035,220"]
+      "distort_to": ["314,240", "314,3742", "1940,3742", "1940,240"]
     },
     "ipad_12_pro_left": {
       "distort_to": ["130,115", "524,2401", "1946,2157", "1425,335"]
