@@ -235,3 +235,6 @@
 [submodule "outcome"]
 	path = p2p/outcome
 	url = https://github.com/boostorg/outcome.git
+[submodule "pcre2"]
+	path = min-pcre2/pcre2
+	url = https://github.com/PhilipHazel/pcre2.git

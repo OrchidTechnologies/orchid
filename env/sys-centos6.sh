@@ -11,8 +11,13 @@ rm -rf "${sysroot}"
 mkdir -p "${sysroot}"
 pushd "${sysroot}"
 
+#vault=https://vault.centos.org
+vault=https://archive.kernel.org/centos-vault
+#vault=http://linuxsoft.cern.ch/centos-vault
+#vault=http://mirror.nsc.liu.se/centos-store
+
 function rpm() {
-    curl -s https://vault.centos.org/6.0/os/"${machine}"/Packages/"$1".el6."${arch}".rpm | rpm2cpio - | cpio -i
+    curl -s "${vault}"/6.0/os/"${machine}"/Packages/"$1".el6."${arch}".rpm | rpm2cpio - | cpio -i
     find . -type d ! -perm 755 -exec chmod 755 {} +
 }
 

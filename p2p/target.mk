@@ -75,7 +75,6 @@ ifeq ($(target),win)
 source += $(pwd)/lwip/contrib/ports/win32/sys_arch.c
 cflags/$(pwd)/lwip/contrib/ports/win32/sys_arch.c += -UWIN32_LEAN_AND_MEAN
 cflags += -I$(pwd)/lwip/contrib/ports/win32/include
-cflags/$(pwd)/lwip/ += -DLWIP_TIMEVAL_PRIVATE=0
 else
 source += $(pwd)/lwip/contrib/ports/unix/port/sys_arch.c
 cflags += -I$(pwd)/lwip/contrib/ports/unix/port/include

@@ -1,0 +1,878 @@
+{
+  "imagesets": {
+    "app_store_ios": {
+      "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
+      "images": {
+        "iphone_1242x2688_1": {
+          "resolution": "1242x2688",
+          "background": "phone1.png",
+          "mock": {
+             "template_name": "iphone_12_pro_left",
+             "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
+             "placement": "-scale 35% -geometry +0+220"
+          },
+          "annotations": [
+          {
+            "message": "unblock",
+            "style": "h1",
+            "size": "1242x600",
+            "location": "+120+120"
+          },
+          {
+            "message": "websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+300"
+          },
+          {
+            "message": "unblock_websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+170"
+          }
+          ]
+        },
+        "iphone_1242x2688_2": {
+          "resolution": "1242x2688",
+          "background": "phone2.png",
+          "mock": {
+             "template_name": "iphone_12_pro_right",
+             "screencap": "caps/iphone_12_pro_purchase_false_%lang%.png",
+             "placement": "-scale 35% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "no_subscriptions",
+            "size": "1242x600",
+            "location": "+0+1040"
+          }
+        },
+        "iphone_1242x2688_3": {
+          "resolution": "1242x2688",
+          "background": "phone3.png",
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_accounts_false_%lang%.png",
+             "placement": "-scale 53% -geometry +0+150"
+          },
+          "annotation": {
+            "message": "crypto_accounts",
+            "size": "1242x600",
+            "location": "+0-1040"
+          }
+        },
+        "iphone_1242x2688_4": {
+          "resolution": "1242x2688",
+          "background": "phone4.png",
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_circuit_true_%lang%.png",
+             "placement": "-scale 53% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "multi_hop",
+            "size": "1242x600",
+            "location": "+0+1040"
+          }
+        },
+        "iphone_1242x2688_5": {
+          "resolution": "1242x2688",
+          "background": "phone5.png",
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_traffic_false_%lang%.png",
+             "placement": "-scale 53% -geometry +0+150"
+          },
+          "annotation": {
+            "message": "monitor_connection",
+            "size": "1242x600",
+            "location": "+0-1040"
+          }
+        },
+        "iphone_1242x2688_6": {
+          "resolution": "1242x2688",
+          "background": "phone6.png",
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_connect_false_%lang%.png",
+             "placement": "-scale 53% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "open_source",
+            "size": "1242x600",
+            "location": "+0+1040"
+          }
+        }
+      }
+    },
+    "app_store_ios_small": {
+      "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
+      "images": {
+        "iphone_1242x2208_1": {
+          "resolution": "1242x2208",
+          "background": "phone_sm1.png",
+          "mock": {
+             "template_name": "iphone_12_pro_left",
+             "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
+             "placement": "-scale 30% -geometry +0+170"
+          },
+          "annotations": [
+          {
+            "message": "unblock",
+            "style": "h1",
+            "size": "1242x600",
+            "location": "+120+55"
+          },
+          {
+            "message": "websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+225"
+          },
+          {
+            "message": "unblock_websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+100"
+          }
+          ]
+        },
+        "iphone_1242x2208_2": {
+          "resolution": "1242x2208",
+          "background": "phone_sm2.png",
+          "mock": {
+             "template_name": "iphone_12_pro_right",
+             "screencap": "caps/iphone_12_pro_purchase_false_%lang%.png",
+             "placement": "-scale 30% -geometry +0-160"
+          },
+          "annotation": {
+            "message": "no_subscriptions",
+            "size": "1242x600",
+            "location": "+0+880"
+          }
+        },
+        "iphone_1242x2208_3": {
+          "resolution": "1242x2208",
+          "background": "phone_sm3.png",
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_accounts_false_%lang%.png",
+             "placement": "-scale 43% -geometry +0+150"
+          },
+          "annotation": {
+            "message": "crypto_accounts",
+            "size": "1242x600",
+            "location": "+0-880"
+          }
+        },
+        "iphone_1242x2208_4": {
+          "resolution": "1242x2208",
+          "background": "phone_sm4.png",
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_circuit_true_%lang%.png",
+             "placement": "-scale 43% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "multi_hop",
+            "size": "1242x600",
+            "location": "+0+880"
+          }
+        },
+        "iphone_1242x2208_5": {
+          "resolution": "1242x2208",
+          "background": "phone_sm5.png",
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_traffic_false_%lang%.png",
+             "placement": "-scale 43% -geometry +0+150"
+          },
+          "annotation": {
+            "message": "monitor_connection",
+            "size": "1242x600",
+            "location": "+0-880"
+          }
+        },
+        "iphone_1242x2208_6": {
+          "resolution": "1242x2208",
+          "background": "phone_sm6.png",
+          "mock": {
+             "template_name": "iphone_12_pro_straight",
+             "screencap": "caps/iphone_12_pro_connect_false_%lang%.png",
+             "placement": "-scale 43% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "open_source",
+            "size": "1242x600",
+            "location": "+0+880"
+          }
+        }
+      }
+    },
+    "app_store_mac": {
+      "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
+      "images": {
+        "mac_1": {
+          "resolution": "2880x1800",
+          "background": "mac_1.png",
+          "mocks": [
+            {
+              "template_name": "mac",
+              "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
+              "placement": "-scale 75% -geometry +174-94"
+            },
+            {
+              "template_name": "mac",
+              "screencap": "caps/iphone_12_pro_purchase_false_%lang%.png",
+              "placement": "-scale 75% -geometry +900+112"
+            }
+          ],
+          "annotations": [
+            {
+              "message": "unblock",
+              "size": "2880x1800",
+              "location": "+160+200",
+              "style": "h1"
+            },
+            {
+              "message": "websites_easily",
+              "size": "2880x1800",
+              "location": "+160+370",
+              "style": "h2"
+            },
+            {
+              "message": "unblock_websites_easily",
+              "style": "h2",
+              "size": "1242x600",
+              "location": "+160+170"
+            },
+            {
+              "message": "no_subscriptions",
+              "size": "2880x1800",
+              "location": "+160-80",
+              "style": "bullet"
+            },
+            {
+              "message": "multi_hop",
+              "size": "2880x1800",
+              "location": "+160+170",
+              "style": "bullet"
+            },
+            {
+              "message": "monitor_connection",
+              "size": "2880x1800",
+              "location": "+160+420",
+              "style": "bullet"
+            }
+          ]
+        },
+        "mac_2": {
+          "resolution": "2880x1800",
+          "background": "mac_2.png",
+          "mocks": [
+            {
+              "template_name": "mac",
+              "screencap": "caps/iphone_12_pro_accounts_false_%lang%.png",
+              "placement": "-scale 75% -geometry +174+112"
+            },
+            {
+              "template_name": "mac",
+              "screencap": "caps/iphone_12_pro_circuit_true_%lang%.png",
+              "placement": "-scale 75% -geometry +900-94"
+            }
+          ],
+          "annotation": {
+            "message": "multi_hop",
+            "size": "1242x600",
+            "location": "-800+00"
+          }
+        },
+        "mac_3": {
+          "resolution": "2880x1800",
+          "background": "mac_3.png",
+          "mocks": [
+          {
+             "template_name": "mac",
+             "screencap": "caps/iphone_12_pro_traffic_false_%lang%.png",
+             "placement": "-scale 75% -geometry +174-94"
+          },
+          {
+             "template_name": "mac",
+             "screencap": "caps/iphone_12_pro_connect_true_%lang%.png",
+             "placement": "-scale 75% -geometry +900+112"
+          }
+          ],
+          "annotations": [
+            {
+              "message": "monitor_connection",
+              "size": "1242x600",
+              "location": "-800-300"
+            },
+            {
+              "message": "open_source",
+              "size": "1242x600",
+              "location": "-800+0"
+            }
+          ]
+        }
+      }
+    },
+    "app_store_ipad": {
+      "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
+      "images": {
+        "ipad_1": {
+          "resolution": "2048x2732",
+          "background": "ipad1.png",
+          "mock": {
+             "template_name": "ipad_12_pro_left",
+             "screencap": "caps/ipad_pro_12_9_connect_true_%lang%.png",
+             "placement": "-scale 80% -geometry +0+230"
+          },
+          "annotations": [
+          {
+            "message": "unblock",
+            "style": "h1_ipad",
+            "size": "1242x600",
+            "location": "+200+100"
+          },
+          {
+            "message": "websites_easily",
+            "style": "h2_ipad",
+            "size": "1242x600",
+            "location": "+200+300"
+          },
+          {
+            "message": "unblock_websites_easily",
+            "style": "h2_ipad",
+            "size": "1242x600",
+            "location": "+200+120"
+          }
+          ]
+        },
+        "ipad_2": {
+          "resolution": "2048x2732",
+          "background": "ipad2.png",
+          "mock": {
+             "template_name": "ipad_12_pro_right",
+             "screencap": "caps/ipad_pro_12_9_purchase_false_%lang%.png",
+             "placement": "-scale 80% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "no_subscriptions",
+            "size": "2048x600",
+            "style": "rjust",
+            "location": "+0+1060",
+            "style": "default_big",
+            "fontset": "default"
+          }
+        },
+        "ipad_3": {
+          "resolution": "2048x2732",
+          "background": "ipad3.png",
+          "mock": {
+             "template_name": "ipad_12_pro_straight",
+             "screencap": "caps/ipad_pro_12_9_accounts_false_%lang%.png",
+             "placement": "-scale 80% -geometry +0+150"
+          },
+          "annotation": {
+            "message": "crypto_accounts",
+            "size": "2048x600",
+            "style": "default_big",
+            "location": "+0-1000",
+            "fontset": "default"
+          }
+        },
+        "ipad_4": {
+          "resolution": "2048x2732",
+          "background": "ipad4.png",
+          "mock": {
+             "template_name": "ipad_12_pro_straight",
+             "screencap": "caps/ipad_pro_12_9_circuit_true_%lang%.png",
+             "placement": "-scale 80% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "multi_hop",
+            "size": "2048x600",
+            "style": "default_big",
+            "location": "+0+1060",
+            "fontset": "default"
+          }
+        },
+        "ipad_5": {
+          "resolution": "2048x2732",
+          "background": "ipad5.png",
+          "mock": {
+             "template_name": "ipad_12_pro_straight",
+             "screencap": "caps/ipad_pro_12_9_traffic_false_%lang%.png",
+             "placement": "-scale 80% -geometry +0+150"
+          },
+          "annotation": {
+            "message": "monitor_connection",
+            "size": "2048x600",
+            "location": "+0-1000",
+            "style": "default_big",
+            "fontset": "default"
+          }
+        },
+        "ipad_6": {
+          "resolution": "2048x2732",
+          "background": "ipad6.png",
+          "mock": {
+             "template_name": "ipad_12_pro_straight",
+             "screencap": "caps/ipad_pro_12_9_connect_true_%lang%.png",
+             "placement": "-scale 80% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "open_source",
+            "size": "2048x600",
+            "location": "+0+1060",
+            "style": "default_big",
+            "fontset": "default"
+          }
+        }
+      }
+    },
+    "play_store": {
+      "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
+      "images": {
+        "android_1080x1920_1": {
+          "resolution": "1080x1920",
+          "background": "phone1.png",
+          "mock": {
+             "template_name": "pixel_4_left",
+             "screencap": "caps/pixel_4_connect_true_%lang%.png",
+             "placement": "-scale 35% -geometry +0+150"
+          },
+          "annotations": [
+          {
+            "message": "unblock",
+            "style": "h1",
+            "size": "1242x600",
+            "location": "+120+100"
+          },
+          {
+            "message": "websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+270"
+          },
+          {
+            "message": "unblock_websites_easily",
+            "style": "h2",
+            "size": "1242x600",
+            "location": "+120+120"
+          }
+        ]
+        },
+        "android_1080x1920_2": {
+          "resolution": "1080x1920",
+          "background": "phone2.png",
+          "mock": {
+             "template_name": "pixel_4_right",
+             "screencap": "caps/pixel_4_purchase_false_%lang%.png",
+             "placement": "-scale 35% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "no_subscriptions",
+            "style": "default_sm",
+            "size": "1242x600",
+            "location": "+0+1080"
+          }
+        },
+        "android_1080x1920_3": {
+          "resolution": "1080x1920",
+          "background": "phone3.png",
+          "mock": {
+             "template_name": "pixel_4_straight",
+             "screencap": "caps/pixel_4_accounts_false_%lang%.png",
+             "placement": "-scale 53% -geometry +0+150"
+          },
+          "annotation": {
+            "message": "crypto_accounts",
+            "style": "default_sm",
+            "size": "1242x600",
+            "location": "+0-1080"
+          }
+        },
+        "android_1080x1920_4": {
+          "resolution": "1080x1920",
+          "background": "phone4.png",
+          "mock": {
+             "template_name": "pixel_4_straight",
+             "screencap": "caps/pixel_4_accounts_false_%lang%.png",
+             "placement": "-scale 53% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "multi_hop",
+            "style": "default_sm",
+            "size": "1242x600",
+            "location": "+0+1080"
+          }
+        },
+        "android_1080x1920_5": {
+          "resolution": "1080x1920",
+          "background": "phone5.png",
+          "mock": {
+             "template_name": "pixel_4_straight",
+             "screencap": "caps/pixel_4_traffic_false_%lang%.png",
+             "placement": "-scale 53% -geometry +0+150"
+          },
+          "annotation": {
+            "message": "monitor_connection",
+            "style": "default_sm",
+            "size": "1242x600",
+            "location": "+0-1080"
+          }
+        },
+        "android_1080x1920_6": {
+          "resolution": "1080x1920",
+          "background": "phone6.png",
+          "mock": {
+             "template_name": "pixel_4_straight",
+             "screencap": "caps/pixel_4_connect_false_%lang%.png",
+             "placement": "-scale 53% -geometry +0-150"
+          },
+          "annotation": {
+            "message": "open_source",
+            "style": "default_sm",
+            "size": "1242x600",
+            "location": "+0+1080"
+          }
+        },
+        "android_feature_1024x500": {
+          "resolution": "1024x500",
+          "background": "android_feature.png",
+          "mocks": [
+            {
+              "template_name": "pixel_4_left",
+              "screencap": "caps/pixel_4_purchase_false_%lang%.png",
+              "placement": "-scale 9.1% -geometry +114+74"
+            },
+            {
+              "template_name": "pixel_4_right",
+              "screencap": "caps/pixel_4_connect_true_%lang%.png",
+              "placement": "-scale 9.1% -geometry +320+30"
+            }
+          ],
+          "annotations": [
+            {
+              "message": "unblock",
+              "style": "mini_head",
+              "size": "1242x600",
+              "location": "+75+40"
+            },
+            {
+              "message": "websites_easily",
+              "style": "mini",
+              "size": "1242x600",
+              "location": "+75+94"
+            },
+            {
+              "message": "unblock_websites_easily",
+              "style": "mini",
+              "size": "1242x600",
+              "location": "+75+50"
+            },
+            {
+              "message": "no_subscriptions",
+              "size": "1024x500",
+              "location": "+75+170",
+              "style": "bullet_mini"
+            },
+            {
+              "message": "crypto_accounts",
+              "size": "1024x500",
+              "location": "+75+260",
+              "style": "bullet_mini"
+            },
+            {
+              "message": "open_source",
+              "size": "1024x500",
+              "location": "+75+370",
+              "style": "bullet_mini"
+            }
+          ]
+        }
+      }
+    }
+
+  },
+  "fontsets": {
+    "default": {
+        "en": "font/Baloo2-SemiBold.ttf",
+        "zh": "font/NotoSansSC-Regular.otf",
+        "fr": "font/Baloo2-SemiBold.ttf",
+        "hi": "font/Baloo2-SemiBold.ttf",
+        "id": "font/Baloo2-SemiBold.ttf",
+        "it": "font/Baloo2-SemiBold.ttf",
+        "ja": "font/KiwiMaru-Medium.ttf",
+        "ko": "font/Jua-Regular.ttf",
+        "br": "font/Baloo2-SemiBold.ttf",
+        "pt": "font/Baloo2-SemiBold.ttf",
+        "ru": "font/MPLUSRounded1c-Regular.ttf",
+        "es": "font/Baloo2-SemiBold.ttf",
+        "tr": "font/Baloo2-SemiBold.ttf",
+        "styles": {
+          "default": "-fill white -stroke white -strokewidth 1 -interline-spacing -55 -pointsize 90",
+          "default_sm": "-fill white -stroke white -strokewidth 1 -interline-spacing -45 -pointsize 84",
+          "default_sm_zh": "-fill white -stroke white -strokewidth 1 -interline-spacing -20 -pointsize 84",
+          "default_fr": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 84",
+          "default_pt": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 84",
+          "default_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 90",
+          "default_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -35 -pointsize 84",
+          "default_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 90",
+          "default_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 80",
+          "default_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 90",
+          "h1": "-fill white -stroke white -strokewidth 4 -interline-spacing -55 -pointsize 160 -gravity northwest",
+          "h1_hi": "-fill white -stroke white -strokewidth 4 -interline-spacing -55 -pointsize 160 -gravity northwest",
+          "h1_ru": "-fill white -stroke white -strokewidth 4 -interline-spacing -55 -pointsize 160 -gravity northwest",
+          "h2": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 110 -gravity northwest",
+          "h2_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 110 -gravity northwest",
+          "h2_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -20 -pointsize 90 -gravity northwest",
+          "h2_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 120 -gravity northwest",
+          "h2_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 90 -gravity northwest",
+          "h2_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 120 -gravity northwest",
+          "h2_fr": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 90 -gravity northwest",
+          "h2_pt": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 100 -gravity northwest",
+          "h2_tr": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 100 -gravity northwest",
+          "h1_ipad": "-fill white -stroke white -strokewidth 4 -interline-spacing -55 -pointsize 200 -gravity northwest",
+          "h2_ipad": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 140 -gravity northwest",
+          "h2_ipad_es": "-fill white -stroke white -strokewidth 2 -interline-spacing -35 -pointsize 140 -gravity northwest",
+          "h2_ipad_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -55 -pointsize 140 -gravity northwest",
+          "h2_ipad_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 140 -gravity northwest",
+          "h2_ipad_tr": "-fill white -stroke white -strokewidth 2 -interline-spacing -75 -pointsize 140 -gravity northwest",
+          "headline_ljust": "-fill white -stroke white -strokewidth 3 -interline-spacing -50 -pointsize 100 -gravity west",
+          "headline_ljust_hi": "-fill white -stroke white -strokewidth 3 -interline-spacing -40 -pointsize 100 -gravity west",
+          "headline_ljust_ja": "-fill white -stroke white -strokewidth 3 -interline-spacing -35 -pointsize 100 -gravity west",
+          "headline_ljust_ko": "-fill white -stroke white -strokewidth 3 -interline-spacing -0 -pointsize 100 -gravity west",
+          "headline_ljust_ru": "-fill white -stroke white -strokewidth 3 -interline-spacing -40 -pointsize 100 -gravity west",
+          "headline_ljust_zh": "-fill white -stroke white -strokewidth 3 -interline-spacing -5 -pointsize 100 -gravity west",
+          "headline_sm": "-fill white -stroke white -strokewidth 3 -interline-spacing -50 -pointsize 75",
+          "headline_sm_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 75",
+          "headline_sm_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -35 -pointsize 75",
+          "headline_sm_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -0 -pointsize 75",
+          "headline_sm_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 75",
+          "headline_sm_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -20 -pointsize 75",
+          "bullet": "-fill white -stroke white -strokewidth 2 -interline-spacing -50 -pointsize 75 -gravity west",
+          "bullet_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 75 -gravity west",
+          "bullet_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -35 -pointsize 75 -gravity west",
+          "bullet_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 75 -gravity west",
+          "bullet_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 75 -gravity west",
+          "bullet_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -20 -pointsize 75 -gravity west",
+          "mini": "-fill white -stroke white -strokewidth 1 -interline-spacing -30 -pointsize 45 -gravity northwest",
+          "mini_head": "-fill white -stroke white -strokewidth 1 -interline-spacing -30 -pointsize 55 -gravity northwest",
+          "mini_head_es": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 50 -gravity northwest",
+          "mini_head_id": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 58 -gravity northwest",
+          "mini_head_it": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 60 -gravity northwest",
+          "mini_head_pt": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 56 -gravity northwest",
+          "mini_es": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 35 -gravity northwest",
+          "mini_fr": "-fill white -stroke white -strokewidth 1 -interline-spacing -30 -pointsize 35 -gravity northwest",
+          "mini_hi": "-fill white -stroke white -strokewidth 1 -interline-spacing -30 -pointsize 45 -gravity northwest",
+          "mini_id": "-fill white -stroke white -strokewidth 1 -interline-spacing -30 -pointsize 36 -gravity northwest",
+          "mini_ja": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 34 -gravity northwest",
+          "mini_ru": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 35 -gravity northwest",
+          "mini_ko": "-fill white -stroke white -strokewidth 1 -interline-spacing -2 -pointsize 45 -gravity northwest",
+          "mini_pt": "-fill white -stroke white -strokewidth 1 -interline-spacing -2 -pointsize 38 -gravity northwest",
+          "mini_zh": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 45 -gravity northwest",
+          "mini_tr": "-fill white -stroke white -strokewidth 1 -interline-spacing -25 -pointsize 36 -gravity northwest",
+          "bullet_mini": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 30 -gravity northwest",
+          "bullet_mini_es": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 25 -gravity northwest",
+          "bullet_mini_fr": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 25 -gravity northwest",
+          "bullet_mini_hi": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 25 -gravity northwest",
+          "bullet_mini_id": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 25 -gravity northwest",
+          "bullet_mini_it": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 27 -gravity northwest",
+          "bullet_mini_ja": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 28 -gravity northwest",
+          "bullet_mini_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -15 -pointsize 30 -gravity northwest",
+          "bullet_mini_ko": "-fill white -stroke white -strokewidth 1 -interline-spacing -1 -pointsize 30 -gravity northwest",
+          "bullet_mini_tr": "-fill white -stroke white -strokewidth 1 -interline-spacing -15 -pointsize 25 -gravity northwest",
+          "bullet_mini_zh": "-fill white -stroke white -strokewidth 1 -interline-spacing -10 -pointsize 30 -gravity northwest",
+          "default_big": "-fill white -stroke white -strokewidth 2 -interline-spacing -75 -pointsize 120",
+          "default_big_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -50 -pointsize 120",
+          "default_big_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 120",
+          "default_big_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 120",
+          "default_big_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -50 -pointsize 120",
+          "default_big_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -45 -pointsize 120",
+          "default_big_rjust": "-fill white -stroke white -strokewidth 2 -interline-spacing -75 -pointsize 120 -gravity east",
+          "default_big_rjust_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -50 -pointsize 120 -gravity east",
+          "default_big_rjust_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -pointsize 120 -gravity east",
+          "default_big_rjust_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -pointsize 120 -gravity east",
+          "default_big_rjust_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -50 -pointsize 120 -gravity east",
+          "default_big_rjust_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -45 -pointsize 120 -gravity east",
+          "default_big_ljust": "-fill white -stroke white -strokewidth 2 -interline-spacing -75 -gravity west -pointsize 120",
+          "default_big_ljust_hi": "-fill white -stroke white -strokewidth 2 -interline-spacing -50 -gravity west -pointsize 120",
+          "default_big_ljust_ja": "-fill white -stroke white -strokewidth 2 -interline-spacing -40 -gravity west -pointsize 120",
+          "default_big_ljust_ko": "-fill white -stroke white -strokewidth 2 -interline-spacing -5 -gravity west -pointsize 120",
+          "default_big_ljust_ru": "-fill white -stroke white -strokewidth 2 -interline-spacing -50 -gravity west -pointsize 120",
+          "default_big_ljust_zh": "-fill white -stroke white -strokewidth 2 -interline-spacing -45 -gravity west -pointsize 120"
+        }
+    }
+  },
+  "messages": {
+    "unblock": {
+      "en": "Unblock",
+      "zh": "",
+      "fr": "Débloquez",
+      "hi": "",
+      "id": "Buka blokir",
+      "it": "Sblocca",
+      "ja": "",
+      "ko": "",
+      "br": "Desbloqueie",
+      "pt": "Desbloqueie",
+      "ru": "",
+      "es": "Desbloquea",
+      "tr": ""
+    },
+    "websites_easily": {
+      "en": "websites easily",
+      "zh": "",
+      "fr": "facilement des sites Web",
+      "hi": "",
+      "id": "situs dengan mudah",
+      "it": "facilmente i siti web",
+      "ja": "",
+      "ko": "",
+      "br": "sites facilmente",
+      "pt": "websites facilmente",
+      "ru": "",
+      "es": "sitios web fácilmente",
+      "tr": ""
+    },
+    "unblock_websites_easily": {
+      "en": "",
+      "zh": "轻松解除\\n被封锁的网站",
+      "fr": "",
+      "hi": "वेबसाइटों को आसानी से\\nअनब्लॉक करेे",
+      "id": "",
+      "it": "",
+      "ja": "Web サイトのブロックを\\n簡単に解除",
+      "ko": "간편하게 웹사이트 \\n차단을 해제하세요",
+      "br": "",
+      "pt": "",
+      "ru": "Удобная разблокировка\\nнедоступных сайтов",
+      "es": "",
+      "tr": "İnternet sitelerinin\\nengelini kolayca\\nkaldırın"
+    },
+    "open_source": {
+        "en": "Open source\\nand no tracking",
+        "zh": "完全开源，\\n绝无跟踪",
+        "fr": "Open source\\net sans traçage",
+        "hi": "खुला स्रोत होगाऔर\\nकोई ट्रैकिंग नहीं",
+        "id": "Proyek sumber terbuka\\ndan tidak ada pelacakan",
+        "it": "Open source\\ne nessun tracciamento",
+        "ja": "オープンソースで\\nトラッキングなし",
+        "ko": "오픈소스이며 정보를\\n트래킹하지 않습니다",
+        "br": "Open source e\\nsem rastreamento",
+        "pt": "Open source e\\nsem rastreamento",
+        "ru": "Открытый исходный\\nкод без отслеживания",
+        "es": "Código abierto\\ny sin rastreo",
+        "tr": "Açık kaynak kodlu\\nve takip edilemez"
+      },
+      "no_subscriptions": {
+        "en": "No subscriptions!\\nPay only for what you use",
+        "zh": "无须预付！\\n用多少付多少",
+        "fr": "Pas d'abonnement!\\nVous ne payez que\\nse que vous consommez",
+        "hi": "कोई सदस्यता नहीं होगा,\\nजो आप उपयोग करते\\n हैं उसके लिए ही भुगतान करें",
+        "id": "Tidak ada langganan!\\nBayar hanya untuk\\napa yang Anda gunakan",
+        "it": "Senza abbonamento!\\nPaga solo ciò che utilizzi",
+        "ja": "サブスクリプション不要！\\n使った分だけ支払う",
+        "ko": "구독 서비스가 아닙니다!\\n사용하신 만큼만 결제하세요",
+        "br": "Sem assinaturas!\\nPague apenas pelo que usar",
+        "pt": "Sem assinaturas!\\nPague apenas o que usa",
+        "ru": "Никаких подписок!\\nПлатите только за то,\\nчем вы пользуетесь",
+        "es": "Sin suscripciones,\\npaga solamente\\npor lo que usas",
+        "tr": "Abonelik yok!\\nSadece kullandığın\\nkadar öde"
+      },
+      "crypto_accounts": {
+        "en": "Use crypto-backed accounts\\nto pay for VPN service",
+        "zh": "用数字货币给VPN付款",
+        "fr": "Utilisez de la crypto-monnaie\\npour payer\\nvotre consommation",
+        "hi": "वीपीएन सेवा को इस्तेमाल करने\\n के लिए क्रिप्टो-समर्थित\\n खातों का उपयोग करें",
+        "id": "Gunakan akun mata uang\\nkripto untuk membayar\\nlayanan VPN",
+        "it": "Utilizza account basati\\nsu crypto per pagare\\nil servizio VPN",
+        "ja": "VPNサービスの支払いは\\n暗号化されたアカ\\nウントを使用",
+        "ko": "암호화폐 계정을 통해\\nVPN 서비스를\\n결제해 보세요",
+        "br": "Use cripto para pagar\\npelo seu serviço de VPN",
+        "pt": "Use crypto para pagar\\no seu serviço VPN",
+        "ru": "Используйте криптовалюту\\nдля оплаты услуг VPN",
+        "es": "Utiliza cuentas respaldadas\\npor criptomonedas para\\npagar el servicio VPN",
+        "tr": "VPN servisi için kripto\\ntabanlı hesaplar ile\\nödeme yapabilirsiniz"
+      },
+      "multi_hop": {
+        "en": "Build multi-hop circuits\\nusing different accounts",
+        "zh": "使用不同帐户\\n打造多跃点线路",
+        "fr": "Créez des circuits multi-bonds\\nà l'aide de plusieurs comptes",
+        "hi": "अलग-अलग खातों का उपयोग करके\\nमल्टी-बॉप परिपथ निर्मित करेें",
+        "id": "Buat sirkuit multi-hop\\ndengan akun yang berbeda",
+        "it": "Crea circuiti multi-hop\\ncon diversi account",
+        "ja": "異なるアカウントを使用して\\nマルチホップ回路を構築",
+        "ko": "여러 개의 계정을 사용해\\n멀티-홉 서킷을 구축하세요",
+        "br": "Construa circuitos multi-hop\\nusando contas diferentes",
+        "pt": "Crie circuitos com vários hops\\nao utilizar contas diferentes",
+        "ru": "Создавайте цепи\\nмультиподключения\\nс несколькими аккаунтами",
+        "es": "Crea circuitos multi-hop\\nusando diferentes cuentas",
+        "tr": "Farklı hesapları kullanarak\\n çoklu ağ atlaması\\ndevreleri oluşturun"
+      },
+      "monitor_connection": {
+        "en": "Monitor your\\ndevice\\'s connection",
+        "zh": "随时监控您\\n的硬件连接",
+        "fr": "Surveillez la connexion\\nde votre appareil",
+        "hi": "अपने डिवाइस के कनेक्शन\\nकी निगरानी करें",
+        "id": "Pantau koneksi\\nperangkat Anda",
+        "it": "Monitora\\nla connessione\\ndel tuo dispositivo",
+        "ja": "デバイスの接続状況\\nを簡単にモニター",
+        "ko": "장치 접속 현황을\\n모니터링\\n할 수 있습니다",
+        "br": "Analise a ligação\\ndo seu dispositivo",
+        "pt": "Analise a ligação\\ndo seu dispositivo",
+        "ru": "Следите\\nза подключением\\nвашего устройства",
+        "es": "Monitorice\\nlas conexiones\\nde su dispositivo",
+        "tr": "Cihazınızın bağlantısını\\nkontrol edin"
+      },
+      "not_product": {
+        "en": "You are not our product,\\nyou are our purpose.",
+        "zh": "我们竭诚为您服务，\\n保障您的信息安全",
+        "fr": "Vous n'êtes pas notre produit\\nmais notre objectif",
+        "hi": "आप हमारे उत्पाद नहीं हैं,\\n आप हमारा उद्देश्य हैं।",
+        "id": "Anda bukanlah produk kami,\\nAnda adalah tujuan kami",
+        "it": "Tu non sei il nostro prodotto,\\ntu sei il nostro scopo.",
+        "ja": "ユーザーのプライバシーは我\\n々のプロダクトではなく、\\n目的です",
+        "ko": "여러분의 프라이버시는 저희의\\n상품이 아니며, \\n저희의 목적입니다.",
+        "br": "Você não é o nosso produto,\\nvocê é o nosso propósito",
+        "pt": "Você não é o nosso produto,\\nvocê é o nosso propósito.",
+        "ru": "Вы не наш продукт,\\nВы - наша цель! ",
+        "es": "No eres nuestro producto,\\neres nuestro propósito.",
+        "tr": "Siz bizim ürünümüz değil,\\namacımızsınız"
+      }
+  },
+  "device_mocks": {
+    "iphone_12_pro_right": {
+      "distort_to": ["936,120", "44,4820", "1729,5204", "2682,132"]
+    },
+    "iphone_12_pro_left": {
+      "distort_to": ["363,209", "1338,5354", "3165,4897", "2152,198"]
+    },
+    "iphone_12_pro_straight": {
+      "distort_to": ["314,240", "314,3742", "1940,3742", "1940,240"]
+    },
+    "ipad_12_pro_left": {
+      "distort_to": ["130,115", "524,2401", "1946,2157", "1425,335"]
+    },
+    "ipad_12_pro_right": {
+      "distort_to": ["570,330", "83,2181", "1416,2403", "1835,116"]
+    },
+    "ipad_12_pro_straight": {
+      "distort_to": ["135,128", "135,2241", "1719,2242", "1719,128"]
+    },
+    "pixel_4_left": {
+      "distort_to": ["420,506", "1353,5423", "3160,5021", "2300,508"]
+    },
+    "pixel_4_right": {
+      "distort_to": ["1116,484", "231,4988", "2029,5401", "2931,517"]
+    },
+    "pixel_4_straight": {
+      "distort_to": ["256,440", "256,3872", "1880,3872", "1880,440"]
+    },
+    "mac": {
+      "distort_to": ["0,-30", "0,1810", "828,1810", "828,-30"]
+    }
+  }
+}

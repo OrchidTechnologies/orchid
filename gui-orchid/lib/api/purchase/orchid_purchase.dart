@@ -84,7 +84,7 @@ abstract class OrchidPurchaseAPI {
         log("iap: mock purchase, advance with receipt");
         // The receipt may be overridden for testing with pac.receipt
         OrchidPACServer()
-            .advancePACTransactionsWithReceipt("mock receipt", ReceiptType.ios);
+            .advancePACTransactionsWithReceipt('mock receipt', ReceiptType.ios);
       });
       return;
     }
@@ -205,7 +205,7 @@ abstract class OrchidPurchaseAPI {
       Map<String, PAC> pacs = await OrchidPurchaseAPI().requestProducts();
       return pacs[OrchidPurchaseAPI.pacTierDollarProductId];
     } catch (err) {
-      log("welcome panel: error requesting products purchase: $err");
+      log("iap: error requesting products purchase: $err");
       throw err;
     }
   }

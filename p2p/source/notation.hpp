@@ -219,6 +219,11 @@ Type_ Num(const Any &value) {
     }
 }
 
+inline Any One(const Array &value) {
+    orc_assert(value.size() == 1);
+    return value[0];
+}
+
 }
 
 #endif//ORCHID_NOTATION_HPP

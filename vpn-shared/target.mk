@@ -28,6 +28,10 @@ cflags += -I$(pwd)/libmaxminddb/include
 cflags/$(pwd)/libmaxminddb/ += -DUNICODE
 cflags/$(pwd)/libmaxminddb/ += -Wno-incompatible-pointer-types-discards-qualifiers
 
+ifneq ($(target),win)
+cflags/$(pwd)/libmaxminddb/ += -DPACKAGE_VERSION='""'
+endif
+
 cflags += -DMMDB_UINT128_IS_BYTE_ARRAY
 
 $(call include,quickjs.mk)

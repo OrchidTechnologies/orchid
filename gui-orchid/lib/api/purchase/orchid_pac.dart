@@ -6,8 +6,8 @@ import 'package:intl/intl.dart';
 class PAC {
   final String productId;
   final double localPrice;
-  final String localCurrencyCode; // e.g. "USD"
-  final String localCurrencySymbol; // e.g. "$"
+  final String localCurrencyCode; // e.g. 'USD'
+  final String localCurrencySymbol; // e.g. '$'
   final USD usdPriceExact;
 
   /// Format the local price as a currency value with symbol.

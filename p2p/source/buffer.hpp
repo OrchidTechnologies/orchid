@@ -1018,56 +1018,6 @@ auto Tie(Buffer_ &&...buffers) {
     return Knot<const Buffer_ &...>(std::forward<Buffer_>(buffers)...);
 }
 
-class Sequence final :
-    public Buffer
-{
-  private:
-    std::vector<Segment> segments_;
-
-  public:
-    Sequence(const Buffer &buffer) :
-        segments_([&]() {
-            size_t count(0);
-            buffer.each([&](const uint8_t *data, size_t size) {
-                ++count;
-                return true;
-            });
-            return count;
-        }())
-    {
-        auto i(segments_.begin());
-        buffer.each([&](const uint8_t *data, size_t size) {
-            *(i++) = Segment(data, size);
-            return true;
-        });
-    }
-
-    Sequence(Sequence &&sequence) noexcept :
-        segments_(std::move(sequence.segments_))
-    {
-    }
-
-    Sequence(const Sequence &sequence) :
-        segments_(sequence.segments_)
-    {
-    }
-
-    auto begin() const {
-        return segments_.begin();
-    }
-
-    auto end() const {
-        return segments_.end();
-    }
-
-    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
-        for (auto i(begin()), e(end()); i != e; ++i)
-            if (!code(i->data(), i->size()))
-                return false;
-        return true;
-    }
-};
-
 template <size_t Size_>
 class Pad :
     public Data<Size_>
@@ -1085,15 +1035,12 @@ class Window final :
     size_t count_;
     // XXX: I'm just being lazy here. :/
     std::unique_ptr<Segment[]> segments_;
-
-    const Segment *segment_;
-    size_t offset_;
+    Segment *begin_;
 
   public:
     Window() :
         count_(0),
-        segment_(nullptr),
-        offset_(0)
+        begin_(nullptr)
     {
     }
 
@@ -1108,9 +1055,7 @@ class Window final :
         }()),
 
         segments_(new Segment[count_]),
-
-        segment_(segments_.get()),
-        offset_(0)
+        begin_(segments_.get())
     {
         auto i(segments_.get());
         buffer.each([&](const uint8_t *data, size_t size) {
@@ -1122,8 +1067,7 @@ class Window final :
     Window(const Segment &segment) :
         count_(1),
         segments_(new Segment[count_]),
-        segment_(segments_.get()),
-        offset_(0)
+        begin_(segments_.get())
     {
         segments_.get()[0] = segment;
     }
@@ -1138,25 +1082,20 @@ class Window final :
     Window(Window &&rhs) = default;
     Window &operator =(Window &&rhs) = default;
 
+    auto begin() const {
+        return begin_;
+    }
+
+    auto end() const {
+        return segments_.get() + count_;
+    }
+
     bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override {
-        auto here(segment_);
-        const auto rest(segments_.get() + count_ - here);
-        if (rest == 0)
-            return true;
-
-        size_t i;
-        if (offset_ == 0)
-            i = 0;
-        else {
-            i = 1;
-            if (!code(here->data() + offset_, here->size() - offset_))
-                return false;
-        }
-
-        for (; i != rest; ++i)
+        auto here(begin_);
+        const auto rest(end() - here);
+        for (size_t i(0); i != rest; ++i)
             if (!code(here[i].data(), here[i].size()))
                 return false;
-
         return true;
     }
 
@@ -1166,19 +1105,21 @@ class Window final :
 
     template <typename Code_>
     void Take(size_t need, Code_ &&code) {
-        for (auto rest(segments_.get() + count_ - segment_); need != 0; offset_ = 0, ++segment_, --rest) {
-            orc_assert(rest != 0);
+        for (auto e(end()); begin_ != e; ++begin_) {
+            if (need == 0)
+                break;
 
-            const auto data(segment_->data());
-            auto size(std::min(need, segment_->size() - offset_));
+            auto size(std::min(need, begin_->size()));
             while (size != 0) {
-                const auto writ(code(data + offset_, size));
+                const auto writ(code(begin_->data(), size));
                 orc_insist(writ <= size);
-                offset_ += writ;
+                size -= writ;
+
+                *begin_ += writ;
+
                 need -= writ;
                 if (need == 0)
                     return;
-                size -= writ;
             }
         }
     }

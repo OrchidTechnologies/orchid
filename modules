@@ -38,8 +38,6 @@ head[srv-shared/GSL]=v2.1.0
 # as a workaround, I've checked out a second, older version of outcome :/
 head[p2p/outcome]=boost-1.75.0
 
-# SPCDNS is stuck due to Win32: https://github.com/spc476/SPCDNS/issues/8
-
 # url is stuck due to https://forums.developer.apple.com/thread/120977 :/
 # (I tried to use a local copy of libcxx on Apple, but crashed on iOS 14)
 

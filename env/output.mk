@@ -149,10 +149,11 @@ endef
 $(each)
 
 define _
-$(output)/%/$(1).a: $(patsubst %,$(output)/$$(percent)/%,$(filter $(1)/%,$(object)))
+$(output)/%/$(1)_.a: $(patsubst %,$(output)/$$(percent)/%,$(filter $(1)%.o,$(object)))
 	@rm -f $$@
 	@echo [AR] $$@
 	@$$(ar/$$*) -rcs $$@ $$^
-object := $(filter-out $(1)/%.o,$(object))
+object := $(filter-out $(1)%.o,$(object))
+linked += $(1)_.a
 endef
 $(foreach archive,$(archive),$(eval $(call _,$(archive))))

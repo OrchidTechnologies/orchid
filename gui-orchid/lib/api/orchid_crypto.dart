@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:pointycastle/api.dart';
-import 'package:pointycastle/digests/sha3.dart';
+import 'package:pointycastle/digests/keccak.dart';
 import 'package:pointycastle/ecc/api.dart';
 import 'package:pointycastle/ecc/curves/secp256k1.dart';
 import 'package:pointycastle/key_generators/api.dart';
@@ -40,8 +40,8 @@ class Crypto {
     final publicKey = Uint8List.view(encoded, 1);
 
     // Derive the Ethereum address from the public key
-    final SHA3Digest sha3digest = SHA3Digest(256 /*bits*/);
-    final hashed = sha3digest.process(publicKey);
+    final keccakDigest = KeccakDigest(256 /*bits*/);
+    final hashed = keccakDigest.process(publicKey);
     final ethereumAddress = Uint8List.view(
         hashed.buffer, 32 /*bytes*/ - 20 /*eth address length bytes*/);
 

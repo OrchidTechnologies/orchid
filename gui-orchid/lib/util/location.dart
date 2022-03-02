@@ -68,6 +68,6 @@ class Location {
   }
 
   String toString() {
-    return "Location(lat: $lat, long: $long)";
+    return 'Location(lat: $lat, long: $long)';
   }
 }

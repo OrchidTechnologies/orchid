@@ -213,8 +213,7 @@ $(call patternize,$(tqsrc)): $(output)/$(pwd/v8)/torque $(patsubst %,$(pwd)/v8/%
 	$< -o $(dir $<)/torque-generated -v8-root $(pwd/v8) $(patsubst ./%,%,$(torque))
 	find $(dir $<)/torque-generated -type f -exec touch {} +
 
-archive += $(output)/$(pwd/v8)/torque-generated
-linked += $(output)/$(pwd/v8)/torque-generated.a
+archive += $(output)/$(pwd/v8)/torque-generated/
 
 source += $(filter %.cc,$(tqsrc))
 header += $(filter %.h %.inc,$(tqsrc))
@@ -237,5 +236,4 @@ cflags += -mno-ms-bitfields
 # https://bugs.chromium.org/p/chromium/issues/detail?id=1016945
 cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment
 
-archive += $(pwd/v8)
-linked += $(pwd/v8).a
+archive += $(pwd/v8)/

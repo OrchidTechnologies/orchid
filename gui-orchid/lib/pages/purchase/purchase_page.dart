@@ -363,7 +363,7 @@ class _PurchasePageState extends State<PurchasePage> {
               gradient: OrchidGradients.pinkBlueGradientTLBR,
             ),
             child: Center(
-                child: Text("Most Popular!",
+                child: Text(s.mostPopular,
                     style: OrchidText.body1.black
                         .copyWith(letterSpacing: 0.02, height: 1.7))))
       ],
@@ -490,7 +490,7 @@ class _PurchasePageState extends State<PurchasePage> {
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Confirm Purchase").title,
+                Text(s.confirmPurchase).title,
                 Container(
                   width: 20,
                   child: FlatButton(
@@ -520,17 +520,17 @@ class _PurchasePageState extends State<PurchasePage> {
                           children: [
                             pady(16),
                             Text(
-                              "VPN Credits",
+                              s.vpnCredits,
                               style: style1,
                             ).body2,
                             pady(13),
                             Text(
-                              "Tx Fee",
+                              s.txFee,
                               style: style1,
                             ).body2,
                             pady(13),
                             Text(
-                              "Promotion",
+                              s.promotion,
                               style: style1,
                             ).body2,
                             pady(20),

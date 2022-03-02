@@ -26,7 +26,9 @@
 
 namespace orc {
 
+#if 1
 typedef int SOCKET;
+#endif  // WEBRTC_POSIX
 
 using namespace rtc;
 
@@ -46,8 +48,14 @@ class Dispatcher {
   virtual ~Dispatcher() = default;
   virtual uint32_t GetRequestedEvents() = 0;
   virtual void OnEvent(uint32_t ff, int err) = 0;
+#if 0
+  virtual WSAEVENT GetWSAEvent() = 0;
+  virtual SOCKET_ GetSocket() = 0;
+  virtual bool CheckSignalClose() = 0;
+#elif 1
   virtual int GetDescriptor() = 0;
   virtual bool IsDescriptorClosed() = 0;
+#endif
 };
 
 // A socket server that provides the real sockets of the underlying OS.
@@ -74,7 +82,23 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   // The number of events to process with one call to "epoll_wait".
   static constexpr size_t kNumEpollEvents = 128;
 
+#if 1
   bool WaitSelect(int cms, bool process_io);
+#endif  // WEBRTC_POSIX
+#if 0
+  void AddEpoll(Dispatcher* dispatcher, uint64_t key);
+  void RemoveEpoll(Dispatcher* dispatcher);
+  void UpdateEpoll(Dispatcher* dispatcher, uint64_t key);
+  bool WaitEpoll(int cms);
+  bool WaitPoll(int cms, Dispatcher* dispatcher);
+
+  // This array is accessed in isolation by a thread calling into Wait().
+  // It's useless to use a SequenceChecker to guard it because a socket
+  // server can outlive the thread it's bound to, forcing the Wait call
+  // to have to reset the sequence checker on Wait calls.
+  std::array<epoll_event, kNumEpollEvents> epoll_events_;
+  const int epoll_fd_ = INVALID_SOCKET;
+#endif  // WEBRTC_USE_EPOLL
   // uint64_t keys are used to uniquely identify a dispatcher in order to avoid
   // the ABA problem during the epoll loop (a dispatcher being destroyed and
   // replaced by one with the same address).
@@ -85,7 +109,7 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   std::unordered_map<Dispatcher*, uint64_t> key_by_dispatcher_
       RTC_GUARDED_BY(crit_);
   // A list of dispatcher keys that we're interested in for the current
-  // select() or WSAWaitForMultipleEvents() loop. Again, used to avoid the ABA
+  // lwip_select() or WSAWaitForMultipleEvents() loop. Again, used to avoid the ABA
   // problem (a socket being destroyed and a new one created with the same
   // handle, erroneously receiving the events from the destroyed socket).
   //
@@ -93,8 +117,11 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   std::vector<uint64_t> current_dispatcher_keys_;
   Signaler* signal_wakeup_;  // Assigned in constructor only
   RecursiveCriticalSection crit_;
+#if 0
+  const WSAEVENT socket_ev_;
+#endif
   bool fWait_;
-  // Are we currently in a select()/epoll()/WSAWaitForMultipleEvents loop?
+  // Are we currently in a lwip_select()/epoll()/WSAWaitForMultipleEvents loop?
   // Used for a DCHECK, because we don't support reentrant waiting.
   bool waiting_ = false;
 };
@@ -196,16 +223,42 @@ class SocketDispatcher : public Dispatcher, public LwipSocket {
   virtual bool Create(int type);
   bool Create(int family, int type) override;
 
+#if 0
+  WSAEVENT GetWSAEvent() override;
+  SOCKET_ GetSocket() override;
+  bool CheckSignalClose() override;
+#elif 1
   int GetDescriptor() override;
   bool IsDescriptorClosed() override;
+#endif
 
   uint32_t GetRequestedEvents() override;
   void OnEvent(uint32_t ff, int err) override;
 
   int Close() override;
 
+#if 0
+ protected:
+  void StartBatchedEventUpdates();
+  void FinishBatchedEventUpdates();
+
+  void SetEnabledEvents(uint8_t events) override;
+  void EnableEvents(uint8_t events) override;
+  void DisableEvents(uint8_t events) override;
+#endif
 
  private:
+#if 0
+  static int next_id_;
+  int id_;
+  bool signal_close_;
+  int signal_err_;
+#endif  // WEBRTC_WIN
+#if 0
+  void MaybeUpdateDispatcher(uint8_t old_events);
+
+  int saved_enabled_events_ = -1;
+#endif
 };
 
 }  // namespace orc

@@ -900,24 +900,24 @@ class Signaler : public Dispatcher {
         flag_to_clear_(flag_to_clear) {
     afd_[0] = ::lwip_socket(PF_INET, SOCK_DGRAM, 0);
     if (afd_[0] < 0)
-      RTC_LOG(LERROR) << "pipe 1 failed";
+      RTC_LOG(LS_ERROR) << "pipe 1 failed";
     afd_[1] = ::lwip_socket(PF_INET, SOCK_DGRAM, 0);
     if (afd_[1] < 0)
-      RTC_LOG(LERROR) << "pipe 2 failed";
+      RTC_LOG(LS_ERROR) << "pipe 2 failed";
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_port = 0;
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     int r = ::lwip_bind(afd_[0], (const struct sockaddr *)&addr, sizeof(addr));
     if (r < 0)
-        RTC_LOG(LERROR) << "pipe bind failed";
+        RTC_LOG(LS_ERROR) << "pipe bind failed";
     socklen_t addrlen = sizeof(addr);
     r = ::lwip_getsockname(afd_[0], (struct sockaddr *)&addr, &addrlen);
     if (r < 0)
-        RTC_LOG(LERROR) << "pipe getsockaddr failed";
+        RTC_LOG(LS_ERROR) << "pipe getsockaddr failed";
     r = ::lwip_connect(afd_[1], (const struct sockaddr *)&addr, addrlen);
     if (r < 0)
-        RTC_LOG(LERROR) << "pipe connect failed";
+        RTC_LOG(LS_ERROR) << "pipe connect failed";
     ss_->Add(this);
   }
 

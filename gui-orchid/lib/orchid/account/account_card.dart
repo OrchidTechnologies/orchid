@@ -95,7 +95,7 @@ class _AccountCardState extends State<AccountCard>
 
   @override
   Widget build(BuildContext context) {
-    final expandedHeight = showLockStatus ? 440.0 : 360.0;
+    final expandedHeight = showLockStatus ? 470.0 : 390.0;
     var height = short
         ? (expanded ? expandedHeight : 74.0)
         : (expanded ? expandedHeight : 116.0);
@@ -257,7 +257,7 @@ class _AccountCardState extends State<AccountCard>
           key: Key(tokenType?.toString() ?? 'empty'),
           width: size,
           height: size,
-          child: tokenType?.icon ?? Container()),
+          child: tokenType?.chain?.icon ?? Container()),
     );
   }
 
@@ -364,6 +364,8 @@ class _AccountCardState extends State<AccountCard>
         ? AccountBalanceChartTicketModel(
             pot, widget.accountDetail.transactions ?? [])
         : null;
+    final version = widget.accountDetail?.account?.version;
+    final versionText = version != null ? 'V$version' : '';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40.0),
@@ -382,6 +384,14 @@ class _AccountCardState extends State<AccountCard>
             children: [
               Text(s.deposit, style: OrchidText.body2),
               Text(depositText, style: OrchidText.body2),
+            ],
+          ),
+          pady(16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(s.contract, style: OrchidText.body2),
+              Text(versionText, style: OrchidText.body2),
             ],
           ),
           pady(16),
@@ -414,10 +424,11 @@ class _AccountCardState extends State<AccountCard>
           if (chartModel != null)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(s.tickets, style: OrchidText.body2),
-                AccountChart.buildTicketsAvailableLineChart(
-                    chartModel, efficiency)
+                AccountChart.buildTicketsAvailable(
+                    context, chartModel, efficiency, true)
               ],
             ),
           if (showLockStatus) ...[

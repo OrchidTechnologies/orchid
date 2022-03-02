@@ -109,7 +109,7 @@ struct SyncConnection {
 
     template <typename Sync_>
     static size_t Send(Sync_ &sync, const Buffer &data) {
-        return sync.send(Sequence(data));
+        return sync.send(Window(data));
     }
 
     template <typename Sync_>
@@ -126,7 +126,7 @@ struct SyncFile {
 
     template <typename Sync_>
     static size_t Send(Sync_ &sync, const Buffer &data) {
-        return sync.write_some(Sequence(data));
+        return sync.write_some(Window(data));
     }
 
     template <typename Sync_>

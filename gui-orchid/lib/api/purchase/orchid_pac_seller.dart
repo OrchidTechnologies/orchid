@@ -140,14 +140,14 @@ class OrchidPacSeller {
   }
 
   /// Render the transaction to an eip-191 string and sign it.
-  // 0x19 + "Ethereum Signed Message:\n" + len(message)
+  // 0x19 + 'Ethereum Signed Message:\n' + len(message)
   static MsgSignature signTransactionString(
       String txString, StoredEthereumKey signerKey) {
     var msg = '\x19' +
-        "Ethereum Signed Message:\n" +
+        'Ethereum Signed Message:\n' +
         txString.length.toString() +
         txString;
-    log("pac: signTransactionString: msg = $msg");
+    log('pac: signTransactionString: msg = $msg');
 
     var encoded = utf8.encode(msg);
     return Web3DartUtils.web3Sign(keccak256(encoded), signerKey);

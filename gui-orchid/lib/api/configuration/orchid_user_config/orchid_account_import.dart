@@ -94,11 +94,11 @@ class ParseOrchidIdentityResult {
 
   ParseOrchidIdentityResult(this.signer, this.isNew);
 
-  static Future<ParseOrchidIdentityResult> parse(
+  static ParseOrchidIdentityResult parse(
       String config, {
         List<StoredEthereumKey> keys,
-      }) async {
-    var existingKeys = keys ?? await UserPreferences().keys.get();
+      }) {
+    var existingKeys = keys ?? UserPreferences().keys.get();
 
     // Try to parse as a V1 identity (which may be a subset of a V0 account)
     try {

@@ -3,18 +3,21 @@ import 'package:orchid/api/configuration/orchid_user_config/orchid_account_impor
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_sizes.dart';
-import 'package:orchid/pages/account_manager/scan_paste_account.dart';
+import 'package:orchid/pages/account_manager/scan_paste_identity.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/util/on_off.dart';
+import 'package:orchid/util/localization.dart';
+
+typedef ImportAccountCompletion = void Function(
+    ParseOrchidIdentityResult result);
 
 // Used from the AccountManagerPage and AdHopPage:
 // Dialog that contains the two button scan/paste control.
-class ScanOrPasteDialog extends StatelessWidget {
+class ScanOrPasteIdentityDialog extends StatefulWidget {
   final ImportAccountCompletion onImportAccount;
 
-  const ScanOrPasteDialog({
+  const ScanOrPasteIdentityDialog({
     Key key,
     this.onImportAccount,
   }) : super(key: key);
@@ -26,18 +29,24 @@ class ScanOrPasteDialog extends StatelessWidget {
     return showDialog(
         context: context,
         builder: (BuildContext context) {
-          return ScanOrPasteDialog(
+          return ScanOrPasteIdentityDialog(
             onImportAccount: onImportAccount,
           );
         });
   }
 
   @override
+  State<ScanOrPasteIdentityDialog> createState() => _ScanOrPasteIdentityDialogState();
+}
+
+class _ScanOrPasteIdentityDialogState extends State<ScanOrPasteIdentityDialog> {
+  ParseOrchidIdentityResult _parsed;
+
+  @override
   Widget build(BuildContext context) {
     S s = S.of(context);
     double screenWidth = MediaQuery.of(context).size.width;
     final pasteOnly = OrchidPlatform.doesNotSupportScanning;
-    var titleText = s.importAnOrchidAccount;
     var bodyText = pasteOnly
         ? s.pasteAnOrchidKeyFromTheClipboardToImportAll
         : s.scanOrPasteAnOrchidKeyFromTheClipboardTo;
@@ -58,7 +67,7 @@ class ScanOrPasteDialog extends StatelessWidget {
                     children: <Widget>[
                       RichText(
                           text: TextSpan(
-                              text: titleText, style: OrchidText.title)),
+                              text: s.importOrchidIdentity, style: OrchidText.title)),
                     ],
                   ).right(16),
                 ),
@@ -76,14 +85,25 @@ class ScanOrPasteDialog extends StatelessWidget {
                 FittedBox(
                   child: SizedBox(
                     width: 300,
-                    child: ScanOrPasteOrchidAccount(
-                      spacing:
-                          screenWidth < AppSize.iphone_12_pro_max.width ? 8 : 16,
-                      onImportAccount: (ParseOrchidIdentityResult result) async {
-                        onImportAccount(result);
-                        Navigator.of(context).pop();
-                      },
-                      pasteOnly: pasteOnly,
+                    child: Column(
+                      children: [
+                        ScanOrPasteOrchidIdentity(
+                          spacing: screenWidth < AppSize.iphone_12_pro_max.width
+                              ? 8
+                              : 16,
+                          pasteOnly: pasteOnly,
+                          onChange: (ParseOrchidIdentityResult parsed) {
+                            setState(() {
+                              _parsed = parsed;
+                            });
+                          },
+                        ),
+                        pady(24),
+                        OrchidImportButton(
+                          enabled: _parsed != null,
+                          onPressed: _doImportAccount,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -96,6 +116,14 @@ class ScanOrPasteDialog extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _doImportAccount() {
+    if (_parsed == null) {
+      return;
+    }
+    widget.onImportAccount(_parsed);
+    Navigator.of(context).pop();
   }
 }
 
@@ -118,5 +146,37 @@ class OrchidCloseButton extends StatelessWidget {
         },
       ),
     ).left(0);
+  }
+}
+
+class OrchidImportButton extends StatelessWidget {
+  const OrchidImportButton({
+    Key key,
+    @required this.enabled,
+    @required this.onPressed,
+  }) : super(key: key);
+
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 100,
+      height: 52,
+      child: TextButton(
+        style: TextButton.styleFrom(
+          backgroundColor:
+              enabled ? OrchidColors.enabled : OrchidColors.disabled,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8.0))),
+          // side: BorderSide(width: 2, color: Colors.white),
+        ),
+        child: Text(
+          context.s.import.toUpperCase(),
+        ).button.black,
+        onPressed: enabled ? onPressed : null,
+      ),
+    );
   }
 }

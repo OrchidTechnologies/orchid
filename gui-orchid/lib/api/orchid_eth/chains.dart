@@ -41,7 +41,7 @@ class Chains {
   static const int GANACHE_TEST_CHAINID = 1337;
   static Chain GanacheTest = Chain(
     chainId: GANACHE_TEST_CHAINID,
-    name: "Ganache",
+    name: 'Ganache',
     nativeCurrency: Tokens.TOK,
     providerUrl: 'http://127.0.0.1:7545/',
     iconPath: OrchidAssetSvgChain.unknown_chain_path,
@@ -52,7 +52,7 @@ class Chains {
   static String ethIconPath = OrchidAssetSvgToken.ethereum_eth_token_path;
   static Chain Ethereum = Chain(
     chainId: ETH_CHAINID,
-    name: "Ethereum",
+    name: 'Ethereum',
     nativeCurrency: Tokens.ETH,
     providerUrl: defaultEthereumProviderUrl,
     iconPath: ethIconPath,
@@ -64,7 +64,7 @@ class Chains {
   static const int XDAI_CHAINID = 100;
   static Chain xDAI = Chain(
     chainId: XDAI_CHAINID,
-    name: "Gnosis",
+    name: 'Gnosis',
     nativeCurrency: Tokens.XDAI,
     // providerUrl: 'https://rpc.xdaichain.com/',
     providerUrl: 'https://rpc.gnosischain.com/',
@@ -76,7 +76,7 @@ class Chains {
   static const int AVALANCHE_CHAINID = 43114;
   static Chain Avalanche = Chain(
     chainId: AVALANCHE_CHAINID,
-    name: "Avalanche",
+    name: 'Avalanche',
     nativeCurrency: Tokens.AVAX,
     providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
@@ -88,7 +88,7 @@ class Chains {
   static const int BSC_CHAINID = 56;
   static Chain BinanceSmartChain = Chain(
     chainId: BSC_CHAINID,
-    name: "Binance Smart Chain",
+    name: 'Binance Smart Chain',
     nativeCurrency: Tokens.BNB,
     providerUrl: 'https://bsc-dataseed1.binance.org',
     iconPath: OrchidAssetSvgChain.binance_smart_chain_path,
@@ -99,7 +99,7 @@ class Chains {
   static const int POLYGON_CHAINID = 137;
   static Chain Polygon = Chain(
     chainId: POLYGON_CHAINID,
-    name: "Polygon",
+    name: 'Polygon',
     nativeCurrency: Tokens.MATIC,
     providerUrl: 'https://polygon-rpc.com/',
     iconPath: OrchidAssetSvgToken.matic_token_path,
@@ -110,7 +110,7 @@ class Chains {
   static const int OPTIMISM_CHAINID = 10;
   static Chain Optimism = Chain(
     chainId: OPTIMISM_CHAINID,
-    name: "Optimism",
+    name: 'Optimism',
     nativeCurrency: Tokens.OETH,
     providerUrl: 'https://mainnet.optimism.io/',
     iconPath: OrchidAssetSvgChain.optimism_chain_path,
@@ -124,7 +124,7 @@ class Chains {
   static const int ARBITRUM_ONE_CHAINID = 42161;
   static Chain ArbitrumOne = Chain(
     chainId: ARBITRUM_ONE_CHAINID,
-    name: "Arbitrum One",
+    name: 'Arbitrum One',
     nativeCurrency: Tokens.ARBITRUM_ETH,
     providerUrl: 'https://arb1.arbitrum.io/rpc/',
     // TODO: missing chain icon
@@ -136,7 +136,7 @@ class Chains {
   static const int AURORA_CHAINID = 1313161554;
   static Chain Aurora = Chain(
     chainId: AURORA_CHAINID,
-    name: "Aurora",
+    name: 'Aurora',
     nativeCurrency: Tokens.AURORA_ETH,
     providerUrl: 'https://mainnet.aurora.dev',
     iconPath: OrchidAssetSvgChain.near_aurora_chain_path,
@@ -151,7 +151,7 @@ class Chains {
   static const int FANTOM_CHAINID = 250;
   static Chain Fantom = Chain(
     chainId: FANTOM_CHAINID,
-    name: "Fantom",
+    name: 'Fantom',
     nativeCurrency: Tokens.FTM,
     providerUrl: 'https://rpc.ftm.tools',
     iconPath: OrchidAssetSvgToken.fantom_ftm_token_path,
@@ -163,7 +163,7 @@ class Chains {
   static const int TELOS_CHAINID = 40;
   static Chain Telos = Chain(
     chainId: TELOS_CHAINID,
-    name: "Telos",
+    name: 'Telos',
     nativeCurrency: Tokens.TLOS,
     providerUrl: 'https://mainnet.telos.net/evm',
     iconPath: OrchidAssetSvgToken.telos_tlos_token_path,
@@ -173,7 +173,7 @@ class Chains {
   static const int RSK_CHAINID = 30;
   static Chain RSK = Chain(
     chainId: RSK_CHAINID,
-    name: "RSK",
+    name: 'RSK',
     nativeCurrency: Tokens.RBTC,
     providerUrl: 'https://public-node.rsk.co',
     iconPath: OrchidAssetSvgChain.rsk_chain_path,
@@ -203,7 +203,7 @@ class Chains {
   static Chain chainFor(int chainId) {
     var chain = map[chainId];
     if (chain == null) {
-      throw Exception("no chain for chainId: $chainId");
+      throw Exception('no chain for chainId: $chainId');
     }
     return chain;
   }

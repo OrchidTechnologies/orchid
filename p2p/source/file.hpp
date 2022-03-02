@@ -74,7 +74,7 @@ class File final :
     }
 
     task<void> Send(const Buffer &data) override {
-        const auto writ(co_await file_.async_write_some(Sequence(data), Adapt()));
+        const auto writ(co_await file_.async_write_some(Window(data), Adapt()));
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
 };

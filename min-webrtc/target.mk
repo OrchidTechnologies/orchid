@@ -151,6 +151,7 @@ cflags += -I$(pwd/libsrtp)/crypto/include
 libsrtp := -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H -DGCM -DOPENSSL
 cflags/$(pwd/libsrtp)/ += $(libsrtp)
 cflags/$(pwd/webrtc)/pc/srtp_session.cc += $(libsrtp)
+cflags/$(pwd/webrtc)/pc/external_hmac.cc += -I$(pwd/libsrtp)/config
 
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
 webrtc += $(filter-out %/sctp_cc_functions.c,$(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c))
@@ -231,9 +232,8 @@ cflags += -DHAVE_INT32_T
 cflags += -DHAVE_UINT32_T
 cflags += -DHAVE_UINT64_T
 
-cflags += -DPACKAGE_STRING='""'
-# this matches the version of libmaxminddb
-cflags += -DPACKAGE_VERSION='"1.6.0"'
+cflags/$(pwd)/libsrtp/ += -DPACKAGE_STRING='""'
+cflags/$(pwd)/libsrtp/ += -DPACKAGE_VERSION='""'
 
 cflags += -D__Userspace__
 cflags += -DSCTP_DEBUG

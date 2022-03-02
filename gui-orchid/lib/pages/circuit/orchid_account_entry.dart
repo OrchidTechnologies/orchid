@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
@@ -14,7 +13,7 @@ import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/orchid/account/account_finder.dart';
-import 'package:orchid/pages/account_manager/scan_paste_account.dart';
+import 'package:orchid/pages/account_manager/scan_paste_identity.dart';
 import 'package:orchid/pages/circuit/chain_selection.dart';
 import 'package:orchid/util/localization.dart';
 import 'funder_selection.dart';
@@ -26,7 +25,8 @@ class OrchidAccountEntry extends StatefulWidget {
   final OrchidHop initialSelectionsFromHop;
   final StoredEthereumKeyRef initialKeySelection;
 
-  /// Callback fires on changes with either a valid account or null if the form state is invalid or incomplete.
+  /// Callback fires on changes with either a valid account or null if the form state is invalid or
+  /// incomplete. The account has not been persisted.
   final void Function(Account account) onChange;
 
   OrchidAccountEntry({
@@ -131,7 +131,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
     );
   }
 
-  // Build the signer key entry dropdown selector
+  // Build the signer key (identity) entry dropdown selector
   Widget _buildSelectSignerField() {
     final pasteOnly = OrchidPlatform.doesNotSupportScanning;
     return Column(
@@ -163,9 +163,12 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
               _selectedKeyItem?.option == KeySelectionDropdown.importKeyOption,
           child: Padding(
             padding: const EdgeInsets.only(top: 24),
-            child: ScanOrPasteOrchidAccount(
-              onImportAccount: (ParseOrchidIdentityResult result) async {
-                log("XXX: import acount = $result");
+            child: ScanOrPasteOrchidIdentity(
+              onChange: (result) async {
+                log("XXX: import identity = $result");
+                // TODO: Saving the key should be deferred until the caller of this form
+                // TODO: decides to save the account.  Doing so will require extending the
+                // TODO: return data and modifying KeySelectionDropdown to handle transient keys.
                 if (result.isNew) {
                   await UserPreferences().addKey(result.signer);
                 }
@@ -187,7 +190,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(s.funderAccount + ':',
+        Text(s.funderAddress + ':',
             style: OrchidText.title.copyWith(
                 color: _funderValid()
                     ? OrchidColors.valid
@@ -320,6 +323,10 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
       return widget.onChange(null);
     }
 
+    // Signer
+    final signerKeyRef = _selectedKeyItem.keyRef;
+
+    // Funder, chain, contract
     EthereumAddress funderAddress;
     int chainId;
     int version;
@@ -337,8 +344,9 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
       return widget.onChange(null);
     }
 
+    // Account
     widget.onChange(Account.base(
-      signerKeyUid: _selectedKeyItem.keyRef.keyUid,
+      signerKeyUid: signerKeyRef.keyUid,
       version: version,
       chainId: chainId,
       funder: funderAddress,

@@ -295,7 +295,7 @@ class _TrafficViewState extends State<TrafficView>
         ? flow.dst_addr
         : flow.hostname;
     var date =
-        DateFormat("MM/dd/yyyy HH:mm:ss.SSS").format(flow.start.toLocal());
+        DateFormat('MM/dd/yyyy HH:mm:ss.SSS').format(flow.start.toLocal());
 
     // Note: Setting the background color on the container vs. the ListTile
     // Note: changes the clipping behavior. (bug?)
