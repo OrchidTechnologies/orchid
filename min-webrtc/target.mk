@@ -151,6 +151,7 @@ cflags += -I$(pwd/libsrtp)/crypto/include
 libsrtp := -I$(pwd/libsrtp)/config -DHAVE_CONFIG_H -DGCM -DOPENSSL
 cflags/$(pwd/libsrtp)/ += $(libsrtp)
 cflags/$(pwd/webrtc)/pc/srtp_session.cc += $(libsrtp)
+cflags/$(pwd/webrtc)/pc/external_hmac.cc += -I$(pwd/libsrtp)/config
 
 webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
 webrtc += $(filter-out %/sctp_cc_functions.c,$(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c))
