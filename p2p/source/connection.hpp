@@ -98,7 +98,7 @@ class Association :
         //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
         const size_t writ(co_await [&]() -> task<size_t> { try {
-            co_return co_await association_.async_send(Sequence(data), Adapt());
+            co_return co_await association_.async_send(Window(data), Adapt());
         } catch (const asio::system_error &error) {
             orc_adapt(error);
         } }());

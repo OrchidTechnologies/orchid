@@ -90,7 +90,7 @@ class LocalOpening :
     }
 
     task<void> Send(const Buffer &data, const Socket &socket) override {
-        const auto writ(co_await connection_.async_send_to(Sequence(data), {socket.Host(), socket.Port()}, Adapt()));
+        const auto writ(co_await connection_.async_send_to(Window(data), {socket.Host(), socket.Port()}, Adapt()));
         orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
     }
 };

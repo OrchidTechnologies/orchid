@@ -98,7 +98,7 @@ class Duplex_ final :
 
     task<void> Send(const Buffer &data) override {
         const size_t writ(co_await [&]() -> task<size_t> { try {
-            co_return co_await inner_.async_write(Sequence(data), Adapt());
+            co_return co_await inner_.async_write(Window(data), Adapt());
         } catch (const asio::system_error &error) {
             orc_adapt(error);
         } }());
