@@ -231,9 +231,8 @@ cflags += -DHAVE_INT32_T
 cflags += -DHAVE_UINT32_T
 cflags += -DHAVE_UINT64_T
 
-cflags += -DPACKAGE_STRING='""'
-# this matches the version of libmaxminddb
-cflags += -DPACKAGE_VERSION='"1.6.0"'
+cflags/$(pwd)/libsrtp/ += -DPACKAGE_STRING='""'
+cflags/$(pwd)/libsrtp/ += -DPACKAGE_VERSION='""'
 
 cflags += -D__Userspace__
 cflags += -DSCTP_DEBUG

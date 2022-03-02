@@ -11,8 +11,7 @@
 
 pwd/wireshark := $(pwd)/wireshark
 
-archive += $(pwd/wireshark)/epan/dissectors
-linked += $(pwd/wireshark)/epan/dissectors.a
+archive += $(patsubst %,$(pwd/wireshark)/epan/dissectors/packet%,-a -d -i -m -r -s -)
 
 wireshark := 
 cflags/$(pwd/wireshark)/ := 
@@ -53,7 +52,7 @@ cflags/$(pwd/wireshark)/ += -DUNICODE
 cflags/$(pwd/wireshark)/ += -DSTRSAFE_NO_DEPRECATE
 cflags/$(pwd/wireshark)/ += -Wno-format
 
-cflags/$(pwd/wireshark)/epan/dissectors/packet-smb2.c += -D_MSC_VER
+cflags/$(pwd/wireshark)/epan/dissectors/packet-smb2.c += -D_MSC_VER=1800
 cflags/$(pwd/wireshark)/wsutil/getopt_long.c += -DNO_OLDNAMES
 cflags/$(pwd/wireshark)/wsutil/filesystem.c += -Wno-unused-function
 cflags/$(pwd/wireshark)/wsutil/win32-utils.c += -Wno-missing-braces
@@ -74,7 +73,12 @@ cflags/$(pwd/wireshark)/ += -DHAVE_SYS_SOCKET_H
 cflags/$(pwd/wireshark)/ += -DHAVE_MKSTEMPS
 cflags/$(pwd/wireshark)/ += -DHAVE_STRPTIME
 
+# XXX: maybe I'm supposed to just remove this now?
 cflags/$(pwd/wireshark)/ += -D_GNU_SOURCE
+# XXX: wireshark uses #define _GNU_SOURCE (no 1)
+cflags/$(pwd/wireshark)/wsutil/str_util.c += -Wno-macro-redefined
+cflags/$(pwd/wireshark)/wsutil/time_util.c += -Wno-macro-redefined
+cflags/$(pwd/wireshark)/wsutil/wmem/wmem_strutl.c += -Wno-macro-redefined
 
 wireshark := $(filter-out \
     %/strptime.c \
@@ -103,6 +107,7 @@ wireshark := $(filter-out \
 
 wireshark := $(filter-out \
     %/dot11decrypt_ccmp_compat.c \
+    %/introspection-enums.c \
 ,$(wireshark))
 
 source += $(wireshark)
@@ -262,3 +267,4 @@ $(each)
 # }}}
 
 $(call include,glib/target.mk)
+$(call include,pcr/target.mk)

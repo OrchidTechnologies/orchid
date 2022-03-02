@@ -27,6 +27,7 @@ source += $(wildcard $(pwd)/libmaxminddb/src/*.c)
 cflags += -I$(pwd)/libmaxminddb/include
 cflags/$(pwd)/libmaxminddb/ += -DUNICODE
 cflags/$(pwd)/libmaxminddb/ += -Wno-incompatible-pointer-types-discards-qualifiers
+cflags/$(pwd)/libmaxminddb/ += -DPACKAGE_VERSION='""'
 
 cflags += -DMMDB_UINT128_IS_BYTE_ARRAY
 
