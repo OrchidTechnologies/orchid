@@ -97,12 +97,15 @@ class Association :
     task<void> Send(const Buffer &data) override {
         //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
 
-        const size_t writ(co_await [&]() -> task<size_t> { try {
-            co_return co_await association_.async_send(Window(data), Adapt());
+        try {
+            Window window(data);
+            while (!window.done()) {
+                const auto writ(co_await association_.async_send(window, Adapt()));
+                window.Skip(writ);
+            }
         } catch (const asio::system_error &error) {
             orc_adapt(error);
-        } }());
-        orc_assert_(writ == data.size(), "orc_assert(" << writ << " {writ} == " << data.size() << " {data.size()})");
+        }
     }
 };
 
