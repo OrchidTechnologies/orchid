@@ -16,9 +16,6 @@ cflags += -I$(pwd)/extra
 
 cflags/$(pwd)/ += -include $(pwd/pcre2)/src/config.h.generic
 
-# XXX: https://github.com/PhilipHazel/pcre2/issues/90
-chacks/$(pwd/pcre2)/src/pcre2_ucd.c += s/\({0,0,0,0,0,0,0\),0 }/\1}/
-
 source += $(pwd)/pcre2_chartables.c
 cflags/$(pwd)/pcre2_chartables.c += -I$(pwd/pcre2)/src
 
