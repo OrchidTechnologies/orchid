@@ -184,7 +184,7 @@ class OrchidPACServer {
     print("iap: tx = $tx, tx.chainId = ${tx.chainId}");
     var chainId = tx.chainId;
     var chain = Chains.chainFor(chainId);
-    var signerKey = await sellerTx.signerKey.get();
+    var signerKey = sellerTx.signerKey.get();
     var signer = signerKey.address;
 
     var l2Nonce = (await getPacAccount(signer: signer)).nonces[tx.chainId];
@@ -192,7 +192,7 @@ class OrchidPACServer {
         await OrchidPacSeller.getL3Nonce(chain: chain, signer: signer);
 
     return submitSellerTransaction(
-      signerKey: await sellerTx.signerKey.get(),
+      signerKey: sellerTx.signerKey.get(),
       chainId: chainId,
       txParams: tx,
       l2Nonce: l2Nonce,

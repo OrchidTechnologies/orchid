@@ -6,7 +6,8 @@ set -euo pipefail
 cd $(dirname "$0")
 
 # See identity.sh.in
-. identity.sh
+#. identity.sh
+identity=""
 
 # Replace these with your iOS simulator UUIDs
 iphone_12_pro=E0032C1E-9471-40ED-BBF3-2246D270084A
@@ -49,7 +50,7 @@ screen() {
     (cd ../../app-flutter;
     (sleep 50; echo 'q') | ../app-shared/flutter/bin/flutter run -d $device \
         --dart-define mock=true \
-        --dart-define identity="$identity" \
+        --dart-define mock_accounts=true \
         --dart-define language=$language \
         --dart-define connected=$connected \
         --dart-define release_notes=false \
@@ -59,7 +60,7 @@ screen() {
 }
 
 devices="$iphone_12_pro $ipad_pro_12_9"
-screens="connect accounts traffic purchase"
+screens="connect accounts traffic purchase circuit"
 languages="en es fr hi id it ja ko pt pt_BR ru tr zh"
 
 #count=$(expr $(echo $screens | wc -w) \* $(echo $languages | wc -w))

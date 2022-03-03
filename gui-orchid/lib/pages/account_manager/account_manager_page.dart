@@ -22,7 +22,7 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/account/account_detail_store.dart';
-import 'package:orchid/pages/account_manager/scan_paste_identity.dart';
+import 'package:orchid/pages/account_manager/account_mock.dart';
 import 'package:orchid/pages/account_manager/scan_paste_identity_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
@@ -483,11 +483,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     return StreamBuilder<Circuit>(
         stream: UserPreferences().circuit.stream(),
         builder: (context, snapshot) {
-          var circuit = snapshot.data;
-          Set<Account> activeAccounts = (circuit?.hops ?? [])
-              .whereType<OrchidHop>()
-              .map((hop) => hop.account)
-              .toSet();
+          Circuit circuit = snapshot.data;
+          Set<Account> activeAccounts = circuit?.activeOrchidAccounts ?? {};
           return _buildAccountList(activeAccounts);
         });
   }
@@ -505,6 +502,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           active: activeAccounts.contains(account),
           detail: _accountDetailStore.get(account));
     }).toList();
+
+    // Support testing
+    if (AccountMock.mockAccounts) {
+      accounts = AccountMock.accountViewModel;
+    }
 
     // Sort by efficiency descending
     accounts.sort((AccountViewModel a, AccountViewModel b) {

@@ -3,10 +3,18 @@
 # This should be link and run from the app-flutter build folder (see app-flutter.sh)
 #
 set -euo pipefail
+
+cleanup() {
+    local pids=$(jobs -pr)
+    [ -n "$pids" ] && kill $pids
+}
+trap "cleanup" INT QUIT TERM EXIT
+
 cd $(dirname "$0")
 
 # See identity.sh.in
-. identity.sh
+#. identity.sh
+identity=""
 
 # screen(device, identity, screen, connected, language, filebase)
 screen() {
@@ -28,6 +36,7 @@ screen() {
     (cd ../../app-flutter;
     (sleep 55; echo 'q') | ../app-shared/flutter/bin/flutter run -d $device \
         --dart-define mock=true \
+        --dart-define mock_accounts=true \
         --dart-define identity="$identity" \
         --dart-define language=$language \
         --dart-define connected=$connected \
@@ -44,12 +53,12 @@ emulator=Pixel_4_Pie
 echo init $emulator
 flutter emulators --launch $emulator
 
-# TODO: Get this from launch somehow?
+# TODO: Get this from launch somehow? (or 'flutter devices')
 emulator_instance=emulator-5554 
 device=$emulator_instance
 device_name='pixel_4'
 
-screens="connect accounts traffic purchase"
+screens="connect accounts traffic purchase circuit"
 languages="en es fr hi id it ja ko pt pt_BR ru tr zh"
 
 for screen in $screens
@@ -62,5 +71,4 @@ do
         screen "$device" "$identity" $screen false $language $device_name
     done
 done
-
 

@@ -6,6 +6,7 @@ import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/pages/account_manager/account_mock.dart';
 import 'package:orchid/util/cacheable.dart';
 import '../orchid_budget_api.dart';
 import 'orchid_market.dart';
@@ -84,8 +85,11 @@ class Account {
   }
 
   static Future<LotteryPot> _getLotteryPotFor(Account account) async {
+    if (account is MockAccount) {
+      return account.mockLotteryPot;
+    }
     // log("Fetching lottery pot from network: $account");
-    var signer = await account.signerAddress;
+    var signer = account.signerAddress;
     if (account.isV0) {
       return OrchidEthereumV0.getLotteryPot(account.funder, signer);
     } else {
@@ -101,6 +105,9 @@ class Account {
   // Note: Market conditions are not cached but the underlying prices are.
   Future<MarketConditions> getMarketConditionsFor(LotteryPot pot,
       {bool refresh = false}) async {
+    if (pot is MockLotteryPot) {
+      return pot.mockMarketConditions;
+    }
     if (isV0) {
       // TODO: Add refresh option
       return MarketConditionsV0.forPotV0(pot);
@@ -148,13 +155,13 @@ class Account {
     return StoredEthereumKeyRef(this.signerKeyUid);
   }
 
-  Future<StoredEthereumKey> get signerKey async {
+  StoredEthereumKey get signerKey {
     return signerKeyRef.get();
   }
 
-  Future<EthereumAddress> get signerAddress async {
+  EthereumAddress get signerAddress {
     if (resolvedSignerAddress == null) {
-      resolvedSignerAddress = (await signerKey).address;
+      resolvedSignerAddress = signerKey?.address;
     }
     return resolvedSignerAddress;
   }

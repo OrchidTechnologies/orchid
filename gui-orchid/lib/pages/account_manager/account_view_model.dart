@@ -11,7 +11,7 @@ class AccountViewModel {
   final StoredEthereumKey signerKey;
   final EthereumAddress funder;
   final Chain chain;
-  final AccountDetailPoller detail;
+  final AccountDetail detail;
   final bool active;
 
   String get identityUid {

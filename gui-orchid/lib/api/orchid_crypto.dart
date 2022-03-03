@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_log_api.dart';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -157,12 +158,13 @@ class StoredEthereumKey {
   // The EC private key
   final BigInt private;
 
-  StoredEthereumKey(
-      {String uid,
-      @required this.time,
-      @required this.imported,
-      @required this.private})
-      : this.uid = uid ?? time.millisecondsSinceEpoch.toString();
+  StoredEthereumKey({
+    String uid,
+    DateTime time,
+    @required this.imported,
+    @required this.private,
+  })  : this.time = time ?? DateTime.now(),
+        this.uid = uid ?? Crypto.uuid();
 
   EthereumKeyPair _keyPair;
 
@@ -253,12 +255,12 @@ class StoredEthereumKeyRef {
 
   // TODO: Remove this dependency on UserPreferences
   // Resolve the reference
-  Future<StoredEthereumKey> get() async {
-    var keys = await UserPreferences().keys.get();
+  StoredEthereumKey get() {
+    var keys = UserPreferences().keys.get();
     try {
       return getFrom(keys);
     } catch (err) {
-      throw Exception("get key error: $err");
+      throw Exception("get key: uid=$keyUid error: $err");
     }
   }
 
@@ -332,13 +334,13 @@ class EthereumAddress {
     if (text == null) {
       throw Exception("invalid, null");
     }
-    // eip55 check
-    if (!Web3DartUtils.isEip55ValidEthereumAddress(text)) {
-      throw Exception("invalid eth address: $text");
-    }
     text = Hex.remove0x(text);
     if (text.length != 40) {
       throw Exception("invalid, length: $text");
+    }
+    // eip55 check
+    if (!Web3DartUtils.isEip55ValidEthereumAddress(text)) {
+      throw Exception("invalid eth address: $text");
     }
     try {
       var val = BigInt.parse(text, radix: 16);
@@ -372,7 +374,10 @@ class Web3DartUtils {
   static bool isEip55ValidEthereumAddress(String address) {
     try {
       web3.EthereumAddress.fromHex(address);
+      // web3.EthereumAddress.fromHex(address, enforceEip55: false);
+      // _fromHex(address);
     } catch (err) {
+      log("XXX: isEip55ValidEthereumAddress err = $err");
       return false;
     }
     return true;

@@ -52,7 +52,7 @@ class _FunderSelectionDropdownState extends State<FunderSelectionDropdown> {
   }
 
   void initStateAsync() async {
-    _signer = await widget.signer?.get();
+    _signer = widget.signer?.get();
 
     // Load accounts, listening for updates
     UserPreferences().cachedDiscoveredAccounts.stream().listen((cached) {

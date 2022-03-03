@@ -83,7 +83,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
 
   Future<void> _pollBalanceAndAccountDetails({bool refresh = false}) async {
     if (signerAddress == null) {
-      signerAddress = await account.signerAddress;
+      signerAddress = account.signerAddress;
     }
 
     // log("polling account details: signer = $signerAddress, funder = $funder");
