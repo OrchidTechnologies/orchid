@@ -74,6 +74,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   AccountStore _accountStore;
   AccountDetailStore _accountDetailStore;
 
+  var _refreshIndicatorKey = new GlobalKey<RefreshIndicatorState>();
+
   @override
   void initState() {
     super.initState();
@@ -266,7 +268,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
           // Support onboarding by prodding the account finder if it exists
           AccountFinder.shared?.refresh();
-          _accountStore.refresh();
+
+          // trigger a refresh
+          _refreshIndicatorKey.currentState.show();
         }
       },
     );
@@ -280,7 +284,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       await UserPreferences().addCachedDiscoveredAccounts([_accountToImport]);
 
       // Set the identity and refresh
-      _setSelectedIdentity(await _accountToImport.signerKey);
+      _setSelectedIdentity(_accountToImport.signerKey);
 
       setState(() {
         _accountToImport = null;
@@ -290,6 +294,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
       // Support onboarding by prodding the account finder if it exists
       AccountFinder.shared?.refresh();
+
+      // trigger a refresh
+      _refreshIndicatorKey.currentState.show();
     };
 
     AppDialogs.showAppDialog(
@@ -549,6 +556,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             });
 
     return RefreshIndicator(
+      key: _refreshIndicatorKey,
       color: Colors.white,
       backgroundColor: OrchidColors.purple_ffb88dfc,
       displacement: 0,
