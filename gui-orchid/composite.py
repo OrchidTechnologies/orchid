@@ -6,8 +6,9 @@ import os
 import csv
 import json
 import logging
+import sys
 
-magickpath = ''
+magickpath = ' '.join(sys.argv[1:])
 
 logging.basicConfig(level="DEBUG", format='%(asctime)s: %(message)s')
 
@@ -35,7 +36,7 @@ def exec(cmd):
    if code != None and code != 0:
       logging.debug(f'Executing: {cmd}')
       logging.debug(f'Return code: {code}')
-   logging.debug(f'Return code: {code}')
+      assert(false)
    return code, result
 
 
@@ -101,7 +102,19 @@ for setname, set in imagesets.items():
          logging.debug(imgspec)
 #         if imgname != 'android_feature_1024x500':
 #            continue
-         dest = f'final/{setname}/{language}/{imgname}_{language}.png'
+         try:
+            os.mkdir(f'final', 0o755)
+         except:
+            pass
+         try:
+            os.mkdir(f'final/{setname}', 0o755)
+         except:
+            pass
+         try:
+            os.mkdir(f'final/{setname}/{language}', 0o755)
+         except:
+            pass
+         dest = f'final/{setname}/{language}/{imgname}.png'
          logging.info(f'   {dest}')
 #         res = imgspec['resolution']
          bg = imgspec['background']

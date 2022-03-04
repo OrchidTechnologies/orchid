@@ -36,6 +36,10 @@ namespace orc {
 
 namespace http = boost::beast::http;
 
+struct Response;
+
+std::ostream &operator <<(std::ostream &out, const Response &response);
+
 struct Response :
     public http::response<http::string_body>
 {
@@ -52,7 +56,7 @@ struct Response :
     }
 
     std::string on(bool check) && {
-        orc_assert_(check, "{ status: " << result() << ", body: ```" << body() << "``` }");
+        orc_assert_(check, *this);
         return std::move(body());
     }
 
@@ -72,6 +76,10 @@ struct Response :
         return std::move(*this).is(http::status_class::successful);
     }
 };
+
+inline std::ostream &operator <<(std::ostream &out, const Response &response) {
+    return out << "{ status: " << response.result() << ", body: ```" << response.body() << "``` }";
+}
 
 }
 

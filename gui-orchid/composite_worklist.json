@@ -1,9 +1,9 @@
 {
   "imagesets": {
-    "app_store_ios": {
+    "APP_IPHONE_65": {
       "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
       "images": {
-        "iphone_1242x2688_1": {
+        "0": {
           "resolution": "1242x2688",
           "background": "phone1.png",
           "mock": {
@@ -32,7 +32,7 @@
           }
           ]
         },
-        "iphone_1242x2688_2": {
+        "1": {
           "resolution": "1242x2688",
           "background": "phone2.png",
           "mock": {
@@ -46,7 +46,7 @@
             "location": "+0+1040"
           }
         },
-        "iphone_1242x2688_3": {
+        "2": {
           "resolution": "1242x2688",
           "background": "phone3.png",
           "mock": {
@@ -60,7 +60,7 @@
             "location": "+0-1040"
           }
         },
-        "iphone_1242x2688_4": {
+        "3": {
           "resolution": "1242x2688",
           "background": "phone4.png",
           "mock": {
@@ -74,7 +74,7 @@
             "location": "+0+1040"
           }
         },
-        "iphone_1242x2688_5": {
+        "4": {
           "resolution": "1242x2688",
           "background": "phone5.png",
           "mock": {
@@ -88,7 +88,7 @@
             "location": "+0-1040"
           }
         },
-        "iphone_1242x2688_6": {
+        "5": {
           "resolution": "1242x2688",
           "background": "phone6.png",
           "mock": {
@@ -104,10 +104,10 @@
         }
       }
     },
-    "app_store_ios_small": {
+    "APP_IPHONE_55": {
       "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
       "images": {
-        "iphone_1242x2208_1": {
+        "0": {
           "resolution": "1242x2208",
           "background": "phone_sm1.png",
           "mock": {
@@ -136,7 +136,7 @@
           }
           ]
         },
-        "iphone_1242x2208_2": {
+        "1": {
           "resolution": "1242x2208",
           "background": "phone_sm2.png",
           "mock": {
@@ -150,7 +150,7 @@
             "location": "+0+880"
           }
         },
-        "iphone_1242x2208_3": {
+        "2": {
           "resolution": "1242x2208",
           "background": "phone_sm3.png",
           "mock": {
@@ -164,7 +164,7 @@
             "location": "+0-880"
           }
         },
-        "iphone_1242x2208_4": {
+        "3": {
           "resolution": "1242x2208",
           "background": "phone_sm4.png",
           "mock": {
@@ -178,7 +178,7 @@
             "location": "+0+880"
           }
         },
-        "iphone_1242x2208_5": {
+        "4": {
           "resolution": "1242x2208",
           "background": "phone_sm5.png",
           "mock": {
@@ -192,7 +192,7 @@
             "location": "+0-880"
           }
         },
-        "iphone_1242x2208_6": {
+        "5": {
           "resolution": "1242x2208",
           "background": "phone_sm6.png",
           "mock": {
@@ -208,10 +208,10 @@
         }
       }
     },
-    "app_store_mac": {
+    "APP_DESKTOP": {
       "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
       "images": {
-        "mac_1": {
+        "0": {
           "resolution": "2880x1800",
           "background": "mac_1.png",
           "mocks": [
@@ -265,7 +265,7 @@
             }
           ]
         },
-        "mac_2": {
+        "1": {
           "resolution": "2880x1800",
           "background": "mac_2.png",
           "mocks": [
@@ -286,7 +286,7 @@
             "location": "-800+00"
           }
         },
-        "mac_3": {
+        "2": {
           "resolution": "2880x1800",
           "background": "mac_3.png",
           "mocks": [
@@ -316,10 +316,10 @@
         }
       }
     },
-    "app_store_ipad": {
+    "APP_IPAD_PRO_129": {
       "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
       "images": {
-        "ipad_1": {
+        "0": {
           "resolution": "2048x2732",
           "background": "ipad1.png",
           "mock": {
@@ -348,7 +348,7 @@
           }
           ]
         },
-        "ipad_2": {
+        "1": {
           "resolution": "2048x2732",
           "background": "ipad2.png",
           "mock": {
@@ -365,7 +365,7 @@
             "fontset": "default"
           }
         },
-        "ipad_3": {
+        "2": {
           "resolution": "2048x2732",
           "background": "ipad3.png",
           "mock": {
@@ -381,7 +381,7 @@
             "fontset": "default"
           }
         },
-        "ipad_4": {
+        "3": {
           "resolution": "2048x2732",
           "background": "ipad4.png",
           "mock": {
@@ -397,7 +397,7 @@
             "fontset": "default"
           }
         },
-        "ipad_5": {
+        "4": {
           "resolution": "2048x2732",
           "background": "ipad5.png",
           "mock": {
@@ -413,7 +413,7 @@
             "fontset": "default"
           }
         },
-        "ipad_6": {
+        "5": {
           "resolution": "2048x2732",
           "background": "ipad6.png",
           "mock": {
@@ -431,10 +431,10 @@
         }
       }
     },
-    "play_store": {
+    "phoneScreenshots": {
       "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
       "images": {
-        "android_1080x1920_1": {
+        "0": {
           "resolution": "1080x1920",
           "background": "phone1.png",
           "mock": {
@@ -463,7 +463,7 @@
           }
         ]
         },
-        "android_1080x1920_2": {
+        "1": {
           "resolution": "1080x1920",
           "background": "phone2.png",
           "mock": {
@@ -478,7 +478,7 @@
             "location": "+0+1080"
           }
         },
-        "android_1080x1920_3": {
+        "2": {
           "resolution": "1080x1920",
           "background": "phone3.png",
           "mock": {
@@ -493,7 +493,7 @@
             "location": "+0-1080"
           }
         },
-        "android_1080x1920_4": {
+        "3": {
           "resolution": "1080x1920",
           "background": "phone4.png",
           "mock": {
@@ -508,7 +508,7 @@
             "location": "+0+1080"
           }
         },
-        "android_1080x1920_5": {
+        "4": {
           "resolution": "1080x1920",
           "background": "phone5.png",
           "mock": {
@@ -523,7 +523,7 @@
             "location": "+0-1080"
           }
         },
-        "android_1080x1920_6": {
+        "5": {
           "resolution": "1080x1920",
           "background": "phone6.png",
           "mock": {
@@ -537,8 +537,13 @@
             "size": "1242x600",
             "location": "+0+1080"
           }
-        },
-        "android_feature_1024x500": {
+        }
+      }
+    },
+    "featureGraphic": {
+      "languages": ["en", "fr", "hi", "es", "id", "it", "ja", "ko", "pt", "ru", "tr", "zh"],
+      "images": {
+        "0": {
           "resolution": "1024x500",
           "background": "android_feature.png",
           "mocks": [
