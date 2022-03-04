@@ -132,4 +132,4 @@ for setname, set in imagesets.items():
             gfx = imgspec['graphic']
             gfx_txt = f"( {gfx['file']} {gfx['placement']} ) -composite"
 
-         exec(convert(f"( bg/{bg} -gravity center {gfx_txt} {mock_txt} ) {note_txt} -layers flatten", dest))
+         exec(convert(f"( bg/{bg} -gravity center {gfx_txt} {mock_txt} ) {note_txt} -layers flatten -alpha off", dest))
