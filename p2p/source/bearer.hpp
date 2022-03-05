@@ -45,7 +45,7 @@ std::string Bearer(const std::string &aud, const std::string &iss, const std::st
 
     const auto now(time(NULL));
     object.add_claim("iat", now);
-    object.add_claim("exp", now + 60);
+    object.add_claim("exp", now + 600);
 
     return object.signature();
 }

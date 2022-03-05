@@ -31,6 +31,7 @@
 #include "sleep.hpp"
 #include "task.hpp"
 #include "ticket.hpp"
+#include "translate.hpp"
 #include "transport.hpp"
 
 namespace orc {
@@ -40,7 +41,7 @@ task<Object> Scope(const S<Base> &base, const Object &secrets, const std::string
     co_return Parse((co_await base->Fetch("POST", {{"https", "oauth2.googleapis.com", "443"}, "/token"}, {
         {"content-type", "application/x-www-form-urlencoded"},
     }, "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=" +
-        Bearer("https://oauth2.googleapis.com/token", Str(secrets.at("client_email")), "RS256", Str(secrets.at("private_key_id")), Str(secrets.at("private_key")), {{"scope", scope}})
+        Bearer("https://oauth2.googleapis.com/token", secrets, {{"scope", scope}})
     )).ok()).as_object();
 }
 
