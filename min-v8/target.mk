@@ -100,9 +100,6 @@ vflags += -DV8_HAVE_TARGET_OS
 
 include $(pwd)/target-$(target).mk
 
-source += $(v8src)
-
-
 # XXX: vflags += -D_LIBCPP_ENABLE_NODISCARD
 vflags += -D__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES=0
 
@@ -126,6 +123,11 @@ vflags += -DV8_COMPRESS_POINTERS_IN_ISOLATE_CAGE
 endif
 vflags += -DV8_DEPRECATION_WARNINGS
 vflags += -DV8_ENABLE_LAZY_SOURCE_POSITIONS
+ifeq ($(machine),x86_64)
+vflags += -DV8_ENABLE_MAGLEV
+else
+v8src := $(filter-out $(pwd/v8)/src/maglev/%,$(v8src))
+endif
 vflags += -DV8_ENABLE_REGEXP_INTERPRETER_THREADED_DISPATCH
 vflags += -DV8_ENABLE_WEBASSEMBLY
 vflags += -DV8_IMMINENT_DEPRECATION_WARNINGS
@@ -145,6 +147,8 @@ endif
 
 vflags += -I$(pwd/v8)
 vflags += -I$(output)/$(pwd/v8)
+
+source += $(v8src)
 
 
 # XXX: this now needs to be per target (due to -m$(bits))

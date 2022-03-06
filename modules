@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# XXX: min-zlib/googletest is throwing "error: Cannot determine remote HEAD" :/
-git submodule foreach 'git fetch -v && (git remote set-head origin -a || true)'
+git submodule foreach 'git fetch -v && git remote set-head origin -a'
 
 declare -A head
 
@@ -21,17 +20,18 @@ head[env/libcxxabi]=origin/release_90
 head[app-shared/flutter]=2.2.3
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
+# boringtun is stuck, by https://github.com/cloudflare/boringtun/pull/235
+
 # fmt is stuck by soralog before 841aad95b42704ea77e3eb05a2cbb075dc5b1137
+# someone talked about this at https://github.com/xDimon/soralog/issues/3
 # fmt broke on April Fools' with 15c10b0c666d274b378cf63429babfa202623db4
-# fmt fixed did not fix it until 69bdc20a3c1271b58f0d052ffc6b2466c44ef649
+# fmt did not fix that bug until 69bdc20a3c1271b58f0d052ffc6b2466c44ef649
 
 # GSL is stuck due to cpp-libp2p using the stupid cmake "hunter" thing :/
 # I've filed a bug on hunter: https://github.com/cpp-pm/hunter/issues/399
 head[srv-shared/GSL]=v2.1.0
 
 # intx is stuck due to eEVM, which I am only using for Ethereum checksums
-
-# libevent is stuck?! https://github.com/libevent/libevent/issues/1251 :/
 
 # XXX: boost's outcome is stuck due to cpp-libp2p using deprecated macros
 # I filed a bug for this: https://github.com/libp2p/cpp-libp2p/issues/144

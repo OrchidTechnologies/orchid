@@ -9,11 +9,12 @@
 # }}}
 
 
-vflags += -DV8_TARGET_OS_MACOSX
+vflags += -DV8_TARGET_OS_MACOS
 
 include $(pwd)/target-psx.mk
 
 v8src += $(filter %-mac.cc %-macos.cc,$(v8all))
+v8src += $(pwd)/v8/src/base/platform/platform-darwin.cc
 v8src += $(pwd)/v8/src/base/platform/platform-macos.cc
 
 v8src := $(filter-out %/trace-writer.cc,$(v8src))
