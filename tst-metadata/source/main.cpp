@@ -113,11 +113,18 @@ struct Platform {
     unsigned count_;
 };
 
+std::string Slash(const std::vector<std::string> &parts) {
+    std::ostringstream slashed;
+    for (const auto &part : parts)
+        slashed << '/' << part;
+    return slashed.str();
+}
+
 task<void> RunApple(const S<Base> &base, const std::string &root, const std::string &iss, const std::string &kid, const std::string &app) {
     Apple apple(base, iss, kid);
 
     *co_await Parallel(Map([&](const Platform &platform) -> task<void> {
-        const auto version$(Str(One((co_await apple("GET", "/v1/apps/" + app + "/appStoreVersions?filter[appStoreState]=PREPARE_FOR_SUBMISSION&filter[platform]=" + platform.name_, {}, http::status::ok)).as_array()).at("id")));
+        const auto version$(Str(One((co_await apple("GET", Slash({"v1/apps", app, "appStoreVersions"}) + "?filter[appStoreState]=PREPARE_FOR_SUBMISSION&filter[platform]=" + platform.name_, {}, http::status::ok)).as_array()).at("id")));
         *co_await Parallel(Map([&](const Any &localization) -> task<void> {
             const auto locale(Str(localization.at("attributes").at("locale")));
             orc_assert(locale.size() >= 2);
@@ -128,8 +135,8 @@ task<void> RunApple(const S<Base> &base, const std::string &root, const std::str
 
                 *co_await Parallel(Map([&](const Any &screenshot) -> task<void> {
                     const auto screenshot$(Str(screenshot.at("id")));
-                    orc_assert(co_await apple("DELETE", "/v1/appScreenshots/" + screenshot$, {}, http::status::no_content) == nullptr);
-                }, (co_await apple("GET", "/v1/appScreenshotSets/" + screenshots$ + "/appScreenshots", {}, http::status::ok)).as_array()));
+                    orc_assert(co_await apple("DELETE", Slash({"v1/appScreenshots", screenshot$}), {}, http::status::no_content) == nullptr);
+                }, (co_await apple("GET", Slash({"v1/appScreenshotSets", screenshots$, "appScreenshots"}), {}, http::status::ok)).as_array()));
 
                 const auto folder(root + "/" + Str(screenshots.at("attributes").at("screenshotDisplayType")) + "/" + locale.substr(0, 2) + "/");
                 for (size_t i(0); i != platform.count_; ++i) {
@@ -165,7 +172,7 @@ task<void> RunApple(const S<Base> &base, const std::string &root, const std::str
                     }, reservation.at("attributes").at("uploadOperations").as_array()));
 
                     const auto screenshot$(Str(reservation.at("id")));
-                    const auto delivery((co_await apple("PATCH", "/v1/appScreenshots/" + screenshot$, Unparse({
+                    const auto delivery((co_await apple("PATCH", Slash({"v1/appScreenshots", screenshot$}), Unparse({
                         {"data", {
                             {"type", "appScreenshots"},
                             {"id", screenshot$},
@@ -186,24 +193,26 @@ task<void> RunApple(const S<Base> &base, const std::string &root, const std::str
 }
 
 task<void> RunGoogle(const S<Base> &base, const std::string &root, const std::string &package$) {
+    const auto edits(Slash({"androidpublisher/v3/applications", package$, "edits"}));
+
     Google google(base, Parse(Load("client_secrets.json")).as_object());
-    const auto edit$(Str((co_await google("POST", "/androidpublisher/v3/applications/" + package$ + "/edits")).as_object().at("id")));
+    const auto edit$(Str((co_await google("POST", edits)).as_object().at("id")));
 
     *co_await Parallel(Map([&](const Any &listing) -> task<void> {
         const auto language$(Str(listing.as_object().at("language")));
         orc_assert(language$.size() >= 2);
         *co_await Parallel(Map([&](const Platform &platform) -> task<void> {
-            co_await google("DELETE", "/androidpublisher/v3/applications/" + package$ + "/edits/" + edit$ + "/listings/" + language$ + "/" + platform.name_);
-            const auto folder(root + "/" + platform.name_ + "/" + language$.substr(0, 2) + "/");
+            co_await google("DELETE", edits + Slash({edit$, "listings", language$, platform.name_}));
+            const auto folder(root + Slash({platform.name_, language$.substr(0, 2)}));
             for (size_t i(0); i != platform.count_; ++i) {
-                const auto file(folder + std::to_string(i) + ".png");
+                const auto file(folder + Slash({std::to_string(i) + ".png"}));
                 std::cout << file << std::endl;
-                co_await google("POST", "/upload/androidpublisher/v3/applications/" + package$ + "/edits/" + edit$ + "/listings/" + language$ + "/" + platform.name_ + "?uploadType=media", "image/png", Load(file));
+                co_await google("POST", "/upload" + edits + Slash({edit$, "listings", language$, platform.name_}) + "?uploadType=media", "image/png", Load(file));
             }
         }, std::vector<Platform>{Platform{"featureGraphic", 1}, Platform{"phoneScreenshots", 6}}));
-    }, (co_await google("GET", "/androidpublisher/v3/applications/" + package$ + "/edits/" + edit$ + "/listings")).at("listings").as_array()));
+    }, (co_await google("GET", edits + Slash({edit$, "listings"}))).at("listings").as_array()));
 
-    co_await google("POST", "/androidpublisher/v3/applications/" + package$ + "/edits/" + edit$ + ":commit");
+    co_await google("POST", edits + Slash({edit$}) + ":commit");
 }
 
 task<void> Main(int argc, const char *const argv[]) {
