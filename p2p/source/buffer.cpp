@@ -103,6 +103,10 @@ void Buffer::copy(uint8_t *data, size_t size) const {
     orc_assert(here == data + size);
 }
 
+Snipped Buffer::snip(size_t length) const {
+    return {*this, length};
+}
+
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
     const auto flags(out.flags());
     _scope({ out.flags(flags); });
@@ -123,6 +127,20 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
     });
     out << '}';
     return out;
+}
+
+// XXX: I don't think the return value of this is correct, but I'm not using it today
+bool Snipped::each(const std::function<bool (const uint8_t *, size_t)> &code) const {
+    size_t rest(size_);
+    return data_.each([&](const uint8_t *data, size_t size) {
+        if (rest > size) {
+            rest -= size;
+            return code(data, size);
+        } else {
+            code(data, rest);
+            return false;
+        }
+    });
 }
 
 std::ostream &operator <<(std::ostream &out, const View &view) {

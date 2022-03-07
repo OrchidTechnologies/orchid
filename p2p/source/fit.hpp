@@ -40,7 +40,7 @@ class Fit {
 
     template <typename Type_>
     inline operator Type_() {
-        orc_assert(value_ <= std::numeric_limits<Type_>::max());
+        orc_assert_(value_ <= std::numeric_limits<Type_>::max(), value_ << " > " << typeid(Type_).name());
         return Type_(value_);
     }
 };

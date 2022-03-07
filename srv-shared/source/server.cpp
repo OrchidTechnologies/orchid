@@ -29,6 +29,7 @@
 #include "croupier.hpp"
 #include "crypto.hpp"
 #include "datagram.hpp"
+#include "defragment.hpp"
 #include "local.hpp"
 #include "protocol.hpp"
 #include "server.hpp"
@@ -49,7 +50,8 @@ class Incoming final :
   protected:
     void Land(rtc::scoped_refptr<webrtc::DataChannelInterface> interface) override {
         auto &bonding(server_->Bond());
-        auto &channel(bonding.Wire<Channel>(shared_from_this(), interface));
+        auto &defragment(bonding.Wire<BufferSink<Defragment>>());
+        auto &channel(defragment.Wire<Channel>(shared_from_this(), interface));
 
         Spawn([&bonding, &channel, server = std::move(server_)]() noexcept -> task<void> {
             co_await channel.Open();

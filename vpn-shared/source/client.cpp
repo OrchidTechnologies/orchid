@@ -25,6 +25,7 @@
 #include "channel.hpp"
 #include "client.hpp"
 #include "datagram.hpp"
+#include "defragment.hpp"
 #include "locator.hpp"
 #include "market.hpp"
 #include "protocol.hpp"
@@ -138,8 +139,9 @@ task<void> Client::Open(const Provider &provider, const S<Base> &base) {
     });
 
     auto &bonding(Bond());
+    auto &defragment(bonding.Wire<BufferSink<Defragment>>());
 
-    socket_ = co_await Channel::Wire(bonding, base, [&]() {
+    socket_ = co_await Channel::Wire(defragment, base, [&]() {
         Configuration configuration;
         configuration.tls_ = local_;
         return configuration;

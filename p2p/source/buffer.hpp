@@ -81,6 +81,7 @@ class Range {
     }
 };
 
+class Snipped;
 class Region;
 class Beam;
 
@@ -90,8 +91,9 @@ class Buffer {
 
     virtual size_t size() const;
     virtual bool have(size_t value) const;
-    virtual bool zero() const;
     virtual bool done() const;
+
+    virtual bool zero() const;
 
     void copy(uint8_t *data, size_t size) const;
 
@@ -103,9 +105,28 @@ class Buffer {
     std::string str() const;
 
     std::string hex(bool prefix = true) const;
+
+    Snipped snip(size_t length) const;
 };
 
 std::ostream &operator <<(std::ostream &out, const Buffer &buffer);
+
+class Snipped final :
+    public Buffer
+{
+  private:
+    const Buffer &data_;
+    size_t size_;
+
+  public:
+    Snipped(const Buffer &data, size_t size) :
+        data_(data),
+        size_(size)
+    {
+    }
+
+    bool each(const std::function<bool (const uint8_t *, size_t)> &code) const override;
+};
 
 template <typename Type_, typename Enable_ = void>
 struct Cast;
