@@ -312,12 +312,14 @@ class _DappHomeState extends State<DappHome> {
         OrchidCircularIdenticon(address: _web3Context.walletAddress, size: 24),
         padx(16),
         SizedBox(
-            width: 200,
+            width: 125,
             child: TapToCopyText(
-              _web3Context.walletAddress.toString(),
+              _web3Context.walletAddress.toString(elide: false),
+              displayText: _web3Context.walletAddress.toString(elide: true),
               style: OrchidText.title,
               // style: TextStyle(color: Colors.white),
               padding: EdgeInsets.zero,
+              overflow: TextOverflow.visible,
             )),
       ],
     );
@@ -341,8 +343,10 @@ class _DappHomeState extends State<DappHome> {
         if (showOxtBalance)
           Padding(
             padding: const EdgeInsets.only(left: 16.0),
-            child: SelectableText(wallet.oxtBalance.formatCurrency(locale: context.locale),
-                style: OrchidText.title, textAlign: TextAlign.right),
+            child: SelectableText(
+                wallet.oxtBalance.formatCurrency(locale: context.locale),
+                style: OrchidText.title,
+                textAlign: TextAlign.right),
           ),
       ],
     );
@@ -382,10 +386,19 @@ class _DappHomeState extends State<DappHome> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        DappButton(
-          text: s.connect.toUpperCase(),
-          onPressed: _connected ? null : _connectEthereum,
-        ),
+        // connect / disconnect button
+        if (_connected)
+          DappButton(
+            text: s.disconnect.toUpperCase(),
+            onPressed: _connected ? _disconnect : null,
+          )
+        else
+          DappButton(
+            text: s.connect.toUpperCase(),
+            onPressed: _connected ? null : _connectEthereum,
+          ),
+
+        // wallet connect
         if (_showWalletConnect) ...[
           padx(24),
           DappButton(
@@ -398,11 +411,7 @@ class _DappHomeState extends State<DappHome> {
             ),
           ),
         ],
-        padx(24),
-        DappButton(
-          text: s.disconnect.toUpperCase(),
-          onPressed: _connected ? _disconnect : null,
-        ),
+        // padx(24),
         if (versions != null) padx(24),
         _buildVersionSwitch(),
       ],
@@ -618,8 +627,7 @@ class _DappHomeState extends State<DappHome> {
     AppDialogs.showAppDialog(
         context: context,
         title: s.orchidIsntOnThisChain,
-        bodyText:
-            s.theOrchidContractHasntBeenDeployedOnThisChainYet);
+        bodyText: s.theOrchidContractHasntBeenDeployedOnThisChainYet);
 
     _setNewContex(null);
   }

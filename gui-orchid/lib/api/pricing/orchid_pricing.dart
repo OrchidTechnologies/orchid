@@ -38,6 +38,7 @@ class OrchidPricing {
     return await usdToTokenRate(toType) / await usdToTokenRate(fromType);
   }
 
+  // TODO: change return type to USD
   /// The USD price for the token. (USD/Token)
   Future<double> usdPrice(TokenType tokenType) async {
     return tokenToUsdRate(tokenType);

@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/preferences/user_preferences_mock.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
-import 'package:orchid/pages/account_manager/account_mock.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../orchid_log_api.dart';
@@ -74,7 +75,7 @@ class UserPreferences {
   // This default to an empty [] circuit if uninitialized.
   static Circuit _getCircuit() {
     if (AccountMock.mockAccounts) {
-      return AccountMock.mockCircuit;
+      return UserPreferencesMock.mockCircuit;
     }
     String value = UserPreferences().getStringForKey(UserPreferenceKey.Circuit);
     return value == null ? Circuit([]) : Circuit.fromJson(jsonDecode(value));

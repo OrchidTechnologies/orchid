@@ -7,25 +7,24 @@ import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
-import 'package:orchid/pages/circuit/model/circuit.dart';
-import 'package:orchid/pages/circuit/model/orchid_hop.dart';
-import 'account_view_model.dart';
 
 /// Mock account data for testing and screenshot generation
 class AccountMock {
-  static const mockAccounts = bool.fromEnvironment('mock_accounts', defaultValue: false);
+  static const mockAccounts =
+      bool.fromEnvironment('mock_accounts', defaultValue: false);
 
-  static final key1 = StoredEthereumKey(
-      uid: 'key1', imported: true, private: BigInt.from(42));
-  static final key2 = StoredEthereumKey(
-      uid: 'key2', imported: true, private: BigInt.from(43));
-  static final key3 = StoredEthereumKey(
-      uid: 'key3', imported: true, private: BigInt.from(44));
+  static final key1 =
+      StoredEthereumKey(uid: 'key1', imported: true, private: BigInt.from(42));
+  static final key2 =
+      StoredEthereumKey(uid: 'key2', imported: true, private: BigInt.from(43));
+  static final key3 =
+      StoredEthereumKey(uid: 'key3', imported: true, private: BigInt.from(44));
 
-  static final funder1 = EthereumAddress.from('0x42cc0d06ca2052ef93b5b7adfec2af7690731110');
-  static final funder2 = EthereumAddress.from('0x69570d06ca2052ef93b5b7adfec2af7690731111');
+  static final funder1 =
+      EthereumAddress.from('0x42cc0d06ca2052ef93b5b7adfec2af7690731110');
+  static final funder2 =
+      EthereumAddress.from('0x69570d06ca2052ef93b5b7adfec2af7690731111');
 
   static List<StoredEthereumKey> mockKeys = [
     key1,
@@ -92,38 +91,6 @@ class AccountMock {
       mockMarketConditions: MockMarketConditions(efficiency: 0.95),
     ),
   );
-
-  static Circuit mockCircuit = Circuit([
-    MockOrchidHop(account1polygon),
-    MockOrchidHop(account1optimism),
-    MockOrchidHop(account1xdai),
-  ]);
-
-  // The Account Manager page view model.
-  static List<AccountViewModel> accountViewModel = [
-    _mockAccountViewModel(account1xdai),
-    _mockAccountViewModel(account1bnb),
-    _mockAccountViewModel(account1avalanche),
-  ];
-
-  static AccountViewModel _mockAccountViewModel(MockAccount account) {
-    try {
-      return AccountViewModel(
-        signerKey: account.signerKey,
-        funder: account.funder,
-        chain: account.chain,
-        detail: MockAccountDetail(
-          account: account,
-          lotteryPot: account.mockLotteryPot,
-          marketConditions: account.mockLotteryPot.mockMarketConditions,
-        ),
-        active: mockCircuit.activeOrchidAccounts.contains(account),
-      );
-    } catch (err) {
-      log("Error building mock account: $err");
-      throw err;
-    }
-  }
 }
 
 // A mock account has a mock lottery pot with mock market conditions.
@@ -148,25 +115,6 @@ class MockAccount extends Account {
           chainId: chain.chainId,
           funder: funder,
         );
-
-/*
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-          other is Account &&
-              runtimeType == other.runtimeType &&
-              signerKeyUid == other.signerKeyUid &&
-              version == other.version &&
-              chainId == other.chainId &&
-              funder == other.funder;
-
-  @override
-  int get hashCode =>
-      signerKeyUid.hashCode ^
-      version.hashCode ^
-      chainId.hashCode ^
-      funder.hashCode;
-   */
 }
 
 class MockLotteryPot extends LotteryPot {
@@ -215,15 +163,4 @@ class MockMarketConditions extends MarketConditions {
   MockMarketConditions({
     @required double efficiency,
   }) : super(null, null, efficiency, false);
-}
-
-class MockOrchidHop extends OrchidHop {
-  MockAccount mockAccount;
-
-  @override
-  Account get account {
-    return mockAccount;
-  }
-
-  MockOrchidHop(this.mockAccount) : super.fromAccount(mockAccount);
 }

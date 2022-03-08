@@ -311,14 +311,21 @@ class EthereumAddress {
   }
 
   // Display the optionally prefixed 40 char hex address.
+  // If 'elide' is true show only the first and last four characters.
   @override
-  String toString({bool prefix: true}) {
+  String toString({bool prefix: true, bool elide = false}) {
     if (value == null) {
       throw Exception("invalid bigint");
     }
-    var raw = value.toRadixString(16).padLeft(40, '0');
-    var eip55 = Web3DartUtils.eip55ChecksumEthereumAddress(raw);
-    return (prefix ? eip55 : Hex.remove0x(eip55));
+    final raw = value.toRadixString(16).padLeft(40, '0');
+    final eip55 = Web3DartUtils.eip55ChecksumEthereumAddress(raw);
+    final hex = prefix ? eip55 : Hex.remove0x(eip55);
+    if (elide)
+      return hex.substring(0, prefix ? 6 : 4) +
+          '…' +
+          hex.substring(hex.length - 4, hex.length);
+    else
+      return hex;
   }
 
   static bool isValid(String text) {

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -22,7 +21,7 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/account/account_detail_store.dart';
-import 'package:orchid/pages/account_manager/account_mock.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/pages/account_manager/scan_paste_identity_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
@@ -40,6 +39,7 @@ import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_sizes.dart';
 import '../app_routes.dart';
+import 'account_manager_mock.dart';
 import 'account_view_model.dart';
 import 'export_identity_dialog.dart';
 
@@ -512,7 +512,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
     // Support testing
     if (AccountMock.mockAccounts) {
-      accounts = AccountMock.accountViewModel;
+      accounts = AccountManagerMock.accountViewModel;
     }
 
     // Sort by efficiency descending

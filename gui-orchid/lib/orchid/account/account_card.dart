@@ -262,11 +262,13 @@ class _AccountCardState extends State<AccountCard>
   }
 
   Widget _buildInfoColumn() {
-    final text = widget.accountDetail?.funder == null
+    final displayText = widget.accountDetail?.funder == null
         ? s.noAccountSelected
-        : widget.accountDetail.funder.toString();
+        : widget.accountDetail.funder.toString(elide: true);
+    final text = widget.accountDetail?.funder?.toString(elide: false) ?? '';
+
     final textWidth =
-        expanded ? 120.0 : (widget.accountDetail == null ? null : 120.0);
+    expanded ? 120.0 : (widget.accountDetail == null ? null : 120.0);
     final balanceText = _balanceText();
     var showBadge =
         (widget.accountDetail?.marketConditions?.efficiency ?? 1.0) <
@@ -284,6 +286,7 @@ class _AccountCardState extends State<AccountCard>
             width: textWidth,
             child: TapToCopyText(
               text,
+              displayText: displayText,
               padding: EdgeInsets.zero,
               style: OrchidText.body2,
             ),
@@ -308,19 +311,19 @@ class _AccountCardState extends State<AccountCard>
               height: 24,
               child: balanceText != null
                   ? Badge(
-                      showBadge: showBadge,
-                      elevation: 0,
-                      badgeContent: Text('!', style: OrchidText.caption),
-                      padding:
-                          EdgeInsets.only(left: 8, right: 8, bottom: 5, top: 8),
-                      toAnimate: false,
-                      position: BadgePosition.topEnd(top: -5, end: -30),
-                      child: Text(balanceText, style: OrchidText.highlight),
-                    )
+                showBadge: showBadge,
+                elevation: 0,
+                badgeContent: Text('!', style: OrchidText.caption),
+                padding:
+                EdgeInsets.only(left: 8, right: 8, bottom: 5, top: 8),
+                toAnimate: false,
+                position: BadgePosition.topEnd(top: -5, end: -30),
+                child: Text(balanceText, style: OrchidText.highlight),
+              )
                   : Align(
-                      alignment: Alignment.bottomCenter,
-                      child: _buildLoading(),
-                    ),
+                alignment: Alignment.bottomCenter,
+                child: _buildLoading(),
+              ),
             ),
           ),
           AnimatedSwitcher(
@@ -328,17 +331,17 @@ class _AccountCardState extends State<AccountCard>
             reverseDuration: const Duration(milliseconds: 200),
             child: expanded
                 ? Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 32.0, right: 32, top: 8, bottom: 24),
-                        child: Divider(
-                            color: Colors.white.withOpacity(0.4),
-                            thickness: 0.5),
-                      ),
-                      _buildExpandedDetail(),
-                    ],
-                  )
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 32.0, right: 32, top: 8, bottom: 24),
+                  child: Divider(
+                      color: Colors.white.withOpacity(0.4),
+                      thickness: 0.5),
+                ),
+                _buildExpandedDetail(),
+              ],
+            )
                 : Container(),
           ),
           pady(1),
@@ -356,13 +359,13 @@ class _AccountCardState extends State<AccountCard>
 
   Widget _buildExpandedDetail() {
     final depositText = pot?.effectiveDeposit
-            ?.formatCurrency(locale: context.locale, digits: 2) ??
+        ?.formatCurrency(locale: context.locale, digits: 2) ??
         '';
     final efficiency =
         widget.accountDetail?.marketConditions?.efficiency; // or null
     final chartModel = pot != null
         ? AccountBalanceChartTicketModel(
-            pot, widget.accountDetail.transactions ?? [])
+        pot, widget.accountDetail.transactions ?? [])
         : null;
     final version = widget.accountDetail?.account?.version;
     final versionText = version != null ? 'V$version' : '';
@@ -404,18 +407,18 @@ class _AccountCardState extends State<AccountCard>
               Text(s.efficiency, style: OrchidText.body2),
               efficiency != null
                   ? Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        OrchidCircularEfficiencyIndicators.large(efficiency),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2.5),
-                          child: Text('${(efficiency * 100.0).round()}%',
-                              style: OrchidText.caption.copyWith(
-                                  color: OrchidCircularEfficiencyIndicators
-                                      .colorForEfficiency(efficiency))),
-                        )
-                      ],
-                    )
+                alignment: Alignment.center,
+                children: [
+                  OrchidCircularEfficiencyIndicators.large(efficiency),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2.5),
+                    child: Text('${(efficiency * 100.0).round()}%',
+                        style: OrchidText.caption.copyWith(
+                            color: OrchidCircularEfficiencyIndicators
+                                .colorForEfficiency(efficiency))),
+                  )
+                ],
+              )
                   : SizedBox(height: 60),
             ],
           ),
@@ -473,12 +476,12 @@ class _AccountCardState extends State<AccountCard>
             duration: Duration(milliseconds: 500),
             child: (checked
                 ? Padding(
-                    padding: const EdgeInsets.only(left: 5, bottom: 5),
-                    child: SvgPicture.asset(OrchidAssetSvg.toggle_checked_path,
-                        width: 25, height: 25, fit: BoxFit.scaleDown),
-                  )
+              padding: const EdgeInsets.only(left: 5, bottom: 5),
+              child: SvgPicture.asset(OrchidAssetSvg.toggle_checked_path,
+                  width: 25, height: 25, fit: BoxFit.scaleDown),
+            )
                 : SvgPicture.asset(OrchidAssetSvg.toggle_unchecked_path,
-                    width: 20, height: 20, fit: BoxFit.scaleDown)),
+                width: 20, height: 20, fit: BoxFit.scaleDown)),
           ),
         ),
       ),
