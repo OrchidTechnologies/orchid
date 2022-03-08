@@ -121,6 +121,7 @@ int Main(int argc, const char *const argv[]) {
     po::options_description group("general command line (the usual)");
     group.add_options()
         ("help", "produce (probably this) help message")
+        ("verbose", "output (mostly useless) log messages")
         ("version", "dump version (intense, with patches)")
     ;
 
@@ -195,6 +196,9 @@ int Main(int argc, const char *const argv[]) {
 
         return 0;
     }
+
+    if (args.count("verbose") != 0)
+        Verbose = true;
 
     if (args.count("version") != 0) {
         std::cout.write(VersionData, Fit(VersionSize));

@@ -49,6 +49,7 @@ int Main(int argc, const char *const argv[]) {
     po::options_description options("command-line (only)");
     options.add_options()
         ("help", "produce help message")
+        ("verbose", "log more messages")
         ("capture", po::value<std::string>(), "single ip address to capture")
         ("config", po::value<std::string>(), "configuration file for client configuration")
     ;
@@ -65,6 +66,9 @@ int Main(int argc, const char *const argv[]) {
         << std::endl;
         return 0;
     }
+
+    if (args.count("verbose") != 0)
+        Verbose = true;
 
 
     Initialize();
