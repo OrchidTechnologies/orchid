@@ -9,7 +9,7 @@
 # }}}
 
 
-source += $(filter-out %_unittest.cc,$(wildcard $(pwd)/libz/google/*.cc))
+source += $(pwd)/libz/google/compression_utils_portable.cc
 
 ifeq ($(target),win)
 cflags/$(pwd)/libz/ += -DUNICODE
