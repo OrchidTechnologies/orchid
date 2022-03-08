@@ -106,7 +106,6 @@ def handle_receipt(receipt, product_id_claim, Stage, verify_receipt):
 
     # extract and hash the receipt body payload
     receipt_hash = hash_receipt_body(receipt)
-    product_id = None
 
     apple_response = process_app_pay_receipt(receipt)
 
@@ -128,14 +127,14 @@ def handle_receipt(receipt, product_id_claim, Stage, verify_receipt):
         if (validation_result['receipt']['in_app'] is None) or (len(validation_result['receipt']['in_app']) == 0):
             return "unexpected in_app result is empty", None, 0
 
-    if (product_id is None):
-        product_id = validation_result['receipt']['in_app'][0]['product_id']
-    quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
-
+    product_id = validation_result['receipt']['in_app'][0]['product_id']
+    if (product_id_claim is None):
+        product_id_claim = product_id
     if product_id != product_id_claim:
         logging.debug(f"handle_receipt_apple  invalid_product_id  {product_id} != {product_id_claim}")
-        return "invalid_product_id", None, 0
+        return f"invalid_product_id {product_id} != {product_id_claim}", None, 0
 
+    quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
     if Stage == 'dev':
         total_usd = wildcard_product_to_usd(product_id=product_id) * quantity
     else:
