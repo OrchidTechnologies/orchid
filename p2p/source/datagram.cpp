@@ -43,6 +43,13 @@ bool Datagram(const Buffer &data, const std::function<bool (const Socket &, cons
     if (ip4.protocol != uint8_t(openvpn::IPCommon::UDP))
         return false;
 
+    const uint16_t fragoff(boost::endian::big_to_native(ip4.frag_off));
+    const auto offset(uint16_t(fragoff << 3));
+    const auto flags(fragoff >> 13);
+    const auto last((flags & 1) == 0);
+    if (offset != 0 || !last)
+        return false;
+
     openvpn::UDPHeader udp;
     window.Take(&udp);
     orc_assert(window.size() == boost::endian::big_to_native(udp.len) - sizeof(udp));
