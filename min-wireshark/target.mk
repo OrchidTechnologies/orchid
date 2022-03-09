@@ -194,6 +194,8 @@ source += $(output)/$(pwd/wireshark)/epan/uat_load.c
 source += $(output)/$(pwd/wireshark)/wiretap/k12text.c
 
 cflags/$(pwd/wireshark)/epan/dfilter/dfilter.c += -I$(output)/$(pwd/wireshark)/epan/dfilter
+$(call depend,$(pwd/wireshark)/epan/dfilter/dfilter.c.o,$(output)/$(pwd/wireshark)/epan/dfilter/grammar.h)
+$(call depend,$(pwd/wireshark)/epan/dfilter/dfilter.c.o,$(output)/$(pwd/wireshark)/epan/dfilter/scanner_lex.h)
 
 define parser
 source += $(output)/$(pwd/wireshark)/$(1)$(2).c
