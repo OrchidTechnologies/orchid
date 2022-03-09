@@ -164,11 +164,6 @@ cflags += -I$(pwd)/intx/include
 source += $(filter-out %/fmt.cc,$(wildcard $(pwd)/fmt/src/*.cc))
 cflags += -I$(pwd)/fmt/include
 
-source += $(pwd)/eEVM/src/processor.cpp
-source += $(pwd)/eEVM/src/stack.cpp
-source += $(pwd)/eEVM/src/transaction.cpp
-source += $(pwd)/eEVM/src/util.cpp
-
 source += $(pwd)/eEVM/3rdparty/keccak/KeccakHash.c
 source += $(pwd)/eEVM/3rdparty/keccak/KeccakSpongeWidth1600.c
 source += $(pwd)/eEVM/3rdparty/keccak/KeccakP-1600-opt64.c

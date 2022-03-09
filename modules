@@ -14,6 +14,7 @@ tag p2p/boost 'boost-[0-9.]*'
 tag min-webrtc/openssl 'OpenSSL_[0-9_]*[a-z]'
 tag p2p/sqlite 'version-[0-9.]*'
 
+# to upgrade to a later version of libc++ would require LLVM as submodule
 head[env/libcxx]=origin/release_90
 head[env/libcxxabi]=origin/release_90
 
@@ -21,17 +22,17 @@ head[app-shared/flutter]=2.2.3
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
 # boringtun is stuck, by https://github.com/cloudflare/boringtun/pull/235
+head[p2p/boringtun]=42710c904605bf1efe6e1e52fd6f7b16c099e06c
 
 # fmt is stuck by soralog before 841aad95b42704ea77e3eb05a2cbb075dc5b1137
 # someone talked about this at https://github.com/xDimon/soralog/issues/3
 # fmt broke on April Fools' with 15c10b0c666d274b378cf63429babfa202623db4
 # fmt did not fix that bug until 69bdc20a3c1271b58f0d052ffc6b2466c44ef649
+head[p2p/fmt]=308510eb4fad9b112ebdd2867b0b96338b0a9a36
 
 # GSL is stuck due to cpp-libp2p using the stupid cmake "hunter" thing :/
 # I've filed a bug on hunter: https://github.com/cpp-pm/hunter/issues/399
 head[srv-shared/GSL]=v2.1.0
-
-# intx is stuck due to eEVM, which I am only using for Ethereum checksums
 
 # XXX: boost's outcome is stuck due to cpp-libp2p using deprecated macros
 # I filed a bug for this: https://github.com/libp2p/cpp-libp2p/issues/144
@@ -40,6 +41,7 @@ head[p2p/outcome]=boost-1.75.0
 
 # url is stuck due to https://forums.developer.apple.com/thread/120977 :/
 # (I tried to use a local copy of libcxx on Apple, but crashed on iOS 14)
+head[p2p/url]=7c822cb9873b1422e09be5131f30e9d83d487096
 
 git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
     cd "${sub}"
