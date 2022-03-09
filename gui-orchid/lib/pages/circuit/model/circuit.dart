@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/pages/circuit/model/wireguard_hop.dart';
 
 import 'circuit_hop.dart';
@@ -8,6 +9,11 @@ class Circuit {
   List<CircuitHop> hops = [];
 
   Circuit(this.hops);
+
+  Set<Account> get activeOrchidAccounts => (hops ?? [])
+      .whereType<OrchidHop>()
+      .map((hop) => hop.account)
+      .toSet();
 
   // Handle the heterogeneous list of hops
   Circuit.fromJson(Map<String, dynamic> json) {

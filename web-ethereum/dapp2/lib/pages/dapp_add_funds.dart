@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -9,6 +7,8 @@ import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/common/token_price_builder.dart';
+import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 
 import 'dapp_button.dart';
@@ -49,7 +49,7 @@ class _AddFundsPaneState extends State<AddFundsPane> {
     return widget.context.wallet;
   }
 
-  // The wallet balance of the configured token type
+  // The wallet balance of the configured token type or null if no tokens known
   Token get walletBalance {
     return wallet?.balanceOf(widget.tokenType);
   }
@@ -59,48 +59,54 @@ class _AddFundsPaneState extends State<AddFundsPane> {
     super.initState();
     _addBalanceField.addListener(_formFieldChanged);
     _addDepositField.addListener(_formFieldChanged);
+    // _initStateAsync();
   }
-
-  void initStateAsync() async {}
+  // void _initStateAsync() async { }
 
   @override
   Widget build(BuildContext context) {
-    if (walletBalance == null) {
-      return Container();
-    }
-    var allowance = wallet.allowanceOf(widget.tokenType);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (allowance != null && allowance.gtZero())
-          Text(s.currentTokenPreauthorizationAmount(
-                  widget.tokenType.symbol, allowance.formatCurrency(locale: context.locale)))
-              .body2
-              .bottom(16)
-              .top(8),
-        LabeledTokenValueField(
-          type: widget.tokenType,
-          controller: _addBalanceField,
-          label: s.balance + ':',
-        ),
-        pady(4),
-        LabeledTokenValueField(
-          type: widget.tokenType,
-          controller: _addDepositField,
-          label: s.deposit + ':',
-        ),
-        pady(24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+    var allowance =
+        wallet?.allowanceOf(widget.tokenType) ?? widget.tokenType.zero;
+    return TokenPriceBuilder(
+      tokenType: widget.tokenType,
+      seconds: 30,
+      builder: (USD tokenPrice) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DappButton(
-                text: s.addFunds,
-                onPressed: _addFundsFormEnabled ? _addFunds : null),
+            if (allowance != null && allowance.gtZero())
+              Text(s.currentTokenPreauthorizationAmount(widget.tokenType.symbol,
+                      allowance.formatCurrency(locale: context.locale)))
+                  .body2
+                  .bottom(16)
+                  .top(8),
+            LabeledTokenValueField(
+              type: widget.tokenType,
+              controller: _addBalanceField,
+              label: s.balance + ':',
+              usdPrice: tokenPrice,
+            ),
+            pady(4),
+            LabeledTokenValueField(
+              type: widget.tokenType,
+              controller: _addDepositField,
+              label: s.deposit + ':',
+              usdPrice: tokenPrice,
+            ),
+            pady(24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                DappButton(
+                    text: s.addFunds,
+                    onPressed: _addFundsFormEnabled ? _addFunds : null),
+              ],
+            ),
+            pady(32),
+            _buildInstructions(),
           ],
-        ),
-        pady(32),
-        _buildInstructions(),
-      ],
+        );
+      }
     );
   }
 
@@ -125,21 +131,22 @@ class _AddFundsPaneState extends State<AddFundsPane> {
 
   bool get _addBalanceFieldValid {
     var value = _addBalanceField.value;
-    return value != null && value < walletBalance;
+    return value != null && value < (walletBalance ?? widget.tokenType.zero);
   }
 
   bool get _addDepositFieldValid {
     var value = _addDepositField.value;
-    return value != null && value < walletBalance;
+    return value != null && value < (walletBalance ?? widget.tokenType.zero);
   }
 
   bool get _addFundsFormEnabled {
     if (_txPending) {
       return false;
     }
+    final zero = widget.tokenType.zero;
     if (_addBalanceFieldValid && _addDepositFieldValid) {
       var total = _addBalanceField.value + _addDepositField.value;
-      return total > walletBalance.type.zero && total <= walletBalance;
+      return total > zero && total <= (walletBalance ?? zero);
     }
     return false;
   }

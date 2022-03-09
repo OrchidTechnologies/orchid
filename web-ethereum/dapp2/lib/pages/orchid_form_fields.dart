@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/util/localization.dart';
+import 'package:orchid/util/units.dart';
 
-class OrchidFormFields {}
-
+/// A typed text field for display and entry of a numeric token value.
+/// The field has a prefix label and displays the token symbol as a suffix.
+/// The field can optionally display a USD price after the token symbol.
 class LabeledTokenValueField extends StatelessWidget {
   final TokenValueFieldController controller;
   final TokenType type;
+  final USD usdPrice;
   final String label;
   final double labelWidth;
   final bool enabled;
@@ -22,16 +26,26 @@ class LabeledTokenValueField extends StatelessWidget {
     this.enabled,
     this.labelWidth,
     this.onClear,
+    this.usdPrice,
   }) : super(key: key) {
     controller.type = type;
   }
 
   @override
   Widget build(BuildContext context) {
-    var tokenText = Text(type.symbol ?? '').button.height(1.5);
+    final usdValue = (usdPrice != null && controller.value != null)
+        ? USD(controller.value.floatValue * usdPrice.value)
+        : null;
+    final usdText = usdValue != null
+        ? "(${usdValue.formatCurrency(locale: context.locale)} USD)"
+        : null;
+
     return Row(
       children: [
+        // label
         SizedBox(width: labelWidth ?? 80, child: Text(label ?? '').button),
+
+        // text field
         Flexible(
           child: OrchidTextField(
             hintText: '0.0',
@@ -42,8 +56,20 @@ class LabeledTokenValueField extends StatelessWidget {
             onClear: onClear,
           ),
         ),
-        // padx(4),
-        tokenText,
+
+        // token symbol suffix
+        Text(type.symbol ?? '').button, //.height(1.5),
+
+        // USD price annotation
+        if (usdText != null)
+          SizedBox(
+            width: 130,
+            child: Text(
+              usdText ?? '',
+              overflow: TextOverflow.visible,
+              softWrap: false,
+            ).button.left(8),
+          )
       ],
     );
   }

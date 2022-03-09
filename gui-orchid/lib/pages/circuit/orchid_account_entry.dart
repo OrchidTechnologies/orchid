@@ -46,7 +46,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
 
   // Funder account selection
   var _pastedFunderField = TextEditingController();
-  Chain _pastedFunderChainSelection;
+  Chain _pastedOrOverriddenFunderChainSelection;
   FunderSelectionItem _initialSelectedFunderItem;
   FunderSelectionItem _selectedFunderItem;
 
@@ -72,10 +72,10 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
 
     _pastedFunderField.addListener(_textFieldChanged);
 
-    updateAccounts();
+    _updateAccounts();
   }
 
-  void updateAccounts() async {
+  void _updateAccounts() async {
     setState(() {
       _updatingAccounts = true;
     });
@@ -171,6 +171,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
                 // TODO: return data and modifying KeySelectionDropdown to handle transient keys.
                 if (result.isNew) {
                   await UserPreferences().addKey(result.signer);
+                  _updateAccounts();
                 }
                 setState(() {
                   _selectedKeyItem =
@@ -220,7 +221,20 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
             padding: const EdgeInsets.only(top: 24),
             child: _buildPasteFunderField(),
           ),
-        )
+        ),
+
+        pady(16),
+        Text(s.chain + ':',
+            style: OrchidText.title.copyWith(
+                color: _funderValid()
+                    ? OrchidColors.valid
+                    : OrchidColors.invalid)),
+        pady(8),
+        ChainSelectionDropdown(
+          key: Key(_selectedFunderItem?.toString() ?? ''),
+          onSelection: _onChainSelectionChanged,
+          initialSelection: _selectedFunderItem?.account?.chain,
+        ),
       ],
     );
   }
@@ -239,8 +253,6 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
             onPressed: _onPasteFunderAddressButton,
           ),
         ),
-        pady(24),
-        ChainSelectionDropdown(onSelection: _onChainSelectionChanged),
       ],
     );
   }
@@ -251,7 +263,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
 
   void _onChainSelectionChanged(Chain chain) {
     setState(() {
-      _pastedFunderChainSelection = chain;
+      _pastedOrOverriddenFunderChainSelection = chain;
     });
     fireUpdate();
   }
@@ -261,6 +273,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
       _selectedKeyItem = key;
       _selectedFunderItem = null;
       _pastedFunderField.text = null;
+      _pastedOrOverriddenFunderChainSelection = null;
     });
     _clearKeyboard();
     fireUpdate();
@@ -269,6 +282,8 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
   void _onFunderSelected(FunderSelectionItem funder) {
     setState(() {
       _selectedFunderItem = funder;
+      _pastedFunderField.text = null;
+      _pastedOrOverriddenFunderChainSelection = null;
     });
     _clearKeyboard();
     fireUpdate();
@@ -310,7 +325,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
 
   bool _pastedFunderAndChainValid() {
     return EthereumAddress.isValid(_pastedFunderField.text) &&
-        _pastedFunderChainSelection != null;
+        _pastedOrOverriddenFunderChainSelection != null;
   }
 
   bool _formValid() {
@@ -334,11 +349,13 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
       var funderAccount = _selectedFunderItem?.account;
       funderAddress = funderAccount?.funder ??
           EthereumAddress.from(_pastedFunderField.text);
-      chainId = funderAccount?.chainId ?? _pastedFunderChainSelection.chainId;
+
+      chainId = _pastedOrOverriddenFunderChainSelection?.chainId ??
+          funderAccount?.chainId;
 
       // Note: Currently inferring contract version from chain selection here.
       version = funderAccount?.version ??
-          (_pastedFunderChainSelection.isEthereum ? 0 : 1);
+          (_pastedOrOverriddenFunderChainSelection.isEthereum ? 0 : 1);
     } catch (err) {
       // e.g. invalid pasted address
       return widget.onChange(null);

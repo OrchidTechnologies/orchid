@@ -637,7 +637,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   /// Copy the wallet address to the clipboard
   void _onCopyButton() async {
-    StoredEthereumKey key = await _selectedKeyItem.keyRef.get();
+    StoredEthereumKey key = _selectedKeyItem.keyRef.get();
     Clipboard.setData(ClipboardData(text: key.get().addressString));
   }
 

@@ -109,7 +109,7 @@ class AccountStore extends ChangeNotifier {
       discoveredAccounts = [];
 
       // Discover accounts for the active identity on supported V1 chains.
-      StoredEthereumKey signer = await identity.get();
+      StoredEthereumKey signer = identity.get();
       try {
         // Small amount of data with high latency, let's do them in parallel.
         await Future.wait(Chains.map.values.where((e) => e.supportsLogs).map(

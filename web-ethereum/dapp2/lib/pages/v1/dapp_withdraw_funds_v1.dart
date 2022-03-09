@@ -9,10 +9,12 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 import '../dapp_button.dart';
 import '../orchid_form_fields.dart';
 import 'package:orchid/util/localization.dart';
+import 'package:orchid/common/token_price_builder.dart';
 
 class WithdrawFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -73,12 +75,18 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
         pady(16),
         Text(availableText).title,
         pady(24),
-        LabeledTokenValueField(
-          labelWidth: 100,
-          type: tokenType,
-          controller: _withdrawBalanceField,
-          label: s.withdraw + ':',
-        ),
+        TokenPriceBuilder(
+            tokenType: tokenType,
+            seconds: 30,
+            builder: (USD tokenPrice) {
+              return LabeledTokenValueField(
+                labelWidth: 100,
+                type: tokenType,
+                controller: _withdrawBalanceField,
+                label: s.withdraw + ':',
+                usdPrice: tokenPrice,
+              );
+            }),
         if (pot.deposit > pot.unlockedAmount)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),

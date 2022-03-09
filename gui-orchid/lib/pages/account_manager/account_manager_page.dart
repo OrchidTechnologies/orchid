@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -22,7 +21,7 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/account/account_detail_store.dart';
-import 'package:orchid/pages/account_manager/scan_paste_identity.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/pages/account_manager/scan_paste_identity_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
@@ -40,6 +39,7 @@ import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_sizes.dart';
 import '../app_routes.dart';
+import 'account_manager_mock.dart';
 import 'account_view_model.dart';
 import 'export_identity_dialog.dart';
 
@@ -73,6 +73,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   AccountStore _accountStore;
   AccountDetailStore _accountDetailStore;
+
+  var _refreshIndicatorKey = new GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
@@ -266,7 +268,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
           // Support onboarding by prodding the account finder if it exists
           AccountFinder.shared?.refresh();
-          _accountStore.refresh();
+
+          // trigger a refresh
+          _refreshIndicatorKey.currentState.show();
         }
       },
     );
@@ -280,7 +284,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       await UserPreferences().addCachedDiscoveredAccounts([_accountToImport]);
 
       // Set the identity and refresh
-      _setSelectedIdentity(await _accountToImport.signerKey);
+      _setSelectedIdentity(_accountToImport.signerKey);
 
       setState(() {
         _accountToImport = null;
@@ -290,6 +294,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
       // Support onboarding by prodding the account finder if it exists
       AccountFinder.shared?.refresh();
+
+      // trigger a refresh
+      _refreshIndicatorKey.currentState.show();
     };
 
     AppDialogs.showAppDialog(
@@ -483,11 +490,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     return StreamBuilder<Circuit>(
         stream: UserPreferences().circuit.stream(),
         builder: (context, snapshot) {
-          var circuit = snapshot.data;
-          Set<Account> activeAccounts = (circuit?.hops ?? [])
-              .whereType<OrchidHop>()
-              .map((hop) => hop.account)
-              .toSet();
+          Circuit circuit = snapshot.data;
+          Set<Account> activeAccounts = circuit?.activeOrchidAccounts ?? {};
           return _buildAccountList(activeAccounts);
         });
   }
@@ -505,6 +509,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           active: activeAccounts.contains(account),
           detail: _accountDetailStore.get(account));
     }).toList();
+
+    // Support testing
+    if (AccountMock.mockAccounts) {
+      accounts = AccountManagerMock.accountViewModel;
+    }
 
     // Sort by efficiency descending
     accounts.sort((AccountViewModel a, AccountViewModel b) {
@@ -547,6 +556,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             });
 
     return RefreshIndicator(
+      key: _refreshIndicatorKey,
       color: Colors.white,
       backgroundColor: OrchidColors.purple_ffb88dfc,
       displacement: 0,

@@ -204,6 +204,8 @@ INSERT INTO flow(start,layer4,src_addr,src_port,dst_addr,dst_port,protocol,hostn
     } else if (showScreen == 'traffic') {
       await UserPreferences().monitoringEnabled.set(true);
       await Navigator.pushNamed(context, AppRoutes.traffic);
+    } else if (showScreen == 'circuit') {
+      await Navigator.pushNamed(context, AppRoutes.circuit);
     }
   }
 

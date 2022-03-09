@@ -53,6 +53,14 @@ def hash_receipt_body(receipt):
 
     return receipt_hash
 
+def hash_string(x):
+    data_str = str(x).encode('utf-8')
+    logging.debug(f'hash_string: {data_str}')
+
+    data_hash = hashlib.sha256(data_str).hexdigest()
+    logging.debug(f'data_hash: {data_hash}')
+
+    return data_hash
 
 def process_app_pay_receipt(
     receipt,
@@ -105,8 +113,7 @@ def product_to_usd(product_id: str) -> float:
 def handle_receipt(receipt, product_id_claim, Stage, verify_receipt):
 
     # extract and hash the receipt body payload
-    receipt_hash = hash_receipt_body(receipt)
-    product_id = None
+    #receipt_hash = hash_receipt_body(receipt)
 
     apple_response = process_app_pay_receipt(receipt)
 
@@ -128,14 +135,21 @@ def handle_receipt(receipt, product_id_claim, Stage, verify_receipt):
         if (validation_result['receipt']['in_app'] is None) or (len(validation_result['receipt']['in_app']) == 0):
             return "unexpected in_app result is empty", None, 0
 
-    if (product_id is None):
-        product_id = validation_result['receipt']['in_app'][0]['product_id']
-    quantity = int(validation_result['receipt']['in_app'][0]['quantity'])
+    product_objs = validation_result['receipt']['in_app']
+    num_products = len(product_objs)
+    prod_idx     = num_products-1
+    last_product = product_objs[prod_idx]
 
+    receipt_hash = hash_string(last_product['transaction_id'])
+
+    product_id   = last_product['product_id']
+    if (product_id_claim is None):
+        product_id_claim = product_id
     if product_id != product_id_claim:
         logging.debug(f"handle_receipt_apple  invalid_product_id  {product_id} != {product_id_claim}")
-        return "invalid_product_id", None, 0
+        return f"invalid_product_id {product_id} != {product_id_claim}", None, 0
 
+    quantity = int(last_product['quantity'])
     if Stage == 'dev':
         total_usd = wildcard_product_to_usd(product_id=product_id) * quantity
     else:

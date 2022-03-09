@@ -9,10 +9,12 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/units.dart';
 
 import '../dapp_button.dart';
 import '../orchid_form_fields.dart';
 import 'package:orchid/util/localization.dart';
+import 'package:orchid/common/token_price_builder.dart';
 
 class AdvancedFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -76,38 +78,43 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       return Container();
     }
     var tokenType = pot.balance.type;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // add
-        ..._buildBalanceForm(tokenType),
-        pady(32),
+    return TokenPriceBuilder(
+        tokenType: tokenType,
+        seconds: 30,
+        builder: (USD tokenPrice) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // add
+              ..._buildBalanceForm(tokenType, tokenPrice),
+              pady(32),
 
-        // withdraw
-        ..._buildDepositForm(tokenType),
+              // withdraw
+              ..._buildDepositForm(tokenType, tokenPrice),
 
-        pady(32),
-        // move
-        ..._buildMoveFunds(tokenType),
+              pady(32),
+              // move
+              ..._buildMoveFunds(tokenType, tokenPrice),
 
-        pady(32),
-        // warn
-        ..._buildWarn(tokenType),
+              pady(32),
+              // warn
+              ..._buildWarn(tokenType, tokenPrice),
 
-        pady(48),
-        // submit button
-        _buildSubmitButton(),
+              pady(48),
+              // submit button
+              _buildSubmitButton(),
 
-        pady(32),
-        Text(
-          s.settingAWarnedDepositAmountBeginsThe24HourWaiting +
-              ' ' +
-              s.duringThisPeriodTheFundsAreNotAvailableAsA +
-              ' ' +
-              s.fundsMayBeRelockedAtAnyTimeByReducingThe,
-        ).caption.center,
-      ],
-    );
+              pady(32),
+              Text(
+                s.settingAWarnedDepositAmountBeginsThe24HourWaiting +
+                    ' ' +
+                    s.duringThisPeriodTheFundsAreNotAvailableAsA +
+                    ' ' +
+                    s.fundsMayBeRelockedAtAnyTimeByReducingThe,
+              ).caption.center,
+            ],
+          );
+        });
   }
 
   Widget _buildSubmitButton() {
@@ -133,7 +140,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         ));
   }
 
-  List<Widget> _buildBalanceForm(TokenType tokenType) {
+  List<Widget> _buildBalanceForm(TokenType tokenType, USD tokenPrice) {
     return [
       _buildTitle(s.balance),
       pady(24),
@@ -153,6 +160,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
               labelWidth: 0,
               type: tokenType,
               controller: _balanceField,
+              usdPrice: tokenPrice,
             ),
           ),
         ],
@@ -160,7 +168,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     ];
   }
 
-  List<Widget> _buildDepositForm(TokenType tokenType) {
+  List<Widget> _buildDepositForm(TokenType tokenType, USD tokenPrice) {
     return [
       _buildTitle(s.deposit),
       pady(24),
@@ -180,6 +188,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
               labelWidth: 0,
               type: tokenType,
               controller: _depositField,
+              usdPrice: tokenPrice,
             ),
           ),
         ],
@@ -187,7 +196,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     ];
   }
 
-  List<Widget> _buildMoveFunds(TokenType tokenType) {
+  List<Widget> _buildMoveFunds(TokenType tokenType, USD tokenPrice) {
     return [
       _buildTitle(s.move),
       pady(24),
@@ -207,6 +216,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
               labelWidth: 0,
               type: tokenType,
               controller: _moveField,
+              usdPrice: tokenPrice,
             ),
           ),
         ],
@@ -214,7 +224,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     ];
   }
 
-  List<Widget> _buildWarn(TokenType tokenType) {
+  List<Widget> _buildWarn(TokenType tokenType, USD tokenPrice) {
     var warnedIncreased = (_warnedField.value ?? tokenType.zero) > pot.warned;
     var unlockTime = warnedIncreased
         ? DateTime.now().add(Duration(days: 1))
@@ -232,6 +242,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         controller: _warnedField,
         label: s.totalWarnedAmount + ':',
         onClear: _resetWarnedField,
+        usdPrice: tokenPrice,
       ),
       Visibility(
         visible: _warnedField.value.gtZero(),

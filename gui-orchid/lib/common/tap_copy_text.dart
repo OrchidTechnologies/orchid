@@ -4,6 +4,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class TapToCopyText extends StatefulWidget {
   final String text;
+  final String displayText;
   final TextStyle style;
   final TextOverflow overflow;
   final EdgeInsets padding;
@@ -11,9 +12,15 @@ class TapToCopyText extends StatefulWidget {
   // Callback to be used in lieu of the default copy functionality
   final void Function(String text) onTap;
 
-  const TapToCopyText(this.text,
-      {Key key, this.style, this.padding, this.onTap, this.overflow})
-      : super(key: key);
+  const TapToCopyText(
+    this.text, {
+    Key key,
+    this.displayText,
+    this.style,
+    this.padding,
+    this.onTap,
+    this.overflow,
+  }) : super(key: key);
 
   @override
   _TapToCopyTextState createState() => _TapToCopyTextState();
@@ -30,7 +37,7 @@ class _TapToCopyTextState extends State<TapToCopyText> {
   void initState() {
     super.initState();
     setState(() {
-      _showText = widget.text;
+      _showText = widget.displayText ?? widget.text;
     });
   }
 
@@ -44,6 +51,7 @@ class _TapToCopyTextState extends State<TapToCopyText> {
           _showText,
           textAlign: TextAlign.center,
           overflow: widget.overflow ?? TextOverflow.ellipsis,
+          softWrap: false,
           style: widget.style,
         ),
       ),
@@ -64,7 +72,7 @@ class _TapToCopyTextState extends State<TapToCopyText> {
     });
     await Future.delayed(Duration(milliseconds: 500));
     setState(() {
-      _showText = widget.text;
+      _showText = widget.displayText ?? widget.text;
     });
   }
 }

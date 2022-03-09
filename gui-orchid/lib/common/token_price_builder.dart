@@ -1,0 +1,33 @@
+import 'package:flutter/widgets.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/pricing/orchid_pricing.dart';
+import 'package:orchid/util/polling_builder.dart';
+import 'package:orchid/util/units.dart';
+
+// TODO: expand to multi-token
+class TokenPriceBuilder extends StatelessWidget {
+  final TokenType tokenType;
+  final int seconds;
+  final Widget Function(USD price) builder;
+
+  const TokenPriceBuilder({
+    Key key,
+    @required this.tokenType,
+    @required this.seconds,
+    @required this.builder,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return PollingBuilder<USD>.interval(
+      seconds: seconds,
+      poll: () async {
+        return USD(await OrchidPricing().usdPrice(tokenType));
+      },
+      // must cast to dynamic here
+      builder: (dynamic arg) {
+        return builder(arg);
+      },
+    );
+  }
+}

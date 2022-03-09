@@ -15,9 +15,12 @@ def verify_txn_sig(msg):
     txn = json.loads(txn_s)
 
 #    msg = str(txn).replace("'", '"').replace(' ', '')
-    print("msg:\n", txn_s)
+    print("msg:")
+    print(txn_s)
     message = messages.encode_defunct(text=txn_s)
-    print("encoded message:\n", message)
+    print("encoded message:")
+    print(message)
+    print(message.version + message.header + message.body)
     rec_pubaddr = w3.eth.account.recover_message(message, signature=sig)
     print("from =", txn['from'])
     print("rec_pubaddr =", rec_pubaddr)
@@ -39,14 +42,17 @@ def sig_test(filename, pubaddr, privkey):
     txnjson = json.loads(txnfile)
     print(f'json: {json.dumps(txnjson)}')
 
-    txn = json.loads(txnjson['txn'])
-    print(f'txn: {str(txn)}')
+    txn_s = txnjson['txn']
+    print(f'txn_s:')
+    print(txn_s)
 
     #// This part prepares "version E" messages, using the EIP-191 standard
-    msg = str(txn).replace("'", '"').replace(' ', '')
-    print("msg:\n", msg)
-    message = messages.encode_defunct(text=msg)
-    print("encoded message:\n", message)
+    #msg = str(txn).replace("'", '"').replace(' ', '')
+    #print("msg:\n")
+    #print(msg)
+    message = messages.encode_defunct(text=txn_s)
+    print("encoded message:")
+    print(message)
 
     #// This part signs any EIP-191-valid message
     signed_message = Account.sign_message(message, private_key=privkey)

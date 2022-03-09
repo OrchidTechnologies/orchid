@@ -532,11 +532,11 @@ class _ConnectPageState extends State<ConnectPage>
   // Allow override of the last viewed release notes version for testing.
   // e.g. set to 0 to see all release notes, or high to hide them.
   Future<ReleaseVersion> _getReleaseVersionWithOverride() async {
-    var version = await UserPreferences().releaseVersion.get();
+    var version = UserPreferences().releaseVersion.get();
 
     const release_version = 'release_version';
     // From user config
-    var jsConfig = await OrchidUserConfig().getUserConfigJS();
+    var jsConfig = OrchidUserConfig().getUserConfigJS();
     var overrideVersion = jsConfig.evalIntDefault(release_version, null);
     if (overrideVersion != null) {
       version = ReleaseVersion(overrideVersion);
@@ -564,7 +564,7 @@ class _ConnectPageState extends State<ConnectPage>
   /// the first one is found and create a default single hop route from it.
   Future<void> _scanForAccountsIfNeeded() async {
     // If cached discovered accounts is empty should start the search.
-    if ((await UserPreferences().cachedDiscoveredAccounts.get()).isNotEmpty) {
+    if ((UserPreferences().cachedDiscoveredAccounts.get()).isNotEmpty) {
       log("connect: Found cached accounts, not starting account finder.");
       return;
     }
@@ -635,7 +635,7 @@ class _ConnectPageState extends State<ConnectPage>
   Future<void> _createFirstIdentity() async {
     log("first launch: Do first launch activities.");
     // If this is a new user with no identities create one.
-    var identities = await UserPreferences().keys.get();
+    var identities = UserPreferences().keys.get();
     if (identities.isEmpty) {
       log("first launch: Creating default identity");
       var key = StoredEthereumKey.generate();
@@ -647,7 +647,7 @@ class _ConnectPageState extends State<ConnectPage>
 
   Future _circuitConfigurationChanged() async {
     var prefs = UserPreferences();
-    _circuit = await prefs.circuit.get();
+    _circuit = prefs.circuit.get();
     _selectedIndex = 0;
 
     // Update the card... need a key
