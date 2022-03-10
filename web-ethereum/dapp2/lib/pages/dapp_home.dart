@@ -12,6 +12,7 @@ import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/common/jazzicon/jazzicon.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
@@ -309,7 +310,12 @@ class _DappHomeState extends State<DappHome> {
         padx(12),
         _buildWalletBalances(),
         padx(32),
-        OrchidCircularIdenticon(address: _web3Context.walletAddress, size: 24),
+        StatefulBuilder(builder: (context, setstate) {
+          return ClipOval(
+            child: Jazzicon()
+                .generate(diameter: 24, address: _web3Context.walletAddress),
+          );
+        }),
         padx(16),
         SizedBox(
             width: 125,

@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/orchid/orchid_identicon.dart';
 

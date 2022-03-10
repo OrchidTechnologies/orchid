@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
@@ -12,7 +11,6 @@ import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/circuit_hop.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/util/localization.dart';
-import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/units.dart';
 import '../../orchid/orchid_circular_identicon.dart';
 import '../../orchid/orchid_panel.dart';
@@ -266,7 +264,9 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
     final _selectedAccount =
         orchidHop != null ? _accountDetailStore.get(orchidHop.account) : null;
     final signerAddress = _selectedAccount?.signerAddress;
-    final text = signerAddress == null ? s.noAccountSelected : signerAddress.toString(elide: true);
+    final text = signerAddress == null
+        ? s.noAccountSelected
+        : signerAddress.toString(elide: true);
     final textWidth = signerAddress == null ? null : 120.0;
     final balanceText = signerAddress == null
         ? formatCurrency(0.0, locale: context.locale, digits: 2)
