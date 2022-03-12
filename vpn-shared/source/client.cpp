@@ -146,7 +146,9 @@ task<void> Client::Open(const Provider &provider, const S<Base> &base) {
         configuration.tls_ = local_;
         return configuration;
     }(), [&](std::string offer) -> task<std::string> {
-        const auto answer((co_await base->Fetch("POST", provider.locator_, {}, offer, verify)).ok());
+        const auto answer((co_await base->Fetch("POST", provider.locator_, {
+            {"content-type", "application/sdp"},
+        }, offer, verify))());
         if (Verbose) {
             Log() << "Offer: " << offer << std::endl;
             Log() << "Answer: " << answer << std::endl;

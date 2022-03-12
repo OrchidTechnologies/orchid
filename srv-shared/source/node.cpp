@@ -49,7 +49,7 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
         }
 
         co_return Respond(request, http::status::ok, {
-            {"content-type", "text/plain"},
+            {"content-type", "application/sdp"},
         }, std::move(answer));
     });
 
