@@ -28,9 +28,9 @@
 
 namespace orc {
 
-Network::Network(S<Chain> chain, Address directory, Address location) :
+Network::Network(S<Ethereum> ethereum, Address directory, Address location) :
     Valve(typeid(*this).name()),
-    chain_(std::move(chain)),
+    ethereum_(std::move(ethereum)),
     directory_(std::move(directory)),
     location_(std::move(location))
 {
@@ -45,12 +45,12 @@ task<void> Network::Shut() noexcept {
 }
 
 template <typename Code_>
-task<void> Stakes(const S<Chain> &chain, const Address &directory, const Block &block, const Brick<32> &storage, const uint256_t &primary, const Code_ &code) {
+task<void> Stakes(const Chain &chain, const Address &directory, const Block &block, const Brick<32> &storage, const uint256_t &primary, const Code_ &code) {
     if (primary == 0)
         co_return;
 
     const auto stake(HashK(Tie(primary, uint256_t(0x2U))).num<uint256_t>());
-    const auto [left, right, stakee, amount, delay] = co_await chain->Get(block, directory, storage, stake + 6, stake + 7, stake + 4, stake + 2, stake + 3);
+    const auto [left, right, stakee, amount, delay] = co_await chain.Get(block, directory, storage, stake + 6, stake + 7, stake + 4, stake + 2, stake + 3);
     orc_assert(amount != 0);
 
     *co_await Parallel(
@@ -60,10 +60,10 @@ task<void> Stakes(const S<Chain> &chain, const Address &directory, const Block &
 }
 
 template <typename Code_>
-task<void> Stakes(const S<Chain> &chain, const Address &directory, const Code_ &code) {
-    const auto height(co_await chain->Height());
-    const auto block(co_await chain->Header(height));
-    const auto [account, root] = co_await chain->Get(block, directory, nullptr, 0x3U);
+task<void> Stakes(const Chain &chain, const Address &directory, const Code_ &code) {
+    const auto height(co_await chain.Height());
+    const auto block(co_await chain.Header(height));
+    const auto [account, root] = co_await chain.Get(block, directory, nullptr, 0x3U);
     co_await Stakes(chain, directory, block, account.storage_, root, code);
 }
 
@@ -71,7 +71,7 @@ task<std::map<Address, Stake>> Network::Scan() {
     cppcoro::async_mutex mutex;
     std::map<Address, uint256_t> stakes;
 
-    co_await Stakes(chain_, directory_, [&](const Address &stakee, const uint256_t &amount, const uint256_t &delay) -> task<void> {
+    co_await Stakes(*ethereum_, directory_, [&](const Address &stakee, const uint256_t &amount, const uint256_t &delay) -> task<void> {
         std::cout << "DELAY " << stakee << " " << std::dec << delay << " " << std::dec << amount << std::endl;
         if (delay < 90*24*60*60)
             co_return;
@@ -83,7 +83,7 @@ task<std::map<Address, Stake>> Network::Scan() {
     const auto urls(co_await Parallel(Map([&](const auto &stake) {
         return [&](Address provider) -> Task<std::string> {
             static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look_("look");
-            const auto &[set, url, tls, gpg] = co_await look_.Call(*chain_, "latest", location_, 90000, provider);
+            const auto &[set, url, tls, gpg] = co_await look_.Call(*ethereum_, "latest", location_, 90000, provider);
             orc_assert(set != 0);
             co_return url.str();
         }(stake.first);
@@ -109,14 +109,14 @@ task<Provider> Network::Select(const std::string &name, const Address &provider)
 
     // XXX: parse the / out of name (but probably punt this to the frontend)
     Beam argument;
-    const auto curator(co_await chain_->Resolve(latest, name));
+    const auto curator(co_await Resolve(*ethereum_, latest, name));
 
     const auto address(co_await [&]() -> task<Address> {
         if (provider != Address(0))
             co_return provider;
 
         static const Selector<std::tuple<Address, uint128_t>, uint128_t> pick_("pick");
-        const auto [address, delay] = co_await pick_.Call(*chain_, latest, directory_, 90000, generator_());
+        const auto [address, delay] = co_await pick_.Call(*ethereum_, latest, directory_, 90000, generator_());
         orc_assert(delay >= 90*24*60*60);
         co_return address;
     }());
@@ -125,8 +125,8 @@ task<Provider> Network::Select(const std::string &name, const Address &provider)
     static const Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look_("look");
 
     const auto [good, look] = *co_await Parallel(
-        good_.Call(*chain_, latest, curator, 90000, address, argument),
-        look_.Call(*chain_, latest, location_, 90000, address));
+        good_.Call(*ethereum_, latest, curator, 90000, address, argument),
+        look_.Call(*ethereum_, latest, location_, 90000, address));
     const auto &[set, url, tls, gpg] = look;
 
     orc_assert(good != 0);

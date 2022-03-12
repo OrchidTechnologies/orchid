@@ -20,28 +20,28 @@
 /* }}} */
 
 
-#ifndef ORCHID_TOKEN_HPP
-#define ORCHID_TOKEN_HPP
-
+#include "binance.hpp"
 #include "currency.hpp"
-#include "jsonrpc.hpp"
-#include "market.hpp"
-#include "shared.hpp"
-#include "task.hpp"
+#include "token.hpp"
 
 namespace orc {
 
-struct Token {
-    const Market market_;
-    const Address contract_;
-    const Currency currency_;
-
-    static task<Token> New(unsigned milliseconds, S<Chain> chain, const char *name, const Address &contract, const Address &pool);
-
-    static task<Token> AVAX(unsigned milliseconds, S<Ethereum> ethereum);
-    static task<Token> OXT(unsigned milliseconds, S<Ethereum> ethereum);
-};
-
+Currency Currency::USD() {
+    return Currency{"USD", []() -> Float { return 1 / Ten18; }};
 }
 
-#endif//ORCHID_TOKEN_HPP
+task<Currency> Currency::New(unsigned milliseconds, const S<Ethereum> &ethereum, const S<Base> &base, std::string name) {
+    if (false);
+    else if (name == "AVAX")
+        co_return (co_await Token::AVAX(milliseconds, ethereum)).currency_;
+    else if (name == "DAI")
+        co_return Currency::USD();
+    else if (name == "OXT")
+        co_return (co_await Token::OXT(milliseconds, ethereum)).currency_;
+    else if (name == "USD")
+        co_return Currency::USD();
+    else
+        co_return co_await Binance(milliseconds, base, std::move(name));
+}
+
+}

@@ -23,7 +23,7 @@
 #ifndef ORCHID_ORACLE_HPP
 #define ORCHID_ORACLE_HPP
 
-#include "chain.hpp"
+#include "ethereum.hpp"
 #include "float.hpp"
 #include "updated.hpp"
 
@@ -35,7 +35,7 @@ struct Prices {
     Float xau_;
 };
 
-task<S<Updated<Prices>>> Oracle(unsigned milliseconds, S<Chain> chain);
+task<S<Updated<Prices>>> Oracle(unsigned milliseconds, S<Ethereum> ethereum);
 
 }
 

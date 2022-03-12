@@ -286,8 +286,8 @@ int Main(int argc, const char *const argv[]) {
     const unsigned milliseconds(60*1000);
     const S<Base> base(Break<Local>());
 
-    const auto markets(Wait(Market::All(milliseconds, base, chains)));
-    const auto ethereum(At(markets, 1).chain_);
+    const auto ethereum(Wait(Ethereum::New(base, chains)));
+    const auto markets(Wait(Market::All(milliseconds, ethereum, base, chains)));
 
     const Address directory("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
     const Address location("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");

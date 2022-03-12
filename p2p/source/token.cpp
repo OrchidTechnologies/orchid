@@ -28,19 +28,28 @@
 
 namespace orc {
 
-task<Token> Token::OXT(unsigned milliseconds, S<Chain> chain) {
+task<Token> Token::New(unsigned milliseconds, S<Chain> chain, const char *name, const Address &contract, const Address &pool) {
     auto [bid, fiat] = *co_await Parallel(
         Opened(Updating(milliseconds, [chain]() -> task<uint256_t> { co_return co_await chain->Bid(); }, "Bid")),
-        Opened(Updating(milliseconds, [chain]() -> task<std::pair<Float, Float>> {
-            const auto [eth, oxt] = *co_await Parallel(Uniswap2(*chain, Uniswap2USDCETH, Ten6), Uniswap2(*chain, Uniswap2OXTETH, 1));
-            co_return std::make_tuple(eth, eth / oxt);
-        }, "OXT"))
+        Opened(Updating(milliseconds, [chain, pool]() -> task<std::pair<Float, Float>> {
+            const auto [under, other] = *co_await Parallel(Uniswap3(*chain, Uniswap3USDCETH, Ten6), Uniswap3(*chain, pool, 1));
+            const auto ether(1 / under / Ten18);
+            co_return std::make_tuple(ether, ether * other);
+        }, name))
     );
 
-    Currency eth{"ETH", [fiat = fiat]() -> Float { return std::get<0>((*fiat)()); }};
-    Currency oxt{"OXT", [fiat = fiat]() -> Float { return std::get<1>((*fiat)()); }};
+    Currency ether{"ETH", [fiat = fiat]() -> Float { return std::get<0>((*fiat)()); }};
+    Currency other{name, [fiat = fiat]() -> Float { return std::get<1>((*fiat)()); }};
 
-    co_return Token{{std::move(chain), std::move(eth), std::move(bid)}, "0x4575f41308EC1483f3d399aa9a2826d74Da13Deb", std::move(oxt)};
+    co_return Token{{std::move(chain), std::move(ether), std::move(bid)}, contract, std::move(other)};
+}
+
+task<Token> Token::AVAX(unsigned milliseconds, S<Ethereum> ethereum) {
+    co_return co_await New(milliseconds, ethereum->chain_, "AVAX", "0x85f138bfee4ef8e540890cfb48f620571d67eda3", Uniswap3WAVAXETH);
+}
+
+task<Token> Token::OXT(unsigned milliseconds, S<Ethereum> ethereum) {
+    co_return co_await New(milliseconds, ethereum->chain_, "OXT", "0x4575f41308EC1483f3d399aa9a2826d74Da13Deb", Uniswap3OXTETH);
 }
 
 }

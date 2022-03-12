@@ -20,28 +20,22 @@
 /* }}} */
 
 
-#ifndef ORCHID_TOKEN_HPP
-#define ORCHID_TOKEN_HPP
-
-#include "currency.hpp"
-#include "jsonrpc.hpp"
-#include "market.hpp"
-#include "shared.hpp"
-#include "task.hpp"
+#include "ethereum.hpp"
 
 namespace orc {
 
-struct Token {
-    const Market market_;
-    const Address contract_;
-    const Currency currency_;
-
-    static task<Token> New(unsigned milliseconds, S<Chain> chain, const char *name, const Address &contract, const Address &pool);
-
-    static task<Token> AVAX(unsigned milliseconds, S<Ethereum> ethereum);
-    static task<Token> OXT(unsigned milliseconds, S<Ethereum> ethereum);
-};
-
+task<S<Ethereum>> Ethereum::New(const S<Base> &base, const Locator &locator) {
+    co_return Make<Ethereum>(co_await Chain::New({locator, base}, {}, 1));
 }
 
-#endif//ORCHID_TOKEN_HPP
+task<S<Ethereum>> Ethereum::New(const S<Base> &base, const std::vector<std::string> &chains) {
+    for (const auto &market : chains) {
+        const auto [chain, currency, locator] = Split<3>(market, {','});
+        if (uint256_t(chain.operator std::string()) == 1)
+            co_return co_await Ethereum::New(base, locator.operator std::string());
+    }
+
+    orc_assert(false);
+}
+
+}

@@ -26,6 +26,7 @@
 #include <set>
 
 #include "currency.hpp"
+#include "ethereum.hpp"
 #include "integer.hpp"
 #include "shared.hpp"
 #include "task.hpp"
@@ -44,9 +45,9 @@ struct Market {
 
 
     static task<Market> New(unsigned milliseconds, S<Chain> chain, Currency currency);
-    static task<Market> New(unsigned milliseconds, const S<Base> &base, uint256_t chain, std::string currency, Locator locator);
+    static task<Market> New(unsigned milliseconds, const S<Ethereum> &ethereum, const S<Base> &base, uint256_t chain, std::string currency, Locator locator);
 
-    static task<std::set<Market, std::less<>>> All(unsigned milliseconds, const S<Base> &base, const std::vector<std::string> &chains);
+    static task<std::set<Market, std::less<>>> All(unsigned milliseconds, const S<Ethereum> &ethereum, const S<Base> &base, const std::vector<std::string> &chains);
 
 
     bool operator <(const Market &market) const {

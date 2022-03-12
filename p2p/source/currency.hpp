@@ -25,6 +25,9 @@
 
 #include <string>
 
+#include "base.hpp"
+#include "chain.hpp"
+#include "ethereum.hpp"
 #include "float.hpp"
 #include "function.hpp"
 
@@ -34,9 +37,9 @@ struct Currency {
     const std::string name_;
     const Function<Float ()> dollars_;
 
-    static Currency USD() {
-        return Currency{"USD", []() -> Float { return 1 / Ten18; }};
-    }
+    static Currency USD();
+
+    static task<Currency> New(unsigned milliseconds, const S<Ethereum> &ethereum, const S<Base> &base, std::string name);
 };
 
 }

@@ -283,7 +283,8 @@ int Main(int argc, const char *const argv[]) {
         const auto recipient(args.count("recipient") == 0 ? Address(*executor) : Address(args["recipient"].as<std::string>()));
 
         const unsigned milliseconds(5*60*1000);
-        const auto markets(co_await Market::All(milliseconds, base, chains));
+        const auto ethereum(co_await Ethereum::New(base, chains));
+        const auto markets(co_await Market::All(milliseconds, ethereum, base, chains));
 
         for (const auto &market : markets) {
             const auto bid((*market.bid_)());

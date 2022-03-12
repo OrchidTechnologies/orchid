@@ -28,6 +28,7 @@
 
 #include "base.hpp"
 #include "chain.hpp"
+#include "ethereum.hpp"
 #include "provider.hpp"
 #include "valve.hpp"
 
@@ -48,14 +49,14 @@ class Network :
     public Valve
 {
   private:
-    const S<Chain> chain_;
+    const S<Ethereum> ethereum_;
     const Address directory_;
     const Address location_;
 
     boost::random::independent_bits_engine<boost::mt19937, 128, uint128_t> generator_;
 
   public:
-    Network(S<Chain> chain, Address directory, Address location);
+    Network(S<Ethereum> ethereum, Address directory, Address location);
 
     Network(const Network &) = delete;
     Network(Network &&) = delete;

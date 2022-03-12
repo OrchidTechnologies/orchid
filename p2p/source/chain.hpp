@@ -195,8 +195,6 @@ class Chain :
     task<Block> Header(const Argument &height) const;
     task<std::optional<Receipt>> operator [](const Bytes32 &transaction) const;
 
-    task<Address> Resolve(const Argument &height, const std::string &name) const;
-
     cppcoro::async_generator<Entry> Logs(uint64_t begin, uint64_t end, Address contract);
 
     task<Beam> Code(const Block &block, const Address &contract) const {
@@ -427,6 +425,8 @@ class Constructor final :
         return builder;
     }
 };
+
+task<Address> Resolve(const Chain &chain, const Argument &height, const std::string &name);
 
 }
 

@@ -691,7 +691,7 @@ static JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueCon
     return JS_ThrowInternalError(context, "%s", error.what());
 } }
 
-static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network, const S<Base> &base, const Host &local, unsigned hop, const boost::filesystem::path &group, const Locator &locator, const S<Updated<Prices>> &oracle, const Token &oxt) { orc_block({
+static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network, const S<Ethereum> &ethereum, const S<Base> &base, const Host &local, unsigned hop, const boost::filesystem::path &group, const Locator &locator, const S<Updated<Prices>> &oracle, const Token &oxt) { orc_block({
     const std::string hops("hops[" + std::to_string(hop) + "]");
     const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
@@ -715,7 +715,7 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network
         const auto provider(co_await network->Select(curator, heap.eval<std::string>(hops + ".provider", "0x0000000000000000000000000000000000000000")));
         Locator locator(heap.eval<std::string>(hops + ".rpc"));
         std::string currency(heap.eval<std::string>(hops + ".currency"));
-        auto &client(co_await Client1::Wire(sunk, oracle, co_await Market::New(5*60*1000, base, chain, std::move(currency), std::move(locator)), lottery, secret, funder));
+        auto &client(co_await Client1::Wire(sunk, oracle, co_await Market::New(5*60*1000, ethereum, base, chain, std::move(currency), std::move(locator)), lottery, secret, funder));
         co_await client.Open(provider, base);
 
     } else if (protocol == "openvpn") {
@@ -784,22 +784,22 @@ void Capture::Start(const std::string &path) {
         const auto directory(Address(heap.eval<std::string>("eth_directory")));
         const auto location(Address(heap.eval<std::string>("eth_location")));
 
-        const auto chain(co_await Chain::New({locator, base_}, {}, 1));
-        const auto network(Break<Network>(chain, directory, location));
+        const auto ethereum(co_await Ethereum::New(base_, locator));
+        const auto network(Break<Network>(ethereum, directory, location));
 
         const unsigned milliseconds(5*60*1000);
-        const auto [oracle, oxt] = *co_await Parallel(Oracle(milliseconds, chain), Token::OXT(milliseconds, chain));
+        const auto [oracle, oxt] = *co_await Parallel(Oracle(milliseconds, ethereum), Token::OXT(milliseconds, ethereum));
 
         auto base(base_);
 
         for (unsigned i(0); i != hops - 1; ++i) {
             auto remote(Break<BufferSink<Remote>>());
-            co_await Single(*remote, heap, network, base, remote->Host(), i, group, locator, oracle, oxt);
+            co_await Single(*remote, heap, network, ethereum, base, remote->Host(), i, group, locator, oracle, oxt);
             remote->Open();
             base = std::move(remote);
         }
 
-        co_await Single(sunk, heap, network, base, host, hops - 1, group, locator, oracle, oxt);
+        co_await Single(sunk, heap, network, ethereum, base, host, hops - 1, group, locator, oracle, oxt);
         locked_()->connected_ = true;
     });
 

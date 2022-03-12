@@ -40,6 +40,7 @@
 #include "ticket.hpp"
 #include "time.hpp"
 #include "trezor.hpp"
+#include "uniswap.hpp"
 
 namespace orc {
 
@@ -798,6 +799,14 @@ task<int> Main(int argc, const char *const argv[]) { try {
 
         static Selector<void, Address, std::vector<Send>> transferv("transferv");
         std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, TransferV, 0, transferv(token, sends))).hex() << std::endl;
+
+    } else if (command == "uniswap2") {
+        const auto [pool] = Options<Address>(args);
+        std::cout << co_await Uniswap2(*chain_, pool, 1) << std::endl;
+
+    } else if (command == "uniswap3") {
+        const auto [pool] = Options<Address>(args);
+        std::cout << co_await Uniswap3(*chain_, pool, 1) << std::endl;
 
     } else if (command == "unwrap") {
         const auto [token, amount] = Options<Address, uint256_t>(args);

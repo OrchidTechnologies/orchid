@@ -375,7 +375,7 @@ task<std::optional<Receipt>> Chain::operator [](const Bytes32 &transaction) cons
     co_return std::optional<Receipt>(std::in_place, std::move(receipt));
 }
 
-task<Address> Chain::Resolve(const Argument &height, const std::string &name) const {
+task<Address> Resolve(const Chain &chain, const Argument &height, const std::string &name) {
     static const std::regex re("0x[0-9A-Fa-f]{40}");
     if (std::regex_match(name, re))
         co_return name;
@@ -384,10 +384,10 @@ task<Address> Chain::Resolve(const Argument &height, const std::string &name) co
     static const Address ens("0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e");
 
     static const Selector<Address, Bytes32> resolver_("resolver");
-    const auto resolver(co_await resolver_.Call(*this, height, ens, 90000, node));
+    const auto resolver(co_await resolver_.Call(chain, height, ens, 90000, node));
 
     static const Selector<Address, Bytes32> addr_("addr");
-    co_return co_await addr_.Call(*this, height, resolver, 90000, node);
+    co_return co_await addr_.Call(chain, height, resolver, 90000, node);
 }
 
 cppcoro::async_generator<Entry> Chain::Logs(uint64_t begin, uint64_t end, Address contract) {

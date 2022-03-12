@@ -20,28 +20,36 @@
 /* }}} */
 
 
-#ifndef ORCHID_TOKEN_HPP
-#define ORCHID_TOKEN_HPP
+#ifndef ORCHID_ETHEREUM_HPP
+#define ORCHID_ETHEREUM_HPP
 
-#include "currency.hpp"
-#include "jsonrpc.hpp"
-#include "market.hpp"
-#include "shared.hpp"
-#include "task.hpp"
+#include "chain.hpp"
 
 namespace orc {
 
-struct Token {
-    const Market market_;
-    const Address contract_;
-    const Currency currency_;
+// XXX: this class is a stub; users access chain_ directly for now
+class Ethereum {
+  public:
+    const S<Chain> chain_;
 
-    static task<Token> New(unsigned milliseconds, S<Chain> chain, const char *name, const Address &contract, const Address &pool);
+  public:
+    Ethereum(S<Chain> chain) :
+        chain_(std::move(chain))
+    {
+    }
 
-    static task<Token> AVAX(unsigned milliseconds, S<Ethereum> ethereum);
-    static task<Token> OXT(unsigned milliseconds, S<Ethereum> ethereum);
+    static task<S<Ethereum>> New(const S<Base> &base, const Locator &locator);
+    static task<S<Ethereum>> New(const S<Base> &base, const std::vector<std::string> &chains);
+
+    operator const Chain &() const {
+        return *chain_;
+    }
+
+    const Chain &operator ->() const {
+        return *chain_;
+    }
 };
 
 }
 
-#endif//ORCHID_TOKEN_HPP
+#endif//ORCHID_ETHEREUM_HPP

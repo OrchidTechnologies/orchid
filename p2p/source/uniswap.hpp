@@ -37,12 +37,13 @@ static const Float Two96(uint256_t(1) << 96);
 extern const Address Uniswap2OXTETH;
 extern const Address Uniswap2USDCETH;
 
+extern const Address Uniswap3ETHUSDT;
 extern const Address Uniswap3OXTETH;
 extern const Address Uniswap3USDCETH;
-extern const Address Uniswap3ETHUSDT;
+extern const Address Uniswap3WAVAXETH;
 
-task<Float> Uniswap2(const Chain &chain, const Address &pair, const Float &adjust);
-task<Float> Uniswap3(const Chain &chain, const Address &pair, const Float &adjust);
+task<Float> Uniswap2(const Chain &chain, const Address &pool, const Float &adjust);
+task<Float> Uniswap3(const Chain &chain, const Address &pool, const Float &adjust);
 
 }
 
