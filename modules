@@ -24,12 +24,6 @@ head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 # boringtun is stuck, by https://github.com/cloudflare/boringtun/pull/235
 head[p2p/boringtun]=42710c904605bf1efe6e1e52fd6f7b16c099e06c
 
-# fmt is stuck by soralog before 841aad95b42704ea77e3eb05a2cbb075dc5b1137
-# someone talked about this at https://github.com/xDimon/soralog/issues/3
-# fmt broke on April Fools' with 15c10b0c666d274b378cf63429babfa202623db4
-# fmt did not fix that bug until 69bdc20a3c1271b58f0d052ffc6b2466c44ef649
-head[p2p/fmt]=308510eb4fad9b112ebdd2867b0b96338b0a9a36
-
 # GSL is stuck due to cpp-libp2p using the stupid cmake "hunter" thing :/
 # I've filed a bug on hunter: https://github.com/cpp-pm/hunter/issues/399
 head[srv-shared/GSL]=v2.1.0

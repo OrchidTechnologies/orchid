@@ -107,6 +107,10 @@ source += $(filter-out %/configurator.cpp,$(shell find $(pwd)/cpp-libp2p/src -na
 cflags += -I$(pwd)/cpp-libp2p/include
 cflags/$(pwd)/cpp-libp2p/ += -Wno-reorder -Wno-unused
 
+# XXX https://github.com/xDimon/soralog/issues/3#issuecomment-1065889746
+cflags/$(pwd)/cpp-libp2p/src/protocol/identify/identify_msg_processor.cpp += -DFMT_DEPRECATED_OSTREAM
+chacks/$(pwd)/cpp-libp2p/src/protocol_muxer/multiselect/multiselect_instance.cpp += /SL_DEBUG.*negotiate.*{}/,/;$$/d;
+
 $(eval $(call protobuf,/generated,$(pwd)/cpp-libp2p/src))
 source += $(output)/pb/generated/crypto/protobuf/keys.pb.cc
 header += $(output)/pb/generated/crypto/protobuf/keys.pb.h
