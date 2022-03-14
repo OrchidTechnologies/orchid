@@ -12,11 +12,10 @@ import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
-import 'package:orchid/common/jazzicon/jazzicon.dart';
 import 'package:orchid/common/tap_copy_text.dart';
+import 'package:orchid/orchid/orchid_wallet_identicon.dart';
 import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
-import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_logo.dart';
 import 'package:orchid/orchid/orchid_text.dart';
@@ -26,7 +25,6 @@ import 'package:orchid/pages/transaction_status_panel.dart';
 import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/util/localization.dart';
-import 'package:orchid/util/on_off.dart';
 import 'dapp_button.dart';
 import 'v1/dapp_tabs_v1.dart';
 
@@ -150,7 +148,7 @@ class _DappHomeState extends State<DappHome> {
         pady(32),
         // connection buttons
         FittedBox(
-          child: _buildConnectionButtons(),
+          child: _buildConnectionRow(),
           fit: BoxFit.scaleDown,
         ).padx(8),
 
@@ -310,12 +308,7 @@ class _DappHomeState extends State<DappHome> {
         padx(12),
         _buildWalletBalances(),
         padx(32),
-        StatefulBuilder(builder: (context, setstate) {
-          return ClipOval(
-            child: Jazzicon()
-                .generate(diameter: 24, address: _web3Context.walletAddress),
-          );
-        }),
+        OrchidWalletIdenticon(address: _web3Context.walletAddress),
         padx(16),
         SizedBox(
             width: 125,
@@ -387,7 +380,7 @@ class _DappHomeState extends State<DappHome> {
     );
   }
 
-  Row _buildConnectionButtons() {
+  Row _buildConnectionRow() {
     final _showWalletConnect = OrchidUserParams().has('wc');
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -417,11 +410,57 @@ class _DappHomeState extends State<DappHome> {
             ),
           ),
         ],
-        // padx(24),
-        if (versions != null) padx(24),
         _buildVersionSwitch(),
+        if (_connected) _buildSettings().left(24),
       ],
     );
+  }
+
+  Widget _buildSettings() {
+    return TextButton(
+        onPressed: _showSettings,
+        child: Icon(
+          Icons.settings,
+          size: 24,
+          color: OrchidColors.tappable,
+        ));
+  }
+
+  void _showSettings() {
+    AppDialogs.showAppDialog(
+        context: context,
+        body: StreamBuilder<bool>(
+            stream: UserPreferences().useBlockiesIdenticons.stream(),
+            builder: (context, snapshot) {
+              final useBlockies = snapshot.data;
+              if (useBlockies == null) {
+                return Container();
+              }
+              return SizedBox(
+                width: 300,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("Settings").title,
+                    pady(24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Use Blockies Identicon:").button,
+                        DappSwitch(
+                            value: useBlockies,
+                            onChanged: (value) async {
+                              await UserPreferences()
+                                  .useBlockiesIdenticons
+                                  .set(value);
+                              setState(() {});
+                            }),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }));
   }
 
   Widget _buildVersionSwitch() {
@@ -446,10 +485,7 @@ class _DappHomeState extends State<DappHome> {
               child: Text("V0").title),
         ),
         padx(8),
-        CupertinoSwitch(
-          trackColor: Colors.grey.withOpacity(0.5),
-          thumbColor: Colors.white,
-          activeColor: Colors.grey.withOpacity(0.5),
+        DappAlternativesSwitch(
           value: selectedVersion == 1,
           onChanged: (bool value) {
             setState(() {
@@ -468,7 +504,7 @@ class _DappHomeState extends State<DappHome> {
                 opacity: selectedVersion == 1 ? 1.0 : 0.4,
                 child: Text("V1").title)),
       ],
-    );
+    ).left(24);
   }
 
   void _connectEthereum() async {
@@ -648,5 +684,50 @@ class _DappHomeState extends State<DappHome> {
 
   S get s {
     return S.of(context);
+  }
+}
+
+class DappAlternativesSwitch extends StatelessWidget {
+  final bool value;
+  final void Function(bool value) onChanged;
+
+  const DappAlternativesSwitch({
+    Key key,
+    @required this.value,
+    @required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoSwitch(
+      trackColor: Colors.grey.withOpacity(0.5),
+      thumbColor: Colors.white,
+      activeColor: Colors.grey.withOpacity(0.5),
+      value: value,
+      onChanged: onChanged,
+    );
+  }
+}
+
+class DappSwitch extends StatelessWidget {
+  final bool value;
+  final void Function(bool value) onChanged;
+
+  const DappSwitch({
+    Key key,
+    @required this.value,
+    @required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoSwitch(
+      thumbColor: value ? OrchidColors.tappable : Colors.white,
+      activeColor: value
+          ? OrchidColors.tappable.withOpacity(0.5)
+          : Colors.grey.withOpacity(0.5),
+      value: value,
+      onChanged: onChanged,
+    );
   }
 }

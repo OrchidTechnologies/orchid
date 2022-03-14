@@ -160,6 +160,10 @@ class UserPreferences {
       ObservableAccountSetPreference(
           UserPreferenceKey.CachedDiscoveredAccounts);
 
+  ObservableBoolPreference useBlockiesIdenticons = ObservableBoolPreference(
+      UserPreferenceKey.UseBlockiesIdenticons,
+      defaultValue: false);
+
   ///
   /// Begin: dapp transactions
   ///
@@ -227,4 +231,5 @@ enum UserPreferenceKey {
   Keys,
   CachedDiscoveredAccounts,
   Transactions,
+  UseBlockiesIdenticons,
 }

@@ -4,14 +4,13 @@ import 'package:flutter/painting.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/util/color_extensions.dart';
-import 'mersenne.dart';
-import 'svg_builder.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/util/svg_builder.dart';
+import 'mersenne_random.dart';
 
 /// Render an identicon from rotated and translated overlapping rects.
 // Ported from https://github.com/MetaMask/jazzicon (ISC License 2020 MetaMask)
 class Jazzicon {
-  MersenneTwister _random;
+  MersenneTwisterRandom _random;
 
   static final colors = [
     ColorExtensions.fromHexString('#01888C'), // teal
@@ -43,7 +42,7 @@ class Jazzicon {
   */
   SvgPicture generateFromHexString(int diameter, String hexString) {
     final seed = _hexStringToSeed(hexString);
-    _random = MersenneTwister(seed);
+    _random = MersenneTwisterRandom(seed);
 
     var remainingColors = _hueShift(List.from(colors));
     final bgColor = _genColor(remainingColors);
