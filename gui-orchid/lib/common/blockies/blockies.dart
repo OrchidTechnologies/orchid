@@ -1,41 +1,20 @@
 import 'dart:math';
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/util/svg_builder.dart';
+import 'xorshift_random.dart';
 
 // Ported from https://github.com/download13/blockies (WTFPL)
 class Blockies {
-  List<int> randSeed;
-
-  // Xorshift PRNG values
-  void seed(String value) {
-    final chars = value.codeUnits;
-    randSeed = new List.filled(4, 0, growable: false);
-    for (var i = 0; i < chars.length; i++) {
-      randSeed[i % 4] =
-          ((Int32(randSeed[i % 4]) << 5).toInt() - (randSeed[i % 4])) +
-              chars[i];
-    }
-  }
+  XorShiftRandom _random;
 
   double rand() {
-    // based on Java's String.hashCode(), expanded to 4 32bit values
-    var t = (Int32(randSeed[0]) ^ (Int32(randSeed[0]) << 11)).toInt();
-    randSeed[0] = randSeed[1];
-    randSeed[1] = randSeed[2];
-    randSeed[2] = randSeed[3];
-    randSeed[3] = (Int32(randSeed[3]) ^
-            (Int32(randSeed[3]) >> 19) ^
-            Int32(t) ^
-            (Int32(t) >> 8))
-        .toInt();
-    return randSeed[3] / (1 << 31);
+    return _random.nextDouble();
   }
 
-  Color createColor() {
+  Color _createColor() {
     // Saturation is the whole color spectrum
     final h = rand() * 360;
     // Saturation goes from 40 to 100, it avoids greyish colors
@@ -48,7 +27,7 @@ class Blockies {
   }
 
   // Array of three color indices (0,1,2)
-  List<int> createImageData(int size) {
+  List<int> _createImageData(int size) {
     final width = size; // Only support square icons for now
     final height = size;
 
@@ -80,7 +59,6 @@ class Blockies {
     int size = 8,
     int scale = 16,
   }) {
-
     // Match Metamask's usage.
     String seed = address.toString(prefix: true, elide: false).toLowerCase();
 
@@ -94,12 +72,12 @@ class Blockies {
     int size = 8,
     int scale = 4,
   }) {
-    seed(seedValue);
+    _random = XorShiftRandom(seedValue);
 
-    final color = createColor(); // preserve this
-    final bgColor = createColor();
-    final spotColor = createColor();
-    final imageData = createImageData(size);
+    final color = _createColor(); // preserve this
+    final bgColor = _createColor();
+    final spotColor = _createColor();
+    final imageData = _createImageData(size);
     final width = sqrt(imageData.length);
 
     var svg = SvgBuilder.fromRect(0, 0, size * scale, size * scale, bgColor);

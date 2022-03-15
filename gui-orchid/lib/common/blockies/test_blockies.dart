@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/test_app.dart';
 import 'blockies.dart';
 
@@ -16,12 +17,6 @@ class _Test extends StatefulWidget {
 
 class _TestState extends State<_Test> {
   @override
-  void initState() {
-    super.initState();
-    // _test();
-  }
-
-  @override
   Widget build(BuildContext context) {
     var address = '0x405BC10E04e3f487E9925ad5815E4406D78B769e';
     return Container(
@@ -30,10 +25,7 @@ class _TestState extends State<_Test> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              address,
-              style: TextStyle(fontSize: 24),
-            ),
+            Text(address).button,
             SizedBox(height: 48),
             Blockies().generate(address: EthereumAddress.from(address)),
           ],

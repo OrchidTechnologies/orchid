@@ -13,6 +13,7 @@ class MersenneTwisterRandom {
   static const L = 18;
   static const B = 0x9D2C5680;
   static const C = 0xEFC60000;
+  static const F = 1812433253;
   static const HIGH = 0x80000000;
   static const LOW = 0x7fffffff;
 
@@ -26,11 +27,11 @@ class MersenneTwisterRandom {
   _seed(int value) {
     state[0] = value.toUnsigned(32);
     for (index = 1; index < N; index++) {
-      state[index] = ((Int32(1812433253) *
-                  Int32(state[index - 1] ^ ((state[index - 1]) >> 30))) +
-              index)
-          .toInt()
-          .toUnsigned(32);
+      state[index] =
+          ((Int32(F) * Int32(state[index - 1] ^ ((state[index - 1]) >> 30))) +
+                  index)
+              .toInt()
+              .toUnsigned(32);
     }
   }
 
