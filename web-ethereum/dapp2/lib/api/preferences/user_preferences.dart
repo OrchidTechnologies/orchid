@@ -160,6 +160,7 @@ class UserPreferences {
       ObservableAccountSetPreference(
           UserPreferenceKey.CachedDiscoveredAccounts);
 
+  /// Identicons UI
   ObservableBoolPreference useBlockiesIdenticons = ObservableBoolPreference(
       UserPreferenceKey.UseBlockiesIdenticons,
       defaultValue: false);

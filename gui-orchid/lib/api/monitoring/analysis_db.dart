@@ -9,6 +9,7 @@ import 'query_parser.dart';
 
 /// Traffic analysis database published by the Orchid extension.
 class AnalysisDb {
+  static String defaultAnalysisFilename = 'analysis.db';
   static AnalysisDb _shared = AnalysisDb._init();
   static final String unknown = "???"; // Localize
 
@@ -29,8 +30,8 @@ class AnalysisDb {
       if (OrchidAPI.mockAPI) {
         _db = await MockOrchidAPI.initInMemoryAnalysisDb();
       } else {
-        String dbPath =
-            (await OrchidAPI().groupContainerPath()) + '/analysis.db';
+        String dbPath = (await OrchidAPI().groupContainerPath()) +
+            '/$defaultAnalysisFilename';
         _db = await openDatabase(dbPath, readOnly: false);
       }
     } catch (err) {
