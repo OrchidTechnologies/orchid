@@ -31,7 +31,7 @@ import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/pages/account_manager/scan_paste_identity.dart';
-import 'package:orchid/pages/circuit/chain_selection.dart';
+import 'package:orchid/orchid/orchid_chain_selection.dart';
 import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';

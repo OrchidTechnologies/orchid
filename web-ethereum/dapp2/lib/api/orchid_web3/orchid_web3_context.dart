@@ -119,7 +119,7 @@ class OrchidWeb3Context {
     // TODO: need to generalize this to specify the set that the wallet should
     // TODO: display for a given chain.
     // Also find the OXT balance if on main net or test
-    if (chain.isEthereum || OrchidUserParams().test) {
+    if (chain.isEthereum /*|| OrchidUserParams().test*/) {
       try {
         var oxt = OrchidERC20(context: this, tokenType: Tokens.OXT);
         balances[Tokens.OXT] = await oxt.getERC20Balance(walletAddress);
@@ -138,15 +138,27 @@ class OrchidWeb3Context {
   Future<Set<int>> _findContractVersions() async {
     Set<int> set = {};
 
-    var code =
-        await web3.getCode(OrchidContractV0.lotteryContractAddressV0String);
-    if (code != "0x") {
-      set.add(0);
+    try {
+      // log("XXX: Checking for v0 contract.");
+      var code =
+          await web3.getCode(OrchidContractV0.lotteryContractAddressV0String);
+      // log("XXX: Checking for v0 contract, returned: ${code.length < 10 ? code : code.substring(0, 10) + '...'}");
+      if (code != "0x") {
+        set.add(0);
+      }
+    } catch (err) {
+      log("Error in searching for contract version 0: $err");
     }
 
-    code = await web3.getCode(OrchidContractV1.lotteryContractAddressV1);
-    if (code != "0x") {
-      set.add(1);
+    try {
+      // log("XXX: Checking for v1 contract.");
+      var code = await web3.getCode(OrchidContractV1.lotteryContractAddressV1);
+      // log("XXX: Checking for v1 contract, returned: ${code.length < 10 ? code : code.substring(0, 10) + '...'}");
+      if (code != "0x") {
+        set.add(1);
+      }
+    } catch (err) {
+      log("Error in searching for contract version 1: $err");
     }
 
     return set;
@@ -237,19 +249,28 @@ class OrchidWeb3Context {
 
   void disconnect() async {
     log("XXX: disconnect context ($id)");
-    removeAllListeners();
+    try {
+      removeAllListeners();
+    } catch (err) {
+      log("XXX: exception in disconnect, removing listeners: $err");
+    }
+    log("XXX: disconnect cancelling timer");
     _pollWalletTimer?.cancel();
 
-    // TODO: How do we close a plain eth provider?
-    // _ethereumProvider.call('close'); // ??
-    walletConnectProvider?.disconnect();
+    try {
+      // TODO: How do we close a plain eth provider?
+      // _ethereumProvider.call('close'); // ??
+      walletConnectProvider?.disconnect();
+    } catch (err) {
+      log("XXX: exception in disconnect, disconnecting provider: $err");
+    }
 
     disposed = true;
   }
 
   @override
   String toString() {
-    return 'OrchidWeb3Context{id: $id, chain: ${chain.chainId}, walletAddress: $walletAddress}';
+    return 'OrchidWeb3Context{name: $id, chainId: ${chain.chainId}, walletAddress: $walletAddress}';
   }
 }
 

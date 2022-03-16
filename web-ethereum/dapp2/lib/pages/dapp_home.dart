@@ -13,6 +13,7 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_copy_text.dart';
+import 'package:orchid/orchid/orchid_chain_selection.dart';
 import 'package:orchid/orchid/orchid_wallet_identicon.dart';
 import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
@@ -106,6 +107,7 @@ class _DappHomeState extends State<DappHome> {
 
   // TODO: replace this account detail management with a provider builder
   void _clearAccountDetail() {
+    // log("XXX: clearAccountDetail");
     _accountDetail?.cancel();
     _accountDetail?.removeListener(_accountDetailUpdated);
     _accountDetail = null;
@@ -114,6 +116,7 @@ class _DappHomeState extends State<DappHome> {
   // TODO: replace this account detail management with a provider builder
   // Start polling the correct account
   void _selectedAccountChanged() async {
+    // log("XXX: selectedAccountChanged");
     _clearAccountDetail();
     if (_signer != null && _web3Context?.walletAddress != null) {
       var account = Account.fromSignerAddress(
@@ -410,20 +413,79 @@ class _DappHomeState extends State<DappHome> {
             ),
           ),
         ],
+        if (_connected) _buildChainSelector().left(24),
         _buildVersionSwitch(),
-        if (_connected) _buildSettings().left(24),
+        if (_connected) _buildSettings().left(16),
       ],
     );
   }
 
+  Widget _buildChainSelector() {
+    return SizedBox(
+      width: 250,
+      child: ChainSelectionDropdown(
+        selected: _web3Context?.chain,
+        onSelection: _switchOrAddChain,
+      ),
+    );
+  }
+
+  void _switchOrAddChain(Chain chain) async {
+    log("XXX: switch chain: $chain");
+    final ethereum = _web3Context.ethereumProvider;
+    try {
+      await ethereum.walletSwitchChain(chain.chainId);
+    } on EthereumUserRejected {
+      log("XXX: user rejected switch");
+    } on EthereumUnrecognizedChainException {
+      log("XXX: chain not recognized, suggesting add");
+      _addChain(chain);
+    } on EthereumException catch (err) {
+      // If metamask gives us an exception that includes text suggesting calling
+      // the add chain method we'll assume this was was an unrecognized chain.
+      if (err.message.contains('wallet_addEthereumChain')) {
+        log("XXX: inferring chain not recognized from exception message, suggesting add. err=$err");
+        _addChain(chain);
+      } else {
+        log("Unknown EthereumException in switch chain: $err");
+      }
+    } catch (err) {
+      log("Unknown err in switch chain: $err");
+    }
+  }
+
+  void _addChain(Chain chain) async {
+    final ethereum = _web3Context.ethereumProvider;
+    try {
+      await ethereum.walletAddChain(
+        chainId: chain.chainId,
+        chainName: chain.name,
+        nativeCurrency: CurrencyParams(
+          name: chain.nativeCurrency.symbol,
+          symbol: chain.nativeCurrency.symbol,
+          decimals: chain.nativeCurrency.decimals,
+        ),
+        blockExplorerUrls: [chain.explorerUrl],
+        rpcUrls: [chain.providerUrl],
+      );
+    } on EthereumUserRejected {
+      log("XXX: user rejected add chain");
+    } catch (err) {
+      log("XXX: add chain failed: $err");
+    }
+  }
+
   Widget _buildSettings() {
-    return TextButton(
-        onPressed: _showSettings,
-        child: Icon(
-          Icons.settings,
-          size: 24,
-          color: OrchidColors.tappable,
-        ));
+    return SizedBox(
+      width: 48,
+      child: TextButton(
+          onPressed: _showSettings,
+          child: Icon(
+            Icons.settings,
+            size: 24,
+            color: OrchidColors.tappable,
+          )),
+    );
   }
 
   void _showSettings() {
@@ -469,7 +531,7 @@ class _DappHomeState extends State<DappHome> {
     }
     var selectedVersion = _contractVersionSelected;
     if (versions.length == 1) {
-      return Text("V${selectedVersion}").title;
+      return Text("V${selectedVersion}").title.height(1.8).left(24);
     }
 
     return Row(
@@ -553,7 +615,7 @@ class _DappHomeState extends State<DappHome> {
 
   // Init a new context, disconnecting any old context and registering listeners
   void _setNewContex(OrchidWeb3Context web3Context) async {
-    log('XXX: New context: $web3Context');
+    log('set new context: $web3Context');
 
     // Clear the old context, removing listeners and disposing of it properly.
     _web3Context?.disconnect();
@@ -574,7 +636,13 @@ class _DappHomeState extends State<DappHome> {
       setState(() {});
     });
 
+    // Install the new context here and as the UI provider
     _web3Context = web3Context;
+    try {
+      _setAppWeb3Provider(web3Context);
+    } catch (err, stack) {
+      log("set new context: error setting app web3 provider: $err,\n$stack");
+    }
 
     // The context was replaced or updated. Check various attributes.
     // check the contract
@@ -583,7 +651,12 @@ class _DappHomeState extends State<DappHome> {
         return _noContract();
       }
     }
-    _web3Context?.refresh();
+
+    try {
+      _web3Context?.refresh();
+    } catch (err) {
+      log("set new context: error in refreshing context: $err");
+    }
 
     // Default the contract version
     if (versions != null) {
@@ -599,16 +672,20 @@ class _DappHomeState extends State<DappHome> {
     //   _contractVersionSelected = 0;
     // }
 
-    _setAppWeb3Provider();
-    _selectedAccountChanged();
+    try {
+      _selectedAccountChanged();
+    } catch (err) {
+      log("set new context: error in selected account changed: $err");
+    }
     setState(() {});
   }
 
   // For contracts that may exist on chains other than main net we ensure that
   // all requests go through the web3 context.
-  void _setAppWeb3Provider() {
-    if (_web3Context != null && _contractVersionSelected > 0) {
-      OrchidEthereumV1.setWeb3Provider(OrchidEthereumV1Web3Impl(_web3Context));
+  void _setAppWeb3Provider(OrchidWeb3Context web3Context) {
+    // log("XXX: setAppWeb3Provider: $web3Context");
+    if (web3Context != null && _contractVersionSelected != null && _contractVersionSelected > 0) {
+      OrchidEthereumV1.setWeb3Provider(OrchidEthereumV1Web3Impl(web3Context));
     } else {
       OrchidEthereumV1.setWeb3Provider(null);
     }
@@ -616,7 +693,7 @@ class _DappHomeState extends State<DappHome> {
 
   /// Update on change of address or chain by rebuilding the web3 context.
   void _onAccountOrChainChange() async {
-    log('XXX: _onAccountOrChainChanged');
+    // log('XXX: _onAccountOrChainChanged');
     if (_web3Context == null) {
       return;
     }
@@ -645,7 +722,7 @@ class _DappHomeState extends State<DappHome> {
 
   void _onContractVersionChanged(int version) async {
     _selectedAccountChanged();
-    _setAppWeb3Provider();
+    _setAppWeb3Provider(_web3Context);
     // Update the UI
     setState(() {});
   }

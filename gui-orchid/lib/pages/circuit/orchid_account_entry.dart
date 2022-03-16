@@ -14,7 +14,7 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/pages/account_manager/scan_paste_identity.dart';
-import 'package:orchid/pages/circuit/chain_selection.dart';
+import 'package:orchid/orchid/orchid_chain_selection.dart';
 import 'package:orchid/util/localization.dart';
 import 'funder_selection.dart';
 import 'key_selection.dart';
@@ -233,7 +233,8 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
         ChainSelectionDropdown(
           key: Key(_selectedFunderItem?.toString() ?? ''),
           onSelection: _onChainSelectionChanged,
-          initialSelection: _selectedFunderItem?.account?.chain,
+          selected: _pastedOrOverriddenFunderChainSelection ??
+              _selectedFunderItem?.account?.chain,
         ),
       ],
     );
