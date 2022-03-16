@@ -69,6 +69,7 @@ class Chains {
     // providerUrl: 'https://rpc.xdaichain.com/',
     providerUrl: 'https://rpc.gnosischain.com/',
     iconPath: OrchidAssetSvgChain.gnossis_chain_path,
+    explorerUrl: 'https://blockscout.com/xdai/mainnet/',
     supportsLogs: true,
   );
 
@@ -141,7 +142,6 @@ class Chains {
     providerUrl: 'https://mainnet.aurora.dev',
     iconPath: OrchidAssetSvgChain.near_aurora_chain_path,
     // TODO: Missing explorer URL
-    explorerUrl: 'https://',
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
     supportsLogs: true,

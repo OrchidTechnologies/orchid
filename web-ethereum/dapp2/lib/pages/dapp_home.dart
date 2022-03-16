@@ -422,7 +422,7 @@ class _DappHomeState extends State<DappHome> {
 
   Widget _buildChainSelector() {
     return SizedBox(
-      width: 250,
+      width: 270,
       child: ChainSelectionDropdown(
         selected: _web3Context?.chain,
         onSelection: _switchOrAddChain,
@@ -465,7 +465,7 @@ class _DappHomeState extends State<DappHome> {
           symbol: chain.nativeCurrency.symbol,
           decimals: chain.nativeCurrency.decimals,
         ),
-        blockExplorerUrls: [chain.explorerUrl],
+        blockExplorerUrls: chain.explorerUrl != null ? [chain.explorerUrl] : null,
         rpcUrls: [chain.providerUrl],
       );
     } on EthereumUserRejected {
@@ -684,7 +684,9 @@ class _DappHomeState extends State<DappHome> {
   // all requests go through the web3 context.
   void _setAppWeb3Provider(OrchidWeb3Context web3Context) {
     // log("XXX: setAppWeb3Provider: $web3Context");
-    if (web3Context != null && _contractVersionSelected != null && _contractVersionSelected > 0) {
+    if (web3Context != null &&
+        _contractVersionSelected != null &&
+        _contractVersionSelected > 0) {
       OrchidEthereumV1.setWeb3Provider(OrchidEthereumV1Web3Impl(web3Context));
     } else {
       OrchidEthereumV1.setWeb3Provider(null);
