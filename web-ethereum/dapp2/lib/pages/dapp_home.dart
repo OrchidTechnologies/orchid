@@ -8,6 +8,7 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
+import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/app_dialogs.dart';
@@ -26,6 +27,7 @@ import 'package:orchid/pages/transaction_status_panel.dart';
 import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/util/localization.dart';
+import 'package:styled_text/styled_text.dart';
 import 'dapp_button.dart';
 import 'v1/dapp_tabs_v1.dart';
 
@@ -235,7 +237,23 @@ class _DappHomeState extends State<DappHome> {
             ),
           ),
         ),
+        _buildFooter().bottom(48),
       ],
+    );
+  }
+
+  Widget _buildFooter() {
+    return Center(
+      child: StyledText(
+        style: OrchidText.body1,
+        textAlign: TextAlign.center,
+        text: "Need help?  "
+            "For guidance on creating an\n"
+            "Orchid Account see our <link>step-by-step guide</link>.",
+        tags: {
+          'link': OrchidText.body1.linkStyle.link(OrchidUrls.join),
+        },
+      ),
     );
   }
 
@@ -465,7 +483,8 @@ class _DappHomeState extends State<DappHome> {
           symbol: chain.nativeCurrency.symbol,
           decimals: chain.nativeCurrency.decimals,
         ),
-        blockExplorerUrls: chain.explorerUrl != null ? [chain.explorerUrl] : null,
+        blockExplorerUrls:
+            chain.explorerUrl != null ? [chain.explorerUrl] : null,
         rpcUrls: [chain.providerUrl],
       );
     } on EthereumUserRejected {
