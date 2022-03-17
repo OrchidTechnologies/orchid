@@ -237,7 +237,7 @@ class _DappHomeState extends State<DappHome> {
             ),
           ),
         ),
-        _buildFooter().bottom(48),
+        _buildFooter().pady(32),
       ],
     );
   }
@@ -283,34 +283,31 @@ class _DappHomeState extends State<DappHome> {
   // The individual transaction panels trigger refresh of the wallet and orchid
   // account info here whenever they are added or updated.
   Widget _buildTransactionsList() {
-    return StreamBuilder<List<String>>(
-        stream: UserPreferences().transactions.stream(),
-        builder: (context, snapshot) {
-          var txs = snapshot.data;
-          if (txs == null) {
-            return Container();
-          }
-          var children = txs
-              .map((tx) => Padding(
-                    padding: const EdgeInsets.only(top: 32),
-                    child: TransactionStatusPanel(
-                      context: _web3Context,
-                      transactionHash: tx,
-                      onDismiss: _dismissTransaction,
-                      onTransactionUpdated: () {
-                        _refreshUserData();
-                      },
-                    ),
-                  ))
-              .toList();
-          return AnimatedSwitcher(
-            duration: Duration(milliseconds: 400),
-            child: Column(
-              key: Key(children.length.toString()),
-              children: children,
-            ),
-          );
-        });
+    return UserPreferences().transactions.builder((txs) {
+      if (txs == null) {
+        return Container();
+      }
+      var children = txs
+          .map((tx) => Padding(
+                padding: const EdgeInsets.only(top: 32),
+                child: TransactionStatusPanel(
+                  context: _web3Context,
+                  transactionHash: tx,
+                  onDismiss: _dismissTransaction,
+                  onTransactionUpdated: () {
+                    _refreshUserData();
+                  },
+                ),
+              ))
+          .toList();
+      return AnimatedSwitcher(
+        duration: Duration(milliseconds: 400),
+        child: Column(
+          key: Key(children.length.toString()),
+          children: children,
+        ),
+      );
+    });
   }
 
   /// The row showing the chain, wallet balance, and wallet address.
@@ -509,39 +506,39 @@ class _DappHomeState extends State<DappHome> {
 
   void _showSettings() {
     AppDialogs.showAppDialog(
-        context: context,
-        body: StreamBuilder<bool>(
-            stream: UserPreferences().useBlockiesIdenticons.stream(),
-            builder: (context, snapshot) {
-              final useBlockies = snapshot.data;
-              if (useBlockies == null) {
-                return Container();
-              }
-              return SizedBox(
-                width: 300,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+      context: context,
+      body: UserPreferences().useBlockiesIdenticons.builder(
+        (useBlockies) {
+          if (useBlockies == null) {
+            return Container();
+          }
+          return SizedBox(
+            width: 300,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Settings").title,
+                pady(24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Settings").title,
-                    pady(24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Use Blockies Identicon:").button,
-                        DappSwitch(
-                            value: useBlockies,
-                            onChanged: (value) async {
-                              await UserPreferences()
-                                  .useBlockiesIdenticons
-                                  .set(value);
-                              setState(() {});
-                            }),
-                      ],
-                    ),
+                    Text("Use Blockies Identicon:").button,
+                    DappSwitch(
+                        value: useBlockies,
+                        onChanged: (value) async {
+                          await UserPreferences()
+                              .useBlockiesIdenticons
+                              .set(value);
+                          setState(() {});
+                        }),
                   ],
                 ),
-              );
-            }));
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Widget _buildVersionSwitch() {
