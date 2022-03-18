@@ -37,6 +37,10 @@ define compile
 $(job)@LANG=C sed -e '1{x;s!.*!#line 1 "$<"!;p;x;};$(chacks/./$<)' $< | $(prefix) $($(1)) $(more/$(arch)) -MD -MP -c -o $@ $(3) $(flags) $(xflags) -iquote$(dir $<) -x $(2) -
 endef
 
+.PHONY: chacks
+chacks:
+	@{ $(foreach v,$(filter chacks/%,$(.VARIABLES)),echo 'diff $(v) += $($(v))'; sed -e '$($(v))' $(patsubst chacks/%,%,$(v)) | diff -u $(patsubst chacks/%,%,$(v)) - && echo $(v);)true; } | colordiff
+
 $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
