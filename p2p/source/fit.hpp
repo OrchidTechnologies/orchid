@@ -28,6 +28,15 @@
 namespace orc {
 
 template <typename Value_>
+inline std::make_unsigned_t<Value_> Pos(Value_ value) {
+    // maybe I can do these with concepts?
+    static_assert(std::is_integral_v<Value_>);
+    static_assert(std::is_signed_v<Value_>);
+    orc_assert(value >= 0);
+    return value;
+}
+
+template <typename Value_>
 class Fit {
   private:
     const Value_ value_;
@@ -40,7 +49,11 @@ class Fit {
 
     template <typename Type_>
     inline operator Type_() {
-        orc_assert_(value_ <= std::numeric_limits<Type_>::max(), value_ << " > " << typeid(Type_).name());
+        // maybe I can do these with concepts?
+        static_assert(std::is_unsigned_v<Value_>);
+        static_assert(std::is_integral_v<Type_>);
+        static_assert(sizeof(Type_) <= sizeof(Value_));
+        orc_assert_(value_ <= Value_(std::numeric_limits<Type_>::max()), value_ << " > " << typeid(Type_).name());
         return Type_(value_);
     }
 };

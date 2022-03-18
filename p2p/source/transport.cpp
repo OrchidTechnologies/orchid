@@ -201,7 +201,7 @@ class Transport :
     }
 
     openvpn::IP::Addr server_endpoint_addr() const noexcept override {
-        return openvpn::IP::Addr("0.0.0.0"); } // XXX
+        return {"0.0.0.0"}; } // XXX
     void server_endpoint_info(std::string &host, std::string &port, std::string &protocol, std::string &address) const noexcept override {
         host.clear(); port.clear(); protocol.clear(); address.clear(); }
     openvpn::Protocol transport_protocol() const noexcept override {

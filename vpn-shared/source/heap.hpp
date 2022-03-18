@@ -128,7 +128,7 @@ inline std::string Value::to<std::string>() {
     const auto data(JS_ToCStringLen(context_, &size, value_));
     orc_assert_(data != nullptr, Value(context_, JS_GetException(context_)).to<std::string>());
     _scope({ JS_FreeCString(context_, data); });
-    return std::string(data, size);
+    return {data, size};
 }
 
 inline Value::Value(JSContext *context, JSValue value) :

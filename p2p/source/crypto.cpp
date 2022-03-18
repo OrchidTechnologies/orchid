@@ -241,7 +241,7 @@ Signature Sign(const Secret &secret, const Brick<32> &data) {
     int v;
     orc_assert(secp256k1_ecdsa_recoverable_signature_serialize_compact(context, external.data(), &v, &internal) != 0);
 
-    return {external, Fit(v)};
+    return {external, Fit(Pos(v))};
 }
 
 Key Recover(const Brick<32> &data, const Signature &signature) {

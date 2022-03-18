@@ -327,7 +327,7 @@ class Region :
     }
 
     operator asio::const_buffer() const {
-        return asio::const_buffer(data(), size());
+        return {data(), size()};
     }
 
     Span<const uint8_t> span() const {

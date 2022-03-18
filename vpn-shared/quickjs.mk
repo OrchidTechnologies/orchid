@@ -15,6 +15,7 @@ source += $(pwd/quickjs)/libregexp.c $(filter-out \
     $(shell grep -lw 'int main' $(pwd/quickjs)/*.c) \
 ,$(wildcard $(pwd/quickjs)/*.c))
 
+cflags/$(pwd/quickjs)/ += -Wno-unused-but-set-variable
 cflags/$(pwd/quickjs)/ += -Wno-unused-result
 cflags/$(pwd/quickjs)/ += -Wno-unused-variable
 

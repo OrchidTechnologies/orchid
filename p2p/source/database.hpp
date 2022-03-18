@@ -26,6 +26,7 @@
 #include <sqlite3.h>
 
 #include "buffer.hpp"
+#include "fit.hpp"
 #include "shared.hpp"
 
 #define orc_sqlstep(expr) ({ \
@@ -195,26 +196,26 @@ static int64_t Get(sqlite3_stmt *statement, int column) {
 template <>
 struct Column<Beam> {
 static Beam Get(sqlite3_stmt *statement, int column) {
-    return Beam(sqlite3_column_blob(statement, column), sqlite3_column_bytes(statement, column));
+    return {sqlite3_column_blob(statement, column), Pos(sqlite3_column_bytes(statement, column))};
 } };
 
 template <>
 struct Column<std::vector<uint8_t>> {
 static std::vector<uint8_t> Get(sqlite3_stmt *statement, int column) {
     const auto data(static_cast<const uint8_t *>(sqlite3_column_blob(statement, column)));
-    return std::vector<uint8_t>(data, data + sqlite3_column_bytes(statement, column));
+    return {data, data + Pos(sqlite3_column_bytes(statement, column))};
 } };
 
 template <>
 struct Column<std::string> {
 static std::string Get(sqlite3_stmt *statement, int column) {
-    return std::string(reinterpret_cast<const char *>(sqlite3_column_text(statement, column)), sqlite3_column_bytes(statement, column));
+    return {reinterpret_cast<const char *>(sqlite3_column_text(statement, column)), Pos(sqlite3_column_bytes(statement, column))};
 } };
 
 template <>
 struct Column<std::u16string> {
 static std::u16string Get(sqlite3_stmt *statement, int column) {
-    return std::u16string(static_cast<const char16_t *>(sqlite3_column_text16(statement, column)), sqlite3_column_bytes16(statement, column) / sizeof(char16_t));
+    return {static_cast<const char16_t *>(sqlite3_column_text16(statement, column)), Pos(sqlite3_column_bytes16(statement, column)) / sizeof(char16_t)};
 } };
 
 template <typename Type_>

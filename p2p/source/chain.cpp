@@ -84,7 +84,7 @@ Receipt::Receipt(Json::Value &&value) :
     contract_([&]() -> Address {
         const auto contract(value["contractAddress"]);
         if (contract.isNull())
-            return Address();
+            return {};
         return contract.asString();
     }()),
     gas_(To<uint64_t>(value["gasUsed"].asString()))

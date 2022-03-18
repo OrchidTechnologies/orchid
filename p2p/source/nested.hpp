@@ -207,7 +207,7 @@ class Nested {
 
     Subset buf() const {
         orc_assert(scalar_);
-        return Subset(value_);
+        return value_;
     }
 
     const std::string &str() const {

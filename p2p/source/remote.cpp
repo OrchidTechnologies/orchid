@@ -252,7 +252,7 @@ class RemoteOpening :
     }
 
     Socket Local() const override {
-        return Socket(pcb_->local_ip, pcb_->local_port);
+        return {pcb_->local_ip, pcb_->local_port};
     }
 
     void Open() {

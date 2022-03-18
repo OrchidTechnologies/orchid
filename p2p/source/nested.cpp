@@ -149,7 +149,7 @@ Nested Explode(Window &window) {
             array.emplace_back(Explode(sub));
     }
 
-    return Nested(scalar, std::move(value), std::move(array));
+    return {scalar, std::move(value), std::move(array)};
 }
 
 Nested Explode(Window &&window) {
