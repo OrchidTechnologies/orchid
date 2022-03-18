@@ -20,30 +20,34 @@
 /* }}} */
 
 
-#ifndef ORCHID_EXECUTE_HPP
-#define ORCHID_EXECUTE_HPP
+#ifndef ORCHID_ENCODING_HPP
+#define ORCHID_ENCODING_HPP
 
-#include <cstdlib>
 #include <string>
-
-#include "encoding.hpp"
 
 namespace orc {
 
-// XXX: this is an unreasonable implementation to stub the API
-template <typename... Args_>
-void Execute(const std::string &path, const Args_ &...args) {
-    std::ostringstream builder;
-    builder << path;
-    (void(builder << ' ' << args), ...);
-    const auto command(builder.str());
-#ifdef _WIN32
-    orc_assert_(_wsystem(w16(utf(command).c_str())) == 0, "system(" << command << ") != 0");
-#else
-    orc_assert_(system(command.c_str()) == 0, "system(" << command << ") != 0");
+#ifdef __WIN32__
+inline const wchar_t *w16(const char16_t *value) {
+    return reinterpret_cast<const wchar_t *>(value);
+}
+
+inline wchar_t *w16(char16_t *value) {
+    return reinterpret_cast<wchar_t *>(value);
+}
+
+inline const char16_t *w16(const wchar_t *value) {
+    return reinterpret_cast<const char16_t *>(value);
+}
+
+inline char16_t *w16(wchar_t *value) {
+    return reinterpret_cast<char16_t *>(value);
+}
+
+std::string utf(const std::u16string &value);
+std::u16string utf(const std::string &value);
 #endif
-}
 
 }
 
-#endif//ORCHID_EXECUTE_HPP
+#endif//ORCHID_ENCODING_HPP
