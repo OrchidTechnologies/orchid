@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include "encoding.hpp"
+#include "fit.hpp"
 #include "sync.hpp"
 #include "tunnel.hpp"
 #include "port.hpp"
@@ -75,19 +77,20 @@ std::string guid_to_name(const char *guid)
             continue;
         }
 
-        WCHAR name_data[256];
+        // XXX: this is wrong and needs much more abstraction
+        std::u16string name;
+        name.resize(256);
         DWORD name_type;
-        len = sizeof(name_data);
-        status = RegQueryValueExW(connection_key, L"Name", nullptr, &name_type, reinterpret_cast<LPBYTE>(name_data), &len);
+        len = Fit(name.size() * sizeof(char16_t));
+        status = RegQueryValueExW(connection_key, L"Name", nullptr, &name_type, reinterpret_cast<LPBYTE>(name.data()), &len);
 
         if (status != ERROR_SUCCESS || name_type != REG_SZ) {
             Log() << "Error opening registry key: " << NETWORK_CONNECTIONS_KEY << "\\" << connection_string << "\\Name" << std::endl;
         } else if (strcmp(enum_name, guid) == 0) {
-            char name[1024];
-            wcstombs(name, name_data, sizeof(name));
+            name.resize(len / sizeof(char16_t) - 1);
             RegCloseKey(connection_key);
             RegCloseKey(network_connections_key);
-            return name;
+            return utf(name);
         }
         RegCloseKey(connection_key);
     }
