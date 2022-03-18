@@ -16,7 +16,7 @@ sudo -EH apt-get -y install \
     clang clang-tidy lld \
     libc++-dev libc++abi-dev \
     g++-multilib gcc-multilib \
-    python python3-pip python3-setuptools \
+    python3-pip python3-setuptools \
     bison flex gperf \
     gettext groff texinfo \
     autoconf autoconf-archive automake libtool \

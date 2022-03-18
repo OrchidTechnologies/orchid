@@ -152,7 +152,7 @@ else
 $(output)/$(pwd/wireshark)/epan/dissectors.c: $(pwd/wireshark)/tools/make-regs.py $(filter $(pwd/wireshark)/epan/dissectors/%.c,$(wireshark))
 	@mkdir -p $(dir $@)
 	@echo [EX] $(target) $<
-	@python3 $< dissectors $@ $(filter %.c,$^)
+	$< dissectors $@ $(filter %.c,$^)
 
 source += $(output)/$(pwd/wireshark)/epan/dissectors.c
 endif
@@ -162,7 +162,7 @@ source += $(pwd/wireshark)/../modules.c
 
 $(output)/$(pwd/wireshark)/epan/dissectors/packet-ncp2222.c: $(pwd/wireshark)/tools/ncp2222.py
 	@mkdir -p $(dir $@)
-	python $< -o $@
+	$< -o $@
 
 source += $(output)/$(pwd/wireshark)/epan/dissectors/packet-ncp2222.c
 
