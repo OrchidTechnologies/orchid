@@ -15,24 +15,16 @@ class ObservablePreference<T> {
   T Function(UserPreferenceKey key) getValue;
   Future Function(UserPreferenceKey key, T value) putValue;
 
-  /// Subscribe to the value stream *without* waiting for the value to be
-  /// initialized.  The first values sent by the stream may be the uninititialized
-  /// value, followed by the initialized value.
+  /// Subscribe to the value stream. This method ensures that the stream is
+  /// initialized with the first value from the underlying user preference.
   Stream<T> stream() {
     _ensureInitialized();
     return _subject.asBroadcastStream();
   }
 
-  // We used to support async value sources here.
-  // If needed in the future we should make an ObservableAsyncPreference that
-  // has different initialization requirements.
-  /*
-  /// Subscribe to the value stream after waiting for the value to be initialized.
-  Future<Stream<T>> streamAsync() async {
-    await ensureInitialized();
-    return _subject.asBroadcastStream();
+  ObservablePreferenceBuilder<T> builder(Widget Function(T t) builder) {
+    return ObservablePreferenceBuilder(stream: stream(), builder: builder);
   }
-   */
 
   T get() {
     if (_initialized) {
@@ -105,6 +97,27 @@ class ObservableBoolPreference extends ObservablePreference<bool> {
             });
 }
 
+class ObservablePreferenceBuilder<T> extends StatelessWidget {
+  final Stream<T> stream;
+  final Widget Function(T t) builder;
+
+  const ObservablePreferenceBuilder({
+    Key key,
+    this.stream,
+    this.builder,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<T>(
+        stream: stream,
+        builder: (context, snapshot) {
+          return builder(snapshot.data);
+        });
+  }
+}
+
+// TODO: MOVE
 class ReleaseVersion {
   final int version;
 

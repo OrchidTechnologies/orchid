@@ -5,4 +5,5 @@ class OrchidUrls {
   static String contact = "https://orchid.com/contact";
   static String partsOfOrchidAccount = "https://docs.orchid.com/en/latest/accounts/#technical-parts-of-an-orchid-account";
   static String accountOrchid = 'https://account.orchid.com';
+  static String join = 'https://www.orchid.com/join/';
 }

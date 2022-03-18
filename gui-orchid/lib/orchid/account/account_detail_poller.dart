@@ -36,6 +36,8 @@ abstract class AccountDetail {
 }
 
 class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
+  static int nextId = 0;
+  final int id;
   final Account account;
   final Duration pollingPeriod;
 
@@ -49,7 +51,9 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   AccountDetailPoller({
     @required this.account,
     this.pollingPeriod = const Duration(seconds: 30),
-  });
+  }) : this.id = nextId++ {
+    log("XXX: AccountDetailPoller $id created.");
+  }
 
   Timer _balanceTimer;
   bool _balancePollInProgress = false;
@@ -59,6 +63,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   LotteryPot lotteryPot; // initially null
   MarketConditions marketConditions;
   bool showMarketStatsAlert = false;
+  bool _isCancelled = false;
 
   // TODO:
   List<OrchidUpdateTransactionV0> transactions;
@@ -82,11 +87,17 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   }
 
   Future<void> _pollBalanceAndAccountDetails({bool refresh = false}) async {
+    // log("XXX: poller $id polling details");
+    // if (!_balanceTimer.isActive) {
+    if (_isCancelled) {
+      log("XXX: call to _pollBalanceAndAccountDetails with cancelled timer.");
+      return;
+    }
+
     if (signerAddress == null) {
       signerAddress = account.signerAddress;
     }
 
-    // log("polling account details: signer = $signerAddress, funder = $funder");
     if (_balancePollInProgress) {
       return;
     }
@@ -99,7 +110,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
             .getLotteryPot(refresh: refresh)
             .timeout(Duration(seconds: 30));
       } catch (err) {
-        log('Error fetching lottery pot 1: $err');
+        log('poller $id error fetching lottery pot 1: $err');
         return;
       }
       lotteryPot = _pot;
@@ -111,8 +122,7 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
             .getMarketConditionsFor(_pot)
             .timeout(Duration(seconds: 60));
       } catch (err, stack) {
-        log('Error fetching market conditions: $err\n$stack');
-        //return;
+        log('poller $id error fetching market conditions: $err\n$stack');
       }
       marketConditions = _marketConditions;
 
@@ -154,7 +164,9 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
   }
 
   void cancel() {
+    _isCancelled = true;
     _balanceTimer?.cancel();
+    log("XXX: account detail $id poller cancelled (account chain = ${account.chainId})");
   }
 
   void dispose() {
@@ -164,6 +176,6 @@ class AccountDetailPoller extends ChangeNotifier implements AccountDetail {
 
   @override
   String toString() {
-    return 'AccountDetailPoller{account: $account, lotteryPot: $lotteryPot, marketConditions: $marketConditions}';
+    return 'AccountDetailPoller{name: $id, account: $account, lotteryPot: $lotteryPot, marketConditions: $marketConditions}';
   }
 }

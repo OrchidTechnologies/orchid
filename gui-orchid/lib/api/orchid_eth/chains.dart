@@ -69,6 +69,7 @@ class Chains {
     // providerUrl: 'https://rpc.xdaichain.com/',
     providerUrl: 'https://rpc.gnosischain.com/',
     iconPath: OrchidAssetSvgChain.gnossis_chain_path,
+    explorerUrl: 'https://blockscout.com/xdai/mainnet/',
     supportsLogs: true,
   );
 
@@ -76,7 +77,7 @@ class Chains {
   static const int AVALANCHE_CHAINID = 43114;
   static Chain Avalanche = Chain(
     chainId: AVALANCHE_CHAINID,
-    name: 'Avalanche',
+    name: 'Avalanche Network',
     nativeCurrency: Tokens.AVAX,
     providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
@@ -141,7 +142,6 @@ class Chains {
     providerUrl: 'https://mainnet.aurora.dev',
     iconPath: OrchidAssetSvgChain.near_aurora_chain_path,
     // TODO: Missing explorer URL
-    explorerUrl: 'https://',
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
     supportsLogs: true,

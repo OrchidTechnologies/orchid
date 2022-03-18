@@ -9,13 +9,13 @@ typedef ChainSelectionCallback = void Function(Chain chain);
 
 class ChainSelectionDropdown extends StatefulWidget {
   final ChainSelectionCallback onSelection;
-  final Chain initialSelection;
+  final Chain selected;
   final bool enabled;
 
   ChainSelectionDropdown({
     Key key,
     @required this.onSelection,
-    this.initialSelection,
+    this.selected,
     this.enabled = true,
   }) : super(key: key);
 
@@ -25,25 +25,12 @@ class ChainSelectionDropdown extends StatefulWidget {
 
 class _ChainSelectionDropdownState extends State<ChainSelectionDropdown> {
   List<Chain> _chains;
-  Chain _selectedChain;
 
   @override
   void initState() {
     super.initState();
-
     _chains = Chains.map.values.where((e) => e != Chains.GanacheTest).toList();
-
-    // If an initial key selection is provided use it
-    if (widget.initialSelection != null) {
-      this._selectedChain = widget.initialSelection;
-    } //else {
-      // this._selectedChain = Chains.Ethereum;
-    // }
-
-    initStateAsync();
   }
-
-  void initStateAsync() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -63,16 +50,11 @@ class _ChainSelectionDropdownState extends State<ChainSelectionDropdown> {
               hint: Text(s.chooseChain, style: OrchidText.button),
               isExpanded: true,
               icon: !widget.enabled ? Icon(Icons.add, size: 0) : null,
-              underline: Container(),
               // suppress the underline
-              value: _selectedChain,
+              underline: Container(),
+              value: widget.selected,
               items: _getDropdownItems(),
-              onChanged: (Chain item) {
-                setState(() {
-                  _selectedChain = item;
-                });
-                widget.onSelection(item);
-              },
+              onChanged: widget.onSelection,
             ),
           ),
         ),

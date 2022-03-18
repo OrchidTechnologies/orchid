@@ -11,9 +11,9 @@ class OrchidContractV1 {
       '0x9a9bD72080219Ef38deE01bCBFC91A9C0Ffe95C6';
 
   static String get lotteryContractAddressV1 {
-    if (OrchidUserParams().test) {
-      return _testLotteryContractAddressV1;
-    }
+    // if (OrchidUserParams().test) {
+    //   return _testLotteryContractAddressV1;
+    // }
     return OrchidUserConfig()
         .getUserConfigJS()
         .evalStringDefault("lottery", _lotteryContractAddressV1);

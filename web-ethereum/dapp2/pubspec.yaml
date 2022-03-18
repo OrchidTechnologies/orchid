@@ -38,7 +38,7 @@ dependencies:
   url_launcher: 6.0.3
   uuid: 3.0.5
   web3dart: 2.3.3
-  flutter_web3: 2.1.6
+  flutter_web3: 2.1.9
   flutter_lints: ^1.0.0
 
 dev_dependencies:

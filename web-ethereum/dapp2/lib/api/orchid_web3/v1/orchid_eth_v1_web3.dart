@@ -22,7 +22,7 @@ class OrchidEthereumV1Web3Impl implements OrchidEthereumV1 {
 
   Future<Token> getGasPrice(Chain chain, {bool refresh = false}) async {
     if (chain != _context.chain) {
-      throw Exception("incorrect chain for web3 provider: $chain, $_context");
+      throw Exception("web3impl: asked to poll chain ${chain.chainId} with web3 provider: $_context");
     }
     // log('OrchidEthereumV1Web3Impl: get gas price');
     TokenType tokenType = chain.nativeCurrency;
@@ -32,7 +32,7 @@ class OrchidEthereumV1Web3Impl implements OrchidEthereumV1 {
   Future<LotteryPot> getLotteryPot(
       {Chain chain, EthereumAddress funder, EthereumAddress signer}) async {
     if (chain != _context.chain) {
-      throw Exception("incorrect chain for web3 provider: $chain, $_context");
+      throw Exception("web3impl: asked to poll chain ${chain.chainId} with web3 provider: $_context");
     }
     logDetail('OrchidEthereumV1Web3Impl: get lottery pot');
     // "function read(IERC20 token, address funder, address signer) external view returns (uint256, uint256)",

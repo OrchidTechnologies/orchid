@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:orchid/api/monitoring/analysis_db.dart';
 import 'package:orchid/api/monitoring/restart_manager.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_types.dart';
@@ -205,23 +206,24 @@ class RealOrchidAPI implements OrchidAPI {
         : "";
 
     // Inject the default (main net Ethereum) RPC provider
-    managedConfig +=
-        '\nrpc = "${Chains.defaultEthereumProviderUrl}";';
+    managedConfig += '\nrpc = "${Chains.defaultEthereumProviderUrl}";';
 
     // Inject the status socket name
     managedConfig += '\ncontrol = "${OrchidRoutingStatus.socketName}";';
 
+    // 'logdb' sets the analysis file location.
     // To disable monitoring set 'logdb' to an empty string.
-    if (!await UserPreferences().monitoringEnabled.get()) {
-      managedConfig += '\nlogdb="";';
-    }
+    final pathOrEmptyString = UserPreferences().monitoringEnabled.get()
+        ? AnalysisDb.defaultAnalysisFilename
+        : '';
+    managedConfig += '\nlogdb="$pathOrEmptyString";';
 
     return managedConfig;
   }
 
   // Generate the combined user config and generated config
   static Future<String> generateCombinedConfig() async {
-    var userConfig = await UserPreferences().userConfig.get();
+    var userConfig = UserPreferences().userConfig.get();
 
     // Append the generated config before saving.
     String generatedConfig;
