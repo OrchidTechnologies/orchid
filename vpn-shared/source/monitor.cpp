@@ -270,9 +270,10 @@ void wireshark_analyze(const uint8_t *buf, size_t packet_len, const orc::hostnam
         wireshark_initialized = true;
         wireshark_setup();
     }
-    if (cf.count > 100) {
-        wireshark_epan_free();
-        wireshark_epan_new();
+    if (cf.count > 10000) {
+        wmem_leave_file_scope();
+        wmem_enter_file_scope();
+        cf.count = 0;
     }
 
     struct timespec ts;
