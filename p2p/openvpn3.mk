@@ -38,6 +38,9 @@ cflags += -DOPENVPN_EXTERNAL_TUN_FACTORY
 
 cflags/$(pwd)/openvpn3/ += -Wno-deprecated-enum-enum-conversion
 
+# XXX: https://github.com/OpenVPN/openvpn3/issues/204
+cflags/$(pwd)/openvpn3/client/ovpncli.cpp += -Wno-bitwise-instead-of-logical
+
 ifeq ($(target),win)
 cflags/$(pwd)/openvpn3/ += -Wno-missing-braces
 cflags/$(pwd)/openvpn3/ += -Wno-pointer-bool-conversion
