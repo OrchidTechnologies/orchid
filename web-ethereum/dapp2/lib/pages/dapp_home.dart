@@ -23,9 +23,11 @@ import 'package:orchid/orchid/orchid_logo.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
+import 'package:orchid/pages/settings/logging_page.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
 import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/util/gestures.dart';
 import 'package:orchid/util/localization.dart';
 import 'package:styled_text/styled_text.dart';
 import 'dapp_button.dart';
@@ -198,17 +200,7 @@ class _DappHomeState extends State<DappHome> {
                       children: [
                         // logo
                         pady(_accountDetail == null ? 64 : 32),
-                        AnimatedContainer(
-                            duration: Duration(milliseconds: 300),
-                            height: _accountDetail == null ? 180 : 64,
-                            width: _accountDetail == null ? 300 : 128,
-                            child: FittedBox(
-                              fit: BoxFit.fitWidth,
-                              child: NeonOrchidLogo(
-                                showBackground: false,
-                                light: _connected ? 1.0 : 0.0,
-                              ),
-                            )),
+                        _buildLogo(),
                         pady(16),
                         if (_connected) _buildPasteSignerField(),
                         pady(40),
@@ -241,6 +233,31 @@ class _DappHomeState extends State<DappHome> {
       ],
     );
   }
+
+  Widget _buildLogo() {
+    return TripleTapGestureDetector(
+      onTripleTap: _openLogsPage,
+      child: AnimatedContainer(
+          duration: Duration(milliseconds: 350),
+          height: _accountDetail == null ? 180 : 64,
+          width: _accountDetail == null ? 300 : 128,
+          child: FittedBox(
+            fit: BoxFit.fitWidth,
+            child: NeonOrchidLogo(
+              showBackground: false,
+              light: _connected ? 1.0 : 0.0,
+            ),
+          )),
+    );
+  }
+
+  void _openLogsPage() {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (BuildContext context) {
+          return LoggingPage();
+        }));
+  }
+
 
   Widget _buildFooter() {
     return Center(
