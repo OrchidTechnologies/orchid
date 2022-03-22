@@ -147,13 +147,13 @@ class UserPreferences {
   /// Add a key to the user's keystore.
   // Note: Minimizes exposure to the full setKeys()
   Future<void> addKey(StoredEthereumKey key) async {
-    var allKeys = ((await keys.get()) ?? []) + [key];
+    var allKeys = ((keys.get()) ?? []) + [key];
     return await keys.set(allKeys);
   }
 
   /// Remove a key from the user's keystore.
   Future<bool> removeKey(StoredEthereumKeyRef keyRef) async {
-    var keysList = ((await keys.get()) ?? []);
+    var keysList = ((keys.get()) ?? []);
     try {
       keysList.removeWhere((key) => key.uid == keyRef.keyUid);
     } catch (err) {
@@ -166,7 +166,7 @@ class UserPreferences {
 
   /// Add a list of keys to the user's keystore.
   Future<void> addKeys(List<StoredEthereumKey> newKeys) async {
-    var allKeys = ((await keys.get()) ?? []) + newKeys;
+    var allKeys = ((keys.get()) ?? []) + newKeys;
     return await keys.set(allKeys);
   }
 

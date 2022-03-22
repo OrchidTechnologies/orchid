@@ -252,12 +252,10 @@ class _DappHomeState extends State<DappHome> {
   }
 
   void _openLogsPage() {
-    Navigator.push(context,
-        MaterialPageRoute(builder: (BuildContext context) {
-          return LoggingPage();
-        }));
+    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
+      return LoggingPage();
+    }));
   }
-
 
   Widget _buildFooter() {
     return Center(
@@ -478,6 +476,10 @@ class _DappHomeState extends State<DappHome> {
       if (err.message.contains('wallet_addEthereumChain')) {
         log("XXX: inferring chain not recognized from exception message, suggesting add. err=$err");
         _addChain(chain);
+      }
+      if (err.message.contains('already pending for origin')) {
+        log("XXX: inferring request pending from exception message: err=$err");
+        _showRequestPendingMessage();
       } else {
         log("Unknown EthereumException in switch chain: $err");
       }
@@ -603,6 +605,30 @@ class _DappHomeState extends State<DappHome> {
   }
 
   void _connectEthereum() async {
+    try {
+      await _tryConnectEthereum();
+    } on EthereumException catch (err) {
+      // Infer the "request already pending" exception from the exception text.
+      if (err.message.contains('already pending for origin')) {
+        log("XXX: inferring request pending from exception message: err=$err");
+        _showRequestPendingMessage();
+      } else {
+        log("Unknown EthereumException in connect: $err");
+      }
+    } catch (err) {
+      log("Unknown err in connect ethereum: $err");
+    }
+  }
+
+  void _showRequestPendingMessage() {
+    AppDialogs.showAppDialog(
+      context: context,
+      title: "Check Wallet",
+      bodyText: "Check your Wallet app or extension for a pending request.",
+    );
+  }
+
+  void _tryConnectEthereum() async {
     if (!Ethereum.isSupported) {
       AppDialogs.showAppDialog(
           context: context,
