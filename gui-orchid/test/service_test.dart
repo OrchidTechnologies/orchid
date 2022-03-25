@@ -48,7 +48,7 @@ void main() async {
       print("Get L3 Nonce...");
       var signer =
           EthereumAddress.from('0xb033bA40615293740e863AB470C2c171291482Ba');
-      await OrchidPacSeller.getL3Nonce(chain: Chains.xDAI, signer: signer);
+      await OrchidPacSeller.getL3Nonce(chain: Chains.Gnosis, signer: signer);
     });
 
     test('add balance', () async {

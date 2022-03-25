@@ -707,7 +707,7 @@ class PurchaseUtils {
     // TODO: Hard coded for xDAI currently
     var fundingTx = await OrchidPacSeller.defaultFundingTransactionParams(
         signerKey: signerKey,
-        chain: Chains.xDAI,
+        chain: Chains.Gnosis,
         totalUsdValue: purchase.usdPriceExact);
 
     var signer = signerKey.address;

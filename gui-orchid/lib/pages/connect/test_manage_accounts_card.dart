@@ -31,14 +31,14 @@ class __AccountCardTestState extends State<_AccountCardTest> {
 
   void initStateAsync() async {
     var account = Account.fromSignerAddress(
-      chainId: Chains.XDAI_CHAINID,
+      chainId: Chains.GNOSIS_CHAINID,
       funder:
           EthereumAddress.from('0x6dd46C5F9f19AB8790F6249322F58028a3185087'),
       signerAddress:
           EthereumAddress.from('0x45cC0D06CA2052Ef93b5B7adfeC2Af7690731110'),
     );
     var account2 = Account.fromSignerAddress(
-      chainId: Chains.XDAI_CHAINID,
+      chainId: Chains.GNOSIS_CHAINID,
       funder:
           EthereumAddress.from('0x6dd46C5F9f19AB8790F6249322F58028a3185088'),
       signerAddress:

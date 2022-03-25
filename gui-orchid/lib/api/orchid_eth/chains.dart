@@ -61,9 +61,9 @@ class Chains {
 
   // Gnosis (xDAI)
   // xDai Chain has been rebranded to Gnosis Chain
-  static const int XDAI_CHAINID = 100;
-  static Chain xDAI = Chain(
-    chainId: XDAI_CHAINID,
+  static const int GNOSIS_CHAINID = 100;
+  static Chain Gnosis = Chain(
+    chainId: GNOSIS_CHAINID,
     name: 'Gnosis',
     nativeCurrency: Tokens.XDAI,
     // providerUrl: 'https://rpc.xdaichain.com/',
@@ -170,6 +170,7 @@ class Chains {
     explorerUrl: 'https://teloscan.io',
   );
 
+  // RSK
   static const int RSK_CHAINID = 30;
   static Chain RSK = Chain(
     chainId: RSK_CHAINID,
@@ -180,16 +181,28 @@ class Chains {
     explorerUrl: 'https://explorer.rsk.co',
   );
 
+  // Celo (CELO)
+  static const int CELO_CHAINID = 42220;
+  static Chain Celo = Chain(
+    chainId: CELO_CHAINID,
+    name: 'CELO',
+    nativeCurrency: Tokens.CELO,
+    providerUrl: 'https://forno.celo.org',
+    iconPath: OrchidAssetSvgChain.celo_chain_path,
+    explorerUrl: 'https://explorer.celo.org',
+  );
+
   static Map<int, Chain> map = [
-    GanacheTest,
-    Ethereum,
-    xDAI,
+    Aurora,
     Avalanche,
     BinanceSmartChain,
-    Polygon,
-    Optimism,
-    Aurora,
+    Celo,
+    Ethereum,
     Fantom,
+    GanacheTest,
+    Gnosis,
+    Optimism,
+    Polygon,
     // ArbitrumOne,
     // RSK,
     // Telos,
