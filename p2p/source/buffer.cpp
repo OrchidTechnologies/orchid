@@ -190,6 +190,21 @@ void Split(const View &value, const View &delimeter, const std::function<void (V
     code(View(data, before - data), View(after, data + value.size() - after));
 }
 
+std::string Join(const std::string &delimeter, const std::vector<std::string> &args) {
+    std::ostringstream data;
+
+    bool comma(false);
+    for (const auto &arg : args) {
+        if (comma)
+            data << delimeter;
+        else
+            comma = true;
+        data << arg;
+    }
+
+    return data.str();
+}
+
 Mutable &Mutable::operator =(const Buffer &buffer) {
     auto here(data());
     size_t rest(size());

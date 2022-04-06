@@ -304,6 +304,8 @@ auto Split(const View &value, const View &delimeter) {
     return Split(value, delimeter, std::make_index_sequence<Size_ - 1>());
 }
 
+std::string Join(const std::string &delimeter, const std::vector<std::string> &args);
+
 class Subset;
 
 class Region :
