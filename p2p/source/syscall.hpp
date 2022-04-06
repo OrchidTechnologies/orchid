@@ -46,7 +46,7 @@
             _value = (decltype(expr)) -success; \
     if (_value != 0) \
         break; \
-    orc_throw("\"" << strerror(error) << "\" calling " << #expr); \
+    orc_throw(error << "=\"" << strerror(error) << "\" calling " << #expr); \
 } _value; })
 
 #define orc_packed \
