@@ -30,18 +30,12 @@
 #include <boost/beast/http/write.hpp>
 #include <boost/beast/version.hpp>
 
-#include "ctre.hpp"
+#include "regex.hpp"
 #include "response.hpp"
 #include "socket.hpp"
 #include "task.hpp"
 
 namespace orc {
-
-using namespace ctre::literals;
-typedef ctre::regex_results<const char *> Matches0;
-typedef ctre::regex_results<const char *, ctre::captured_content<1>> Matches1;
-typedef ctre::regex_results<const char *, ctre::captured_content<1>, ctre::captured_content<2>> Matches2;
-typedef ctre::regex_results<const char *, ctre::captured_content<1>, ctre::captured_content<2>, ctre::captured_content<3>> Matches3;
 
 const char *Params();
 
