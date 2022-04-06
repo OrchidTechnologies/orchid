@@ -61,90 +61,6 @@ class UserPreferences {
         throw Exception("no keys");
       });
 
-  /*
-  ///
-  /// Begin: Keys
-  ///
-
-  /// Return the user's keys or [] empty array if uninitialized.
-  ObservablePreference<List<StoredEthereumKey>> keys = ObservablePreference(
-      key: UserPreferenceKey.Keys,
-      getValue: (key) {
-        return _getKeys();
-      },
-      putValue: (key, keys) {
-        return _setKeys(keys);
-      });
-
-  /// Return the user's keys or [] empty array if uninitialized.
-  static List<StoredEthereumKey> _getKeys() {
-    String value = UserPreferences().getStringForKey(UserPreferenceKey.Keys);
-    if (value == null) {
-      return [];
-    }
-    try {
-      var jsonList = jsonDecode(value) as List<dynamic>;
-      return jsonList
-          .map((el) {
-            try {
-              return StoredEthereumKey.fromJson(el);
-            } catch (err) {
-              log("Error decoding key: $err");
-              return null;
-            }
-          })
-          .where((key) => key != null)
-          .toList();
-    } catch (err) {
-      log("Error retrieving keys!: $err");
-      return [];
-    }
-  }
-
-  static Future<bool> _setKeys(List<StoredEthereumKey> keys) async {
-    print("setKeys: storing keys: ${jsonEncode(keys)}");
-    try {
-      var value = jsonEncode(keys);
-      return await UserPreferences()
-          .putStringForKey(UserPreferenceKey.Keys, value);
-    } catch (err) {
-      log("Error storing keys!: $err");
-      return false;
-    }
-  }
-
-  /// Add a key to the user's keystore.
-  // Note: Minimizes exposure to the full setKeys()
-  Future<void> addKey(StoredEthereumKey key) async {
-    var allKeys = ((await keys.get()) ?? []) + [key];
-    return await keys.set(allKeys);
-  }
-
-  /// Remove a key from the user's keystore.
-  Future<bool> removeKey(StoredEthereumKeyRef keyRef) async {
-    var keysList = ((await keys.get()) ?? []);
-    try {
-      keysList.removeWhere((key) => key.uid == keyRef.keyUid);
-    } catch (err) {
-      log("account: error removing key: $keyRef");
-      return false;
-    }
-    await keys.set(keysList);
-    return true;
-  }
-
-  /// Add a list of keys to the user's keystore.
-  Future<void> addKeys(List<StoredEthereumKey> newKeys) async {
-    var allKeys = ((await keys.get()) ?? []) + newKeys;
-    return await keys.set(allKeys);
-  }
-
-  ///
-  /// End: Keys
-  ///
-
-   */
-
   // Get the user editable configuration file text.
   Future<String> getUserConfig() async {
     return (await SharedPreferences.getInstance())
@@ -157,6 +73,9 @@ class UserPreferences {
         .setString(UserPreferenceKey.UserConfig.toString(), value);
   }
 
+  /// User selected locale override (e.g. en, pt_BR)
+  ObservableStringPreference languageOverride =
+      ObservableStringPreference(UserPreferenceKey.LanguageOverride);
 }
 
 // TODO: Remove unneeded items.
@@ -166,4 +85,5 @@ enum UserPreferenceKey {
   ActiveAccounts,
   CachedDiscoveredAccounts,
   Transactions,
+  LanguageOverride,
 }

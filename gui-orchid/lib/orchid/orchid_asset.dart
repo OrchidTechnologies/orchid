@@ -112,6 +112,10 @@ class OrchidAssetSvg {
   final openvpn = SvgPicture.asset(openvpn_path);
   static const orchid_logo_side_path = 'assets/svg/orchid_logo_side.svg';
   final orchid_logo_side = SvgPicture.asset(orchid_logo_side_path);
+  static const orchid_logo_small_path = 'assets/svg/orchid_logo_small.svg';
+  final orchid_logo_small = SvgPicture.asset(orchid_logo_small_path);
+  static const orchid_logo_text_path = 'assets/svg/orchid_logo_text.svg';
+  final orchid_logo_text = SvgPicture.asset(orchid_logo_text_path);
   static const payments_path = 'assets/svg/payments.svg';
   final payments = SvgPicture.asset(payments_path);
   static const price_path = 'assets/svg/price.svg';

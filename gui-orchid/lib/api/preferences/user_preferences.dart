@@ -272,6 +272,10 @@ class UserPreferences {
   ObservableBoolPreference monitoringEnabled = ObservableBoolPreference(
       UserPreferenceKey.MonitoringEnabled,
       defaultValue: false);
+
+  /// User selected locale override (e.g. en, pt_BR)
+  ObservableStringPreference languageOverride =
+      ObservableStringPreference(UserPreferenceKey.LanguageOverride);
 }
 
 enum UserPreferenceKey {
@@ -286,4 +290,5 @@ enum UserPreferenceKey {
   ReleaseVersion,
   RoutingEnabled,
   MonitoringEnabled,
+  LanguageOverride,
 }

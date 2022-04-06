@@ -160,11 +160,6 @@ class UserPreferences {
       ObservableAccountSetPreference(
           UserPreferenceKey.CachedDiscoveredAccounts);
 
-  /// Identicons UI
-  ObservableBoolPreference useBlockiesIdenticons = ObservableBoolPreference(
-      UserPreferenceKey.UseBlockiesIdenticons,
-      defaultValue: false);
-
   ///
   /// Begin: dapp transactions
   ///
@@ -224,6 +219,14 @@ class UserPreferences {
   /// End: dapp transactions
   ///
 
+  /// Identicons UI
+  ObservableBoolPreference useBlockiesIdenticons = ObservableBoolPreference(
+      UserPreferenceKey.UseBlockiesIdenticons,
+      defaultValue: false);
+
+  /// User selected locale override (e.g. en, pt_BR)
+  ObservableStringPreference languageOverride =
+      ObservableStringPreference(UserPreferenceKey.LanguageOverride);
 }
 
 // TODO: Remove unneeded items.
@@ -233,4 +236,5 @@ enum UserPreferenceKey {
   CachedDiscoveredAccounts,
   Transactions,
   UseBlockiesIdenticons,
+  LanguageOverride,
 }

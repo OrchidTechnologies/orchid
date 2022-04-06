@@ -15,6 +15,15 @@ extension WidgetListExtensions<Widget> on List<Widget> {
       this.insert(i, SizedBox(width: value, height: value) as Widget);
     }
   }
+
+  /// Adds the [value] between all elements in the list
+  List<Widget> separatedWith(Widget value) {
+    var list = List<Widget>.from(this);
+    for (int i = this.length - 1; i > 0; i--) {
+      list.insert(i, value);
+    }
+    return list;
+  }
 }
 
 extension PaddingExtensions on Widget {

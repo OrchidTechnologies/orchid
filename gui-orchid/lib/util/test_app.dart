@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/orchid/orchid_desktop_dragscroll.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:orchid/api/orchid_platform.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 /*
   e.g.
@@ -27,18 +25,8 @@ class TestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      localizationsDelegates: [
-        S.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: OrchidPlatform.languageOverride == null
-          ? S.supportedLocales
-          : [
-              Locale.fromSubtags(
-                  languageCode: OrchidPlatform.languageOverrideCode,
-                  countryCode: OrchidPlatform.languageOverrideCountry)
-            ],
+      localizationsDelegates: OrchidLanguage.localizationsDelegates,
+      supportedLocales: OrchidLanguage.supportedLocales,
       home: Material(
         child: Container(
           decoration:

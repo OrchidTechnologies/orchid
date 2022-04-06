@@ -8,6 +8,8 @@ class OrchidActionButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final double gradientRadius;
+  final TextStyle textStyle;
+  final double width;
 
   // TODO: Remove and behave like a regular button relying on onPress
   final bool enabled;
@@ -19,6 +21,8 @@ class OrchidActionButton extends StatelessWidget {
     // TODO: Remove and behave like a regular button relying on onPress
     @required this.enabled,
     this.gradientRadius = 3.0,
+    this.textStyle,
+    this.width,
   }) : super(key: key);
 
   @override
@@ -33,7 +37,7 @@ class OrchidActionButton extends StatelessWidget {
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: SizedBox(
-          width: 294,
+          width: width ?? 294,
           height: 52,
           child: GradientBorder(
             strokeWidth: 1.5,
@@ -50,7 +54,8 @@ class OrchidActionButton extends StatelessWidget {
                     gradient: enabled ? radialGradient : null,
                   ),
                   child: Center(
-                      child: Text(text, style: OrchidText.button.black)),
+                      child: Text(text,
+                          style: textStyle ?? OrchidText.button.black)),
                 ),
                 // If onPressed is null this does not render the background color
                 onPressed: onPressed),

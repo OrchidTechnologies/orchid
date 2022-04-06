@@ -8,6 +8,7 @@ import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.d
 import 'package:orchid/api/orchid_eth/abi_encode.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
+import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/util/json.dart';
 import 'package:orchid/util/units.dart';
 import 'package:web3dart/crypto.dart';
@@ -399,7 +400,7 @@ class OrchidPACServer {
     @required Map<String, dynamic> paramsIn,
   }) async {
     var clientVersion = await OrchidAPI().versionString();
-    var clientLocale = OrchidPlatform.staticLocale.toLanguageTag();
+    var clientLocale = OrchidLanguage.staticLocale.toLanguageTag();
 
     // Guard the unknown map type
     var params = Map<String, dynamic>();

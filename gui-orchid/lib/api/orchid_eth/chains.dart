@@ -56,6 +56,7 @@ class Chains {
     nativeCurrency: Tokens.ETH,
     providerUrl: defaultEthereumProviderUrl,
     iconPath: ethIconPath,
+    explorerUrl: 'https://etherscan.io/',
     supportsLogs: true,
   );
 
@@ -77,7 +78,7 @@ class Chains {
   static const int AVALANCHE_CHAINID = 43114;
   static Chain Avalanche = Chain(
     chainId: AVALANCHE_CHAINID,
-    name: 'Avalanche Network',
+    name: 'Avalanche',
     nativeCurrency: Tokens.AVAX,
     providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
@@ -89,7 +90,7 @@ class Chains {
   static const int BSC_CHAINID = 56;
   static Chain BinanceSmartChain = Chain(
     chainId: BSC_CHAINID,
-    name: 'Binance Smart Chain',
+    name: 'Binance',
     nativeCurrency: Tokens.BNB,
     providerUrl: 'https://bsc-dataseed1.binance.org',
     iconPath: OrchidAssetSvgChain.binance_smart_chain_path,
@@ -170,7 +171,7 @@ class Chains {
     explorerUrl: 'https://teloscan.io',
   );
 
-  // RSK
+// RSK (BTC)
   static const int RSK_CHAINID = 30;
   static Chain RSK = Chain(
     chainId: RSK_CHAINID,

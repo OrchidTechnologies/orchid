@@ -19,8 +19,8 @@ class OrchidText {
   static TextStyle button = medium_18_025.copyWith(height: 1.9);
 
   static TextStyle highlight = regular_24_050;
-  static TextStyle body1 = medium_16_025;
-  static TextStyle body2 = regular_16_025;
+  static TextStyle body1 = medium_16_025; // w500
+  static TextStyle body2 = regular_16_025; // w400
   static TextStyle caption = regular_14;
 
   static TextStyle medium_20_050 = TextStyle(
@@ -47,6 +47,7 @@ class OrchidText {
       letterSpacing: 0.25);
   static TextStyle regular_16_025 = normal_16_025;
   static TextStyle medium_16_025 = normal_16_025.medium;
+  static TextStyle medium_14 = normal_14.medium;
 
   static TextStyle normal_18_025 = TextStyle(
     color: Colors.white,
@@ -54,10 +55,11 @@ class OrchidText {
     height: 1.0,
     fontFamily: "Baloo2",
     fontWeight: FontWeight.normal,
+    // w400
     letterSpacing: 0.25,
   );
-  static TextStyle regular_18_025 = normal_18_025;
-  static TextStyle medium_18_025 = normal_18_025.medium;
+  static TextStyle regular_18_025 = normal_18_025; // w400
+  static TextStyle medium_18_025 = normal_18_025.medium; // w500
 
   static TextStyle normal_24_050 = TextStyle(
     fontFamily: "Baloo2",
@@ -106,6 +108,10 @@ extension TextStyleExtensions on TextStyle {
 
   TextStyle get medium {
     return this.copyWith(fontWeight: FontWeight.w500);
+  }
+
+  TextStyle get semibold {
+    return this.copyWith(fontWeight: FontWeight.w600);
   }
 
   TextStyle get bold {
@@ -171,6 +177,10 @@ extension TextExtensions on Text {
 extension OrchidTextStyleExtensions on TextStyle {
   TextStyle get purpleBright {
     return this.copyWith(color: OrchidColors.purple_bright);
+  }
+
+  TextStyle get newPurpleBright {
+    return this.copyWith(color: OrchidColors.new_purple_bright);
   }
 
   TextStyle get tappable {

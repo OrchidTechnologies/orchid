@@ -4,7 +4,7 @@ import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/util/polling_builder.dart';
 import 'package:orchid/util/units.dart';
 
-// TODO: expand to multi-token
+// TODO: expand to multi-token, selectable currency
 class TokenPriceBuilder extends StatelessWidget {
   final TokenType tokenType;
   final int seconds;
@@ -13,7 +13,7 @@ class TokenPriceBuilder extends StatelessWidget {
   const TokenPriceBuilder({
     Key key,
     @required this.tokenType,
-    @required this.seconds,
+    this.seconds = 30,
     @required this.builder,
   }) : super(key: key);
 

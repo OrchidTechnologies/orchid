@@ -5,20 +5,26 @@ class DappButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final Widget trailing;
+  final TextStyle textStyle;
+  final double width;
 
   const DappButton({
     Key key,
     @required this.text,
     @required this.onPressed,
     this.trailing,
+    this.textStyle,
+    this.width,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return OrchidActionButton(
       text: text,
+      textStyle: textStyle,
       onPressed: onPressed ?? () {},
       enabled: onPressed != null,
+      width: width,
     );
   }
 }

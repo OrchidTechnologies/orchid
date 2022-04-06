@@ -1,8 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:orchid/api/orchid_platform.dart';
+import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
@@ -17,8 +16,8 @@ class OrchidApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'Orchid',
-      localizationsDelegates: OrchidPlatform.localizationsDelegates,
-      supportedLocales: OrchidPlatform.supportedLocales,
+      localizationsDelegates: OrchidLanguage.localizationsDelegates,
+      supportedLocales: OrchidLanguage.supportedLocales,
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
@@ -39,7 +38,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   @override
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
-    OrchidPlatform.staticLocale = locale;
+    OrchidLanguage.staticLocale = locale;
     var preferredSize = Size.fromHeight(kToolbarHeight);
     return Container(
       decoration:

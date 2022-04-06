@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
+import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
@@ -19,8 +20,8 @@ class _OrchidAppState extends State<OrchidApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Orchid',
-      localizationsDelegates: OrchidPlatform.localizationsDelegates,
-      supportedLocales: OrchidPlatform.supportedLocales,
+      localizationsDelegates: OrchidLanguage.localizationsDelegates,
+      supportedLocales: OrchidLanguage.supportedLocales,
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
@@ -48,7 +49,7 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   @override
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
-    OrchidPlatform.staticLocale = locale;
+    OrchidLanguage.staticLocale = locale;
     final color = OrchidUserParams().getColor('background_color');
     return Container(
       color: color,
