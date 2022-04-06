@@ -52,7 +52,7 @@ Pool::Pool() :
 {
 }
 
-void Pool::Shut() {
+Pool::~Pool() {
     { std::unique_lock<std::mutex> lock(mutex_);
         end_ = nullptr; }
     ready_.set();

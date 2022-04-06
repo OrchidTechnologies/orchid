@@ -50,7 +50,7 @@ class Pool {
 
   public:
     Pool();
-    void Shut();
+    ~Pool();
 
   private:
     void Push(Work *work) noexcept;
