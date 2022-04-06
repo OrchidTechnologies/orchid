@@ -254,7 +254,7 @@ static Any _(const std::string &arg) {
 
 template <>
 struct Option<S<Executor>> {
-static cppcoro::shared_task<S<Executor>> _(std::string_view arg) {
+static cppcoro::shared_task<S<Executor>> _(std::string arg) {
     if (boost::algorithm::starts_with(arg, "@")) {
         const auto json(Parse(Load(arg.substr(1))));
         std::cout << json << std::endl;
