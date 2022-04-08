@@ -56,14 +56,15 @@ class Chains {
     nativeCurrency: Tokens.ETH,
     providerUrl: defaultEthereumProviderUrl,
     iconPath: ethIconPath,
+    explorerUrl: 'https://etherscan.io/',
     supportsLogs: true,
   );
 
   // Gnosis (xDAI)
   // xDai Chain has been rebranded to Gnosis Chain
-  static const int XDAI_CHAINID = 100;
-  static Chain xDAI = Chain(
-    chainId: XDAI_CHAINID,
+  static const int GNOSIS_CHAINID = 100;
+  static Chain Gnosis = Chain(
+    chainId: GNOSIS_CHAINID,
     name: 'Gnosis',
     nativeCurrency: Tokens.XDAI,
     // providerUrl: 'https://rpc.xdaichain.com/',
@@ -77,7 +78,7 @@ class Chains {
   static const int AVALANCHE_CHAINID = 43114;
   static Chain Avalanche = Chain(
     chainId: AVALANCHE_CHAINID,
-    name: 'Avalanche Network',
+    name: 'Avalanche',
     nativeCurrency: Tokens.AVAX,
     providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
@@ -89,7 +90,7 @@ class Chains {
   static const int BSC_CHAINID = 56;
   static Chain BinanceSmartChain = Chain(
     chainId: BSC_CHAINID,
-    name: 'Binance Smart Chain',
+    name: 'Binance',
     nativeCurrency: Tokens.BNB,
     providerUrl: 'https://bsc-dataseed1.binance.org',
     iconPath: OrchidAssetSvgChain.binance_smart_chain_path,
@@ -170,6 +171,7 @@ class Chains {
     explorerUrl: 'https://teloscan.io',
   );
 
+// RSK (BTC)
   static const int RSK_CHAINID = 30;
   static Chain RSK = Chain(
     chainId: RSK_CHAINID,
@@ -180,16 +182,28 @@ class Chains {
     explorerUrl: 'https://explorer.rsk.co',
   );
 
+  // Celo (CELO)
+  static const int CELO_CHAINID = 42220;
+  static Chain Celo = Chain(
+    chainId: CELO_CHAINID,
+    name: 'CELO',
+    nativeCurrency: Tokens.CELO,
+    providerUrl: 'https://forno.celo.org',
+    iconPath: OrchidAssetSvgChain.celo_chain_path,
+    explorerUrl: 'https://explorer.celo.org',
+  );
+
   static Map<int, Chain> map = [
-    GanacheTest,
-    Ethereum,
-    xDAI,
+    Aurora,
     Avalanche,
     BinanceSmartChain,
-    Polygon,
-    Optimism,
-    Aurora,
+    Celo,
+    Ethereum,
     Fantom,
+    GanacheTest,
+    Gnosis,
+    Optimism,
+    Polygon,
     // ArbitrumOne,
     // RSK,
     // Telos,

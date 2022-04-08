@@ -112,6 +112,10 @@ class OrchidAssetSvg {
   final openvpn = SvgPicture.asset(openvpn_path);
   static const orchid_logo_side_path = 'assets/svg/orchid_logo_side.svg';
   final orchid_logo_side = SvgPicture.asset(orchid_logo_side_path);
+  static const orchid_logo_small_path = 'assets/svg/orchid_logo_small.svg';
+  final orchid_logo_small = SvgPicture.asset(orchid_logo_small_path);
+  static const orchid_logo_text_path = 'assets/svg/orchid_logo_text.svg';
+  final orchid_logo_text = SvgPicture.asset(orchid_logo_text_path);
   static const payments_path = 'assets/svg/payments.svg';
   final payments = SvgPicture.asset(payments_path);
   static const price_path = 'assets/svg/price.svg';
@@ -145,6 +149,8 @@ class OrchidAssetSvgChain {
   final arbitrum_chain = SvgPicture.asset(arbitrum_chain_path);
   static const binance_smart_chain_path = 'assets/svg/chains/binance-smart-chain.svg';
   final binance_smart_chain = SvgPicture.asset(binance_smart_chain_path);
+  static const celo_chain_path = 'assets/svg/chains/celo-chain.svg';
+  final celo_chain = SvgPicture.asset(celo_chain_path);
   static const gnossis_chain_path = 'assets/svg/chains/gnossis-chain.svg';
   final gnossis_chain = SvgPicture.asset(gnossis_chain_path);
   static const near_aurora_chain_path = 'assets/svg/chains/near-aurora-chain.svg';

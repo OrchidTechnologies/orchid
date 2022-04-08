@@ -29,6 +29,11 @@ class OrchidColors {
   static const valid = active;
   static const enabled = active;
 
+  static const new_purple = Color(0xff51426A);
+  static const new_purple_divider = Color(0xFF2F253F);
+  static const selected_color_dark = new_purple_divider;
+  static const new_purple_bright = Color(0xFFCBAAFF);
+
   // For debugging convenience
   static const orange = Colors.orange;
   static const green = Colors.green;

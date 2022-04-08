@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 
-// TODO: Move to util
 class AppSize {
   static const Size small_android = Size(360, 640);
   static const Size iphone_se = Size(320, 568);
@@ -9,9 +9,15 @@ class AppSize {
 
   Size size;
 
+  AppSize(BuildContext context) {
+    this.size = MediaQuery.of(context).size;
+    // log("XXX size = $size");
+  }
+
   bool tallerThan(Size targetSize) {
     return size.height > targetSize.height;
   }
+
   bool shorterThan(Size targetSize) {
     return !tallerThan(targetSize);
   }
@@ -19,12 +25,13 @@ class AppSize {
   bool widerThan(Size targetSize) {
     return size.width > targetSize.width;
   }
+
   bool narrowerThan(Size targetSize) {
     return !widerThan(targetSize);
   }
 
-  AppSize(BuildContext context) {
-    this.size = MediaQuery.of(context).size;
+  bool narrowerThanWidth(double width) {
+    return !widerThan(Size(width, 0));
   }
 
   static Widget constrainMaxSizeDefaults(Widget child) {

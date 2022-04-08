@@ -1,10 +1,5 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-
-import 'configuration/orchid_user_config/orchid_user_config.dart';
 import 'orchid_log_api.dart';
 
 /// Support overriding the platform for testing.
@@ -12,48 +7,6 @@ class OrchidPlatform {
   // To maintain synchronous operation this value is set on startup and
   // after changing the advanced config (which may override it).
   static bool pretendToBeAndroid = false;
-
-  /// If non-null this is a language code with optional country code, e.g.
-  /// en or en_US
-  static String languageOverride;
-
-  /// Fetch any language override from the environment or user config.
-  static void initLanguageOverride() {
-    var languageOverride = (const String.fromEnvironment('language',
-            defaultValue: null)) ??
-        OrchidUserConfig().getUserConfigJS().evalStringDefault('lang', null);
-    if (languageOverride != null &&
-        OrchidPlatform.hasLanguage(languageOverride)) {
-      OrchidPlatform.languageOverride = languageOverride;
-    }
-  }
-
-  /// Get the language code fro the language override
-  static String get languageOverrideCode {
-    return languageOverride.split('_')[0];
-  }
-
-  /// Get the country code fro the language override or null if there is none.
-  static String get languageOverrideCountry {
-    return languageOverride.contains('_')
-        ? languageOverride.split('_')[1]
-        : null;
-  }
-
-  /// lang should be a language code with optional country code, e.g.
-  /// en or en_US
-  static bool hasLanguage(String lang) {
-    return S.supportedLocales
-        .map((e) => (e.countryCode != null && e.countryCode.isNotEmpty)
-            ? e.languageCode + '_' + e.countryCode
-            : e.languageCode)
-        .contains(lang);
-  }
-
-  // Providing this static snapshot of the locale for use in the
-  // api layer that does not have access to the context.
-  // This should be updated on locale changes from the context.
-  static Locale staticLocale;
 
   static bool get isMacOS {
     try {
@@ -71,22 +24,6 @@ class OrchidPlatform {
       OrchidPlatform.isLinux;
 
   static bool supportsScanning = !doesNotSupportScanning;
-
-  static final localizationsDelegates = [
-    S.delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
-
-  static Iterable<Locale> get supportedLocales {
-    return OrchidPlatform.languageOverride == null
-        ? S.supportedLocales
-        : [
-            Locale.fromSubtags(
-                languageCode: OrchidPlatform.languageOverrideCode,
-                countryCode: OrchidPlatform.languageOverrideCountry)
-          ];
-  }
 
   static bool get isLinux {
     try {

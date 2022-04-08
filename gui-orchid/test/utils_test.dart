@@ -71,7 +71,7 @@ void main() {
      */
 
     test('misc', () async {
-      var currency = Chains.xDAI.nativeCurrency;
+      var currency = Chains.Gnosis.nativeCurrency;
       // var usdToTokenRate = await OrchidPricing().usdToTokenRate(currency);
       var usdToTokenRate = 1.0;
       var totalUsdValue = USD(40);

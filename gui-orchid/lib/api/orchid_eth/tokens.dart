@@ -31,7 +31,7 @@ class Tokens {
     // Binance lists DAIUSDT but the value is bogus. The real pair is USDTDAI, so invert.
     exchangeRateSource:
         BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
-    chainId: Chains.XDAI_CHAINID,
+    chainId: Chains.GNOSIS_CHAINID,
     iconPath: OrchidAssetSvgToken.xdai_token_path,
   );
 
@@ -107,5 +107,12 @@ class Tokens {
     exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'BTC'),
     chainId: Chains.RSK_CHAINID,
     iconPath: OrchidAssetSvgToken.bitcoin_btc_token_path,
+  );
+
+  static const TokenType CELO = TokenType(
+    symbol: 'CELO',
+    exchangeRateSource: BinanceExchangeRateSource(),
+    chainId: Chains.CELO_CHAINID,
+    iconPath: OrchidAssetSvgToken.celo_token_path,
   );
 }

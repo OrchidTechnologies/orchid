@@ -35,7 +35,7 @@ class AccountMock {
   static final account1xdai = MockAccount(
     signerKey: key1,
     version: 1,
-    chain: Chains.xDAI,
+    chain: Chains.Gnosis,
     funder: funder1,
     mockLotteryPot: MockLotteryPot(
       balance: Tokens.XDAI.fromDouble(0.94),

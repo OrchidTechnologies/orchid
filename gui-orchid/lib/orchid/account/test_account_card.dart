@@ -32,7 +32,7 @@ class _TestState extends State<_Test> {
     var funder = "0x7dFae1C74a946FCb50e7376Ff40fe2Aa3A2F9B2b";
     account = AccountDetailPoller(
       account: Account.fromSignerAddress(
-        chainId: Chains.XDAI_CHAINID,
+        chainId: Chains.GNOSIS_CHAINID,
         funder: EthereumAddress.from(funder),
         signerAddress: EthereumAddress.from(signer),
       ),

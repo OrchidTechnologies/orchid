@@ -1,8 +1,10 @@
+import 'dart:io';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_platform.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/pages/dapp_home.dart';
 
@@ -13,37 +15,28 @@ class OrchidApp extends StatefulWidget {
 }
 
 class _OrchidAppState extends State<OrchidApp> {
-  final homePage = OrchidAppNoTabs();
-
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
-      title: 'Orchid',
-      localizationsDelegates: [
-        S.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: OrchidPlatform.languageOverride == null
-          ? S.supportedLocales
-          : [
-              Locale.fromSubtags(
-                  languageCode: OrchidPlatform.languageOverrideCode,
-                  countryCode: OrchidPlatform.languageOverrideCountry)
-            ],
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-      ),
-      debugShowCheckedModeBanner: false,
-      // scrollBehavior: OrchidDesktopDragScrollBehavior(),
-      // Without this the root widget is created twice?
-      onGenerateInitialRoutes: (initialRoute) =>
-          [MaterialPageRoute(builder: (_) => homePage)],
-      onGenerateRoute: (settings) {
-        //log('generate route: $settings');
-        return MaterialPageRoute(builder: (_) => homePage);
-      },
-    );
+    return UserPreferences().languageOverride.builder((languageOverride) {
+      if (languageOverride != null) {
+        log("XXX: language override = $languageOverride");
+      }
+      return new MaterialApp(
+        title: 'Orchid',
+        localizationsDelegates: OrchidLanguage.localizationsDelegates,
+        supportedLocales: OrchidLanguage.supportedLocales,
+        locale: OrchidLanguage.languageOverrideLocale,
+        theme: ThemeData(primarySwatch: Colors.deepPurple),
+        debugShowCheckedModeBanner: false,
+        // The root widget is created twice?
+        onGenerateInitialRoutes: (initialRoute) =>
+            [MaterialPageRoute(builder: (_) => OrchidAppNoTabs())],
+        onGenerateRoute: (settings) {
+          //log('generate route: $settings');
+          return MaterialPageRoute(builder: (_) => OrchidAppNoTabs());
+        },
+      );
+    });
   }
 }
 
@@ -62,7 +55,8 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   @override
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
-    OrchidPlatform.staticLocale = locale;
+    OrchidLanguage.staticLocale = locale;
+    log("XXX: OrchidAppNoTabs build, locale/staticLocale = ${OrchidLanguage.staticLocale}");
     return Container(
       decoration:
           BoxDecoration(gradient: OrchidGradients.blackGradientBackground),
@@ -78,4 +72,3 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
     return Center(child: DappHome());
   }
 }
-

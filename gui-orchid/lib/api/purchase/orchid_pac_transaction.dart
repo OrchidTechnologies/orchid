@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
+import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/enums.dart';
@@ -122,7 +123,7 @@ class PacTransaction {
   Future<String> userDebugString() async {
     var json = toJson();
     json['os'] = OrchidPlatform.operatingSystem;
-    json['locale'] = OrchidPlatform.staticLocale.toString();
+    json['locale'] = OrchidLanguage.staticLocale.toString();
     json['appVersion'] = await OrchidAPI().versionString();
     return jsonEncode(json);
   }
