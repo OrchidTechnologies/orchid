@@ -17,11 +17,8 @@
 	path = min-webrtc/libsrtp
 	url = https://chromium.googlesource.com/chromium/deps/libsrtp
 [submodule "usrsctp"]
-	path = min-webrtc/usrsctp
+	path = srv-shared/usrsctp
 	url = https://github.com/sctplab/usrsctp.git
-[submodule "sctp-idata"]
-	path = min-webrtc/sctp-idata
-	url = https://github.com/sctplab/sctp-idata.git
 [submodule "webrtc"]
 	path = min-webrtc/webrtc
 	url = https://webrtc.googlesource.com/src

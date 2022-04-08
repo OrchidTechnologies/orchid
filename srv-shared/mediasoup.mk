@@ -21,6 +21,20 @@
 cflags += -I$(pwd)/json/include/nlohmann
 cflags += -I$(pwd)/json/include
 
+
+source += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
+source += $(filter-out %/sctp_cc_functions.c,$(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c))
+source += $(pwd)/congestion.cc
+cflags += -I$(pwd)/usrsctp
+cflags += -I$(pwd)/usrsctp/usrsctplib
+cflags += -I$(pwd)/sctp-idata/src
+
+ifeq ($(target),win)
+cflags/$(pwd)/usrsctp/usrsctplib/ += -Wno-unused-function
+cflags/$(pwd)/congestion.cc += -Wno-unused-function
+endif
+
+
 $(output)/extra/mediasoup.hpp: $(pwd)/mediasoup/src/supportedRtpCapabilities.ts
 	mkdir -p $(dir $@)
 	sed -e '/^[^ \t{}]/d;s/};/}/;s/[ \t]//g;/^\/\//d;s/'"'"'/"/g;s/\(^\|[{,]\)\([a-zA-Z]*\):/\1"\2":/g' $< | tr -d $$'\n' | xxd -i >$@

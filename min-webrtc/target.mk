@@ -155,18 +155,6 @@ cflags/$(pwd/libsrtp)/ += $(libsrtp)
 cflags/$(pwd/webrtc)/pc/srtp_session.cc += $(libsrtp)
 cflags/$(pwd/webrtc)/pc/external_hmac.cc += -I$(pwd/libsrtp)/config
 
-webrtc += $(wildcard $(pwd)/usrsctp/usrsctplib/*.c)
-webrtc += $(filter-out %/sctp_cc_functions.c,$(wildcard $(pwd)/usrsctp/usrsctplib/netinet/*.c))
-source += $(pwd)/congestion.cc
-cflags += -I$(pwd)/usrsctp
-cflags += -I$(pwd)/usrsctp/usrsctplib
-cflags += -I$(pwd)/sctp-idata/src
-
-ifeq ($(target),win)
-cflags/$(pwd)/usrsctp/usrsctplib/ += -Wno-unused-function
-cflags/$(pwd)/congestion.cc += -Wno-unused-function
-endif
-
 webrtc += $(wildcard $(pwd)/crc32c/src/*.cc)
 
 
@@ -217,7 +205,6 @@ source += $(webrtc)
 
 cflags += -DWEBRTC_HAVE_SCTP
 cflags += -DWEBRTC_HAVE_DCSCTP
-cflags += -DWEBRTC_HAVE_USRSCTP
 
 cflags += -DABSL_ALLOCATOR_NOTHROW=0
 #cflags += -DDCHECK_ALWAYS_ON
@@ -253,6 +240,13 @@ chacks/$(pwd/webrtc)/pc/rtc_stats_collector.cc += s/rtc::make_ref_counted<RTCSta
 
 # XXX: https://bugs.chromium.org/p/webrtc/issues/detail?id=12967
 chacks/$(pwd/webrtc)/p2p/base/dtls_transport.cc += /Should not happen\./,/;/d;
+
+# XXX: a bug needs to be filed for this :/
+# vpn/p2p/rtc/webrtc/rtc_base/checks.cc:49:3: error: ignoring return value of function declared with 'warn_unused_result' attribute [-Werror,-Wunused-result]
+#   fwrite(output.data(), output.size(), 1, stderr);
+#   ^~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cflags/$(pwd/webrtc)/rtc_base/checks.cc += -Wno-unused-result
+
 
 include $(pwd)/openssl.mk
 

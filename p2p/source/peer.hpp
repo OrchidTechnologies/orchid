@@ -106,7 +106,6 @@ class Peer :
         return peer_;
     }
 
-    task<struct socket *> Internal();
     task<cricket::Candidate> Candidate();
 
     void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState state) noexcept override;
