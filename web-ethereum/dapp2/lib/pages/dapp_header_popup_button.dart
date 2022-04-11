@@ -1,4 +1,4 @@
-import 'package:orchid/dapp.dart';
+import 'package:orchid/orchid.dart';
 
 /// Rounded rect popup menu button with the dapp theme.
 class DappHeaderPopupMenuButton<T> extends StatelessWidget {

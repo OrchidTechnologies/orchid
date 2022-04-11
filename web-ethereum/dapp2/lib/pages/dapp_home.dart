@@ -1,4 +1,4 @@
-import 'package:orchid/dapp.dart';
+import 'package:orchid/orchid.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_crypto.dart';

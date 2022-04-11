@@ -1,4 +1,4 @@
-import 'package:orchid/dapp.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/common/token_price_builder.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/common/tap_copy_text.dart';

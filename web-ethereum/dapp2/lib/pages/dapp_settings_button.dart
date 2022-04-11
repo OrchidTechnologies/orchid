@@ -1,4 +1,4 @@
-import 'package:orchid/dapp.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';

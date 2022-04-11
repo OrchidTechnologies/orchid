@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../orchid_eth/orchid_chain_config.dart';
 import '../orchid_log_api.dart';
+import 'chain_config_preferences.dart';
 
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
@@ -76,6 +78,16 @@ class UserPreferences {
   /// User selected locale override (e.g. en, pt_BR)
   ObservableStringPreference languageOverride =
       ObservableStringPreference(UserPreferenceKey.LanguageOverride);
+
+  // TODO: This is not really applicable in the web context.
+  /// User Chain config overrides
+  ObservableChainConfigPreference chainConfig =
+      ObservableChainConfigPreference(UserPreferenceKey.ChainConfig);
+
+  // TODO: This is not really applicable in the web context.
+  ChainConfig chainConfigFor(int chainId) {
+    return ChainConfig.map(chainConfig.get())[chainId];
+  }
 }
 
 // TODO: Remove unneeded items.
@@ -86,4 +98,5 @@ enum UserPreferenceKey {
   CachedDiscoveredAccounts,
   Transactions,
   LanguageOverride,
+  ChainConfig,
 }

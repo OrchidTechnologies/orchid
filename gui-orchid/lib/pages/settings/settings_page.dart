@@ -8,6 +8,7 @@ import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
@@ -114,6 +115,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                 ),
               )),
+
+              // RPC Settings
+              _divided(PageTile.route(
+                  // leading: Icon(Icons.cloud_outlined, color: Colors.white, size: 24),
+                  leading: OrchidAsset.chain.unknown_chain_no_bg,
+                  title: "Chain Settings",
+                  routeName: '/settings/rpc',
+                  context: context)),
 
               // Advanced Configuration
               _divided(PageTile(

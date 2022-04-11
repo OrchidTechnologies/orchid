@@ -247,6 +247,7 @@ class _ConnectPageState extends State<ConnectPage>
 
   @override
   Widget build(BuildContext context) {
+    /*
     try {
       log("XXX: first launch: "
           "_hasDefaultIdentity = $_hasDefaultIdentity, "
@@ -255,6 +256,7 @@ class _ConnectPageState extends State<ConnectPage>
     } catch (err) {
       log("first launch: Error should not happen: $err");
     }
+     */
 
     return Stack(
       children: <Widget>[

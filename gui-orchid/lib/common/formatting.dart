@@ -24,6 +24,13 @@ extension WidgetListExtensions<Widget> on List<Widget> {
     }
     return list;
   }
+
+  List<Widget> surroundedWith(Widget value) {
+    var list = List<Widget>.from(this).separatedWith(value);
+    list.insert(0, value);
+    list.add(value);
+    return list;
+  }
 }
 
 extension PaddingExtensions on Widget {

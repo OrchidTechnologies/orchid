@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
-import 'package:rxdart/rxdart.dart';
 
 void log(String text) {
   OrchidLogAPI.defaultLogAPI.write(text);
@@ -20,17 +18,24 @@ void logWrapped(String text) {
 abstract class OrchidLogAPI {
   static OrchidLogAPI defaultLogAPI = MemoryOrchidLogAPI();
 
+  bool _enabled = true;
+
   /// Notify observers when the log file has updated.
-  PublishSubject<void> logChanged = PublishSubject<void>();
+  final logChanged = ChangeNotifier();
 
   /// Enable or disable logging.
-  Future<void> setEnabled(bool enabled);
+  set enabled(bool value) {
+    _enabled = value;
+    logChanged.notifyListeners();
+  }
 
   /// Get the logging enabled status.
-  Future<bool> getEnabled();
+  bool get enabled {
+    return _enabled;
+  }
 
   /// Get the current log contents.
-  Future<String> get();
+  List<String> get();
 
   /// Write the text to the log.
   void write(String text);
@@ -39,32 +44,44 @@ abstract class OrchidLogAPI {
   void clear();
 }
 
+class LogLine {
+  static int nextId = 0;
+
+  // A consecutive incrementing id
+  final int id;
+  final DateTime date;
+  final String text;
+
+  LogLine(this.text)
+      : this.id = nextId++,
+        this.date = DateTime.now();
+
+  String withDate() {
+    final timeStamp = DateTime.now().toIso8601String();
+    return timeStamp + ': ' + text;
+  }
+
+  @override
+  String toString() {
+    return withDate();
+  }
+}
+
 /// Transient, in-memory log implementation.
 class MemoryOrchidLogAPI extends OrchidLogAPI {
   static int maxLines = 5000;
-  bool _enabled = true;
 
-  // Note: All Dart code runs in a single Isolate by default so explicit
-  // Note: locking or synchronization should not be needed here.
   List<String> _buffer = <String>[];
 
-  /// Notify observers when the log file has updated.
-  PublishSubject<void> logChanged = PublishSubject<void>();
-
-  /// Enable or disable logging.
-  Future<void> setEnabled(bool enabled) async {
-    _enabled = enabled;
-    logChanged.add(null);
-  }
-
-  /// Get the logging enabled status.
-  Future<bool> getEnabled() async {
-    return _enabled;
-  }
-
   /// Get the current log contents.
-  Future<String> get() async {
-    return _buffer.join();
+  List<String> get() {
+    return List.unmodifiable(_buffer);
+    // var data = testLogData;
+    // data += data;
+    // data += data;
+    // data += data;
+    // data += data;
+    // return data;
   }
 
   /// Write the text to the log.
@@ -84,12 +101,12 @@ class MemoryOrchidLogAPI extends OrchidLogAPI {
       _buffer.removeAt(0);
     }
 
-    logChanged.add(null);
+    logChanged.notifyListeners();
   }
 
   /// Clear the log file.
   void clear() {
     _buffer.clear();
-    logChanged.add(null);
+    logChanged.notifyListeners();
   }
 }

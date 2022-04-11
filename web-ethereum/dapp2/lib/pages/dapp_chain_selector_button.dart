@@ -1,4 +1,4 @@
-import 'package:orchid/dapp.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/orchid/orchid_chain_selection.dart';
 import 'dapp_header_popup_button.dart';

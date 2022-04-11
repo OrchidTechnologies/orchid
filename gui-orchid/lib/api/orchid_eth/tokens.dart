@@ -1,3 +1,4 @@
+// ignore_for_file: non_constant_identifier_names
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/orchid/orchid_asset.dart';

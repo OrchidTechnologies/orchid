@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/orchid_chain_config.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/preferences/user_preferences_mock.dart';
@@ -9,6 +10,7 @@ import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../orchid_log_api.dart';
 import 'accounts_preferences.dart';
+import 'chain_config_preferences.dart';
 
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
@@ -273,9 +275,18 @@ class UserPreferences {
       UserPreferenceKey.MonitoringEnabled,
       defaultValue: false);
 
-  /// User selected locale override (e.g. en, pt_BR)
+  /// User locale override (e.g. en, pt_BR)
   ObservableStringPreference languageOverride =
       ObservableStringPreference(UserPreferenceKey.LanguageOverride);
+
+  /// User Chain config overrides
+  ObservableChainConfigPreference chainConfig =
+      ObservableChainConfigPreference(UserPreferenceKey.ChainConfig);
+
+  ChainConfig chainConfigFor(int chainId) {
+    return ChainConfig.map(chainConfig.get())[chainId];
+  }
+
 }
 
 enum UserPreferenceKey {
@@ -291,4 +302,5 @@ enum UserPreferenceKey {
   RoutingEnabled,
   MonitoringEnabled,
   LanguageOverride,
+  ChainConfig
 }

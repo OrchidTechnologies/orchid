@@ -4,6 +4,7 @@ import 'package:orchid/pages/help/privacy_page.dart';
 import 'package:orchid/pages/settings/advanced_configuration_page.dart';
 import 'package:orchid/pages/settings/manage_config_page.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
+import 'package:orchid/pages/settings/rpc_page.dart';
 import 'package:orchid/pages/settings/settings_page.dart';
 import 'account_manager/account_manager_page.dart';
 import 'circuit/circuit_page.dart';
@@ -18,6 +19,7 @@ class AppRoutes {
   static const String settings_vpn = "/settings/vpn";
   static const String settings_log = "/settings/log";
   static const String settings_dev = "/settings/dev";
+  static const String settings_rpc = "/settings/rpc";
   static const String configuration = "/settings/configuration";
   static const String help = "/help";
   static const String help_overview = "/help/overview";
@@ -42,6 +44,7 @@ class AppRoutes {
   static final Map<String, WidgetBuilder> routes = {
     settings: (context) => SettingsPage(),
     settings_log: (context) => LoggingPage(),
+    settings_rpc: (context) => RpcPage(),
     configuration: (context) => AdvancedConfigurationPage(),
     help_overview: (context) => HelpOverviewPage(),
     privacy: (context) => PrivacyPage(),

@@ -26,6 +26,7 @@ class OrchidTextField extends StatelessWidget {
   final double height;
 
   final VoidCallback onClear;
+  final ValueChanged<String> onChanged;
 
   OrchidTextField({
     this.hintText,
@@ -40,6 +41,7 @@ class OrchidTextField extends StatelessWidget {
     this.numeric = false,
     this.height = 56,
     this.onClear,
+    this.onChanged,
   });
 
   @override
@@ -49,7 +51,12 @@ class OrchidTextField extends StatelessWidget {
 
     final suffixIcon = hasValue && !readOnly
         ? IconButton(
-            onPressed: onClear ?? controller.clear,
+            onPressed: () {
+              controller.clear();
+              if (onClear != null) {
+                onClear();
+              }
+            },
             icon: Padding(
               padding: const EdgeInsets.only(right: 4.0),
               child: Icon(Icons.clear,
@@ -90,7 +97,7 @@ class OrchidTextField extends StatelessWidget {
                   textAlign: TextAlign.left,
                   textAlignVertical: TextAlignVertical.center,
                   maxLines: maxLines,
-                  onChanged: null,
+                  onChanged: onChanged,
                   focusNode: null,
                   decoration: InputDecoration(
                     isDense: true,

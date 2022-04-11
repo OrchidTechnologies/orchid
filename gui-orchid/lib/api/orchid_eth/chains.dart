@@ -5,16 +5,14 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
+import 'orchid_chain_config.dart';
 import 'token_type.dart';
 import 'package:orchid/util/collections.dart';
-
 import 'tokens.dart';
 
-/*
-TODO: embed Chain data from https://chainid.network/chains.json
-  https://github.com/ethereum-lists/chains
- */
+// Some chain data from https://github.com/ethereum-lists/chains
 class Chains {
   static final _defaultEthereumProviderUrl = 'htt' +
       'ps://et' +
@@ -43,7 +41,7 @@ class Chains {
     chainId: GANACHE_TEST_CHAINID,
     name: 'Ganache',
     nativeCurrency: Tokens.TOK,
-    providerUrl: 'http://127.0.0.1:7545/',
+    defaultProviderUrl: 'http://127.0.0.1:7545/',
     iconPath: OrchidAssetSvgChain.unknown_chain_path,
   );
 
@@ -54,7 +52,7 @@ class Chains {
     chainId: ETH_CHAINID,
     name: 'Ethereum',
     nativeCurrency: Tokens.ETH,
-    providerUrl: defaultEthereumProviderUrl,
+    defaultProviderUrl: defaultEthereumProviderUrl,
     iconPath: ethIconPath,
     explorerUrl: 'https://etherscan.io/',
     supportsLogs: true,
@@ -68,7 +66,7 @@ class Chains {
     name: 'Gnosis',
     nativeCurrency: Tokens.XDAI,
     // providerUrl: 'https://rpc.xdaichain.com/',
-    providerUrl: 'https://rpc.gnosischain.com/',
+    defaultProviderUrl: 'https://rpc.gnosischain.com/',
     iconPath: OrchidAssetSvgChain.gnossis_chain_path,
     explorerUrl: 'https://blockscout.com/xdai/mainnet/',
     supportsLogs: true,
@@ -80,7 +78,7 @@ class Chains {
     chainId: AVALANCHE_CHAINID,
     name: 'Avalanche',
     nativeCurrency: Tokens.AVAX,
-    providerUrl: 'https://api.avax.network/ext/bc/C/rpc',
+    defaultProviderUrl: 'https://api.avax.network/ext/bc/C/rpc',
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
     explorerUrl: 'https://snowtrace.io/',
     supportsLogs: true,
@@ -92,7 +90,7 @@ class Chains {
     chainId: BSC_CHAINID,
     name: 'Binance',
     nativeCurrency: Tokens.BNB,
-    providerUrl: 'https://bsc-dataseed1.binance.org',
+    defaultProviderUrl: 'https://bsc-dataseed1.binance.org',
     iconPath: OrchidAssetSvgChain.binance_smart_chain_path,
     explorerUrl: 'https://bscscan.com',
   );
@@ -103,7 +101,7 @@ class Chains {
     chainId: POLYGON_CHAINID,
     name: 'Polygon',
     nativeCurrency: Tokens.MATIC,
-    providerUrl: 'https://polygon-rpc.com/',
+    defaultProviderUrl: 'https://polygon-rpc.com/',
     iconPath: OrchidAssetSvgToken.matic_token_path,
     explorerUrl: 'https://polygonscan.com/',
   );
@@ -114,7 +112,7 @@ class Chains {
     chainId: OPTIMISM_CHAINID,
     name: 'Optimism',
     nativeCurrency: Tokens.OETH,
-    providerUrl: 'https://mainnet.optimism.io/',
+    defaultProviderUrl: 'https://mainnet.optimism.io/',
     iconPath: OrchidAssetSvgChain.optimism_chain_path,
     explorerUrl: 'https://optimistic.etherscan.io',
     // Additional L1 fees.
@@ -128,7 +126,7 @@ class Chains {
     chainId: ARBITRUM_ONE_CHAINID,
     name: 'Arbitrum One',
     nativeCurrency: Tokens.ARBITRUM_ETH,
-    providerUrl: 'https://arb1.arbitrum.io/rpc/',
+    defaultProviderUrl: 'https://arb1.arbitrum.io/rpc/',
     // TODO: missing chain icon
     iconPath: OrchidAssetSvgChain.unknown_chain_path,
     explorerUrl: 'https://arbiscan.io/',
@@ -140,7 +138,7 @@ class Chains {
     chainId: AURORA_CHAINID,
     name: 'Aurora',
     nativeCurrency: Tokens.AURORA_ETH,
-    providerUrl: 'https://mainnet.aurora.dev',
+    defaultProviderUrl: 'https://mainnet.aurora.dev',
     iconPath: OrchidAssetSvgChain.near_aurora_chain_path,
     // TODO: Missing explorer URL
     // Additional L1 fees.
@@ -154,7 +152,7 @@ class Chains {
     chainId: FANTOM_CHAINID,
     name: 'Fantom',
     nativeCurrency: Tokens.FTM,
-    providerUrl: 'https://rpc.ftm.tools',
+    defaultProviderUrl: 'https://rpc.ftm.tools',
     iconPath: OrchidAssetSvgToken.fantom_ftm_token_path,
     explorerUrl: 'https://ftmscan.com',
     supportsLogs: true,
@@ -166,7 +164,7 @@ class Chains {
     chainId: TELOS_CHAINID,
     name: 'Telos',
     nativeCurrency: Tokens.TLOS,
-    providerUrl: 'https://mainnet.telos.net/evm',
+    defaultProviderUrl: 'https://mainnet.telos.net/evm',
     iconPath: OrchidAssetSvgToken.telos_tlos_token_path,
     explorerUrl: 'https://teloscan.io',
   );
@@ -177,7 +175,7 @@ class Chains {
     chainId: RSK_CHAINID,
     name: 'RSK',
     nativeCurrency: Tokens.RBTC,
-    providerUrl: 'https://public-node.rsk.co',
+    defaultProviderUrl: 'https://public-node.rsk.co',
     iconPath: OrchidAssetSvgChain.rsk_chain_path,
     explorerUrl: 'https://explorer.rsk.co',
   );
@@ -188,12 +186,12 @@ class Chains {
     chainId: CELO_CHAINID,
     name: 'CELO',
     nativeCurrency: Tokens.CELO,
-    providerUrl: 'https://forno.celo.org',
+    defaultProviderUrl: 'https://forno.celo.org',
     iconPath: OrchidAssetSvgChain.celo_chain_path,
     explorerUrl: 'https://explorer.celo.org',
   );
 
-  static Map<int, Chain> map = [
+  static Map<int, Chain> _map = [
     Aurora,
     Avalanche,
     BinanceSmartChain,
@@ -208,6 +206,23 @@ class Chains {
     // RSK,
     // Telos,
   ].toMap(withKey: (e) => e.chainId, withValue: (e) => e);
+
+  /// The map of supportd chains, filtered to remove disabled chains.
+  static Map<int, Chain> get map {
+    // Remove disabled chains
+    final disabled = UserPreferences()
+        .chainConfig
+        .get()
+        .where((e) => !e.enabled)
+        .map((e) => e.chainId);
+    var map = Map.of(_map);
+    map.removeWhere((key, _) => disabled.contains(key));
+    return map;
+  }
+
+  static Map<int, Chain> get allChainsUnfiltered {
+    return _map;
+  }
 
   static bool isKnown(int chainId) {
     return map[chainId] != null;
@@ -227,7 +242,7 @@ class Chain {
   final int chainId;
   final String name;
   final TokenType nativeCurrency;
-  final String providerUrl;
+  final String _defaultProviderUrl;
   final int requiredConfirmations;
   final bool supportsLogs;
   final String iconPath;
@@ -248,13 +263,25 @@ class Chain {
     @required this.chainId,
     @required this.name,
     @required this.nativeCurrency,
-    @required this.providerUrl,
+    @required String defaultProviderUrl,
     this.requiredConfirmations = 1,
     this.iconPath,
     this.explorerUrl,
     this.hasNonstandardTransactionFees = false,
     this.supportsLogs = false,
-  });
+  }) : this._defaultProviderUrl = defaultProviderUrl;
+
+  String get providerUrl {
+    final config = UserPreferences().chainConfigFor(chainId);
+
+    // TODO: Decide what we do with configured hops.
+    // Prevent any usage of the chain if the user has it disabled.
+    // if (config?.enabled == false) {
+    //   throw Exception("chain disabled");
+    // }
+
+    return config?.rpcUrl ?? _defaultProviderUrl;
+  }
 
   Future<Token> getGasPrice({bool refresh = false}) {
     // The gas price call is generic and works for V0 and V1

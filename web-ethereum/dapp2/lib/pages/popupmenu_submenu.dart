@@ -1,4 +1,4 @@
-import 'package:orchid/dapp.dart';
+import 'package:orchid/orchid.dart';
 
 // TODO: refactor with _buildExpandableMenuItem and move to orchid
 /// A PopupMenuItem that builds its child with a builder accepting an expanded flag.

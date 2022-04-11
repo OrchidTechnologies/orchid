@@ -1,4 +1,4 @@
-import 'package:orchid/dapp.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/pages/dapp_settings_button.dart';
 import 'dapp_header_popup_button.dart';
 

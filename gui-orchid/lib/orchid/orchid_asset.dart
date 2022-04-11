@@ -165,6 +165,8 @@ class OrchidAssetSvgChain {
   final rsk_chain = SvgPicture.asset(rsk_chain_path);
   static const unknown_chain_path = 'assets/svg/chains/unknown-chain.svg';
   final unknown_chain = SvgPicture.asset(unknown_chain_path);
+  static const unknown_chain_no_bg_path = 'assets/svg/chains/unknown-chain_no_bg.svg';
+  final unknown_chain_no_bg = SvgPicture.asset(unknown_chain_no_bg_path);
 }
 
 class OrchidAssetSvgToken {
