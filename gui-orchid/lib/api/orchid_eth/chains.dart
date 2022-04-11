@@ -207,7 +207,11 @@ class Chains {
     // Telos,
   ].toMap(withKey: (e) => e.chainId, withValue: (e) => e);
 
-  /// The map of supportd chains, filtered to remove disabled chains.
+  static Map<int, Chain> get unfiltered {
+    return _map;
+  }
+
+  /// The map of supported chains, filtered to remove disabled chains.
   static Map<int, Chain> get map {
     // Remove disabled chains
     final disabled = UserPreferences()
@@ -218,10 +222,6 @@ class Chains {
     var map = Map.of(_map);
     map.removeWhere((key, _) => disabled.contains(key));
     return map;
-  }
-
-  static Map<int, Chain> get allChainsUnfiltered {
-    return _map;
   }
 
   static bool isKnown(int chainId) {
