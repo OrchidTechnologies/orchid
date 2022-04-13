@@ -224,13 +224,9 @@ class Chains {
     return map;
   }
 
-  static bool isKnown(int chainId) {
-    return map[chainId] != null;
-  }
-
   // Get the chain for chainId
   static Chain chainFor(int chainId) {
-    var chain = map[chainId];
+    var chain = unfiltered[chainId];
     if (chain == null) {
       throw Exception('no chain for chainId: $chainId');
     }
