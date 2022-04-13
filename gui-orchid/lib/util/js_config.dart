@@ -65,7 +65,7 @@ class JSConfig {
     try {
       return evalInt(expression);
     } catch (err) {
-      log("evalIntDefault: $err");
+      //log("evalIntDefault: $err");
       return defaultValue;
     }
   }

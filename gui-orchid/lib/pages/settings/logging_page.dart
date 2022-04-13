@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,29 +25,32 @@ class LoggingPage extends StatefulWidget {
 }
 
 class _LoggingPageState extends State<LoggingPage> {
-  List<String> _logText = ["..."];
+  List<LogLine> _filteredLogLines = [];
+  int _lastFilteredId = -1;
   bool _loggingEnabled = false;
 
+  // errors, hour, rpc
   var _selectedFilters = [false, false, false];
+  var _loading = false;
 
   bool get isFiltered {
     return _selectedFilters.reduce((a, b) => a || b);
   }
 
-  var _loading = false;
+  OrchidLogAPI get logger {
+    return OrchidAPI().logger();
+  }
 
   @override
   void initState() {
     super.initState();
-
-    OrchidLogAPI logger = OrchidAPI().logger();
 
     setState(() {
       _loggingEnabled = logger.enabled;
     });
 
     // Fetch the initial log state
-    _updateLog();
+    _updateLog(filtersChanged: true);
 
     // Listen for log changes
     logger.logChanged.addListener(_updateLog);
@@ -96,30 +101,7 @@ class _LoggingPageState extends State<LoggingPage> {
                 child: Padding(
                   padding: const EdgeInsets.only(
                       left: 20, right: 20, top: 12, bottom: 0),
-                  child: Container(
-                    padding: EdgeInsets.all(16.0),
-                    child: _loading
-                        ? Center(
-                            child: OrchidCircularProgressIndicator
-                                .smallIndeterminate(size: 20))
-                        : SingleChildScrollView(
-                            reverse: true,
-                            // Note: SelectableText does not support softWrap
-                            child: Text(
-                              _logText.join(),
-                              softWrap: true,
-                              textAlign: TextAlign.left,
-                              style: AppText.logStyle
-                                  .copyWith(fontSize: 10, color: Colors.white),
-                            ),
-                          ),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                      border:
-                          Border.all(width: 2.0, color: AppColors.neutral_5),
-                    ),
-                  ),
+                  child: _buildLogView(),
                 ),
               ),
 
@@ -127,7 +109,7 @@ class _LoggingPageState extends State<LoggingPage> {
               if (portrait)
                 Center(
                   child: Text(
-                    "${_logText.length} lines" +
+                    "${_filteredLogLines.length} lines" +
                         (isFiltered ? ' ' + "(filtered)" : ''),
                     style: OrchidText.caption
                         .copyWith(color: Colors.white.withOpacity(0.5)),
@@ -164,6 +146,59 @@ class _LoggingPageState extends State<LoggingPage> {
     );
   }
 
+  Container _buildLogView() {
+    return Container(
+      padding: EdgeInsets.all(16.0),
+      child: _loading
+          ? Center(
+              child:
+                  OrchidCircularProgressIndicator.smallIndeterminate(size: 20),
+            )
+          : Theme(
+              data: Theme.of(context).copyWith(
+                scrollbarTheme: ScrollbarThemeData(
+                  thumbColor:
+                      MaterialStateProperty.all(Colors.white.withOpacity(0.4)),
+                  // isAlwaysShown: true,
+                ),
+              ),
+              child: _buildLogViewList(),
+            ),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.all(Radius.circular(4.0)),
+        border: Border.all(width: 2.0, color: AppColors.neutral_5),
+      ),
+    );
+  }
+
+  final scrollController = ScrollController();
+
+  Widget _buildLogViewList() {
+    final style = AppText.logStyle.size(10).white;
+    return ListView.builder(
+      controller: scrollController,
+      itemCount: _filteredLogLines.length,
+      itemBuilder: (context, index) {
+        final line = _filteredLogLines[index];
+        final timeStamp = line.date.toIso8601String();
+        return RichText(
+          softWrap: true,
+          textAlign: TextAlign.left,
+          text: TextSpan(
+            children: [
+              TextSpan(text: timeStamp + ': ', style: style.purpleBright),
+              TextSpan(text: line.text, style: style),
+            ],
+          ),
+        );
+      },
+      // separatorBuilder: (BuildContext context, int index) {
+      //   return Divider(height: 16, color: Colors.white.withOpacity(0.4));
+      // },
+    );
+  }
+
   Container _buildSwitch() {
     return Container(
       height: 56,
@@ -177,7 +212,7 @@ class _LoggingPageState extends State<LoggingPage> {
           value: _loggingEnabled,
           onChanged: (bool value) {
             _loggingEnabled = value;
-            OrchidAPI().logger().enabled = value;
+            logger.enabled = value;
           },
         ),
       ),
@@ -193,7 +228,7 @@ class _LoggingPageState extends State<LoggingPage> {
             setState(() {
               _selectedFilters[index] = !_selectedFilters[index];
             });
-            _updateLog();
+            _updateLog(filtersChanged: true);
           },
           children: [
             _buildFilterButton("Errors", _filterErrors, null),
@@ -220,44 +255,72 @@ class _LoggingPageState extends State<LoggingPage> {
         ));
   }
 
-  void _updateLog() async {
-    print("XXX: updateLog...");
-    OrchidLogAPI logger = OrchidAPI().logger();
+  void _updateLog({bool filtersChanged = false}) async {
+    if (filtersChanged) {
+      _filteredLogLines = [];
+      _lastFilteredId = -1;
+    }
+
     var lines = logger.get();
-    setState(() {
-      _logText = [];
-    });
+
+    if (!isFiltered || lines.isEmpty) {
+      setState(() {
+        _filteredLogLines = List.from(lines);
+      });
+      return;
+    }
+
+    // drop old
+    _filteredLogLines.removeWhere((e) => e.id < lines.first.id);
+
+    // filter new
+    var toFilter = lines.where((e) => e.id > _lastFilteredId).toList();
+    // print("YYY: lines=${lines.length}, lastId=$_lastFilteredId, toFilter=${toFilter.length}");
+
+    // var start = DateTime.now();
     try {
-      var start = DateTime.now();
-      setState(() {
-        _loading = true;
-      });
-      _logText =
-          await compute(_filterLog, _FilterLogArgs(lines, _selectedFilters));
-      print(
-          "XXX: updateLog = ${DateTime.now().difference(start).inMilliseconds}");
-      print("XXX: filter logs returned ${_logText.length} lines");
-      setState(() {
-        _loading = false;
-      });
+      if (toFilter.length > 20) {
+        _filteredLogLines += await _filterBackground(toFilter);
+      } else {
+        _filteredLogLines +=
+            _filterLog(_FilterLogArgs(toFilter, _selectedFilters));
+      }
     } catch (err) {
       print("filter logs error: $err");
     }
+    // print("YYY: filtered log view in ${DateTime.now().difference(start).inMilliseconds}ms");
+
+    _lastFilteredId = lines.last.id;
+    setState(() {});
+  }
+
+  Future<List<LogLine>> _filterBackground(List<LogLine> lines) async {
+    setState(() {
+      _loading = true;
+    });
+
+    final result =
+        await compute(_filterLog, _FilterLogArgs(lines, _selectedFilters));
+
+    setState(() {
+      _loading = false;
+    });
+    return result;
   }
 
   @override
   void dispose() {
-    OrchidAPI().logger().logChanged.removeListener(_updateLog);
+    logger.logChanged.removeListener(_updateLog);
     super.dispose();
   }
 
   /// Copy the log data to the clipboard
   void _onCopyButton() {
-    Clipboard.setData(ClipboardData(text: _logText.join()));
+    Clipboard.setData(ClipboardData(text: _filteredLogLines.join('\n')));
   }
 
   void _performDelete() {
-    OrchidAPI().logger().clear();
+    logger.clear();
   }
 
   void _confirmDelete() {
@@ -284,33 +347,31 @@ final _errorExp = RegExp(r'.*[Ee][Rr][Rr][Oo][Rr].*');
 final _rpcExp = RegExp(r'.*[Rr][Pp][Cc].*');
 
 class _FilterLogArgs {
-  List<String> lines;
+  List<LogLine> lines;
   List<bool> selectedFilters;
 
   _FilterLogArgs(this.lines, this.selectedFilters);
 }
 
 // This is structured as a top level function so that it can be called in an isolate.
-List<String> _filterLog(_FilterLogArgs args) {
-  List<String> lines = args.lines;
+List<LogLine> _filterLog(_FilterLogArgs args) {
+  List<LogLine> lines = args.lines;
   List<bool> selectedFilters = args.selectedFilters;
-  print("XXX: filterLog...");
 
   bool errors = selectedFilters[_filterErrors];
-  final isError = (String line) {
-    return line.contains(_errorExp);
+  final isError = (LogLine line) {
+    return line.text.contains(_errorExp);
   };
 
   bool rpc = selectedFilters[_filterRPC];
-  final isRpc = (String line) {
-    return line.contains(_rpcExp);
+  final isRpc = (LogLine line) {
+    return line.text.contains(_rpcExp);
   };
 
   bool hour = selectedFilters[_filterLastHour];
-  final isHour = (line) {
+  final isHour = (LogLine line) {
     try {
-      return DateTime.parse(line.substring(0, 19))
-          .isAfter(DateTime.now().subtract(Duration(hours: 1)));
+      return line.date.isAfter(DateTime.now().subtract(Duration(hours: 1)));
     } catch (err) {
       return false;
     }

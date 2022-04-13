@@ -35,7 +35,7 @@ abstract class OrchidLogAPI {
   }
 
   /// Get the current log contents.
-  List<String> get();
+  List<LogLine> get();
 
   /// Write the text to the log.
   void write(String text);
@@ -52,18 +52,19 @@ class LogLine {
   final DateTime date;
   final String text;
 
-  LogLine(this.text)
-      : this.id = nextId++,
+  LogLine(String text)
+      : this.text = text.trim(),
+        this.id = nextId++,
         this.date = DateTime.now();
 
-  String withDate() {
+  String toStringWithDate() {
     final timeStamp = DateTime.now().toIso8601String();
     return timeStamp + ': ' + text;
   }
 
   @override
   String toString() {
-    return withDate();
+    return toStringWithDate();
   }
 }
 
@@ -71,32 +72,45 @@ class LogLine {
 class MemoryOrchidLogAPI extends OrchidLogAPI {
   static int maxLines = 5000;
 
-  List<String> _buffer = <String>[];
+  List<LogLine> _buffer = [];
+
+  /*
+  MemoryOrchidLogAPI() {
+    var data = testLogData;
+    data += data;
+    data += data;
+    data += data;
+    data += data;
+    _buffer = data.map((e) => LogLine(e)).toList();
+  }
+   */
+
+  @override
+  set enabled(bool value) {
+    if (value == false) {
+      _buffer = [];
+    }
+    super.enabled = value;
+  }
 
   /// Get the current log contents.
-  List<String> get() {
+  List<LogLine> get() {
     return List.unmodifiable(_buffer);
-    // var data = testLogData;
-    // data += data;
-    // data += data;
-    // data += data;
-    // data += data;
-    // return data;
   }
 
   /// Write the text to the log.
-  void write(String textIn) async {
-    String timeStamp = DateTime.now().toIso8601String();
-    String text = timeStamp + ': ' + textIn;
+  void write(String text) async {
+    final line = LogLine(text);
 
-    debugPrint("LOG: $text");
+    // always print to syslog
+    debugPrint("LOG: ${line.toStringWithDate()}");
     if (!_enabled) {
       return;
     }
 
-    _buffer.add(text = text.endsWith('\n') ? text : (text + '\n'));
+    _buffer.add(line);
 
-    // truncate if needed
+    // rotater buffer if needed
     if (_buffer.length > maxLines) {
       _buffer.removeAt(0);
     }

@@ -539,7 +539,7 @@ class _ConnectPageState extends State<ConnectPage>
     const release_version = 'release_version';
     // From user config
     var jsConfig = OrchidUserConfig().getUserConfigJS();
-    var overrideVersion = jsConfig.evalIntDefault(release_version, null);
+    int overrideVersion = jsConfig.evalIntDefault(release_version, null);
     if (overrideVersion != null) {
       version = ReleaseVersion(overrideVersion);
     }
