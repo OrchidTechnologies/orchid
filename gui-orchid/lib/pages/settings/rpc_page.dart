@@ -2,7 +2,6 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_chain_config.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/api/preferences/user_preferences_mock.dart';
 import 'package:orchid/orchid.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -130,81 +129,65 @@ class _ChainItemState extends State<_ChainItem> {
             ],
           ),
 
-          // rpc
-          AnimatedCrossFade(
-            duration: millis(260),
-            crossFadeState:
-                _show ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-            firstChild: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+          // body
+          AnimatedVisibility(
+            show: _show,
+            child: Column(
               children: [
-                SizedBox(width: labelWidth, child: Text(s.rpc + ':').title),
-                Expanded(
-                  child: OrchidTextField(
-                    padding: EdgeInsets.zero,
-                    margin: EdgeInsets.zero,
-                    controller: _controller,
-                    onChanged: (_) {
-                      _update();
-                    },
-                    onClear: _update,
-                    hintText: widget.chain.providerUrl ==
-                            Chains.defaultEthereumProviderUrl
-                        ? widget.chain.providerUrl.substring(0, 34)
-                        : widget.chain.providerUrl,
-                  ),
-                ),
-              ],
-            ).top(12),
-            secondChild: Container(),
-          ),
-
-          /*
-              // price
-              if (enabled)
+                // rpc field
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    SizedBox(width: labelWidth, child: Text("Price:").button),
+                    SizedBox(width: labelWidth, child: Text(s.rpc + ':').title),
                     Expanded(
                       child: OrchidTextField(
                         padding: EdgeInsets.zero,
                         margin: EdgeInsets.zero,
-                        controller: controller,
-                        hintText:
-                            "https://api.binance.com/api/v3/avgPrice?symbol=\${TOKEN}USDT",
+                        controller: _controller,
+                        onChanged: (_) {
+                          _update();
+                        },
+                        onClear: _update,
+                        hintText: widget.chain.providerUrl ==
+                                Chains.defaultEthereumProviderUrl
+                            ? widget.chain.providerUrl.substring(0, 34)
+                            : widget.chain.providerUrl,
                       ),
                     ),
                   ],
-                ).top(8),
-               */
+                ).top(12),
 
-          if (_testResults.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: _testResults
-                  .map((e) => SizedBox(
-                        height: 24,
-                        child: Row(
-                          children: [
-                            e,
-                          ],
-                        ),
-                      ))
-                  .toList()
-                  .cast<Widget>()
-                  .surroundedWith(Divider(color: Colors.white)),
-            ).top(16),
+                // last test results
+                if (_testResults.isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: _testResults
+                        .map((e) => SizedBox(
+                              height: 24,
+                              child: Row(
+                                children: [
+                                  e,
+                                ],
+                              ),
+                            ))
+                        .toList()
+                        .cast<Widget>()
+                        .surroundedWith(Divider(color: Colors.white)),
+                  ).top(16),
 
-          // Test
-          if (_show)
-            OrchidActionButton(
-              width: 70,
-              text: "TEST",
-              onPressed: _testRpc,
-              enabled: _controller.text == null ||
-                  _controller.text.isEmpty ||
-                  _rpcIsValid(),
-            ).top(20).bottom(8),
+                // test button
+                if (_show)
+                  OrchidActionButton(
+                    width: 70,
+                    text: "TEST",
+                    onPressed: _testRpc,
+                    enabled: _controller.text == null ||
+                        _controller.text.isEmpty ||
+                        _rpcIsValid(),
+                  ).top(20).bottom(8),
+              ],
+            ),
+          ),
         ],
       ).padx(16).top(8).bottom(16),
     );
