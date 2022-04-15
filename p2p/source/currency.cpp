@@ -34,8 +34,16 @@ task<Currency> Currency::New(unsigned milliseconds, const S<Ethereum> &ethereum,
     if (false);
     else if (name == "AVAX")
         co_return (co_await Token::AVAX(milliseconds, ethereum)).currency_;
+    else if (name == "BNB")
+        co_return (co_await Token::BNB(milliseconds, ethereum)).currency_;
+    else if (name == "BTC")
+        co_return (co_await Token::BTC(milliseconds, ethereum)).currency_;
     else if (name == "DAI")
         co_return Currency::USD();
+    else if (name == "FTM")
+        co_return (co_await Token::FTM(milliseconds, ethereum)).currency_;
+    else if (name == "MATIC")
+        co_return (co_await Token::MATIC(milliseconds, ethereum)).currency_;
     else if (name == "OXT")
         co_return (co_await Token::OXT(milliseconds, ethereum)).currency_;
     else if (name == "USD")

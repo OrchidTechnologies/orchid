@@ -36,9 +36,13 @@ struct Token {
     const Address contract_;
     const Currency currency_;
 
-    static task<Token> New(unsigned milliseconds, S<Chain> chain, const char *name, const Address &contract, const Address &pool);
+    static task<Token> New(unsigned milliseconds, S<Chain> chain, const char *name, const Address &contract, const Address &pool, const Float &adjust = 1);
 
     static task<Token> AVAX(unsigned milliseconds, S<Ethereum> ethereum);
+    static task<Token> BNB(unsigned milliseconds, S<Ethereum> ethereum);
+    static task<Token> BTC(unsigned milliseconds, S<Ethereum> ethereum);
+    static task<Token> FTM(unsigned milliseconds, S<Ethereum> ethereum);
+    static task<Token> MATIC(unsigned milliseconds, S<Ethereum> ethereum);
     static task<Token> OXT(unsigned milliseconds, S<Ethereum> ethereum);
 };
 

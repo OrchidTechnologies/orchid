@@ -28,6 +28,7 @@
 
 #include "base58.hpp"
 #include "binance.hpp"
+#include "currency.hpp"
 #include "decimal.hpp"
 #include "executor.hpp"
 #include "float.hpp"
@@ -659,6 +660,12 @@ task<int> Main(int argc, const char *const argv[]) { try {
         // https://bitcointalk.org/index.php?topic=5227953
         const auto [key] = Options<Key>(args);
         std::cout << ToSegwit("bc", 0, Hash2(Tie(uint8_t(0x21), ToCompressed(key), uint8_t(0xac)))) << std::endl;
+
+    } else if (command == "price") {
+        const auto [symbol] = Options<std::string>(args);
+        const auto ethereum(Make<Ethereum>(chain_));
+        const auto currency(co_await Currency::New(5000, ethereum, base_, symbol));
+        std::cout << currency.dollars_() << std::endl;
 
     } else if (command == "read") {
         const auto [contract, slot] = Options<Address, uint256_t>(args);

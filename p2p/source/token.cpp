@@ -28,11 +28,11 @@
 
 namespace orc {
 
-task<Token> Token::New(unsigned milliseconds, S<Chain> chain, const char *name, const Address &contract, const Address &pool) {
+task<Token> Token::New(unsigned milliseconds, S<Chain> chain, const char *name, const Address &contract, const Address &pool, const Float &adjust) {
     auto [bid, fiat] = *co_await Parallel(
         Opened(Updating(milliseconds, [chain]() -> task<uint256_t> { co_return co_await chain->Bid(); }, "Bid")),
-        Opened(Updating(milliseconds, [chain, pool]() -> task<std::pair<Float, Float>> {
-            const auto [under, other] = *co_await Parallel(Uniswap3(*chain, Uniswap3USDCETH, Ten6), Uniswap3(*chain, pool, 1));
+        Opened(Updating(milliseconds, [chain, pool, adjust]() -> task<std::pair<Float, Float>> {
+            const auto [under, other] = *co_await Parallel(Uniswap3(*chain, Uniswap3USDCETH, Ten6), Uniswap3(*chain, pool, adjust));
             const auto ether(1 / under / Ten18);
             co_return std::make_tuple(ether, ether * other);
         }, name))
@@ -46,6 +46,22 @@ task<Token> Token::New(unsigned milliseconds, S<Chain> chain, const char *name, 
 
 task<Token> Token::AVAX(unsigned milliseconds, S<Ethereum> ethereum) {
     co_return co_await New(milliseconds, ethereum->chain_, "AVAX", "0x85f138bfee4ef8e540890cfb48f620571d67eda3", Uniswap3WAVAXETH);
+}
+
+task<Token> Token::BNB(unsigned milliseconds, S<Ethereum> ethereum) {
+    co_return co_await New(milliseconds, ethereum->chain_, "BNB", {}, "0xba8080b0b09181e09bca0612b22b9475d8171055");
+}
+
+task<Token> Token::BTC(unsigned milliseconds, S<Ethereum> ethereum) {
+    co_return co_await New(milliseconds, ethereum->chain_, "BTC", {}, "0x4585fe77225b41b697c938b018e2ac67ac5a20c0", Float("100000"));
+}
+
+task<Token> Token::FTM(unsigned milliseconds, S<Ethereum> ethereum) {
+    co_return co_await New(milliseconds, ethereum->chain_, "FTM", {}, "0x3b685307c8611afb2a9e83ebc8743dc20480716e");
+}
+
+task<Token> Token::MATIC(unsigned milliseconds, S<Ethereum> ethereum) {
+    co_return co_await New(milliseconds, ethereum->chain_, "MATIC", {}, "0x290a6a7460b308ee3f19023d2d00de604bcf5b42");
 }
 
 task<Token> Token::OXT(unsigned milliseconds, S<Ethereum> ethereum) {
