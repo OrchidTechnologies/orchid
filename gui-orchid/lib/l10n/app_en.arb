@@ -441,5 +441,16 @@
 	"importOrchidIdentity": "Import Orchid Identity",
 	"funderAddress": "Funder Address",
 	"contract": "Contract",
-	"txFee": "Tx Fee"
+	"txFee": "Tx Fee",
+	"show": "Show",
+	"rpc": "RPC",
+	"errors": "Errors",
+	"lastHour": "Last Hour",
+	"chainSettings": "Chain Settings",
+	"price": "Price",
+	"failed": "Failed",
+	"fetchGasPrice": "Fetch gas price",
+	"fetchLotteryPot": "Fetch lottery pot",
+	"lines": "lines",
+	"filtered": "filtered"
 }

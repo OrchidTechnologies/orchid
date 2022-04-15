@@ -441,5 +441,16 @@
 	"importIdentity": "导入身份",
 	"importOrchidIdentity": "导入兰花身份",
 	"newIdentity": "新身份",
-	"txFee": "交易费"
+	"txFee": "交易费",
+	"chainSettings": "链设置",
+	"errors": "错误",
+	"failed": "失败",
+	"fetchGasPrice": "获取gas价格",
+	"fetchLotteryPot": "拿彩票",
+	"filtered": "过滤",
+	"lastHour": "上一个小时",
+	"lines": "线",
+	"price": "价钱",
+	"rpc": "RPC",
+	"show": "节目"
 }

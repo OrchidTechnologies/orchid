@@ -526,7 +526,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       var priceText =
           formatCurrency(tokenPrice, locale: context.locale, suffix: 'USD');
       tokenPrices = [
-        Text(tokenType.symbol + ' ' + "Price" + ': ' + priceText).body2,
+        Text(tokenType.symbol + ' ' + s.price + ': ' + priceText).body2,
       ];
     }
 

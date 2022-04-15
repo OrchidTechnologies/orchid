@@ -441,5 +441,16 @@
 	"importIdentity": "ID 가져오기",
 	"importOrchidIdentity": "난초 아이덴티티 가져오기",
 	"newIdentity": "새로운 아이덴티티",
-	"txFee": "Tx 수수료"
+	"txFee": "Tx 수수료",
+	"chainSettings": "체인 설정",
+	"errors": "오류",
+	"failed": "실패한",
+	"fetchGasPrice": "가스 가격 가져오기",
+	"fetchLotteryPot": "복권 가져오기",
+	"filtered": "거르는",
+	"lastHour": "지난 시간",
+	"lines": "윤곽",
+	"price": "가격",
+	"rpc": "RPC",
+	"show": "보여 주다"
 }

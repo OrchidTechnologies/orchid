@@ -441,5 +441,16 @@
 	"importIdentity": "Importar identidad",
 	"importOrchidIdentity": "Importar identidad de orquídea",
 	"newIdentity": "nueva identidad",
-	"txFee": "Tarifa de transmisión"
+	"txFee": "Tarifa de transmisión",
+	"chainSettings": "Ajustes de la cadena",
+	"errors": "Los errores",
+	"failed": "Ha fallado",
+	"fetchGasPrice": "Obtener el precio del gas",
+	"fetchLotteryPot": "Obtener bote de lotería",
+	"filtered": "Filtrado",
+	"lastHour": "ultima hora",
+	"lines": "líneas",
+	"price": "Precio",
+	"rpc": "RPC",
+	"show": "Show"
 }

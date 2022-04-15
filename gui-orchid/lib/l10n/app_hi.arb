@@ -441,5 +441,16 @@
 	"importIdentity": "आयात पहचान",
 	"importOrchidIdentity": "आर्किड पहचान आयात करें",
 	"newIdentity": "नई पहचान",
-	"txFee": "टीएक्स शुल्क"
+	"txFee": "टीएक्स शुल्क",
+	"chainSettings": "चेन सेटिंग्स",
+	"errors": "त्रुटियाँ",
+	"failed": "अनुत्तीर्ण होना",
+	"fetchGasPrice": "गैस की कीमत प्राप्त करें",
+	"fetchLotteryPot": "लॉटरी पॉट लायें",
+	"filtered": "छाना हुआ",
+	"lastHour": "अंतिम घंटा",
+	"lines": "पंक्तियां",
+	"price": "मूल्य",
+	"rpc": "आरपीसी",
+	"show": "प्रदर्शन"
 }

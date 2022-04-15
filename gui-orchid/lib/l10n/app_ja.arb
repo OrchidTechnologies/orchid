@@ -441,5 +441,16 @@
 	"importIdentity": "IDのインポート",
 	"importOrchidIdentity": "蘭のアイデンティティをインポートする",
 	"newIdentity": "新しいアイデンティティ",
-	"txFee": "Tx料金"
+	"txFee": "Tx料金",
+	"chainSettings": "チェーン設定",
+	"errors": "エラー",
+	"failed": "失敗",
+	"fetchGasPrice": "ガス価格を取得",
+	"fetchLotteryPot": "宝くじのポットを取得します",
+	"filtered": "フィルタリング済み",
+	"lastHour": "最後の時間",
+	"lines": "行",
+	"price": "価格",
+	"rpc": "RPC",
+	"show": "見せる"
 }

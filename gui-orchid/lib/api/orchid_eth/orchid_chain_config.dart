@@ -20,7 +20,7 @@ class ChainConfig {
 
   ChainConfig.fromJson(Map<String, dynamic> json)
       : this.chainId = int.parse(json['chainId']),
-        this.enabled = json['enabled'].toString().toLowerCase() == "true",
+        this.enabled = json['enabled'].toString().toLowerCase() == 'true',
         this.rpcUrl = json['rpcUrl'];
 
   Map<String, dynamic> toJson() => {

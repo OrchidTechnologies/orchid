@@ -27,7 +27,7 @@ class _RpcPageState extends State<RpcPage> {
   @override
   Widget build(BuildContext context) {
     return TitledPage(
-        title: "Chain Settings",
+        title: s.chainSettings,
         constrainWidth: false,
         child: buildPage(context));
   }
@@ -123,7 +123,7 @@ class _ChainItemState extends State<_ChainItem> {
               if (widget.showEnableSwitch)
                 Row(
                   children: [
-                    Text("Show" + ':').button,
+                    Text(s.show + ':').button,
                     _buildSwitch(_show),
                   ],
                 )
@@ -138,7 +138,7 @@ class _ChainItemState extends State<_ChainItem> {
             firstChild: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                SizedBox(width: labelWidth, child: Text("RPC" + ':').title),
+                SizedBox(width: labelWidth, child: Text(s.rpc + ':').title),
                 Expanded(
                   child: OrchidTextField(
                     padding: EdgeInsets.zero,
@@ -223,10 +223,10 @@ class _ChainItemState extends State<_ChainItem> {
 
     try {
       await OrchidEthereumV1().getGasPrice(widget.chain, refresh: true);
-      _testResults.last = Text("Fetch gas price: Ok").body2;
+      _testResults.last = Text(s.fetchGasPrice + ': ' + s.ok).body2;
     } catch (err) {
       log('test rpc: gas price failed for chain: $widget.chain, err=$err');
-      _testResults.last = Text("Fetch gas price: Failed")
+      _testResults.last = Text(s.fetchGasPrice + ': ' + s.failed)
           .body2
           .tappable
           .linkButton(onTapped: _showLogs);
@@ -238,10 +238,10 @@ class _ChainItemState extends State<_ChainItem> {
           chain: widget.chain,
           funder: EthereumAddress.zero,
           signer: EthereumAddress.zero);
-      _testResults.last = Text("Fetch lottery pot: Ok").body2;
+      _testResults.last = Text(s.fetchLotteryPot + ': ' + s.ok).body2;
     } catch (err) {
       log('test rpc: get lottery pot failed for chain: $widget.chain, err=$err');
-      _testResults.last = Text("Fetch lottery pot: Failed")
+      _testResults.last = Text(s.fetchLotteryPot + ': ' + s.failed)
           .body2
           .tappable
           .linkButton(onTapped: _showLogs);

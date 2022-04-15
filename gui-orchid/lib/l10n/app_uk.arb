@@ -441,5 +441,16 @@
 	"importIdentity": "Імпорт посвідчення",
 	"importOrchidIdentity": "Імпорт орхідеї",
 	"newIdentity": "Нова ідентичність",
-	"txFee": "Комісія Tx"
+	"txFee": "Комісія Tx",
+	"chainSettings": "Налаштування ланцюга",
+	"errors": "помилки",
+	"failed": "Не вдалося",
+	"fetchGasPrice": "Дізнайтеся ціну на газ",
+	"fetchLotteryPot": "Принесіть лотерейний горщик",
+	"filtered": "відфільтрований",
+	"lastHour": "Остання година",
+	"lines": "Лінії",
+	"price": "Ціна",
+	"rpc": "RPC",
+	"show": "показати"
 }

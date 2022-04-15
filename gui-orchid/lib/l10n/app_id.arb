@@ -441,5 +441,16 @@
 	"importIdentity": "Impor Identitas",
 	"importOrchidIdentity": "Impor Identitas Anggrek",
 	"newIdentity": "Identitas Baru",
-	"txFee": "Tx Biaya"
+	"txFee": "Tx Biaya",
+	"chainSettings": "Pengaturan Rantai",
+	"errors": "Kesalahan",
+	"failed": "Gagal",
+	"fetchGasPrice": "Ambil harga gas",
+	"fetchLotteryPot": "Ambil pot lotre",
+	"filtered": "tersaring",
+	"lastHour": "Jam terakhir",
+	"lines": "Garis",
+	"price": "Harga",
+	"rpc": "RPC",
+	"show": "Menunjukkan"
 }

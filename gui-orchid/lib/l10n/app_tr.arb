@@ -441,5 +441,16 @@
 	"importIdentity": "Kimliği İçe Aktar",
 	"importOrchidIdentity": "Orkide Kimliğini İçe Aktar",
 	"newIdentity": "Yeni Kimlik",
-	"txFee": "Tx Ücreti"
+	"txFee": "Tx Ücreti",
+	"chainSettings": "Zincir Ayarları",
+	"errors": "Hatalar",
+	"failed": "başarısız oldu",
+	"fetchGasPrice": "gaz fiyatını getir",
+	"fetchLotteryPot": "Piyango potunu getir",
+	"filtered": "Filtrelenmiş",
+	"lastHour": "Son saat",
+	"lines": "Çizgiler",
+	"price": "Fiyat",
+	"rpc": "RPC",
+	"show": "Göstermek"
 }

@@ -109,8 +109,8 @@ class _LoggingPageState extends State<LoggingPage> {
               if (portrait)
                 Center(
                   child: Text(
-                    "${_filteredLogLines.length} lines" +
-                        (isFiltered ? ' ' + "(filtered)" : ''),
+                    "${_filteredLogLines.length} ${s.lines}" +
+                        (isFiltered ? ' ' + '(' + s.filtered + ')' : ''),
                     style: OrchidText.caption
                         .copyWith(color: Colors.white.withOpacity(0.5)),
                   ),
@@ -231,12 +231,12 @@ class _LoggingPageState extends State<LoggingPage> {
             _updateLog(filtersChanged: true);
           },
           children: [
-            _buildFilterButton("Errors", _filterErrors, null),
+            _buildFilterButton(s.errors, _filterErrors, null),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildFilterButton("Last Hour", _filterLastHour, null),
+              child: _buildFilterButton(s.lastHour, _filterLastHour, null),
             ),
-            _buildFilterButton("RPC", _filterRPC, null),
+            _buildFilterButton(s.rpc, _filterRPC, null),
           ]),
     );
   }

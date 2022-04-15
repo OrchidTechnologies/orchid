@@ -273,7 +273,7 @@ class Chain {
     // TODO: Decide what we do with configured hops.
     // Prevent any usage of the chain if the user has it disabled.
     // if (config?.enabled == false) {
-    //   throw Exception("chain disabled");
+    //   throw Exception('chain disabled');
     // }
 
     return config?.rpcUrl ?? _defaultProviderUrl;

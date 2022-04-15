@@ -441,5 +441,16 @@
 	"importIdentity": "Импортировать личность",
 	"importOrchidIdentity": "Импорт идентичности Orchid",
 	"newIdentity": "Новая личность",
-	"txFee": "Плата за передачу"
+	"txFee": "Плата за передачу",
+	"chainSettings": "Настройки цепочки",
+	"errors": "ошибки",
+	"failed": "не удалось",
+	"fetchGasPrice": "Получить цену на газ",
+	"fetchLotteryPot": "Получить лотерейный банк",
+	"filtered": "отфильтрованный",
+	"lastHour": "Последний час",
+	"lines": "Линии",
+	"price": "Цена",
+	"rpc": "RPC",
+	"show": "Шоу"
 }

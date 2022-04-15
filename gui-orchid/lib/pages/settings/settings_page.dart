@@ -118,7 +118,7 @@ class _SettingsPageState extends State<SettingsPage> {
               _divided(PageTile.route(
                   // leading: Icon(Icons.cloud_outlined, color: Colors.white, size: 24),
                   leading: OrchidAsset.chain.unknown_chain_no_bg,
-                  title: "Chain Settings",
+                  title: s.chainSettings,
                   routeName: '/settings/rpc',
                   context: context)),
 
