@@ -3,6 +3,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 
+import 'configuration/orchid_user_config/orchid_user_config.dart';
+
 /// Supports app localization and language override
 class OrchidLanguage {
   /// Language code to display name.
@@ -35,9 +37,9 @@ class OrchidLanguage {
   /// If non-null this is a language code with optional country code, e.g.
   /// en or en_US
   static String get languageOverride {
-    var envLanguageOverride =
-        (const String.fromEnvironment('language', defaultValue: null));
-    // ?? OrchidUserConfig().getUserConfigJS().evalStringDefault('lang', null);
+    var envLanguageOverride = (const String.fromEnvironment('language',
+            defaultValue: null)) ??
+        OrchidUserConfig().getUserConfigJS().evalStringDefault('lang', null);
     if (envLanguageOverride != null && hasLanguage(envLanguageOverride)) {
       return envLanguageOverride;
     }

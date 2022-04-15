@@ -1,0 +1,445 @@
+{
+	"@@locale": "uk",
+	"@newHop": {
+		"description": "New network hop"
+	},
+	"orchidHop": "Стрибок Orchid",
+	"@orchidHop": {
+		"description": "Orchid network hop"
+	},
+	"orchidDisabled": "Orchid деактивовано",
+	"trafficMonitoringOnly": "Лише відстеження трафіку",
+	"orchidConnecting": "Підключення Orchid",
+	"orchidDisconnecting": "Відключення Orchid",
+	"numHopsConfigured": "{num, plural, one {} few {{num} стрибки сконфігуровано} many {{num} стрибків сконфігуровано} =0{стрибків сконфігуровано} =1{один стрибок сконфігуровано} =2{два стрибки сконфігуровано} other{{num} стрибків сконфігуровано}}",
+	"@numHopsConfigured": {
+		"type": "text",
+		"placeholders": {
+			"num": {
+				"type": "int"
+			}
+		}
+	},
+	"delete": "Видалити",
+	"orchid": "Orchid",
+	"openVPN": "OpenVPN",
+	"hops": "Стрибки",
+	"@hops": {
+		"description": "Network hops"
+	},
+	"traffic": "Трафік",
+	"@traffic": {
+		"description": "Network traffic"
+	},
+	"curation": "Контроль",
+	"signerKey": "Ключ підписувача",
+	"copy": "Копіювати",
+	"paste": "Вставити",
+	"deposit": "Депозит",
+	"curator": "Контролер",
+	"ok": "ОК",
+	"settingsButtonTitle": "НАЛАШТУВАННЯ",
+	"confirmThisAction": "Підтвердьте цю дію",
+	"cancelButtonTitle": "СКАСУВАТИ",
+	"changesWillTakeEffectInstruction": "Зміни застосуватимуться після перезапуску VPN.",
+	"saved": "Збережено",
+	"configurationSaved": "Конфігурацію збережено",
+	"whoops": "Помилка",
+	"configurationFailedInstruction": "Не вдалося зберегти конфігурацію. Перевірте синтаксис і повторіть спробу.",
+	"addHop": "Додати стрибок",
+	"scan": "Сканувати",
+	"invalidQRCode": "Недійсний QR-код",
+	"theQRCodeYouScannedDoesNot": "Сканований QR-код не містить дійсної конфігурації рахунку.",
+	"invalidCode": "Недійсний код",
+	"theCodeYouPastedDoesNot": "Вставлений код не містить дійсної конфігурації рахунку.",
+	"openVPNHop": "Стрибок OpenVPN",
+	"username": "Імʼя користувача",
+	"password": "Пароль",
+	"config": "Конфігурація",
+	"pasteYourOVPN": "Вставте файл конфігурації OVPN тут",
+	"enterYourCredentials": "Уведіть облікові дані",
+	"enterLoginInformationInstruction": "Уведіть дані для входу в обліковий запис VPN-провайдера вище. Потім вставте вміст файлу конфігурації OpenVPN в надане поле.",
+	"save": "Зберегти",
+	"help": "Довідка",
+	"privacyPolicy": "Політика конфіденційності",
+	"openSourceLicenses": "Ліцензії з відкритим кодом",
+	"settings": "Налаштування",
+	"version": "Версія",
+	"noVersion": "Без версії",
+	"orchidOverview": "Огляд Orchid",
+	"defaultCurator": "Контролер за замовченням",
+	"queryBalances": "Запит балансів",
+	"reset": "Скинути",
+	"manageConfiguration": "Керування конфігурацією",
+	"warningThesefeature": "Увага! Ці функції призначені лише для досвідчених користувачів. Прочитайте всі інструкції.",
+	"exportHopsConfiguration": "Експорт конфігурації стрибків",
+	"export": "Експорт",
+	"warningExportedConfiguration": "Увага! Експортована конфігурація містить закриті приватні ключі підписувача для експортованих стрибків. Розкриття закритих ключів може призвести до втрати всіх коштів на пов’язаних облікових записах Orchid.",
+	"importHopsConfiguration": "Імпорт конфігурації стрибків",
+	"import": "Імпорт",
+	"warningImportedConfiguration": "Увага! Імпортована конфігурація замінює будь-які наявні стрибки, що ви створили в додатку. Ключі підписувача, раніше згенеровані або імпортовані на цьому пристрої, зберігаються і можуть використовуватися для створення нових стрибків. Проте вся інша конфігурація, у тому числі конфігурація стрибку OpenVPN, буде втрачена.",
+	"configuration": "Конфігурація",
+	"saveButtonTitle": "ЗБЕРЕГТИ",
+	"search": "Пошук",
+	"newContent": "Новий контент",
+	"clear": "Очистити",
+	"connectionDetail": "Деталі підключення",
+	"host": "Хост",
+	"time": "Час",
+	"sourcePort": "Початковий порт",
+	"destination": "Призначення",
+	"destinationPort": "Кінцевий порт",
+	"generateNewKey": "Згенерувати новий ключ",
+	"importKey": "Імпортувати ключ",
+	"nothingToDisplayYet": "Дани відображатимуться, коли зʼявиться трафік.",
+	"disconnecting": "Відключення...",
+	"connecting": "Підключення...",
+	"pushToConnect": "Натисніть для підключення.",
+	"orchidIsRunning": "Orchid запущено!",
+	"pacPurchaseWaiting": "Очікування покупки",
+	"retry": "Повторити",
+	"getHelpResolvingIssue": "Звернутися за довідкою для розвʼязання проблеми.",
+	"copyDebugInfo": "Копіювати відомості налагодження",
+	"contactOrchid": "Звʼязатися з Orchid",
+	"remove": "Видалити",
+	"deleteTransaction": "Видалити транзакцію",
+	"clearThisInProgressTransactionExplain": "Поточну транзакцію буде видалено, але вартість покупки в додатку не буде повернена. Щоб отримати повернення оплати, звертайтеся в Orchid.",
+	"preparingPurchase": "Підготовка покупки",
+	"retryingPurchasedPAC": "Повторна спроба покупки",
+	"retryPurchasedPAC": "Повторити спробу покупки",
+	"purchaseError": "Помилка покупки",
+	"thereWasAnErrorInPurchasingContact": "Виникла помилка покупки. Зверніться в підтримку Orchid.",
+	"importAnOrchidAccount": "Імпортувати рахунок Orchid",
+	"buyCredits": "Придбати кредити",
+	"@gb": {
+		"description": "Gigabytes"
+	},
+	"@ofTraffic": {
+		"description": "GB of traffic"
+	},
+	"linkAnOrchidAccount": "Зв’язати рахунок Orchid",
+	"weAreSorryButThisPurchaseWouldExceedTheDaily": "Вибачте, але ця покупка перевищить щоденний ліміт кредитів для доступу. Спробуйте пізніше.",
+	"marketStats": "Статистика ринку",
+	"balanceTooLow": "Надто низький баланс",
+	"depositSizeTooSmall": "Недостатній розмір депозиту",
+	"yourMaxTicketValueIsCurrentlyLimitedByYourBalance": "Максимальна вартість квитка наразі обмежена вашим балансом",
+	"yourMaxTicketValueIsCurrentlyLimitedByYourDeposit": "Максимальна вартість квитка наразі обмежена вашим депозитом",
+	"considerAddingOxtToYourAccountBalance": "Рекомендуємо додати OXT до балансу свого рахунку.",
+	"considerAddingOxtToYourDepositOrMovingFundsFrom": "Рекомендуємо додати OXT до свого депозиту або переказати кошти на депозит із балансу.",
+	"prices": "Ціни",
+	"ticketValue": "Вартість квитка",
+	"costToRedeem": "Вартість викупу:",
+	"viewTheDocsForHelpOnThisIssue": "Перегляньте довідкові документи стосовно цього питання.",
+	"goodForBrowsingAndLightActivity": "Для перегляду та нечастого використання",
+	"learnMore": "Докладніше",
+	"connect": "Підключити",
+	"disconnect": "Відключити",
+	"wireguardHop": "Стрибок WireGuard®️",
+	"pasteYourWireguardConfigFileHere": "Вставте файл конфігурації WireGuard®️ тут",
+	"pasteTheCredentialInformationForYourWireguardProviderIntoThe": "Вставте облікові дані постачальника WireGuard®️ у поле вище.",
+	"wireguard": "WireGuard®️",
+	"clearAllLogData": "Очистити всі дані журналу?",
+	"thisDebugLogIsNonpersistentAndClearedWhenQuittingThe": "Цей журнал налагодження є тимчасовим і очищається під час виходу з додатка.",
+	"itMayContainSecretOrPersonallyIdentifyingInformation": "Він може містити секретну або особисту інформацію.",
+	"loggingEnabled": "Журнал увімкнено",
+	"cancel": "СКАСУВАТИ",
+	"logging": "Ведення журналу",
+	"loading": "Завантажується...",
+	"ethPrice": "Ціна ETH:",
+	"oxtPrice": "Ціна OXT:",
+	"gasPrice": "Ціна газу:",
+	"maxFaceValue": "Макс. номінал:",
+	"confirmDelete": "Підтвердити видалення",
+	"enterOpenvpnConfig": "Уведіть конфігурацію OpenVPN",
+	"enterWireguardConfig": "Уведіть конфігурацію WireGuard®️",
+	"starting": "Запуск...",
+	"legal": "Юридичне",
+	"whatsNewInOrchid": "Що нового в Orchid",
+	"orchidIsOnXdai": "Orchid на xDai!",
+	"youCanNowPurchaseOrchidCreditsOnXdaiStartUsing": "Тепер можна купувати кредити Orchid на xDai! Почніть використовувати VPN лише за 1$.",
+	"xdaiAccountsForPastPurchases": "На xDai обліковуються попередні покупки",
+	"forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave": "Кошти в xDai, витрачені до сьогодні в додатку, додано до того самого ключа рахунку. Трафік — за наш рахунок!",
+	"newInterface": "Новий інтерфейс",
+	"accountsAreNowOrganizedUnderTheOrchidAddressTheyAre": "Рахунки тепер організовані відповідно до адреси Orchid, з якою вони пов’язані.",
+	"seeYourActiveAccountBalanceAndBandwidthCostOnThe": "Перегляд балансу активного рахунку та вартості смуги пропускання на головному екрані.",
+	"seeOrchidcomForHelp": "Див. довідку на orchid.com.",
+	"payPerUseVpnService": "VPN-служба з платою за фактом використання",
+	"notASubscriptionCreditsDontExpire": "Без передплати; кредити без строків дії",
+	"shareAccountWithUnlimitedDevices": "Необмежена кількість пристроїв для одного облікового запису",
+	"theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn": "Магазин Orchid тимчасово недоступний. Перевірте через кільки хвилин.",
+	"talkingToPacServer": "Обмін даними зі сервером Orchid",
+	"advancedConfiguration": "Розширена конфігурація",
+	"newWord": "Додати",
+	"copied": "Скопійовано",
+	"efficiency": "Ефективність",
+	"minTicketsAvailableTickets": "Мін. квитків доступно: {tickets}",
+	"@minTicketsAvailableTickets": {
+		"placeholders": {
+			"tickets": {
+				"type": "int"
+			}
+		}
+	},
+	"transactionSentToBlockchain": "Транзакцію надіслано в блокчейн",
+	"yourPurchaseIsCompleteAndIsNowBeingProcessedBy": "Покупка завершена і зараз обробляється блокчейном xDai, що може зайняти кілька хвилин або іноді більше. Щоб переглянути оновлений баланс рахунку нижче, потягніть донизу.",
+	"copyReceipt": "Копіювати квитанцію",
+	"manageAccounts": "Керування рахунками",
+	"configurationManagement": "Керування конфігурацією",
+	"exportThisOrchidKey": "Експорт цього ключа Orchid",
+	"aQrCodeAndTextForAllTheOrchidAccounts": "Нижче наведено QR-код і текст для всіх рахунків Orchid, пов’язаних із цим ключем.",
+	"importThisKeyOnAnotherDeviceToShareAllThe": "Імпортуйте цей ключ на іншому пристрої, щоб надати доступ до всіх рахунків Orchid, пов’язаних із цим ідентифікатором Orchid.",
+	"orchidAccountInUse": "Рахунок Orchid у користуванні",
+	"thisOrchidAccountIsInUseAndCannotBeDeleted": "Цей рахунок Orchid зараз використовується. Його видалення неможливо.",
+	"pullToRefresh": "Потягніть для оновлення.",
+	"balance": "Баланс",
+	"active": "Активно",
+	"pasteAnOrchidKeyFromTheClipboardToImportAll": "Щоб імпортувати всі рахунки Orchid, пов’язані з цим ключем, вставте ключ Orchid із буфера.",
+	"scanOrPasteAnOrchidKeyFromTheClipboardTo": "Щоб імпортувати всі рахунки Orchid, пов’язані з цим ключем, зіскануйте або вставте ключ Orchid із буфера.",
+	"account": "Рахунок",
+	"transactions": "Транзакції",
+	"weRecommendBackingItUp": "Рекомендуємо <link>створити резервну копію</link>.",
+	"copiedOrchidIdentity": "Скопійовано ідентифікатор Orchid",
+	"thisIsNotAWalletAddress": "Це не адреса гаманця.",
+	"doNotSendTokensToThisAddress": "Не надсилайте токени на цю адресу.",
+	"yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork": "Ваш ідентифікатор Orchid однозначно ідентифікує вас у мережі.",
+	"learnMoreAboutYourLinkorchidIdentitylink": "Докладніше про <link>ідентифікацію Orchid</link>.",
+	"analyzingYourConnections": "Аналіз підключень",
+	"analyzeYourConnections": "Проаналізуйте підключення",
+	"networkAnalysisUsesYourDevicesVpnFacilityToCapturePackets": "Для аналізу мережі й трафіку використовується VPN вашого пристрою, через який отримуються пакети даних.",
+	"networkAnalysisRequiresVpnPermissionsButDoesNotByItself": "Хоча для аналізу мережі потрібні дозволи на використання VPN, це само по собі не захищає дані та не приховує вашу IP-адресу.",
+	"toGetTheBenefitsOfNetworkPrivacyYouMustConfigure": "Щоб забезпечити конфіденційність мережі, необхідно налаштувати та активувати VPN-з’єднання на головному екрані.",
+	"turningOnThisFeatureWillIncreaseTheBatteryUsageOf": "Внаслідок увімкнення цієї функції, додаток Orchid буде споживати більше заряду батареї.",
+	"useAnOrchidAccount": "Використовувати рахунок Orchid",
+	"pasteAddress": "Вставити адресу",
+	"chooseAddress": "Вибрати адресу",
+	"chooseAnOrchidAccountToUseWithThisHop": "Вибрати рахунок Orchid для використання з цим стрибком.",
+	"ifYouDontSeeYourAccountBelowYouCanUse": "Якщо ви не бачите рахунок нижче, можна скористатися диспетчером, щоб його імпортувати, придбати або створити новий.",
+	"selectAnOrchidAccount": "Вибрати рахунок Orchid",
+	"takeMeToTheAccountManager": "Перейти до диспетчера рахунків",
+	"funderAccount": "Фінансувальний рахунок",
+	"orchidRunningAndAnalyzing": "Orchid виконує аналіз",
+	"startingVpn": "(Запуск VPN)",
+	"disconnectingVpn": "(Відключення VPN)",
+	"orchidAnalyzingTraffic": "Orchid аналізує трафік",
+	"vpnConnectedButNotRouting": "(VPN підключено, але без маршрутизації)",
+	"restarting": "Перезапуск",
+	"changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly": "Щоб змінити статус моніторингу, потрібно перезапустити VPN, що може ненадовго призвести до порушення захисту конфіденційності.",
+	"confirmRestart": "Підтвердити перезапуск",
+	"averagePriceIsUSDPerGb": "Середня ціна: {price} USD за Гб",
+	"@averagePriceIsUSDPerGb": {
+		"placeholders": {
+			"price": {
+				"type": "String"
+			}
+		}
+	},
+	"myOrchidConfig": "Моя конфігурація Orchid",
+	"noAccountSelected": "Не вибрано рахунок",
+	"inactive": "Неактивно",
+	"tickets": "Квитки",
+	"accounts": "Рахунки",
+	"orchidIdentity": "Ідентифікатор Orchid",
+	"addFunds": "ДОДАТИ КОШТИ",
+	"gb": "Гб",
+	"usdgb": "USD/Гб",
+	"hop": "Стрибок",
+	"circuit": "Ланцюжок",
+	"clearAllAnalysisData": "Очистити всі дані аналізу?",
+	"thisActionWillClearAllPreviouslyAnalyzedTrafficConnectionData": "Буде видалено всі раніше проаналізовані дані з’єднання трафіку.",
+	"clearAll": "ОЧИСТИТИ ВСЕ",
+	"stopAnalysis": "ЗУПИНИТИ АНАЛІЗ",
+	"startAnalysis": "ПОЧАТИ АНАЛІЗ",
+	"orchidAccountsInclude247CustomerSupportUnlimitedDevicesAndAre": "Рахунки Orchid передбачають цілодобову підтримку клієнтів, необмежену кількість пристроїв і забезпечені <link2>криптовалютою xDai</link2>.",
+	"purchasedAccountsConnectExclusivelyToOur": "Придбані рахунки підключаються лише до <link1>рекомендованих провайдерів</link1>.",
+	"refundPolicyCoveredByAppStores": "Повернення коштів, згідно з відповідними правилами, забезпечують магазини додатків.",
+	"orchidIsUnableToDisplayInappPurchasesAtThisTime": "Orchid зараз не може відображати покупки в додатку.",
+	"pleaseConfirmThatThisDeviceSupportsAndIsConfiguredFor": "Переконайтеся, що цей пристрій підтримує покупки в додатку та налаштований для них.",
+	"pleaseConfirmThatThisDeviceSupportsAndIsConfiguredForOrUseOurDecentralized": "Переконайтеся, що цей пристрій підтримує покупки в додатку та налаштований для них, або скористайтеся нашою децентралізованою системою <link>керування рахунками</link>.",
+	"buy": "КУПИТИ",
+	"gbApproximately12": "12 Гб (приблизно)",
+	"gbApproximately60": "60 Гб (приблизно)",
+	"gbApproximately240": "240 Гб (приблизно)",
+	"idealSizeForMediumtermIndividualUsageThatIncludesBrowsingAnd": "Для середньострокового перегляду сайтів і легкого стримінгу одним користувачем.",
+	"mostPopular": "Найпопулярніше!",
+	"bandwidthheavyLongtermUsageOrSharedAccounts": "Великий обсяг трафіку, довготривале використання або спільні рахунки.",
+	"total": "Загалом",
+	"pausingAllTraffic": "Призупинення всього трафіку...",
+	"queryingEthereumForARandom": "Надсилаємо в Ethereum запит на довільного провайдера...",
+	"quickFundAnAccount": "Швидке поповнення рахунку!",
+	"accountFound": "Рахунок знайдено",
+	"weFoundAnAccountAssociatedWithYourIdentitiesAndCreated": "Ми знайшли рахунок, пов’язаний з вашими ідентифікаторами, і створили для нього ланцюжок Orchid з одним стрибком. Тепер можна використовувати VPN.",
+	"welcomeToOrchid": "Вітаємо в Orchid!",
+	"fundYourAccount": "Поповніть рахунок",
+	"processing": "Обробляється...",
+	"subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService": "Децентралізований VPN-сервіс із відкритим кодом без передплати, оплата за фактом користування.",
+	"getStartedFor1": "РОЗПОЧАТИ КОРИСТУВАННЯ ЗА {smallAmount}",
+	"@getStartedFor1": {
+		"placeholders": {
+			"smallAmount": {
+				"type": "String"
+			}
+		}
+	},
+	"importAccount": "ІМПОРТ РАХУНКУ",
+	"illDoThisLater": "Пізніше",
+	"connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By": "Поповніть спільний рахунок Orchid, придбавши кредити VPN, щоб автоматично підключатися до <link1>рекомендованих провайдерів</link1>.",
+	"confirmPurchase": "ПІДТВЕРДИТИ ПОКУПКУ",
+	"orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink": "Для рахунків Orchid використовуються кредити VPN, забезпечені <link>криптовалютою xDAI</link>. Рахунки передбачають цілодобову підтримку клієнтів, необмежений доступ до пристроїв та повернення коштів із магазину додатків згідно з його правилами.",
+	"yourPurchaseIsInProgress": "Покупка оброблюється.",
+	"thisPurchaseIsTakingLongerThanExpectedToProcessAnd": "Обробка цієї покупки займає більше часу, ніж очікувалося. Імовірно, виникла помилка.",
+	"thisMayTakeAMinute": "Це займе деякий час...",
+	"vpnCredits": "Кредити VPN",
+	"blockchainFee": "Комісія блокчейну",
+	"promotion": "Знижка",
+	"showInAccountManager": "Показувати в диспетчері рахунків",
+	"deleteThisOrchidIdentity": "Видалити цей ідентифікатор Orchid",
+	"chooseIdentity": "Вибрати ідентифікатор",
+	"updatingAccounts": "Оновлення рахунків",
+	"trafficAnalysis": "Аналіз трафіку",
+	"accountManager": "Диспетчер рахунків",
+	"circuitBuilder": "Конструктор ланцюжків",
+	"exitHop": "Стрибок виходу",
+	"entryHop": "Стрибок входу",
+	"addNewHop": "ДОДАТИ НОВИЙ СТРИБОК",
+	"newCircuitBuilder": "Новий конструктор ланцюжків!",
+	"youCanNowPayForAMultihopOrchidCircuitWith": "Тепер ви можете заплатити в xDAI за ланцюжок Orchid із кількома стрибками. Багатострибковий інтерфейс одночасно з конфігураціями OpenVPN і WireGuard зараз підтримує рахунки xDAI та OXT Orchid, що можна об’єднати в цибулевий маршрут.",
+	"manageYourConnectionFromTheCircuitBuilderInsteadOfThe": "Керуйте з’єднанням за допомогою конструктора ланцюжків замість диспетчера рахунків. Усі з’єднання тепер використовують ланцюжок із нульовим стрибком або кількома стрибками. Наявні конфігурації перенесено до конструктора ланцюжків.",
+	"quickStartFor1": "Швидкий старт за {smallAmount}",
+	"@quickStartFor1": {
+		"placeholders": {
+			"smallAmount": {
+				"type": "String"
+			}
+		}
+	},
+	"weAddedAMethodToPurchaseAnOrchidAccountAnd": "Ми додали новий спосіб придбати рахунок Orchid і створити однострибковий ланцюжок з головного екрана, щоб швидше розпочати користування.",
+	"orchidIsUniqueAsAMultiHopOrOnion": "Orchid — унікальний клієнт цибулевої або багатострибкової маршрутизації, що підтримує кілька протоколів VPN. Можна налаштувати з’єднання, об’єднавши стрибки з підтримуваних протоколів, зазначених нижче.\n\nОдин стрибок схожий на звичайний VPN. Три стрибка (для досвідчених користувачів) — це класичний варіант цибулевої маршрутизації. Нульові стрибки дозволяють аналізувати трафік без використання VPN-тунелю.",
+	"deletingOpenVPNAndWireguardHopsWillLose": "Видалення стрибків OpenVPN та Wireguard призведе до втрати пов’язаних облікових даних та конфігурації підключення. Обов’язково створіть резервну копію даних перед продовженням.",
+	"thisCannotBeUndoneToSaveThisIdentity": "Видалення не може бути скасовано. Щоб зберегти цей ідентифікатор, натисніть «Скасувати» та скористайтеся параметром «Експорт»",
+	"unlockTime": "Час розблокування",
+	"chooseChain": "Вибрати блокчейн",
+	"unlocking": "Розблокується",
+	"unlocked": "Розблоковано",
+	"orchidTransaction": "Транзакція Orchid",
+	"confirmations": "Підтвердження",
+	"pending": "Очікування...",
+	"txHash": "Хеш транзакції:",
+	"allOfYourFundsAreAvailableForWithdrawal": "Усі кошти доступні для зняття.",
+	"maxWithdrawOfYourTotalFundsCombinedFunds": "Доступно для зняття {maxWithdraw} з {totalFunds} загальних коштів.",
+	"@maxWithdrawOfYourTotalFundsCombinedFunds": {
+		"placeholders": {
+			"maxWithdraw": {
+				"type": "String"
+			},
+			"totalFunds": {
+				"type": "String"
+			}
+		}
+	},
+	"alsoUnlockRemainingDeposit": "Також розблокувати залишок депозиту",
+	"ifYouSpecifyLessThanTheFullAmountFundsWill": "Якщо ви зазначите не повну суму, кошти стягуватимуться спочатку з вашого балансу.",
+	"forAdditionalOptionsSeeTheAdvancedPanel": "Дивіться додаткові параметри на панелі РОЗШИРЕНІ.",
+	"ifYouSelectTheUnlockDepositOptionThisTransactionWill": "Якщо ви виберете параметр розблокування депозиту, внаслідок транзакції буде негайно знято з балансу зазначену суму, а також розпочнеться процес розблокування решти депозиту.",
+	"depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking": "Кошти можна зняти з депозиту через 24 години після розблокування.",
+	"withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Знімайте кошти з рахунка Orchid на поточний гаманець.",
+	"withdrawAndUnlockFunds": "ЗНЯТТЯ Й РОЗБЛОКУВАННЯ КОШТІВ",
+	"withdrawFunds": "ЗНЯТТЯ КОШТІВ",
+	"withdraw": "Зняти",
+	"submitTransaction": "НАДІСЛАТИ ТРАНЗАКЦІЮ",
+	"move": "Переказати",
+	"now": "Зараз",
+	"amount": "Сума",
+	"available": "Доступно",
+	"select": "Вибрати",
+	"add": "ДОДАТИ",
+	"balanceToDeposit": "З БАЛАНСУ НА ДЕПОЗИТ",
+	"depositToBalance": "З ДЕПОЗИТУ НА БАЛАНС",
+	"setWarnedAmount": "Задати резервовану суму",
+	"addFundsToYourOrchidAccountBalanceAndorDeposit": "Додати кошти до балансу і/або депозиту рахунку Orchid.",
+	"forGuidanceOnSizingYourAccountSee": "Читайте на сайті <link>orchid.com</link> рекомендації з розподілення сум на рахункові",
+	"currentTokenPreauthorizationAmount": "Поточна попередня авторизація {tokenType}: {amount}",
+	"@currentTokenPreauthorizationAmount": {
+		"placeholders": {
+			"tokenType": {
+				"type": "String"
+			},
+			"amount": {
+				"type": "String"
+			}
+		}
+	},
+	"noWallet": "Немає гаманця",
+	"noWalletOrBrowserNotSupported": "Не зазначено гаманець або не підтримується браузер.",
+	"error": "Помилка",
+	"failedToConnectToWalletconnect": "Не вдалося підключитися до WalletConnect.",
+	"unknownChain": "Невідомий блокчейн",
+	"theOrchidAccountManagerDoesntSupportThisChainYet": "Диспетчер рахунків Orchid наразі не підтримує цей блокчейн.",
+	"orchidIsntOnThisChain": "Orchid не працює з цим блокчейном.",
+	"theOrchidContractHasntBeenDeployedOnThisChainYet": "Контракт Orchid ще не розгорнуто в цьому блокчейні.",
+	"moveFunds": "ПЕРЕКАЗАТИ КОШТИ",
+	"lockUnlock": "БЛОКУВАТИ / РОЗБЛОКУВАТИ",
+	"yourDepositOfAmountIsUnlocked": "Депозит {amount} розблоковано.",
+	"@yourDepositOfAmountIsUnlocked": {
+		"placeholders": {
+			"amount": {
+				"type": "String"
+			}
+		}
+	},
+	"locked": "заблоковано",
+	"yourDepositOfAmountIsUnlockingOrUnlocked": "Депозит {amount} {unlockingOrUnlocked}.",
+	"@yourDepositOfAmountIsUnlockingOrUnlocked": {
+		"placeholders": {
+			"amount": {
+				"type": "String"
+			},
+			"unlockingOrUnlocked": {
+				"type": "String"
+			}
+		}
+	},
+	"theFundsWillBeAvailableForWithdrawalInTime": "Кошти можна зняти через {time}.",
+	"@theFundsWillBeAvailableForWithdrawalInTime": {
+		"placeholders": {
+			"time": {
+				"type": "String"
+			}
+		}
+	},
+	"lockDeposit": "БЛОКУВАТИ ДЕПОЗИТ",
+	"unlockDeposit": "РОЗБЛОКУВАТИ ДЕПОЗИТ",
+	"advanced": "РОЗШИРЕНІ",
+	"linklearnMoreAboutOrchidAccountslink": "<link>Докладніше про рахунки Orchid</link>.",
+	"estimatedCostToCreateAnOrchidAccountWith": "Приблизна вартість створення рахунку Orchid з ефективністю {efficiency} та {num} квитка(-ів) вартості.",
+	"@estimatedCostToCreateAnOrchidAccountWith": {
+		"placeholders": {
+			"efficiency": {
+				"type": "String"
+			},
+			"num": {
+				"type": "int"
+			}
+		}
+	},
+	"chain": "Блокчейн",
+	"token": "Токен",
+	"minDeposit": "Мін. депозит",
+	"minBalance": "Мін. баланс",
+	"fundFee": "Комісія за поповнення",
+	"withdrawFee": "Комісія за зняття",
+	"tokenValues": "ВАРТІСТЬ ТОКЕНІВ",
+	"usdPrices": "ЦІНИ В USD",
+	"settingAWarnedDepositAmountBeginsThe24HourWaiting": "Для зняття коштів через 24 години, зазначте суму резервованого депозиту.",
+	"duringThisPeriodTheFundsAreNotAvailableAsA": "Протягом цього часу кошти залишатимуться недоступними для депонування в мережі Orchid.",
+	"fundsMayBeRelockedAtAnyTimeByReducingThe": "Кошти можна повторно заблокувати в будь-який момент, зменшивши резервовану суму.",
+	"warn": "Резервувати",
+	"totalWarnedAmount": "Загальна резервована сума",
+	"contract": "Договір",
+	"deleteIdentity": "Видалити посвідчення",
+	"exportIdentity": "Експортувати ідентифікатор",
+	"funderAddress": "Адреса спонсора",
+	"importIdentity": "Імпорт посвідчення",
+	"importOrchidIdentity": "Імпорт орхідеї",
+	"newIdentity": "Нова ідентичність",
+	"txFee": "Комісія Tx"
+}
