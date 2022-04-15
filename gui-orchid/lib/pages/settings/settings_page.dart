@@ -30,7 +30,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   // TODO: These switches should work directly with ObservablePreference
   bool _queryBalances = false;
-  bool _showLogging = false;
   bool _tester = false;
 
   @override
@@ -41,8 +40,8 @@ class _SettingsPageState extends State<SettingsPage> {
     _defaultCurator.addListener(_curatorChanged);
 
     _queryBalances = UserPreferences().getQueryBalances();
-    _defaultCurator.text = UserPreferences().getDefaultCurator() ??
-        OrchidHop.appDefaultCurator;
+    _defaultCurator.text =
+        UserPreferences().getDefaultCurator() ?? OrchidHop.appDefaultCurator;
   }
 
   void initStateAsync() async {
@@ -52,8 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   /// Update system config based on changes to user advanced config
   void advancedConfigChanged() async {
-    var jsConfig = await OrchidUserConfig().getUserConfigJS();
-    _showLogging = jsConfig.evalBoolDefault('logging', false);
+    var jsConfig = OrchidUserConfig().getUserConfigJS();
     _tester = jsConfig.evalBoolDefault('tester', false);
 
     OrchidPlatform.pretendToBeAndroid =
@@ -147,12 +145,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   context: context)),
 
               // Logging
-              if (_showLogging || _tester)
-                _divided(PageTile.route(
-                    // height: height,
-                    title: s.logging,
-                    routeName: '/settings/log',
-                    context: context)),
+              _divided(PageTile.route(
+                  // height: height,
+                  title: s.logging,
+                  routeName: '/settings/log',
+                  context: context)),
 
               if (_tester)
                 _divided(PageTile(
