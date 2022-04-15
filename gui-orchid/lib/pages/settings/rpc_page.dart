@@ -97,14 +97,14 @@ class _ChainItem extends StatefulWidget {
 
 class _ChainItemState extends State<_ChainItem> {
   var _controller = TextEditingController();
-  bool _enabled;
+  bool _show;
   List<Widget> _testResults = [];
 
   @override
   void initState() {
     super.initState();
     _controller.text = widget.config?.rpcUrl;
-    _enabled = widget.config?.enabled ?? true;
+    _show = widget.config?.enabled ?? true;
   }
 
   @override
@@ -123,19 +123,22 @@ class _ChainItemState extends State<_ChainItem> {
               if (widget.showEnableSwitch)
                 Row(
                   children: [
-                    Text("Enabled: ").button,
-                    _buildSwitch(_enabled),
+                    Text("Show" + ':').button,
+                    _buildSwitch(_show),
                   ],
                 )
             ],
           ),
 
           // rpc
-          if (_enabled)
-            Row(
+          AnimatedCrossFade(
+            duration: millis(260),
+            crossFadeState:
+                _show ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+            firstChild: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                SizedBox(width: labelWidth, child: Text("RPC:").title),
+                SizedBox(width: labelWidth, child: Text("RPC" + ':').title),
                 Expanded(
                   child: OrchidTextField(
                     padding: EdgeInsets.zero,
@@ -153,6 +156,8 @@ class _ChainItemState extends State<_ChainItem> {
                 ),
               ],
             ).top(12),
+            secondChild: Container(),
+          ),
 
           /*
               // price
@@ -191,7 +196,7 @@ class _ChainItemState extends State<_ChainItem> {
             ).top(16),
 
           // Test
-          if (_enabled)
+          if (_show)
             OrchidActionButton(
               width: 70,
               text: "TEST",
@@ -256,7 +261,7 @@ class _ChainItemState extends State<_ChainItem> {
     int chainId = widget.chain.chainId;
     var newConfig = ChainConfig(
       chainId: chainId,
-      enabled: _enabled,
+      enabled: _show,
       rpcUrl: text,
     );
     var list = UserPreferences()
@@ -279,7 +284,7 @@ class _ChainItemState extends State<_ChainItem> {
       inactiveTrackColor: OrchidColors.inactive,
       value: value,
       onChanged: (bool value) {
-        _enabled = !_enabled;
+        _show = !_show;
         _update();
       },
     );
