@@ -46,7 +46,8 @@ class OrchidTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var textStyle = OrchidText.body2.copyWith(height: 1.5);
+    // var textStyle = OrchidText.body2.copyWith(height: 1.0, fontFamily: 'SFProText-Regular');
+    var textStyle = OrchidText.body2.copyWith( height: 1.5, textBaseline: TextBaseline.alphabetic, );
     var hasValue = controller.text != '';
 
     final suffixIcon = hasValue && !readOnly
@@ -102,7 +103,7 @@ class OrchidTextField extends StatelessWidget {
                   decoration: InputDecoration(
                     isDense: true,
                     contentPadding: EdgeInsets.only(
-                        top: 24, bottom: 20, left: 16, right: 16),
+                        top: 20, bottom: 20, left: 16, right: 16),
                     border: InputBorder.none,
                     hintText: hintText,
                     hintStyle: textStyle.copyWith(

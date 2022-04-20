@@ -116,7 +116,7 @@ class _ChainItemState extends State<_ChainItem> {
           pady(8),
           Row(
             children: [
-              SizedBox(height: 24, child: widget.chain.icon),
+              SizedBox(height: 24, width:24, child: widget.chain.icon),
               Text(widget.chain.name).title.height(1.8).left(12),
               Spacer(),
               if (widget.showEnableSwitch)
@@ -155,7 +155,7 @@ class _ChainItemState extends State<_ChainItem> {
                       ),
                     ),
                   ],
-                ).top(12),
+                ).top(12).right(12),
 
                 // last test results
                 if (_testResults.isNotEmpty)
@@ -178,7 +178,7 @@ class _ChainItemState extends State<_ChainItem> {
                 // test button
                 if (_show)
                   OrchidActionButton(
-                    width: 70,
+                    width: 110,
                     text: "TEST",
                     onPressed: _testRpc,
                     enabled: _controller.text == null ||
@@ -189,7 +189,7 @@ class _ChainItemState extends State<_ChainItem> {
             ),
           ),
         ],
-      ).padx(16).top(8).bottom(16),
+      ).padx(20).top(8).bottom(16),
     );
   }
 
