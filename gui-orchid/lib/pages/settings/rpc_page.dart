@@ -148,10 +148,10 @@ class _ChainItemState extends State<_ChainItem> {
                           _update();
                         },
                         onClear: _update,
-                        hintText: widget.chain.providerUrl ==
-                                Chains.defaultEthereumProviderUrl
-                            ? widget.chain.providerUrl.substring(0, 34)
-                            : widget.chain.providerUrl,
+                        hintText: widget.chain.defaultProviderUrl ==
+                                Chains.Ethereum.defaultProviderUrl
+                            ? widget.chain.defaultProviderUrl.substring(0, 34)
+                            : widget.chain.defaultProviderUrl,
                       ),
                     ),
                   ],

@@ -20,7 +20,7 @@ class OrchidEthereumV0 {
     if (OrchidUserParams().test) {
       return Chains.GanacheTest.providerUrl;
     }
-    return Chains.defaultEthereumProviderUrl;
+    return Chains.Ethereum.providerUrl;
   }
 
   OrchidEthereumV0._init();

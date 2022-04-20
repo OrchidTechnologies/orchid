@@ -206,7 +206,7 @@ class RealOrchidAPI implements OrchidAPI {
         : "";
 
     // Inject the default (main net Ethereum) RPC provider
-    managedConfig += '\nrpc = "${Chains.defaultEthereumProviderUrl}";';
+    managedConfig += '\nrpc = "${Chains.Ethereum.providerUrl}";';
 
     // Inject the status socket name
     managedConfig += '\ncontrol = "${OrchidRoutingStatus.socketName}";';

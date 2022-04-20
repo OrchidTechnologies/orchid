@@ -7,7 +7,6 @@ import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.d
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
-import 'orchid_chain_config.dart';
 import 'token_type.dart';
 import 'package:orchid/util/collections.dart';
 import 'tokens.dart';
@@ -23,10 +22,6 @@ class Chains {
       'pi.i' +
       'o/v' +
       '2/VwJMm1VlCgpmjULmKeaVAt3Ik4XVwxO0';
-
-  static String get defaultEthereumProviderUrl {
-    return _overriddenEthereumProviderUrl;
-  }
 
   // Get the provider URL allowing override in the advanced config
   static String get _overriddenEthereumProviderUrl {
@@ -52,7 +47,7 @@ class Chains {
     chainId: ETH_CHAINID,
     name: 'Ethereum',
     nativeCurrency: Tokens.ETH,
-    defaultProviderUrl: defaultEthereumProviderUrl,
+    defaultProviderUrl: _overriddenEthereumProviderUrl,
     iconPath: ethIconPath,
     explorerUrl: 'https://etherscan.io/',
     supportsLogs: true,
@@ -238,7 +233,7 @@ class Chain {
   final int chainId;
   final String name;
   final TokenType nativeCurrency;
-  final String _defaultProviderUrl;
+  final String defaultProviderUrl;
   final int requiredConfirmations;
   final bool supportsLogs;
   final String iconPath;
@@ -259,13 +254,13 @@ class Chain {
     @required this.chainId,
     @required this.name,
     @required this.nativeCurrency,
-    @required String defaultProviderUrl,
+    @required this.defaultProviderUrl,
     this.requiredConfirmations = 1,
     this.iconPath,
     this.explorerUrl,
     this.hasNonstandardTransactionFees = false,
     this.supportsLogs = false,
-  }) : this._defaultProviderUrl = defaultProviderUrl;
+  });
 
   String get providerUrl {
     final config = UserPreferences().chainConfigFor(chainId);
@@ -276,7 +271,7 @@ class Chain {
     //   throw Exception('chain disabled');
     // }
 
-    return config?.rpcUrl ?? _defaultProviderUrl;
+    return config?.rpcUrl ?? defaultProviderUrl;
   }
 
   Future<Token> getGasPrice({bool refresh = false}) {
