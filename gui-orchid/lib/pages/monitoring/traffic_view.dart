@@ -220,6 +220,7 @@ class _TrafficViewState extends State<TrafficView>
   }
 
   Widget _buildSearchView() {
+    var textStyle = OrchidText.body2.copyWith(height: 1.5);
     return Container(
       padding: EdgeInsets.only(bottom: 12.0, top: 12.0),
       child: TextFormField(
@@ -228,7 +229,8 @@ class _TrafficViewState extends State<TrafficView>
         smartDashesType: SmartDashesType.disabled,
         controller: _searchTextController,
         cursorColor: Colors.white,
-        style: TextStyle(color: Colors.white),
+        // style: TextStyle(color: Colors.white),
+        style: textStyle,
         decoration: InputDecoration(
           // fillColor: Colors.black,
           // filled: true,
@@ -237,7 +239,8 @@ class _TrafficViewState extends State<TrafficView>
               borderSide: BorderSide(width: 1, color: Colors.white)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(width: 2, color: Color(0xffFC7EFF))),
+              borderSide:
+                  BorderSide(width: 2, color: OrchidColors.interactive_pink)),
           // hintText: s.search,
           prefixIcon: Padding(
             padding: const EdgeInsets.only(left: 6.0),

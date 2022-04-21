@@ -14,6 +14,7 @@ import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
+import 'package:orchid/orchid/orchid_switch.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
@@ -205,10 +206,7 @@ class _LoggingPageState extends State<LoggingPage> {
       child: PageTile(
         title: s.loggingEnabled,
         onTap: () {},
-        trailing: Switch(
-          activeColor: OrchidColors.active,
-          inactiveThumbColor: OrchidColors.inactive,
-          inactiveTrackColor: OrchidColors.inactive,
+        trailing: OrchidSwitch(
           value: _loggingEnabled,
           onChanged: (bool value) {
             _loggingEnabled = value;

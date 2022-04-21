@@ -9,6 +9,8 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
+import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:orchid/orchid/orchid_switch.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
@@ -65,11 +67,6 @@ class _SettingsPageState extends State<SettingsPage> {
     var buttonStyle = OrchidText.button
         .copyWith(color: Colors.black, fontSize: 14, height: 1.5);
 
-    var activeThumbColor = Color(0xFFFC7EFF);
-    var activeTrackColor = Color(0x61FC7EFF);
-    var inactiveThumbColor = Color(0x99FFFFFF);
-    var inactiveTrackColor = Color(0x61FFFFFF);
-
     final height = 56.0;
     return TitledPage(
       title: s.settings,
@@ -96,14 +93,7 @@ class _SettingsPageState extends State<SettingsPage> {
               _divided(PageTile(
                 height: height,
                 title: s.queryBalances,
-                trailing: Switch(
-                  activeColor: activeThumbColor,
-                  activeTrackColor: activeTrackColor,
-
-                  // TODO: Why aren't these working?
-                  inactiveThumbColor: inactiveThumbColor,
-                  inactiveTrackColor: inactiveTrackColor,
-
+                trailing: OrchidSwitch(
                   value: _queryBalances,
                   onChanged: (bool value) {
                     UserPreferences().setQueryBalances(value);

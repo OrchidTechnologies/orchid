@@ -8,6 +8,7 @@ import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
+import 'package:orchid/orchid/orchid_switch.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
@@ -116,7 +117,7 @@ class _ChainItemState extends State<_ChainItem> {
           pady(8),
           Row(
             children: [
-              SizedBox(height: 24, width:24, child: widget.chain.icon),
+              SizedBox(height: 24, width: 24, child: widget.chain.icon),
               Text(widget.chain.name).title.height(1.8).left(12),
               Spacer(),
               if (widget.showEnableSwitch)
@@ -261,10 +262,7 @@ class _ChainItemState extends State<_ChainItem> {
   }
 
   Widget _buildSwitch(bool value) {
-    return Switch(
-      activeColor: OrchidColors.active,
-      inactiveThumbColor: OrchidColors.inactive,
-      inactiveTrackColor: OrchidColors.inactive,
+    return OrchidSwitch(
       value: value,
       onChanged: (bool value) {
         _show = !_show;

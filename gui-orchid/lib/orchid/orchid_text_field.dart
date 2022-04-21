@@ -139,7 +139,6 @@ class OrchidTextField extends StatelessWidget {
     borderRadius: BorderRadius.circular(12),
     borderSide: BorderSide(
       width: 2,
-      // color: Color(0xffFC7EFF),
       color: OrchidColors.tappable,
     ),
   );

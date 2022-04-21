@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 // This is replacing AppColors
 // We can give these names as we discover them.
 class OrchidColors {
-  static const purple_ffb88dfc = Color(0xffb88dfc);
-  static const purple_bright = purple_ffb88dfc;
-  static const tappable = purple_bright;
   static const purple_ff8c61e1 = Color(0xff8C61E1);
   static const purple_ffa29ec0 = Color(0xffa29ec0);
   static const purpleCaption = purple_ffa29ec0;
@@ -34,7 +31,21 @@ class OrchidColors {
   static const selected_color_dark = new_purple_divider;
   static const new_purple_bright = Color(0xFFCBAAFF);
 
+  // interactive / tappable - 'on'-state toggles and active fields
+  static const interactive_pink = Color(0xFFFC7EFF);
+  static const switch_active_thumb = interactive_pink;
+  static const switch_active_track = Color(0x61FC7EFF);
+  static const switch_inactive_thumb = Color(0x99FFFFFF);
+  static const switch_inactive_track = Color(0x61FFFFFF);
+
+  // interactive / tappable - buttons and hyperlinks
+  static const purple_ffb88dfc = Color(0xffb88dfc);
+  static const purple_bright = purple_ffb88dfc;
+  static const tappable = purple_bright;
+
   // For debugging convenience
+  static const white = Colors.white;
+  static const red = Colors.red;
   static const orange = Colors.orange;
   static const green = Colors.green;
 }
