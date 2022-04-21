@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/util/on_off.dart';
 
 /// A styled text field with an optional custom trailing component.
 class OrchidTextField extends StatelessWidget {
@@ -19,11 +17,7 @@ class OrchidTextField extends StatelessWidget {
   // If readOnly the text is displayed without the text field decoration
   final bool readOnly;
 
-  final EdgeInsetsGeometry padding;
-  final EdgeInsetsGeometry margin;
-
   final bool numeric;
-  final double height;
 
   final VoidCallback onClear;
   final ValueChanged<String> onChanged;
@@ -36,10 +30,7 @@ class OrchidTextField extends StatelessWidget {
     this.maxLines = 1,
     this.enabled = true,
     this.readOnly = false,
-    this.padding,
-    this.margin,
     this.numeric = false,
-    this.height = 56,
     this.onClear,
     this.onChanged,
   });
@@ -47,7 +38,7 @@ class OrchidTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // var textStyle = OrchidText.body2.copyWith(height: 1.0, fontFamily: 'SFProText-Regular');
-    var textStyle = OrchidText.body2.copyWith( height: 1.5, textBaseline: TextBaseline.alphabetic, );
+    var textStyle = OrchidText.body2.copyWith(height: 1.0);
     var hasValue = controller.text != '';
 
     final suffixIcon = hasValue && !readOnly
@@ -80,55 +71,48 @@ class OrchidTextField extends StatelessWidget {
         ]).top(10).bottom(10);
      */
 
-    return Container(
-        height: height,
-        margin: margin ??
-            (readOnly ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: 20)),
-        child: Row(
-          children: <Widget>[
-            Flexible(
-              child: Padding(
-                padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
-                child: TextField(
-                  enabled: enabled,
-                  style: textStyle,
-                  obscureText: obscureText,
-                  controller: controller,
-                  autocorrect: false,
-                  textAlign: TextAlign.left,
-                  textAlignVertical: TextAlignVertical.center,
-                  maxLines: maxLines,
-                  onChanged: onChanged,
-                  focusNode: null,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.only(
-                        top: 20, bottom: 20, left: 16, right: 16),
-                    border: InputBorder.none,
-                    hintText: hintText,
-                    hintStyle: textStyle.copyWith(
-                        color: Colors.white.withOpacity(0.3)),
-                    enabledBorder: textFieldEnabledBorder,
-                    focusedBorder: textFieldFocusedBorder,
-                    // suffix: suffix,
-                    suffixIcon: suffixIcon,
-                  ),
-                  cursorColor: Colors.white,
-                  keyboardType: numeric
-                      ? TextInputType.numberWithOptions(decimal: true)
-                      : null,
-                  inputFormatters: numeric
-                      ? <TextInputFormatter>[
-                          // include comma as decimal separator
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                        ]
-                      : null,
-                ),
-              ),
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: TextField(
+            enabled: enabled,
+            style: textStyle,
+            obscureText: obscureText,
+            controller: controller,
+            autocorrect: false,
+            textAlign: TextAlign.left,
+            // textAlignVertical: TextAlignVertical.center,
+            textAlignVertical: TextAlignVertical.top,
+            maxLines: maxLines,
+            onChanged: onChanged,
+            focusNode: null,
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: EdgeInsets.only(top: 20, bottom: 20, left: 16, right: 16),
+              // contentPadding: EdgeInsets.zero,
+              border: InputBorder.none,
+              hintText: hintText,
+              hintStyle:
+                  textStyle.copyWith(color: Colors.white.withOpacity(0.3)),
+              enabledBorder: textFieldEnabledBorder,
+              focusedBorder: textFieldFocusedBorder,
+              // suffix: suffix,
+              suffixIcon: suffixIcon,
             ),
-            trailing != null ? trailing : Container(),
-          ],
-        ));
+            cursorColor: Colors.white,
+            keyboardType:
+                numeric ? TextInputType.numberWithOptions(decimal: true) : null,
+            inputFormatters: numeric
+                ? <TextInputFormatter>[
+                    // include comma as decimal separator
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                  ]
+                : null,
+          ),
+        ),
+        trailing != null ? trailing : Container(),
+      ],
+    );
   }
 
   static var textFieldEnabledBorder = OutlineInputBorder(

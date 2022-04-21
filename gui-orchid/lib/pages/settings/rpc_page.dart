@@ -142,8 +142,6 @@ class _ChainItemState extends State<_ChainItem> {
                     SizedBox(width: labelWidth, child: Text(s.rpc + ':').title),
                     Expanded(
                       child: OrchidTextField(
-                        padding: EdgeInsets.zero,
-                        margin: EdgeInsets.zero,
                         controller: _controller,
                         onChanged: (_) {
                           _update();

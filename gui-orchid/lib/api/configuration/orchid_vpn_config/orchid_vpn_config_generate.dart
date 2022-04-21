@@ -70,7 +70,7 @@ class OrchidVPNConfigGenerate {
     var signerKey = await hop.account.signerKey;
     var funder = hop.account.funder;
     var curator = hop.curator ??
-        (await UserPreferences().getDefaultCurator()) ??
+        (UserPreferences().getDefaultCurator()) ??
         OrchidHop.appDefaultCurator;
 
     // V0 fields

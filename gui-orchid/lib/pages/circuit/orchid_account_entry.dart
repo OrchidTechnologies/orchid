@@ -246,8 +246,6 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
       children: <Widget>[
         OrchidTextField(
           hintText: '0x...',
-          margin: EdgeInsets.zero,
-          padding: EdgeInsets.zero,
           controller: _pastedFunderField,
           trailing: TextButton(
             child: Icon(Icons.paste, color: OrchidColors.tappable),

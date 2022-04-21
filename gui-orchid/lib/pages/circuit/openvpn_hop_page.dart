@@ -119,7 +119,6 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
         pady(8),
         OrchidTextField(
             hintText: s.password,
-            margin: EdgeInsets.zero,
             controller: _userPassword)
       ],
     );
@@ -135,7 +134,6 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
         pady(8),
         OrchidTextField(
             hintText: s.username,
-            margin: EdgeInsets.zero,
             controller: _userName)
       ],
     );

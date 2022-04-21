@@ -470,7 +470,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         Expanded(
             child: OrchidTextField(
           controller: _curatorField,
-          padding: EdgeInsets.zero,
+          hintText: OrchidHop.appDefaultCurator,
           readOnly: true,
           enabled: false,
         ))

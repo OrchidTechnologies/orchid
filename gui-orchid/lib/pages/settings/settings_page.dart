@@ -84,8 +84,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     width: min(275, screenWidth * 0.5),
                     child: OrchidTextField(
                       controller: _defaultCurator,
-                      margin: EdgeInsets.zero,
-                      padding: EdgeInsets.zero,
+                      hintText: OrchidHop.appDefaultCurator,
                     )),
               )),
 
@@ -233,6 +232,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _curatorChanged() {
     UserPreferences().setDefaultCurator(_defaultCurator.text);
+    setState(() { });
   }
 
   @override

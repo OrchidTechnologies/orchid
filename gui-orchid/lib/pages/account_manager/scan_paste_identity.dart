@@ -52,8 +52,6 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
   Widget _buildPasteField(bool showIcons) {
     return OrchidTextField(
       hintText: '0x...',
-      margin: EdgeInsets.zero,
-      padding: EdgeInsets.zero,
       controller: _pasteField,
       trailing: Row(
         children: [

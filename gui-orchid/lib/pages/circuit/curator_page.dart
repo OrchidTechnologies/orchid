@@ -4,9 +4,6 @@ import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
-import 'package:orchid/util/on_off.dart';
-import '../../common/app_colors.dart';
-import '../../common/app_text.dart';
 import 'hop_editor.dart';
 import 'model/orchid_hop.dart';
 
@@ -52,10 +49,11 @@ class _CuratorEditorState extends State<CuratorEditorPage> {
       children: <Widget>[
         Container(
           width: 90,
-          child: Text(s.curator+":").title,
+          child: Text(s.curator + ":").title,
         ),
         Expanded(
             child: OrchidTextField(
+          hintText: OrchidHop.appDefaultCurator,
           controller: _curatorField,
         ))
       ],
@@ -65,6 +63,7 @@ class _CuratorEditorState extends State<CuratorEditorPage> {
   void _updateHop() {
     widget.editableHop.update(OrchidHop.from(widget.editableHop.value?.hop,
         curator: _curatorField.text));
+    setState(() {});
   }
 
   S get s {
