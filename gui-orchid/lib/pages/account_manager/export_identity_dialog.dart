@@ -66,31 +66,38 @@ class _ExportIdentityDialogState extends State<ExportIdentityDialog> {
                     version: QrVersions.auto,
                     size: 180.0,
                   ),
-                  pady(8),
-                  Container(
-                    width: 180,
-                    height: 30,
-                    child: _showCopiedText
-                        ? Center(
-                            child: Text(
-                            s.copied,
-                            style: OrchidText.button
-                                .copyWith(color: Colors.deepPurple),
-                          ))
-                        : Center(
-                            child: Text(
-                              s.copy,
-                              style: OrchidText.button
-                                  .copyWith(color: Colors.deepPurple),
-                            ),
-                          ),
-                  ),
+                  if (orientation == Orientation.portrait)
+                    Text(
+                      widget.config,
+                      softWrap: true,
+                    ).caption.black.padx(26).top(8),
+                  _buildCopyButton(),
                 ],
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Container _buildCopyButton() {
+    var s = S.of(context);
+    return Container(
+      width: 180,
+      height: 30,
+      child: _showCopiedText
+          ? Center(
+              child: Text(
+              s.copied,
+              style: OrchidText.button.copyWith(color: Colors.deepPurple),
+            ))
+          : Center(
+              child: Text(
+                s.copy,
+                style: OrchidText.button.copyWith(color: Colors.deepPurple),
+              ),
+            ),
     );
   }
 
