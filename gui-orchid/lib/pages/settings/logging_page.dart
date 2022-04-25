@@ -129,13 +129,17 @@ class _LoggingPageState extends State<LoggingPage> {
                           padding: const EdgeInsets.all(0),
                           child: RoundTitledRaisedImageButton(
                               title: s.copy,
-                              imageName: OrchidAssetImage.business_path,
+                              icon: Icon(Icons.copy,
+                                  color: Colors.black, size: 20),
+                              padding: 16,
                               onPressed: _onCopyButton)),
                       Padding(
-                          padding: const EdgeInsets.only(left: 0, right: 0),
+                          padding: const EdgeInsets.all(0),
                           child: RoundTitledRaisedImageButton(
                               title: s.clear,
-                              imageName: OrchidAssetImage.business_path,
+                              icon: Icon(Icons.clear,
+                                  color: Colors.black, size: 20),
+                              padding: 16,
                               onPressed: _confirmDelete)),
                     ],
                   ),
