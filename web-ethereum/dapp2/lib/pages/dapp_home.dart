@@ -156,7 +156,7 @@ class _DappHomeState extends State<DappHome> {
               scrollbarTheme: ScrollbarThemeData(
                 thumbColor:
                     MaterialStateProperty.all(Colors.white.withOpacity(0.4)),
-                // isAlwaysShown: true,
+                isAlwaysShown: true,
               ),
             ),
             child: Scrollbar(
@@ -353,9 +353,7 @@ class _DappHomeState extends State<DappHome> {
           ),
           pady(12),
           OrchidTextField(
-            height: 60,
             hintText: '0x...',
-            margin: EdgeInsets.zero,
             controller: _signerField,
           ),
         ],

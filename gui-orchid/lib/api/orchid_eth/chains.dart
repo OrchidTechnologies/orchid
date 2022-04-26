@@ -219,6 +219,10 @@ class Chains {
     return map;
   }
 
+  static bool isKnown(int chainId) {
+    return unfiltered[chainId] != null;
+  }
+
   // Get the chain for chainId
   static Chain chainFor(int chainId) {
     var chain = unfiltered[chainId];

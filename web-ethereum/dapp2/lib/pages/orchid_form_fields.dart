@@ -49,12 +49,11 @@ class LabeledTokenValueField extends StatelessWidget {
         Flexible(
           child: OrchidTextField(
             hintText: '0.0',
-            margin: EdgeInsets.zero,
             controller: controller._textController,
             numeric: true,
             enabled: enabled ?? true,
             onClear: onClear,
-          ),
+          ).padx(16),
         ),
 
         // token symbol suffix

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/util/time_extensions.dart';
 
 class LotteryPot {
   final Token deposit;
@@ -38,8 +39,7 @@ class LotteryPot {
   }
 
   String unlockInString() {
-    var unlockIn = unlockTime.difference(DateTime.now());
-    return '${unlockIn.inHours}:${unlockIn.inMinutes.remainder(60)}:${(unlockIn.inSeconds.remainder(60))}';
+    return unlockTime.toCountdownString();
   }
 
   /// The amount that can be withdrawn by moving any unlocked funds from deposit

@@ -7,6 +7,7 @@ import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/units.dart';
@@ -230,7 +231,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         ? DateTime.now().add(Duration(days: 1))
         : pot.unlockTime;
     var unlockText = unlockTime.isAfter(DateTime.now())
-        ? unlockTime.toLocal().toString()
+        ? unlockTime.toLocal().toShortString()
         : s.now;
 
     return [
@@ -247,7 +248,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       Visibility(
         visible: _warnedField.value.gtZero(),
         child: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
+          padding: const EdgeInsets.only(top: 16.0),
           child: Row(
             children: [
               SizedBox(width: 110, child: Text(s.available + ':').button),

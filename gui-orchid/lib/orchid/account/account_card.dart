@@ -191,7 +191,6 @@ class _AccountCardState extends State<AccountCard>
     }
 
     // log('XXX: pot = $pot, unlocked = ${pot.isUnlocked}, warned int = ${pot.warned.intValue}');
-    // var unlockTimeStr = DateFormat('MM/dd/yyyy HH:mm:ss').format(pot.unlockTime);
     String unlockInStr = pot.unlockInString();
     return Column(
       children: [
