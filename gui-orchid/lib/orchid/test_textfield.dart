@@ -74,7 +74,7 @@ class __TestState extends State<_Test> with TickerProviderStateMixin {
   }
 
   Widget _buildLinesOverlay() {
-    final dividerHeight = 2.0;
+    final dividerHeight = 0.1;
     final pad = (textFieldDefaultHeightNonDense - 3 * dividerHeight) / 2;
     return Container(
       width: 185,
@@ -82,41 +82,48 @@ class __TestState extends State<_Test> with TickerProviderStateMixin {
       // color: Colors.grey.withOpacity(0.2),
       child: Column(
         children: [
-          Divider(color: Colors.white, height: dividerHeight),
+          Container(color: Colors.white, height: dividerHeight),
           pady(pad),
-          Divider(color: Colors.white, height: dividerHeight),
+          Container(color: Colors.white, height: dividerHeight),
           pady(pad),
-          Divider(color: Colors.white, height: dividerHeight),
+          Container(color: Colors.white, height: dividerHeight),
         ],
       ),
     );
   }
 
   Widget _buildTextField(TextStyle textStyle) {
-    return TextField(
-      enabled: true,
-      style: textStyle,
-      controller: controller,
-      obscureText: false,
-      autocorrect: false,
-      textAlign: TextAlign.left,
-      // textAlignVertical: TextAlignVertical.center,
-      textAlignVertical: TextAlignVertical.bottom,
-      maxLines: 1,
-      onChanged: (_) {},
-      focusNode: null,
-      decoration: InputDecoration(
-        // isDense: true, // 48px vs 40px default height
-        // contentPadding: EdgeInsets.only(top: 0, bottom: 0, left: 16, right: 16),
-        // contentPadding: EdgeInsets.zero,
-        border: InputBorder.none,
-        hintText: 'This is hint text...',
-        hintStyle: textStyle.copyWith(color: Colors.white.withOpacity(0.3)),
-        enabledBorder: OrchidTextField.textFieldEnabledBorder,
-        focusedBorder: OrchidTextField.textFieldFocusedBorder,
-        // suffixIcon: suffixIcon,
+    return Theme(
+      data: ThemeData(
+        // platform: TargetPlatform.macOS,
       ),
-      cursorColor: Colors.white,
+      child: TextField(
+        enabled: true,
+        style: textStyle,
+        controller: controller,
+        obscureText: false,
+        autocorrect: false,
+        textAlign: TextAlign.left,
+        // textAlignVertical: TextAlignVertical.center,
+        // textAlignVertical: TextAlignVertical.top,
+        textAlignVertical: TextAlignVertical.bottom,
+        maxLines: 1,
+        onChanged: (_) {},
+        focusNode: null,
+        decoration: InputDecoration(
+          // isDense: true, // 48px vs 40px default height
+          // contentPadding: EdgeInsets.only(top: 0, bottom: 0, left: 16, right: 16),
+          // contentPadding: EdgeInsets.zero,
+          border: InputBorder.none,
+          // hintText: 'This is hint text...',
+          hintStyle: textStyle.copyWith(color: Colors.white.withOpacity(0.3)),
+          enabledBorder: OrchidTextField.textFieldEnabledBorder,
+          focusedBorder: OrchidTextField.textFieldFocusedBorder,
+          // suffixIcon: suffixIcon,
+        ),
+        // cursorHeight: 14,
+        cursorColor: Colors.white,
+      ),
     );
   }
 }

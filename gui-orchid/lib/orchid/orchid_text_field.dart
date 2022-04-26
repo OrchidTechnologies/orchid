@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text.dart';
 
 /// A styled text field with an optional custom trailing component.
 class OrchidTextField extends StatelessWidget {
@@ -38,7 +37,16 @@ class OrchidTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // var textStyle = OrchidText.body2.copyWith(height: 1.0, fontFamily: 'SFProText-Regular');
-    var textStyle = OrchidText.body2.copyWith(height: 1.0);
+    // var textStyle = OrchidText.body2;
+
+    var textStyle = TextStyle(
+        fontFamily: "Baloo2",
+        fontWeight: FontWeight.normal,
+        color: Colors.white,
+        fontSize: 16,
+        height: 1.00,
+        letterSpacing: 0.25);
+
     var hasValue = controller.text != '';
 
     final suffixIcon = hasValue && !readOnly
@@ -57,20 +65,6 @@ class OrchidTextField extends StatelessWidget {
           )
         : null;
 
-    // TODO: Moving the paste/scan button into the field suffix area along with
-    // TODO: the clear button causes all kinds of alignment problems.
-    // TODO: We should probably just reserve space with the suffix and overlay
-    // TODO: the buttons with a stack.
-    /*
-    final suffix = Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          suffixIcon,
-          trailing != null ? trailing : SizedBox.shrink(),
-        ]).top(10).bottom(10);
-     */
-
     return Row(
       children: <Widget>[
         Expanded(
@@ -81,15 +75,14 @@ class OrchidTextField extends StatelessWidget {
             controller: controller,
             autocorrect: false,
             textAlign: TextAlign.left,
-            // textAlignVertical: TextAlignVertical.center,
-            textAlignVertical: TextAlignVertical.top,
-            maxLines: maxLines,
+            textAlignVertical: TextAlignVertical.bottom,
+            cursorHeight: textStyle.fontSize - 2,
+            maxLines: 1,
             onChanged: onChanged,
             focusNode: null,
             decoration: InputDecoration(
-              isDense: true,
-              contentPadding: EdgeInsets.only(top: 20, bottom: 20, left: 16, right: 16),
-              // contentPadding: EdgeInsets.zero,
+              // isDense: true,
+              contentPadding: EdgeInsets.only(top: 19, bottom: 17, left: 16, right: 16),
               border: InputBorder.none,
               hintText: hintText,
               hintStyle:
