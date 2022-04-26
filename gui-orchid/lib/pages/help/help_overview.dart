@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_docs.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:orchid/orchid/orchid_text.dart';
@@ -18,40 +20,38 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
   @override
   void initState() {
     super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_helpText == null) {
-      _helpText = "";
+    SchedulerBinding.instance.addPostFrameCallback((_) {
       OrchidDocs.helpOverview(context).then((text) {
         setState(() {
           _helpText = text;
         });
       });
-    }
+    });
+  }
 
-    String title = s.orchidOverview;
-    return TitledPage(title: title, child: buildPage(context));
+  @override
+  Widget build(BuildContext context) {
+    return TitledPage(title: s.orchidOverview, child: buildPage(context));
   }
 
   Widget buildPage(BuildContext context) {
-    return SafeArea(
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          // highlightColor: OrchidColors.tappable,
-          scrollbarTheme: ScrollbarThemeData(
-            thumbColor:
-                MaterialStateProperty.all(Colors.white.withOpacity(0.4)),
-            // isAlwaysShown: true,
-          ),
+    if (_helpText == null) {
+      return Center(
+          child: OrchidCircularProgressIndicator.smallIndeterminate());
+    }
+    return Theme(
+      data: Theme.of(context).copyWith(
+        // highlightColor: OrchidColors.tappable,
+        scrollbarTheme: ScrollbarThemeData(
+          thumbColor: MaterialStateProperty.all(Colors.white.withOpacity(0.4)),
+          // isAlwaysShown: true,
         ),
+      ),
+      child: SafeArea(
+        // The HTML must be a direct child of the scrollview.
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: html(_helpText),
-          ),
-        ),
+          child: html(_helpText),
+        ).padx(16),
       ),
     );
   }
@@ -59,9 +59,8 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
   // flutter_hmtl supports a subset of html: https://pub.dev/packages/flutter_html
   Widget html(String html) {
     return Html(
-      key: Key(html),
       data: html,
-      onAnchorTap: (url, context, attributes, element) {
+      onLinkTap: (url, context, attributes, element) {
         launch(url, forceSafariVC: false);
       },
       style: {
@@ -77,9 +76,5 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
         'h2': Style.fromTextStyle(OrchidText.title.copyWith(height: 1.0)),
       },
     );
-  }
-
-  S get s {
-    return S.of(context);
   }
 }
