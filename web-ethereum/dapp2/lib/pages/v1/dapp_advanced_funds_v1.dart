@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
@@ -52,7 +53,8 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
   }
 
   LotteryPot get pot {
-    return widget.pot;
+    return AccountMock.account0eth.mockLotteryPot;
+    // return widget.pot;
   }
 
   @override
@@ -62,13 +64,6 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     _depositField.addListener(_formFieldChanged);
     _moveField.addListener(_formFieldChanged);
     _warnedField.addListener(_formFieldChanged);
-    _resetWarnedField();
-  }
-
-  void _resetWarnedField() {
-    if (pot != null) {
-      _warnedField.value = pot.warned;
-    }
   }
 
   void initStateAsync() async {}
@@ -143,7 +138,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   List<Widget> _buildBalanceForm(TokenType tokenType, USD tokenPrice) {
     return [
-      _buildTitle(s.balance),
+      _title(s.balance),
       pady(24),
       Row(
         children: [
@@ -171,7 +166,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   List<Widget> _buildDepositForm(TokenType tokenType, USD tokenPrice) {
     return [
-      _buildTitle(s.deposit),
+      _title(s.deposit),
       pady(24),
       Row(
         children: [
@@ -199,7 +194,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   List<Widget> _buildMoveFunds(TokenType tokenType, USD tokenPrice) {
     return [
-      _buildTitle(s.move),
+      _title(s.move),
       pady(24),
       Row(
         children: [
@@ -226,61 +221,73 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
   }
 
   List<Widget> _buildWarn(TokenType tokenType, USD tokenPrice) {
-    var warnedIncreased = (_warnedField.value ?? tokenType.zero) > pot.warned;
-    var unlockTime = warnedIncreased
-        ? DateTime.now().add(Duration(days: 1))
-        : pot.unlockTime;
-    var unlockText = unlockTime.isAfter(DateTime.now())
-        ? unlockTime.toLocal().toShortString()
+    final currentUnlockText = pot.unlockTime.isAfter(DateTime.now())
+        ? pot.unlockTime.toLocal().toShortString()
         : s.now;
+    final futureUnlockText =
+        DateTime.now().add(Duration(days: 1)).toLocal().toShortString();
+    final currentAmount = TokenValueFieldController();
+    currentAmount.value = pot.warned;
+    final setLabel =
+        pot.isWarned ? "Change Warned Amount To" : "Set Warned Amount To";
 
     return [
-      _buildTitle(s.warn),
-      pady(24),
+      pady(16),
+      _title(s.warn),
+      pady(8),
+      Visibility(
+        visible: pot.isWarned,
+        child: Column(
+          children: [
+            // Current warned amount
+            LabeledTokenValueField(
+              enabled: false,
+              readOnly: true,
+              labelWidth: 260,
+              type: tokenType,
+              controller: currentAmount,
+              label: "Current Warned Amount" + ':',
+              usdPrice: tokenPrice,
+            ),
+            // Current available time
+            Row(
+              children: [
+                SizedBox(width: 110, child: Text(s.available + ':').button),
+                Text(currentUnlockText).button,
+              ],
+            ).top(0),
+          ],
+        ),
+      ).bottom(16),
+
+      // User warned amount field
       LabeledTokenValueField(
         labelWidth: 260,
         type: tokenType,
         controller: _warnedField,
-        label: s.totalWarnedAmount + ':',
-        onClear: _resetWarnedField,
-        usdPrice: tokenPrice,
+        label: setLabel + ':',
+        hintText:
+            pot.warned.toFixedLocalized(digits: 2, locale: context.locale),
+        usdPrice: _warnedField.hasValue ? tokenPrice : null,
       ),
+      // User available time
       Visibility(
-        visible: _warnedField.value.gtZero(),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 16.0),
-          child: Row(
-            children: [
-              SizedBox(width: 110, child: Text(s.available + ':').button),
-              Text(unlockText).button,
-            ],
-          ),
-        ),
+        visible: _warnedField.hasValue && _warnedField.value.gtZero(),
+        child: Row(
+          children: [
+            Text("All warned funds will be locked until" + ':').button,
+            Text(futureUnlockText).button.left(8),
+          ],
+        ).top(12),
       ),
     ];
   }
 
-  Widget _buildTitle(String text) {
+  Widget _title(String text) {
     return Text(text).title;
-    // return Row(
-    //   mainAxisAlignment: MainAxisAlignment.center,
-    //   children: [
-    //     Text(text).title,
-    //   ],
-    // );
-  }
-
-  Padding _divider() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 24),
-      child: Divider(color: Colors.white.withOpacity(0.3)),
-    );
   }
 
   void _formFieldChanged() {
-    if (_warnedField.hasNoValue) {
-      _resetWarnedField();
-    }
     // Update UI
     setState(() {});
   }
@@ -325,9 +332,13 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     return -_netDepositAdd;
   }
 
-  // positive if the warned amount is increasing
+  // Change to warn amount: positive if the warned amount is increasing
   Token get _warnedAmountAdd {
-    return (_warnedField.value ?? pot.warned) - pot.warned;
+    if (_warnedField.hasValue) {
+      return _warnedField.value - pot.warned;
+    } else {
+      return pot.balance.type.zero;
+    }
   }
 
   // The net amount leaving the user's wallet (which may be negative)
@@ -387,6 +398,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   // Would the transaction described by the form actually cause a change.
   bool get _formTransactionHasNetEffect {
+    log("XXX: _warnedAmountAdd = ${_warnedAmountAdd}");
     return _netPayable.isNotZero() ||
         _netDepositAdd.isNotZero() ||
         _warnedAmountAdd.isNotZero();

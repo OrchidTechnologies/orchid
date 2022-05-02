@@ -32,6 +32,19 @@ class AccountMock {
     key3,
   ];
 
+  static final account0eth = MockAccount(
+    signerKey: key1,
+    version: 1,
+    chain: Chains.Ethereum,
+    funder: funder1,
+    mockLotteryPot: MockLotteryPot(
+      balance: Tokens.ETH.fromDouble(0.94),
+      deposit: Tokens.ETH.fromDouble(0.50),
+      warned: Tokens.ETH.fromDouble(0.25),
+      mockMarketConditions: MockMarketConditions(efficiency: 0.94),
+    ),
+  );
+
   static final account1xdai = MockAccount(
     signerKey: key1,
     version: 1,

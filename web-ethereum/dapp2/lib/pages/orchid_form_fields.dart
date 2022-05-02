@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/common/formatting.dart';
@@ -16,7 +18,9 @@ class LabeledTokenValueField extends StatelessWidget {
   final String label;
   final double labelWidth;
   final bool enabled;
+  final bool readOnly;
   final VoidCallback onClear;
+  final String hintText;
 
   LabeledTokenValueField({
     Key key,
@@ -27,6 +31,8 @@ class LabeledTokenValueField extends StatelessWidget {
     this.labelWidth,
     this.onClear,
     this.usdPrice,
+    this.readOnly,
+    this.hintText,
   }) : super(key: key) {
     controller.type = type;
   }
@@ -48,9 +54,10 @@ class LabeledTokenValueField extends StatelessWidget {
         // text field
         Flexible(
           child: OrchidTextField(
-            hintText: '0.0',
+            hintText: hintText ?? '0.0',
             controller: controller._textController,
             numeric: true,
+            readOnly: readOnly ?? false,
             enabled: enabled ?? true,
             onClear: onClear,
           ).padx(16),
@@ -60,15 +67,16 @@ class LabeledTokenValueField extends StatelessWidget {
         Text(type.symbol ?? '').button, //.height(1.5),
 
         // USD price annotation
-        if (usdText != null)
-          SizedBox(
-            width: 130,
-            child: Text(
-              usdText ?? '',
-              overflow: TextOverflow.visible,
-              softWrap: false,
-            ).button.left(8),
-          )
+        SizedBox(
+          width: 130,
+          child: usdText != null
+              ? Text(
+                  usdText ?? '',
+                  overflow: TextOverflow.visible,
+                  softWrap: false,
+                ).button.left(8)
+              : Container(),
+        )
       ],
     );
   }

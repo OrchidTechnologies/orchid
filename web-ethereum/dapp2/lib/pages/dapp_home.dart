@@ -73,6 +73,7 @@ class _DappHomeState extends State<DappHome> {
   }
 
   void initStateAsync() async {
+    // (TESTING)
     if (OrchidUserParams().test) {
       await Future.delayed(Duration(seconds: 0), () {
         _connectEthereum();
