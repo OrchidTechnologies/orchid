@@ -10,7 +10,6 @@ import 'package:pointycastle/ecc/api.dart';
 import 'package:pointycastle/ecc/curves/secp256k1.dart';
 import 'package:pointycastle/key_generators/api.dart';
 import 'package:pointycastle/key_generators/ec_key_generator.dart';
-import 'package:pointycastle/src/utils.dart' as decode;
 import 'package:uuid/uuid.dart';
 import 'package:uuid/uuid_util.dart';
 import 'package:web3dart/credentials.dart' as web3;
@@ -112,23 +111,27 @@ class DartSecureRandom implements SecureRandom {
   }
 
   @override
+  String get algorithmName => 'dart';
+
+  @override
   int nextUint8() => random.nextInt(1 << 8);
 
   @override
   int nextUint16() => random.nextInt(1 << 16);
 
   @override
-  int nextUint32() => random.nextInt(1 << 32);
-
-  @override
-  String get algorithmName => 'dart';
+  int nextUint32() {
+    // Simon Binder (simolus3/web3dart)
+    // We can't write 1 << 32 because that evaluates to 0 on js
+    return random.nextInt(4294967296);
+  }
 
   // Inspired by code from Simon Binder (simolus3/web3dart)
   @override
   BigInt nextBigInteger(int bitLength) {
     final byteLength = bitLength ~/ 8;
     final remainderBits = bitLength % 8;
-    final part1 = decode.decodeBigInt(nextBytes(byteLength));
+    final part1 = bytesToUnsignedInt(nextBytes(byteLength));
     final part2 = BigInt.from(random.nextInt(1 << remainderBits));
     return part1 + (part2 << (byteLength * 8));
   }
@@ -216,13 +219,18 @@ class StoredEthereumKey {
   }
 
   static StoredEthereumKey generate() {
-    var secret = Crypto.generateKeyPair().private;
-    return StoredEthereumKey(
-      imported: false,
-      time: DateTime.now(),
-      uid: Crypto.uuid(),
-      private: secret,
-    );
+    try {
+      var secret = Crypto.generateKeyPair().private;
+      return StoredEthereumKey(
+        imported: false,
+        time: DateTime.now(),
+        uid: Crypto.uuid(),
+        private: secret,
+      );
+    } catch (err) {
+      log("Error in key generation!: $err");
+      throw err;
+    }
   }
 
   @override
