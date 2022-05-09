@@ -73,6 +73,7 @@ windres = '${windres}'
 pkgconfig = '${curdir}/env/pkg-config'
 
 [properties]
+needs_exe_wrapper = true
 c_args = [$(args "${cflags[@]}")]
 cpp_args = [$(args "${cflags[@]}" "${xflags[@]}")]
 objc_args = [$(args "${cflags[@]}")]
