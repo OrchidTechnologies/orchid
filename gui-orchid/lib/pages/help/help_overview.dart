@@ -6,10 +6,10 @@ import 'package:orchid/api/orchid_docs.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
+import 'package:html/dom.dart' as dom;
 import 'package:flutter_html/flutter_html.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:html/dom.dart' as dom;
 
 class HelpOverviewPage extends StatefulWidget {
   @override
@@ -60,13 +60,14 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
 
   // flutter_hmtl supports a subset of html: https://pub.dev/packages/flutter_html
   Widget html(String html) {
-    dom.Element doc = HtmlParser.parseHTML(html);
+    // dom.Element doc = HtmlParser.parseHTML(html);
 
     // Add the index
-    _generateIndex(doc);
+    // _generateIndex(doc);
 
-    return Html.fromElement(
-      documentElement: doc,
+    // return Html.fromElement( documentElement: doc,
+    return Html(
+      data: html,
       onLinkTap: (url, context, attributes, element) {
         launch(url, forceSafariVC: false);
       },
