@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
@@ -8,6 +9,7 @@ import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:html/dom.dart' as dom;
 
 class HelpOverviewPage extends StatefulWidget {
   @override
@@ -58,23 +60,45 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
 
   // flutter_hmtl supports a subset of html: https://pub.dev/packages/flutter_html
   Widget html(String html) {
-    return Html(
-      data: html,
+    dom.Element doc = HtmlParser.parseHTML(html);
+
+    // Add the index
+    _generateIndex(doc);
+
+    return Html.fromElement(
+      documentElement: doc,
       onLinkTap: (url, context, attributes, element) {
         launch(url, forceSafariVC: false);
       },
       style: {
         'body': Style.fromTextStyle(OrchidText.body2),
-        // Note: This seems to be the only way to control the color of the bullet
-        // Note: It does not default to match the body text color.
-        'ul': Style.fromTextStyle(OrchidText.body2).copyWith(
-          listStyleType: ListStyleType.fromWidget(Text('•').body2),
-        ),
         'a': Style.fromTextStyle(OrchidText.body2.linkStyle),
         'h1': Style.fromTextStyle(
             OrchidText.title.copyWith(fontSize: 24, height: 1.0)),
         'h2': Style.fromTextStyle(OrchidText.title.copyWith(height: 1.0)),
       },
     );
+  }
+
+  /// Add unique ids to each H2 element and generate an index for them at
+  /// the location of the <help_index></help_index> tag.
+  void _generateIndex(dom.Element doc) {
+    try {
+      List<dom.Element> h2s = doc.getElementsByTagName('h2');
+      h2s.forEachIndexed((h2, i) {
+        h2.id = i.toString();
+      });
+      var indexLocationEl = doc.getElementsByTagName('help_index').first;
+      var content = dom.Element.tag('div');
+      content.innerHtml = '<ul>' +
+          h2s
+              .mapIndexed((h2, i) => '<li><a href="#$i">${h2.text}</a></li>')
+              .join() +
+          '</ul>';
+
+      indexLocationEl.parent.insertBefore(content, indexLocationEl);
+    } catch (err) {
+      log("html error generating index: $err");
+    }
   }
 }
