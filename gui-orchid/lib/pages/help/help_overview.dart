@@ -60,14 +60,13 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
 
   // flutter_hmtl supports a subset of html: https://pub.dev/packages/flutter_html
   Widget html(String html) {
-    // dom.Element doc = HtmlParser.parseHTML(html);
+    dom.Element doc = HtmlParser.parseHTML(html);
 
     // Add the index
-    // _generateIndex(doc);
+    _generateIndex(doc);
 
-    // return Html.fromElement( documentElement: doc,
-    return Html(
-      data: html,
+    return Html.fromElement(
+      documentElement: doc,
       onLinkTap: (url, context, attributes, element) {
         launch(url, forceSafariVC: false);
       },
