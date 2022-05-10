@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <net/if_utun.h>
+
 #include <sys/sys_domain.h>
 #include <sys/kern_control.h>
 
@@ -95,12 +97,18 @@ static inline NSString *cfs(const std::string &data) {
     [self setTunnelNetworkSettings:settings completionHandler:^(NSError *_Nullable error) { try {
         orc_assert_(error == nil, [[error localizedDescription] UTF8String]);
 
-        auto flow(self.packetFlow);
-        orc_assert(flow != nil);
-        auto value((NSNumber *) [flow valueForKeyPath:@"socket.fileDescriptor"]);
-        orc_assert(value != nil);
-        int file([value intValue]);
-        orc_assert(file != -1);
+        auto file([]() {
+            // Apple removed [self.packetFlow valueForKeyPath:@"socket.fileDescriptor"] in iOS 15
+            // this technique is from https://blog.csdn.net/qq_26359763/article/details/118331747
+            char name[IFNAMSIZ];
+            socklen_t size;
+            // XXX: I think there is a way to request the size of the file descriptor table
+            for (int fd(0); fd != 1024; ++fd)
+                if (getsockopt(fd, SYSPROTO_CONTROL, UTUN_OPT_IFNAME, name, &(size = sizeof(name))) == 0)
+                    if (strncmp(name, "utun", 4) == 0)
+                        return fd;
+            orc_assert_(false, "could not find utun fd");
+        }());
 
         // XXX: seriously consider if using Covered here is sane
         auto capture(std::make_unique<Covered<BufferSink<Capture>>>(Break<Local>(), Host_));
