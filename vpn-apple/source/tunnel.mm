@@ -20,10 +20,10 @@
 /* }}} */
 
 
-#include <net/if_utun.h>
-
+// the order of these headers matters :/
 #include <sys/sys_domain.h>
 #include <sys/kern_control.h>
+#include <net/if_utun.h>
 
 #include <NetworkExtension/NetworkExtension.h>
 
