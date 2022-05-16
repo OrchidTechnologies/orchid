@@ -53,8 +53,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
   }
 
   LotteryPot get pot {
-    return AccountMock.account0eth.mockLotteryPot;
-    // return widget.pot;
+    return widget.pot;
   }
 
   @override
