@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
@@ -18,7 +19,6 @@ import 'package:orchid/util/localization.dart';
 class AddFundsPane extends StatefulWidget {
   final OrchidWeb3Context context;
   final EthereumAddress signer;
-  final TokenType tokenType;
 
   // Callback to add the funds
   final Future<List<String>> Function({
@@ -32,7 +32,6 @@ class AddFundsPane extends StatefulWidget {
     Key key,
     @required this.context,
     @required this.signer,
-    @required this.tokenType,
     @required this.addFunds,
   }) : super(key: key);
 
@@ -45,13 +44,17 @@ class _AddFundsPaneState extends State<AddFundsPane> {
   final _addDepositField = TokenValueFieldController();
   bool _txPending = false;
 
-  OrchidWallet get wallet {
+  OrchidWallet get _wallet {
     return widget.context.wallet;
   }
 
   // The wallet balance of the configured token type or null if no tokens known
-  Token get walletBalance {
-    return wallet?.balanceOf(widget.tokenType);
+  Token get _walletBalance {
+    return _wallet?.balance;
+  }
+
+  TokenType get _tokenType {
+    return _walletBalance?.type ?? Tokens.TOK;
   }
 
   @override
@@ -61,53 +64,55 @@ class _AddFundsPaneState extends State<AddFundsPane> {
     _addDepositField.addListener(_formFieldChanged);
     // _initStateAsync();
   }
+
   // void _initStateAsync() async { }
 
   @override
   Widget build(BuildContext context) {
-    var allowance =
-        wallet?.allowanceOf(widget.tokenType) ?? widget.tokenType.zero;
+    if (_wallet == null) {
+      return Container();
+    }
+    var allowance = _wallet?.allowanceOf(_tokenType) ?? _tokenType.zero;
     return TokenPriceBuilder(
-      tokenType: widget.tokenType,
-      seconds: 30,
-      builder: (USD tokenPrice) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (allowance != null && allowance.gtZero())
-              Text(s.currentTokenPreauthorizationAmount(widget.tokenType.symbol,
-                      allowance.formatCurrency(locale: context.locale)))
-                  .body2
-                  .bottom(16)
-                  .top(8),
-            LabeledTokenValueField(
-              type: widget.tokenType,
-              controller: _addBalanceField,
-              label: s.balance + ':',
-              usdPrice: tokenPrice,
-            ),
-            pady(4),
-            LabeledTokenValueField(
-              type: widget.tokenType,
-              controller: _addDepositField,
-              label: s.deposit + ':',
-              usdPrice: tokenPrice,
-            ),
-            pady(24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                DappButton(
-                    text: s.addFunds,
-                    onPressed: _addFundsFormEnabled ? _addFunds : null),
-              ],
-            ),
-            pady(32),
-            _buildInstructions(),
-          ],
-        );
-      }
-    );
+        tokenType: _tokenType,
+        seconds: 30,
+        builder: (USD tokenPrice) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (allowance != null && allowance.gtZero())
+                Text(s.currentTokenPreauthorizationAmount(_tokenType.symbol,
+                        allowance.formatCurrency(locale: context.locale)))
+                    .body2
+                    .bottom(16)
+                    .top(8),
+              LabeledTokenValueField(
+                type: _tokenType,
+                controller: _addBalanceField,
+                label: s.balance + ':',
+                usdPrice: tokenPrice,
+              ),
+              pady(4),
+              LabeledTokenValueField(
+                type: _tokenType,
+                controller: _addDepositField,
+                label: s.deposit + ':',
+                usdPrice: tokenPrice,
+              ),
+              pady(24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  DappButton(
+                      text: s.addFunds,
+                      onPressed: _addFundsFormEnabled ? _addFunds : null),
+                ],
+              ),
+              pady(32),
+              _buildInstructions(),
+            ],
+          );
+        });
   }
 
   Widget _buildInstructions() {
@@ -131,22 +136,22 @@ class _AddFundsPaneState extends State<AddFundsPane> {
 
   bool get _addBalanceFieldValid {
     var value = _addBalanceField.value;
-    return value != null && value < (walletBalance ?? widget.tokenType.zero);
+    return value != null && value < (_walletBalance ?? _tokenType.zero);
   }
 
   bool get _addDepositFieldValid {
     var value = _addDepositField.value;
-    return value != null && value < (walletBalance ?? widget.tokenType.zero);
+    return value != null && value < (_walletBalance ?? _tokenType.zero);
   }
 
   bool get _addFundsFormEnabled {
     if (_txPending) {
       return false;
     }
-    final zero = widget.tokenType.zero;
+    final zero = _tokenType.zero;
     if (_addBalanceFieldValid && _addDepositFieldValid) {
       var total = _addBalanceField.value + _addDepositField.value;
-      return total > zero && total <= (walletBalance ?? zero);
+      return total > zero && total <= (_walletBalance ?? zero);
     }
     return false;
   }
@@ -160,7 +165,7 @@ class _AddFundsPaneState extends State<AddFundsPane> {
     });
     try {
       var txHashes = await widget.addFunds(
-        wallet: wallet,
+        wallet: _wallet,
         signer: widget.signer,
         addBalance: _addBalanceField.value,
         addEscrow: _addDepositField.value,

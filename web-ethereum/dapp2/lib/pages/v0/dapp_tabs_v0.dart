@@ -75,7 +75,6 @@ class _DappTabsV0State extends State<DappTabsV0> {
                   child: AddFundsPane(
                     context: widget.web3Context,
                     signer: widget.signer,
-                    tokenType: v0.fundsTokenType,
                     addFunds: v0.orchidAddFunds,
                   ),
                 )),
