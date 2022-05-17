@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
+import 'package:orchid/orchid.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class TapToCopyText extends StatefulWidget {
+  /// The text to display and copy on tap
   final String text;
+
+  /// Text that overrides what is displayed (e.g. to elide or obfuscate)
   final String displayText;
+
   final TextStyle style;
   final TextOverflow overflow;
   final EdgeInsets padding;
@@ -31,14 +34,14 @@ class TapToCopyText extends StatefulWidget {
 }
 
 class _TapToCopyTextState extends State<TapToCopyText> {
-  String _showText = "";
+  bool _tapped = false;
+
+  String get _display =>
+      _tapped ? context.s.copied : (widget.displayText ?? widget.text);
 
   @override
   void initState() {
     super.initState();
-    setState(() {
-      _showText = widget.displayText ?? widget.text;
-    });
   }
 
   @override
@@ -48,7 +51,7 @@ class _TapToCopyTextState extends State<TapToCopyText> {
       child: Padding(
         padding: widget.padding ?? const EdgeInsets.only(top: 16, bottom: 16),
         child: Text(
-          _showText,
+          _display,
           textAlign: TextAlign.center,
           overflow: widget.overflow ?? TextOverflow.ellipsis,
           softWrap: false,
@@ -68,11 +71,11 @@ class _TapToCopyTextState extends State<TapToCopyText> {
   void _doCopy() async {
     TapToCopyText.copyTextToClipboard(widget.text);
     setState(() {
-      _showText = S.of(context).copied;
+      _tapped = true;
     });
     await Future.delayed(Duration(milliseconds: 500));
     setState(() {
-      _showText = widget.displayText ?? widget.text;
+      _tapped = false;
     });
   }
 }
