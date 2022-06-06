@@ -15,12 +15,14 @@ class MoveFundsPaneV0 extends StatefulWidget {
   final OrchidWeb3Context context;
   final LotteryPot pot;
   final EthereumAddress signer;
+  final bool enabled;
 
   const MoveFundsPaneV0({
     Key key,
     @required this.context,
     @required this.pot,
     @required this.signer,
+    this.enabled,
   }) : super(key: key);
 
   @override
@@ -45,9 +47,6 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
 
   @override
   Widget build(BuildContext context) {
-    if (pot?.balance == null) {
-      return Container();
-    }
     var tokenType = Tokens.OXT;
     var buttonTitle = s.moveFunds;
 
@@ -55,6 +54,7 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         LabeledTokenValueField(
+          enabled: widget.enabled,
           type: tokenType,
           controller: _moveBalanceField,
           label: s.balanceToDeposit + ':',
@@ -65,8 +65,7 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             DappButton(
-                text: buttonTitle,
-                onPressed: _formEnabled ? _moveFunds : null),
+                text: buttonTitle, onPressed: _formEnabled ? _moveFunds : null),
           ],
         ),
       ],
@@ -79,7 +78,8 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
   }
 
   bool get _formEnabled {
-    return !_txPending &&
+    return pot != null &&
+        !_txPending &&
         _moveBalanceFieldValid &&
         _moveBalanceField.value.gtZero();
   }

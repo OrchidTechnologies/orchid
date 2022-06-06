@@ -12,6 +12,7 @@ class Tokens {
   // Override the symbol to ETH so that ETH-equivalent tokens care share this.
   static const ETHExchangeRateSource =
       BinanceExchangeRateSource(symbolOverride: 'ETH');
+
   static const TokenType ETH = TokenType(
     symbol: 'ETH',
     exchangeRateSource: ETHExchangeRateSource,
@@ -38,7 +39,7 @@ class Tokens {
 
   static const TokenType TOK = TokenType(
     symbol: 'TOK',
-    exchangeRateSource: ETHExchangeRateSource,
+    exchangeRateSource: ZeroPriceToken(),
     chainId: Chains.GANACHE_TEST_CHAINID,
     iconPath: OrchidAssetSvgToken.unknown_token_path,
   );
@@ -116,4 +117,15 @@ class Tokens {
     chainId: Chains.CELO_CHAINID,
     iconPath: OrchidAssetSvgToken.celo_token_path,
   );
+}
+
+class ZeroPriceToken extends ExchangeRateSource {
+
+  const ZeroPriceToken();
+
+  @override
+  Future<double> tokenToUsdRate(TokenType tokenType) async {
+    return 0;
+  }
+
 }

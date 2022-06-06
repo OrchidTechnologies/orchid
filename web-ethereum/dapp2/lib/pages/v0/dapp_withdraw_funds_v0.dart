@@ -15,12 +15,14 @@ class WithdrawFundsPaneV0 extends StatefulWidget {
   final OrchidWeb3Context context;
   final LotteryPot pot;
   final EthereumAddress signer;
+  final bool enabled;
 
   const WithdrawFundsPaneV0({
     Key key,
     @required this.context,
     @required this.pot,
     @required this.signer,
+    @required this.enabled,
   }) : super(key: key);
 
   @override
@@ -47,9 +49,6 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
 
   @override
   Widget build(BuildContext context) {
-    if (pot?.balance == null) {
-      return Container();
-    }
     var tokenType = Tokens.OXT;
     var buttonTitle = s.withdrawFunds;
 
@@ -57,12 +56,14 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         LabeledTokenValueField(
+          enabled: widget.enabled,
           type: tokenType,
           controller: _withdrawBalanceField,
           label: s.balance + ':',
         ),
         pady(4),
         LabeledTokenValueField(
+          enabled: widget.enabled,
           type: tokenType,
           controller: _withdrawEscrowField,
           label: s.deposit + ':',
@@ -91,7 +92,8 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
   }
 
   bool get _withdrawFundsFormEnabled {
-    return !_txPending &&
+    return pot != null &&
+        !_txPending &&
         _withdrawFieldValid &&
         _escrowFieldValid &&
         (_withdrawBalanceField.value.gtZero() ||

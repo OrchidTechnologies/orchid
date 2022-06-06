@@ -20,10 +20,11 @@ class OrchidCircularEfficiencyIndicators {
     return [Color(0xff6efac8), Color(0xff99f5cb)];
   }
 
-  static OrchidCircularProgressIndicator small(double efficiency) {
+  static OrchidCircularProgressIndicator small(double efficiency,
+      {double size = 16}) {
     var colors = _colorAndGlowColorForEfficiency(efficiency);
     return OrchidCircularProgressIndicator(
-      size: 16,
+      size: size,
       value: efficiency,
       color: colors[0],
       glowColor: colors[1],
@@ -32,10 +33,11 @@ class OrchidCircularEfficiencyIndicators {
     );
   }
 
-  static OrchidCircularProgressIndicator medium(double efficiency) {
+  static OrchidCircularProgressIndicator medium(double efficiency,
+      {double size = 40}) {
     var colors = _colorAndGlowColorForEfficiency(efficiency);
     return OrchidCircularProgressIndicator(
-      size: 40,
+      size: size,
       value: efficiency,
       color: colors[0],
       glowColor: colors[1],
@@ -77,7 +79,8 @@ class OrchidCircularProgressIndicator extends StatelessWidget {
     this.backgroundColor = const Color(0x66FFFFFF),
   }) : super(key: key);
 
-  static OrchidCircularProgressIndicator smallIndeterminate({double size = 20, double stroke = 2.0}) {
+  static OrchidCircularProgressIndicator smallIndeterminate(
+      {double size = 20, double stroke = 2.0}) {
     return OrchidCircularProgressIndicator(
       size: size,
       value: null,

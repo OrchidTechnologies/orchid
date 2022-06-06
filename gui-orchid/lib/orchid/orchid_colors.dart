@@ -15,6 +15,7 @@ class OrchidColors {
 
   static const dark_ff3a3149 = Color(0xff3A3149);
   static const dark_background = dark_ff3a3149;
+  static const dark_background_2 = Color(0xFF1F1D21);
 
   static const ffaca3bc = Color(0xffACA3BC);
   static const inactive = ffaca3bc;

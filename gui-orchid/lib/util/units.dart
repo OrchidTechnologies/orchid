@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
+import 'package:orchid/orchid.dart';
 
 class ScalarValue<T extends num> {
   final T value;
@@ -147,6 +148,8 @@ class GWEI extends ScalarValue<double> {
 }
 
 class USD extends ScalarValue<double> {
+  static const zero = USD(0.0);
+
   // TODO: rebase on pennies?
   const USD(double value) : super(value);
 
@@ -174,8 +177,29 @@ class USD extends ScalarValue<double> {
     return divideDouble(other);
   }
 
-  String formatCurrency({@required Locale locale, int digits = 2}) {
-    return '\$' + _formatCurrency(this.value, locale: locale, digits: digits);
+  String formatCurrency(
+      {@required Locale locale,
+      int digits = 2,
+      bool showPrefix = true,
+      showSuffix = false}) {
+    return (showPrefix ? '\$' : '') +
+        _formatCurrency(this.value, locale: locale, digits: digits) +
+        (showSuffix ? ' USD' : '');
+  }
+
+  /// convert a token amount and price to string
+  static String formatUSDValue({
+    BuildContext context,
+    Token tokenAmount,
+    USD price,
+    bool showSuffix = true,
+  }) {
+    return ((price ?? USD.zero) * (tokenAmount ?? Tokens.TOK.zero).floatValue)
+        .formatCurrency(
+        locale: context.locale,
+        digits: 2,
+        showPrefix: false,
+        showSuffix: showSuffix);
   }
 }
 
@@ -194,8 +218,7 @@ String formatCurrency(num value,
   if (value == null) {
     return ifNull;
   }
-  return NumberFormat("#0." + "0" * digits, locale?.toLanguageTag())
-          .format(value) +
+  return NumberFormat("#0." + "0" * digits, locale?.toLanguageTag()) .format(value) +
       (suffix != null ? " $suffix" : "");
 }
 

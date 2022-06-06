@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
@@ -20,12 +21,14 @@ class WithdrawFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
   final LotteryPot pot;
   final EthereumAddress signer;
+  final bool enabled;
 
   const WithdrawFundsPaneV1({
     Key key,
     @required this.context,
     @required this.pot,
     @required this.signer,
+    this.enabled,
   }) : super(key: key);
 
   @override
@@ -40,6 +43,10 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
     return widget.pot;
   }
 
+  bool get _connected {
+    return pot != null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -52,42 +59,45 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
 
   @override
   Widget build(BuildContext context) {
-    if (pot?.balance == null) {
-      return Container();
-    }
-    var tokenType = pot.balance.type;
+    var tokenType = pot?.balance?.type ?? Tokens.TOK;
     var buttonTitle =
         _unlockDeposit ? s.withdrawAndUnlockFunds : s.withdrawFunds;
 
-    final totalFunds = pot.balance + pot.deposit;
-    final maxWithdraw = pot.maxWithdrawable;
-    final fullyUnlocked = maxWithdraw >= totalFunds;
+    bool fullyUnlocked;
+    String availableText;
+    Token totalFunds;
+    if (_connected) {
+      totalFunds = pot.balance + pot.deposit;
+      final maxWithdraw = pot.maxWithdrawable;
+      fullyUnlocked = maxWithdraw >= totalFunds;
 
-    final availableText = fullyUnlocked
-        ? s.allOfYourFundsAreAvailableForWithdrawal
-        : s.maxWithdrawOfYourTotalFundsCombinedFunds(
-            maxWithdraw.formatCurrency(locale: context.locale),
-            totalFunds.formatCurrency(locale: context.locale));
+      availableText = fullyUnlocked
+          ? s.allOfYourFundsAreAvailableForWithdrawal
+          : s.maxWithdrawOfYourTotalFundsCombinedFunds(
+              maxWithdraw.formatCurrency(locale: context.locale),
+              totalFunds.formatCurrency(locale: context.locale));
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         pady(16),
-        Text(availableText).title,
-        pady(24),
+        if (_connected && totalFunds.gtZero())
+          Text(availableText).title.bottom(24),
         TokenPriceBuilder(
             tokenType: tokenType,
             seconds: 30,
             builder: (USD tokenPrice) {
               return LabeledTokenValueField(
+                enabled: _connected,
                 labelWidth: 100,
                 type: tokenType,
                 controller: _withdrawBalanceField,
-                label: s.withdraw + ':',
+                label: s.withdraw,
                 usdPrice: tokenPrice,
               );
             }),
-        if (pot.deposit > pot.unlockedAmount)
+        if (_connected && pot.deposit > pot.unlockedAmount)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: _buildUnlockDepositCheckbox(context),
@@ -102,7 +112,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
           ],
         ),
         pady(32),
-        _buildInstructions(fullyUnlocked),
+        if (_connected) _buildInstructions(fullyUnlocked),
       ],
     );
   }

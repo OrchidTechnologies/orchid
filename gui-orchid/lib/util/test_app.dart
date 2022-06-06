@@ -25,8 +25,8 @@ class TestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      // localizationsDelegates: OrchidLanguage.localizationsDelegates,
-      // supportedLocales: OrchidLanguage.supportedLocales,
+      localizationsDelegates: OrchidLanguage.localizationsDelegates,
+      supportedLocales: OrchidLanguage.supportedLocales,
       home: Material(
         child: Container(
           decoration:

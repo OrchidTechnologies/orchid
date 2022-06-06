@@ -19,6 +19,7 @@ import 'package:orchid/util/localization.dart';
 class AddFundsPane extends StatefulWidget {
   final OrchidWeb3Context context;
   final EthereumAddress signer;
+  final bool enabled;
 
   // Callback to add the funds
   final Future<List<String>> Function({
@@ -33,6 +34,7 @@ class AddFundsPane extends StatefulWidget {
     @required this.context,
     @required this.signer,
     @required this.addFunds,
+    this.enabled,
   }) : super(key: key);
 
   @override
@@ -45,7 +47,7 @@ class _AddFundsPaneState extends State<AddFundsPane> {
   bool _txPending = false;
 
   OrchidWallet get _wallet {
-    return widget.context.wallet;
+    return widget.context?.wallet;
   }
 
   // The wallet balance of the configured token type or null if no tokens known
@@ -69,9 +71,6 @@ class _AddFundsPaneState extends State<AddFundsPane> {
 
   @override
   Widget build(BuildContext context) {
-    if (_wallet == null) {
-      return Container();
-    }
     var allowance = _wallet?.allowanceOf(_tokenType) ?? _tokenType.zero;
     return TokenPriceBuilder(
         tokenType: _tokenType,
@@ -84,21 +83,21 @@ class _AddFundsPaneState extends State<AddFundsPane> {
                 Text(s.currentTokenPreauthorizationAmount(_tokenType.symbol,
                         allowance.formatCurrency(locale: context.locale)))
                     .body2
-                    .bottom(16)
                     .top(8),
               LabeledTokenValueField(
+                enabled: widget.enabled,
                 type: _tokenType,
                 controller: _addBalanceField,
-                label: s.balance + ':',
+                label: s.balance,
                 usdPrice: tokenPrice,
-              ),
-              pady(4),
+              ).top(16),
               LabeledTokenValueField(
+                enabled: widget.enabled,
                 type: _tokenType,
                 controller: _addDepositField,
-                label: s.deposit + ':',
+                label: s.deposit,
                 usdPrice: tokenPrice,
-              ),
+              ).top(16),
               pady(24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

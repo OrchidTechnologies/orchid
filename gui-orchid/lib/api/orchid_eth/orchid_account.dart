@@ -88,7 +88,7 @@ class Account {
     if (account is MockAccount) {
       return account.mockLotteryPot;
     }
-    // log("Fetching lottery pot from network: $account");
+    log("Fetching lottery pot from network: $account");
     var signer = account.signerAddress;
     if (account.isV0) {
       return OrchidEthereumV0.getLotteryPot(account.funder, signer);

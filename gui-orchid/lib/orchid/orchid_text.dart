@@ -11,17 +11,18 @@ import 'package:url_launcher/url_launcher.dart';
 // normal = w400 = regular
 // medium = w500
 class OrchidText {
-  static TextStyle title = medium_20_050;
+  static TextStyle extra_large = title.size(22); // w500
+  static TextStyle title = medium_20_050; // w500
   static TextStyle subtitle = medium_18_025;
 
   // Flutter sizes text based on the EM-box, not the font metrics.
   // https://api.flutter.dev/flutter/painting/TextStyle/height.html
   static TextStyle button = medium_18_025.copyWith(height: 1.9);
 
-  static TextStyle highlight = regular_24_050;
+  static TextStyle highlight = regular_24_050; // w400
   static TextStyle body1 = medium_16_025; // w500
   static TextStyle body2 = regular_16_025; // w400
-  static TextStyle caption = regular_14;
+  static TextStyle caption = regular_14; // w400
 
   static TextStyle medium_20_050 = TextStyle(
       fontFamily: "Baloo2",
@@ -33,6 +34,7 @@ class OrchidText {
   static TextStyle normal_14 = TextStyle(
       fontFamily: "Baloo2",
       fontWeight: FontWeight.normal,
+      // w400
       color: Colors.white,
       fontSize: 14,
       height: 1.0);
@@ -119,7 +121,15 @@ extension TextStyleExtensions on TextStyle {
   }
 
   TextStyle height(double height) {
+    return this.withHeight(height);
+  }
+
+  TextStyle withHeight(double height) {
     return this.copyWith(height: height);
+  }
+
+  TextStyle inactiveIf(bool isInactive) {
+    return isInactive ? this.inactive : this;
   }
 
   TextStyle size(double size) {
@@ -187,18 +197,33 @@ extension OrchidTextStyleExtensions on TextStyle {
     return purpleBright;
   }
 
+  TextStyle get inactive {
+    return _copyWithColor(OrchidColors.inactive);
+  }
+
   TextStyle get blueHightlight {
     return this.copyWith(color: OrchidColors.blue_highlight);
   }
 
   TextStyle get linkStyle {
     return this.copyWith(
-        color: OrchidColors.purple_ffb88dfc,
-        decoration: TextDecoration.underline);
+        color: OrchidColors.tappable, decoration: TextDecoration.underline);
+  }
+
+  TextStyle get underlined {
+    return this.copyWith(decoration: TextDecoration.underline);
+  }
+
+  TextStyle _copyWithColor(Color color) {
+    return this.copyWith(color: color);
   }
 }
 
 extension OrchidTextExtensions on Text {
+  Text get extra_large {
+    return this.copyWith(style: OrchidText.extra_large);
+  }
+
   Text get title {
     return this.copyWith(style: OrchidText.title);
   }
@@ -227,6 +252,10 @@ extension OrchidTextExtensions on Text {
     return this.copyWith(style: OrchidText.caption);
   }
 
+  Text get linkStyle {
+    return this.copyWith(style: OrchidText.linkStyle);
+  }
+
   Text height(double height) {
     return this.copyWith(style: this.style.copyWith(height: height));
   }
@@ -244,8 +273,33 @@ extension OrchidTextExtensions on Text {
         .copyWith(style: this.style.copyWith(color: OrchidColors.tappable));
   }
 
+  Text get inactive {
+    return _copyWithColor(OrchidColors.inactive);
+  }
+
+  Text inactiveIf(bool isInactive) {
+    return isInactive ? inactive : this;
+  }
+
+  Text get new_purple_bright {
+    return this.copyWith(
+        style: this.style.copyWith(color: OrchidColors.new_purple_bright));
+  }
+
   Text get center {
     return this.copyWith(textAlign: TextAlign.center);
+  }
+
+  Text get bold {
+    return this.copyWith(style: this.style.bold);
+  }
+
+  Text get semibold {
+    return this.copyWith(style: this.style.semibold);
+  }
+
+  Text get medium {
+    return this.copyWith(style: this.style.medium);
   }
 
   Widget link({@required String url, TextStyle style}) {
@@ -263,5 +317,14 @@ extension OrchidTextExtensions on Text {
       style: style ?? this.style,
       onTapped: onTapped,
     );
+  }
+
+  Text _copyWithColor(Color color) {
+    return this
+        .copyWith(style: (this.style ?? TextStyle()).copyWith(color: color));
+  }
+
+  Text withStyle(TextStyle style) {
+    return this.copyWith(style: style);
   }
 }

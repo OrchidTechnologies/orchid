@@ -1,6 +1,7 @@
 #!/bin/sh
 
 FLUTTER="${FLUTTER:-$FLUTTER_STABLE}"
+$FLUTTER --version | grep -i channel
 
 rm -rf build
 

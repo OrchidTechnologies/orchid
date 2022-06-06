@@ -40,6 +40,7 @@ dependencies:
   web3dart: 2.3.3
   flutter_web3: 2.1.9
   flutter_lints: ^1.0.0
+  browser_detector: ^2.0.0
 
 dev_dependencies:
   flutter_test:

@@ -103,8 +103,12 @@ class Token {
   }
 
   /// Format as value with the symbol suffixed
-  String formatCurrency({@required Locale locale, int digits = 4}) {
-    return units.formatCurrency(floatValue, locale: locale, digits: digits, suffix: type.symbol);
+  String formatCurrency(
+      {@required Locale locale, int digits = 4, bool showSuffix = true}) {
+    return units.formatCurrency(floatValue,
+        locale: locale,
+        digits: digits,
+        suffix: showSuffix ? type.symbol : null);
   }
 
   Token multiplyInt(int other) {

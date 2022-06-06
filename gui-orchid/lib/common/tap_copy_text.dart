@@ -9,8 +9,10 @@ class TapToCopyText extends StatefulWidget {
   final String displayText;
 
   final TextStyle style;
+  final TextAlign textAlign;
   final TextOverflow overflow;
   final EdgeInsets padding;
+  final Widget displayWidget;
 
   // Callback to be used in lieu of the default copy functionality
   final void Function(String text) onTap;
@@ -19,10 +21,12 @@ class TapToCopyText extends StatefulWidget {
     this.text, {
     Key key,
     this.displayText,
+    this.displayWidget,
     this.style,
     this.padding,
     this.onTap,
     this.overflow,
+    this.textAlign,
   }) : super(key: key);
 
   @override
@@ -48,16 +52,19 @@ class _TapToCopyTextState extends State<TapToCopyText> {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      child: Padding(
-        padding: widget.padding ?? const EdgeInsets.only(top: 16, bottom: 16),
-        child: Text(
-          _display,
-          textAlign: TextAlign.center,
-          overflow: widget.overflow ?? TextOverflow.ellipsis,
-          softWrap: false,
-          style: widget.style,
-        ),
-      ),
+      child: (widget.displayWidget != null && !_tapped)
+          ? widget.displayWidget
+          : Padding(
+              padding:
+                  widget.padding ?? const EdgeInsets.only(top: 16, bottom: 16),
+              child: Text(
+                _display,
+                textAlign: widget.textAlign ?? TextAlign.center,
+                overflow: widget.overflow ?? TextOverflow.ellipsis,
+                softWrap: false,
+                style: widget.style,
+              ),
+            ),
       onTap: () {
         if (widget.onTap != null) {
           widget.onTap(widget.text);

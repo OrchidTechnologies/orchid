@@ -14,12 +14,14 @@ class LockWarnPaneV0 extends StatefulWidget {
   final OrchidWeb3Context context;
   final LotteryPot pot;
   final EthereumAddress signer;
+  final bool enabled;
 
   const LockWarnPaneV0({
     Key key,
     @required this.context,
     @required this.pot,
     @required this.signer,
+    this.enabled,
   }) : super(key: key);
 
   @override
@@ -42,18 +44,21 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
 
   @override
   Widget build(BuildContext context) {
-    if (pot?.balance == null) {
-      return Container();
+    var statusText = '';
+    var isUnlockedOrUnlocking = false;
+    if (pot != null) {
+      statusText = pot.isUnlocked
+          ? s.yourDepositOfAmountIsUnlocked(
+              pot.warned.formatCurrency(locale: context.locale))
+          : s.yourDepositOfAmountIsUnlockingOrUnlocked(
+              pot.deposit.formatCurrency(locale: context.locale),
+              pot.isUnlocking ? s.unlocking : s.locked);
+      statusText += pot.isUnlocking
+          ? '\n' +
+              s.theFundsWillBeAvailableForWithdrawalInTime(pot.unlockInString())
+          : '';
+      isUnlockedOrUnlocking = (pot.isUnlocked || pot.isUnlocking);
     }
-    var statusText = pot.isUnlocked
-        ? s.yourDepositOfAmountIsUnlocked(pot.warned.formatCurrency(locale: context.locale))
-        : s.yourDepositOfAmountIsUnlockingOrUnlocked(
-            pot.deposit.formatCurrency(locale: context.locale),
-            pot.isUnlocking ? s.unlocking : s.locked);
-    statusText += pot.isUnlocking
-        ? '\n' +
-            s.theFundsWillBeAvailableForWithdrawalInTime(pot.unlockInString())
-        : '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,7 +73,7 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (pot.isUnlocked || pot.isUnlocking)
+            if (isUnlockedOrUnlocking)
               DappButton(
                   text: s.lockDeposit,
                   onPressed: _formEnabled()
@@ -91,7 +96,7 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
   }
 
   bool _formEnabled() {
-    return !_txPending;
+    return pot != null && !_txPending;
   }
 
   void _lockOrUnlock({bool lock}) async {
