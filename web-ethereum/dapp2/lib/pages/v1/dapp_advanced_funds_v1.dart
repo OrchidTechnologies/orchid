@@ -7,6 +7,7 @@ import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
+import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid.dart';
@@ -432,7 +433,8 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         warnAmount: _warnedAmountAdd,
       );
 
-      UserPreferences().addTransaction(txHash);
+      UserPreferences().addTransaction(DappTransaction(
+          transactionHash: txHash, chainId: widget.context.chain.chainId));
       _balanceField.clear();
       _depositField.clear();
       _moveField.clear();

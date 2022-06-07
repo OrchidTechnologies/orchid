@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
+import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';
@@ -163,7 +164,7 @@ class _AddFundsPaneState extends State<AddFundsPane> {
       _txPending = true;
     });
     try {
-      var txHashes = await widget.addFunds(
+      final txHashes = await widget.addFunds(
         wallet: _wallet,
         signer: widget.signer,
         addBalance: _addBalanceField.value,
@@ -171,7 +172,8 @@ class _AddFundsPaneState extends State<AddFundsPane> {
       );
 
       // Persisting the transaction(s) will update the UI elsewhere.
-      UserPreferences().addTransactions(txHashes);
+      UserPreferences().addTransactions(txHashes.map((hash) => DappTransaction(
+          transactionHash: hash, chainId: widget.context.chain.chainId)));
 
       _addBalanceField.clear();
       _addDepositField.clear();

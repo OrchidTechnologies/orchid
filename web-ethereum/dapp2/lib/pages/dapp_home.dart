@@ -424,15 +424,18 @@ class _DappHomeState extends State<DappHome> {
   // account info here whenever they are added or updated.
   Widget _buildTransactionsList() {
     return UserPreferences().transactions.builder((txs) {
-      if (txs == null) {
+      // Limit to currently selected chain
+      txs = (txs ?? []).where((tx) => tx.chainId == _web3Context?.chain?.chainId).toList();
+      if (txs.isEmpty) {
         return Container();
       }
+
       var txWidgets = txs
           .map((tx) => Padding(
                 padding: const EdgeInsets.only(top: 32),
                 child: TransactionStatusPanel(
                   context: _web3Context,
-                  transactionHash: tx,
+                  tx: tx,
                   onDismiss: _dismissTransaction,
                   onTransactionUpdated: () {
                     _refreshUserData();
@@ -528,7 +531,7 @@ class _DappHomeState extends State<DappHome> {
   /// The connect wallet button within the connect panel
   Widget _buildConnectButton() {
     final narrow = AppSize(context).narrowerThanWidth(550);
-    final reallyNarrow = AppSize(context).narrowerThanWidth(460);
+    // final reallyNarrow = AppSize(context).narrowerThanWidth(460);
     return AnimatedCrossFade(
       duration: Duration(milliseconds: 300),
       crossFadeState:
@@ -541,6 +544,7 @@ class _DappHomeState extends State<DappHome> {
           web3Context: _web3Context,
           onDisconnect: _disconnect,
           showBalance: !narrow,
+          onPressed: null,
         ),
       ),
       // Connect button

@@ -60,7 +60,6 @@ class Chains {
     chainId: GNOSIS_CHAINID,
     name: 'Gnosis',
     nativeCurrency: Tokens.XDAI,
-    // providerUrl: 'https://rpc.xdaichain.com/',
     defaultProviderUrl: 'https://rpc.gnosischain.com/',
     iconPath: OrchidAssetSvgChain.gnossis_chain_path,
     explorerUrl: 'https://blockscout.com/xdai/mainnet/',

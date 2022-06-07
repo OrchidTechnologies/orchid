@@ -51,8 +51,10 @@ class DappWalletInfoPanel extends StatelessWidget {
     ).padx(24);
   }
 
-  static Widget buildExplorerLink(TextStyle textStyle, String link) {
+  static Widget buildExplorerLink(TextStyle textStyle, String link,
+      {MainAxisAlignment alignment = MainAxisAlignment.start}) {
     return Row(
+      mainAxisAlignment: alignment,
       children: [
         Transform.rotate(
             angle: -3.14 / 4,

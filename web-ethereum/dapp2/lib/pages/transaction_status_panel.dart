@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/orchid.dart';
 import 'dart:async';
 import 'package:flutter_web3/flutter_web3.dart';
@@ -5,20 +6,20 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
-import 'package:orchid/pages/dapp_wallet_info_panel.dart';
+
+import '../api/preferences/dapp_transaction.dart';
+import 'dapp_wallet_info_panel.dart';
 
 class TransactionStatusPanel extends StatefulWidget {
-  final Function(String) onDismiss;
-  final VoidCallback onTransactionUpdated;
-
-  // final TransactionResponse tx;
+  final DappTransaction tx;
   final OrchidWeb3Context context;
-  final String transactionHash;
+  final VoidCallback onTransactionUpdated;
+  final Function(String) onDismiss;
 
   const TransactionStatusPanel({
     Key key,
     @required this.context,
-    @required this.transactionHash,
+    @required this.tx,
     @required this.onDismiss,
     this.onTransactionUpdated,
   }) : super(key: key);
@@ -60,12 +61,12 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
   }
 
   void _poll(_) async {
-    if (widget.context?.web3 != null && widget.transactionHash != null) {
+    if (widget.context?.web3 != null && widget.tx.transactionHash != null) {
       try {
         _receipt = await widget.context.web3
-            .getTransactionReceipt(widget.transactionHash);
+            .getTransactionReceipt(widget.tx.transactionHash);
       } catch (err) {
-        log("Error fetching transaction receipt for ${widget.transactionHash}");
+        log("Error fetching transaction receipt for ${widget.tx.transactionHash}");
       }
     }
 
@@ -105,7 +106,7 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
             iconSize: 18,
             icon: Icon(Icons.close, color: Colors.white),
             onPressed: () {
-              widget.onDismiss(widget.transactionHash);
+              widget.onDismiss(widget.tx.transactionHash);
             },
           ),
         ),
@@ -141,16 +142,20 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
                       displayText: EthereumAddress.elideAddressString(
                           _receipt.transactionHash),
                       overflow: TextOverflow.ellipsis,
-                      style: OrchidText.caption,
+                      style: OrchidText.caption.tappable,
                       padding: EdgeInsets.zero,
                     ),
                   ),
                 ],
               ).bottom(8),
-              // DappWalletInfoPanel.buildExplorerLink(OrchidText.caption, link),
+              Text(message ?? '').caption.bottom(12),
+              DappWalletInfoPanel.buildExplorerLink(
+                OrchidText.caption.tappable,
+                Chains.chainFor(widget.tx.chainId).explorerUrl,
+                alignment: MainAxisAlignment.center,
+              ),
             ],
           ),
-        Text(message ?? '').caption,
       ],
     );
   }
