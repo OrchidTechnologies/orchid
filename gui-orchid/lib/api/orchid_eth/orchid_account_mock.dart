@@ -56,6 +56,7 @@ class AccountMock {
       mockMarketConditions: MockMarketConditions(efficiency: 0.94),
     ),
   );
+  static final account1xdaiLocked = account1xdai;
 
   static final account1xdaiUnlocking = MockAccount(
     signerKey: key1,

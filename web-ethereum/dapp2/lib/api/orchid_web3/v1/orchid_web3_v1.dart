@@ -82,7 +82,7 @@ class OrchidWeb3V1 {
     if (withdrawBalance > pot.balance) {
       throw Exception('insufficient balance: $withdrawBalance, $pot');
     }
-    if (withdrawEscrow > pot.warned) {
+    if (withdrawEscrow > pot.unlockedAmount) {
       throw Exception('insufficient warned: $withdrawEscrow, $pot');
     }
     if (withdrawEscrow.gtZero() && pot.isLocked) {

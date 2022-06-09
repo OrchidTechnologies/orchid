@@ -128,10 +128,6 @@ extension TextStyleExtensions on TextStyle {
     return this.copyWith(height: height);
   }
 
-  TextStyle inactiveIf(bool isInactive) {
-    return isInactive ? this.inactive : this;
-  }
-
   TextStyle size(double size) {
     return this.copyWith(fontSize: size);
   }
@@ -199,6 +195,14 @@ extension OrchidTextStyleExtensions on TextStyle {
 
   TextStyle get inactive {
     return _copyWithColor(OrchidColors.inactive);
+  }
+
+  TextStyle inactiveIf(bool isInactive) {
+    return isInactive ? this.inactive : this;
+  }
+
+  TextStyle activeIf(bool isActive) {
+    return isActive ? this : this.inactive;
   }
 
   TextStyle get blueHightlight {
@@ -281,6 +285,10 @@ extension OrchidTextExtensions on Text {
     return isInactive ? inactive : this;
   }
 
+  Text activeIf(bool isActive) {
+    return isActive ? this : inactive;
+  }
+
   Text get new_purple_bright {
     return this.copyWith(
         style: this.style.copyWith(color: OrchidColors.new_purple_bright));
@@ -326,5 +334,9 @@ extension OrchidTextExtensions on Text {
 
   Text withStyle(TextStyle style) {
     return this.copyWith(style: style);
+  }
+
+  Text withStyleIf(TextStyle style, bool value) {
+    return value ? this.withStyle(style) : this;
   }
 }

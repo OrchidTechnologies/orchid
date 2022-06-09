@@ -44,6 +44,9 @@ class OrchidColors {
   static const purple_bright = purple_ffb88dfc;
   static const tappable = purple_bright;
 
+  static const status_yellow = Color(0xFFFFF282);
+  static const status_green = Color(0xFF6EFAC8);
+
   // For debugging convenience
   static const white = Colors.white;
   static const red = Colors.red;
