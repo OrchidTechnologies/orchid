@@ -31,8 +31,9 @@ class WithdrawFundsPaneV0 extends StatefulWidget {
 }
 
 class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
-  final _withdrawBalanceField = TokenValueFieldController();
-  final _withdrawEscrowField = TokenValueFieldController();
+  static final tokenType = Tokens.OXT;
+  final _withdrawBalanceField = TypedTokenValueFieldController(type: tokenType);
+  final _withdrawEscrowField = TypedTokenValueFieldController(type: tokenType);
   bool _txPending = false;
 
   LotteryPot get pot {
@@ -50,7 +51,6 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
 
   @override
   Widget build(BuildContext context) {
-    var tokenType = Tokens.OXT;
     var buttonTitle = s.withdrawFunds;
 
     return Column(
@@ -60,14 +60,14 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
           enabled: widget.enabled,
           type: tokenType,
           controller: _withdrawBalanceField,
-          label: s.balance + ':',
+          label: s.balance,
         ),
         pady(4),
         LabeledTokenValueField(
           enabled: widget.enabled,
           type: tokenType,
           controller: _withdrawEscrowField,
-          label: s.deposit + ':',
+          label: s.deposit,
         ),
         pady(32),
         Row(

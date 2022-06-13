@@ -277,6 +277,11 @@ extension OrchidTextExtensions on Text {
         .copyWith(style: this.style.copyWith(color: OrchidColors.tappable));
   }
 
+  Text get error {
+    return this
+        .copyWith(style: this.style.copyWith(color: OrchidColors.status_red));
+  }
+
   Text get inactive {
     return _copyWithColor(OrchidColors.inactive);
   }

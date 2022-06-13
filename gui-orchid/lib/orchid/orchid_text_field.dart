@@ -100,9 +100,9 @@ class OrchidTextField extends StatelessWidget {
               hintText: hintText,
               // hintStyle: textStyle.copyWith(color: Colors.white.withOpacity(0.3)),
               hintStyle: textStyle.inactive,
-              enabledBorder: border ? textFieldEnabledBorder : null,
-              disabledBorder: border ? textFieldDisabledBorder : null,
-              focusedBorder: border ? textFieldFocusedBorder : null,
+              enabledBorder: (border ? textFieldEnabledBorder : null),
+              disabledBorder: (border ? textFieldDisabledBorder : null),
+              focusedBorder: (border ? textFieldFocusedBorder : null),
               // suffix: suffixIcon,
               suffixIcon: suffixIcon,
             ),
@@ -132,10 +132,12 @@ class OrchidTextField extends StatelessWidget {
 
   static var textFieldFocusedBorder = OutlineInputBorder(
     borderRadius: BorderRadius.circular(12),
-    borderSide: BorderSide(
-      width: 2,
-      color: OrchidColors.tappable,
-    ),
+    borderSide: BorderSide(width: 2, color: OrchidColors.tappable),
+  );
+
+  static var textFieldErrorBorder = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(width: 2, color: OrchidColors.status_red),
   );
 
   // TODO: Remove

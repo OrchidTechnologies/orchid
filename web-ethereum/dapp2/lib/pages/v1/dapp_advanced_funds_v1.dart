@@ -1,23 +1,17 @@
-import 'package:flutter/material.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
 import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/common/formatting.dart';
-import 'package:orchid/orchid.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/units.dart';
-
 import '../dapp_button.dart';
+import '../dapp_error_row.dart';
+import '../dapp_tab_context.dart';
 import '../orchid_form_fields.dart';
-import 'package:orchid/util/localization.dart';
 import 'package:orchid/common/token_price_builder.dart';
 
 class AdvancedFundsPaneV1 extends StatefulWidget {
@@ -38,38 +32,35 @@ class AdvancedFundsPaneV1 extends StatefulWidget {
   _AdvancedFundsPaneV1State createState() => _AdvancedFundsPaneV1State();
 }
 
-class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
-  final _balanceField = TokenValueFieldController();
+class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
+    with DappTabWalletContext, DappTabPotContext {
+  OrchidWeb3Context get web3Context => widget.context;
+
+  LotteryPot get pot => widget.pot;
+
+  EthereumAddress get signer => widget.signer;
+
+  TypedTokenValueFieldController _balanceField;
   _AddWithdrawDirection _balanceFieldDirection = _AddWithdrawDirection.Add;
 
-  final _depositField = TokenValueFieldController();
+  TypedTokenValueFieldController _depositField;
   _AddWithdrawDirection _depositFieldDirection = _AddWithdrawDirection.Add;
 
-  final _moveField = TokenValueFieldController();
+  TypedTokenValueFieldController _moveField;
   _MoveDirection _moveFieldDirection = _MoveDirection.BalanceToDeposit;
 
-  final _warnedField = TokenValueFieldController();
-
-  bool _txPending = false;
-
-  OrchidWallet get wallet {
-    return widget.context?.wallet;
-  }
-
-  LotteryPot get pot {
-    return widget.pot;
-  }
-
-  bool get _connected {
-    return pot != null;
-  }
+  TypedTokenValueFieldController _warnedField;
 
   @override
   void initState() {
     super.initState();
+    _balanceField = TypedTokenValueFieldController(type: tokenType);
     _balanceField.addListener(_formFieldChanged);
+    _depositField = TypedTokenValueFieldController(type: tokenType);
     _depositField.addListener(_formFieldChanged);
+    _moveField = TypedTokenValueFieldController(type: tokenType);
     _moveField.addListener(_formFieldChanged);
+    _warnedField = TypedTokenValueFieldController(type: tokenType);
     _warnedField.addListener(_formFieldChanged);
   }
 
@@ -86,19 +77,22 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // add
-              _buildBalanceForm(tokenType, tokenPrice),
+              _buildBalanceField(tokenType, tokenPrice),
               pady(32),
 
               // withdraw
-              _buildDepositForm(tokenType, tokenPrice),
+              _buildDepositField(tokenType, tokenPrice),
 
               pady(32),
               // move
-              _buildMoveFunds(tokenType, tokenPrice),
+              _buildMoveField(tokenType, tokenPrice),
 
               pady(32),
               // warn
               ..._buildWarn(tokenType, tokenPrice),
+
+              if (_netPayableError)
+                DappErrorRow(text: 'Total exceeds wallet balance.').top(16),
 
               pady(32),
               // submit button
@@ -141,7 +135,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     );
   }
 
-  Widget _buildBalanceForm(TokenType tokenType, USD tokenPrice) {
+  Widget _buildBalanceField(TokenType tokenType, USD tokenPrice) {
     return LabeledTokenValueField(
       enabled: widget.enabled,
       labelWidth: 100,
@@ -149,6 +143,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       type: tokenType,
       controller: _balanceField,
       usdPrice: tokenPrice,
+      error: _balanceFieldError || _netPayableError,
       trailing: _addBorder(
         _AddWithdrawDropdown(
           enabled: widget.enabled,
@@ -163,7 +158,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     );
   }
 
-  Widget _buildDepositForm(TokenType tokenType, USD tokenPrice) {
+  Widget _buildDepositField(TokenType tokenType, USD tokenPrice) {
     return LabeledTokenValueField(
       enabled: widget.enabled,
       labelWidth: 100,
@@ -171,6 +166,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       type: tokenType,
       controller: _depositField,
       usdPrice: tokenPrice,
+      error: _depositFieldError || _netPayableError,
       trailing: _addBorder(
         _AddWithdrawDropdown(
           enabled: widget.enabled,
@@ -185,7 +181,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     );
   }
 
-  Widget _buildMoveFunds(TokenType tokenType, USD tokenPrice) {
+  Widget _buildMoveField(TokenType tokenType, USD tokenPrice) {
     return LabeledTokenValueField(
       enabled: widget.enabled,
       labelWidth: 100,
@@ -193,6 +189,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       type: tokenType,
       controller: _moveField,
       usdPrice: tokenPrice,
+      error: _moveFieldError,
       trailing: _addBorder(
         _MoveDirectionDropdown(
           enabled: widget.enabled,
@@ -209,7 +206,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
 
   List<Widget> _buildWarn(TokenType tokenType, USD tokenPrice) {
     String currentUnlockText = "", futureUnlockText = "";
-    if (_connected) {
+    if (connected) {
       currentUnlockText = pot.unlockTime.isAfter(DateTime.now())
           ? pot.unlockTime.toLocal().toShortString()
           : s.now;
@@ -218,16 +215,16 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     }
 
     // Inactive field used for formatting
-    final currentAmount = TokenValueFieldController();
+    final currentAmount = TypedTokenValueFieldController(type: tokenType);
     currentAmount.value = pot?.warned ?? tokenType.zero;
 
-    final setLabel = (_connected && pot.isWarned)
+    final warnLabelText = (connected && pot.isWarned)
         ? "Change Warned Amount To"
         : "Set Warned Amount To";
 
     return [
       Visibility(
-        visible: _connected && pot.isWarned,
+        visible: connected && pot.isWarned,
         child: Column(
           children: [
             // Current warned amount
@@ -257,24 +254,21 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
         labelWidth: 260,
         type: tokenType,
         controller: _warnedField,
-        label: setLabel,
-        hintText: (pot?.warned ?? tokenType.zero)
-            .toFixedLocalized(digits: 2, locale: context.locale),
+        label: warnLabelText,
         usdPrice: _warnedField.hasValue ? tokenPrice : null,
+        error: _warnFieldError,
       ),
       // User available time
       Visibility(
-        visible: _warnedField.hasValue && _warnedField.value.gtZero(),
+        visible: _warnedField.hasValue &&
+            _warnedField.value.gtZero() &&
+            !_warnFieldError,
         child: Text(
           "All warned funds will be locked until" + ':  ' + futureUnlockText,
           maxLines: 2,
         ).body1.top(16),
       ),
     ];
-  }
-
-  Widget _title(String text) {
-    return Text(text).title;
   }
 
   void _formFieldChanged() {
@@ -336,66 +330,87 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
     return _netBalanceAdd + _netDepositAdd;
   }
 
-  bool get _netFundsChangeValid {
+  bool get _netPayableValid {
     return _netPayable <= wallet.balance;
   }
 
-  bool get _balanceFormValid {
+  bool get _netPayableError {
+    return pot != null &&
+        wallet != null &&
+        !_balanceFieldError &&
+        !_depositFieldError &&
+        !_netPayableValid;
+  }
+
+  bool get _balanceFieldValid {
     switch (_balanceFieldDirection) {
       case _AddWithdrawDirection.Add:
-        return true;
+        return _balanceField.value <= walletBalance;
         break;
       case _AddWithdrawDirection.Withdraw:
-        return _balanceField.value <= pot.balance &&
-            _netBalanceWithdraw <= pot.balance;
+        return _balanceField.value <= pot.balance;
         break;
       default:
         throw Exception();
     }
   }
 
-  bool get _depositFormValid {
+  bool get _balanceFieldError {
+    return pot != null && wallet != null && !_balanceFieldValid;
+  }
+
+  bool get _depositFieldValid {
     switch (_depositFieldDirection) {
       case _AddWithdrawDirection.Add:
-        return true;
+        return _depositField.value <= walletBalance;
         break;
       case _AddWithdrawDirection.Withdraw:
-        return _depositField.value <= pot.warned &&
-            _netDepositWithdraw <= pot.warned;
+        return _depositField.value <= pot.unlockedAmount;
         break;
       default:
         throw Exception();
     }
   }
 
-  bool get _moveFormValid {
+  bool get _depositFieldError {
+    return pot != null && wallet != null && !_depositFieldValid;
+  }
+
+  bool get _moveFieldValid {
     // return _balanceField.value <= pot.balance && _withdrawDepositField.value <= pot.warned;
     switch (_moveFieldDirection) {
       case _MoveDirection.BalanceToDeposit:
         return _moveField.value <= pot.balance;
         break;
       case _MoveDirection.DepositToBalance:
-        return _moveField.value <= pot.warned;
+        return _moveField.value <= pot.unlockedAmount;
         break;
       default:
         throw Exception();
     }
   }
 
+  bool get _moveFieldError {
+    return pot != null && wallet != null && !_moveFieldValid;
+  }
+
   bool get _warnFormValid {
     return _warnedField.value <= pot.deposit;
   }
 
+  bool get _warnFieldError {
+    return pot != null && !_warnFormValid;
+  }
+
   // Would the transaction described by the form actually cause a change.
   bool get _formTransactionHasNetEffect {
-    // log("XXX: _warnedAmountAdd = ${_warnedAmountAdd}");
     return _netPayable.isNotZero() ||
         _netDepositAdd.isNotZero() ||
         _warnedAmountAdd.isNotZero();
   }
 
   bool get _formEnabled {
-    if (!_connected || pot?.balance == null || wallet == null) {
+    if (!connected || pot?.balance == null || wallet == null) {
       return false;
     }
 
@@ -410,18 +425,18 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       return false;
     }
 
-    return !_txPending &&
-        _netFundsChangeValid &&
-        _balanceFormValid &&
-        _depositFormValid &&
-        _moveFormValid &&
+    return !txPending &&
+        _netPayableValid &&
+        _balanceFieldValid &&
+        _depositFieldValid &&
+        _moveFieldValid &&
         _warnFormValid &&
         _formTransactionHasNetEffect;
   }
 
   void _doTx() async {
     setState(() {
-      _txPending = true;
+      txPending = true;
     });
     try {
       var txHash = await OrchidWeb3V1(widget.context).orchidEditFunds(
@@ -445,7 +460,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1> {
       log('Error on edit funds: $err');
     }
     setState(() {
-      _txPending = false;
+      txPending = false;
     });
   }
 

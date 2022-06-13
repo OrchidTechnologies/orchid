@@ -31,7 +31,8 @@ class MoveFundsPaneV0 extends StatefulWidget {
 }
 
 class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
-  final _moveBalanceField = TokenValueFieldController();
+  static final tokenType = Tokens.OXT;
+  final _moveBalanceField = TypedTokenValueFieldController(type: tokenType);
   bool _txPending = false;
 
   LotteryPot get pot {
@@ -48,7 +49,6 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
 
   @override
   Widget build(BuildContext context) {
-    var tokenType = Tokens.OXT;
     var buttonTitle = s.moveFunds;
 
     return Column(
@@ -58,7 +58,7 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
           enabled: widget.enabled,
           type: tokenType,
           controller: _moveBalanceField,
-          label: s.balanceToDeposit + ':',
+          label: "Balance to Deposit",
           labelWidth: 180,
         ),
         pady(32),

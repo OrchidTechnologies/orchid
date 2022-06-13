@@ -1,4 +1,5 @@
 import 'package:orchid/api/orchid_eth/tokens.dart';
+import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/orchid/account/account_card.dart';
@@ -9,7 +10,7 @@ import 'package:orchid/util/units.dart';
 /// The field has a field label and displays the token symbol as a suffix.
 /// The field can optionally display a USD price after the token symbol.
 class LabeledTokenValueField extends StatelessWidget {
-  final TokenValueFieldController controller;
+  final TypedTokenValueFieldController controller;
   final TokenType type;
   final USD usdPrice;
   final String label;
@@ -20,6 +21,9 @@ class LabeledTokenValueField extends StatelessWidget {
   final String hintText;
   final Widget trailing;
   final Widget bottomBanner;
+
+  // TODO: enhance this to include a message
+  final bool error;
 
   LabeledTokenValueField({
     Key key,
@@ -34,77 +38,84 @@ class LabeledTokenValueField extends StatelessWidget {
     this.hintText,
     this.trailing,
     this.bottomBanner,
-  }) : super(key: key) {
-    controller.type = type;
-  }
+    this.error = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.all(Radius.circular(12.0)),
-      child: Column(
-        children: [
-          Container(
-            color: OrchidColors.dark_background_2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      label ?? '',
-                      style: enabled
-                          ? OrchidText.body1
-                          : OrchidText.body1.inactive,
-                    ).top(5).height(24),
-                    trailing ?? Container(),
-                  ],
-                ),
-                TokenValueWidgetRow(
-                  enabled: enabled,
-                  context: context,
-                  child: Expanded(
-                    child: OrchidTextField(
-                      contentPadding: EdgeInsets.only(bottom: 12),
-                      suffixIconPadding: EdgeInsets.zero,
-                      style: OrchidText.extra_large,
-                      textAlignVertical: TextAlignVertical.center,
-                      hintText: hintText ?? '0.0',
-                      controller: controller._textController,
-                      numeric: true,
-                      readOnly: readOnly ?? false,
-                      enabled: enabled ?? true,
-                      onClear: onClear,
-                      border: false,
-                      cursorHeight: 16,
-                    ),
-                  ),
-                  price: usdPrice,
-                  tokenAmount: controller.value,
-                ),
-              ],
-            ).pady(8).padx(16),
-          ),
-          if (bottomBanner != null)
+    return RoundedRect(
+      borderColor: error ? OrchidColors.status_red : null,
+      radius: 12,
+      child: ClipRRect(
+        borderRadius: BorderRadius.all(Radius.circular(12.0)),
+        child: Column(
+          children: [
             Container(
-              color: OrchidColors.disabled,
-              child: bottomBanner,
+              color: OrchidColors.dark_background_2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        label ?? '',
+                        style: enabled
+                            ? OrchidText.body1
+                            : OrchidText.body1.inactive,
+                      ).top(5).height(24),
+                      trailing ?? Container(),
+                    ],
+                  ),
+                  TokenValueWidgetRow(
+                    enabled: enabled,
+                    context: context,
+                    child: Expanded(
+                      child: OrchidTextField(
+                        contentPadding: EdgeInsets.only(bottom: 12),
+                        suffixIconPadding: EdgeInsets.zero,
+                        style: OrchidText.extra_large,
+                        textAlignVertical: TextAlignVertical.center,
+                        hintText: hintText ?? '0.0',
+                        controller: controller._textController,
+                        numeric: true,
+                        readOnly: readOnly ?? false,
+                        enabled: enabled ?? true,
+                        onClear: onClear,
+                        border: false,
+                        cursorHeight: 16,
+                      ),
+                    ),
+                    price: usdPrice,
+                    tokenAmount: controller.value,
+                  ),
+                ],
+              ).pady(8).padx(16),
             ),
-        ],
+            if (bottomBanner != null)
+              Container(
+                color: OrchidColors.disabled,
+                child: bottomBanner,
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class TokenValueFieldController implements Listenable {
+class TypedTokenValueFieldController {
   final _textController = TextEditingController();
-  TokenType type = Tokens.TOK;
 
-  TokenValueFieldController();
+  final TokenType type;
+
+  TypedTokenValueFieldController({
+    @required this.type,
+  });
 
   /// Return the value, zero if empty, or null if invalid
   Token get value {
+
     if (type == null) {
       return null;
     }

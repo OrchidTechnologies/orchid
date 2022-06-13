@@ -46,6 +46,7 @@ class OrchidColors {
 
   static const status_yellow = Color(0xFFFFF282);
   static const status_green = Color(0xFF6EFAC8);
+  static const status_red = Color(0xFFFF6F97);
 
   // For debugging convenience
   static const white = Colors.white;

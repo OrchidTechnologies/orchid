@@ -68,6 +68,10 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
           ),
         );
 
+    // Rebuild tab form fields on context change (chain or account).
+    // log("XXX: buildTabs web3Context id = ${widget.web3Context?.id}");
+    final contextKey = Key(widget.web3Context?.id?.toString() ?? '');
+
     return SizedBox(
       // Note: We seem to have to set a fixed height outside the scaffold here.
       height: _selectedTab == 2 ? 800 : 600,
@@ -95,6 +99,7 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
           children: [
             tabView(
               AddFundsPane(
+                key: contextKey,
                 enabled: _enabled,
                 context: widget.web3Context,
                 signer: widget.signer,
@@ -103,6 +108,7 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
             ),
             tabView(
               WithdrawFundsPaneV1(
+                key: contextKey,
                 enabled: _enabled,
                 context: widget.web3Context,
                 pot: widget.accountDetail?.lotteryPot,
@@ -111,6 +117,7 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
             ),
             tabView(
               AdvancedFundsPaneV1(
+                key: contextKey,
                 enabled: _enabled,
                 context: widget.web3Context,
                 pot: widget.accountDetail?.lotteryPot,

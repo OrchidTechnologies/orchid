@@ -400,8 +400,6 @@ class _DappHomeState extends State<DappHome> {
   }
 
   Widget _buildTabs() {
-    // TODO:
-    log("XXX: buildTabs web3Context id = ${_web3Context?.id}");
     switch (_contractVersionSelected) {
       case 0:
         return DappTabsV0(

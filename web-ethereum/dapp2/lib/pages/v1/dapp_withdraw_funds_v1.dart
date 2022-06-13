@@ -9,6 +9,7 @@ import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
 import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/pages/dapp_tab_context.dart';
 import 'package:orchid/util/timed_builder.dart';
 import 'package:orchid/util/units.dart';
 import '../dapp_button.dart';
@@ -39,42 +40,38 @@ class WithdrawFundsPaneV1 extends StatefulWidget {
   _WithdrawFundsPaneV1State createState() => _WithdrawFundsPaneV1State();
 }
 
-class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
-  final _balanceField = TokenValueFieldController();
-  final _depositField = TokenValueFieldController();
-  bool _txPending = false;
+class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
+    with DappTabWalletContext, DappTabPotContext {
+  OrchidWeb3Context get web3Context => widget.context;
 
-  LotteryPot get _pot {
-    return widget.pot;
-  }
+  LotteryPot get pot => widget.pot;
 
-  bool get _connected {
-    return _pot != null && widget.signer != null;
-  }
+  EthereumAddress get signer => widget.signer;
+
+  TypedTokenValueFieldController _balanceField;
+  TypedTokenValueFieldController _depositField;
+  bool _unlockDeposit = false;
 
   @override
   void initState() {
     super.initState();
+    _balanceField = TypedTokenValueFieldController(type: tokenType);
     _balanceField.addListener(_formFieldChanged);
+    _depositField = TypedTokenValueFieldController(type: tokenType);
     _depositField.addListener(_formFieldChanged);
   }
 
-  void initStateAsync() async {}
-
-  bool _unlockDeposit = false;
-
   @override
   Widget build(BuildContext context) {
-    var tokenType = _pot?.balance?.type ?? Tokens.TOK;
     var buttonTitle =
         _unlockDeposit ? s.withdrawAndUnlockFunds : s.withdrawFunds;
 
     bool fullyUnlocked;
     String availableText;
     Token totalFunds;
-    if (_connected) {
-      totalFunds = _pot.balance + _pot.deposit;
-      final maxWithdraw = _pot.maxWithdrawable;
+    if (connected) {
+      totalFunds = pot.balance + pot.deposit;
+      final maxWithdraw = pot.maxWithdrawable;
       fullyUnlocked = maxWithdraw >= totalFunds;
       availableText = fullyUnlocked
           ? s.allOfYourFundsAreAvailableForWithdrawal
@@ -87,7 +84,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         pady(16),
-        if (_connected && totalFunds.gtZero())
+        if (connected && totalFunds.gtZero())
           Text(availableText).title.bottom(24),
         TokenPriceBuilder(
             tokenType: tokenType,
@@ -97,26 +94,28 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
                 children: [
                   LabeledTokenValueField(
                     label: s.balance,
-                    enabled: _connected,
+                    enabled: connected,
                     labelWidth: 100,
                     type: tokenType,
                     controller: _balanceField,
                     usdPrice: tokenPrice,
+                    error: _balanceFieldError,
                   ),
                   LabeledTokenValueField(
                     label: s.deposit,
                     trailing: _depositLockIndicator(),
                     bottomBanner: _depositBottomBanner(),
-                    enabled: _connected && _pot.isUnlocked,
+                    enabled: connected && pot.isUnlocked,
                     labelWidth: 100,
                     type: tokenType,
                     controller: _depositField,
                     usdPrice: tokenPrice,
+                    error: _depositFieldError,
                   ).top(16),
                 ],
               );
             }),
-        if (_connected && _pot.deposit > _pot.unlockedAmount)
+        if (connected && pot.deposit > pot.unlockedAmount)
           _buildUnlockDepositCheckbox(context).top(8),
         pady(24),
         Row(
@@ -128,13 +127,13 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
           ],
         ),
         // pady(32),
-        // if (_connected) _buildInstructions(fullyUnlocked),
+        // if (connected) _buildInstructions(fullyUnlocked),
       ],
     );
   }
 
   bool get _showDepositBottomBanner {
-    return _unlockDeposit || (_connected && _pot.isUnlocking);
+    return _unlockDeposit || (connected && pot.isUnlocking);
   }
 
   Widget _depositBottomBanner() {
@@ -157,7 +156,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
         ],
       );
     }
-    if (_connected && _pot.isUnlocking) {
+    if (connected && pot.isUnlocking) {
       return TimedBuilder.interval(
           seconds: 1,
           builder: (context) {
@@ -168,7 +167,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
                 SizedBox(
                   width: 70,
                   child: Text(
-                    _pot.unlockTime.toCountdownString(),
+                    pot.unlockTime.toCountdownString(),
                   ).withStyle(style),
                 ),
               ],
@@ -181,10 +180,10 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
 
   // The lock icon and text annotation on the deposit field
   Widget _depositLockIndicator() {
-    if (!_connected) {
+    if (!connected) {
       return Container();
     }
-    return _pot.isLocked
+    return pot.isLocked
         ? Row(
             children: [
               Icon(
@@ -215,8 +214,8 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
 
   // The unlock checkbox and instructions shown when applicable
   Widget _buildUnlockDepositCheckbox(BuildContext context) {
-    final active = _connected;
-    if (!active || _pot.isWarned) {
+    final active = connected;
+    if (!active || pot.isWarned) {
       return Container();
     }
     final style = OrchidText.body2.activeIf(active);
@@ -260,21 +259,29 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
   }
 
   bool get _formEnabled {
-    return _connected &&
-        !_txPending &&
+    return connected &&
+        !txPending &&
         _balanceFormValid &&
         _depositFormValid &&
         _netWithdraw.gtZero() &&
-        _netWithdraw <= _pot.maxWithdrawable;
+        _netWithdraw <= pot.maxWithdrawable;
   }
 
   bool get _balanceFormValid {
-    log("XXX: _pot = ${_pot.balance}, field.value = ${_balanceField?.value}");
-    return _balanceField.value <= _pot.balance;
+    var value = _balanceField.value;
+    return value != null && value <= pot.balance;
+  }
+
+  bool get _balanceFieldError {
+    return pot != null && !_balanceFormValid;
   }
 
   bool get _depositFormValid {
-    return _depositField.value <= _pot.unlockedAmount;
+    return _depositField.value <= pot.unlockedAmount;
+  }
+
+  bool get _depositFieldError {
+    return pot != null && !_depositFormValid;
   }
 
   Token get _netWithdraw {
@@ -282,16 +289,16 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
   }
 
   void _withdrawFunds() async {
-    var withdrawBalance = Token.min(_balanceField.value, _pot.balance);
-    var withdrawDeposit = Token.min(_depositField.value, _pot.unlockedAmount);
+    var withdrawBalance = Token.min(_balanceField.value, pot.balance);
+    var withdrawDeposit = Token.min(_depositField.value, pot.unlockedAmount);
 
     setState(() {
-      _txPending = true;
+      txPending = true;
     });
     try {
       var txHash = await OrchidWeb3V1(widget.context).orchidWithdrawFunds(
-        pot: _pot,
-        signer: widget.signer,
+        pot: pot,
+        signer: signer,
         withdrawBalance: withdrawBalance,
         withdrawEscrow: withdrawDeposit,
         warnDeposit: _unlockDeposit,
@@ -306,7 +313,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
       log('Error on withdraw funds: $err');
     }
     setState(() {
-      _txPending = false;
+      txPending = false;
     });
   }
 
