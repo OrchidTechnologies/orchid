@@ -75,7 +75,7 @@ class Chains {
     defaultProviderUrl: 'https://api.avax.network/ext/bc/C/rpc',
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
     explorerUrl: 'https://snowtrace.io/',
-    supportsLogs: true,
+    supportsLogs: false,
   );
 
   // Binance Smart Chain (BSC)
