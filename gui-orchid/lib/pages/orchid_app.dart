@@ -1,9 +1,7 @@
-import 'dart:ui';
-import 'package:flutter/material.dart';
+import 'package:orchid/orchid.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/common/app_sizes.dart';
-import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_desktop_dragscroll.dart';
 import 'package:orchid/pages/app_routes.dart';
