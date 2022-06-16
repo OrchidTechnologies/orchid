@@ -65,6 +65,9 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
   Widget build(BuildContext context) {
     var buttonTitle =
         _unlockDeposit ? s.withdrawAndUnlockFunds : s.withdrawFunds;
+    if (_unlockDeposit && connected && _netWithdraw.isZero()) {
+      buttonTitle = s.unlockDeposit;
+    }
 
     bool fullyUnlocked;
     String availableText;
@@ -180,7 +183,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
 
   // The lock icon and text annotation on the deposit field
   Widget _depositLockIndicator() {
-    if (!connected) {
+    if (!connected || pot.deposit.isZero()) {
       return Container();
     }
     return pot.isLocked
@@ -259,12 +262,18 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
   }
 
   bool get _formEnabled {
+    // The normal condition for a withdrawal of funds
+    bool validPositiveWithdrawal =
+        _netWithdraw.gtZero() && _netWithdraw <= pot.maxWithdrawable;
+
+    // This allows unlocking without any actual withdrawal amount
+    bool validZeroWithdrawal = _netWithdraw.isZero() && _unlockDeposit;
+
     return connected &&
         !txPending &&
         _balanceFormValid &&
         _depositFormValid &&
-        _netWithdraw.gtZero() &&
-        _netWithdraw <= pot.maxWithdrawable;
+        (validPositiveWithdrawal || validZeroWithdrawal);
   }
 
   bool get _balanceFormValid {
