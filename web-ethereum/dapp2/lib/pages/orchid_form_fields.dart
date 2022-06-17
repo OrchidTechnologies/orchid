@@ -115,7 +115,6 @@ class TypedTokenValueFieldController {
 
   /// Return the value, zero if empty, or null if invalid
   Token get value {
-
     if (type == null) {
       return null;
     }
@@ -140,7 +139,7 @@ class TypedTokenValueFieldController {
 
   bool get hasValue {
     final text = _textController.text;
-    return text != null && text != '';
+    return text != null && text != '' && value != null;
   }
 
   bool get hasNoValue {

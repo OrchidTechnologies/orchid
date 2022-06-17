@@ -263,17 +263,17 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
 
   bool get _formEnabled {
     // The normal condition for a withdrawal of funds
-    bool validPositiveWithdrawal =
+    bool validPositiveWithdrawal() =>
         _netWithdraw.gtZero() && _netWithdraw <= pot.maxWithdrawable;
 
     // This allows unlocking without any actual withdrawal amount
-    bool validZeroWithdrawal = _netWithdraw.isZero() && _unlockDeposit;
+    bool validZeroWithdrawal() => _netWithdraw.isZero() && _unlockDeposit;
 
     return connected &&
         !txPending &&
         _balanceFormValid &&
         _depositFormValid &&
-        (validPositiveWithdrawal || validZeroWithdrawal);
+        (validPositiveWithdrawal() || validZeroWithdrawal());
   }
 
   bool get _balanceFormValid {

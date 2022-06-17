@@ -339,16 +339,20 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
         wallet != null &&
         !_balanceFieldError &&
         !_depositFieldError &&
+        !_moveFieldError &&
+        !_warnFieldError &&
         !_netPayableValid;
   }
 
   bool get _balanceFieldValid {
     switch (_balanceFieldDirection) {
       case _AddWithdrawDirection.Add:
-        return _balanceField.value <= walletBalance;
+        return _balanceField.value != null &&
+            _balanceField.value <= walletBalance;
         break;
       case _AddWithdrawDirection.Withdraw:
-        return _balanceField.value <= pot.balance;
+        return _balanceField.value != null &&
+            _balanceField.value <= pot.balance;
         break;
       default:
         throw Exception();
@@ -362,10 +366,12 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
   bool get _depositFieldValid {
     switch (_depositFieldDirection) {
       case _AddWithdrawDirection.Add:
-        return _depositField.value <= walletBalance;
+        return _depositField.value != null &&
+            _depositField.value <= walletBalance;
         break;
       case _AddWithdrawDirection.Withdraw:
-        return _depositField.value <= pot.unlockedAmount;
+        return _depositField.value != null &&
+            _depositField.value <= pot.unlockedAmount;
         break;
       default:
         throw Exception();
@@ -377,13 +383,13 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
   }
 
   bool get _moveFieldValid {
-    // return _balanceField.value <= pot.balance && _withdrawDepositField.value <= pot.warned;
     switch (_moveFieldDirection) {
       case _MoveDirection.BalanceToDeposit:
-        return _moveField.value <= pot.balance;
+        return _moveField.value != null && _moveField.value <= pot.balance;
         break;
       case _MoveDirection.DepositToBalance:
-        return _moveField.value <= pot.unlockedAmount;
+        return _moveField.value != null &&
+            _moveField.value <= pot.unlockedAmount;
         break;
       default:
         throw Exception();
@@ -395,7 +401,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
   }
 
   bool get _warnFormValid {
-    return _warnedField.value <= pot.deposit;
+    return _warnedField.value != null && _warnedField.value <= pot.deposit;
   }
 
   bool get _warnFieldError {
@@ -426,11 +432,11 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
     }
 
     return !txPending &&
-        _netPayableValid &&
         _balanceFieldValid &&
         _depositFieldValid &&
         _moveFieldValid &&
         _warnFormValid &&
+        _netPayableValid &&
         _formTransactionHasNetEffect;
   }
 
