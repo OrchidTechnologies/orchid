@@ -36,8 +36,10 @@ In order to make the dApp active, you will need to attach a funder wallet. The �
 
 The key supported wallet connection methods are:
 
-* Load the dApp in a dApp browser, such as MetaMask Mobile
-* Use a desktop browser with MetaMask enabled as a web3 browser plugin
+* Load the dApp in a dApp browser
+* Use a desktop browser with a web3 browser plugin enabled
+
+For testing purposes, Orchid uses Metamask.
 
 Once the wallet is connected, you will see the address of that wallet displayed as the “funder wallet” with the funds associated with it appearing next to the address. 
 
