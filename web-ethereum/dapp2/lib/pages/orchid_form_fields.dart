@@ -1,4 +1,3 @@
-import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -87,7 +86,8 @@ class LabeledTokenValueField extends StatelessWidget {
                       ),
                     ),
                     price: usdPrice,
-                    tokenAmount: controller.value,
+                    tokenType: type,
+                    value: controller.value,
                   ),
                 ],
               ).pady(8).padx(16),

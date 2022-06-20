@@ -458,7 +458,12 @@ class _AccountCardState extends State<AccountCard>
         .formatCurrency(locale: context.locale, digits: 2, showSuffix: false));
     final valueWidget = Text(valueText).extra_large;
     return TokenValueWidgetRow(
-        context: context, child: valueWidget, tokenAmount: value, price: price);
+      context: context,
+      child: valueWidget,
+      tokenType: tokenType,
+      value: value,
+      price: price,
+    );
   }
 
   // label row with child row below
@@ -578,15 +583,12 @@ class _AccountCardState extends State<AccountCard>
   }
 }
 
-// TODO: widget
-class AccountCardUtils {
-  // Display token value (child widget) and symbol on a row with usd price in a row below
-}
-
+// Display token value (child widget) and symbol on a row with usd price in a row below
 class TokenValueWidgetRow extends StatelessWidget {
   final BuildContext context;
   final Widget child;
-  final Token tokenAmount;
+  final TokenType tokenType;
+  final Token value;
   final USD price;
   final bool enabled;
 
@@ -596,7 +598,8 @@ class TokenValueWidgetRow extends StatelessWidget {
     Key key,
     @required this.context,
     @required this.child,
-    @required this.tokenAmount,
+    @required this.tokenType,
+    @required this.value,
     @required this.price,
     this.enabled = true,
   }) : super(key: key);
@@ -604,11 +607,7 @@ class TokenValueWidgetRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final usdValueText = USD.formatUSDValue(
-        context: context,
-        price: price,
-        tokenAmount: tokenAmount,
-        showSuffix: false);
-    final tokenType = tokenAmount?.type ?? Tokens.TOK;
+        context: context, price: price, tokenAmount: value, showSuffix: false);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -619,14 +618,20 @@ class TokenValueWidgetRow extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             child,
-            Text((tokenType).symbol).extra_large.inactiveIf(disabled),
+            Text((tokenType ?? Tokens.TOK).symbol)
+                .extra_large
+                .inactiveIf(disabled),
           ],
         ).top(8).height(26),
         // USD value
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(usdValueText).caption.medium.new_purple_bright.inactiveIf(disabled),
+            Text(usdValueText)
+                .caption
+                .medium
+                .new_purple_bright
+                .inactiveIf(disabled),
             Text('USD').caption.medium.new_purple_bright.inactiveIf(disabled),
           ],
         ).height(24),
