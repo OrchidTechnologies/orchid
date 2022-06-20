@@ -10,7 +10,7 @@ Orchid Labs hosts the dApp at [account.orchid.com](https://account.orchid.com/)
 
 The interface allows users to create and manage their Orchid account.
 
-Orchid is a layer 2 protocol that allows users to use funds stored on layer 1 chains in a more nimble and rapid fashion. Users will connect their wallet of choice supporting one of our partnered chains.
+Orchid is an EVM-compatible layer 2 that enables the transmission of tiny payments. Users connect their L1 wallet on one of the supported chains, and using the dApp, they can move funds into and out of their Orchid accounts.
 
 We currently support the following chains:
 
