@@ -17,8 +17,8 @@ import 'package:orchid/common/token_price_builder.dart';
 
 class WithdrawFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
-  EthereumAddress signer;
-  LotteryPot pot;
+  final EthereumAddress signer;
+  final LotteryPot pot;
   final bool enabled;
 
   WithdrawFundsPaneV1({
@@ -28,9 +28,9 @@ class WithdrawFundsPaneV1 extends StatefulWidget {
     @required this.signer,
     this.enabled,
   }) : super(key: key) {
-    this.signer = AccountMock.account1xdai.signerAddress;
+    // this.signer = AccountMock.account1xdai.signerAddress;
     // this.pot = AccountMock.account1xdaiLocked.mockLotteryPot;
-    this.pot = AccountMock.account1xdaiUnlocked.mockLotteryPot;
+    // this.pot = AccountMock.account1xdaiUnlocked.mockLotteryPot;
     // this.pot = AccountMock.account1xdaiUnlocking.mockLotteryPot;
   }
 
