@@ -90,6 +90,22 @@ class AccountMock {
     ),
   );
 
+  static final account1xdaiPartUnlocked = MockAccount(
+    signerKey: key1,
+    version: 1,
+    chain: Chains.Gnosis,
+    funder: funder1,
+    mockLotteryPot: MockLotteryPot(
+      balance: Tokens.XDAI.fromDouble(0.94),
+      deposit: Tokens.XDAI.fromDouble(1.00),
+      mockMarketConditions: MockMarketConditions(efficiency: 0.94),
+      warned: Tokens.XDAI.fromDouble(0.5),
+      unlock: BigInt.from(
+          DateTime.now().subtract(Duration(hours: 1)).millisecondsSinceEpoch /
+              1000.0),
+    ),
+  );
+
   static final account1polygon = MockAccount(
     signerKey: key2,
     version: 1,

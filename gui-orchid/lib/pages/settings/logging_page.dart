@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/orchid.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
@@ -70,29 +71,30 @@ class _LoggingPageState extends State<LoggingPage> {
         child: OrientationBuilder(
             builder: (BuildContext context, Orientation builderOrientation) {
           var orientation = MediaQuery.of(context).orientation;
-          var portrait = orientation == Orientation.portrait;
+          var showControls =
+              (orientation == Orientation.portrait) || OrchidPlatform.isWeb;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               // The logging control switch
-              if (portrait) _buildSwitch(),
+              if (showControls) _buildSwitch(),
 
-              if (portrait)
+              if (showControls)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Divider(color: Colors.grey.withOpacity(0.5)),
                 ),
 
               // Privacy description
-              if (portrait)
+              if (showControls)
                 Padding(
                   padding:
                       EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 0),
                   child: Text(privacyText).caption,
                 ),
 
-              if (portrait) pady(4),
-              if (portrait) _buildFilterPanel(),
+              if (showControls) pady(4),
+              if (showControls) _buildFilterPanel(),
 
               // The log text view
               Expanded(
@@ -103,8 +105,8 @@ class _LoggingPageState extends State<LoggingPage> {
                 ),
               ),
 
-              if (portrait) pady(8),
-              if (portrait)
+              if (showControls) pady(8),
+              if (showControls)
                 Center(
                   child: Text(
                     "${_filteredLogLines.length} ${s.lines}" +
@@ -116,7 +118,7 @@ class _LoggingPageState extends State<LoggingPage> {
               pady(16),
 
               // The buttons row
-              if (portrait)
+              if (showControls)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 28),
                   child: Row(

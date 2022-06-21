@@ -283,7 +283,7 @@ extension OrchidTextExtensions on Text {
   }
 
   Text get inactive {
-    return _copyWithColor(OrchidColors.inactive);
+    return withColor(OrchidColors.inactive);
   }
 
   Text inactiveIf(bool isInactive) {
@@ -332,7 +332,7 @@ extension OrchidTextExtensions on Text {
     );
   }
 
-  Text _copyWithColor(Color color) {
+  Text withColor(Color color) {
     return this
         .copyWith(style: (this.style ?? TextStyle()).copyWith(color: color));
   }

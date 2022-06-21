@@ -1,10 +1,8 @@
-import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
 import 'package:orchid/api/preferences/dapp_transaction.dart';
@@ -12,14 +10,15 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/pages/dapp_tab_context.dart';
 import 'package:orchid/util/timed_builder.dart';
 import 'package:orchid/util/units.dart';
+import '../../api/orchid_eth/orchid_account_mock.dart';
 import '../dapp_button.dart';
 import '../orchid_form_fields.dart';
 import 'package:orchid/common/token_price_builder.dart';
 
 class WithdrawFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
-  final EthereumAddress signer;
-  final LotteryPot pot;
+  EthereumAddress signer;
+  LotteryPot pot;
   final bool enabled;
 
   WithdrawFundsPaneV1({
@@ -29,10 +28,9 @@ class WithdrawFundsPaneV1 extends StatefulWidget {
     @required this.signer,
     this.enabled,
   }) : super(key: key) {
-    // TESTING
-    // this.signer = AccountMock.account1xdai.signerAddress;
+    this.signer = AccountMock.account1xdai.signerAddress;
     // this.pot = AccountMock.account1xdaiLocked.mockLotteryPot;
-    // this.pot = AccountMock.account1xdaiUnlocked.mockLotteryPot;
+    this.pot = AccountMock.account1xdaiUnlocked.mockLotteryPot;
     // this.pot = AccountMock.account1xdaiUnlocking.mockLotteryPot;
   }
 
@@ -82,6 +80,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
               maxWithdraw.formatCurrency(locale: context.locale),
               totalFunds.formatCurrency(locale: context.locale));
     }
+    bool showUnlock = connected && pot.deposit > pot.unlockedAmount;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,8 +117,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
                 ],
               );
             }),
-        if (connected && pot.deposit > pot.unlockedAmount)
-          _buildUnlockDepositCheckbox(context).top(8),
+        if (showUnlock) _buildUnlockDepositCheckbox(context).top(8),
         pady(24),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -228,7 +226,9 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
       radius: 12,
       child: Column(
         children: [
-          Text("To withdraw your deposit, you'll need to unlock it which takes 24 hours.")
+          Text('To withdraw your deposit the funds must be unlocked, which requires a waiting period of 24 hours.'
+                  '  '
+                  'Once the unlock is started you will no longer be able to use this account for payments until you re-lock or re-fund the account’s deposit.')
               .withStyle(style)
               .padx(16)
               .top(16),
@@ -286,7 +286,8 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
   }
 
   bool get _depositFormValid {
-    return _depositField.value <= pot.unlockedAmount;
+    var value = _depositField.value;
+    return value != null && value <= pot.unlockedAmount;
   }
 
   bool get _depositFieldError {

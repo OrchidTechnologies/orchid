@@ -1,27 +1,22 @@
 import 'package:orchid/orchid.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/common/token_price_builder.dart';
-import 'dart:ui';
 import 'package:badges/badges.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/common/account_chart.dart';
-import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/gradient_border.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/util/timed_builder.dart';
 import 'package:orchid/util/units.dart';
-import '../orchid_asset.dart';
 import '../orchid_panel.dart';
-import '../orchid_text.dart';
 import 'account_detail_poller.dart';
 
 /// The account cards used on the account manager
@@ -89,22 +84,14 @@ class _AccountCardState extends State<AccountCard>
   double get efficiency => widget.accountDetail?.marketConditions?.efficiency;
 
   LotteryPot get pot {
-    /*
-    // TESTING
-    final type = widget.accountDetail?.lotteryPot?.balance?.type;
-    return LotteryPot(
-      balance: type.fromDouble(1.0),
-      deposit: type.fromDouble(1.0),
-      warned: type.fromDouble(0.5),
-      // warned: type.zero,
-      unlock: BigInt.from( DateTime.now().add(Duration(hours: 23)).millisecondsSinceEpoch / 1000),
-      // unlock: BigInt.from( DateTime.now().subtract(Duration(days: 1)).millisecondsSinceEpoch / 1000),
-    );
-     */
+    // return AccountMock.account1xdaiLocked.mockLotteryPot;
+    // return AccountMock.account1xdaiUnlocking.mockLotteryPot;
+    // return AccountMock.account1xdaiUnlocked.mockLotteryPot;
+    // return AccountMock.account1xdaiPartUnlocked.mockLotteryPot;
     return widget.accountDetail?.lotteryPot;
   }
 
-  bool get showLockStatus {
+  bool get _potIsWarned {
     return pot?.isWarned ?? false;
   }
 
@@ -136,8 +123,9 @@ class _AccountCardState extends State<AccountCard>
                       child: AnimatedSize(
                         alignment: Alignment.topCenter,
                         duration: expandDuration,
-                        child:
-                            IntrinsicHeight(child: _buildCardContent(context)),
+                        child: IntrinsicHeight(
+                          child: _buildCardContent(context),
+                        ),
                       ),
                     );
                   }),
@@ -360,16 +348,36 @@ class _AccountCardState extends State<AccountCard>
     final version = widget.accountDetail?.account?.version;
     final versionText = version != null ? 'V$version' : '';
 
+    final showDeposit =
+        // not yet loaded (placeholder)
+        pot?.effectiveDeposit == null ||
+            // has net deposit
+            pot.effectiveDeposit.gtZero() ||
+            // no warned amount
+            !_potIsWarned;
+
     return Column(
       children: [
         if (!minHeight) _divider().bottom(12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // balance
             _buildLabeledTokenValueRow(s.balance, pot?.balance, price),
-            _buildLabeledTokenValueRow(s.deposit, pot?.effectiveDeposit, price)
-                .top(13),
+
+            // deposit
+            if (showDeposit)
+              _buildLabeledTokenValueRow(
+                      s.deposit, pot?.effectiveDeposit, price)
+                  .top(13),
+
+            // lock
+            if (_potIsWarned) _buildUnlockInfo(price).top(16),
+
+            // efficiency
             _buildEfficiencyRow(efficiency).top(16),
+
+            // tickets
             if (chartModel != null)
               _buildTicketsRow(chartModel, efficiency).top(20),
 
@@ -393,8 +401,6 @@ class _AccountCardState extends State<AccountCard>
               child: Text(versionText, style: OrchidText.extra_large).top(8),
             ).top(16),
 
-            // lock
-            if (showLockStatus) _buildUnlockInfo(price).top(16),
             pady(16)
           ],
         ).padx(40),
@@ -448,21 +454,23 @@ class _AccountCardState extends State<AccountCard>
   ) {
     return _labeledRow(
       title: title,
-      child: _buildTokenValueTextRow(value, price),
+      child: _buildTokenValueTextRow(value: value, price: price),
     );
   }
 
   // display token value and symbol on a row with usd price in a row below
-  Widget _buildTokenValueTextRow(Token value, USD price) {
+  Widget _buildTokenValueTextRow({Token value, USD price, Color textColor}) {
     final valueText = ((value ?? (tokenType ?? Tokens.TOK).zero)
         .formatCurrency(locale: context.locale, digits: 2, showSuffix: false));
-    final valueWidget = Text(valueText).extra_large;
+    final valueWidget =
+        Text(valueText).extra_large.withColor(textColor ?? Colors.white);
     return TokenValueWidgetRow(
       context: context,
       child: valueWidget,
       tokenType: tokenType,
       value: value,
       price: price,
+      textColor: textColor,
     );
   }
 
@@ -471,12 +479,17 @@ class _AccountCardState extends State<AccountCard>
     String title,
     Widget titleWidget,
     @required Widget child,
+    Color textColor,
   }) {
     assert(title != null || titleWidget != null);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        (titleWidget ?? Text(title, style: OrchidText.body2).top(5)).height(24),
+        (titleWidget ??
+                Text(title, style: OrchidText.body2)
+                    .withColor(textColor ?? Colors.white)
+                    .top(5))
+            .height(24),
         child,
       ],
     );
@@ -495,9 +508,10 @@ class _AccountCardState extends State<AccountCard>
     if (pot == null || !pot.isWarned) {
       return Container();
     }
+    final color = OrchidColors.status_yellow;
 
     final icon = Icon(pot.isUnlocked ? Icons.lock_open : Icons.lock,
-        color: Colors.white, size: 18);
+        color: color, size: 20);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,18 +522,23 @@ class _AccountCardState extends State<AccountCard>
               icon,
               Text(pot.isUnlocked ? "Unlocked deposit" : "Unlocking deposit")
                   .body2
-                  .left(14)
+                  .withColor(color)
+                  .left(8)
                   .top(4),
             ],
           ),
           child: _buildTokenValueTextRow(
-                  pot.isUnlocked ? pot.unlockedAmount : pot.warned, price)
-              .top(4),
+            value: pot.isUnlocked ? pot.unlockedAmount : pot.warned,
+            price: price,
+            textColor: color,
+          ).top(4),
         ),
         if (pot.isUnlocking)
           _labeledRow(
             title: s.unlockTime,
-            child: Text(pot.unlockInString()).extra_large.top(4),
+            child:
+                Text(pot.unlockInString()).extra_large.withColor(color).top(4),
+            textColor: color,
           ).top(4)
       ],
     );
@@ -592,6 +611,9 @@ class TokenValueWidgetRow extends StatelessWidget {
   final USD price;
   final bool enabled;
 
+  // Used for the token symbol
+  final Color textColor;
+
   bool get disabled => !enabled;
 
   const TokenValueWidgetRow({
@@ -602,6 +624,7 @@ class TokenValueWidgetRow extends StatelessWidget {
     @required this.value,
     @required this.price,
     this.enabled = true,
+    this.textColor,
   }) : super(key: key);
 
   @override
@@ -620,6 +643,7 @@ class TokenValueWidgetRow extends StatelessWidget {
             child,
             Text((tokenType ?? Tokens.TOK).symbol)
                 .extra_large
+                .withColor(textColor)
                 .inactiveIf(disabled),
           ],
         ).top(8).height(26),
