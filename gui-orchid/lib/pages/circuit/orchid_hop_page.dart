@@ -1,3 +1,4 @@
+import 'package:orchid/orchid.dart';
 import 'dart:async';
 import 'package:badges/badges.dart';
 import 'package:flutter/foundation.dart';
@@ -5,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
@@ -23,15 +23,12 @@ import 'package:orchid/common/instructions_view.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/orchid/account/market_stats_dialog.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
-import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_text_field.dart';
-import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
-import 'package:orchid/pages/account_manager/scan_paste_identity.dart';
-import 'package:orchid/orchid/orchid_chain_selection.dart';
 import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
@@ -499,106 +496,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Future<void> _showMarketStats() async {
-    if (_lotteryPot == null || _marketConditions == null) {
-      return;
-    }
-
-    var gasPrice = await _account.chain.getGasPrice();
-
-    // We used to do this :)
-    // bool gasPriceHigh = gasPrice.value >= 50.0;
-    bool gasPriceHigh = false;
-
-    List<Widget> tokenPrices;
-    if (_account.isV0) {
-      PricingV0 pricing = await OrchidPricingAPIV0().getPricing();
-      var ethPriceText = formatCurrency(1.0 / pricing?.ethPriceUSD,
-          locale: context.locale, suffix: 'USD');
-      var oxtPriceText = formatCurrency(1.0 / pricing?.oxtPriceUSD,
-          locale: context.locale, suffix: 'USD');
-      tokenPrices = [
-        Text(s.ethPrice + " " + ethPriceText).body2,
-        Text(s.oxtPrice + " " + oxtPriceText).body2,
-      ];
-    } else {
-      var tokenType = _account.chain.nativeCurrency;
-      var tokenPrice = await OrchidPricing().tokenToUsdRate(tokenType);
-      var priceText =
-          formatCurrency(tokenPrice, locale: context.locale, suffix: 'USD');
-      tokenPrices = [
-        Text(tokenType.symbol + ' ' + s.price + ': ' + priceText).body2,
-      ];
-    }
-
-    // Show gas prices as "GWEI" regardless of token type.
-    var gasPriceGwei = gasPrice.multiplyDouble(1e9);
-    var gasPriceText = formatCurrency(gasPriceGwei.floatValue,
-        locale: context.locale, suffix: 'GWEI');
-
-    String maxFaceValueText =
-        _marketConditions.maxFaceValue.formatCurrency(locale: context.locale);
-    String costToRedeemText =
-        _marketConditions.costToRedeem.formatCurrency(locale: context.locale);
-
-    bool ticketUnderwater = _marketConditions.costToRedeem.floatValue >=
-        _marketConditions.maxFaceValue.floatValue;
-
-    String limitedByText = _marketConditions.limitedByBalance
-        ? s.yourMaxTicketValueIsCurrentlyLimitedByYourBalance +
-            " ${_lotteryPot.balance.formatCurrency(locale: context.locale)}.  " +
-            s.considerAddingOxtToYourAccountBalance
-        : s.yourMaxTicketValueIsCurrentlyLimitedByYourDeposit +
-            " ${_lotteryPot.deposit.formatCurrency(locale: context.locale)}.  " +
-            s.considerAddingOxtToYourDepositOrMovingFundsFrom;
-
-    String limitedByTitleText = _marketConditions.limitedByBalance
-        ? s.balanceTooLow
-        : s.depositSizeTooSmall;
-
-    return AppDialogs.showAppDialog(
-        context: context,
-        title: s.marketStats,
-        body: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(s.prices).title,
-              pady(4),
-              ...tokenPrices,
-              Text(s.gasPrice + " " + gasPriceText,
-                      style: gasPriceHigh
-                          ? OrchidText.body1.copyWith(color: Colors.red)
-                          : OrchidText.body1)
-                  .body2,
-              pady(16),
-              Text(s.ticketValue).title,
-              pady(4),
-
-              Text(s.maxFaceValue + " " + maxFaceValueText).body2,
-
-              Text(s.costToRedeem + " " + costToRedeemText,
-                  style: ticketUnderwater
-                      ? OrchidText.body2.copyWith(color: Colors.red)
-                      : OrchidText.body2),
-
-              // Problem description
-              if (ticketUnderwater) ...[
-                pady(16),
-                Text(limitedByTitleText).body1,
-                pady(8),
-
-                // Text(limitedByText, style: TextStyle(fontStyle: FontStyle.italic)),
-                Text(limitedByText,
-                    style:
-                        OrchidText.body1.copyWith(fontStyle: FontStyle.italic)),
-
-                pady(16),
-                LinkText(s.viewTheDocsForHelpOnThisIssue,
-                    style: OrchidText.linkStyle,
-                    url:
-                        'https://docs.orchid.com/en/stable/accounts/#deposit-size-too-small')
-              ]
-            ]));
+    MarketStatsDialog.show(
+      context: context,
+      account: _account,
+      lotteryPot: _lotteryPot,
+      marketConditions: _marketConditions,
+    );
   }
 
   void _editCurator() async {

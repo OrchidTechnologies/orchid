@@ -238,14 +238,16 @@ class _AccountCardState extends State<AccountCard>
         _fade(
           SizedBox(
             key: Key(balanceText ?? ''),
-            // height: 24,
             child: balanceText != null
                 ? Badge(
+                    // ignorePointer: true,
                     showBadge: showBadge,
                     elevation: 0,
-                    badgeContent: Text('!', style: OrchidText.caption),
-                    padding:
-                        EdgeInsets.only(left: 8, right: 8, bottom: 5, top: 8),
+                    badgeContent: Text('!', style: OrchidText.caption)
+                        .padx(8)
+                        .top(8)
+                        .bottom(5),
+                    padding: EdgeInsets.zero,
                     toAnimate: false,
                     position: BadgePosition.topEnd(top: -5, end: -30),
                     child: Text(balanceText, style: OrchidText.highlight),
