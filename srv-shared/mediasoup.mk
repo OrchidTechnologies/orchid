@@ -51,6 +51,9 @@ cflags += -DMS_LOG_STD
 cflags += -DMS_LOG_TRACE
 #cflags += -DMS_LOG_DEV_LEVEL=3
 
+# XXX: this trips if MS_LOG_DEV_LEVEL isn't set
+cflags/$(pwd)/mediasoup/worker/deps/libwebrtc/libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.cc += -Wno-unused-but-set-variable
+
 # XXX: maybe try to upstream an #ifndef __MINGW32__
 chacks/$(pwd)/mediasoup/worker/src/Utils/File.cpp += s/^\#define.*_S_.*//
 
