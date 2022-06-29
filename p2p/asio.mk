@@ -57,6 +57,7 @@ boost += mpl
 boost += multi_index
 boost += multiprecision
 boost += optional
+boost += outcome
 boost += parameter
 boost += predef
 boost += preprocessor
@@ -85,7 +86,6 @@ boost += winapi
 cflags += $(patsubst %,-I$(pwd)/boost/libs/%/include,$(boost))
 
 cflags += $(patsubst %,-I%,$(wildcard $(pwd)/boost/libs/numeric/*/include))
-cflags += -I$(pwd)/outcome/include
 
 cflags += -I$(pwd)/boost/libs/asio/include/boost
 cflags += -DBOOST_ASIO_DISABLE_CONNECTEX

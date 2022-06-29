@@ -196,36 +196,12 @@
 [submodule "libuv"]
 	path = srv-shared/libuv
 	url = https://github.com/libuv/libuv.git
-[submodule "cpp-libp2p"]
-	path = srv-shared/cpp-libp2p
-	url = https://github.com/libp2p/cpp-libp2p.git
-[submodule "GSL"]
-	path = srv-shared/GSL
-	url = https://github.com/microsoft/GSL.git
-[submodule "soralog"]
-	path = srv-shared/soralog
-	url = https://github.com/xDimon/soralog.git
-[submodule "hat-trie"]
-	path = srv-shared/hat-trie
-	url = https://github.com/Tessil/hat-trie.git
-[submodule "yaml-cpp"]
-	path = srv-shared/yaml-cpp
-	url = https://github.com/jbeder/yaml-cpp.git
-[submodule "di"]
-	path = srv-shared/di
-	url = https://github.com/boost-ext/di.git
-[submodule "sqlite_modern_cpp"]
-	path = srv-shared/sqlite_modern_cpp
-	url = https://github.com/SqliteModernCpp/sqlite_modern_cpp.git
 [submodule "crc32c"]
 	path = min-webrtc/crc32c
 	url = https://github.com/google/crc32c.git
 [submodule "snappy"]
 	path = p2p/snappy
 	url = https://github.com/google/snappy.git
-[submodule "outcome"]
-	path = p2p/outcome
-	url = https://github.com/boostorg/outcome.git
 [submodule "pcre2"]
 	path = min-pcre2/pcre2
 	url = https://github.com/PhilipHazel/pcre2.git
