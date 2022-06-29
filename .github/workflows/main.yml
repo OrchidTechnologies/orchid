@@ -212,8 +212,7 @@ jobs:
     - name: make macOS server
       # XXX: v8 cannot be compiled using Xcode due to something I haven't spent the time to investigate :(
       # exception specification of explicitly defaulted copy constructor does not match the calculated one
-      # XXX: my crossndk feature isn't 100% compatible with Xcode 12 as it mixes up the clang directory :/
-      run: DEVELOPER_DIR=/Applications/Xcode_11.7.app debug=crossndk make -j3 -C srv-shared
+      run: debug=crossndk make -j3 -C srv-shared
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-mac
