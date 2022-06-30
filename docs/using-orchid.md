@@ -173,22 +173,18 @@ The advanced configuration box is where you can input custom commands into the c
 
 The Chain Settings tab is where you can review connections to our partnered chains’ RPC endpoints.
 
-Ethereum Endpoint:
+The Ethereum Endpoint is the first and most important. For Orchid to connect, the app needs to access the Ethereum blockchain to access the stake weighted directory in order to find a provider. The default RPC uses [Alchemy](https://www.alchemy.com/). If you hit the TEST button and it fails, you will need to find a working RPC endpoint to get a VPN connection. You can override the default Ethereum RPC by pasting the endpoint into the provided box. Some options to consider if Alchemy is failing:
 
-One of the most useful settings is the Ethereum RPC endpoint. For Orchid to connect, the app needs to access the Ethereum blockchain to access the stake weighted directory in order to find a provider. The default RPC uses [Alchemy](https://www.alchemy.com/). You can override the default Ethereum with `rpc='&lt;URL to ETH Endpoint>'` (no ; or other characters). There are many ways to get access to the latest state of the Ethereum blockchain:
-
-* Cloudflare runs a public endpoint. To connect add this line: `rpc='https://cloudflare-eth.com'` with no ; or extra spaces
-* You can run your own Ethereum node using [GETH](https://geth.ethereum.org/), enable the RPC endpoint and then set the `rpc=''
+* Cloudflare runs a public endpoint. Simply paste in https://cloudflare-eth.com and hit test to see if that works.
+* You can run your own Ethereum node using [GETH](https://geth.ethereum.org/)
 * [Infura](https://infura.io/) offers free Ethereum endpoints after you register for an account
 * [POKT Network](https://www.pokt.network/) offers a free Ethereum endpoint after you register for an account
 
-Note that both POKT and Infura will require an account; after you register, they will provide a unique URL that you can use in the advanced configuration.
-
-Without a functioning Ethereum endpoint, Orchid will not connect. When troubleshooting, use a browser to test and see if certain domains are blocked, such as [alchemy.com](https://alchemy.com). If your browser cannot open [alchemy.com](https://alchemy.com), then it is probably blocked in your region and you will need to find an alternative Ethereum RPC to connect.
+Note that both POKT and Infura will require an account; after you register, they will provide a unique URL that you can paste in.
 
 Other Endpoints:
 
-If you have an account on a particular blockchain, the RPC server must be available in order for the app to be able to read your balance. If the interface is blank, it is because the RPC server for the chain housing your account cannot be read by the app. 
+If you have an account on a particular blockchain, the RPC server must be available in order for the app to be able to read your balance. Find the chain where your account is located and then test the chain to make sure the RPC endpoint is working. If not, find a new RPC endpoint for that chain and paste it into the box.
 
 ### Configuration management
 
