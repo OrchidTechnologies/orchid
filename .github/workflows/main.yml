@@ -14,15 +14,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make skeleton
       run: ./app-flutter.sh orchid && cd app-flutter && make
@@ -39,15 +31,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make iOS .ipa
       run: debug=ldid make -j3 -C app-ios precache='--no-android'
@@ -66,15 +50,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Android .apk
       run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 make -j3 -C app-android precache='--no-ios'
@@ -94,15 +70,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup-git.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Android .apk
       run: cd app-android && env/docker.sh -j3
@@ -119,15 +87,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make macOS .app
       run: debug=ldid make -j3 -C app-macos precache='--no-android --no-ios --macos'
@@ -143,15 +103,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make macOS sender
       run: make -j3 -C eth-sender
@@ -171,15 +123,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make macOS client
       run: make -j3 -C cli-shared
@@ -199,15 +143,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make macOS server
       run: make -j3 -C srv-shared
@@ -231,15 +167,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: setup plugins
       run: debug=crossndk make -j3 -C app-windows ./env/dotdot/gui-orchid/.flutter-plugins
@@ -261,15 +189,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Windows client
       run: make -j3 -C cli-shared target=win
@@ -292,15 +212,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Windows server
       run: make -j3 -C srv-shared target=win
@@ -321,15 +233,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: setup plugins
       run: debug=crossndk make -j3 -C app-linux ./env/dotdot/gui-orchid/.flutter-plugins
@@ -348,15 +252,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Linux dashboard
       run: debug=crossndk make -j3 -C tst-network
@@ -369,15 +265,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Linux client
       run: debug=crossndk make -j3 -C cli-shared machine=x86_64
@@ -394,15 +282,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Linux client
       run: debug=crossndk make -j3 -C cli-shared machine=arm64
@@ -419,15 +299,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Linux client
       run: debug=crossndk make -j3 -C cli-shared machine=armhf
@@ -447,15 +319,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Linux server
       run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared
@@ -474,15 +338,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Linux server
       run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared machine=arm64
@@ -505,15 +361,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Linux server
       run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared machine=armhf
@@ -536,15 +384,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup-git.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Linux server
       run: cd srv-shared && env/docker.sh -j3
@@ -582,15 +422,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Linux server
       run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 make -j3 -C srv-shared target=lnx
@@ -607,15 +439,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - uses: ./.github/actions/submodule
 
     - name: make Linux server
       run: make -j3 -C srv-shared
