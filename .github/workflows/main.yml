@@ -133,7 +133,7 @@ jobs:
     - uses: ./.github/actions/submodule
 
     - run: debug=crossndk make -j3 -C app-windows ./env/dotdot/gui-orchid/.flutter-plugins
-    - run: make -j3 -C app-windows target=win precache='--no-android --no-ios --windows -a'
+    - run: debug=crossndk make -j3 -C app-windows target=win precache='--no-android --no-ios --windows -a'
 
     - uses: actions/upload-artifact@v1
       with:
