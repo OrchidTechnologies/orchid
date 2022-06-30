@@ -208,52 +208,25 @@ jobs:
     - run: debug=crossndk make -j3 -C tst-network
 
 
-  build-lnx-cli-amd64:
+  build-lnx-cli:
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [x86_64, arm64, armhf]
 
     steps:
     - uses: actions/checkout@v2
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
 
-    - run: debug=crossndk make -j3 -C cli-shared machine=x86_64
+    - run: debug=crossndk make -j3 -C cli-shared machine=${{ matrix.machine }}
 
     - uses: actions/upload-artifact@v1
       with:
-        name: orchidcd-lnx-amd64
-        path: cli-shared/out-lnx/x86_64/orchidcd
-
-
-  build-lnx-cli-arm64:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - run: env/setup.sh
-    - uses: ./.github/actions/submodule
-
-    - run: debug=crossndk make -j3 -C cli-shared machine=arm64
-
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchidcd-lnx-arm64
-        path: cli-shared/out-lnx/arm64/orchidcd
-
-
-  build-lnx-cli-armhf:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - run: env/setup.sh
-    - uses: ./.github/actions/submodule
-
-    - run: debug=crossndk make -j3 -C cli-shared machine=armhf
-
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchidcd-lnx-armhf
-        path: cli-shared/out-lnx/armhf/orchidcd
+        name: orchidcd-lnx-${{ matrix.machine }}
+        path: cli-shared/out-lnx/${{ matrix.machine }}/orchidcd
 
 
   build-lnx-srv-amd64:
@@ -270,8 +243,13 @@ jobs:
     - run: git status
 
 
-  build-lnx-srv-arm64:
+  build-lnx-srv:
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [arm64, armhf]
 
     steps:
     - uses: actions/checkout@v2
@@ -279,31 +257,12 @@ jobs:
     - run: env/setup-ndk.sh
     - uses: ./.github/actions/submodule
 
-    - run: debug=crossndk make -j3 -C srv-shared machine=arm64
+    - run: debug=crossndk make -j3 -C srv-shared machine=${{ matrix.machine }}
 
     - uses: actions/upload-artifact@v1
       with:
-        name: orchidd-lnx-arm64
-        path: srv-shared/out-lnx/arm64/orchidd
-
-    - run: git status
-
-
-  build-lnx-srv-armhf:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - run: env/setup.sh
-    - run: env/setup-ndk.sh
-    - uses: ./.github/actions/submodule
-
-    - run: debug=crossndk make -j3 -C srv-shared machine=armhf
-
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchidd-lnx-armhf
-        path: srv-shared/out-lnx/armhf/orchidd
+        name: orchidd-lnx-${{ matrix.machine }}
+        path: srv-shared/out-lnx/${{ matrix.machine }}/orchidd
 
     - run: git status
 
