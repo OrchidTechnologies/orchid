@@ -8,9 +8,6 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -25,9 +22,6 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -81,9 +75,6 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -97,9 +88,6 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -117,9 +105,6 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -137,9 +122,6 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
@@ -203,9 +185,6 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - name: install mingw-w64
       run: brew install mingw-w64 coreutils
 
@@ -413,9 +392,6 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - name: install NDK r22
       run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
 
