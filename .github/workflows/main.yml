@@ -38,16 +38,14 @@ jobs:
     - name: rm -rf /opt
       run: sudo rm -rf /opt
 
-    - name: install NDK r22
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
+    - run: env/setup-ndk.sh
     - uses: ./.github/actions/submodule
 
     - name: make Android .apk
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 make -j3 -C app-android precache='--no-ios'
+      run: make -j3 -C app-android precache='--no-ios'
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-apk
@@ -292,16 +290,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: install NDK r22
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
+    - run: env/setup-ndk.sh
     - uses: ./.github/actions/submodule
 
     - name: make Linux server
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared
+      run: debug=crossndk make -j3 -C srv-shared
 
     - name: git status
       run: git status
@@ -311,16 +307,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: install NDK r22
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
+    - run: env/setup-ndk.sh
     - uses: ./.github/actions/submodule
 
     - name: make Linux server
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared machine=arm64
+      run: debug=crossndk make -j3 -C srv-shared machine=arm64
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-lnx-arm64
@@ -334,16 +328,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: install NDK r22
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
+    - run: env/setup-ndk.sh
     - uses: ./.github/actions/submodule
 
     - name: make Linux server
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared machine=armhf
+      run: debug=crossndk make -j3 -C srv-shared machine=armhf
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-lnx-armhf
@@ -392,16 +384,14 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: install NDK r22
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
-
     - uses: actions/checkout@v2
     - name: env/setup
       run: env/setup.sh
+    - run: env/setup-ndk.sh
     - uses: ./.github/actions/submodule
 
     - name: make Linux server
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 make -j3 -C srv-shared target=lnx
+      run: make -j3 -C srv-shared target=lnx
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-lnx-amd64

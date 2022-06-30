@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -o pipefail
 cd "$(dirname "$0")/.."
 
 env/setup-lnx.sh
@@ -15,7 +14,9 @@ curl -o android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux
 mkdir -p /usr/local/lib/android
 unzip -d /usr/local/lib/android/sdk android-sdk.zip
 rm -f android-sdk.zip
-echo y | /usr/local/lib/android/sdk/tools/bin/sdkmanager "build-tools;29.0.2" "ndk;22.1.7171670" "platforms;android-30" >/dev/null
+export ANDROID_HOME=/usr/local/lib/android/sdk
+
+env/setup-ndk.sh
 
 uid=$1
 shift
