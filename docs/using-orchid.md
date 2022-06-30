@@ -11,7 +11,7 @@ After the purchase completes, hit the “Connect” button to start the VPN, and
 
 It's that easy!
 
-![alt_text](images/image1.png "image_tooltip")
+![Get Started Screenshot](img/get-started.png "Get started")
 
 ## Home
 
@@ -19,7 +19,7 @@ The home screen displays key pieces of information about how your device is conn
 
 Problems with your account balance, deposit or circuit will be denoted with a red ‘!’.
 
-![alt_text](images/image2.png "image_tooltip")
+![Home screenshot](img/home.png "Home screen")
 
 ### Circuit and account display
 
@@ -50,7 +50,7 @@ It is also possible to connect to a server, have the screen change states, and t
 
 The account manager allows you to manage multiple accounts and associated identities. It is also where you can go to export and import accounts. The identity is displayed under "Orchid Identity". The funder wallet address is displayed inside the account. The identity and funder wallet together are key bits of information for each account. Learn more about Orchid's layer 2 nanopayment system: [Orchid accounts](https://docs.orchid.com/en/latest/accounts/).
 
-![alt_text](images/image3.png "image_tooltip")
+![Account manager screenshot](img/account-manager.png "Account manager screen")
 
 ### Add funds with an in-app purchase
 
@@ -96,7 +96,7 @@ A single hop circuit is similar to a typical VPN provider. Three hops is a stand
 
 To add a hop to your circuit, enter the Circuit Builder menu by either selecting “Circuit Builder” in the menu or tapping on the “0 Hop Circuit” button on the main page. Here, you can view your current hop configuration and add hops. Swiping left or right on a hop will delete it, and long pressing on a hop will allow you to change its position in the circuit; the entry node is at the top of the screen and the exit node is at the bottom. While Orchid accounts are stored in the account manager, there is no way to store OpenVPN or WireGuard hops, except by adding them to your active circuit. See below on how to save your circuit and export the entire configuration, which could help you manage inactive OpenVPN or WireGuard hops.
 
-![alt_text](images/image4.png "image_tooltip")
+![Circuit builder screenshot](img/circuit-builder.png "Circuit builder screen")
 
 ### Orchid hop
 
@@ -136,7 +136,7 @@ Orchid has a built-in traffic monitor that can run with or without an Orchid acc
 
 To enable the traffic analyzer and review your device’s connections, tap on the traffic light icon in the upper right of the homescreen, or select “Traffic Analysis” from the menu.
 
-![alt_text](images/image5.png "image_tooltip")
+![Traffic analyzer screenshot](img/traffic-analyzer.png "Traffic analyzer screen")
 
 ### Traffic filters
 
@@ -151,9 +151,9 @@ The traffic analyzer supports different ways to filter the traffic to better mak
 
 From the homescreen, swipe right or tap the menu button in the top left. From there, you can navigate to all the screens in the app, get in-app help, and read the privacy policy, open source license and version number on the bottom.
 
-![alt_text](images/image6.png "image_tooltip")
+![Settings screenshot](img/settings.PNG "Settings screen")
 
-### Default **c**urator
+### Default curator
 
 Orchid uses an on-chain curated list which filters the viable nodes to a custom subset called a curator. Orchid's official curator is `partners.orch1d.eth`. The Orchid client uses this list to prevent certain kinds of attacks from malicious exit nodes (e.g. SSL downgrade attacks) by using a default list with trusted VPN partners.
 
