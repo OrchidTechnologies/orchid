@@ -92,3 +92,5 @@ $(each)
 endif
 
 lflags += -lm -llog
+
+wflags += -L$(CURDIR)/env/android
