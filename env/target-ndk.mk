@@ -52,10 +52,6 @@ ifeq ($(ndk),)
 ndk := $(wildcard /usr/lib/android-ndk)
 endif
 
-# XXX: C:\Users\[username]\AppData\Local\Android\Sdk\ndk-bundle
-# XXX: C:\Program Files\Android\Android Studio\plugins\android-ndk
-# XXX: C:\Users\[username]\AppData\Local\VirtualStore\Windows\SysWOW64\android-ndk-r10e
-
 ifeq ($(ndk),)
 $(error install Android NDK and export ANDROID_NDK_HOME)
 endif
