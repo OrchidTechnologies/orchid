@@ -227,7 +227,7 @@ int Main(int argc, const char *const argv[]) {
             std::cout << key << std::endl;
             std::cout << certificate << std::endl;
 
-            return Store(std::move(key), std::move(certificate));
+            return {std::move(key), std::move(certificate)};
         }
     }());
 
