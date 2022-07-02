@@ -104,3 +104,9 @@ While you could use your primary Ethereum wallet, we do not recommend it if you 
 While a decentralized exchange does not store personal information that could link your source of funds to your identity, a decentralized exchange does typically require an Ethereum account with some sort of crypto such as ETH, which has its own history of transactions. If that ETH or wallet is linked to your identity, then the source of funds could be linked through the DEX back to your originating Ethereum wallet.
 
 A large exchange typically has a ledger they use to keep track of ownership, with a hot wallet they use to send funds in and out of the exchange. While the exchange knows your identity, the movement of currency in and out of the exchange is anonymous, as the funds can’t be tracked to your identity on the blockchain without the exchange being hacked, subpoenaed or otherwise compromised.
+
+### How do I switch accounts?
+
+To switch accounts in the DApp, you will need to do so within the connected wallet which is typically Metamask. To switch between wallet accounts in Metamask, you can click your wallet identicon on the top right and swap to a different wallet account.
+ 
+Otherwise, to disconnect your wallet, open the MetaMask add-on then below the fox icon on the top left, click where it says connected. Click the three dots on the right of the shown account to disconnect your wallet. You may need to refresh your browser before you’re able to reconnect.
