@@ -141,6 +141,24 @@ jobs:
         path: app-windows/out-win/package
 
 
+  build-win-snd:
+    runs-on: ubuntu-latest
+
+    steps:
+    - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
+
+    - uses: actions/checkout@v2
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
+
+    - run: make -j3 -C eth-sender target=win
+
+    - uses: actions/upload-artifact@v1
+      with:
+        name: cj-win
+        path: eth-sender/out-win/x86_64/cj.exe
+
+
   build-win-cli:
     runs-on: ubuntu-latest
 
