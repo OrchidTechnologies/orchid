@@ -283,7 +283,7 @@ std::ostream &operator <<(std::ostream &out, const View &view);
 std::optional<Range<>> Find(const View &data, const View &value);
 std::tuple<View, View> Split(const View &value, const Range<> &range);
 
-cppcoro::generator<View> Split(const View &value, const View &delimeter);
+cppcoro::generator<View> Split(const View &value, std::string delimeter);
 
 void Split(const View &value, const View &delimeter, const std::function<void (View, View)> &code);
 
