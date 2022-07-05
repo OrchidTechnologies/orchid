@@ -23,6 +23,7 @@
 #include "messages.pb.h"
 #include "messages-common.pb.h"
 #include "messages-ethereum.pb.h"
+#include "messages-management.pb.h"
 
 #include "nested.hpp"
 #include "trezor.hpp"
@@ -30,7 +31,7 @@
 namespace orc {
 
 namespace tzr = hw::trezor::messages;
-#define ORC_TREZOR(type) Call<tzr::MessageType_##type, tzr::ethereum::type>
+#define ORC_TREZOR(space, type) Call<tzr::MessageType_##type, tzr::space::type>
 
 static task<std::string> Trezor(const S<Base> &base, const std::string &path, const std::string &data = {}) {
     co_return (co_await base->Fetch("POST", {{"http", "localhost", "21325"}, path}, {
@@ -50,7 +51,18 @@ task<S<TrezorSession>> TrezorSession::New(S<Base> base) {
     const auto device(devices.at(0).as_object());
     const auto previous(device.find("session"));
     const auto session(Parse(co_await Trezor(base, "/acquire/" + Str(device.at("path")) + "/" + (previous == device.end() || previous->value().is_null() ? "null" : Str(previous->value())))).as_object());
-    co_return Break<TrezorSession>(std::move(base), Str(session.at("session")));
+    co_return co_await Opened(Break<TrezorSession>(std::move(base), Str(session.at("session"))));
+}
+
+task<void> TrezorSession::Open() {
+    tzr::management::Initialize request;
+    request.set_session_id(session_);
+    const auto features(co_await ORC_TREZOR(management, Features)(tzr::MessageType_Initialize, request));
+    if (features.has_safety_checks() && features.safety_checks() == tzr::management::Strict) {
+        tzr::management::ApplySettings request;
+        request.set_safety_checks(tzr::management::PromptTemporarily);
+        co_await ORC_TREZOR(common, Success)(tzr::MessageType_ApplySettings, request);
+    }
 }
 
 task<void> TrezorSession::Shut() noexcept {
@@ -135,7 +147,7 @@ TrezorExecutor::TrezorExecutor(S<TrezorSession> session, std::vector<uint32_t> i
 task<S<TrezorExecutor>> TrezorExecutor::New(S<TrezorSession> session, std::vector<uint32_t> indices) {
     tzr::ethereum::EthereumGetAddress request;
     Trezor(request, indices);
-    const auto response(co_await session->ORC_TREZOR(EthereumAddress)(tzr::MessageType_EthereumGetAddress, request));
+    const auto response(co_await session->ORC_TREZOR(ethereum, EthereumAddress)(tzr::MessageType_EthereumGetAddress, request));
     co_return Make<TrezorExecutor>(std::move(session), std::move(indices), response.address());
 }
 
@@ -147,7 +159,7 @@ task<Signature> TrezorExecutor::operator ()(const Chain &chain, const Buffer &da
     tzr::ethereum::EthereumSignMessage request;
     Trezor(request, indices_);
     request.set_message(data.str());
-    const auto response(co_await session_->ORC_TREZOR(EthereumMessageSignature)(tzr::MessageType_EthereumSignMessage, request));
+    const auto response(co_await session_->ORC_TREZOR(ethereum, EthereumMessageSignature)(tzr::MessageType_EthereumSignMessage, request));
     Log() << Subset(response.signature()) << std::endl;
     orc_insist(false);
 }
@@ -170,11 +182,11 @@ task<Bytes32> TrezorExecutor::Send(const Chain &chain, const uint256_t &nonce, c
     if (size > 1024) size = 1024;
 
     request.set_data_initial_chunk(window.Take(size).str());
-    auto response(co_await session_->ORC_TREZOR(EthereumTxRequest)(tzr::MessageType_EthereumSignTx, request));
+    auto response(co_await session_->ORC_TREZOR(ethereum, EthereumTxRequest)(tzr::MessageType_EthereumSignTx, request));
     while (response.has_data_length()) {
         tzr::ethereum::EthereumTxAck request;
         request.set_data_chunk(window.Take(response.data_length()).str());
-        response = co_await session_->ORC_TREZOR(EthereumTxRequest)(tzr::MessageType_EthereumTxAck, request);
+        response = co_await session_->ORC_TREZOR(ethereum, EthereumTxRequest)(tzr::MessageType_EthereumTxAck, request);
     }
 
     orc_assert(window.done());

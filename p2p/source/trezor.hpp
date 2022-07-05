@@ -37,6 +37,8 @@ class TrezorSession :
   public:
     TrezorSession(S<Base> base, std::string session);
     static task<S<TrezorSession>> New(S<Base> base);
+
+    task<void> Open();
     task<void> Shut() noexcept override;
 
     template <uint16_t Type_, typename Response_, typename Request_>

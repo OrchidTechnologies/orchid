@@ -218,6 +218,8 @@ source += $(output)/pb/messages-common.pb.cc
 header += $(output)/pb/messages-common.pb.h
 source += $(output)/pb/messages-ethereum.pb.cc
 header += $(output)/pb/messages-ethereum.pb.h
+source += $(output)/pb/messages-management.pb.cc
+header += $(output)/pb/messages-management.pb.h
 
 $(call include,rtc/target.mk)
 $(call include,krypton/target.mk)
