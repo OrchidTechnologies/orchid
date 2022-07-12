@@ -4,6 +4,7 @@ import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/util/polling_builder.dart';
 import 'package:orchid/util/units.dart';
 
+// TODO: Move to orchid package
 // TODO: expand to multi-token, selectable currency
 class TokenPriceBuilder extends StatelessWidget {
   final TokenType tokenType;
@@ -20,6 +21,7 @@ class TokenPriceBuilder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PollingBuilder<USD>.interval(
+      key: Key(tokenType?.toString() ?? 'null'),
       seconds: seconds,
       poll: () async {
         return USD(await OrchidPricing().usdPrice(tokenType));

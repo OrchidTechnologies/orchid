@@ -82,8 +82,8 @@ arch := $$(word 1,$$(temp))
 temp := $$(subst $$(space),-,$$(wordlist 2,3,$$(temp)))
 more/$(1) := -target $$(arch)-unknown-$$(temp)$(aver)
 temp := $(word 1,$(meson/$(1)))-$$(temp)
-ranlib/$(1) := $(llvm)/bin/$$(temp)-ranlib
-ar/$(1) := $(llvm)/bin/$$(temp)-ar
+ranlib/$(1) := $(llvm)/bin/llvm-ranlib
+ar/$(1) := $(llvm)/bin/llvm-ar
 strip/$(1) := $(llvm)/bin/$$(temp)-strip
 windres/$(1) := false
 endef
@@ -92,3 +92,5 @@ $(each)
 endif
 
 lflags += -lm -llog
+
+wflags += -L$(CURDIR)/env/android

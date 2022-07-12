@@ -24,15 +24,6 @@ head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 # boringtun is stuck, by https://github.com/cloudflare/boringtun/pull/235
 head[p2p/boringtun]=42710c904605bf1efe6e1e52fd6f7b16c099e06c
 
-# GSL is stuck due to cpp-libp2p using the stupid cmake "hunter" thing :/
-# I've filed a bug on hunter: https://github.com/cpp-pm/hunter/issues/399
-head[srv-shared/GSL]=v2.1.0
-
-# XXX: boost's outcome is stuck due to cpp-libp2p using deprecated macros
-# I filed a bug for this: https://github.com/libp2p/cpp-libp2p/issues/144
-# as a workaround, I've checked out a second, older version of outcome :/
-head[p2p/outcome]=boost-1.75.0
-
 # url is stuck due to https://forums.developer.apple.com/thread/120977 :/
 # (I tried to use a local copy of libcxx on Apple, but crashed on iOS 14)
 head[p2p/url]=7c822cb9873b1422e09be5131f30e9d83d487096

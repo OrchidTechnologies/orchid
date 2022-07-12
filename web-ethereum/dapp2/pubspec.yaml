@@ -1,12 +1,6 @@
 name: orchid
 description: Silicon Valley (Season 4)
 
-# The following defines the version and build number for your application.
-# A version number is three numbers separated by dots, like 1.2.43
-# followed by an optional build number separated by a +.
-# Both the version and the builder number may be overridden in flutter
-# build by specifying --build-name and --build-number, respectively.
-# Read more about versioning at semver.org.
 version: 0.9.0+1
 
 environment:
@@ -23,7 +17,6 @@ dependencies:
   flutter_cupertino_localizations: 1.0.1
   flutter_localizations:
     sdk: flutter
-  #flutter_secure_storage: 3.3.5 # XXX: macOS
   flutter_svg: 1.0.3
   font_awesome_flutter: 9.0.0
   intl: 0.17.0
@@ -34,12 +27,12 @@ dependencies:
   rxdart: 0.25.0
   shared_preferences: 2.0.5
   styled_text: 4.0.0
-  #sqflite: 2.0.0+3
-  url_launcher: 6.0.3
+  url_launcher: 6.1.3
   uuid: 3.0.5
   web3dart: 2.3.3
   flutter_web3: 2.1.9
   flutter_lints: ^1.0.0
+  browser_detector: ^2.0.0
 
 dev_dependencies:
   flutter_test:

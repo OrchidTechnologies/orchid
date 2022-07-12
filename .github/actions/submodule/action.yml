@@ -1,0 +1,14 @@
+runs:
+  using: "composite"
+  steps:
+    - name: git submodule status
+      id: git-submodule-status
+      shell: bash
+      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
+    - uses: actions/cache@v2
+      with:
+        path: .git/modules
+        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
+    - name: git submodule
+      shell: bash
+      run: env/submodule.sh --jobs 3

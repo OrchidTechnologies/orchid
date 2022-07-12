@@ -12,6 +12,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await UserPreferences.init();
   OrchidAPI().logger().write("App Startup");
+  FlutterError.onError = (FlutterErrorDetails details) {
+    print("FlutterError:  ${details.exception}");
+    print("FlutterError:  ${details.stack}");
+  };
   OrchidRoutingStatus().beginPollingStatus();
   OrchidAPI().applicationReady();
   OrchidPlatform.pretendToBeAndroid =

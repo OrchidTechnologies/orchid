@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
+import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import '../dapp_button.dart';
@@ -15,12 +16,14 @@ class MoveFundsPaneV0 extends StatefulWidget {
   final OrchidWeb3Context context;
   final LotteryPot pot;
   final EthereumAddress signer;
+  final bool enabled;
 
   const MoveFundsPaneV0({
     Key key,
     @required this.context,
     @required this.pot,
     @required this.signer,
+    this.enabled,
   }) : super(key: key);
 
   @override
@@ -28,7 +31,8 @@ class MoveFundsPaneV0 extends StatefulWidget {
 }
 
 class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
-  final _moveBalanceField = TokenValueFieldController();
+  static final tokenType = Tokens.OXT;
+  final _moveBalanceField = TypedTokenValueFieldController(type: tokenType);
   bool _txPending = false;
 
   LotteryPot get pot {
@@ -45,19 +49,16 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
 
   @override
   Widget build(BuildContext context) {
-    if (pot?.balance == null) {
-      return Container();
-    }
-    var tokenType = Tokens.OXT;
     var buttonTitle = s.moveFunds;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         LabeledTokenValueField(
+          enabled: widget.enabled,
           type: tokenType,
           controller: _moveBalanceField,
-          label: s.balanceToDeposit + ':',
+          label: "Balance to Deposit",
           labelWidth: 180,
         ),
         pady(32),
@@ -65,8 +66,7 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             DappButton(
-                text: buttonTitle,
-                onPressed: _formEnabled ? _moveFunds : null),
+                text: buttonTitle, onPressed: _formEnabled ? _moveFunds : null),
           ],
         ),
       ],
@@ -79,7 +79,8 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
   }
 
   bool get _formEnabled {
-    return !_txPending &&
+    return pot != null &&
+        !_txPending &&
         _moveBalanceFieldValid &&
         _moveBalanceField.value.gtZero();
   }
@@ -94,7 +95,8 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
         pot: pot,
         moveAmount: _moveBalanceField.value,
       );
-      UserPreferences().addTransaction(txHash);
+      UserPreferences().addTransaction(DappTransaction(
+          transactionHash: txHash, chainId: widget.context.chain.chainId));
       _moveBalanceField.clear();
       setState(() {});
     } catch (err) {

@@ -1,5 +1,5 @@
+import 'package:orchid/orchid.dart';
 import 'dart:ui';
-import 'package:flutter/material.dart';
 import 'package:orchid/common/blend_mask.dart';
 import 'package:orchid/common/gradient_border.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
@@ -7,36 +7,67 @@ import 'package:orchid/orchid/orchid_gradients.dart';
 class OrchidPanel extends StatelessWidget {
   final Widget child;
   final Gradient edgeGradient;
+  final Gradient backgroundGradient;
+  final Color backgroundFillColor;
   final double edgeStrokeWidth;
   final bool highlight;
   final double highlightAnimation;
 
-  const OrchidPanel({
-    Key key,
-    this.child,
-    this.edgeGradient,
-    this.edgeStrokeWidth = 1.5,
-    this.highlight = false,
-    this.highlightAnimation = 0,
-  }) : super(key: key);
+  static const defaultBackgroundGradient = const LinearGradient(
+    begin: Alignment(-0.2, -1.4),
+    end: Alignment(0.2, 1.4),
+    // Figma design
+    colors: [Color(0xA0ffffff), Color(0x00ffffff)],
+  );
+
+  static const defaultBackgroundFill = const Color(0x503a3149);
+
+  static const verticalBackgroundGradient = const LinearGradient(
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+    colors: [Color(0x80ffffff), Color(0x00000000)],
+  );
+
+  static final verticalBackgroundFill =
+      OrchidColors.dark_ff3a3149.withOpacity(0.25);
 
   // animation 0-1
   static Gradient highlightGradient(double animation) {
     return OrchidGradients.pinkBlueGradientTLBR.rotated(animation * 2 * 3.1415);
   }
 
+  const OrchidPanel({
+    Key key,
+    this.child,
+    this.edgeGradient,
+    this.backgroundGradient = defaultBackgroundGradient,
+    this.backgroundFillColor = defaultBackgroundFill,
+    this.edgeStrokeWidth = 1.5,
+    this.highlight = false,
+    this.highlightAnimation = 0,
+  }) : super(key: key);
+
+  OrchidPanel.vertical({
+    Key key,
+    Widget child,
+    Gradient edgeGradient,
+    double edgeStrokeWidth = 1.5,
+    bool highlight = false,
+    double highlightAnimation = 0,
+  }) : this(
+          key: key,
+          child: child,
+          edgeGradient: edgeGradient,
+          edgeStrokeWidth: edgeStrokeWidth,
+          highlight: highlight,
+          highlightAnimation: highlightAnimation,
+          backgroundGradient: OrchidPanel.verticalBackgroundGradient,
+          backgroundFillColor: OrchidPanel.verticalBackgroundFill,
+        );
+
   @override
   Widget build(BuildContext context) {
     // Figma design
-    // var fill = Color(0x403a3149);
-    var fill = Color(0x503a3149);
-    var backgroundGradient = LinearGradient(
-      begin: Alignment(-0.2, -1.4),
-      end: Alignment(0.2, 1.4),
-      // Figma design
-      // colors: [Color(0x40ffffff), Color(0x00ffffff)],
-      colors: [Color(0xA0ffffff), Color(0x00ffffff)],
-    );
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -49,17 +80,20 @@ class OrchidPanel extends StatelessWidget {
         //   blendMode: BlendMode.screen,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 7.0, sigmaY: 7.0),
+          // border
           child: GradientBorder(
             strokeWidth: edgeStrokeWidth,
             radius: 16,
             gradient: highlight
                 ? highlightGradient(highlightAnimation)
                 : (edgeGradient ?? OrchidGradients.orchidPanelEdgeGradient),
+            // fill
             child: Container(
               decoration: BoxDecoration(
-                color: fill,
+                color: backgroundFillColor,
                 borderRadius: BorderRadius.circular(16),
               ),
+              // background gradient
               child: Container(
                 decoration: BoxDecoration(
                   gradient: backgroundGradient,

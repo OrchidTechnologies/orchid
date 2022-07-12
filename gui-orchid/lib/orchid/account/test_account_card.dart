@@ -1,8 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/chains.dart';
-import 'package:orchid/orchid/orchid_logo.dart';
+import 'package:orchid/orchid.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/util/test_app.dart';
 import 'account_card.dart';
 import 'account_detail_poller.dart';
@@ -17,28 +14,16 @@ class _Test extends StatefulWidget {
 }
 
 class _TestState extends State<_Test> {
-  AccountDetailPoller account;
+  AccountDetail account;
   bool active1 = true;
-  bool active2 = false;
 
   @override
   void initState() {
     super.initState();
-    initStateAsync();
-  }
 
-  void initStateAsync() async {
-    var signer = "0x45cC0D06CA2052Ef93b5B7adfeC2Af7690731110";
-    var funder = "0x7dFae1C74a946FCb50e7376Ff40fe2Aa3A2F9B2b";
-    account = AccountDetailPoller(
-      account: Account.fromSignerAddress(
-        chainId: Chains.GNOSIS_CHAINID,
-        funder: EthereumAddress.from(funder),
-        signerAddress: EthereumAddress.from(signer),
-      ),
-    );
-    await account.pollOnce();
-    setState(() {});
+    account = MockAccountDetail.fromMock(AccountMock.account1xdai);
+    // account = MockAccountDetail.fromMock(AccountMock.account1xdaiUnlocking);
+    // account = MockAccountDetail.fromMock(AccountMock.account1xdaiUnlocked);
   }
 
   @override
@@ -46,30 +31,43 @@ class _TestState extends State<_Test> {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Center(child: NeonOrchidLogo()),
+        // Center(child: NeonOrchidLogo()),
         Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // full
               AccountCard(
+                initiallyExpanded: true,
                 accountDetail: account,
-                selected: active1,
+                // active: true,
+                // selected: active1,
                 onSelected: () {
                   setState(() {
                     active1 = !active1;
                   });
                 },
               ),
-              SizedBox(height: 50),
+
               AccountCard(
+                initiallyExpanded: false,
                 accountDetail: account,
-                selected: active2,
-                onSelected: () {
-                  setState(() {
-                    active2 = !active2;
-                  });
-                },
-              ),
+              ).top(40),
+
+              // no account
+              AccountCard(
+                initiallyExpanded: false,
+                accountDetail: null,
+              ).top(40),
+
+              // partial account
+              AccountCard(
+                initiallyExpanded: false,
+                accountDetail: null,
+                partialAccountFunderAddress: account.funder,
+                // partialAccountSignerAddress: account.signerAddress,
+              ).top(40),
+
             ],
           ),
         ),

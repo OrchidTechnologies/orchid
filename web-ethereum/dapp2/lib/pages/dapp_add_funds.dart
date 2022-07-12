@@ -1,24 +1,22 @@
-import 'package:flutter/material.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
+import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/common/formatting.dart';
-import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/common/token_price_builder.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
-
 import 'dapp_button.dart';
+import 'dapp_error_row.dart';
+import 'dapp_tab_context.dart';
 import 'orchid_form_fields.dart';
-import 'package:orchid/util/localization.dart';
 
 class AddFundsPane extends StatefulWidget {
   final OrchidWeb3Context context;
   final EthereumAddress signer;
-  final TokenType tokenType;
+  final bool enabled;
 
   // Callback to add the funds
   final Future<List<String>> Function({
@@ -32,82 +30,78 @@ class AddFundsPane extends StatefulWidget {
     Key key,
     @required this.context,
     @required this.signer,
-    @required this.tokenType,
     @required this.addFunds,
+    this.enabled,
   }) : super(key: key);
 
   @override
   _AddFundsPaneState createState() => _AddFundsPaneState();
 }
 
-class _AddFundsPaneState extends State<AddFundsPane> {
-  final _addBalanceField = TokenValueFieldController();
-  final _addDepositField = TokenValueFieldController();
-  bool _txPending = false;
+class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
+  OrchidWeb3Context get web3Context => widget.context;
 
-  OrchidWallet get wallet {
-    return widget.context.wallet;
-  }
-
-  // The wallet balance of the configured token type or null if no tokens known
-  Token get walletBalance {
-    return wallet?.balanceOf(widget.tokenType);
-  }
+  TypedTokenValueFieldController _addBalanceField;
+  TypedTokenValueFieldController _addDepositField;
 
   @override
   void initState() {
     super.initState();
+    // Note: The field controller captures the token type so this form must be
+    // Note: rebuilt on chain changes.
+    _addBalanceField = TypedTokenValueFieldController(type: tokenType);
     _addBalanceField.addListener(_formFieldChanged);
+    _addDepositField = TypedTokenValueFieldController(type: tokenType);
     _addDepositField.addListener(_formFieldChanged);
-    // _initStateAsync();
   }
-  // void _initStateAsync() async { }
 
   @override
   Widget build(BuildContext context) {
-    var allowance =
-        wallet?.allowanceOf(widget.tokenType) ?? widget.tokenType.zero;
+    var allowance = wallet?.allowanceOf(tokenType) ?? tokenType.zero;
     return TokenPriceBuilder(
-      tokenType: widget.tokenType,
-      seconds: 30,
-      builder: (USD tokenPrice) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (allowance != null && allowance.gtZero())
-              Text(s.currentTokenPreauthorizationAmount(widget.tokenType.symbol,
-                      allowance.formatCurrency(locale: context.locale)))
-                  .body2
-                  .bottom(16)
-                  .top(8),
-            LabeledTokenValueField(
-              type: widget.tokenType,
-              controller: _addBalanceField,
-              label: s.balance + ':',
-              usdPrice: tokenPrice,
-            ),
-            pady(4),
-            LabeledTokenValueField(
-              type: widget.tokenType,
-              controller: _addDepositField,
-              label: s.deposit + ':',
-              usdPrice: tokenPrice,
-            ),
-            pady(24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                DappButton(
-                    text: s.addFunds,
-                    onPressed: _addFundsFormEnabled ? _addFunds : null),
-              ],
-            ),
-            pady(32),
-            _buildInstructions(),
-          ],
-        );
-      }
-    );
+        tokenType: tokenType,
+        seconds: 30,
+        builder: (USD tokenPrice) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (allowance != null && allowance.gtZero())
+                Text(s.currentTokenPreauthorizationAmount(tokenType.symbol,
+                        allowance.formatCurrency(locale: context.locale)))
+                    .body2
+                    .top(8),
+              LabeledTokenValueField(
+                enabled: widget.enabled,
+                type: tokenType,
+                controller: _addBalanceField,
+                label: s.balance,
+                usdPrice: tokenPrice,
+                error: _addBalanceFieldError || _netAddError,
+              ).top(16),
+              LabeledTokenValueField(
+                enabled: widget.enabled,
+                type: tokenType,
+                controller: _addDepositField,
+                label: s.deposit,
+                usdPrice: tokenPrice,
+                error: _addDepositFieldError || _netAddError,
+              ).top(16),
+              if (_netAddError)
+                DappErrorRow(text: 'Total exceeds wallet balance.').top(16),
+              pady(24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  DappButton(
+                      text: s.addFunds,
+                      onPressed: _addFundsFormEnabled ? _addFunds : null),
+                ],
+              ),
+              pady(32),
+              _buildInstructions(),
+            ],
+          );
+        });
   }
 
   Widget _buildInstructions() {
@@ -131,24 +125,46 @@ class _AddFundsPaneState extends State<AddFundsPane> {
 
   bool get _addBalanceFieldValid {
     var value = _addBalanceField.value;
-    return value != null && value < (walletBalance ?? widget.tokenType.zero);
+    return value != null && value <= (walletBalance ?? tokenType.zero);
+  }
+
+  bool get _addBalanceFieldError {
+    return walletBalance != null && !_addBalanceFieldValid;
   }
 
   bool get _addDepositFieldValid {
     var value = _addDepositField.value;
-    return value != null && value < (walletBalance ?? widget.tokenType.zero);
+    return value != null && value <= (walletBalance ?? tokenType.zero);
+  }
+
+  bool get _addDepositFieldError {
+    return walletBalance != null && !_addDepositFieldValid;
   }
 
   bool get _addFundsFormEnabled {
-    if (_txPending) {
+    return !txPending && _netAddValid;
+  }
+
+  bool get _netAddValid {
+    if (walletBalance == null) {
       return false;
     }
-    final zero = widget.tokenType.zero;
+    final zero = tokenType.zero;
     if (_addBalanceFieldValid && _addDepositFieldValid) {
-      var total = _addBalanceField.value + _addDepositField.value;
-      return total > zero && total <= (walletBalance ?? zero);
+      var total = _totalAdd;
+      return total > zero && total <= walletBalance;
     }
     return false;
+  }
+
+  Token get _totalAdd {
+    return _addBalanceField.value + _addDepositField.value;
+  }
+
+  bool get _netAddError {
+    return (_addBalanceFieldValid && _addDepositFieldValid) &&
+        !_netAddValid &&
+        _totalAdd.gtZero();
   }
 
   void _addFunds() async {
@@ -156,10 +172,10 @@ class _AddFundsPaneState extends State<AddFundsPane> {
       return;
     }
     setState(() {
-      _txPending = true;
+      txPending = true;
     });
     try {
-      var txHashes = await widget.addFunds(
+      final txHashes = await widget.addFunds(
         wallet: wallet,
         signer: widget.signer,
         addBalance: _addBalanceField.value,
@@ -167,7 +183,8 @@ class _AddFundsPaneState extends State<AddFundsPane> {
       );
 
       // Persisting the transaction(s) will update the UI elsewhere.
-      UserPreferences().addTransactions(txHashes);
+      UserPreferences().addTransactions(txHashes.map((hash) => DappTransaction(
+          transactionHash: hash, chainId: widget.context.chain.chainId)));
 
       _addBalanceField.clear();
       _addDepositField.clear();
@@ -176,7 +193,7 @@ class _AddFundsPaneState extends State<AddFundsPane> {
       log('Error on add funds: $err, $stack');
     }
     setState(() {
-      _txPending = false;
+      txPending = false;
     });
   }
 

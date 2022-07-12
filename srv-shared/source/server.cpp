@@ -291,8 +291,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
     const Signature signature(r, s, v - 27);
     const Address signer(Recover(digest, signature));
 
-    if (Verbose)
-        Log() << std::dec << std::fixed << std::setprecision(16) << recipient << "<-" << funder << "/" << signer << " " << amount << " " << ratio << " " << issued << nonce << " " << expected << " " << locked_()->balance_ << std::endl;
+    //Log() << std::dec << std::fixed << std::setprecision(16) << recipient << "<-" << funder << "/" << signer << " " << amount << " " << ratio << " " << issued << nonce << " " << expected << " " << locked_()->balance_ << std::endl;
 
     const auto [reveal, winner] = ({
         const auto locked(locked_());

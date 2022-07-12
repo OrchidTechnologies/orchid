@@ -170,7 +170,7 @@ std::tuple<View, View> Split(const View &value, const Range<> &range) {
     return {View(data, range.data()), View(data + right, size - right)};
 }
 
-cppcoro::generator<View> Split(const View &value, const View &delimeter) {
+cppcoro::generator<View> Split(const View &value, std::string delimeter) {
     for (auto data(value.data()), stop(data + value.size());; ) {
         // XXX: this clang-tidy check should not trigger on ?:
         // NOLINTNEXTLINE (readability-implicit-bool-conversion)

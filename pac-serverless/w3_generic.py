@@ -378,8 +378,9 @@ def get_w3wsock_providers():
 
     providers = {}
 
-    providers[1]  = test_connections([os.environ['WEB3_WEBSOCKET']])
-    providers[100] = test_connections(['https://rpc.xdaichain.com/','https://xdai.poanetwork.dev','wss://rpc.xdaichain.com/wss','wss://xdai.poanetwork.dev/wss'])
+    providers[1]   = test_connections([os.environ['WEB3_WEBSOCKET']])
+    providers[100] = test_connections(['https://rpc.gnosischain.com','https://rpc.ankr.com/gnosis','https://gnosischain-rpc.gateway.pokt.network','https://gnosis-mainnet.public.blastapi.io'])
+    #providers[100] = test_connections(['https://rpc.xdaichain.com/','https://xdai.poanetwork.dev','wss://rpc.xdaichain.com/wss','wss://xdai.poanetwork.dev/wss'])
 
     logging.info(f'get_w3wsock_providers:  {str(providers)} ')
 

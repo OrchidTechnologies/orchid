@@ -38,4 +38,6 @@ source += $(output)/sqlite/sqlite3.c
 
 cflags += -I$(output)/$(pwd)
 header += $(output)/$(pwd/sqlite)3.h
+
+cflags/./$(output)/sqlite/sqlite3.c += -Wno-unused-but-set-variable
 endif

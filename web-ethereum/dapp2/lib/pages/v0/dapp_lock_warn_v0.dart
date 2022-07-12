@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
+import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';
@@ -14,12 +15,14 @@ class LockWarnPaneV0 extends StatefulWidget {
   final OrchidWeb3Context context;
   final LotteryPot pot;
   final EthereumAddress signer;
+  final bool enabled;
 
   const LockWarnPaneV0({
     Key key,
     @required this.context,
     @required this.pot,
     @required this.signer,
+    this.enabled,
   }) : super(key: key);
 
   @override
@@ -42,18 +45,21 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
 
   @override
   Widget build(BuildContext context) {
-    if (pot?.balance == null) {
-      return Container();
+    var statusText = '';
+    var isUnlockedOrUnlocking = false;
+    if (pot != null) {
+      statusText = pot.isUnlocked
+          ? s.yourDepositOfAmountIsUnlocked(
+              pot.warned.formatCurrency(locale: context.locale))
+          : s.yourDepositOfAmountIsUnlockingOrUnlocked(
+              pot.deposit.formatCurrency(locale: context.locale),
+              pot.isUnlocking ? s.unlocking : s.locked);
+      statusText += pot.isUnlocking
+          ? '\n' +
+              s.theFundsWillBeAvailableForWithdrawalInTime(pot.unlockInString())
+          : '';
+      isUnlockedOrUnlocking = (pot.isUnlocked || pot.isUnlocking);
     }
-    var statusText = pot.isUnlocked
-        ? s.yourDepositOfAmountIsUnlocked(pot.warned.formatCurrency(locale: context.locale))
-        : s.yourDepositOfAmountIsUnlockingOrUnlocked(
-            pot.deposit.formatCurrency(locale: context.locale),
-            pot.isUnlocking ? s.unlocking : s.locked);
-    statusText += pot.isUnlocking
-        ? '\n' +
-            s.theFundsWillBeAvailableForWithdrawalInTime(pot.unlockInString())
-        : '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,7 +74,7 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (pot.isUnlocked || pot.isUnlocking)
+            if (isUnlockedOrUnlocking)
               DappButton(
                   text: s.lockDeposit,
                   onPressed: _formEnabled()
@@ -91,7 +97,7 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
   }
 
   bool _formEnabled() {
-    return !_txPending;
+    return pot != null && !_txPending;
   }
 
   void _lockOrUnlock({bool lock}) async {
@@ -103,7 +109,8 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
         isLock: lock,
         signer: widget.signer,
       );
-      UserPreferences().addTransaction(txHash);
+      UserPreferences().addTransaction(DappTransaction(
+          transactionHash: txHash, chainId: widget.context.chain.chainId));
       setState(() {});
     } catch (err) {
       log('Error on move funds: $err');

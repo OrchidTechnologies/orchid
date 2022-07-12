@@ -7,6 +7,7 @@ import '../orchid_eth/orchid_chain_config.dart';
 import '../orchid_log_api.dart';
 import 'accounts_preferences.dart';
 import 'chain_config_preferences.dart';
+import 'dapp_transaction.dart';
 
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
@@ -30,8 +31,12 @@ class UserPreferences {
     _sharedPreferences = await SharedPreferences.getInstance();
   }
 
+  bool get initialized {
+    return _sharedPreferences != null;
+  }
+
   SharedPreferences sharedPreferences() {
-    if (_sharedPreferences == null) {
+    if (!initialized) {
       throw Exception("UserPreferences uninitialized.");
     }
     return _sharedPreferences;
@@ -167,30 +172,31 @@ class UserPreferences {
   ///
 
   /// Tracked user dapp transactions
-  ObservablePreference<List<String>> transactions = ObservablePreference(
-      key: UserPreferenceKey.Transactions,
-      getValue: (key) {
-        return _getTransactions();
-      },
-      putValue: (key, List<String> txs) {
-        return _setTransactions(txs);
-      });
+  ObservablePreference<List<DappTransaction>> transactions =
+      ObservablePreference(
+          key: UserPreferenceKey.Transactions,
+          getValue: (key) {
+            return _getTransactions();
+          },
+          putValue: (key, List<DappTransaction> txs) {
+            return _setTransactions(txs);
+          });
 
-  void addTransaction(String txHash) {
-    transactions.set(transactions.get() + [txHash]);
+  void addTransaction(DappTransaction tx) {
+    transactions.set(transactions.get() + [tx]);
   }
 
-  void addTransactions(List<String> txHashes) {
-    transactions.set(transactions.get() + txHashes);
+  void addTransactions(Iterable<DappTransaction> txs) {
+    transactions.set(transactions.get() + txs.toList());
   }
 
   void removeTransaction(String txHash) {
     var list = transactions.get();
-    list.remove(txHash);
+    list.removeWhere((tx) => tx.transactionHash == txHash);
     transactions.set(list);
   }
 
-  static List<String> _getTransactions() {
+  static List<DappTransaction> _getTransactions() {
     String value =
         UserPreferences().getStringForKey(UserPreferenceKey.Transactions);
     if (value == null) {
@@ -198,17 +204,19 @@ class UserPreferences {
     }
     try {
       var jsonList = jsonDecode(value) as List<dynamic>;
-      return jsonList.map((e) => e.toString()).toList();
+      return jsonList.map((el) {
+        return DappTransaction.fromJson(el);
+      }).toList();
     } catch (err) {
       log("Error retrieving txs!: $err");
       return [];
     }
   }
 
-  static Future<bool> _setTransactions(List<String> txs) async {
-    print("XXX setTxs: storing txs: ${jsonEncode(txs)}");
+  static Future<bool> _setTransactions(Iterable<DappTransaction> txs) async {
+    print("XXX setTxs: storing txs: ${jsonEncode(txs.toList())}");
     try {
-      var value = jsonEncode(txs);
+      var value = jsonEncode(txs.toList());
       return await UserPreferences()
           .putStringForKey(UserPreferenceKey.Transactions, value);
     } catch (err) {

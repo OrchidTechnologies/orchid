@@ -45,42 +45,35 @@ class _OnOffState extends State<OnOff> {
 }
 
 Widget orange(Widget child) {
-  return Orange(child: child);
+  return DebugColor(child: child);
 }
 
 extension DebugExtension on Widget {
   Widget get orange {
-    return Orange(child: this);
+    return DebugColor(child: this);
   }
+
   Widget get green {
-    return Green(child: this);
+    return DebugColor(child: this, color: Colors.green);
+  }
+
+  Widget get show {
+    return DebugColor(child: this, color: Colors.white.withOpacity(0.4));
   }
 }
 
-class Orange extends StatelessWidget {
+class DebugColor extends StatelessWidget {
   final Widget child;
+  final Color color;
 
-  const Orange({Key key, this.child}) : super(key: key);
+  const DebugColor({Key key, this.child, this.color = Colors.orange})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.orange,
+      color: color,
       child: child ?? SizedBox(width: 200, height: 200),
-    );
-  }
-}
-
-class Green extends StatelessWidget {
-  final Widget child;
-
-  const Green({Key key, this.child}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.green,
-      child: child,
     );
   }
 }

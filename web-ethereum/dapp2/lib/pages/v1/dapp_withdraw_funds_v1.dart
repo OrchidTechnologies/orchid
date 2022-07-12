@@ -1,160 +1,258 @@
-import 'package:flutter/material.dart';
+import 'package:orchid/common/rounded_rect.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_web3_v1.dart';
+import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/common/formatting.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/pages/dapp_tab_context.dart';
+import 'package:orchid/util/timed_builder.dart';
 import 'package:orchid/util/units.dart';
-import 'package:styled_text/styled_text.dart';
+import '../../api/orchid_eth/orchid_account_mock.dart';
 import '../dapp_button.dart';
 import '../orchid_form_fields.dart';
-import 'package:orchid/util/localization.dart';
 import 'package:orchid/common/token_price_builder.dart';
 
 class WithdrawFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
-  final LotteryPot pot;
   final EthereumAddress signer;
+  final LotteryPot pot;
+  final bool enabled;
 
-  const WithdrawFundsPaneV1({
+  WithdrawFundsPaneV1({
     Key key,
     @required this.context,
     @required this.pot,
     @required this.signer,
-  }) : super(key: key);
+    this.enabled,
+  }) : super(key: key) {
+    // this.signer = AccountMock.account1xdai.signerAddress;
+    // this.pot = AccountMock.account1xdaiLocked.mockLotteryPot;
+    // this.pot = AccountMock.account1xdaiUnlocked.mockLotteryPot;
+    // this.pot = AccountMock.account1xdaiUnlocking.mockLotteryPot;
+  }
 
   @override
   _WithdrawFundsPaneV1State createState() => _WithdrawFundsPaneV1State();
 }
 
-class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
-  final _withdrawBalanceField = TokenValueFieldController();
-  bool _txPending = false;
+class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
+    with DappTabWalletContext, DappTabPotContext {
+  OrchidWeb3Context get web3Context => widget.context;
 
-  LotteryPot get pot {
-    return widget.pot;
-  }
+  LotteryPot get pot => widget.pot;
+
+  EthereumAddress get signer => widget.signer;
+
+  TypedTokenValueFieldController _balanceField;
+  TypedTokenValueFieldController _depositField;
+  bool _unlockDeposit = false;
 
   @override
   void initState() {
     super.initState();
-    _withdrawBalanceField.addListener(_formFieldChanged);
+    _balanceField = TypedTokenValueFieldController(type: tokenType);
+    _balanceField.addListener(_formFieldChanged);
+    _depositField = TypedTokenValueFieldController(type: tokenType);
+    _depositField.addListener(_formFieldChanged);
   }
-
-  void initStateAsync() async {}
-
-  bool _unlockDeposit = false;
 
   @override
   Widget build(BuildContext context) {
-    if (pot?.balance == null) {
-      return Container();
-    }
-    var tokenType = pot.balance.type;
     var buttonTitle =
         _unlockDeposit ? s.withdrawAndUnlockFunds : s.withdrawFunds;
+    if (_unlockDeposit && connected && _netWithdraw.isZero()) {
+      buttonTitle = s.unlockDeposit;
+    }
 
-    final totalFunds = pot.balance + pot.deposit;
-    final maxWithdraw = pot.maxWithdrawable;
-    final fullyUnlocked = maxWithdraw >= totalFunds;
-
-    final availableText = fullyUnlocked
-        ? s.allOfYourFundsAreAvailableForWithdrawal
-        : s.maxWithdrawOfYourTotalFundsCombinedFunds(
-            maxWithdraw.formatCurrency(locale: context.locale),
-            totalFunds.formatCurrency(locale: context.locale));
+    bool fullyUnlocked;
+    String availableText;
+    Token totalFunds;
+    if (connected) {
+      totalFunds = pot.balance + pot.deposit;
+      final maxWithdraw = pot.maxWithdrawable;
+      fullyUnlocked = maxWithdraw >= totalFunds;
+      availableText = fullyUnlocked
+          ? s.allOfYourFundsAreAvailableForWithdrawal
+          : s.maxWithdrawOfYourTotalFundsCombinedFunds(
+              maxWithdraw.formatCurrency(locale: context.locale),
+              totalFunds.formatCurrency(locale: context.locale));
+    }
+    bool showUnlock = connected && pot.deposit > pot.unlockedAmount;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         pady(16),
-        Text(availableText).title,
-        pady(24),
+        if (connected && totalFunds.gtZero())
+          Text(availableText).title.bottom(24),
         TokenPriceBuilder(
             tokenType: tokenType,
             seconds: 30,
             builder: (USD tokenPrice) {
-              return LabeledTokenValueField(
-                labelWidth: 100,
-                type: tokenType,
-                controller: _withdrawBalanceField,
-                label: s.withdraw + ':',
-                usdPrice: tokenPrice,
+              return Column(
+                children: [
+                  LabeledTokenValueField(
+                    label: s.balance,
+                    enabled: connected,
+                    labelWidth: 100,
+                    type: tokenType,
+                    controller: _balanceField,
+                    usdPrice: tokenPrice,
+                    error: _balanceFieldError,
+                  ),
+                  LabeledTokenValueField(
+                    label: s.deposit,
+                    trailing: _depositLockIndicator(),
+                    bottomBanner: _depositBottomBanner(),
+                    enabled: connected && pot.isUnlocked,
+                    labelWidth: 100,
+                    type: tokenType,
+                    controller: _depositField,
+                    usdPrice: tokenPrice,
+                    error: _depositFieldError,
+                  ).top(16),
+                ],
               );
             }),
-        if (pot.deposit > pot.unlockedAmount)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: _buildUnlockDepositCheckbox(context),
-          ),
+        if (showUnlock) _buildUnlockDepositCheckbox(context).top(8),
         pady(24),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             DappButton(
                 text: buttonTitle,
-                onPressed: _withdrawFundsFormEnabled ? _withdrawFunds : null),
+                onPressed: _formEnabled ? _withdrawFunds : null),
           ],
         ),
-        pady(32),
-        _buildInstructions(fullyUnlocked),
+        // pady(32),
+        // if (connected) _buildInstructions(fullyUnlocked),
       ],
     );
   }
 
-  Row _buildUnlockDepositCheckbox(BuildContext context) {
-    return Row(
-      children: [
-        Text(s.alsoUnlockRemainingDeposit + ': ').button.height(1.3),
-        padx(8),
-        Theme(
-          data: Theme.of(context).copyWith(
-            unselectedWidgetColor: Colors.white,
-            toggleableActiveColor: OrchidColors.tappable,
-          ),
-          child: Checkbox(
-              value: _unlockDeposit,
-              onChanged: (value) {
-                setState(() {
-                  _unlockDeposit = value;
-                });
-              }),
-        ),
-      ],
-    );
+  bool get _showDepositBottomBanner {
+    return _unlockDeposit || (connected && pot.isUnlocking);
   }
 
-  Widget _buildInstructions(bool fullyUnlocked) {
-    final fullyUnlockedInstruction =
-        s.ifYouSpecifyLessThanTheFullAmountFundsWill +
-            '  ' +
-            s.forAdditionalOptionsSeeTheAdvancedPanel;
+  Widget _depositBottomBanner() {
+    return AnimatedVisibility(
+        duration: millis(200),
+        show: _showDepositBottomBanner,
+        child: _depositBottomBannerImpl());
+  }
 
-    final partiallyUnlockedInstruction =
-        s.ifYouSpecifyLessThanTheFullAmountFundsWill +
-            '  ' +
-            s.ifYouSelectTheUnlockDepositOptionThisTransactionWill +
-            '  ' +
-            s.depositFundsAreAvailableForWithdrawal24HoursAfterUnlocking +
-            '  ' +
-            s.forAdditionalOptionsSeeTheAdvancedPanel;
+  Widget _depositBottomBannerImpl() {
+    final style = OrchidText.body1.black;
+    if (_unlockDeposit) {
+      return Row(
+        children: [
+          Text('Will be unlocked in 24 hours.')
+              .withStyle(style)
+              .top(8)
+              .bottom(4)
+              .padx(16),
+        ],
+      );
+    }
+    if (connected && pot.isUnlocking) {
+      return TimedBuilder.interval(
+          seconds: 1,
+          builder: (context) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Time until unlocked').withStyle(style),
+                SizedBox(
+                  width: 70,
+                  child: Text(
+                    pot.unlockTime.toCountdownString(),
+                  ).withStyle(style),
+                ),
+              ],
+            );
+          }).top(8).bottom(4).padx(16);
+    }
 
-    return StyledText(
-      style: OrchidText.caption,
-      textAlign: TextAlign.center,
-      text: s.withdrawFundsFromYourOrchidAccountToYourCurrentWallet +
-          '  ' +
-          (fullyUnlocked
-              ? fullyUnlockedInstruction
-              : partiallyUnlockedInstruction),
-      tags: {
-        // 'link': OrchidText.caption.linkStyle.link(OrchidUrls.partsOfOrchidAccount),
-      },
+    return Container();
+  }
+
+  // The lock icon and text annotation on the deposit field
+  Widget _depositLockIndicator() {
+    if (!connected || pot.deposit.isZero()) {
+      return Container();
+    }
+    return pot.isLocked
+        ? Row(
+            children: [
+              Icon(
+                Icons.lock,
+                color: OrchidColors.status_yellow,
+                size: 18,
+              ),
+              Text("Locked")
+                  .body1
+                  .copyWith(style: TextStyle(color: OrchidColors.status_yellow))
+                  .left(12),
+            ],
+          )
+        : Row(
+            children: [
+              Icon(
+                Icons.lock_open,
+                color: OrchidColors.status_green,
+                size: 18,
+              ),
+              Text(s.unlocked)
+                  .body1
+                  .copyWith(style: TextStyle(color: OrchidColors.status_green))
+                  .left(12),
+            ],
+          );
+  }
+
+  // The unlock checkbox and instructions shown when applicable
+  Widget _buildUnlockDepositCheckbox(BuildContext context) {
+    final active = connected;
+    if (!active || pot.isWarned) {
+      return Container();
+    }
+    final style = OrchidText.body2.activeIf(active);
+
+    return RoundedRect(
+      backgroundColor: OrchidColors.dark_background_2,
+      radius: 12,
+      child: Column(
+        children: [
+          Text('To withdraw your deposit the funds must be unlocked, which requires a waiting period of 24 hours.'
+                  '  '
+                  'Once the unlock is started you will no longer be able to use this account for payments until you re-lock or re-fund the account’s deposit.')
+              .withStyle(style)
+              .padx(16)
+              .top(16),
+          Row(
+            children: [
+              Theme(
+                data: Theme.of(context).copyWith(
+                  unselectedWidgetColor: Colors.white,
+                  toggleableActiveColor: OrchidColors.tappable,
+                ),
+                child: Checkbox(
+                  value: _unlockDeposit,
+                  onChanged: (value) {
+                    setState(() {
+                      _unlockDeposit = value;
+                    });
+                  },
+                ),
+              ),
+              Text("Unlock deposit").withStyle(style).height(1.7).left(8),
+            ],
+          ).top(8).left(8).bottom(8),
+        ],
+      ),
     );
   }
 
@@ -163,50 +261,76 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1> {
     setState(() {});
   }
 
-  bool get _withdrawFundsFormEnabled {
-    var value = _withdrawBalanceField.value;
-    return !_txPending &&
-        value != null &&
-        value.gtZero() &&
-        value <= pot.maxWithdrawable;
+  bool get _formEnabled {
+    // The normal condition for a withdrawal of funds
+    bool validPositiveWithdrawal() =>
+        _netWithdraw.gtZero() && _netWithdraw <= pot.maxWithdrawable;
+
+    // This allows unlocking without any actual withdrawal amount
+    bool validZeroWithdrawal() => _netWithdraw.isZero() && _unlockDeposit;
+
+    return connected &&
+        !txPending &&
+        _balanceFormValid &&
+        _depositFormValid &&
+        (validPositiveWithdrawal() || validZeroWithdrawal());
+  }
+
+  bool get _balanceFormValid {
+    var value = _balanceField.value;
+    return value != null && value <= pot.balance;
+  }
+
+  bool get _balanceFieldError {
+    return pot != null && !_balanceFormValid;
+  }
+
+  bool get _depositFormValid {
+    var value = _depositField.value;
+    return value != null && value <= pot.unlockedAmount;
+  }
+
+  bool get _depositFieldError {
+    return pot != null && !_depositFormValid;
+  }
+
+  Token get _netWithdraw {
+    return _balanceField.value + _depositField.value;
   }
 
   void _withdrawFunds() async {
-    // Cap total at max withdrawable.
-    var totalWithdrawal =
-        Token.min(_withdrawBalanceField.value, pot.maxWithdrawable);
-    // first from the balance
-    var withdrawBalance = Token.min(totalWithdrawal, pot.balance);
-    // any remainder from the warned deposit
-    var withdrawDeposit = totalWithdrawal - withdrawBalance;
+    var withdrawBalance = Token.min(_balanceField.value, pot.balance);
+    var withdrawDeposit = Token.min(_depositField.value, pot.unlockedAmount);
 
     setState(() {
-      _txPending = true;
+      txPending = true;
     });
     try {
       var txHash = await OrchidWeb3V1(widget.context).orchidWithdrawFunds(
         pot: pot,
-        signer: widget.signer,
+        signer: signer,
         withdrawBalance: withdrawBalance,
         withdrawEscrow: withdrawDeposit,
         warnDeposit: _unlockDeposit,
       );
-      UserPreferences().addTransaction(txHash);
-      _withdrawBalanceField.clear();
+      UserPreferences().addTransaction(DappTransaction(
+          transactionHash: txHash, chainId: widget.context.chain.chainId));
+      _balanceField.clear();
+      _depositField.clear();
       _unlockDeposit = false;
       setState(() {});
     } catch (err) {
       log('Error on withdraw funds: $err');
     }
     setState(() {
-      _txPending = false;
+      txPending = false;
     });
   }
 
   @override
   void dispose() {
-    _withdrawBalanceField.removeListener(_formFieldChanged);
-    _withdrawBalanceField.removeListener(_formFieldChanged);
+    _balanceField.removeListener(_formFieldChanged);
+    _depositField.removeListener(_formFieldChanged);
     super.dispose();
   }
 }

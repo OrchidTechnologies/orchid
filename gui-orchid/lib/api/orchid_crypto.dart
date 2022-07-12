@@ -329,11 +329,16 @@ class EthereumAddress {
     final eip55 = Web3DartUtils.eip55ChecksumEthereumAddress(raw);
     final hex = prefix ? eip55 : Hex.remove0x(eip55);
     if (elide)
-      return hex.substring(0, prefix ? 6 : 4) +
-          '…' +
-          hex.substring(hex.length - 4, hex.length);
+      return elideAddressString(hex);
     else
       return hex;
+  }
+
+  static String elideAddressString(String hex) {
+    final prefix = hex.startsWith('0x');
+    return hex.substring(0, prefix ? 6 : 4) +
+        '…' +
+        hex.substring(hex.length - 4, hex.length);
   }
 
   static bool isValid(String text) {

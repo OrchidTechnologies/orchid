@@ -15,6 +15,7 @@ class OrchidColors {
 
   static const dark_ff3a3149 = Color(0xff3A3149);
   static const dark_background = dark_ff3a3149;
+  static const dark_background_2 = Color(0xFF1F1D21);
 
   static const ffaca3bc = Color(0xffACA3BC);
   static const inactive = ffaca3bc;
@@ -42,6 +43,10 @@ class OrchidColors {
   static const purple_ffb88dfc = Color(0xffb88dfc);
   static const purple_bright = purple_ffb88dfc;
   static const tappable = purple_bright;
+
+  static const status_yellow = Color(0xFFFFF282);
+  static const status_green = Color(0xFF6EFAC8);
+  static const status_red = Color(0xFFFF6F97);
 
   // For debugging convenience
   static const white = Colors.white;

@@ -56,6 +56,55 @@ class AccountMock {
       mockMarketConditions: MockMarketConditions(efficiency: 0.94),
     ),
   );
+  static final account1xdaiLocked = account1xdai;
+
+  static final account1xdaiUnlocking = MockAccount(
+    signerKey: key1,
+    version: 1,
+    chain: Chains.Gnosis,
+    funder: funder1,
+    mockLotteryPot: MockLotteryPot(
+      balance: Tokens.XDAI.fromDouble(0.94),
+      deposit: Tokens.XDAI.fromDouble(0.50),
+      mockMarketConditions: MockMarketConditions(efficiency: 0.94),
+      warned: Tokens.XDAI.fromDouble(0.5),
+      unlock: BigInt.from(
+          DateTime.now().add(Duration(hours: 12)).millisecondsSinceEpoch /
+              1000.0),
+    ),
+  );
+
+  static final account1xdaiUnlocked = MockAccount(
+    signerKey: key1,
+    version: 1,
+    chain: Chains.Gnosis,
+    funder: funder1,
+    mockLotteryPot: MockLotteryPot(
+      balance: Tokens.XDAI.fromDouble(0.94),
+      deposit: Tokens.XDAI.fromDouble(0.50),
+      mockMarketConditions: MockMarketConditions(efficiency: 0.94),
+      warned: Tokens.XDAI.fromDouble(0.5),
+      unlock: BigInt.from(
+          DateTime.now().subtract(Duration(hours: 1)).millisecondsSinceEpoch /
+              1000.0),
+    ),
+  );
+
+  static final account1xdaiPartUnlocked = MockAccount(
+    signerKey: key1,
+    version: 1,
+    chain: Chains.Gnosis,
+    funder: funder1,
+    mockLotteryPot: MockLotteryPot(
+      balance: Tokens.XDAI.fromDouble(0.94),
+      deposit: Tokens.XDAI.fromDouble(1.00),
+      mockMarketConditions: MockMarketConditions(efficiency: 0.94),
+      warned: Tokens.XDAI.fromDouble(0.5),
+      unlock: BigInt.from(
+          DateTime.now().subtract(Duration(hours: 1)).millisecondsSinceEpoch /
+              1000.0),
+    ),
+  );
 
   static final account1polygon = MockAccount(
     signerKey: key2,
@@ -104,6 +153,12 @@ class AccountMock {
       mockMarketConditions: MockMarketConditions(efficiency: 0.95),
     ),
   );
+
+  static final mockAccountDetail1 = MockAccountDetail(
+    account: account1xdai,
+    lotteryPot: account1xdai.mockLotteryPot,
+    marketConditions: account1xdai.mockLotteryPot.mockMarketConditions,
+  );
 }
 
 // A mock account has a mock lottery pot with mock market conditions.
@@ -122,10 +177,10 @@ class MockAccount extends Account {
     EthereumAddress funder,
     @required this.mockLotteryPot,
   }) : super.base(
-          signerKeyUid: signerKey.uid,
+          signerKeyUid: signerKey?.uid,
           resolvedSignerAddress: resolvedSignerAddress,
           version: version,
-          chainId: chain.chainId,
+          chainId: chain?.chainId,
           funder: funder,
         );
 }
@@ -163,6 +218,11 @@ class MockAccountDetail extends AccountDetail {
   @override
   final List<OrchidUpdateTransactionV0> transactions;
 
+  @override
+  EthereumAddress get signerAddress {
+    return account.signerAddress;
+  }
+
   MockAccountDetail({
     @required this.account,
     @required this.lotteryPot,
@@ -170,6 +230,14 @@ class MockAccountDetail extends AccountDetail {
     this.showMarketStatsAlert,
     this.transactions,
   });
+
+  MockAccountDetail.fromMock(
+    MockAccount account,
+  ) : this(
+          account: account,
+          lotteryPot: account.mockLotteryPot,
+          marketConditions: account.mockLotteryPot?.mockMarketConditions,
+        );
 }
 
 class MockMarketConditions extends MarketConditions {

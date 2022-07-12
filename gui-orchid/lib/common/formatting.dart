@@ -33,7 +33,7 @@ extension WidgetListExtensions<Widget> on List<Widget> {
   }
 }
 
-extension PaddingExtensions on Widget {
+extension WidgetExtensions on Widget {
   Widget pad(double pad) {
     return Padding(padding: EdgeInsets.all(pad), child: this);
   }
@@ -62,5 +62,21 @@ extension PaddingExtensions on Widget {
 
   Widget right(double pad) {
     return Padding(padding: EdgeInsets.only(right: pad), child: this);
+  }
+
+  Widget width(double width) {
+    return SizedBox(width: width, child: this);
+  }
+
+  Widget height(double height) {
+    return SizedBox(height: height, child: this);
+  }
+
+  Widget boxHeight(double height) {
+    return this.height(height);
+  }
+
+  Widget size(double width, double height) {
+    return SizedBox(width: width, height: height, child: this);
   }
 }

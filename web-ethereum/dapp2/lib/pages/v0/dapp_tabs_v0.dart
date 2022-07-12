@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
@@ -30,12 +31,14 @@ class DappTabsV0 extends StatefulWidget {
 }
 
 class _DappTabsV0State extends State<DappTabsV0> {
-  OrchidWeb3V0 v0;
 
   @override
   void initState() {
     super.initState();
-    v0 = OrchidWeb3V0(widget.web3Context);
+  }
+
+  bool get _enabled {
+    return widget.web3Context != null && widget.signer != null;
   }
 
   @override
@@ -43,7 +46,7 @@ class _DappTabsV0State extends State<DappTabsV0> {
     // var tabStyle = OrchidText.button.copyWith(fontSize: 16);
     var tabStyle = OrchidText.button;
     return SizedBox(
-      height: 1000,
+      height: 500,
       width: 700,
       child: DefaultTabController(
         initialIndex: 0,
@@ -52,17 +55,14 @@ class _DappTabsV0State extends State<DappTabsV0> {
           backgroundColor: Colors.transparent,
           appBar: PreferredSize(
             preferredSize: Size(double.infinity, 50),
-            child: AppBar(
-              backgroundColor: Colors.transparent,
-              bottom: TabBar(
-                indicatorColor: OrchidColors.tappable,
-                tabs: [
-                  Tab(child: FittedBox(child: Text(s.addFunds, style: tabStyle))),
-                  Tab(child: FittedBox(child: Text(s.withdrawFunds, style: tabStyle))),
-                  Tab(child: FittedBox(child: Text(s.moveFunds).button)),
-                  Tab(child: FittedBox(child: Text(s.lockUnlock).button)),
-                ],
-              ),
+            child: TabBar(
+              indicatorColor: OrchidColors.tappable,
+              tabs: [
+                Tab(child: FittedBox(child: Text("Add", style: tabStyle))),
+                Tab(child: FittedBox(child: Text(s.withdraw, style: tabStyle))),
+                Tab(child: FittedBox(child: Text(s.move).button)),
+                Tab(child: FittedBox(child: Text("Lock / Unlock").button)),
+              ],
             ),
           ),
           body: TabBarView(
@@ -73,53 +73,62 @@ class _DappTabsV0State extends State<DappTabsV0> {
                     child: SizedBox(
                   width: 500,
                   child: AddFundsPane(
+                    enabled: _enabled,
                     context: widget.web3Context,
                     signer: widget.signer,
-                    tokenType: v0.fundsTokenType,
-                    addFunds: v0.orchidAddFunds,
+                    addFunds: _orchidAddFunds,
                   ),
                 )),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 24.0),
                 child: Center(
-                    child: SizedBox(
-                  width: 500,
-                  child: WithdrawFundsPaneV0(
-                    context: widget.web3Context,
-                    pot: widget.accountDetail?.lotteryPot,
-                    signer: widget.signer,
-                  ),
+                    child: WithdrawFundsPaneV0(
+                  enabled: _enabled,
+                  context: widget.web3Context,
+                  pot: widget.accountDetail?.lotteryPot,
+                  signer: widget.signer,
                 )),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 24.0),
                 child: Center(
-                    child: SizedBox(
-                  width: 500,
-                  child: MoveFundsPaneV0(
-                    context: widget.web3Context,
-                    pot: widget.accountDetail?.lotteryPot,
-                    signer: widget.signer,
-                  ),
+                    child: MoveFundsPaneV0(
+                  enabled: _enabled,
+                  context: widget.web3Context,
+                  pot: widget.accountDetail?.lotteryPot,
+                  signer: widget.signer,
                 )),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 24.0),
                 child: Center(
-                    child: SizedBox(
-                      width: 500,
-                      child: LockWarnPaneV0(
-                        context: widget.web3Context,
-                        pot: widget.accountDetail?.lotteryPot,
-                        signer: widget.signer,
-                      ),
-                    )),
+                    child: LockWarnPaneV0(
+                  enabled: _enabled,
+                  context: widget.web3Context,
+                  pot: widget.accountDetail?.lotteryPot,
+                  signer: widget.signer,
+                )),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // Defers construction of the contract until needed
+  Future<List<String> /*TransactionId*/ > _orchidAddFunds({
+    OrchidWallet wallet,
+    EthereumAddress signer,
+    Token addBalance,
+    Token addEscrow,
+  }) async {
+    return OrchidWeb3V0(widget.web3Context).orchidAddFunds(
+      wallet: wallet,
+      signer: signer,
+      addBalance: addBalance,
+      addEscrow: addEscrow,
     );
   }
 }

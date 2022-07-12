@@ -2,16 +2,14 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 
-/// A builder widget that polls an async resource requiring disposal.
-class PollingBuilder<T> extends StatefulWidget {
+/// A simple widget that rebuilds at an interval
+class TimedBuilder<T> extends StatefulWidget {
   final Duration duration;
-  final Future<T> Function() poll;
-  final Widget Function(T arg) builder;
+  final Widget Function(BuildContext context) builder;
 
-  PollingBuilder({
+  TimedBuilder({
     Key key,
     @required this.duration,
-    @required this.poll,
     @required this.builder,
   }) : super(key: key) {
     if (this.duration.inMilliseconds <= 0) {
@@ -19,27 +17,22 @@ class PollingBuilder<T> extends StatefulWidget {
     }
   }
 
-  PollingBuilder.interval({
-    Key key,
+  TimedBuilder.interval({
     int seconds,
     int millis,
-    Future<T> Function() poll,
-    Widget Function(T arg) builder,
+    Widget Function(BuildContext context) builder,
   }) : this(
-            key: key,
             duration:
                 Duration(milliseconds: (seconds ?? 0) * 1000 + (millis ?? 0)),
-            poll: poll,
             builder: builder);
 
   @override
-  State<PollingBuilder> createState() => _PollingBuilderState();
+  State<TimedBuilder> createState() => _TimedBuilderState();
 }
 
-class _PollingBuilderState<T> extends State<PollingBuilder<T>> {
+class _TimedBuilderState<T> extends State<TimedBuilder<T>> {
   String _name;
   Timer _timer;
-  T _currentValue;
 
   @override
   void initState() {
@@ -50,20 +43,16 @@ class _PollingBuilderState<T> extends State<PollingBuilder<T>> {
   }
 
   void _update(_) async {
-    // log("XXX: polling builder ($_name) update, duration = ${widget.duration.inMilliseconds}");
-    _currentValue = await widget.poll();
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    // log("XXX: polling builder ($_name) build");
-    return widget.builder(_currentValue);
+    return widget.builder(context);
   }
 
   @override
   void dispose() {
-    // log("XXX: polling builder ($_name) dispose");
     _timer.cancel();
     super.dispose();
   }

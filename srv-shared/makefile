@@ -81,53 +81,6 @@ cflags += -I$(pwd)/libuv/include
 include mediasoup.mk
 
 
-cflags += -I$(pwd)/di/include
-cflags += -I$(pwd)/GSL/include
-cflags += -I$(pwd)/hat-trie/include
-cflags += -I$(pwd)/sqlite_modern_cpp/hdr
-
-
-source += $(wildcard $(pwd)/yaml-cpp/src/*.cpp)
-cflags += -I$(pwd)/yaml-cpp/include
-cflags += -DYAML_CPP_STATIC_DEFINE
-
-
-source += $(pwd)/soralog/src/group.cpp
-source += $(pwd)/soralog/src/logger.cpp
-source += $(pwd)/soralog/src/logging_system.cpp
-source += $(pwd)/soralog/src/impl/fallback_configurator.cpp
-source += $(pwd)/soralog/src/impl/sink_to_console.cpp
-source += $(pwd)/soralog/src/impl/sink_to_nowhere.cpp
-cflags += -I$(pwd)/soralog/include
-cflags/$(pwd)/soralog/ += -Wno-reorder -Wno-unused-function -Wno-unused-variable
-cflags/$(pwd)/soralog/ += -Wno-pessimizing-move
-
-
-source += $(filter-out %/configurator.cpp,$(shell find $(pwd)/cpp-libp2p/src -name '*.cpp'))
-cflags += -I$(pwd)/cpp-libp2p/include
-cflags/$(pwd)/cpp-libp2p/ += -Wno-reorder -Wno-unused
-
-# XXX https://github.com/xDimon/soralog/issues/3#issuecomment-1065889746
-cflags/$(pwd)/cpp-libp2p/src/protocol/identify/identify_msg_processor.cpp += -DFMT_DEPRECATED_OSTREAM
-chacks/$(pwd)/cpp-libp2p/src/protocol_muxer/multiselect/multiselect_instance.cpp += /SL_DEBUG.*negotiate.*{}/,/;$$/d;
-
-$(eval $(call protobuf,/generated,$(pwd)/cpp-libp2p/src))
-source += $(output)/pb/generated/crypto/protobuf/keys.pb.cc
-header += $(output)/pb/generated/crypto/protobuf/keys.pb.h
-source += $(output)/pb/generated/protocol/gossip/protobuf/rpc.pb.cc
-header += $(output)/pb/generated/protocol/gossip/protobuf/rpc.pb.h
-source += $(output)/pb/generated/protocol/identify/protobuf/identify.pb.cc
-header += $(output)/pb/generated/protocol/identify/protobuf/identify.pb.h
-source += $(output)/pb/generated/protocol/kademlia/protobuf/kademlia.pb.cc
-header += $(output)/pb/generated/protocol/kademlia/protobuf/kademlia.pb.h
-source += $(output)/pb/generated/security/noise/protobuf/noise.pb.cc
-header += $(output)/pb/generated/security/noise/protobuf/noise.pb.h
-source += $(output)/pb/generated/security/plaintext/protobuf/plaintext.pb.cc
-header += $(output)/pb/generated/security/plaintext/protobuf/plaintext.pb.h
-source += $(output)/pb/generated/security/secio/protobuf/secio.pb.cc
-header += $(output)/pb/generated/security/secio/protobuf/secio.pb.h
-
-
 include env/output.mk
 
 $(output)/%/orchidd$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))

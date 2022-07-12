@@ -5,6 +5,7 @@ import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
+import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import '../dapp_button.dart';
@@ -15,12 +16,14 @@ class WithdrawFundsPaneV0 extends StatefulWidget {
   final OrchidWeb3Context context;
   final LotteryPot pot;
   final EthereumAddress signer;
+  final bool enabled;
 
   const WithdrawFundsPaneV0({
     Key key,
     @required this.context,
     @required this.pot,
     @required this.signer,
+    @required this.enabled,
   }) : super(key: key);
 
   @override
@@ -28,8 +31,9 @@ class WithdrawFundsPaneV0 extends StatefulWidget {
 }
 
 class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
-  final _withdrawBalanceField = TokenValueFieldController();
-  final _withdrawEscrowField = TokenValueFieldController();
+  static final tokenType = Tokens.OXT;
+  final _withdrawBalanceField = TypedTokenValueFieldController(type: tokenType);
+  final _withdrawEscrowField = TypedTokenValueFieldController(type: tokenType);
   bool _txPending = false;
 
   LotteryPot get pot {
@@ -47,25 +51,23 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
 
   @override
   Widget build(BuildContext context) {
-    if (pot?.balance == null) {
-      return Container();
-    }
-    var tokenType = Tokens.OXT;
     var buttonTitle = s.withdrawFunds;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         LabeledTokenValueField(
+          enabled: widget.enabled,
           type: tokenType,
           controller: _withdrawBalanceField,
-          label: s.balance + ':',
+          label: s.balance,
         ),
         pady(4),
         LabeledTokenValueField(
+          enabled: widget.enabled,
           type: tokenType,
           controller: _withdrawEscrowField,
-          label: s.deposit + ':',
+          label: s.deposit,
         ),
         pady(32),
         Row(
@@ -91,7 +93,8 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
   }
 
   bool get _withdrawFundsFormEnabled {
-    return !_txPending &&
+    return pot != null &&
+        !_txPending &&
         _withdrawFieldValid &&
         _escrowFieldValid &&
         (_withdrawBalanceField.value.gtZero() ||
@@ -110,7 +113,8 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
         withdrawBalance: _withdrawBalanceField.value,
         withdrawEscrow: _withdrawEscrowField.value,
       );
-      UserPreferences().addTransaction(txHash);
+      UserPreferences().addTransaction(DappTransaction(
+          transactionHash: txHash, chainId: widget.context.chain.chainId));
       _withdrawBalanceField.clear();
       _withdrawEscrowField.clear();
       setState(() {});

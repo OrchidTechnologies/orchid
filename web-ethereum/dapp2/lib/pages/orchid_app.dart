@@ -49,14 +49,14 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
   @override
   void initState() {
     super.initState();
-    log('XXX: OrchidAppNoTabs init');
+    // log('XXX: OrchidAppNoTabs init');
   }
 
   @override
   Widget build(BuildContext context) {
     Locale locale = Localizations.localeOf(context);
     OrchidLanguage.staticLocale = locale;
-    log("XXX: OrchidAppNoTabs build, locale/staticLocale = ${OrchidLanguage.staticLocale}");
+    // log("XXX: OrchidAppNoTabs build, locale/staticLocale = ${OrchidLanguage.staticLocale}");
     return Container(
       decoration:
           BoxDecoration(gradient: OrchidGradients.blackGradientBackground),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 
 /// A styled text field with an optional custom trailing component.
@@ -17,9 +18,14 @@ class OrchidTextField extends StatelessWidget {
   final bool readOnly;
 
   final bool numeric;
-
   final VoidCallback onClear;
   final ValueChanged<String> onChanged;
+  final bool border;
+  final TextStyle style;
+  final EdgeInsets contentPadding;
+  final EdgeInsets suffixIconPadding;
+  final TextAlignVertical textAlignVertical;
+  final double cursorHeight;
 
   OrchidTextField({
     this.hintText,
@@ -32,36 +38,42 @@ class OrchidTextField extends StatelessWidget {
     this.numeric = false,
     this.onClear,
     this.onChanged,
+    this.border = true,
+    this.style,
+    this.contentPadding,
+    this.textAlignVertical,
+    this.suffixIconPadding,
+    this.cursorHeight,
   });
 
   @override
   Widget build(BuildContext context) {
-    // var textStyle = OrchidText.body2.copyWith(height: 1.0, fontFamily: 'SFProText-Regular');
-    // var textStyle = OrchidText.body2;
-
-    var textStyle = TextStyle(
-        fontFamily: "Baloo2",
-        fontWeight: FontWeight.normal,
-        color: Colors.white,
-        fontSize: 16,
-        height: 1.00,
-        letterSpacing: 0.25);
+    var textStyle = style ??
+        TextStyle(
+            fontFamily: "Baloo2",
+            fontWeight: FontWeight.normal,
+            color: Colors.white,
+            fontSize: 16,
+            height: 1.00,
+            letterSpacing: 0.25);
 
     var hasValue = controller.text != '';
 
     final suffixIcon = hasValue && !readOnly
         ? IconButton(
+            // cannot be null, this is the original default
+            padding: suffixIconPadding ?? const EdgeInsets.all(8.0),
             onPressed: () {
               controller.clear();
               if (onClear != null) {
                 onClear();
               }
             },
-            icon: Padding(
-              padding: const EdgeInsets.only(right: 4.0),
-              child: Icon(Icons.clear,
-                  color: Colors.white.withOpacity(0.5), size: 20),
-            ),
+            icon: Icon(
+              Icons.clear,
+              color: Colors.white.withOpacity(0.5),
+              size: 20,
+            ).right(4.0),
           )
         : null;
 
@@ -75,21 +87,23 @@ class OrchidTextField extends StatelessWidget {
             controller: controller,
             autocorrect: false,
             textAlign: TextAlign.left,
-            textAlignVertical: TextAlignVertical.bottom,
-            cursorHeight: textStyle.fontSize - 2,
+            textAlignVertical: textAlignVertical ?? TextAlignVertical.bottom,
+            cursorHeight: cursorHeight,
             maxLines: 1,
             onChanged: onChanged,
             focusNode: null,
             decoration: InputDecoration(
               // isDense: true,
-              contentPadding: EdgeInsets.only(top: 19, bottom: 17, left: 16, right: 16),
+              contentPadding: contentPadding ??
+                  EdgeInsets.only(top: 19, bottom: 17, left: 16, right: 16),
               border: InputBorder.none,
               hintText: hintText,
-              hintStyle:
-                  textStyle.copyWith(color: Colors.white.withOpacity(0.3)),
-              enabledBorder: textFieldEnabledBorder,
-              focusedBorder: textFieldFocusedBorder,
-              // suffix: suffix,
+              // hintStyle: textStyle.copyWith(color: Colors.white.withOpacity(0.3)),
+              hintStyle: textStyle.inactive,
+              enabledBorder: (border ? textFieldEnabledBorder : null),
+              disabledBorder: (border ? textFieldDisabledBorder : null),
+              focusedBorder: (border ? textFieldFocusedBorder : null),
+              // suffix: suffixIcon,
               suffixIcon: suffixIcon,
             ),
             cursorColor: Colors.white,
@@ -112,12 +126,18 @@ class OrchidTextField extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       borderSide: BorderSide(width: 1, color: Colors.white));
 
+  static var textFieldDisabledBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(width: 1, color: Colors.white.withOpacity(0.2)));
+
   static var textFieldFocusedBorder = OutlineInputBorder(
     borderRadius: BorderRadius.circular(12),
-    borderSide: BorderSide(
-      width: 2,
-      color: OrchidColors.tappable,
-    ),
+    borderSide: BorderSide(width: 2, color: OrchidColors.tappable),
+  );
+
+  static var textFieldErrorBorder = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(width: 2, color: OrchidColors.status_red),
   );
 
   // TODO: Remove

@@ -60,7 +60,6 @@ class Chains {
     chainId: GNOSIS_CHAINID,
     name: 'Gnosis',
     nativeCurrency: Tokens.XDAI,
-    // providerUrl: 'https://rpc.xdaichain.com/',
     defaultProviderUrl: 'https://rpc.gnosischain.com/',
     iconPath: OrchidAssetSvgChain.gnossis_chain_path,
     explorerUrl: 'https://blockscout.com/xdai/mainnet/',
@@ -76,7 +75,7 @@ class Chains {
     defaultProviderUrl: 'https://api.avax.network/ext/bc/C/rpc',
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
     explorerUrl: 'https://snowtrace.io/',
-    supportsLogs: true,
+    supportsLogs: false,
   );
 
   // Binance Smart Chain (BSC)

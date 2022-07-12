@@ -28,8 +28,12 @@ class UserPreferences {
     _sharedPreferences = await SharedPreferences.getInstance();
   }
 
+  bool get initialized {
+    return _sharedPreferences != null;
+  }
+
   SharedPreferences sharedPreferences() {
-    if (_sharedPreferences == null) {
+    if (!initialized) {
       throw Exception("UserPreferences uninitialized.");
     }
     return _sharedPreferences;

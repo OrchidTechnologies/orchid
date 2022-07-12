@@ -13,7 +13,9 @@ Duration millis(int millis) {
 extension DateTimeExtensions on DateTime {
   String toCountdownString() {
     var unlockIn = this.difference(DateTime.now());
-    return '${unlockIn.inHours}:${unlockIn.inMinutes.remainder(60)}:${(unlockIn.inSeconds.remainder(60))}';
+    return '${unlockIn.inHours}:'
+        +'${unlockIn.inMinutes.remainder(60)}:'.padLeft(2, '0')
+        +'${unlockIn.inSeconds.remainder(60)}'.padLeft(2, '0');
   }
 
   String toShortString() {

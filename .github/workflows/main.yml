@@ -8,24 +8,11 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make skeleton
-      run: ./app-flutter.sh orchid && cd app-flutter && make
+    - run: ./app-flutter.sh orchid && cd app-flutter && make
 
 
 
@@ -33,51 +20,26 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make iOS .ipa
-      run: debug=ldid make -j3 -C app-ios precache='--no-android'
+    - run: debug=ldid make -j3 -C app-ios precache='--no-android'
 
 
   build-and-app:
     runs-on: ubuntu-latest
 
     steps:
-    - name: rm -rf /opt
-      run: sudo rm -rf /opt
-
-    - name: install NDK r22
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
+    - run: sudo rm -rf /opt
 
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - run: env/setup-ndk.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Android .apk
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 make -j3 -C app-android precache='--no-ios'
+    - run: make -j3 -C app-android precache='--no-ios'
+
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-apk
@@ -88,24 +50,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: rm -rf /opt
-      run: sudo rm -rf /opt
+    - run: sudo rm -rf /opt
 
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup-git.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup-git.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Android .apk
-      run: cd app-android && env/docker.sh -j3
+    - run: cd app-android && env/docker.sh -j3
 
 
 
@@ -113,48 +64,23 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make macOS .app
-      run: debug=ldid make -j3 -C app-macos precache='--no-android --no-ios --macos'
+    - run: debug=ldid make -j3 -C app-macos precache='--no-android --no-ios --macos'
 
 
   build-mac-snd:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make macOS sender
-      run: make -j3 -C eth-sender
+    - run: make -j3 -C eth-sender
+
     - uses: actions/upload-artifact@v1
       with:
         name: cj-mac
@@ -165,24 +91,12 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make macOS client
-      run: make -j3 -C cli-shared
+    - run: make -j3 -C cli-shared
+
     - uses: actions/upload-artifact@v1
       with:
         name: orchidcd-mac
@@ -193,34 +107,18 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make macOS server
-      # XXX: v8 cannot be compiled using Xcode due to something I haven't spent the time to investigate :(
-      # exception specification of explicitly defaulted copy constructor does not match the calculated one
-      # XXX: my crossndk feature isn't 100% compatible with Xcode 12 as it mixes up the clang directory :/
-      run: DEVELOPER_DIR=/Applications/Xcode_11.7.app debug=crossndk make -j3 -C srv-shared
+    - run: make -j3 -C srv-shared
+
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-mac
         path: srv-shared/out-mac/x86_64/orchidd
 
-    - name: git status
-      run: git status
+    - run: git status
 
 
 
@@ -228,54 +126,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: install mingw-w64
-      run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
+    - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: setup plugins
-      run: debug=crossndk make -j3 -C app-windows ./env/dotdot/gui-orchid/.flutter-plugins
-    - name: make Windows app
-      run: make -j3 -C app-windows target=win precache='--no-android --no-ios --windows -a'
+    - run: debug=crossndk make -j3 -C app-windows ./env/dotdot/gui-orchid/.flutter-plugins
+    - run: debug=crossndk make -j3 -C app-windows target=win precache='--no-android --no-ios --windows -a'
+
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-win
         path: app-windows/out-win/package
 
 
+  build-win-snd:
+    runs-on: ubuntu-latest
+
+    steps:
+    - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
+
+    - uses: actions/checkout@v2
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
+
+    - run: make -j3 -C eth-sender target=win
+
+    - uses: actions/upload-artifact@v1
+      with:
+        name: cj-win
+        path: eth-sender/out-win/x86_64/cj.exe
+
+
   build-win-cli:
     runs-on: ubuntu-latest
 
     steps:
-    - name: install mingw-w64
-      run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
+    - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Windows client
-      run: make -j3 -C cli-shared target=win
+    - run: make -j3 -C cli-shared target=win
+
     - uses: actions/upload-artifact@v1
       with:
         name: orchidcd-win
@@ -286,34 +181,20 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
-    - name: install mingw-w64
-      run: brew install mingw-w64 coreutils
+    - run: brew install mingw-w64 coreutils
 
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Windows server
-      run: make -j3 -C srv-shared target=win
+    - run: make -j3 -C srv-shared target=win
+
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-w64
         path: srv-shared/out-win/x86_64/orchidd.exe
 
-    - name: git status
-      run: git status
+    - run: git status
 
 
 
@@ -322,22 +203,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: setup plugins
-      run: debug=crossndk make -j3 -C app-linux ./env/dotdot/gui-orchid/.flutter-plugins
-    - name: make Linux app
-      run: debug=crossndk make -j3 -C app-linux precache='--no-android --no-ios --linux'
+    - run: debug=crossndk make -j3 -C app-linux ./env/dotdot/gui-orchid/.flutter-plugins
+    - run: debug=crossndk make -j3 -C app-linux precache='--no-android --no-ios --linux'
+
     - uses: actions/upload-artifact@v1
       with:
         name: orchid-lnx
@@ -349,223 +220,95 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Linux dashboard
-      run: debug=crossndk make -j3 -C tst-network
+    - run: debug=crossndk make -j3 -C tst-network
 
 
-  build-lnx-cli-amd64:
+  build-lnx-cli:
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [x86_64, arm64, armhf]
 
     steps:
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Linux client
-      run: debug=crossndk make -j3 -C cli-shared machine=x86_64
+    - run: debug=crossndk make -j3 -C cli-shared machine=${{ matrix.machine }}
+
     - uses: actions/upload-artifact@v1
       with:
-        name: orchidcd-lnx-amd64
-        path: cli-shared/out-lnx/x86_64/orchidcd
-
-
-  build-lnx-cli-arm64:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
-
-    - name: make Linux client
-      run: debug=crossndk make -j3 -C cli-shared machine=arm64
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchidcd-lnx-arm64
-        path: cli-shared/out-lnx/arm64/orchidcd
-
-
-  build-lnx-cli-armhf:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
-
-    - name: make Linux client
-      run: debug=crossndk make -j3 -C cli-shared machine=armhf
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchidcd-lnx-armhf
-        path: cli-shared/out-lnx/armhf/orchidcd
+        name: orchidcd-lnx-${{ matrix.machine }}
+        path: cli-shared/out-lnx/${{ matrix.machine }}/orchidcd
 
 
   build-lnx-srv-amd64:
     runs-on: ubuntu-latest
 
     steps:
-    - name: install NDK r22
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
-
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - run: env/setup-ndk.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Linux server
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared
+    - run: debug=crossndk make -j3 -C srv-shared
 
-    - name: git status
-      run: git status
+    - run: git status
 
 
-  build-lnx-srv-arm64:
+  build-lnx-srv:
     runs-on: ubuntu-latest
 
-    steps:
-    - name: install NDK r22
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
-
-    - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
-
-    - name: make Linux server
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared machine=arm64
-    - uses: actions/upload-artifact@v1
-      with:
-        name: orchidd-lnx-arm64
-        path: srv-shared/out-lnx/arm64/orchidd
-
-    - name: git status
-      run: git status
-
-
-  build-lnx-srv-armhf:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [arm64, armhf]
 
     steps:
-    - name: install NDK r22
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
-
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - run: env/setup-ndk.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Linux server
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 debug=crossndk make -j3 -C srv-shared machine=armhf
+    - run: debug=crossndk make -j3 -C srv-shared machine=${{ matrix.machine }}
+
     - uses: actions/upload-artifact@v1
       with:
-        name: orchidd-lnx-armhf
-        path: srv-shared/out-lnx/armhf/orchidd
+        name: orchidd-lnx-${{ matrix.machine }}
+        path: srv-shared/out-lnx/${{ matrix.machine }}/orchidd
 
-    - name: git status
-      run: git status
+    - run: git status
 
 
   build-lnx-dkr:
     runs-on: ubuntu-latest
 
     steps:
-    - name: rm -rf /opt
-      run: sudo rm -rf /opt
+    - run: sudo rm -rf /opt
 
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup-git.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup-git.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Linux server
-      run: cd srv-shared && env/docker.sh -j3
+    - run: cd srv-shared && env/docker.sh -j3
 
 
   build-lnx-bld:
     runs-on: ubuntu-latest
 
     steps:
-    - name: rm -rf /opt
-      run: sudo rm -rf /opt
+    - run: sudo rm -rf /opt
 
     - uses: actions/checkout@v2
 
-    - name: make Linux server
-      run: docker build --build-arg GIT_REPOSITORY=https://github.com/${{ github.repository }}.git --build-arg GIT_COMMIT=${{ github.sha }} --build-arg GIT_SETUP=env/setup-git.sh -t orchidd:latest srv-docker
-    - name: docker save
-      run: docker save -o orchidd.tar orchidd:latest
+    - run: docker build --build-arg GIT_REPOSITORY=https://github.com/${{ github.repository }}.git --build-arg GIT_COMMIT=${{ github.sha }} --build-arg GIT_SETUP=env/setup-git.sh -t orchidd:latest srv-docker
+    - run: docker save -o orchidd.tar orchidd:latest
+
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-dkr
@@ -576,27 +319,13 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: debug instance
-      run: ls /usr/local/opt/runner/settings/instancename || true
-
-    - name: install NDK r22
-      run: echo y | sudo -EH "${ANDROID_HOME}/tools/bin/sdkmanager" "ndk;22.1.7171670" >/dev/null
-
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - run: env/setup-ndk.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Linux server
-      run: ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/22.1.7171670 make -j3 -C srv-shared target=lnx
+    - run: make -j3 -C srv-shared target=lnx
+
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-lnx-amd64
@@ -608,20 +337,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: env/setup
-      run: env/setup.sh
-    - name: git submodule status
-      id: git-submodule-status
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
-      with:
-        path: .git/modules
-        key: git-modules-${{ steps.git-submodule-status.outputs.hash }}
-    - name: git submodule
-      run: env/submodule.sh --jobs 3
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
 
-    - name: make Linux server
-      run: make -j3 -C srv-shared
+    - run: make -j3 -C srv-shared
 
 
   build-lnx-all:
@@ -629,21 +348,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: download orchidd-dkr
-      uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v2
       with:
         name: orchidd-dkr
-    - name: extract docker image
-      run: tar -xvf orchidd.tar
-    - name: extract docker layer
-      run: tar -xvf "$(jq -r '.[0].Layers | .[]' manifest.json | tail -n1)"
+    - run: tar -xvf orchidd.tar
+    - run: tar -xvf "$(jq -r '.[0].Layers | .[]' manifest.json | tail -n1)"
 
-    - name: download orchidd-lnx
-      uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v2
       with:
         name: orchidd-lnx-amd64
-    - name: verify reproduction
-      run: diff -u <(xxd usr/sbin/orchidd) <(xxd orchidd)
+
+    - run: diff -u <(xxd usr/sbin/orchidd) <(xxd orchidd)
 
 
 
