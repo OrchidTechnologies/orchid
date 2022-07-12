@@ -57,6 +57,7 @@ Brick<32> HashK(const Buffer &data);
 inline Brick<32> HashK(const std::string &data) {
     return HashK(Subset(data)); }
 
+Brick<64> Hash4(const Buffer &data);
 Brick<32> Hash2(const Buffer &data);
 Brick<20> Hash1(const Buffer &data);
 
@@ -68,12 +69,12 @@ Brick<16> Hash5(const Buffer &data);
 inline Brick<16> Hash5(const std::string &data) {
     return Hash5(Subset(data)); }
 
-template <auto Hash_, typename Data_>
+template <auto Hash_, size_t Size_, typename Data_>
 auto Auth(const Region &secret, const Data_ &data) {
-    Brick<64> inner; memset(inner.data(), 0x36, inner.size());
-    Brick<64> outer; memset(outer.data(), 0x5c, outer.size());
+    Brick<Size_> inner; memset(inner.data(), 0x36, inner.size());
+    Brick<Size_> outer; memset(outer.data(), 0x5c, outer.size());
 
-    orc_assert(secret.size() <= 64);
+    orc_assert(secret.size() <= Size_);
     for (size_t i(0), e(secret.size()); i != e; ++i) {
         inner[i] ^= secret[i];
         outer[i] ^= secret[i];

@@ -87,6 +87,20 @@ Brick<32> HashK(const Buffer &data) {
     return std::move(context)();
 }
 
+Brick<64> Hash4(const Buffer &data) {
+    SHA512_CTX context;
+    SHA512_Init(&context);
+
+    data.each([&](const uint8_t *data, size_t size) {
+        SHA512_Update(&context, data, size);
+        return true;
+    });
+
+    Brick<SHA512_DIGEST_LENGTH> hash;
+    SHA512_Final(hash.data(), &context);
+    return hash;
+}
+
 Brick<32> Hash2(const Buffer &data) {
     SHA256_CTX context;
     SHA256_Init(&context);
