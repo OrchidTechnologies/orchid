@@ -52,7 +52,7 @@ $(subst $(space),/,$(wordlist 2,$(words $(temp)),$(temp)))
 endef
 
 define head
-$(shell cd $(1) && git rev-parse --git-dir)/HEAD
+$(shell cd $(1) && cd $$(git rev-parse --git-dir) && pwd)/HEAD
 endef
 
 define patternize
