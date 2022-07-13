@@ -78,19 +78,19 @@ void operator *(std::vector<Type_> &&readys) noexcept(noexcept(*std::declval<Typ
         *std::move(ready);
 }
 
-template <typename ...Args_>
+template <bool Test_, typename ...Args_>
 constexpr bool Voided() {
-    return (std::is_void_v<decltype(*std::declval<Args_>())> && ...);
+    return ((std::is_void_v<decltype(*std::declval<Args_>())> == Test_) && ...);
 }
 
-template <typename ...Args_, typename Enable_ = std::enable_if_t<!Voided<Args_...>()>>
+template <typename ...Args_, typename Enable_ = std::enable_if_t<Voided<false, Args_...>()>>
 auto operator *(std::tuple<Args_...> &&readys) {
     return std::apply([](auto && ...ready) {
         return std::make_tuple(*std::move(ready)...);
     }, std::forward<std::tuple<Args_...>>(readys));
 }
 
-template <typename ...Args_, typename Enable_ = std::enable_if_t<Voided<Args_...>()>>
+template <typename ...Args_, typename Enable_ = std::enable_if_t<Voided<true, Args_...>()>>
 void operator *(std::tuple<Args_...> &&readys) {
     std::apply([](auto && ...ready) {
         (*std::move(ready), ...);
