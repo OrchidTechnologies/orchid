@@ -41,6 +41,12 @@ endef
 chacks:
 	@{ $(foreach v,$(filter chacks/%,$(.VARIABLES)),echo 'diff $(v) += $($(v))'; sed -e '$($(v))' $(patsubst chacks/%,%,$(v)) | diff -u $(patsubst chacks/%,%,$(v)) - && echo $(v);)true; } | colordiff
 
+$(output)/%.S.o: $$(specific) $$(folder).S $$(code)
+	$(specific)
+	@mkdir -p $(dir $@)
+	@echo [CC] $(target)/$(arch) $<
+	$(call compile,cc,assembler-with-cpp,)
+
 $(output)/%.c.o: $$(specific) $$(folder).c $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
