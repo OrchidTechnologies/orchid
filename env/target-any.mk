@@ -60,6 +60,17 @@ cflags += -Wno-unknown-warning-option
 cflags += -Wno-deprecated-volatile
 cflags += -Wno-range-loop-analysis
 
+cflags += -Wno-bitwise-op-parentheses
+cflags += -Wno-dangling-else
+cflags += -Wno-empty-body
+cflags += -Wno-logical-op-parentheses
+cflags += -Wno-misleading-indentation
+cflags += -Wno-missing-selector-name
+cflags += -Wno-overloaded-shift-op-parentheses
+cflags += -Wno-potentially-evaluated-expression
+cflags += -Wno-tautological-constant-out-of-range-compare
+cflags += -Wno-tautological-overlap-compare
+
 cflags += -fmessage-length=0
 cflags += -ferror-limit=0
 cflags += -ftemplate-backtrace-limit=0

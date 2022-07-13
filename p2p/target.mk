@@ -18,18 +18,6 @@
 # }}}
 
 
-cflags += -Wno-bitwise-op-parentheses
-cflags += -Wno-dangling-else
-cflags += -Wno-empty-body
-cflags += -Wno-logical-op-parentheses
-cflags += -Wno-misleading-indentation
-cflags += -Wno-missing-selector-name
-cflags += -Wno-overloaded-shift-op-parentheses
-cflags += -Wno-potentially-evaluated-expression
-cflags += -Wno-tautological-constant-out-of-range-compare
-cflags += -Wno-tautological-overlap-compare
-
-
 cflags += -fcoroutines-ts
 cflags += -Wno-deprecated-experimental-coroutine
 
