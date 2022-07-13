@@ -28,7 +28,7 @@
 
 // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4152.pdf
 
-#if 1
+#ifdef __cpp_exceptions
 #define uncaught_exceptions cy_uncaught_exceptions
 
 namespace __cxxabiv1 {
@@ -44,12 +44,16 @@ inline int uncaught_exceptions() noexcept {
 
 class scope {
   private:
+#ifdef __cpp_exceptions
     const int uncaught_;
+#endif
     std::function<void ()> function_;
 
   public:
     scope(std::function<void ()> function) :
+#ifdef __cpp_exceptions
         uncaught_(std::uncaught_exceptions()),
+#endif
         function_(std::move(function))
     {
     }
@@ -57,6 +61,7 @@ class scope {
     // XXX: consider if this Impactor behavior is sane
     // NOLINTNEXTLINE (bugprone-exception-escape)
     ~scope() noexcept(false) {
+#ifdef __cpp_exceptions
         if (!function_);
         else if (std::uncaught_exceptions() == uncaught_)
             function_();
@@ -64,6 +69,9 @@ class scope {
             function_();
         } catch (...) {
         }
+#else
+        function_();
+#endif
     }
 
     void operator()() {
@@ -77,7 +85,7 @@ class scope {
     }
 };
 
-#if 1
+#if __cpp_exceptions
 #undef uncaught_exceptions
 #endif
 
