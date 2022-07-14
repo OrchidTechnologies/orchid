@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:orchid/orchid.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
+import 'package:flutter/services.dart';
 
 /// A styled text field with an optional custom trailing component.
 class OrchidTextField extends StatelessWidget {

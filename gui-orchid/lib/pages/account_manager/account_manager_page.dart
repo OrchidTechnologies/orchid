@@ -126,7 +126,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     // Open to the supplied account
     if (widget.openToAccount != null) {
       // log("open to account: ${widget.openToAccount}");
-      _setSelectedIdentity(await widget.openToAccount.signerKey);
+      _setSelectedIdentity(widget.openToAccount.signerKey);
     }
 
     // Open the import dialog after the UI has rendered.
@@ -280,7 +280,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     // State used by the dialog
     Account _accountToImport;
 
-    final onPressed = (BuildContext context) async {
+    final doImport = (BuildContext context) async {
       await UserPreferences().addCachedDiscoveredAccounts([_accountToImport]);
 
       // Set the identity and refresh
@@ -324,7 +324,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                   OrchidActionButton(
                     text: s.importAccount.toUpperCase(),
                     enabled: _accountToImport != null,
-                    onPressed: () => onPressed(context),
+                    onPressed: () => doImport(context),
                   ),
                 ],
               ),
@@ -350,7 +350,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     if (identity == null) {
       return;
     }
-    var config = 'account={ secret: "${identity.formatSecretFixed()}" }';
+    var config = identity.toExportString();
     var title = s.exportThisOrchidKey;
     // var bodyStyle = AppText.dialogBody.copyWith(fontSize: 15);
     var bodyStyle = OrchidText.body2;

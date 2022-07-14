@@ -1,6 +1,6 @@
 import 'package:orchid/orchid.dart';
 import 'package:orchid/pages/dapp_settings_button.dart';
-import 'dapp_header_popup_button.dart';
+import '../orchid/menu/orchid_popup_menu_button.dart';
 
 class DappVersionButton extends StatefulWidget {
   final int contractVersionSelected;
@@ -24,7 +24,7 @@ class _DappVersionButtonState extends State<DappVersionButton> {
   @override
   Widget build(BuildContext context) {
     final _textStyle = OrchidText.medium_16_025.copyWith(height: 2.0);
-    return DappHeaderPopupMenuButton(
+    return OrchidPopupMenuButton(
       width: 48,
       height: 30,
       offset: Offset(0, widget.contractVersionsAvailable.length * -50.0 - 22.0),

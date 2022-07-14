@@ -12,7 +12,7 @@ import 'package:orchid/util/timed_builder.dart';
 import 'package:orchid/util/units.dart';
 import '../../api/orchid_eth/orchid_account_mock.dart';
 import '../dapp_button.dart';
-import '../orchid_form_fields.dart';
+import '../../orchid/field/orchid_labeled_token_value_field.dart';
 import 'package:orchid/common/token_price_builder.dart';
 
 class WithdrawFundsPaneV1 extends StatefulWidget {
@@ -94,7 +94,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
             builder: (USD tokenPrice) {
               return Column(
                 children: [
-                  LabeledTokenValueField(
+                  OrchidLabeledTokenValueField(
                     label: s.balance,
                     enabled: connected,
                     labelWidth: 100,
@@ -103,7 +103,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
                     usdPrice: tokenPrice,
                     error: _balanceFieldError,
                   ),
-                  LabeledTokenValueField(
+                  OrchidLabeledTokenValueField(
                     label: s.deposit,
                     trailing: _depositLockIndicator(),
                     bottomBanner: _depositBottomBanner(),

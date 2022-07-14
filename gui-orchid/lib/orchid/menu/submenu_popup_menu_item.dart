@@ -1,6 +1,6 @@
 import 'package:orchid/orchid.dart';
 
-// TODO: refactor with _buildExpandableMenuItem and move to orchid
+// TODO: refactor with _buildExpandableMenuItem
 /// A PopupMenuItem that builds its child with a builder accepting an expanded flag.
 /// Tapping on this (parent) menu item toggles the expanded flag.
 class SubmenuPopopMenuItem<T> extends PopupMenuItem<T> {

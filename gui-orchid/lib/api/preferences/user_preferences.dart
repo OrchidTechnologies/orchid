@@ -133,13 +133,18 @@ class UserPreferences {
           .where((key) => key != null)
           .toList();
     } catch (err) {
-      log("Error retrieving keys!: $err");
+      log("Error retrieving keys!: $value, $err");
       return [];
     }
   }
 
   static Future<bool> _setKeys(List<StoredEthereumKey> keys) async {
     print("setKeys: storing keys: ${jsonEncode(keys)}");
+    if (keys == null) {
+      return UserPreferences()
+          .sharedPreferences()
+          .remove(UserPreferenceKey.Keys.toString());
+    }
     try {
       var value = jsonEncode(keys);
       return await UserPreferences()

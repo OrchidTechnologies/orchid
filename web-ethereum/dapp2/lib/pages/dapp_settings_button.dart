@@ -2,9 +2,9 @@ import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/pages/popupmenu_submenu.dart';
+import 'package:orchid/orchid/menu/submenu_popup_menu_item.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
-import 'dapp_header_popup_button.dart';
+import '../orchid/menu/orchid_popup_menu_button.dart';
 
 class DappSettingsButton extends StatefulWidget {
   final int contractVersionSelected;
@@ -30,7 +30,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
 
   @override
   Widget build(BuildContext context) {
-    return DappHeaderPopupMenuButton<String>(
+    return OrchidPopupMenuButton<String>(
       width: 40,
       height: 40,
       selected: _buttonSelected,

@@ -1,5 +1,4 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:orchid/orchid.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -7,17 +6,13 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/common/formatting.dart';
+import 'package:orchid/orchid/menu/orchid_chain_selector_menu.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/pages/account_manager/scan_paste_identity.dart';
-import 'package:orchid/orchid/orchid_chain_selection.dart';
-import 'package:orchid/util/localization.dart';
-import 'funder_selection.dart';
-import 'key_selection.dart';
+import '../../orchid/menu/orchid_funder_selector_menu.dart';
+import 'package:orchid/orchid/menu/orchid_key_selector_menu.dart';
 import 'model/orchid_hop.dart';
 
 /// Allow selection or manual entry of all components of an OrchidAccount
@@ -147,12 +142,11 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
         Row(
           children: <Widget>[
             Expanded(
-              child: KeySelectionDropdown(
-                  key: ValueKey(_selectedKeyItem?.toString() ??
-                      _initialSelectedKeyItem.toString()),
-                  enabled: true,
-                  initialSelection: _selectedKeyItem ?? _initialSelectedKeyItem,
-                  onSelection: _onKeySelected),
+              child: OrchidKeySelectorMenu(
+                enabled: true,
+                selected: _selectedKeyItem ?? _initialSelectedKeyItem,
+                onSelection: _onKeySelected,
+              ),
             ),
           ],
         ),
@@ -160,27 +154,24 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
         // Show the import key field if the user has selected the option
         Visibility(
           visible:
-              _selectedKeyItem?.option == KeySelectionDropdown.importKeyOption,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 24),
-            child: ScanOrPasteOrchidIdentity(
-              onChange: (result) async {
-                log("XXX: import identity = $result");
-                // TODO: Saving the key should be deferred until the caller of this form
-                // TODO: decides to save the account.  Doing so will require extending the
-                // TODO: return data and modifying KeySelectionDropdown to handle transient keys.
-                if (result.isNew) {
-                  await UserPreferences().addKey(result.signer);
-                  _updateAccounts();
-                }
-                setState(() {
-                  _selectedKeyItem =
-                      KeySelectionItem(keyRef: result.signer.ref());
-                });
-              },
-              pasteOnly: pasteOnly,
-            ),
-          ),
+              _selectedKeyItem?.option == OrchidKeySelectorMenu.importKeyOption,
+          child: ScanOrPasteOrchidIdentity(
+            onChange: (result) async {
+              log("XXX: import identity = $result");
+              // TODO: Saving the key should be deferred until the caller of this form
+              // TODO: decides to save the account.  Doing so will require extending the
+              // TODO: return data and modifying KeySelectionDropdown to handle transient keys.
+              if (result.isNew) {
+                await UserPreferences().addKey(result.signer);
+                _updateAccounts();
+              }
+              setState(() {
+                _selectedKeyItem =
+                    KeySelectionItem(keyRef: result.signer.ref());
+              });
+            },
+            pasteOnly: pasteOnly,
+          ).top(24),
         )
       ],
     );
@@ -201,13 +192,12 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
         Row(
           children: <Widget>[
             Expanded(
-              child: FunderSelectionDropdown(
+              child: OrchidFunderSelectorMenu(
                   signer: _selectedKeyItem?.keyRef,
-                  key: ValueKey(_selectedKeyItem?.toString() ??
-                      _initialSelectedKeyItem.toString()),
+                  // Update on change in key
+                  key: ValueKey(_selectedKeyItem?.toString() ?? _initialSelectedKeyItem.toString()),
                   enabled: true,
-                  initialSelection:
-                      _selectedFunderItem ?? _initialSelectedFunderItem,
+                  selected: _selectedFunderItem ?? _initialSelectedFunderItem,
                   onSelection: _onFunderSelected),
             ),
           ],
@@ -216,7 +206,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
         // Show the paste funder field if the user has selected the option
         Visibility(
           visible: _selectedFunderItem?.option ==
-              FunderSelectionDropdown.pasteAddressOption,
+              OrchidFunderSelectorMenu.pasteAddressOption,
           child: Padding(
             padding: const EdgeInsets.only(top: 24),
             child: _buildPasteFunderField(),
@@ -230,11 +220,14 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
                     ? OrchidColors.valid
                     : OrchidColors.invalid)),
         pady(8),
-        ChainSelectionDropdown(
+
+        OrchidChainSelectorMenu(
           key: Key(_selectedFunderItem?.toString() ?? ''),
           onSelection: _onChainSelectionChanged,
           selected: _pastedOrOverriddenFunderChainSelection ??
               _selectedFunderItem?.account?.chain,
+          enabled: _selectedFunderItem != null,
+          width: double.infinity,
         ),
       ],
     );
@@ -318,7 +311,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
   bool _funderValid() {
     return (_selectedFunderItem != null &&
             _selectedFunderItem.option !=
-                FunderSelectionDropdown.pasteAddressOption) ||
+                OrchidFunderSelectorMenu.pasteAddressOption) ||
         _pastedFunderAndChainValid();
   }
 

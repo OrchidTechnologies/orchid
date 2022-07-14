@@ -18,6 +18,7 @@ dependencies:
   # that said, this library has been *discontinued*
   # this library can be upgraded to at least 3.0.1
   barcode_scan: 2.0.2
+  browser_detector: ^2.0.0
   cupertino_icons: 1.0.2
   dartjsengine: 1.0.1
   dotted_border: 2.0.0+2
@@ -51,6 +52,7 @@ dependencies:
     path: flutter-desktop-embedding/plugins/window_size
 
 dev_dependencies:
+  dart_code_metrics: ^4.16.0
   flutter_test:
     sdk: flutter
   pedantic: 1.11.0

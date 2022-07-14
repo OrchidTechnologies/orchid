@@ -1,39 +1,41 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+import 'package:browser_detector/browser_detector.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/common/qrcode_scan.dart';
-import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:flutter/services.dart';
+import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/field/orchid_text_field.dart';
-import 'package:orchid/util/localization.dart';
 
-// TODO: Replacing this with orchid/field/...
-@deprecated
-class ScanOrPasteOrchidIdentity extends StatefulWidget {
+/// Scan or paste an identity
+class OrchidLabeledIdentityField extends StatefulWidget {
+  final String label;
+
   /// Callback fires on changes with either a valid parsed account or null if the form state is invalid or incomplete.
   final void Function(ParseOrchidIdentityResult parsed) onChange;
   final double spacing;
-  final bool pasteOnly;
 
-  const ScanOrPasteOrchidIdentity({
+  const OrchidLabeledIdentityField({
     Key key,
+    @required this.label,
     @required this.onChange,
-    @required this.pasteOnly,
     this.spacing,
   }) : super(key: key);
 
   @override
-  _ScanOrPasteOrchidIdentityState createState() =>
-      _ScanOrPasteOrchidIdentityState();
+  _OrchidLabeledIdentityFieldState createState() =>
+      _OrchidLabeledIdentityFieldState();
 }
 
-class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
+class _OrchidLabeledIdentityFieldState
+    extends State<OrchidLabeledIdentityField> {
   var _pasteField = TextEditingController();
+
+  // cache the results of the last validation
+  var isValid = false;
+
+  bool get _hasText => (_pasteField.text ?? '').isNotEmpty;
 
   @override
   void initState() {
@@ -43,46 +45,45 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    var showIcons = screenWidth >= AppSize.iphone_xs.width;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: _buildPasteField(showIcons),
-    );
+    final showPaste = !BrowserDetector().browser.isFirefox;
+    return OrchidLabeledTextField(
+      label: widget.label,
+      hintText: 'account={ secret:...',
+      controller: _pasteField,
+      trailing: showPaste ? _buildTrailing() : null,
+      error: _hasText && !isValid,
+    ).pady(8);
   }
 
-  Widget _buildPasteField(bool showIcons) {
-    return OrchidTextField(
-      hintText: '0x...',
-      controller: _pasteField,
-      trailing: Row(
-        children: [
-          if (widget.pasteOnly)
-            SizedBox(
-              width: 48,
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.only(left: 20.0),
-                ),
-                child: Icon(Icons.paste, color: OrchidColors.tappable),
-                onPressed: _pasteCode,
+  Widget _buildTrailing() {
+    final pasteOnly = OrchidPlatform.doesNotSupportScanning;
+    return Row(
+      children: [
+        if (pasteOnly)
+          SizedBox(
+            width: 40,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.only(left: 16.0),
               ),
+              child: Icon(Icons.paste, color: OrchidColors.tappable),
+              onPressed: _pasteCode,
             ),
-          if (!widget.pasteOnly)
-            SizedBox(
-              width: 48,
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.only(left: 16.0),
-                ),
-                child: Image.asset(OrchidAssetImage.scan_path,
-                    color: OrchidColors.tappable),
-                onPressed: _scanCode,
+          ),
+        if (!pasteOnly)
+          SizedBox(
+            width: 40,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.only(left: 16.0),
               ),
+              child: Image.asset(OrchidAssetImage.scan_path,
+                  color: OrchidColors.tappable),
+              onPressed: _scanCode,
             ),
-        ],
-      ),
-    );
+          ),
+      ],
+    ).right(12);
   }
 
   /// Scan a QR Code and add the text to the field
@@ -122,13 +123,16 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
     _validateCodeAndFireCallback();
   }
 
-  void _validateCodeAndFireCallback({bool fromPaste, bool fromScan}) {
+  void _validateCodeAndFireCallback(
+      {bool fromPaste = false, bool fromScan = false}) {
     try {
       final parsed = _parse(_pasteField.text);
       widget.onChange(parsed);
+      isValid = true;
       log("pasted code valid = $parsed");
     } catch (err) {
       widget.onChange(null);
+      isValid = false;
       if (fromPaste) {
         _pasteCodeError();
       } else if (fromScan) {

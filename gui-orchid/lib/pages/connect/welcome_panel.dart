@@ -1,45 +1,40 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter/services.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
+import 'package:orchid/api/orchid_eth/chains.dart';
+import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/common/rounded_rect.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
+import 'package:orchid/orchid/account/account_finder.dart';
+import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
+import 'package:orchid/orchid/field/orchid_labeled_identity_field.dart';
+import 'package:orchid/orchid/menu/orchid_chain_selector_menu.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
+import 'package:orchid/orchid/orchid_checkbox.dart';
+import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
-import 'package:orchid/pages/account_manager/account_manager_page.dart';
-import 'package:orchid/common/formatting.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
-import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/units.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../app_routes.dart';
 
-enum WelcomePanelState {
-  welcome,
-  confirm,
-  // after hitting confirm wait for processing to begin
-  confirm_wait,
-  processing_pac,
-  processing_chain,
-  processing_timeout
-}
-
 class WelcomePanel extends StatefulWidget {
-  final StoredEthereumKey identity;
   final VoidCallback onDismiss;
+  final void Function(Account account) onAccount;
+  final StoredEthereumKey defaultIdentity;
 
   const WelcomePanel({
     Key key,
-    @required this.identity,
     this.onDismiss,
+    this.onAccount,
+    this.defaultIdentity,
   }) : super(key: key);
 
   @override
@@ -47,19 +42,32 @@ class WelcomePanel extends StatefulWidget {
 }
 
 class _WelcomePanelState extends State<WelcomePanel> {
-  WelcomePanelState _state;
+  _State _state;
   PAC _dollarPAC;
+  StoredEthereumKey _generatedIdentity;
+  StoredEthereumKey _importedIdentity;
+
+  // This could be either the imported or generated identity, depending on whether
+  // the user hits the "back" button.
+  StoredEthereumKey _selectedIdentity;
 
   @override
   void initState() {
     super.initState();
+    // If a default key was passed use it and skip the key choice.
+    _selectedIdentity = widget.defaultIdentity;
     initStateAsync();
   }
 
   void initStateAsync() async {
     UserPreferences().pacTransaction.stream().listen((tx) {
       if (tx == null) {
-        _state = WelcomePanelState.welcome;
+        // If we already have an identity supplied skip the choice.
+        if (_selectedIdentity != null) {
+          _state = _State.setup_account;
+        } else {
+          _state = _State.welcome;
+        }
       } else {
         switch (tx.state) {
           case PacTransactionState.None:
@@ -67,18 +75,20 @@ class _WelcomePanelState extends State<WelcomePanel> {
           case PacTransactionState.Ready:
           case PacTransactionState.InProgress:
           case PacTransactionState.WaitingForRetry:
-            _state = WelcomePanelState.processing_pac;
+            _state = _State.processing_pac;
             break;
           case PacTransactionState.WaitingForUserAction:
           case PacTransactionState.Error:
-            _state = WelcomePanelState.processing_timeout;
+            _state = _State.processing_timeout;
             break;
           case PacTransactionState.Complete:
-            _state = WelcomePanelState.processing_chain;
+            _state = _State.processing_chain;
             break;
         }
       }
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     });
 
     _dollarPAC = await OrchidPurchaseAPI.getDollarPAC();
@@ -90,123 +100,143 @@ class _WelcomePanelState extends State<WelcomePanel> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.identity == null || _state == null) {
-      log("(first launch) welcome pane: not ready: ${widget.identity}, $_state");
+    if (_state == null) {
+      log("(first launch) welcome pane: not ready: $_state");
       return Container();
     }
-    return Padding(
-      padding: const EdgeInsets.only(left: 28, right: 28),
-      child: SizedBox(
-        width: double.infinity,
+    return SizedBox(
+      width: double.infinity,
+      child: Container(
+        color: Colors.black,
         child: Container(
-          color: Colors.black,
-          child: Container(
-            color: OrchidColors.dark_background.withOpacity(0.25),
-            child: OrchidPanel(
-              highlight: true,
-              // TODO: Why isn't this animating scaling up?
-              // child: AnimatedSize(
-              // duration: Duration(milliseconds: 300),
-              // alignment: Alignment.topCenter,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildTitle(),
-                  _buildContent(),
-                ],
-              ),
-            ),
+          color: OrchidColors.dark_background.withOpacity(0.25),
+          child: OrchidPanel(
+            highlight: true,
+            child: AnimatedSize(
+                alignment: Alignment.topCenter,
+                duration: millis(250),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTitle(),
+                    Flexible(
+                        child: SingleChildScrollView(child: _buildContent())),
+                  ],
+                )),
           ),
+        ),
+      ),
+    ).padx(28);
+  }
+
+  Widget _buildTitle() {
+    final style = OrchidText.title.withHeight(2.0);
+    final title = _getTitleContent();
+
+    return Opacity(
+      opacity: 0.99,
+      child: Container(
+        width: double.infinity,
+        height: 52,
+        color: Colors.white.withOpacity(0.1),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            ((title.backState != null)
+                    ? IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _state = title.backState;
+                          });
+                        },
+                        icon: Icon(Icons.chevron_left),
+                        color: Colors.white,
+                      )
+                    : Container())
+                .width(48),
+            Text(title.text).withStyle(style),
+            ((title.showDismiss)
+                    ? IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _dismiss();
+                          });
+                        },
+                        icon: Icon(Icons.close),
+                        color: Colors.white,
+                      )
+                    : Container())
+                .width(48),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTitle() {
-    return Opacity(
-      opacity: 0.99,
-      child: Container(
-        width: double.infinity,
-        height: 50,
-        color: Colors.white.withOpacity(0.1),
-        child: Center(child: _buildTitleContent()),
-      ),
-    );
-  }
-
-  Widget _buildTitleContent() {
+  // merge this with _buildContent
+  _TitleContent _getTitleContent() {
     switch (_state) {
-      case WelcomePanelState.welcome:
-        return Text(s.welcomeToOrchid).title.height(2.0);
-        break;
-      case WelcomePanelState.confirm:
-      case WelcomePanelState.confirm_wait:
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Visibility(
-                visible: _state == WelcomePanelState.confirm,
-                maintainSize: true,
-                maintainAnimation: true,
-                maintainState: true,
-                child: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _state = WelcomePanelState.welcome;
-                    });
-                  },
-                  icon: Icon(Icons.chevron_left),
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            Text(s.fundYourAccount).title.height(2.0),
-            Container(width: 48),
-          ],
+      case _State.welcome:
+        return _TitleContent(text: s.welcomeToOrchid);
+      case _State.setup_choice:
+        return _TitleContent(
+            text: s.orchidIdentity,
+            backState: _State.welcome,
+            showDismiss: true);
+      case _State.backup_identity:
+        return _TitleContent(
+          text: "Back up your Identity",
+          backState: _State.setup_choice,
+          showDismiss: true,
         );
-        break;
-      case WelcomePanelState.processing_pac:
-      case WelcomePanelState.processing_chain:
-      case WelcomePanelState.processing_timeout:
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(width: 60),
-            Text(s.processing).title.height(2.0),
-            Padding(
-              padding: const EdgeInsets.only(right: 14),
-              child: IconButton(
-                onPressed: () {
-                  setState(() {
-                    _dismiss();
-                  });
-                },
-                icon: Icon(Icons.close),
-                color: Colors.white,
-              ),
-            ),
-          ],
+
+      case _State.setup_account:
+        return _TitleContent(
+          text: "Account set up",
+          backState: _selectedIdentity == _generatedIdentity
+              ? _State.backup_identity
+              : _State.setup_choice,
+          showDismiss: true,
         );
-        break;
+
+      case _State.confirm_purchase:
+        return _TitleContent(
+            text: s.fundYourAccount, backState: _State.welcome);
+
+      case _State.confirm_purchase_wait:
+        return _TitleContent(text: s.fundYourAccount);
+
+      case _State.processing_pac:
+      case _State.processing_chain:
+      case _State.processing_timeout:
+        return _TitleContent(text: s.processing, showDismiss: true);
     }
     throw Exception();
   }
 
   Widget _buildContent() {
     switch (_state) {
-      case WelcomePanelState.welcome:
+      case _State.welcome:
         return _buildContentWelcomeState();
         break;
-      case WelcomePanelState.confirm:
-      case WelcomePanelState.confirm_wait:
-        return _buildContentConfirmState();
+      case _State.setup_choice:
+        return _buildContentSetupChoiceState();
         break;
-      case WelcomePanelState.processing_pac:
-      case WelcomePanelState.processing_chain:
-      case WelcomePanelState.processing_timeout:
-        return _buildContentProcessingState();
+      case _State.setup_account:
+        return _buildContentSetupAccountState();
+        break;
+      case _State.backup_identity:
+        return _buildContentBackupIdentityState();
+        break;
+
+      case _State.confirm_purchase:
+      case _State.confirm_purchase_wait:
+        return _buildContentConfirmPurchaseState();
+        break;
+      case _State.processing_pac:
+      case _State.processing_chain:
+      case _State.processing_timeout:
+        return _buildContentProcessingPurchaseState();
         break;
     }
     throw Exception();
@@ -216,33 +246,34 @@ class _WelcomePanelState extends State<WelcomePanel> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        pady(32),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-                  s.subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService)
-              .body2
-              .center,
-        ),
+        Text(s.subscriptionfreePayAsYouGoDecentralizedOpenSourceVpnService)
+            .body2
+            .center
+            .padx(24)
+            .top(32),
         pady(40),
+        OrchidActionButton(
+          height: 50,
+          enabled: true,
+          text: "SET UP ACCOUNT",
+          onPressed: () {
+            setState(() {
+              _state = _State.setup_choice;
+            });
+          },
+        ),
+        pady(16),
         Visibility(
           visible: _dollarPAC != null,
-          child: OrchidActionButton(
-            enabled: true,
-            text: s.getStartedFor1(_dollarPAC?.localDisplayPrice ?? ''),
+          child: OrchidOutlineButton(
+            text: s.buyCredits.toUpperCase(),
             onPressed: () {
               setState(() {
-                _state = WelcomePanelState.confirm;
+                _state = _State.confirm_purchase;
               });
             },
           ),
         ),
-        pady(16),
-        _buildOutlineButton(
-            text: s.importAccount,
-            onPressed: () {
-              _importAccount(context);
-            }),
         pady(24),
         Text(s.illDoThisLater).linkButton(onTapped: _dismiss),
         pady(40),
@@ -250,80 +281,341 @@ class _WelcomePanelState extends State<WelcomePanel> {
     );
   }
 
-  Widget _buildContentConfirmState() {
+  final Map<String, StyledTextTagBase> tags = {
+    'account_link':
+        OrchidText.body2.tappable.link(OrchidUrls.partsOfOrchidAccount),
+  };
+
+  Widget _buildContentSetupChoiceState() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        pady(32),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: StyledText(
-            textAlign: TextAlign.center,
-            style: OrchidText.body2,
-            text: s
-                .connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By,
-            tags: {
-              'link1': OrchidText.linkStyle.link(OrchidUrls.preferredProviders),
-            },
-          ),
-        ),
-        pady(40),
-        _buildConfirmPurchaseDetails(pac: _dollarPAC),
-        pady(40),
+        Text("Generate a new Identity" + ':').body2.top(32).padx(24),
         OrchidActionButton(
-          enabled: _state == WelcomePanelState.confirm,
-          text: s.confirmPurchase,
-          onPressed: _doPurchase,
-        ),
-        pady(24),
-        Text(s.illDoThisLater).linkButton(onTapped: _dismiss),
+          height: 50,
+          text: "GENERATE IDENTITY",
+          onPressed: () async {
+            await _generateIdentityIfNeeded();
+            setState(() {
+              _state = _State.backup_identity;
+            });
+          },
+          enabled: true,
+        ).center.top(24).padx(24),
+        Divider(color: Colors.black).top(24),
+        StyledText(
+          style: OrchidText.body2,
+          text:
+              "Enter an existing <account_link>Orchid Identity</account_link>" +
+                  ':',
+          tags: tags,
+        ).top(24).padx(24),
+        OrchidLabeledIdentityField(
+          label: s.orchidIdentity,
+          onChange: (ParseOrchidIdentityResult result) async {
+            if (result != null) {
+              if (result.isNew) {
+                await UserPreferences().addKey(result.signer);
+              }
+              setState(() {
+                _importedIdentity = result.signer;
+                _selectedIdentity = _importedIdentity;
+                _state = _State.setup_account;
+              });
+            }
+          },
+        ).top(16).padx(24).bottom(40),
+      ],
+    );
+  }
+
+  EthereumAddress _funderAddress;
+  Chain _chain;
+
+  Widget _buildContentSetupAccountState() {
+    if (_selectedIdentity == null) {
+      return Container();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text("Your Orchid Identity public address" + ':')
+            .body2
+            .height(2.0)
+            .top(16),
+        _buildAddress(address: _selectedIdentity.address).top(16),
+        _buildCopyIdentityButton(
+                value: _selectedIdentity.address
+                    .toString(prefix: true, elide: false))
+            .center
+            .top(16),
+        Text("Paste the web3 wallet address that you will use to fund your account below.")
+            .body2
+            .top(32),
+        OrchidLabeledAddressField(
+          label: "Funder wallet address",
+          onChange: (value) {
+            setState(() {
+              _funderAddress = value;
+            });
+          },
+        ).top(16),
+        Text(s.chain).body1.top(32),
+        OrchidChainSelectorMenu(
+          key: Key(_funderAddress?.toString() ?? 'null'),
+          // enabled: _funderAddress != null,
+          enabled: true,
+          selected: _chain,
+          onSelection: (chain) {
+            setState(() {
+              _chain = chain;
+            });
+          },
+        ).top(12),
+        OrchidOutlineButton(
+          text: s.importAccount.toUpperCase(),
+          onPressed: _formValid()
+              ? () async {
+                  await _importAccount();
+                  _dismiss();
+                }
+              : null,
+        ).top(32).bottom(40),
+      ],
+    ).padx(24);
+  }
+
+  bool _formValid() {
+    return _selectedIdentity != null &&
+        _funderAddress != null &&
+        _chain != null;
+  }
+
+  bool _backupComplete = false;
+
+  // If the user generated an identity suggest backing it up
+  Widget _buildContentBackupIdentityState() {
+    if (_generatedIdentity == null) {
+      return Container();
+    }
+
+    var config = _generatedIdentity.toExportString();
+    var title = "Back up Identity";
+    var body = StyledText(
+        style: OrchidText.body2, newLineAsBreaks: true, text: '', tags: {});
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Text("Your new Orchid Identity" + ':').body2.top(30),
+        // _buildAddress(address: _generatedIdentity.address).top(16),
+        // Row(
+        //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+        //   children: [
+        //     _buildCopyIdentityButton(value: config),
+        //     _buildShowQRButton(title, body, config),
+        //   ],
+        // ).top(16),
+
+        RoundedRect(
+          borderColor: OrchidColors.tappable,
+          borderWidth: 1.0,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: QrImage(
+                  data: config,
+                  backgroundColor: Colors.white,
+                  version: QrVersions.auto,
+                  size: 108.0,
+                ),
+              ),
+              Flexible(
+                child: Column(
+                  // mainAxisAlignment: MainAxisAlignment.start,
+                  // mainAxisSize: MainAxisSize.max,
+                  children: [
+                    SizedBox(
+                      height: 70,
+                      child: Text(
+                        config,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          letterSpacing: 0.02,
+                          height: 1.4,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    _buildCopyIdentityButton(label: s.copy, value: config)
+                        .top(12),
+                  ],
+                ).left(12),
+              )
+            ],
+          ).pad(12),
+        ).top(24),
+
+        StyledText(
+          // textAlign: TextAlign.center,
+          style: OrchidText.body2,
+          text:
+              "Back up your Orchid Identity <bold>private key</bold>. You will need this key to share, import or restore this identity and all associated accounts.",
+          tags: {
+            'bold': StyledTextTag(style: OrchidText.body2.bold),
+          },
+        ).top(24),
+
+        // Text("Without your Orchid Identity you will lose access to your account."
+        //         "  Save a copy of it somewhere secure.")
+        //     .body2
+        //     .top(24),
+
+        Row(
+          children: [
+            OrchidCheckbox(
+              value: _backupComplete,
+              onChanged: (value) {
+                setState(() {
+                  _backupComplete = value;
+                });
+              },
+            ).bottom(8),
+            Flexible(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _backupComplete = true;
+                  });
+                },
+                child: Text(
+                  "Yes, I have saved a copy of my private key somewhere secure.",
+                ).body2.boxHeight(36).left(8).top(8),
+              ),
+            ),
+          ],
+        ).top(24),
+        OrchidActionButton(
+          height: 50,
+          text: "CONTINUE",
+          enabled: _backupComplete,
+          onPressed: () {
+            setState(() {
+              _state = _State.setup_account;
+              _selectedIdentity = _generatedIdentity;
+            });
+          },
+        ).center.top(22),
         pady(40),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: StyledText(
-            textAlign: TextAlign.center,
-            style: OrchidText.caption.copyWith(fontSize: 12),
-            text: s
-                .orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink,
-            tags: {
-              'link': OrchidText.linkStyle.size(12).link(OrchidUrls.xdaiChain),
-            },
-          ),
+      ],
+    ).padx(24);
+  }
+
+  Row _buildAddress({@required EthereumAddress address, bool elide = false}) {
+    return Row(
+      children: [
+        OrchidCircularIdenticon(size: 22, address: address),
+        Flexible(
+          child: SelectableText(
+            address.toString(elide: elide),
+            style: OrchidText.extra_large,
+          ).top(4).left(16),
         ),
+      ],
+    );
+  }
+
+  TextButton _buildCopyIdentityButton({@required String value, String label}) {
+    return TextButton(
+      child: Row(
+        children: [
+          Icon(Icons.copy, color: OrchidColors.tappable, size: 20),
+          Text(label ?? "Copy Identity").body2.tappable.left(14).top(2),
+          SizedBox(width: 20),
+        ],
+      ),
+      onPressed: () {
+        Clipboard.setData(ClipboardData(text: value));
+      },
+    );
+  }
+
+  Widget _buildContentConfirmPurchaseState() {
+    return Column(
+      children: [
+        StyledText(
+          textAlign: TextAlign.center,
+          style: OrchidText.body2,
+          text: s
+              .connectAutomaticallyToOneOfTheNetworksLink1preferredProviderslink1By,
+          tags: {
+            'link1': OrchidText.linkStyle.link(OrchidUrls.preferredProviders),
+          },
+        )
+            .padx(24)
+            .top(32)
+            // Note: styled text breaks animated size layout so we provide a height
+            .height(100),
+        _buildConfirmPurchaseDetails(pac: _dollarPAC).top(40),
+        OrchidActionButton(
+          enabled: _state == _State.confirm_purchase,
+          text: s.confirmPurchase,
+          onPressed: _generateIdentityAndDoPurchase,
+        ).top(40),
+        Text(s.illDoThisLater).linkButton(onTapped: _dismiss).top(24),
+        StyledText(
+          textAlign: TextAlign.center,
+          style: OrchidText.caption.copyWith(fontSize: 12),
+          text: s
+              .orchidAccountsUseVpnCreditsBackedByTheLinkxdaiCryptocurrencylink,
+          tags: {
+            'link': OrchidText.linkStyle.size(12).link(OrchidUrls.xdaiChain),
+          },
+        )
+            .padx(24)
+            .top(40)
+            // Note: styled text breaks animated size layout so we provide a height
+            .height(80),
         pady(40),
       ],
     );
   }
 
-  Widget _buildContentProcessingState() {
+  Widget _buildContentProcessingPurchaseState() {
     String text;
     switch (_state) {
-      case WelcomePanelState.processing_pac:
+      case _State.processing_pac:
         text = s.yourPurchaseIsInProgress;
         break;
-      case WelcomePanelState.processing_chain:
+      case _State.processing_chain:
         text = s.yourPurchaseIsCompleteAndIsNowBeingProcessedBy;
         break;
-      case WelcomePanelState.processing_timeout:
+      case _State.processing_timeout:
         text = s.thisPurchaseIsTakingLongerThanExpectedToProcessAnd;
         break;
-      case WelcomePanelState.welcome:
-      case WelcomePanelState.confirm:
-      case WelcomePanelState.confirm_wait:
+      case _State.welcome:
+      case _State.confirm_purchase:
+      case _State.confirm_purchase_wait:
         text = '...';
         break;
     }
 
     bool timeout;
     switch (_state) {
-      case WelcomePanelState.processing_pac:
-      case WelcomePanelState.processing_chain:
+      case _State.processing_pac:
+      case _State.processing_chain:
         timeout = false;
         break;
-      case WelcomePanelState.processing_timeout:
-      case WelcomePanelState.welcome:
-      case WelcomePanelState.confirm:
-      case WelcomePanelState.confirm_wait:
+      case _State.processing_timeout:
+      case _State.welcome:
+      case _State.confirm_purchase:
+      case _State.confirm_purchase_wait:
         timeout = true;
         break;
     }
@@ -421,21 +713,38 @@ class _WelcomePanelState extends State<WelcomePanel> {
     );
   }
 
+  Future<void> _generateIdentityIfNeeded() async {
+    if (_generatedIdentity == null) {
+      log("welcome panel: generating identity");
+      final key = StoredEthereumKey.generate();
+      await UserPreferences().addKey(key);
+      setState(() {
+        _generatedIdentity = key;
+      });
+    }
+  }
+
+  void _generateIdentityAndDoPurchase() async {
+    await _generateIdentityIfNeeded();
+    return _doPurchase();
+  }
+
   void _doPurchase() async {
-    if (_dollarPAC == null) {
+    if (_dollarPAC == null || _generatedIdentity == null) {
+      log("no purchase");
       return;
     }
     // disable the purchase button, etc.
     setState(() {
-      _state = WelcomePanelState.confirm_wait;
+      _state = _State.confirm_purchase_wait;
     });
     await PurchaseUtils.purchase(
       purchase: _dollarPAC,
-      signerKey: widget.identity,
+      signerKey: _generatedIdentity,
       onError: ({rateLimitExceeded}) async {
         setState(() {
           // This should really be an additional error state
-          _state = WelcomePanelState.processing_timeout;
+          _state = _State.processing_timeout;
         });
       },
     );
@@ -445,52 +754,57 @@ class _WelcomePanelState extends State<WelcomePanel> {
     widget.onDismiss();
   }
 
-  Widget _buildOutlineButton({
-    @required String text,
-    VoidCallback onPressed,
-  }) {
-    Color backgroundColor = OrchidColors.dark_background;
-    Color borderColor = OrchidColors.tappable;
-    Color textColor = OrchidColors.tappable;
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: SizedBox(
-        width: 294,
-        height: 52,
-        child: TextButton(
-          style: TextButton.styleFrom(
-              backgroundColor: backgroundColor,
-              shape: RoundedRectangleBorder(
-                  side: BorderSide(
-                      color: borderColor, width: 2, style: BorderStyle.solid),
-                  borderRadius: BorderRadius.all(Radius.circular(16)))),
-          onPressed: onPressed,
-          child: Text(
-            text,
-            style: OrchidText.button.copyWith(color: textColor),
-          ),
-        ),
-      ),
+  Future<void> _importAccount() async {
+    if (_selectedIdentity == null || _funderAddress == null) {
+      return;
+    }
+    final account = Account.fromSignerKey(
+      signerKey: _selectedIdentity.ref(),
+      funder: _funderAddress,
+      chainId: _chain.chainId,
+      version: 1
     );
-  }
-
-  void _importAccount(BuildContext context) async {
-    _openAccountManager(context, import: true);
-  }
-
-  void _openDapp() async {
-    launch(OrchidUrls.accountOrchid, forceSafariVC: false);
-  }
-
-  void _openAccountManager(context,
-      {bool import = false, bool purchase = false}) async {
-    await Navigator.push(context,
-        MaterialPageRoute(builder: (BuildContext context) {
-      return AccountManagerPage(openToImport: import, openToPurchase: purchase);
-    }));
+    await UserPreferences().addCachedDiscoveredAccounts([account]);
+    log("XXX: saved account: $account");
+    widget.onAccount(account);
   }
 
   S get s {
     return S.of(context);
   }
+}
+
+enum _State {
+  welcome,
+  // Import or generate identity
+  setup_choice,
+
+  // If the user generated an identity suggest backing it up
+  backup_identity,
+
+  // Specify the funder and chain
+  setup_account,
+
+  // Begin PAC purchase
+  confirm_purchase,
+  // after hitting confirm wait for processing to begin
+  confirm_purchase_wait,
+  processing_pac,
+  processing_chain,
+  processing_timeout
+}
+
+class _TitleContent {
+  String text;
+
+  bool showDismiss;
+
+  // @nullable the state to return to if the back button is tapped.
+  _State backState;
+
+  _TitleContent({
+    @required this.text,
+    this.showDismiss = false,
+    this.backState,
+  });
 }

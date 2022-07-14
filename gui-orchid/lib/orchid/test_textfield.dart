@@ -1,6 +1,6 @@
 import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/util/test_app.dart';
-import 'orchid_text_field.dart';
 
 void main() {
   runApp(TestApp(scale: 5.0, content: _Test()));

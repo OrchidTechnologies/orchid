@@ -10,7 +10,7 @@ import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_switch.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 
 class RpcPage extends StatefulWidget {

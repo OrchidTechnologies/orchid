@@ -1,5 +1,5 @@
+import 'package:orchid/orchid.dart';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -8,17 +8,12 @@ import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_dialogs.dart';
-import 'package:orchid/orchid/orchid_asset.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_switch.dart';
-import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
-import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
-
 import '../app_routes.dart';
 
 /// The main settings page.
@@ -142,8 +137,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
               if (_tester)
                 _divided(PageTile(
-                  title: "(TEST) Reset First Launch Version",
+                  title: "[TESTER] Reset First Launch Version",
                   trailing: RaisedButton(
+                    color: OrchidColors.tappable,
                     child: Text(
                       s.reset.toUpperCase(),
                       style: buttonStyle,
@@ -158,8 +154,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
               if (_tester)
                 _divided(PageTile(
-                  title: "(TEST) Clear cached accounts",
+                  title: "[TESTER] Clear cached accounts",
                   trailing: RaisedButton(
+                    color: OrchidColors.tappable,
                     child: Text(
                       s.clear.toUpperCase(),
                       style: buttonStyle,
@@ -169,6 +166,42 @@ class _SettingsPageState extends State<SettingsPage> {
                       await UserPreferences().cachedDiscoveredAccounts.clear();
                       AppDialogs.showAppDialog(
                           context: context, title: "Cached accounts cleared.");
+                    },
+                  ),
+                )),
+
+              if (_tester)
+                _divided(PageTile(
+                  title: "[TESTER] Remove all identities (keys)",
+                  trailing: RaisedButton(
+                    color: OrchidColors.tappable,
+                    child: Text(
+                      s.remove.toUpperCase(),
+                      style: buttonStyle,
+                    ),
+                    onPressed: () async {
+                      final activeKeyUids = await OrchidHop.getInUseKeyUids();
+                      if (activeKeyUids.isNotEmpty) {
+                        await AppDialogs.showAppDialog(
+                            context: context,
+                            title: s.orchidAccountInUse,
+                            bodyText:
+                                "One or more Orchid hops are using keys.  Unable to remove them.");
+                        return;
+                      }
+                      AppDialogs.showConfirmationDialog(
+                          context: context,
+                          title: "Remove all identities?",
+                          actionText: "REMOVE",
+                          bodyText:
+                              "Are you sure you want to remove all stored keys? Have you backed them up?",
+                          commitAction: () async {
+                            log("Clearing identities");
+                            await UserPreferences()
+                                .cachedDiscoveredAccounts
+                                .clear();
+                            await UserPreferences().keys.clear();
+                          });
                     },
                   ),
                 )),
@@ -232,7 +265,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _curatorChanged() {
     UserPreferences().setDefaultCurator(_defaultCurator.text);
-    setState(() { });
+    setState(() {});
   }
 
   @override

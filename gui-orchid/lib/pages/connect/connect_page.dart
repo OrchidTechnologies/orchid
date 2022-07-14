@@ -1,6 +1,5 @@
+import 'package:orchid/orchid.dart';
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/monitoring/restart_manager.dart';
@@ -36,7 +35,6 @@ import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
 import 'package:orchid/util/dispose.dart';
 import 'package:orchid/util/units.dart';
-
 import 'connect_status_panel.dart';
 
 /// The main page containing the connect button.
@@ -80,13 +78,6 @@ class _ConnectPageState extends State<ConnectPage>
     return _circuitHops > 0;
   }
 
-  // Show the welcome pane if the user has a default (singular) identity key
-  // and no (cached) accounts have yet been created on it. (_hasAccounts is initially null).
-  bool get _showWelcomePane => _hasDefaultIdentity && _hasAccounts == false;
-
-  // User toggle for display of the panel
-  bool _showWelcomePaneMinimized = false;
-
   // The hop selected on the manage accounts card
   int _selectedIndex = 0;
 
@@ -115,18 +106,33 @@ class _ConnectPageState extends State<ConnectPage>
 
   NeonOrchidLogoController _logoController;
 
-  // If the user has exactly one identity this is the default, else null
-  StoredEthereumKey _defaultIdentity;
+  // True if there are cached accounts for any identity. Initially null.
+  bool _hasAccounts;
 
-  bool get _hasDefaultIdentity {
-    return _defaultIdentity != null;
+  // True if the user has one or more identities (keys).  Initially null.
+  // bool _hasIdentity;
+
+  // The user's keys (null until initialized).
+  List<StoredEthereumKey> _keys;
+
+  // The most recently generated or imported key or null if there are none.
+  StoredEthereumKey get _latestKey {
+    return (_keys ?? []).isEmpty
+        ? null
+        : _keys.reduce((a, b) => a.time.isAfter(b.time) ? a : b);
   }
 
-  // True if there are cached accounts for any identity (initially null)
-  bool _hasAccounts;
+  bool get _initialized => _hasAccounts != null && _keys != null;
+
+  // Show the welcome pane if the user has not created any accounts.
+  bool get _showWelcomePane => _initialized && !_hasAccounts;
+
+  // User toggle for display of the panel
+  bool _showWelcomePaneMinimized = false;
 
   @override
   void initState() {
+    log("XXX: connect page init...");
     super.initState();
     ScreenOrientation.reset();
 
@@ -227,9 +233,9 @@ class _ConnectPageState extends State<ConnectPage>
 
     // Monitor identities
     UserPreferences().keys.stream().listen((keys) async {
-      log("XXX: keys = $keys");
       setState(() {
-        _defaultIdentity = (keys ?? []).length == 1 ? keys.first : null;
+        // _hasIdentity = keys.isNotEmpty;
+        _keys = keys;
       });
     }).dispose(_subs);
 
@@ -247,16 +253,16 @@ class _ConnectPageState extends State<ConnectPage>
 
   @override
   Widget build(BuildContext context) {
-    /*
     try {
       log("XXX: first launch: "
-          "_hasDefaultIdentity = $_hasDefaultIdentity, "
+          "_initialized == $_initialized, "
           "_hasAccounts == $_hasAccounts, "
+          "_keys = $_keys,"
+          "_latestKey == $_latestKey, "
           "_showWelcomePane = $_showWelcomePane");
     } catch (err) {
       log("first launch: Error should not happen: $err");
     }
-     */
 
     return Stack(
       children: <Widget>[
@@ -303,11 +309,15 @@ class _ConnectPageState extends State<ConnectPage>
           Align(
             alignment: Alignment.center,
             child: WelcomePanel(
-              identity: _defaultIdentity,
+              defaultIdentity: _latestKey,
               onDismiss: () {
                 setState(() {
                   _showWelcomePaneMinimized = true;
                 });
+              },
+              onAccount: (account) {
+                log("XXX: account import: $account");
+                AccountFinder.shared?.refresh();
               },
             ),
           )

@@ -11,7 +11,7 @@ import 'package:styled_text/styled_text.dart';
 import 'dapp_button.dart';
 import 'dapp_error_row.dart';
 import 'dapp_tab_context.dart';
-import 'orchid_form_fields.dart';
+import '../orchid/field/orchid_labeled_token_value_field.dart';
 
 class AddFundsPane extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -70,7 +70,7 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
                         allowance.formatCurrency(locale: context.locale)))
                     .body2
                     .top(8),
-              LabeledTokenValueField(
+              OrchidLabeledTokenValueField(
                 enabled: widget.enabled,
                 type: tokenType,
                 controller: _addBalanceField,
@@ -78,7 +78,7 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
                 usdPrice: tokenPrice,
                 error: _addBalanceFieldError || _netAddError,
               ).top(16),
-              LabeledTokenValueField(
+              OrchidLabeledTokenValueField(
                 enabled: widget.enabled,
                 type: tokenType,
                 controller: _addDepositField,

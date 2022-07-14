@@ -1,7 +1,5 @@
-import 'package:browser_detector/browser_detector.dart';
-import 'package:flutter/services.dart';
-import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_crypto.dart';
@@ -16,8 +14,8 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
+import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
-import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
@@ -25,7 +23,7 @@ import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
 import 'package:orchid/util/gestures.dart';
 import 'package:styled_text/styled_text.dart';
 import 'dapp_button.dart';
-import 'dapp_chain_selector_button.dart';
+import '../orchid/menu/orchid_chain_selector_menu.dart';
 import 'dapp_settings_button.dart';
 import 'dapp_version_button.dart';
 import 'dapp_wallet_button.dart';
@@ -47,7 +45,7 @@ class _DappHomeState extends State<DappHome> {
   // TODO: Encapsulate this in a provider widget
   AccountDetailPoller _accountDetail;
 
-  final _signerField = TextEditingController();
+  final _signerField = AddressValueFieldController();
   final _scrollController = ScrollController();
 
   /// The contract version defaulted or selected by the user.
@@ -99,7 +97,7 @@ class _DappHomeState extends State<DappHome> {
         _connectEthereum();
         _signer =
             EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
-        _signerField.text = _signer.toString();
+        _signerField.textController.text = _signer.toString();
         _showConnectPanel = true;
       });
     }
@@ -126,11 +124,7 @@ class _DappHomeState extends State<DappHome> {
   void _signerFieldChanged() {
     // signer field changed?
     var oldSigner = _signer;
-    try {
-      _signer = EthereumAddress.from(_signerField.text);
-    } catch (err) {
-      _signer = null;
-    }
+    _signer = _signerField.value;
     if (_signer != oldSigner) {
       _selectedAccountChanged();
     }
@@ -423,7 +417,9 @@ class _DappHomeState extends State<DappHome> {
   Widget _buildTransactionsList() {
     return UserPreferences().transactions.builder((txs) {
       // Limit to currently selected chain
-      txs = (txs ?? []).where((tx) => tx.chainId == _web3Context?.chain?.chainId).toList();
+      txs = (txs ?? [])
+          .where((tx) => tx.chainId == _web3Context?.chain?.chainId)
+          .toList();
       if (txs.isEmpty) {
         return Container();
       }
@@ -452,41 +448,8 @@ class _DappHomeState extends State<DappHome> {
   }
 
   Widget _buildPasteSignerField() {
-    final showPaste = !BrowserDetector().browser.isFirefox;
-    return RoundedRect(
-      backgroundColor: Colors.white.withOpacity(0.1),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(s.orchidIdentity + ':').body1.left(18).top(20).bottom(4),
-          OrchidTextField(
-            border: false,
-            hintText: '0x...',
-            style: OrchidText.title.copyWith(fontSize: 22, height: 1.0),
-            controller: _signerField,
-            trailing: showPaste
-                ? IconButton(
-                    icon: Icon(Icons.paste, color: Colors.white),
-                    onPressed: _onPaste,
-                  ).bottom(4)
-                : null,
-            contentPadding:
-                EdgeInsets.only(top: 8, bottom: 14, left: 16, right: 16),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _onPaste() async {
-    try {
-      ClipboardData data = await Clipboard.getData('text/plain');
-      setState(() {
-        _signerField.text = data.text;
-      });
-    } catch (err) {
-      print("Can't get clipboard: $err");
-    }
+    return OrchidLabeledAddressField(
+        label: s.orchidIdentity, controller: _signerField);
   }
 
   Widget _buildHeader() {
@@ -613,7 +576,7 @@ class _DappHomeState extends State<DappHome> {
     return SizedBox(
       width: narrow ? 40 : 190,
       height: 40,
-      child: DappChainSelectorButton(
+      child: OrchidChainSelectorMenu(
         iconOnly: narrow,
         selected: _web3Context?.chain,
         onSelection: _switchOrAddChain,

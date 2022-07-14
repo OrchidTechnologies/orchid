@@ -3,7 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
-import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'hop_editor.dart';
 import 'model/orchid_hop.dart';
 

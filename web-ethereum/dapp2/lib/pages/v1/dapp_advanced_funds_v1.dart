@@ -11,7 +11,7 @@ import 'package:orchid/util/units.dart';
 import '../dapp_button.dart';
 import '../dapp_error_row.dart';
 import '../dapp_tab_context.dart';
-import '../orchid_form_fields.dart';
+import '../../orchid/field/orchid_labeled_token_value_field.dart';
 import 'package:orchid/common/token_price_builder.dart';
 
 class AdvancedFundsPaneV1 extends StatefulWidget {
@@ -136,7 +136,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
   }
 
   Widget _buildBalanceField(TokenType tokenType, USD tokenPrice) {
-    return LabeledTokenValueField(
+    return OrchidLabeledTokenValueField(
       enabled: widget.enabled,
       labelWidth: 100,
       label: s.balance,
@@ -159,7 +159,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
   }
 
   Widget _buildDepositField(TokenType tokenType, USD tokenPrice) {
-    return LabeledTokenValueField(
+    return OrchidLabeledTokenValueField(
       enabled: widget.enabled,
       labelWidth: 100,
       label: s.deposit,
@@ -182,7 +182,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
   }
 
   Widget _buildMoveField(TokenType tokenType, USD tokenPrice) {
-    return LabeledTokenValueField(
+    return OrchidLabeledTokenValueField(
       enabled: widget.enabled,
       labelWidth: 100,
       label: s.move,
@@ -228,7 +228,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
         child: Column(
           children: [
             // Current warned amount
-            LabeledTokenValueField(
+            OrchidLabeledTokenValueField(
               enabled: false,
               readOnly: true,
               labelWidth: 260,
@@ -249,7 +249,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
       ),
 
       // User warned amount field
-      LabeledTokenValueField(
+      OrchidLabeledTokenValueField(
         enabled: widget.enabled,
         labelWidth: 260,
         type: tokenType,
