@@ -306,9 +306,8 @@ class _WelcomePanelState extends State<WelcomePanel> {
         StyledText(
           style: OrchidText.body2,
           text: s.enterAnExistingOrchidIdentity + ':',
-          // "Enter an existing <account_link>Orchid Identity</account_link>" + ':',
           tags: tags,
-        ).top(24).padx(24),
+        ).height(20).top(24).padx(24),
         OrchidLabeledIdentityField(
           label: s.orchidIdentity,
           onChange: (ParseOrchidIdentityResult result) async {
@@ -447,7 +446,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
           tags: {
             'bold': StyledTextTag(style: OrchidText.body2.bold),
           },
-        ).top(24),
+        ).height(70).top(24),
         Row(
           children: [
             OrchidCheckbox(
