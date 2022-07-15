@@ -12,7 +12,7 @@ class EthereumJsonRpc {
     @required String url,
     List<Object> params = const [],
   }) async {
-    return ethJsonRpcCall(url: url, method: "eth_call", params: params);
+    return ethJsonRpcCall(url: url, method: 'eth_call', params: params);
   }
 
   /// Ethereum json rpc call
@@ -23,11 +23,11 @@ class EthereumJsonRpc {
   }) async {
     // construct the abi encoded eth_call
     var postBody = jsonEncode(
-        {"jsonrpc": "2.0", "method": method, "id": 1, "params": params});
+        {'jsonrpc': '2.0', 'method': method, 'id': 1, 'params': params});
 
     // json null params should not be quoted
     postBody = postBody.replaceAll('"null"', 'null');
-    logDetail("jsonRPC to $url: postbody = $postBody");
+    logDetail('jsonRPC to $url: postbody = $postBody');
 
     Map<String, String> headers = {
       'Content-Type': 'application/json',
@@ -44,15 +44,15 @@ class EthereumJsonRpc {
     );
 
     if (response.statusCode != 200) {
-      log("jsonRPC: error response from $url: ${response.body}");
-      throw Exception("Error status code: ${response.statusCode}");
+      log('jsonRPC: error response from $url: ${response.body}');
+      throw Exception('Error status code: ${response.statusCode}');
     }
     var body = json.decode(response.body);
     if (body['error'] != null) {
-      throw Exception("fetch error in response: $body");
+      throw Exception('fetch error in response: $body');
     }
 
-    //log("jsonRPC: to $url: result = ${body['result']}");
+    // log('jsonRPC: to $url: result = ${body['result']}');
     return body['result'];
   }
 }

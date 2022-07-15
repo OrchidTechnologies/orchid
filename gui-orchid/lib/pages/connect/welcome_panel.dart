@@ -10,7 +10,6 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
-import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_identity_field.dart';
 import 'package:orchid/orchid/menu/orchid_chain_selector_menu.dart';
@@ -185,14 +184,14 @@ class _WelcomePanelState extends State<WelcomePanel> {
             showDismiss: true);
       case _State.backup_identity:
         return _TitleContent(
-          text: "Back up your Identity",
+          text: s.backUpYourIdentity,
           backState: _State.setup_choice,
           showDismiss: true,
         );
 
       case _State.setup_account:
         return _TitleContent(
-          text: "Account set up",
+          text: s.accountSetUp,
           backState: _selectedIdentity == _generatedIdentity
               ? _State.backup_identity
               : _State.setup_choice,
@@ -255,7 +254,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
         OrchidActionButton(
           height: 50,
           enabled: true,
-          text: "SET UP ACCOUNT",
+          text: s.setUpAccount,
           onPressed: () {
             setState(() {
               _state = _State.setup_choice;
@@ -294,7 +293,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
         Text("Generate a new Identity" + ':').body2.top(32).padx(24),
         OrchidActionButton(
           height: 50,
-          text: "GENERATE IDENTITY",
+          text: s.generateIdentity,
           onPressed: () async {
             await _generateIdentityIfNeeded();
             setState(() {
@@ -306,9 +305,8 @@ class _WelcomePanelState extends State<WelcomePanel> {
         Divider(color: Colors.black).top(24),
         StyledText(
           style: OrchidText.body2,
-          text:
-              "Enter an existing <account_link>Orchid Identity</account_link>" +
-                  ':',
+          text: s.enterAnExistingOrchidIdentity + ':',
+          // "Enter an existing <account_link>Orchid Identity</account_link>" + ':',
           tags: tags,
         ).top(24).padx(24),
         OrchidLabeledIdentityField(
@@ -342,21 +340,16 @@ class _WelcomePanelState extends State<WelcomePanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text("Your Orchid Identity public address" + ':')
-            .body2
-            .height(2.0)
-            .top(16),
+        Text(s.yourOrchidIdentityPublicAddress + ':').body2.height(2.0).top(16),
         _buildAddress(address: _selectedIdentity.address).top(16),
         _buildCopyIdentityButton(
                 value: _selectedIdentity.address
                     .toString(prefix: true, elide: false))
             .center
             .top(16),
-        Text("Paste the web3 wallet address that you will use to fund your account below.")
-            .body2
-            .top(32),
+        Text(s.pasteTheWeb3WalletAddress).body2.top(32),
         OrchidLabeledAddressField(
-          label: "Funder wallet address",
+          label: s.funderWalletAddress,
           onChange: (value) {
             setState(() {
               _funderAddress = value;
@@ -403,23 +396,10 @@ class _WelcomePanelState extends State<WelcomePanel> {
     }
 
     var config = _generatedIdentity.toExportString();
-    var title = "Back up Identity";
-    var body = StyledText(
-        style: OrchidText.body2, newLineAsBreaks: true, text: '', tags: {});
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Text("Your new Orchid Identity" + ':').body2.top(30),
-        // _buildAddress(address: _generatedIdentity.address).top(16),
-        // Row(
-        //   mainAxisAlignment: MainAxisAlignment.spaceAround,
-        //   children: [
-        //     _buildCopyIdentityButton(value: config),
-        //     _buildShowQRButton(title, body, config),
-        //   ],
-        // ).top(16),
-
         RoundedRect(
           borderColor: OrchidColors.tappable,
           borderWidth: 1.0,
@@ -461,22 +441,13 @@ class _WelcomePanelState extends State<WelcomePanel> {
             ],
           ).pad(12),
         ).top(24),
-
         StyledText(
-          // textAlign: TextAlign.center,
           style: OrchidText.body2,
-          text:
-              "Back up your Orchid Identity <bold>private key</bold>. You will need this key to share, import or restore this identity and all associated accounts.",
+          text: s.backUpYourOrchidIdentityPrivateKeyYouWill,
           tags: {
             'bold': StyledTextTag(style: OrchidText.body2.bold),
           },
         ).top(24),
-
-        // Text("Without your Orchid Identity you will lose access to your account."
-        //         "  Save a copy of it somewhere secure.")
-        //     .body2
-        //     .top(24),
-
         Row(
           children: [
             OrchidCheckbox(
@@ -495,7 +466,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
                   });
                 },
                 child: Text(
-                  "Yes, I have saved a copy of my private key somewhere secure.",
+                  s.yesIHaveSavedACopyOf,
                 ).body2.boxHeight(36).left(8).top(8),
               ),
             ),
@@ -503,7 +474,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
         ).top(24),
         OrchidActionButton(
           height: 50,
-          text: "CONTINUE",
+          text: s.continueButton,
           enabled: _backupComplete,
           onPressed: () {
             setState(() {
@@ -604,6 +575,10 @@ class _WelcomePanelState extends State<WelcomePanel> {
       case _State.confirm_purchase_wait:
         text = '...';
         break;
+      case _State.setup_choice:
+      case _State.backup_identity:
+      case _State.setup_account:
+        throw Exception();
     }
 
     bool timeout;
@@ -618,6 +593,10 @@ class _WelcomePanelState extends State<WelcomePanel> {
       case _State.confirm_purchase_wait:
         timeout = true;
         break;
+      case _State.setup_choice:
+      case _State.backup_identity:
+      case _State.setup_account:
+        throw Exception();
     }
 
     return Column(
@@ -759,11 +738,10 @@ class _WelcomePanelState extends State<WelcomePanel> {
       return;
     }
     final account = Account.fromSignerKey(
-      signerKey: _selectedIdentity.ref(),
-      funder: _funderAddress,
-      chainId: _chain.chainId,
-      version: 1
-    );
+        signerKey: _selectedIdentity.ref(),
+        funder: _funderAddress,
+        chainId: _chain.chainId,
+        version: 1);
     await UserPreferences().addCachedDiscoveredAccounts([account]);
     log("XXX: saved account: $account");
     widget.onAccount(account);

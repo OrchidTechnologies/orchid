@@ -49,10 +49,10 @@ class OrchidERC20 {
     // This mitigates the potential for rounding errors in calculated amounts.
     amount = Token.min(amount, walletBalance);
 
-    log("XXX: do approve: ${[
+    log('XXX: do approve: ${[
       spender.toString(),
       amount.intValue.toString()
-    ]}");
+    ]}');
 
     // approve(address spender, uint256 amount) external returns (bool)
     var contract = _contract.connect(context.web3.getSigner());
@@ -63,15 +63,15 @@ class OrchidERC20 {
         amount.intValue.toString(),
       ],
     );
-    log("XXX: approveHash = ${tx.hash}");
+    log('XXX: approveHash = ${tx.hash}');
     return tx.hash;
   }
 
   static List<String> _erc20Abi = [
-    "function balanceOf(address account) external view returns (uint256)",
-    "function transfer(address recipient, uint256 amount) external returns (bool)",
-    "function allowance(address owner, address spender) external view returns (uint256)",
-    "function approve(address spender, uint256 amount) external returns (bool)",
-    "function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)",
+    'function balanceOf(address account) external view returns (uint256)',
+    'function transfer(address recipient, uint256 amount) external returns (bool)',
+    'function allowance(address owner, address spender) external view returns (uint256)',
+    'function approve(address spender, uint256 amount) external returns (bool)',
+    'function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)',
   ];
 }

@@ -43,10 +43,10 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
   Future<void> purchaseImpl(PAC pac) async {
     var payment = SKPaymentWrapper(productIdentifier: pac.productId);
     try {
-      log("iap: add payment to queue");
+      log('iap: add payment to queue');
       await SKPaymentQueueWrapper().addPayment(payment);
     } catch (err) {
-      log("Error adding payment to queue: $err");
+      log('Error adding payment to queue: $err');
       // The exception will be handled by the calling UI. No tx started.
       rethrow;
     }
@@ -56,13 +56,13 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
   @override
   void updatedTransactions(
       {List<SKPaymentTransactionWrapper> transactions}) async {
-    log("iap: received (${transactions.length}) updated transactions");
+    log('iap: received (${transactions.length}) updated transactions');
     for (SKPaymentTransactionWrapper tx in transactions) {
       switch (tx.transactionState) {
         case SKPaymentTransactionStateWrapper.purchasing:
-          log("iap: IAP purchasing state");
+          log('iap: IAP purchasing state');
           if (PacTransaction.shared.get() == null) {
-            log("iap: Unexpected purchasing state.");
+            log('iap: Unexpected purchasing state.');
             // TODO: We'd like to salvage the receipt but what identity should we use?
             // PacAddBalanceTransaction.pending(
             //     signer: signer, productId: tx.payment.productIdentifier).save();
@@ -70,42 +70,42 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
           break;
 
         case SKPaymentTransactionStateWrapper.restored:
-          log("iap: iap purchase restored?");
+          log('iap: iap purchase restored?');
           // Attempting to just handle it as a new purchase for now.
           _completeIAPTransaction(tx);
           break;
 
         case SKPaymentTransactionStateWrapper.purchased:
-          log("iap: IAP purchased state");
+          log('iap: IAP purchased state');
           await _completeIAPTransaction(tx);
 
           try {
             await SKPaymentQueueWrapper().finishTransaction(tx);
           } catch (err) {
-            log("iap: error finishing purchased tx: $err");
+            log('iap: error finishing purchased tx: $err');
           }
           break;
 
         case SKPaymentTransactionStateWrapper.failed:
-          log("iap: IAP failed state.");
-          log("iap: finishing failed tx");
+          log('iap: IAP failed state.');
+          log('iap: finishing failed tx');
 
           // We must finish even failed transactions.
           try {
             await SKPaymentQueueWrapper().finishTransaction(tx);
           } catch (err) {
-            log("iap: error finishing cancelled tx: $err");
+            log('iap: error finishing cancelled tx: $err');
           }
 
           switch (tx.error?.code) {
             case SKErrorPaymentCancelled:
-              log("iap: was cancelled");
+              log('iap: was cancelled');
               PacTransaction.shared.clear();
               break;
             case kCFURLErrorDataNotAllowed:
               // The behavior here seems to be that we will get another update
               // with the purchased state when connectivity is restored.
-              log("iap: failed due to network connectivity. Expect another update.");
+              log('iap: failed due to network connectivity. Expect another update.');
               // Show the transaction in progress.
               var pacTx = PacTransaction.shared.get();
               pacTx.state = PacTransactionState.InProgress;
@@ -113,21 +113,21 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
               break;
             default:
               // Unknown error.
-              log("iap: IAP Failed, ${tx.toString()} error: type=${tx.error.runtimeType}, code=${tx.error.code}, userInfo=${tx.error.userInfo}, domain=${tx.error.domain}");
+              log('iap: IAP Failed, ${tx.toString()} error: type=${tx.error.runtimeType}, code=${tx.error.code}, userInfo=${tx.error.userInfo}, domain=${tx.error.domain}');
               var pacTx = PacTransaction.shared.get();
-              pacTx.error("IAP failed, reason unknown.").save();
+              pacTx.error('IAP failed, reason unknown.').save();
               break;
           }
           break;
 
         case SKPaymentTransactionStateWrapper.deferred:
-          log("iap: iap deferred");
+          log('iap: iap deferred');
           break;
 
         case SKPaymentTransactionStateWrapper.unspecified:
-          log("iap: transaction in unknown state: $tx, ${tx.error}");
+          log('iap: transaction in unknown state: $tx, ${tx.error}');
           var pacTx = PacTransaction.shared.get();
-          pacTx.error("iap failed: unknown state").save();
+          pacTx.error('iap failed: unknown state').save();
           break;
       }
     }
@@ -135,31 +135,31 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
 
   // The IAP is complete, update AML and the pending transaction status.
   Future _completeIAPTransaction(SKPaymentTransactionWrapper tx) async {
-    log("iap: Completing transaction");
+    log('iap: Completing transaction');
 
     // Record the purchase for rate limiting
     OrchidPurchaseAPI.addPurchaseToRateLimit(tx.payment.productIdentifier);
 
     // Get the receipt
     try {
-      log("iap: getting receipt");
+      log('iap: getting receipt');
       var receipt = await SKReceiptManager.retrieveReceiptData();
 
       // If the receipt is null, try to refresh it.
       // (This might happen if there was a purchase in flight during an upgrade.)
       if (receipt == null) {
-        log("iap: receipt null, refreshing");
+        log('iap: receipt null, refreshing');
         try {
           await SKRequestMaker().startRefreshReceiptRequest();
         } catch (err) {
-          log("iap: Error in refresh receipt request");
+          log('iap: Error in refresh receipt request');
         }
         receipt = await SKReceiptManager.retrieveReceiptData();
       }
 
       // If the receipt is still null there's not much we can do.
       if (receipt == null) {
-        log("iap: Completed purchase but no receipt found! Clearing transaction.");
+        log('iap: Completed purchase but no receipt found! Clearing transaction.');
         await PacTransaction.shared.clear();
         return;
       }
@@ -168,7 +168,7 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
       return OrchidPACServer()
           .advancePACTransactionsWithReceipt(receipt, ReceiptType.ios);
     } catch (err) {
-      log("iap: error getting receipt data for completed iap: $err");
+      log('iap: error getting receipt data for completed iap: $err');
     }
   }
 
@@ -181,15 +181,15 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
       return OrchidPurchaseAPI.mockPacs();
     }
     if (productsCached != null && !refresh) {
-      log("iap: returning cached products");
+      log('iap: returning cached products');
       return productsCached;
     }
 
     var productIds = OrchidPurchaseAPI.pacProductIds;
-    log("iap: product ids requested: $productIds");
+    log('iap: product ids requested: $productIds');
     SkProductResponseWrapper productResponse =
         await SKRequestMaker().startProductRequest(productIds);
-    log("iap: product response: ${productResponse.products.map((p) => p.productIdentifier)}");
+    log('iap: product response: ${productResponse.products.map((p) => p.productIdentifier)}');
 
     var toPAC = (SKProductWrapper prod) {
       double localizedPrice = double.parse(prod.price);
@@ -208,14 +208,14 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
     var pacs = productResponse.products.map(toPAC).toList();
     Map<String, PAC> products = {for (var pac in pacs) pac.productId: pac};
     productsCached = products;
-    log("iap: returning products");
+    log('iap: returning products');
     return products;
   }
 
   @override
   bool shouldAddStorePayment(
       {SKPaymentWrapper payment, SKProductWrapper product}) {
-    log("iap: Should add store payment: $payment, for product: $product");
+    log('iap: Should add store payment: $payment, for product: $product');
     return true;
   }
 
@@ -224,11 +224,11 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
 
   @override
   void removedTransactions({List<SKPaymentTransactionWrapper> transactions}) {
-    log("iap: removed transactions: $transactions");
+    log('iap: removed transactions: $transactions');
   }
 
   @override
   void restoreCompletedTransactionsFailed({SKError error}) {
-    log("iap: restore failed");
+    log('iap: restore failed');
   }
 }

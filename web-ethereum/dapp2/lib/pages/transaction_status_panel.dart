@@ -150,6 +150,7 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
               ).bottom(8),
               Text(message ?? '').caption.bottom(12),
               DappWalletInfoPanel.buildExplorerLink(
+                context,
                 OrchidText.caption.tappable,
                 Chains.chainFor(widget.tx.chainId).explorerUrl,
                 alignment: MainAxisAlignment.center,

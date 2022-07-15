@@ -1,8 +1,5 @@
 {
 	"@@locale": "id",
-	"@newHop": {
-		"description": "New network hop"
-	},
 	"orchidHop": "Hop Orchid",
 	"@orchidHop": {
 		"description": "Orchid network hop"
@@ -111,12 +108,6 @@
 	"thereWasAnErrorInPurchasingContact": "Terjadi kesalahan dalam proses pembelian. Silakan hubungi Dukungan Orchid.",
 	"importAnOrchidAccount": "Impor akun Orchid",
 	"buyCredits": "Beli kredit",
-	"@gb": {
-		"description": "Gigabytes"
-	},
-	"@ofTraffic": {
-		"description": "GB of traffic"
-	},
 	"linkAnOrchidAccount": "Hubungkan akun Orchid",
 	"weAreSorryButThisPurchaseWouldExceedTheDaily": "Maaf, pembelian tidak dapat dilanjutkan karena akan melebihi batas pembelian harian untuk kredit akses. Silakan coba lagi nanti.",
 	"marketStats": "Statistik pasar",
@@ -241,6 +232,9 @@
 	"orchidIdentity": "Identitas Orchid",
 	"addFunds": "TAMBAH DANA",
 	"gb": "GB",
+	"@gb": {
+		"description": "Gigabytes"
+	},
 	"usdgb": "USD/GB",
 	"hop": "Hop",
 	"circuit": "Sirkuit",
@@ -456,5 +450,42 @@
 	"Test": "Uji",
 	"@Test": {
 		"description": "Test"
-	}
+	},
+	"accountSetUp": "Pengaturan akun",
+	"add1": "Menambahkan",
+	"advanced1": "Maju",
+	"allWarnedFundsWillBeLockedUntil": "Semua dana yang diperingatkan akan dikunci sampai",
+	"backUpYourIdentity": "Cadangkan Identitas Anda",
+	"backUpYourOrchidIdentityPrivateKeyYouWill": "Cadangkan <bold>kunci pribadi</bold>Orchid Identity Anda. Anda akan memerlukan kunci ini untuk membagikan, mengimpor, atau memulihkan identitas ini dan semua akun terkait.",
+	"balanceToDeposit1": "Saldo untuk Deposit",
+	"blockExplorer": "Blok Penjelajah",
+	"blockies": "Blokir",
+	"changeWarnedAmountTo": "Ubah Jumlah yang Diperingatkan Menjadi",
+	"checkWallet": "Cek Dompet",
+	"checkYourWalletAppOrExtensionFor": "Periksa aplikasi atau ekstensi Wallet Anda untuk permintaan yang tertunda.",
+	"connectWallet": "HUBUNGKAN DOMPET",
+	"connectedWithMetamask": "Terhubung dengan Metamask",
+	"continueButton": "Terus",
+	"contractVersion": "Versi Kontrak",
+	"currentWarnedAmount": "Jumlah Peringatan Saat Ini",
+	"depositToBalance1": "Setor ke Saldo",
+	"enterAnExistingOrchidIdentity": "Masukkan <account_link>Identitas Anggrek</account_link>yang ada",
+	"funderWalletAddress": "Alamat dompet pemberi dana",
+	"generateIdentity": "HASILKAN IDENTITAS",
+	"identiconStyle": "Gaya Identifikasi",
+	"jazzicon": "ikon jazz",
+	"language": "Bahasa",
+	"lockUnlock1": "Kunci / Buka Kunci",
+	"locked1": "Terkunci",
+	"pasteTheWeb3WalletAddress": "Tempel alamat dompet web3 yang akan Anda gunakan untuk mendanai akun Anda di bawah ini.",
+	"setUpAccount": "Siapkan Akun",
+	"setWarnedAmountTo": "Setel Jumlah yang Diperingatkan Ke",
+	"systemDefault": "Default Sistem",
+	"tapToMinimize": "Ketuk untuk Meminimalkan",
+	"unlockDeposit1": "Buka kunci deposit",
+	"version0": "Versi 0",
+	"version1": "Versi 1",
+	"viewLogs": "Lihat Log",
+	"yesIHaveSavedACopyOf": "Ya, saya telah menyimpan salinan kunci pribadi saya di suatu tempat yang aman.",
+	"yourOrchidIdentityPublicAddress": "Alamat publik Orchid Identity Anda"
 }

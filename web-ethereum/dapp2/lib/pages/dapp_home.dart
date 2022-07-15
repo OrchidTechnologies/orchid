@@ -58,7 +58,7 @@ class _DappHomeState extends State<DappHome> {
 
   void _selectContractVersion(int version) {
     // if (version == _contractVersionSelected) { return; }
-    log("XXX: version = $version");
+    log('XXX: version = $version');
     _contractVersionSelectedValue = version;
     if (version != null) {
       _onContractVersionChanged(version);
@@ -109,15 +109,15 @@ class _DappHomeState extends State<DappHome> {
     try {
       var accounts = await ethereum.getAccounts();
       if (accounts.isNotEmpty) {
-        log("connect: User already has accounts, connecting.");
+        log('connect: User already has accounts, connecting.');
         await Future.delayed(Duration(seconds: 0), () {
           _connectEthereum();
         });
       } else {
-        log("connect: No connected accounts, require the user to initiate.");
+        log('connect: No connected accounts, require the user to initiate.');
       }
     } catch (err) {
-      log("connect: Error checking getAccounts: $err");
+      log('connect: Error checking getAccounts: $err');
     }
   }
 
@@ -139,7 +139,6 @@ class _DappHomeState extends State<DappHome> {
 
   // TODO: replace this account detail management with a provider builder
   void _clearAccountDetail() {
-    // log("XXX: clearAccountDetail");
     _accountDetail?.cancel();
     _accountDetail?.removeListener(_accountDetailUpdated);
     _accountDetail = null;
@@ -229,8 +228,7 @@ class _DappHomeState extends State<DappHome> {
                       size: 20,
                       color: OrchidColors.tappable,
                     ).right(4),
-                    Text("Tap to Minimize",
-                        style: OrchidText.linkStyle.size(14)),
+                    Text(s.tapToMinimize, style: OrchidText.linkStyle.size(14)),
                   ],
                 ),
               ).pady(8)
@@ -359,16 +357,6 @@ class _DappHomeState extends State<DappHome> {
           : MainAxisAlignment.center,
       children: [
         _buildVersionButton(),
-        // StyledText(
-        //   style: OrchidText.body1,
-        //   textAlign: TextAlign.center,
-        //   text: "Need help?  "
-        //       "For guidance on creating an\n"
-        //       "Orchid Account see our <link>step-by-step guide</link>.",
-        //   tags: {
-        //     'link': OrchidText.body1.linkStyle.link(OrchidUrls.join),
-        //   },
-        // ).padx(16),
         if (_contractVersionSelected != null)
           SizedBox(width: 48)
         else
@@ -480,7 +468,7 @@ class _DappHomeState extends State<DappHome> {
   Widget _buildWalletConnectTMButton() {
     return DappButton(
       // 'WalletConnect' is a name, not a description
-      text: "WalletConnect",
+      text: 'WalletConnect',
       onPressed: _connected ? null : _connectWalletConnect,
       trailing: Padding(
         padding: const EdgeInsets.only(left: 10.0, right: 16.0),
@@ -515,7 +503,7 @@ class _DappHomeState extends State<DappHome> {
           // width: reallyNarrow ? 140 : null,
           width: double.infinity,
           textStyle: OrchidText.medium_18_025.black.copyWith(height: 1.8),
-          text: "CONNECT WALLET",
+          text: s.connectWallet,
           onPressed: _connected ? null : _connectEthereum,
         ),
       ),
@@ -654,8 +642,8 @@ class _DappHomeState extends State<DappHome> {
   void _showRequestPendingMessage() {
     AppDialogs.showAppDialog(
       context: context,
-      title: "Check Wallet",
-      bodyText: "Check your Wallet app or extension for a pending request.",
+      title: s.checkWallet,
+      bodyText: s.checkYourWalletAppOrExtensionFor,
     );
   }
 
@@ -735,7 +723,7 @@ class _DappHomeState extends State<DappHome> {
     try {
       _setAppWeb3Provider(web3Context);
     } catch (err, stack) {
-      log("set new context: error setting app web3 provider: $err,\n$stack");
+      log('set new context: error setting app web3 provider: $err,\n$stack');
     }
 
     // The context was replaced or updated. Check various attributes.
@@ -750,7 +738,7 @@ class _DappHomeState extends State<DappHome> {
     try {
       _web3Context?.refresh();
     } catch (err) {
-      log("set new context: error in refreshing context: $err");
+      log('set new context: error in refreshing context: $err');
     }
 
     // Default the contract version
@@ -772,7 +760,7 @@ class _DappHomeState extends State<DappHome> {
     try {
       _selectedAccountChanged();
     } catch (err) {
-      log("set new context: error in selected account changed: $err");
+      log('set new context: error in selected account changed: $err');
     }
     setState(() {});
   }
@@ -813,7 +801,7 @@ class _DappHomeState extends State<DappHome> {
             _web3Context.walletConnectProvider);
       }
     } catch (err) {
-      log("Error constructing web context:");
+      log('Error constructing web context:');
     }
     _setNewContex(context);
   }

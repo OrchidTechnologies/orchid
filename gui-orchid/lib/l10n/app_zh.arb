@@ -1,8 +1,5 @@
 {
 	"@@locale": "zh",
-	"@newHop": {
-		"description": "New network hop"
-	},
 	"orchidHop": "Orchid 跃点",
 	"@orchidHop": {
 		"description": "Orchid network hop"
@@ -111,12 +108,6 @@
 	"thereWasAnErrorInPurchasingContact": "购买时出错。请联系兰花支持。",
 	"importAnOrchidAccount": "导入兰花帐户",
 	"buyCredits": "购买积分",
-	"@gb": {
-		"description": "Gigabytes"
-	},
-	"@ofTraffic": {
-		"description": "GB of traffic"
-	},
 	"linkAnOrchidAccount": "关联兰花帐户",
 	"weAreSorryButThisPurchaseWouldExceedTheDaily": "很抱歉，这次购买将超出访问积分的每日购买限额。请稍后再试。",
 	"marketStats": "市场统计",
@@ -241,6 +232,9 @@
 	"orchidIdentity": "Orchid ID",
 	"addFunds": "充值",
 	"gb": "GB",
+	"@gb": {
+		"description": "Gigabytes"
+	},
 	"usdgb": "美元/GB",
 	"hop": "跃点",
 	"circuit": "线路",
@@ -456,5 +450,42 @@
 	"Test": "测试",
 	"@Test": {
 		"description": "Test"
-	}
+	},
+	"accountSetUp": "账户设置",
+	"add1": "加",
+	"advanced1": "高级",
+	"allWarnedFundsWillBeLockedUntil": "所有被警告的资金将被锁定，直到",
+	"backUpYourIdentity": "备份您的身份",
+	"backUpYourOrchidIdentityPrivateKeyYouWill": "备份您的 Orchid Identity <bold>私钥</bold>。您将需要此密钥来共享、导入或恢复此身份和所有关联帐户。",
+	"balanceToDeposit1": "存款余额",
+	"blockExplorer": "区块浏览器",
+	"blockies": "块状",
+	"changeWarnedAmountTo": "将警告金额更改为",
+	"checkWallet": "检查钱包",
+	"checkYourWalletAppOrExtensionFor": "检查您的电子钱包应用或扩展程序是否有待处理的请求。",
+	"connectWallet": "连接钱包",
+	"connectedWithMetamask": "与 Metamask 连接",
+	"continueButton": "继续",
+	"contractVersion": "合约版本",
+	"currentWarnedAmount": "当前警告金额",
+	"depositToBalance1": "存款余额",
+	"enterAnExistingOrchidIdentity": "输入现有的 <account_link>Orchid 身份</account_link>",
+	"funderWalletAddress": "资助者钱包地址",
+	"generateIdentity": "生成身份",
+	"identiconStyle": "标识样式",
+	"jazzicon": "爵士乐",
+	"language": "语言",
+	"lockUnlock1": "锁定/解锁",
+	"locked1": "锁定",
+	"pasteTheWeb3WalletAddress": "在下面粘贴您将用于为您的帐户注资的 web3 钱包地址。",
+	"setUpAccount": "设置帐号",
+	"setWarnedAmountTo": "将警告金额设置为",
+	"systemDefault": "系统预设",
+	"tapToMinimize": "点击以最小化",
+	"unlockDeposit1": "解锁存款",
+	"version0": "版本 0",
+	"version1": "版本 1",
+	"viewLogs": "查看日志",
+	"yesIHaveSavedACopyOf": "是的，我已将我的私钥副本保存在安全的地方。",
+	"yourOrchidIdentityPublicAddress": "您的兰花身份公共地址"
 }

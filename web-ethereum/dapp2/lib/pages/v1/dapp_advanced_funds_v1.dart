@@ -219,8 +219,8 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
     currentAmount.value = pot?.warned ?? tokenType.zero;
 
     final warnLabelText = (connected && pot.isWarned)
-        ? "Change Warned Amount To"
-        : "Set Warned Amount To";
+        ? s.changeWarnedAmountTo
+        : s.setWarnedAmountTo;
 
     return [
       Visibility(
@@ -234,7 +234,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
               labelWidth: 260,
               type: tokenType,
               controller: currentAmount,
-              label: "Current Warned Amount" + ':',
+              label: s.currentWarnedAmount + ':',
               usdPrice: tokenPrice,
             ),
             // Current available time
@@ -264,7 +264,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
             _warnedField.value.gtZero() &&
             !_warnFieldError,
         child: Text(
-          "All warned funds will be locked until" + ':  ' + futureUnlockText,
+          s.allWarnedFundsWillBeLockedUntil + ':  ' + futureUnlockText,
           maxLines: 2,
         ).body1.top(16),
       ),
@@ -561,11 +561,11 @@ class _MoveDirectionDropdown extends StatelessWidget {
           value: value,
           items: [
             DropdownMenuItem(
-              child: Text("Balance to Deposit").withStyle(style),
+              child: Text(s.balanceToDeposit1).withStyle(style),
               value: _MoveDirection.BalanceToDeposit,
             ),
             DropdownMenuItem(
-              child: Text("Deposit to Balance").withStyle(style),
+              child: Text(s.depositToBalance1).withStyle(style),
               value: _MoveDirection.DepositToBalance,
             ),
           ],

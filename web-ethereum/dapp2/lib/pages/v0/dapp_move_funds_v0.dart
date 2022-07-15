@@ -58,7 +58,7 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
           enabled: widget.enabled,
           type: tokenType,
           controller: _moveBalanceField,
-          label: "Balance to Deposit",
+          label: s.balanceToDeposit1,
           labelWidth: 180,
         ),
         pady(32),

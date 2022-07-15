@@ -79,7 +79,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
             height: _height,
             child: SizedBox(
               width: _width,
-              child: Text("View Logs", style: _textStyle),
+              child: Text(s.viewLogs, style: _textStyle),
             ),
           ),
         ];
@@ -92,7 +92,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
   }
 
   Future _openLogsPage(BuildContext context) {
-    log("XXX: open logs page");
+    log('XXX: open logs page');
     return Navigator.push(context,
         MaterialPageRoute(builder: (BuildContext context) {
       return LoggingPage();
@@ -141,7 +141,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     return UserPreferences().languageOverride.builder((languageOverride) {
       return _buildExpandableMenuItem(
         expanded: expanded,
-        title: "Language",
+        title: s.language,
         currentSelectionText: OrchidLanguage.languages[languageOverride] ?? '',
         expandedContent: _languageOptions(languageOverride),
         expandedHeight: 690,
@@ -170,7 +170,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
         0,
         _listMenuItem(
           selected: selected == null,
-          title: "System Default",
+          title: s.systemDefault,
           onTap: () async {
             await UserPreferences().languageOverride.set(null);
           },
@@ -190,9 +190,9 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
         }
         return _buildExpandableMenuItem(
           expanded: expanded,
-          title: "Identicon Style",
+          title: s.identiconStyle,
           currentSelectionText:
-              (!expanded ? (useBlockies ? "Blockies" : "Jazzicon") : ''),
+              (!expanded ? (useBlockies ? s.blockies : s.jazzicon) : ''),
           expandedContent: _identiconOptions(useBlockies),
           expandedHeight: 108,
         );
@@ -208,7 +208,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
         PopupMenuDivider(height: 1.0),
         _listMenuItem(
           selected: useBlockies,
-          title: "Blockies",
+          title: s.blockies,
           onTap: () async {
             await pref.set(true);
           },
@@ -216,7 +216,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
         PopupMenuDivider(height: 1.0),
         _listMenuItem(
           selected: !useBlockies,
-          title: "Jazzicon",
+          title: s.jazzicon,
           onTap: () async {
             await pref.set(false);
           },
@@ -230,7 +230,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     final selected = widget.contractVersionSelected;
     return _buildExpandableMenuItem(
       expanded: expanded,
-      title: "Contract Version",
+      title: s.contractVersion,
       currentSelectionText: (!expanded ? selected.toString() : ''),
       expandedContent: _contractVersionOptions(),
       expandedHeight: available.length * 54.0,
@@ -279,8 +279,8 @@ class DappSettingsButtonUtils {
         select: select,
         textStyle: textStyle,
       ).cast<Widget>().separatedWith(
-        PopupMenuDivider(height: 1),
-      ),
+            PopupMenuDivider(height: 1),
+          ),
     );
   }
 
@@ -298,7 +298,7 @@ class DappSettingsButtonUtils {
           context: context,
           textStyle: textStyle,
           selected: selected == 0,
-          title: "Version 0",
+          title: context.s.version0,
           onTap: () {
             select(0);
           },
@@ -311,7 +311,7 @@ class DappSettingsButtonUtils {
           context: context,
           textStyle: textStyle,
           selected: selected == 1,
-          title: "Version 1",
+          title: context.s.version1,
           onTap: () {
             select(1);
           },

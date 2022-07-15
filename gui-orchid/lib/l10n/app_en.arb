@@ -1,8 +1,5 @@
 {
 	"@@locale": "en",
-	"@newHop": {
-		"description": "New network hop"
-	},
 	"orchidHop": "Orchid Hop",
 	"@orchidHop": {
 		"description": "Orchid network hop"
@@ -111,12 +108,6 @@
 	"thereWasAnErrorInPurchasingContact": "There was an error in purchasing.  Please contact Orchid Support.",
 	"importAnOrchidAccount": "Import an Orchid Account",
 	"buyCredits": "Buy Credits",
-	"@gb": {
-		"description": "Gigabytes"
-	},
-	"@ofTraffic": {
-		"description": "GB of traffic"
-	},
 	"linkAnOrchidAccount": "Link Orchid Account",
 	"weAreSorryButThisPurchaseWouldExceedTheDaily": "We are sorry but this purchase would exceed the daily purchase limit for access credits.  Please try again later.",
 	"marketStats": "Market Stats",
@@ -241,6 +232,9 @@
 	"orchidIdentity": "Orchid Identity",
 	"addFunds": "ADD FUNDS",
 	"gb": "GB",
+	"@gb": {
+		"description": "Gigabytes"
+	},
 	"usdgb": "USD/GB",
 	"hop": "Hop",
 	"circuit": "Circuit",
@@ -452,5 +446,42 @@
 	"fetchGasPrice": "Fetch gas price",
 	"fetchLotteryPot": "Fetch lottery pot",
 	"lines": "lines",
-	"filtered": "filtered"
+	"filtered": "filtered",
+	"backUpYourIdentity": "Back up your Identity",
+	"accountSetUp": "Account set up",
+	"setUpAccount": "SET UP ACCOUNT",
+	"generateIdentity": "GENERATE IDENTITY",
+	"enterAnExistingOrchidIdentity": "Enter an existing <account_link>Orchid Identity</account_link>",
+	"pasteTheWeb3WalletAddress": "Paste the web3 wallet address that you will use to fund your account below.",
+	"funderWalletAddress": "Funder wallet address",
+	"yourOrchidIdentityPublicAddress": "Your Orchid Identity public address",
+	"continueButton": "CONTINUE",
+	"yesIHaveSavedACopyOf": "Yes, I have saved a copy of my private key somewhere secure.",
+	"backUpYourOrchidIdentityPrivateKeyYouWill": "Back up your Orchid Identity <bold>private key</bold>. You will need this key to share, import or restore this identity and all associated accounts.",
+	"locked1": "Locked",
+	"unlockDeposit1": "Unlock deposit",
+	"changeWarnedAmountTo": "Change Warned Amount To",
+	"setWarnedAmountTo": "Set Warned Amount To",
+	"currentWarnedAmount": "Current Warned Amount",
+	"allWarnedFundsWillBeLockedUntil": "All warned funds will be locked until",
+	"balanceToDeposit1": "Balance to Deposit",
+	"depositToBalance1": "Deposit to Balance",
+	"advanced1": "Advanced",
+	"add1": "Add",
+	"lockUnlock1": "Lock / Unlock",
+	"viewLogs": "View Logs",
+	"language": "Language",
+	"systemDefault": "System Default",
+	"identiconStyle": "Identicon Style",
+	"blockies": "Blockies",
+	"jazzicon": "Jazzicon",
+	"contractVersion": "Contract Version",
+	"version0": "Version 0",
+	"version1": "Version 1",
+	"connectedWithMetamask": "Connected with Metamask",
+	"blockExplorer": "Block Explorer",
+	"tapToMinimize": "Tap to Minimize",
+	"connectWallet": "CONNECT WALLET",
+	"checkWallet": "Check Wallet",
+	"checkYourWalletAppOrExtensionFor": "Check your Wallet app or extension for a pending request."
 }

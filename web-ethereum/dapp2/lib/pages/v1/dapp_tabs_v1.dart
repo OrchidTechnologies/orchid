@@ -85,7 +85,7 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
             tabs: [
               tab("Add", 0),
               tab(s.withdraw, 1),
-              tab("Advanced", 2),
+              tab(s.advanced1, 2),
             ],
             onTap: (index) {
               setState(() {

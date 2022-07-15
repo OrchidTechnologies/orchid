@@ -125,7 +125,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Future<void> _doOpenOptions() async {
     // Open to the supplied account
     if (widget.openToAccount != null) {
-      // log("open to account: ${widget.openToAccount}");
+      // log('open to account: ${widget.openToAccount}');
       _setSelectedIdentity(widget.openToAccount.signerKey);
     }
 
@@ -315,7 +315,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                   OrchidAccountEntry(
                     onChange: (account) {
                       setState(() {
-                        log("XXX: onChange = $account");
+                        log('XXX: onChange = $account');
                         _accountToImport = account;
                       });
                     },
@@ -461,14 +461,14 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     var body = StyledText(
       style: OrchidText.body2,
       newLineAsBreaks: true,
-      text: "<alarm/> <bold>" +
+      text: '<alarm/> <bold>' +
           s.thisIsNotAWalletAddress +
-          "</bold>" +
-          "  " +
+          '</bold>' +
+          '  ' +
           s.doNotSendTokensToThisAddress +
-          "\n\n" +
+          '\n\n' +
           s.yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork +
-          "  " +
+          '  ' +
           s.learnMoreAboutYourLinkorchidIdentitylink,
       tags: {
         'bold': StyledTextTag(
@@ -598,7 +598,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Future<void> _addFunds() async {
     var signerKey = _selectedIdentity;
     if (signerKey == null) {
-      throw Exception("iap: no signer!");
+      throw Exception('iap: no signer!');
     }
     return Navigator.push(
       context,
@@ -609,7 +609,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                 signerKey: signerKey,
                 cancellable: true,
                 completion: () {
-                  log("purchase complete");
+                  log('purchase complete');
                 });
           }),
     );

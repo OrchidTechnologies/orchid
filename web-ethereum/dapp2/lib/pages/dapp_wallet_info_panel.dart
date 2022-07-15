@@ -39,11 +39,11 @@ class DappWalletInfoPanel extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text("Connected with Metamask", style: _textStyle),
+            Text(context.s.connectedWithMetamask, style: _textStyle),
           ],
         ).height(26).top(12),
         _buildWalletAddressRow().top(16),
-        buildExplorerLink(_textStyle, link).top(8),
+        buildExplorerLink(context, _textStyle, link).top(8),
         _buildWalletBalances(context).top(12),
         // _buildDisconnectButton(context).top(24),
         pady(16)
@@ -51,7 +51,7 @@ class DappWalletInfoPanel extends StatelessWidget {
     ).padx(24);
   }
 
-  static Widget buildExplorerLink(TextStyle textStyle, String link,
+  static Widget buildExplorerLink(BuildContext context, TextStyle textStyle, String link,
       {MainAxisAlignment alignment = MainAxisAlignment.start}) {
     return Row(
       mainAxisAlignment: alignment,
@@ -59,7 +59,7 @@ class DappWalletInfoPanel extends StatelessWidget {
         Transform.rotate(
             angle: -3.14 / 4,
             child: Icon(Icons.arrow_forward, color: Colors.white)),
-        Text("Block Explorer", style: textStyle).link(url: link).left(8),
+        Text(context.s.blockExplorer, style: textStyle).link(url: link).left(8),
       ],
     );
   }

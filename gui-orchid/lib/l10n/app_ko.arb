@@ -1,8 +1,5 @@
 {
 	"@@locale": "ko",
-	"@newHop": {
-		"description": "New network hop"
-	},
 	"orchidHop": "Orchid 홉",
 	"@orchidHop": {
 		"description": "Orchid network hop"
@@ -111,12 +108,6 @@
 	"thereWasAnErrorInPurchasingContact": "구매 중에 오류가 발생했습니다. 오키드 지원 센터에 문의하십시오.",
 	"importAnOrchidAccount": "오키드 계정 불러오기",
 	"buyCredits": "크레딧 구매하기",
-	"@gb": {
-		"description": "Gigabytes"
-	},
-	"@ofTraffic": {
-		"description": "GB of traffic"
-	},
 	"linkAnOrchidAccount": "오키드 계정 연결하기",
 	"weAreSorryButThisPurchaseWouldExceedTheDaily": "죄송합니다. 접속 크레딧 일일 구매 한도를 초과합니다. 나중에 다시 시도해 주세요.",
 	"marketStats": "시장 현황",
@@ -241,6 +232,9 @@
 	"orchidIdentity": "Orchid ID",
 	"addFunds": "자금 추가",
 	"gb": "GB",
+	"@gb": {
+		"description": "Gigabytes"
+	},
 	"usdgb": "USD/GB",
 	"hop": "홉",
 	"circuit": "순환",
@@ -456,5 +450,42 @@
 	"Test": "테스트",
 	"@Test": {
 		"description": "Test"
-	}
+	},
+	"accountSetUp": "계정 설정",
+	"add1": "더하다",
+	"advanced1": "많은",
+	"allWarnedFundsWillBeLockedUntil": "경고된 모든 자금은",
+	"backUpYourIdentity": "신원 백업",
+	"backUpYourOrchidIdentityPrivateKeyYouWill": "Orchid ID <bold>개인 키</bold>를 백업하십시오. 이 ID 및 연결된 모든 계정을 공유, 가져오기 또는 복원하려면 이 키가 필요합니다.",
+	"balanceToDeposit1": "예치할 잔액",
+	"blockExplorer": "블록 탐색기",
+	"blockies": "블로키",
+	"changeWarnedAmountTo": "경고 금액을 다음으로 변경",
+	"checkWallet": "지갑 확인",
+	"checkYourWalletAppOrExtensionFor": "보류 중인 요청이 있는지 지갑 앱 또는 확장 프로그램을 확인하세요.",
+	"connectWallet": "지갑 연결",
+	"connectedWithMetamask": "메타마스크와 연결",
+	"continueButton": "잇다",
+	"contractVersion": "계약 버전",
+	"currentWarnedAmount": "현재 경고 금액",
+	"depositToBalance1": "잔액에 예치",
+	"enterAnExistingOrchidIdentity": "기존 <account_link>난초 ID</account_link>입력",
+	"funderWalletAddress": "펀딩자 지갑 주소",
+	"generateIdentity": "ID 생성",
+	"identiconStyle": "아이덴티콘 스타일",
+	"jazzicon": "재즈콘",
+	"language": "언어",
+	"lockUnlock1": "잠금 / 잠금 해제",
+	"locked1": "잠김",
+	"pasteTheWeb3WalletAddress": "아래에 귀하의 계정에 자금을 입금하는 데 사용할 web3 지갑 주소를 붙여넣습니다.",
+	"setUpAccount": "계정 설정",
+	"setWarnedAmountTo": "경고 금액 설정",
+	"systemDefault": "시스템 기본값",
+	"tapToMinimize": "탭하여 최소화",
+	"unlockDeposit1": "보증금 잠금 해제",
+	"version0": "버전 0",
+	"version1": "버전 1",
+	"viewLogs": "로그 보기",
+	"yesIHaveSavedACopyOf": "예, 개인 키 사본을 안전한 곳에 저장했습니다.",
+	"yourOrchidIdentityPublicAddress": "귀하의 난초 신원 공개 주소"
 }

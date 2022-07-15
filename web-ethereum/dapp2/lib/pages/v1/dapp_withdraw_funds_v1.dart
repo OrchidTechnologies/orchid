@@ -192,7 +192,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
                 color: OrchidColors.status_yellow,
                 size: 18,
               ),
-              Text("Locked")
+              Text(s.locked1)
                   .body1
                   .copyWith(style: TextStyle(color: OrchidColors.status_yellow))
                   .left(12),
@@ -248,7 +248,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
                   },
                 ),
               ),
-              Text("Unlock deposit").withStyle(style).height(1.7).left(8),
+              Text(s.unlockDeposit1).withStyle(style).height(1.7).left(8),
             ],
           ).top(8).left(8).bottom(8),
         ],

@@ -1,8 +1,5 @@
 {
 	"@@locale": "uk",
-	"@newHop": {
-		"description": "New network hop"
-	},
 	"orchidHop": "Стрибок Orchid",
 	"@orchidHop": {
 		"description": "Orchid network hop"
@@ -111,12 +108,6 @@
 	"thereWasAnErrorInPurchasingContact": "Виникла помилка покупки. Зверніться в підтримку Orchid.",
 	"importAnOrchidAccount": "Імпортувати рахунок Orchid",
 	"buyCredits": "Придбати кредити",
-	"@gb": {
-		"description": "Gigabytes"
-	},
-	"@ofTraffic": {
-		"description": "GB of traffic"
-	},
 	"linkAnOrchidAccount": "Зв’язати рахунок Orchid",
 	"weAreSorryButThisPurchaseWouldExceedTheDaily": "Вибачте, але ця покупка перевищить щоденний ліміт кредитів для доступу. Спробуйте пізніше.",
 	"marketStats": "Статистика ринку",
@@ -241,6 +232,9 @@
 	"orchidIdentity": "Ідентифікатор Orchid",
 	"addFunds": "ДОДАТИ КОШТИ",
 	"gb": "Гб",
+	"@gb": {
+		"description": "Gigabytes"
+	},
 	"usdgb": "USD/Гб",
 	"hop": "Стрибок",
 	"circuit": "Ланцюжок",
@@ -456,5 +450,42 @@
 	"Test": "Тест",
 	"@Test": {
 		"description": "Test"
-	}
+	},
+	"accountSetUp": "Налаштування облікового запису",
+	"add1": "Додати",
+	"advanced1": "Додатково",
+	"allWarnedFundsWillBeLockedUntil": "Усі попереджені кошти будуть заблоковані до",
+	"backUpYourIdentity": "Створіть резервну копію своєї особи",
+	"backUpYourOrchidIdentityPrivateKeyYouWill": "Створіть резервну копію свого <bold>закритого ключа</bold>Orchid Identity. Вам знадобиться цей ключ, щоб поділитися, імпортувати або відновити цю особу та всі пов’язані облікові записи.",
+	"balanceToDeposit1": "Залишок до депозиту",
+	"blockExplorer": "Провідник блоків",
+	"blockies": "Блоки",
+	"changeWarnedAmountTo": "Змінити попереджену суму на",
+	"checkWallet": "Перевірте гаманець",
+	"checkYourWalletAppOrExtensionFor": "Перевірте програму або розширення Wallet на наявність запиту, що очікує на розгляд.",
+	"connectWallet": "ПІДКЛЮЧИТИ ГАМАНЕЦЬ",
+	"connectedWithMetamask": "Підключено до Metamask",
+	"continueButton": "продовжити",
+	"contractVersion": "Контрактна версія",
+	"currentWarnedAmount": "Поточна попереджена сума",
+	"depositToBalance1": "Депозит на баланс",
+	"enterAnExistingOrchidIdentity": "Введіть наявну <account_link>ідентифікацію орхідеї</account_link>",
+	"funderWalletAddress": "Адреса гаманця спонсора",
+	"generateIdentity": "ГЕНЕРУЙТЕ ІДЕНТИЧНІСТЬ",
+	"identiconStyle": "Стиль ідентифікатора",
+	"jazzicon": "Джазикон",
+	"language": "Мова",
+	"lockUnlock1": "Блокування / Розблокування",
+	"locked1": "заблокований",
+	"pasteTheWeb3WalletAddress": "Вставте нижче адресу гаманця web3, яку ви використовуватимете для поповнення свого облікового запису.",
+	"setUpAccount": "Налаштувати обліковий запис",
+	"setWarnedAmountTo": "Установити попереджену суму",
+	"systemDefault": "За замовчуванням система",
+	"tapToMinimize": "Торкніться, щоб згорнути",
+	"unlockDeposit1": "Розблокувати депозит",
+	"version0": "Версія 0",
+	"version1": "Версія 1",
+	"viewLogs": "Переглянути журнали",
+	"yesIHaveSavedACopyOf": "Так, я зберіг копію свого приватного ключа в надійному місці.",
+	"yourOrchidIdentityPublicAddress": "Ваша публічна адреса Orchid Identity"
 }

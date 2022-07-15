@@ -31,7 +31,6 @@ class DappTabsV0 extends StatefulWidget {
 }
 
 class _DappTabsV0State extends State<DappTabsV0> {
-
   @override
   void initState() {
     super.initState();
@@ -58,10 +57,10 @@ class _DappTabsV0State extends State<DappTabsV0> {
             child: TabBar(
               indicatorColor: OrchidColors.tappable,
               tabs: [
-                Tab(child: FittedBox(child: Text("Add", style: tabStyle))),
+                Tab(child: FittedBox(child: Text(s.add1, style: tabStyle))),
                 Tab(child: FittedBox(child: Text(s.withdraw, style: tabStyle))),
                 Tab(child: FittedBox(child: Text(s.move).button)),
-                Tab(child: FittedBox(child: Text("Lock / Unlock").button)),
+                Tab(child: FittedBox(child: Text(s.lockUnlock1).button)),
               ],
             ),
           ),

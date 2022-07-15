@@ -1,8 +1,5 @@
 {
 	"@@locale": "hi",
-	"@newHop": {
-		"description": "New network hop"
-	},
 	"orchidHop": "ऑर्किड हॉप",
 	"@orchidHop": {
 		"description": "Orchid network hop"
@@ -111,12 +108,6 @@
 	"thereWasAnErrorInPurchasingContact": "खरीदे समय एक त्रुटि हुई। कृपया ऑर्किड समर्थन से संपर्क करें।",
 	"importAnOrchidAccount": "एक ऑर्किड खाता आयात करें",
 	"buyCredits": "क्रेडिट खरीदें",
-	"@gb": {
-		"description": "Gigabytes"
-	},
-	"@ofTraffic": {
-		"description": "GB of traffic"
-	},
 	"linkAnOrchidAccount": "ऑर्किड खाते को लिंक करें",
 	"weAreSorryButThisPurchaseWouldExceedTheDaily": "हमें खेद है लेकिन यह खरीद एक्सेस क्रेडिट के लिए दैनिक खरीद सीमा से अधिक होगी।  कृपया बाद में दुबारा कोशिश करें।",
 	"marketStats": "बाजर के आँकड़े",
@@ -241,6 +232,9 @@
 	"orchidIdentity": "ऑर्किड पहचान",
 	"addFunds": "निधियाँ जोड़ें",
 	"gb": "जीबी",
+	"@gb": {
+		"description": "Gigabytes"
+	},
 	"usdgb": "USD/GB",
 	"hop": "हॉप",
 	"circuit": "परिपथ",
@@ -456,5 +450,42 @@
 	"Test": "परीक्षण",
 	"@Test": {
 		"description": "Test"
-	}
+	},
+	"accountSetUp": "खाता स्थापित करना",
+	"add1": "जोड़ना",
+	"advanced1": "उन्नत",
+	"allWarnedFundsWillBeLockedUntil": "सभी चेतावनी दी गई धनराशि तब तक लॉक रहेगी जब तक",
+	"backUpYourIdentity": "अपनी पहचान का बैकअप लें",
+	"backUpYourOrchidIdentityPrivateKeyYouWill": "अपनी आर्किड पहचान <bold>निजी कुंजी</bold>का बैक अप लें। इस पहचान और सभी संबद्ध खातों को साझा करने, आयात करने या पुनर्स्थापित करने के लिए आपको इस कुंजी की आवश्यकता होगी।",
+	"balanceToDeposit1": "जमा करने के लिए शेष राशि",
+	"blockExplorer": "ब्लॉक एक्सप्लोरर",
+	"blockies": "ब्लॉकियां",
+	"changeWarnedAmountTo": "चेतावनी दी गई राशि को बदलें",
+	"checkWallet": "वॉलेट चेक करें",
+	"checkYourWalletAppOrExtensionFor": "लंबित अनुरोध के लिए अपना वॉलेट ऐप या एक्सटेंशन देखें।",
+	"connectWallet": "बटुआ कनेक्ट करें",
+	"connectedWithMetamask": "Metamask . के साथ जुड़ा हुआ है",
+	"continueButton": "जारी रहना",
+	"contractVersion": "अनुबंध संस्करण",
+	"currentWarnedAmount": "वर्तमान चेतावनी राशि",
+	"depositToBalance1": "शेष राशि में जमा करें",
+	"enterAnExistingOrchidIdentity": "एक मौजूदा <account_link>आर्किड पहचान</account_link>दर्ज करें",
+	"funderWalletAddress": "फंडर वॉलेट का पता",
+	"generateIdentity": "पहचान उत्पन्न करें",
+	"identiconStyle": "पहचान शैली",
+	"jazzicon": "जैज़िकॉन",
+	"language": "भाषा",
+	"lockUnlock1": "लॉक करो लॉक खोलो",
+	"locked1": "बंद",
+	"pasteTheWeb3WalletAddress": "नीचे दिए गए वेब3 वॉलेट पते को पेस्ट करें जिसका उपयोग आप अपने खाते में निधि लगाने के लिए करेंगे।",
+	"setUpAccount": "खाता सेट करें",
+	"setWarnedAmountTo": "चेतावनी राशि को इस पर सेट करें",
+	"systemDefault": "प्रणालीगत चूक",
+	"tapToMinimize": "छोटा करने के लिए टैप करें",
+	"unlockDeposit1": "जमा अनलॉक करें",
+	"version0": "संस्करण 0",
+	"version1": "संस्करण 1",
+	"viewLogs": "लॉग्स को देखें",
+	"yesIHaveSavedACopyOf": "हां, मैंने अपनी निजी कुंजी की एक प्रति कहीं सुरक्षित रख ली है।",
+	"yourOrchidIdentityPublicAddress": "आपका आर्किड पहचान सार्वजनिक पता"
 }

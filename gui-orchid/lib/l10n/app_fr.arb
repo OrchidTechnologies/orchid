@@ -1,8 +1,5 @@
 {
 	"@@locale": "fr",
-	"@newHop": {
-		"description": "New network hop"
-	},
 	"orchidHop": "Bond Orchid",
 	"@orchidHop": {
 		"description": "Orchid network hop"
@@ -111,12 +108,6 @@
 	"thereWasAnErrorInPurchasingContact": "Une erreur s'est produite lors de l'achat. Veuillez contacter l'assistance Orchid.",
 	"importAnOrchidAccount": "Importer un compte Orchid",
 	"buyCredits": "Acheter des crédits",
-	"@gb": {
-		"description": "Gigabytes"
-	},
-	"@ofTraffic": {
-		"description": "GB of traffic"
-	},
 	"linkAnOrchidAccount": "Lier le compte Orchid",
 	"weAreSorryButThisPurchaseWouldExceedTheDaily": "Malheureusement, cet achat dépasserait la limite d'achat quotidienne des crédits d'accès. Veuillez réessayer plus tard.",
 	"marketStats": "Statistiques du marché",
@@ -241,6 +232,9 @@
 	"orchidIdentity": "Identité Orchid",
 	"addFunds": "AJOUTER DES FONDS",
 	"gb": "Go",
+	"@gb": {
+		"description": "Gigabytes"
+	},
 	"usdgb": "USD/Go",
 	"hop": "Bond",
 	"circuit": "Circuit",
@@ -456,5 +450,42 @@
 	"Test": "Test",
 	"@Test": {
 		"description": "Test"
-	}
+	},
+	"accountSetUp": "Configuration du compte",
+	"add1": "Ajouter",
+	"advanced1": "Avancée",
+	"allWarnedFundsWillBeLockedUntil": "Tous les fonds avertis seront bloqués jusqu'à",
+	"backUpYourIdentity": "Sauvegardez votre identité",
+	"backUpYourOrchidIdentityPrivateKeyYouWill": "Sauvegardez votre clé privée <bold>Orchid Identity</bold>. Vous aurez besoin de cette clé pour partager, importer ou restaurer cette identité et tous les comptes associés.",
+	"balanceToDeposit1": "Solde à déposer",
+	"blockExplorer": "explorateur de blocs",
+	"blockies": "blocs",
+	"changeWarnedAmountTo": "Remplacer le montant averti par",
+	"checkWallet": "Chèque Portefeuille",
+	"checkYourWalletAppOrExtensionFor": "Vérifiez votre application Wallet ou votre extension pour une demande en attente.",
+	"connectWallet": "Connecter le portefeuille",
+	"connectedWithMetamask": "Connecté avec Metamask",
+	"continueButton": "Continuer",
+	"contractVersion": "Version du contrat",
+	"currentWarnedAmount": "Montant averti actuel",
+	"depositToBalance1": "Dépôt au solde",
+	"enterAnExistingOrchidIdentity": "Saisissez une <account_link>identité d'orchidée</account_link>existante",
+	"funderWalletAddress": "Adresse du portefeuille du bailleur de fonds",
+	"generateIdentity": "GÉNÉRER UNE IDENTITÉ",
+	"identiconStyle": "Style d'icône d'identification",
+	"jazzicon": "Jazzicon",
+	"language": "La langue",
+	"lockUnlock1": "Verrouiller / Déverrouiller",
+	"locked1": "Fermé à clef",
+	"pasteTheWeb3WalletAddress": "Collez ci-dessous l'adresse du portefeuille Web3 que vous utiliserez pour approvisionner votre compte.",
+	"setUpAccount": "Mettre en place compte",
+	"setWarnedAmountTo": "Définir le montant averti sur",
+	"systemDefault": "Défaut du système",
+	"tapToMinimize": "Appuyez pour réduire",
+	"unlockDeposit1": "Débloquer le dépôt",
+	"version0": "Variante 0",
+	"version1": "Version 1",
+	"viewLogs": "Regardes les connexions",
+	"yesIHaveSavedACopyOf": "Oui, j'ai enregistré une copie de ma clé privée dans un endroit sûr.",
+	"yourOrchidIdentityPublicAddress": "Votre adresse publique Orchid Identity"
 }
