@@ -66,7 +66,8 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
         _receipt = await widget.context.web3
             .getTransactionReceipt(widget.tx.transactionHash);
       } catch (err) {
-        log("Error fetching transaction receipt for ${widget.tx.transactionHash}");
+        log("Error fetching transaction receipt for ${widget.tx
+            .transactionHash}");
       }
     }
 
@@ -118,6 +119,11 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
     var message = _receipt != null
         ? s.confirmations + ': ${_receipt.confirmations}'
         : s.pending;
+
+    final explorerLink = Chains
+        .chainFor(widget.tx.chainId)
+        .explorerUrl;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -150,10 +156,11 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
               ).bottom(8),
               Text(message ?? '').caption.bottom(12),
               DappWalletInfoPanel.buildExplorerLink(
-                context,
-                OrchidText.caption.tappable,
-                Chains.chainFor(widget.tx.chainId).explorerUrl,
-                alignment: MainAxisAlignment.center,
+                  context,
+                  OrchidText.caption.tappable,
+                  explorerLink,
+                  alignment: MainAxisAlignment.center,
+                  disabled: explorerLink == null,
               ),
             ],
           ),

@@ -5,7 +5,7 @@ import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/common/token_price_builder.dart';
+import 'package:orchid/orchid/builder/token_price_builder.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 import 'dapp_button.dart';
@@ -144,6 +144,7 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
   bool get _addFundsFormEnabled {
     return !txPending && _netAddValid;
   }
+
 
   bool get _netAddValid {
     if (walletBalance == null) {

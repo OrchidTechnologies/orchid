@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_web3/v1/orchid_contract_deployment_v1.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/orchid_log_api.dart';
@@ -10,12 +11,14 @@ class DappSettingsButton extends StatefulWidget {
   final int contractVersionSelected;
   final void Function(int version) selectContractVersion;
   final Set<int> contractVersionsAvailable;
+  final VoidCallback deployContract;
 
   DappSettingsButton({
     Key key,
     this.contractVersionSelected,
     this.selectContractVersion,
     this.contractVersionsAvailable,
+    this.deployContract,
   }) : super(key: key);
 
   @override
@@ -41,6 +44,9 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
         switch (item) {
           case 'logs':
             _openLogsPage(context);
+            break;
+          case 'contract':
+            widget.deployContract();
             break;
         }
       },
@@ -82,6 +88,15 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
               child: Text(s.viewLogs, style: _textStyle),
             ),
           ),
+          if (widget.deployContract != null)
+            PopupMenuItem<String>(
+              value: 'contract',
+              height: _height,
+              child: SizedBox(
+                width: _width,
+                child: Text("Deploy Contract", style: _textStyle),
+              ),
+            ),
         ];
       },
       child: FittedBox(

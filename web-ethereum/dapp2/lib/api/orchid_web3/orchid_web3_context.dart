@@ -151,9 +151,9 @@ class OrchidWeb3Context {
     }
 
     try {
-      // log("XXX: Checking for v1 contract.");
+      log("XXX: Checking for v1 contract.");
       var code = await web3.getCode(OrchidContractV1.lotteryContractAddressV1);
-      // log("XXX: Checking for v1 contract, returned: ${code.length < 10 ? code : code.substring(0, 10) + '...'}");
+      log("XXX: Checking for v1 contract, returned: ${code.length < 10 ? code : code.substring(0, 10) + '...'}");
       if (code != "0x") {
         set.add(1);
       }

@@ -1,7 +1,7 @@
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
-import 'package:orchid/common/token_price_builder.dart';
+import 'package:orchid/orchid/builder/token_price_builder.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_wallet_identicon.dart';
@@ -43,7 +43,8 @@ class DappWalletInfoPanel extends StatelessWidget {
           ],
         ).height(26).top(12),
         _buildWalletAddressRow().top(16),
-        buildExplorerLink(context, _textStyle, link).top(8),
+        buildExplorerLink(context, _textStyle, link, disabled: link == null)
+            .top(8),
         _buildWalletBalances(context).top(12),
         // _buildDisconnectButton(context).top(24),
         pady(16)
@@ -51,15 +52,22 @@ class DappWalletInfoPanel extends StatelessWidget {
     ).padx(24);
   }
 
-  static Widget buildExplorerLink(BuildContext context, TextStyle textStyle, String link,
-      {MainAxisAlignment alignment = MainAxisAlignment.start}) {
+  static Widget buildExplorerLink(
+      BuildContext context, TextStyle textStyle, String link,
+      {MainAxisAlignment alignment = MainAxisAlignment.start,
+      bool disabled = false}) {
+    final text =
+        context.s.blockExplorer + (disabled ? ' (' + "unknown" + ')' : '');
     return Row(
       mainAxisAlignment: alignment,
       children: [
         Transform.rotate(
             angle: -3.14 / 4,
-            child: Icon(Icons.arrow_forward, color: Colors.white)),
-        Text(context.s.blockExplorer, style: textStyle).link(url: link).left(8),
+            child: Icon(Icons.arrow_forward,
+                color: disabled ? OrchidColors.disabled : Colors.white)),
+        Text(text, style: textStyle.disabledIf(disabled))
+            .link(url: link)
+            .left(8),
       ],
     );
   }

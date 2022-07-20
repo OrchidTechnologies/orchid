@@ -29,7 +29,11 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
   TabController tabController;
 
   bool get _enabled {
-    return widget.web3Context != null && widget.signer != null;
+    return widget.web3Context != null &&
+        widget.signer != null
+        // right now this is a stand-in to make sure the contacts are found and working
+        &&
+        widget.accountDetail?.lotteryPot != null;
   }
 
   static int _initialIndex = 0;

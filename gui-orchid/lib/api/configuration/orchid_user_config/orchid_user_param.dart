@@ -36,7 +36,6 @@ class OrchidUserParams {
       return null;
     }
     try {
-
       return Color(int.parse(Hex.remove0x(svalue), radix: 16));
     } catch (err) {
       log("Error in color: $err");
@@ -48,7 +47,13 @@ class OrchidUserParams {
     return get(name) != null;
   }
 
+  // testing flag
   bool get test {
     return get('test') != null;
+  }
+
+  // testing new chain flag
+  bool get newchain {
+    return get('newchain') != null;
   }
 }

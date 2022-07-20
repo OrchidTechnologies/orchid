@@ -12,7 +12,7 @@ import '../dapp_button.dart';
 import '../dapp_error_row.dart';
 import '../dapp_tab_context.dart';
 import '../../orchid/field/orchid_labeled_token_value_field.dart';
-import 'package:orchid/common/token_price_builder.dart';
+import 'package:orchid/orchid/builder/token_price_builder.dart';
 
 class AdvancedFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -497,7 +497,7 @@ class _AddWithdrawDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final style = OrchidText.body1.withHeight(1.7).inactiveIf(!enabled);
+    final style = OrchidText.body1.withHeight(1.7).disabledIf(!enabled);
     return Theme(
       data: Theme.of(context).copyWith(
         canvasColor: OrchidColors.dark_background,
@@ -545,7 +545,7 @@ class _MoveDirectionDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final style = OrchidText.body1.withHeight(1.7).inactiveIf(!enabled);
+    final style = OrchidText.body1.withHeight(1.7).disabledIf(!enabled);
     return Theme(
       data: Theme.of(context).copyWith(
         canvasColor: OrchidColors.dark_background,

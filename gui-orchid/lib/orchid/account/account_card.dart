@@ -1,7 +1,7 @@
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
-import 'package:orchid/common/token_price_builder.dart';
+import 'package:orchid/orchid/builder/token_price_builder.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_budget_api.dart';

@@ -25,6 +25,9 @@ class OrchidSelectorMenu<T> extends StatefulWidget {
   /// If true display the title instead of the title
   final bool titleIconOnly;
 
+  // highlight the selected item in the menu
+  final bool highlightSelected;
+
   OrchidSelectorMenu({
     Key key,
     this.selected,
@@ -37,6 +40,7 @@ class OrchidSelectorMenu<T> extends StatefulWidget {
     @required this.items,
     this.iconForItem,
     @required this.titleForItem,
+    this.highlightSelected = true,
   }) : super(key: key);
 
   @override
@@ -127,7 +131,7 @@ class _OrchidSelectorMenuState<T> extends State<OrchidSelectorMenu<T>> {
   }
 
   PopupMenuItem<T> _buildMenuItem(T value) {
-    final selected = value == widget.selected;
+    final selected = value == widget.selected && widget.highlightSelected;
     return ColorPopupMenuItem<T>(
       padding: EdgeInsets.zero,
       color: selected ? OrchidColors.selected_color_dark : null,

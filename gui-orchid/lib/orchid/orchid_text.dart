@@ -197,11 +197,11 @@ extension OrchidTextStyleExtensions on TextStyle {
     return _copyWithColor(OrchidColors.inactive);
   }
 
-  TextStyle inactiveIf(bool isInactive) {
+  TextStyle disabledIf(bool isInactive) {
     return isInactive ? this.inactive : this;
   }
 
-  TextStyle activeIf(bool isActive) {
+  TextStyle enabledIf(bool isActive) {
     return isActive ? this : this.inactive;
   }
 

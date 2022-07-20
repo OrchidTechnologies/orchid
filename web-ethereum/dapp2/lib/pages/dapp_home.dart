@@ -1,5 +1,6 @@
+import 'package:orchid/api/orchid_web3/v1/orchid_contract_deployment_v1.dart';
+import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_crypto.dart';
@@ -42,7 +43,9 @@ class _DappHomeState extends State<DappHome> {
   OrchidWeb3Context _web3Context;
   EthereumAddress _signer;
 
-  // TODO: Encapsulate this in a provider widget
+  // TODO: Encapsulate this in a provider builder widget (ala TokenPriceBuilder)
+  // TODO: Before that we need to add a controller to our PollingBuilder to allow
+  // TODO: for refresh on demand.
   AccountDetailPoller _accountDetail;
 
   final _signerField = AddressValueFieldController();
@@ -150,18 +153,21 @@ class _DappHomeState extends State<DappHome> {
     // log("XXX: selectedAccountChanged");
     _clearAccountDetail();
     if (_hasAccount) {
-      var account = Account.fromSignerAddress(
-        signerAddress: _signer,
-        version: _contractVersionSelected,
-        funder: _web3Context.walletAddress,
-        chainId: _web3Context.chain.chainId,
-      );
-      _accountDetail = AccountDetailPoller(
-        account: account,
-        pollingPeriod: Duration(seconds: 5),
-      );
-      _accountDetail.addListener(_accountDetailUpdated);
-      _accountDetail.startPolling();
+      // Avoid starting the poller in the rare case where there are no contracts
+      if (_contractVersionSelected != null) {
+        var account = Account.fromSignerAddress(
+          signerAddress: _signer,
+          version: _contractVersionSelected,
+          funder: _web3Context.walletAddress,
+          chainId: _web3Context.chain.chainId,
+        );
+        _accountDetail = AccountDetailPoller(
+          account: account,
+          pollingPeriod: Duration(seconds: 10),
+        );
+        _accountDetail.addListener(_accountDetailUpdated);
+        _accountDetail.startPolling();
+      }
 
       _showConnectPanel = false;
     }
@@ -266,6 +272,8 @@ class _DappHomeState extends State<DappHome> {
 
   // main info column
   Expanded _buildMainColumn() {
+    // final showAccountCard = _contractVersionSelected != null;
+
     return Expanded(
       child: Theme(
         data: Theme.of(context).copyWith(
@@ -292,10 +300,17 @@ class _DappHomeState extends State<DappHome> {
                       child: _buildConnectPanel().bottom(32).padx(20),
                     ),
 
-                    // AnimatedSize(
-                    //   duration: millis(1000),
-                    //   child: _showConnectPanel ? _buildConnectPanel().bottom(32).padx(20) : Container(),
-                    // ),
+                    if (_contractVersionsAvailable != null &&
+                        _contractVersionsAvailable.isEmpty)
+                      RoundedRect(
+                        backgroundColor: OrchidColors.dark_background,
+                        child: Text(s
+                                .theOrchidContractHasntBeenDeployedOnThisChainYet)
+                            .subtitle
+                            .height(1.7)
+                            .withColor(OrchidColors.status_yellow)
+                            .pad(24),
+                      ).center.bottom(24),
 
                     // account card
                     AccountCard(
@@ -367,7 +382,7 @@ class _DappHomeState extends State<DappHome> {
 
   Widget _buildVersionButton() {
     return AnimatedSwitcher(
-      duration: millis(300),
+      duration: millis(500),
       child: _contractVersionSelected != null
           ? _buildVersionButtonImpl()
           : Container(),
@@ -382,6 +397,7 @@ class _DappHomeState extends State<DappHome> {
   }
 
   Widget _buildTabs() {
+    log("_accountDetail = $_accountDetail");
     switch (_contractVersionSelected) {
       case 0:
         return DappTabsV0(
@@ -442,6 +458,9 @@ class _DappHomeState extends State<DappHome> {
 
   Widget _buildHeader() {
     final _showWalletConnect = OrchidUserParams().has('wc');
+    final deploy = (_contractVersionsAvailable?.contains(1) ?? false)
+        ? null
+        : _deployContract;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -457,12 +476,20 @@ class _DappHomeState extends State<DappHome> {
               contractVersionsAvailable: _contractVersionsAvailable,
               contractVersionSelected: _contractVersionSelected,
               selectContractVersion: _selectContractVersion,
+              deployContract: deploy,
               // onDisconnect: _disconnect,
             ).left(16),
           ],
         ),
       ],
     );
+  }
+
+  void _deployContract() async {
+    final deploy = OrchidContractDeployment(_web3Context);
+    if (await deploy.deployIfNeeded()) {
+      _onAccountOrChainChange();
+    }
   }
 
   Widget _buildWalletConnectTMButton() {
@@ -561,12 +588,14 @@ class _DappHomeState extends State<DappHome> {
     final size = AppSize(context);
     final narrow = (_connected && size.narrowerThanWidth(700)) ||
         size.narrowerThanWidth(600);
+    final chain = _web3Context?.chain;
+
     return SizedBox(
       width: narrow ? 40 : 190,
       height: 40,
       child: OrchidChainSelectorMenu(
         iconOnly: narrow,
-        selected: _web3Context?.chain,
+        selected: chain,
         onSelection: _switchOrAddChain,
         enabled: _web3Context != null,
       ),
@@ -657,10 +686,10 @@ class _DappHomeState extends State<DappHome> {
     }
 
     // Check chain before constructing web3
-    var chainId = await ethereum.getChainId();
-    if (!Chains.isKnown(chainId)) {
-      return _invalidChain();
-    }
+    // var chainId = await ethereum.getChainId();
+    // if (!Chains.isKnown(chainId)) {
+    //   return _invalidChain();
+    // }
 
     var web3 = await OrchidWeb3Context.fromEthereum(ethereum);
     _setNewContex(web3);
@@ -728,12 +757,12 @@ class _DappHomeState extends State<DappHome> {
 
     // The context was replaced or updated. Check various attributes.
     // check the contract
-    if (_web3Context != null) {
-      if (_contractVersionsAvailable == null ||
-          _contractVersionsAvailable.isEmpty) {
-        return _noContract();
-      }
-    }
+    // if (_web3Context != null) {
+    //   if (_contractVersionsAvailable == null ||
+    //       _contractVersionsAvailable.isEmpty) {
+    //     await _noContract();
+    //   }
+    // }
 
     try {
       _web3Context?.refresh();
@@ -785,10 +814,10 @@ class _DappHomeState extends State<DappHome> {
     }
 
     // Check chain before constructing web3
-    var chainId = await ethereum.getChainId();
-    if (!Chains.isKnown(chainId)) {
-      return _invalidChain();
-    }
+    // var chainId = await ethereum.getChainId();
+    // if (!Chains.isKnown(chainId)) {
+    //   return _invalidChain();
+    // }
 
     // Recreate the context wrapper
     var context = null;
@@ -820,6 +849,9 @@ class _DappHomeState extends State<DappHome> {
   // Refresh the wallet and account balances
   void _refreshUserData() {
     _web3Context?.refresh();
+    // TODO: Encapsulate this in a provider builder widget (ala TokenPriceBuilder)
+    // TODO: Before that we need to add a controller to our PollingBuilder to allow
+    // TODO: for refresh on demand.
     _accountDetail?.refresh();
   }
 
@@ -832,13 +864,13 @@ class _DappHomeState extends State<DappHome> {
     _setNewContex(null);
   }
 
-  void _noContract() {
-    AppDialogs.showAppDialog(
+  Future<void> _noContract() {
+    return AppDialogs.showAppDialog(
         context: context,
         title: s.orchidIsntOnThisChain,
         bodyText: s.theOrchidContractHasntBeenDeployedOnThisChainYet);
 
-    _setNewContex(null);
+    // _setNewContex(null);
   }
 
   void _disconnect() async {

@@ -13,7 +13,7 @@ import 'package:orchid/util/units.dart';
 import '../../api/orchid_eth/orchid_account_mock.dart';
 import '../dapp_button.dart';
 import '../../orchid/field/orchid_labeled_token_value_field.dart';
-import 'package:orchid/common/token_price_builder.dart';
+import 'package:orchid/orchid/builder/token_price_builder.dart';
 
 class WithdrawFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -219,7 +219,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
     if (!active || pot.isWarned) {
       return Container();
     }
-    final style = OrchidText.body2.activeIf(active);
+    final style = OrchidText.body2.enabledIf(active);
 
     return RoundedRect(
       backgroundColor: OrchidColors.dark_background_2,

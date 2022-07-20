@@ -42,6 +42,8 @@ class OrchidChainSelectorMenu extends StatelessWidget {
       titleIconOnly: iconOnly,
       enabled: enabled,
       width: width,
+      // support testing
+      highlightSelected: selected?.isKnown,
     );
   }
 }

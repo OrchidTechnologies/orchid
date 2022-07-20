@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
@@ -28,6 +29,23 @@ class Chains {
     var jsConfig = OrchidUserConfig().getUserConfigJS();
     // Note: This var is also used by the tunnel for the eth provider.
     return jsConfig.evalStringDefault('rpc', _defaultEthereumProviderUrl);
+  }
+
+  static Chain unknownChain(int chainId) {
+    return Chain(
+      chainId: chainId,
+      name: "Unknown",
+      defaultProviderUrl: null,
+      iconPath: OrchidAssetSvgChain.unknown_chain_path,
+
+      // unknown token type
+      nativeCurrency: TokenType(
+        symbol: 'TOK',
+        exchangeRateSource: ZeroPriceToken(),
+        chainId: chainId,
+        iconPath: OrchidAssetSvgToken.unknown_token_path,
+      ),
+    );
   }
 
   // Ganache Test
@@ -219,14 +237,21 @@ class Chains {
   }
 
   static bool isKnown(int chainId) {
+    if (OrchidUserParams().newchain) {
+      return false;
+    }
     return unfiltered[chainId] != null;
   }
 
   // Get the chain for chainId
   static Chain chainFor(int chainId) {
+    if (OrchidUserParams().newchain) {
+      return unknownChain(chainId);
+    }
+
     var chain = unfiltered[chainId];
     if (chain == null) {
-      throw Exception('no chain for chainId: $chainId');
+      return unknownChain(chainId);
     }
     return chain;
   }
@@ -288,6 +313,10 @@ class Chain {
 
   bool get isEthereum {
     return this == Chains.Ethereum;
+  }
+
+  bool get isKnown {
+    return Chains.isKnown(chainId);
   }
 
   @override
