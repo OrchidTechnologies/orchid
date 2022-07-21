@@ -287,9 +287,7 @@ class StoredEthereumKeyRef {
   }
 
   bool isFoundIn(List<StoredEthereumKey> keys) {
-    return keys.contains((key) {
-      return key.uid == keyUid;
-    });
+    return keys.map((e) => e.ref().keyUid).contains(keyUid);
   }
 
   @override
