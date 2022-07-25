@@ -132,7 +132,6 @@ class _ConnectPageState extends State<ConnectPage>
 
   @override
   void initState() {
-    log("XXX: connect page init...");
     super.initState();
     ScreenOrientation.reset();
 
@@ -141,8 +140,7 @@ class _ConnectPageState extends State<ConnectPage>
     _updateStatsTimer = Timer.periodic(Duration(seconds: 30), _updateStats);
     _updateStats(null);
 
-    _releaseVersionCheck();
-
+    _launchCheckItems();
     _scanForAccountsIfNeeded();
 
     _logoController = NeonOrchidLogoController(vsync: this);
@@ -234,7 +232,6 @@ class _ConnectPageState extends State<ConnectPage>
     // Monitor identities
     UserPreferences().keys.stream().listen((keys) async {
       setState(() {
-        // _hasIdentity = keys.isNotEmpty;
         _keys = keys;
       });
     }).dispose(_subs);
@@ -521,15 +518,15 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   /// Do first launch and per-release activities.
-  Future<void> _releaseVersionCheck() async {
+  Future<void> _launchCheckItems() async {
+    // Support migration from very early versions of the app.
     await _doMigrationActivities();
 
-    var lastVersion = await _getReleaseVersionWithOverride();
-
+    // Show release notes if needed
     log("first launch: check.");
+    var lastVersion = await _getReleaseVersionWithOverride();
     if (lastVersion.isFirstLaunch) {
       log("first launch: is first launch");
-      await _doFirstLaunchActivities();
     } else {
       // show any release notes since the last viewed
       log("connect: check release notes since version: $lastVersion");
@@ -606,11 +603,6 @@ class _ConnectPageState extends State<ConnectPage>
     // UserPreferences().pacTransaction.stream().listen((event) { });
   }
 
-  Future<void> _doFirstLaunchActivities() async {
-    await _createFirstIdentity();
-    await _migrateActiveAccountTo1Hop();
-  }
-
   Future<void> _doMigrationActivities() async {
     await _migrateActiveAccountTo1Hop();
   }
@@ -642,19 +634,6 @@ class _ConnectPageState extends State<ConnectPage>
             accounts[0].isIdentityPlaceholder
         ? null
         : accounts[0];
-  }
-
-  Future<void> _createFirstIdentity() async {
-    log("first launch: Do first launch activities.");
-    // If this is a new user with no identities create one.
-    var identities = UserPreferences().keys.get();
-    if (identities.isEmpty) {
-      log("first launch: Creating default identity");
-      var key = StoredEthereumKey.generate();
-      await UserPreferences().addKey(key);
-    }
-    // Update the UI after first identity created
-    setState(() {});
   }
 
   Future _circuitConfigurationChanged() async {
