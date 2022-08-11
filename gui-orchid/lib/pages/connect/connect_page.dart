@@ -572,33 +572,6 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
-  /// As part of new user onboarding we scan for accounts continually until
-  /// the first one is found and create a default single hop route from it.
-  /*
-  Future<void> _scanForAccountsIfNeeded() async {
-    // If cached discovered accounts is empty should start the search.
-    if ((UserPreferences().cachedDiscoveredAccounts.get()).isNotEmpty) {
-      log("connect: Found cached accounts, not starting account finder.");
-      return;
-    }
-
-    log("connect: No accounts in cache, starting account finder.");
-    AccountFinder.shared = AccountFinder()
-        .withPollingInterval(Duration(seconds: 20))
-        .find((accounts) async {
-      var created =
-          await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
-              accounts);
-      log("connect: default circuit: $created");
-      if (created) {
-        CircuitUtils.showDefaultCircuitCreatedDialog(context);
-      }
-    });
-    // As an optimization we listen for PAC purchases and increase the rate
-    // UserPreferences().pacTransaction.stream().listen((event) { });
-  }
-   */
-
   Future<void> _doMigrationActivities() async {
     await _migrateActiveAccountTo1Hop();
   }

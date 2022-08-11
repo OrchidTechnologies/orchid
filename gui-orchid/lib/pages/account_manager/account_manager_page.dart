@@ -581,7 +581,6 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
         //   }
         //   return null;
         // }); // Return the load future
-
       },
       child: accountListView,
     );
@@ -626,6 +625,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                 cancellable: true,
                 completion: () {
                   log('purchase complete');
+                  CircuitUtils.findAccountsAndDefaultCircuitIfNeeded(context);
                 });
           }),
     );

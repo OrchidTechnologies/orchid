@@ -7,6 +7,7 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/orchid/account/account_finder.dart';
 import 'add_hop_page.dart';
 import 'model/circuit.dart';
 import 'model/circuit_hop.dart';
@@ -109,11 +110,53 @@ class CircuitUtils {
   static void showDefaultCircuitCreatedDialog(BuildContext context) {
     final s = context.s;
     SchedulerBinding.instance.addPostFrameCallback(
-          (_) => AppDialogs.showAppDialog(
+      (_) => AppDialogs.showAppDialog(
         context: context,
         title: s.accountFound,
         bodyText: s.weFoundAnAccountAssociatedWithYourIdentitiesAndCreated,
       ),
     );
+  }
+
+  /// As part of new user onboarding we scan for accounts continually until
+  /// the first one is found and create a default single hop route from it.
+  /*
+  Future<void> _scanForAccountsIfNeeded() async {
+    // If cached discovered accounts is empty should start the search.
+    if ((UserPreferences().cachedDiscoveredAccounts.get()).isNotEmpty) {
+      log("connect: Found cached accounts, not starting account finder.");
+      return;
+    }
+
+    log("connect: No accounts in cache, starting account finder.");
+    AccountFinder.shared = AccountFinder()
+        .withPollingInterval(Duration(seconds: 20))
+        .find((accounts) async {
+      var created =
+          await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
+              accounts);
+      log("connect: default circuit: $created");
+      if (created) {
+        CircuitUtils.showDefaultCircuitCreatedDialog(context);
+      }
+    });
+    // As an optimization we listen for PAC purchases and increase the rate
+    // UserPreferences().pacTransaction.stream().listen((event) { });
+  }
+   */
+
+  static Future<void> findAccountsAndDefaultCircuitIfNeeded(BuildContext context) async {
+    log("connect: No accounts in cache, starting account finder.");
+    AccountFinder.shared = AccountFinder()
+        .withPollingInterval(Duration(seconds: 20))
+        .find((accounts) async {
+      var created =
+          await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
+              accounts);
+      log("connect: default circuit: $created");
+      if (created) {
+        CircuitUtils.showDefaultCircuitCreatedDialog(context);
+      }
+    });
   }
 }
