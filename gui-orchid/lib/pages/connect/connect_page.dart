@@ -141,7 +141,7 @@ class _ConnectPageState extends State<ConnectPage>
     _updateStats(null);
 
     _launchCheckItems();
-    _scanForAccountsIfNeeded();
+    // _scanForAccountsIfNeeded();
 
     _logoController = NeonOrchidLogoController(vsync: this);
 
@@ -312,11 +312,14 @@ class _ConnectPageState extends State<ConnectPage>
                   _showWelcomePaneMinimized = true;
                 });
               },
-              onAccount: (account) {
+              onAccount: (account) async {
                 log("XXX: account import: $account");
-                AccountFinder.shared?.refresh();
+                if (await CircuitUtils.defaultCircuitIfNeededFrom(account)) {
+                  CircuitUtils.showDefaultCircuitCreatedDialog(context);
+                }
+                // AccountFinder.shared?.refresh();
               },
-            ),
+            ).pady(40),
           )
       ],
     );
@@ -571,6 +574,7 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// As part of new user onboarding we scan for accounts continually until
   /// the first one is found and create a default single hop route from it.
+  /*
   Future<void> _scanForAccountsIfNeeded() async {
     // If cached discovered accounts is empty should start the search.
     if ((UserPreferences().cachedDiscoveredAccounts.get()).isNotEmpty) {
@@ -582,26 +586,18 @@ class _ConnectPageState extends State<ConnectPage>
     AccountFinder.shared = AccountFinder()
         .withPollingInterval(Duration(seconds: 20))
         .find((accounts) async {
-      var sorted = await Account.sortAccountsByEfficiency(accounts);
-      if (sorted.isNotEmpty) {
-        var created =
-            await CircuitUtils.defaultCircuitIfNeededFrom(sorted.first);
-        log("connect: default circuit: $created");
-        if (created) {
-          SchedulerBinding.instance.addPostFrameCallback(
-            (_) => AppDialogs.showAppDialog(
-              context: context,
-              title: s.accountFound,
-              bodyText:
-                  s.weFoundAnAccountAssociatedWithYourIdentitiesAndCreated,
-            ),
-          );
-        }
+      var created =
+          await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
+              accounts);
+      log("connect: default circuit: $created");
+      if (created) {
+        CircuitUtils.showDefaultCircuitCreatedDialog(context);
       }
     });
     // As an optimization we listen for PAC purchases and increase the rate
     // UserPreferences().pacTransaction.stream().listen((event) { });
   }
+   */
 
   Future<void> _doMigrationActivities() async {
     await _migrateActiveAccountTo1Hop();
@@ -680,7 +676,7 @@ class _ConnectPageState extends State<ConnectPage>
   void dispose() {
     super.dispose();
     ScreenOrientation.reset();
-    AccountFinder.shared?.dispose();
+    // AccountFinder.shared?.dispose();
     _updateStatsTimer.cancel();
     _subs.dispose();
   }

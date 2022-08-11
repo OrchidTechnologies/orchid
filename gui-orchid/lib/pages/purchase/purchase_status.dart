@@ -1,18 +1,14 @@
+import 'package:orchid/orchid.dart';
 import 'dart:async';
-
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/common/app_dialogs.dart';
-import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text.dart';
 import '../../util/dispose.dart';
 
 class PurchaseStatus extends StatefulWidget {
@@ -125,7 +121,8 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
       children: <Widget>[
         Text(
           s.transactionSentToBlockchain,
-        ).body1,
+          textAlign: TextAlign.center,
+        ).body1.padx(16),
         pady(8),
         Text(
           s.yourPurchaseIsCompleteAndIsNowBeingProcessedBy,

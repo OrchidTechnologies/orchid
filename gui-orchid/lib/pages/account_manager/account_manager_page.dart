@@ -27,6 +27,7 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
+import 'package:orchid/pages/circuit/circuit_utils.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/circuit/orchid_account_entry.dart';
@@ -267,7 +268,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           _setSelectedIdentity(result.signer);
 
           // Support onboarding by prodding the account finder if it exists
-          AccountFinder.shared?.refresh();
+          // AccountFinder.shared?.refresh();
 
           // trigger a refresh
           _refreshIndicatorKey.currentState.show();
@@ -286,17 +287,22 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       // Set the identity and refresh
       _setSelectedIdentity(_accountToImport.signerKey);
 
+      final account = _accountToImport;
+
       setState(() {
         _accountToImport = null;
       });
       // dismiss the dialog
       Navigator.pop(context);
 
-      // Support onboarding by prodding the account finder if it exists
-      AccountFinder.shared?.refresh();
-
       // trigger a refresh
-      _refreshIndicatorKey.currentState.show();
+      await _refreshIndicatorKey.currentState.show();
+
+      // Support onboarding by prodding the account finder if it exists
+      // AccountFinder.shared?.refresh();
+      if (await CircuitUtils.defaultCircuitIfNeededFrom(account)) {
+        CircuitUtils.showDefaultCircuitCreatedDialog(context);
+      }
     };
 
     AppDialogs.showAppDialog(
@@ -566,6 +572,16 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
         // Look for new accounts
         return _accountStore.refresh(); // Return the load future
+
+        // return _accountStore.refresh().then((value) async {
+        //   final accounts = _accountStore.accounts;
+        //   if (await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
+        //       accounts)) {
+        //     CircuitUtils.showDefaultCircuitCreatedDialog(context);
+        //   }
+        //   return null;
+        // }); // Return the load future
+
       },
       child: accountListView,
     );

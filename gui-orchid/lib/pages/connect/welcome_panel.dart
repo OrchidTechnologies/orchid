@@ -291,17 +291,26 @@ class _WelcomePanelState extends State<WelcomePanel> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text("Generate a new Identity" + ':').body2.top(32).padx(24),
-        OrchidActionButton(
-          height: 50,
-          text: s.generateIdentity,
-          onPressed: () async {
-            await _generateIdentityIfNeeded();
-            setState(() {
-              _state = _State.backup_identity;
-            });
-          },
-          enabled: true,
-        ).center.top(24).padx(24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: FittedBox(
+                child: OrchidActionButton(
+                  height: 50,
+                  text: s.generateIdentity,
+                  onPressed: () async {
+                    await _generateIdentityIfNeeded();
+                    setState(() {
+                      _state = _State.backup_identity;
+                    });
+                  },
+                  enabled: true,
+                ),
+              ).top(24).padx(24),
+            ),
+          ],
+        ),
         Divider(color: Colors.black).top(24),
         StyledText(
           style: OrchidText.body2,

@@ -1,10 +1,12 @@
+import 'package:orchid/orchid.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/common/app_dialogs.dart';
 import 'add_hop_page.dart';
 import 'model/circuit.dart';
 import 'model/circuit_hop.dart';
@@ -80,6 +82,15 @@ class CircuitUtils {
     OrchidAPI().circuitConfigurationChanged.add(null);
   }
 
+  static Future<bool> defaultCircuitFromMostEfficientAccountIfNeeded(
+      Set<Account> accounts) async {
+    var sorted = await Account.sortAccountsByEfficiency(accounts);
+    if (sorted.isNotEmpty) {
+      return await CircuitUtils.defaultCircuitIfNeededFrom(sorted.first);
+    }
+    return false;
+  }
+
   /// If the circuit is empty create a default single hop circuit using the
   /// supplied account.
   /// Returns true if a circuit was created.
@@ -93,5 +104,16 @@ class CircuitUtils {
       return true;
     }
     return false;
+  }
+
+  static void showDefaultCircuitCreatedDialog(BuildContext context) {
+    final s = context.s;
+    SchedulerBinding.instance.addPostFrameCallback(
+          (_) => AppDialogs.showAppDialog(
+        context: context,
+        title: s.accountFound,
+        bodyText: s.weFoundAnAccountAssociatedWithYourIdentitiesAndCreated,
+      ),
+    );
   }
 }
