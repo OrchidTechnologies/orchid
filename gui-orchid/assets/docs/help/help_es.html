@@ -1,91 +1,91 @@
 
 <h1>Ayuda de Orchid</h1>
 
-<p>Bienvenido a Orchid 0.9.24</p>
+<p>Para obtener más información sobre cómo funciona Orchid y para solucionar problemas, consulta los <a href="https://docs.orchid.com">documentos de ayuda de Orchid</a>.</p>
+
+<p>Únete al <a href="https://discord.gg/GDbxmjxX9F">canal de Discord de Orchid</a> para obtener soporte de productos y preguntas relacionadas. Si recibiste un error de compra o tienes comentarios generales, envía un correo electrónico a <a href="mailto:help@orchid.com">help@orchid.com</a>.</p>
+
 <help_index></help_index>
 
-<b>Soporte del producto</b>
-<ul><li>Necesito más ayuda, ¿a dónde puedo ir?</li></ul>
-
-<b>Cómo comenzar</b>
+<h2>Cómo comenzar</h2>
 <ul><li>¿Qué es Orchid?</li>
 <li>¿Cómo activo Orchid?</li>
+<li>¿Qué sucede si Orchid se queda en Conectando?</li>
+<li>¿Cómo uso el Generador de circuitos?</li>
 <li>¿Cómo funciona la sección Administrar Cuentas?</li>
 <li>¿Qué es el monitor de tráfico?</li>
 <li>¿Cómo accedo a multi-hop, OpenVPN y WireGuard?</li></ul>
 
-<b>Cuentas Orchid</b>
+<h2>Identidades y cuentas Orchid</h2>
 <ul>
-	<!-- BEGIN: EXCLUDE(Android) -->
-	<li>¿Cómo compro una cuenta Orchid?</li>
-	<!-- END: EXCLUDE(Android) -->
+<li>¿Cómo compro una cuenta Orchid?</li>
 <li>¿Puedo crear una cuenta Orchid usando cripto?</li>
 <li>¿Cómo importo una cuenta Orchid existente?</li></ul>
 
-<h1>Soporte del producto</h1>
-<p>Para obtener más información sobre cómo funciona Orchid y para solucionar problemas, consulta los <a href="https://docs.orchid.com/en/latest/">documentos de ayuda de Orchid</a>.</p>
-
-<p>Si aún necesitas ayuda o tienes algún comentario en general, envía un correo electrónico a <a href="mailto:help@orchid.com">help@orchid.com</a> para abrir un ticket de soporte y nos comunicaremos contigo en un plazo de 24 horas.</p>
 <h1>Cómo comenzar</h1>
 
 <h2>¿Qué es Orchid?</h2>
 
 <p>Orchid te conecta a un mercado de VPN con múltiples proveedores de VPN que ofrecen servicio. Cada vez que te conectas, se asigna un proveedor de la red aleatoriamente. Si en algún momento no te gusta el servicio, puedes desactivar y reactivar Orchid para cambiar la conexión y ser reasignado a otro proveedor. Una vez que estés conectado y usando la VPN, pagas el servicio por byte, mediante el envío de nanopagos.</p>
 
-<p>Para pagar a los proveedores de VPN por el servicio, la app necesitará acceso al menos a una cuenta Orchid. La cuenta Orchid también deberá tener el monto correcto de depósito y saldo para funcionar. </p>
+<p>Para pagar a los proveedores de VPN por el servicio, la app necesitará acceso al menos a una cuenta Orchid. La cuenta Orchid también deberá tener el monto mínimo correcto de depósito y saldo para funcionar. Para obtener más información sobre los depósitos y saldos mínimos por blockchain admitida, puedes consultar un <a href="https://account.orchid.com/widget/">gráfico</a> para ver los valores actualizados para agregar fondos en tu cuenta. Se recomienda agregar fondos suficientes para cuatro tickets y 90% de eficiencia de cuenta; lee más sobre eficiencia y tamaño de ticket <a href="https://docs.orchid.com/en/latest/accounts/#orchid-account-efficiency">aquí</a>. Las cuentas compradas en la app mediante una compra dentro de la app son cuentas de crédito VPN de prepago que están en la blockchain de Gnosis y vendrán con el monto correcto prepagado de saldo y depósito.</p>
 
 <h2>¿Cómo activo Orchid?</h2>
 
-<p>Una vez que tengas al menos una cuenta activa y con fondos, ya sea al añadir créditos o financiar una cuenta Orchid a través de la DApp, pulsa conectar en la pantalla de inicio para activar Orchid y ver el estado de tu conexión.</p>
+<p>Una vez que tengas al menos una cuenta con fondos, ya sea al comprar créditos en la app o financiar una cuenta Orchid a través de la <a href="https://account.orchid.com/">dApp</a>, y la hayas seleccionado en el Generador de circuitos, pulsa conectar en la pantalla de inicio para activar Orchid y ver el estado de tu conexión.</p>
 
 <p>Deberás autorizar los permisos de VPN la primera vez que actives Orchid. Cada vez que activas Orchid, te conectas aleatoriamente a un proveedor de la red. Desactivar y reactivar Orchid usando el botón cambiará tu conexión y te volverá a conectar aleatoriamente.</p>
 
+<h2>¿Qué sucede si Orchid se queda en Conectando?</h2>
+
+<p>Cuando Orchid se conecta, la app debe consultar la blockchain de Ethereum para obtener información sobre los proveedores de VPN. A veces, las redes pueden intentar bloquear las conexiones a la blockchain de Ethereum. Si eso sucede, el botón dirá Conectando y la pantalla mostrará un mensaje que indica que la app está consultando Ethereum para un proveedor aleatorio.</p>
+
+<p>Para solucionar esto, deberás obtener una conexión a la blockchain de Ethereum que funcione. Entra al panel de ajustes al deslizar el dedo de izquierda a derecha, abrir "Ajustes" y seleccionar "Configuración de cadena". Deberás encontrar un punto final Ethereum RPC que funcione para que Orchid funcione; usa el botón Probar para probar el RPC predeterminado o cualquier RPC que pegues en el cuadro. Más información <a href="https://docs.orchid.com/en/latest/using-orchid/#chain-settings">aquí</a>.</p>
+
+<h2>¿Cómo uso el Generador de circuitos?</h2>
+
+<p>Accede al Generador de circuitos desde la pantalla de inicio al hacer clic en "Circuito de 0 hops", luego agrega al menos un hop, alimentado por una cuenta Orchid, para conectarte a un proveedor de VPN.</p>
+
+<p>Para agregar una cuenta Orchid como un hop, deberás seleccionar la identidad Orchid correspondiente, la dirección del financiador (que coincidirá con la dirección de la cartera que usaste para crearla) y la cadena en la que se financió la cuenta, luego pulsa guardar.</p>
+
+<p>Puedes agregar múltiples hops para hacer una "ruta de cebolla" con múltiples servidores VPN independientes. Se admiten los protocolos Orchid, WireGuard y OpenVPN.</p>
+
 <h2>¿Cómo funciona la sección Administrar Cuentas?</h2>
 
-<p>La sección Administrar Cuentas contiene más información sobre las direcciones Orchid y todas sus cuentas asociadas. Puedes usar una dirección Orchid tanto para comprar una cuenta con créditos como para crear una cuenta con tus propios fondos de criptomoneda en la DApp Orchid.</p>
+<p>La sección Administrar Cuentas contiene más información sobre las identidades Orchid y todas sus cuentas asociadas. Puedes usar una identidad Orchid tanto para comprar una cuenta con créditos como para crear una cuenta con tus propios fondos de criptomoneda en la dApp Orchid.</p>
 
-<p>Debajo de la dirección Orchid que selecciones, aparecerán todas las cuentas asociadas. Deberás elegir una cuenta activa para utilizarla para realizar pagos de VPN a los proveedores de la red Orchid.</p>
+<p>Debajo de la identidad Orchid que selecciones, aparecerán todas las cuentas asociadas. Deberás conectar una cuenta con fondos para generar un circuito.</p>
 
 <p>Consulta más información acerca de comprar y crear cuentas Orchid a continuación.</p>
 
 <h2>¿Qué es el monitor de tráfico?</h2>
 
-<p>El Monitor de Tráfico es un analizador de protocolos de red que te permite ver información sobre las conexiones de red de tu teléfono. Puedes accederlo desde la pantalla de inicio al hacer clic en el ícono de menú en la parte superior izquierda y luego seleccionar Monitor de Tráfico. </p>
-
-<p>Puedes habilitar el monitor de tráfico sin configurar ningún hop al entrar a Ajustes y habilitar Permitir VPN sin Hop (Solo monitoreo de tráfico).</p>
+<p>El Monitor de Tráfico es un analizador de protocolos de red que te permite ver información sobre las conexiones de red de tu teléfono. Puedes acceder a esta herramienta desde la pantalla de inicio al hacer clic en el ícono de semáforo en la parte superior derecha.</p>
 
 <h2>¿Cómo accedo a multi-hop, OpenVPN y WireGuard?</h2>
 
-<p>Por ahora, deberás volver a la interfaz anterior para poder usar multi-hop, OpenVPN y WireGuard. Está disponible en Ajustes -> Habilitar IU multi-hop.</p>
+<p>Para usar hops OpenVPN y/o WireGuard, entra al Generador de circuitos al tocar "Circuito de 0 hops" en la pantalla de inicio y hacer clic en "Añadir nuevo hop". Allí puedes ingresar tus configuraciones de OpenVPN/WireGuard y agregarlas a tu circuito.</p>
 
-<p>Por el momento, solo puedes comprar crédito de cuentas Orchid en la nueva interfaz.</p>
-
-<h1>Dirección y cuentas Orchid</h1>
-
-<!-- BEGIN: EXCLUDE(Android) -->
+<h1>Identidades y cuentas Orchid</h1>
 
 <h2>¿Cómo compro una cuenta Orchid?</h2>
 
-<p>La forma más fácil de empezar a utilizar Orchid es al comprar una cuenta Orchid en la app. En la pantalla de inicio, entra a Administrar Cuentas y luego haz clic en Añadir Crédito.</p>
+<p>La forma más fácil de empezar a utilizar Orchid es al comprar una cuenta Orchid en la app. En la pantalla de inicio, entra a "Administrar Cuentas" y luego selecciona "Añadir fondos"</p>
 
-<p>Desde allí, podrás ver las opciones que están disponibles para comprar. Una vez que se complete la compra, volverás a Administrar Cuentas y tu cuenta aparecerá con un saldo y un depósito visibles. Podrás conectarte a Orchid una vez que actives una cuenta.</p>
-<!-- END: EXCLUDE(Android) -->
+<p>Desde allí, podrás ver las opciones que están disponibles para comprar. Una vez que se complete la compra, volverás a Administrar Cuentas y tu cuenta aparecerá con un saldo y un depósito visibles. Una vez que aparezca tu cuenta, deberás generar un circuito; lee "¿Cómo uso el Generador de circuitos?" para más información. Las cuentas compradas están respaldadas por XDAI en la blockchain de Gnosis, pero no se puede retirar el cripto. Las cuentas compradas son créditos de acceso prepago que solo se pueden gastar con la red de <a href="https://www.orchid.com/preferredproviders/">proveedores preferidos</a> de Orchid.</p>
 
 <h2>¿Puedo crear una cuenta Orchid usando cripto?</h2>
 
-<p>¡Sí! El ecosistema Orchid tiene una dApp (aplicación descentralizada) donde los usuarios pueden conectar una cartera y añadir fondos cripto a una cuenta Orchid. </p>
+<p>¡Sí! El ecosistema Orchid tiene una <a href="https://account.orchid.com/">dApp</a> (aplicación descentralizada) donde los usuarios pueden conectar una cartera y añadir fondos cripto a una cuenta Orchid. </p>
 
-<p>Se pueden crear cuentas Orchid al añadir fondos a la dirección Orchid creada en la app. Deberás copiar la dirección Orchid de la app en la dApp Orchid, conectar una cartera y luego pagar para que se cree la cuenta. </p>
+<p>Se pueden crear cuentas Orchid al añadir fondos a la identidad Orchid creada en la app. Deberás copiar la identidad Orchid de la app a la dApp Orchid al elegirla en la pantalla Administrar Cuentas, conectar una cartera y luego agregar fondos en la cuenta para crearla.</p>
 
-<p>Para copiar la dirección Orchid, pulsa el número a continuación donde dice Dirección Orchid en la pantalla Administrar Cuentas.</p>
+<p>Para copiar la identidad Orchid, pulsa el número a continuación donde dice ‘Identidad Orchid’ en la pantalla ‘Administrar Cuentas’.</p>
 
-<p>Para obtener más ayuda, consulta nuestras <a href="https://www.orchid.com/join" target="_blank">instrucciones para unirse</a> o lee la <a href="http://docs.orchid.com">documentación de ayuda</a>.</p>
+<p>Para obtener más ayuda, consulta la <a href="https://docs.orchid.com/en/latest/orchid-dapp/">documentación de ayuda</a>.</p>
 
 <h2>¿Cómo importo una cuenta Orchid existente?</h2>
 
-<p>Una vez que se crea una cuenta en la app u otro lugar, se puede exportar y compartir. Para importar una cuenta existente, entra a Administrar Cuentas y pulsa el ícono de engranaje junto a Dirección Orchid, luego entra a Importar.  Después puedes escanear o pegar la cuenta Orchid, la cual se añadirá bajo una nueva dirección Orchid.</p>
+<p>Una vez que se crea una cuenta en la app u otro lugar, se puede exportar y compartir. Para importar una cuenta existente, entra a 'Administrar Cuentas' y pulsa el ícono de engranaje en la parte superior derecha, luego a 'Importar Identidad'.  Después puedes pegar tu identidad Orchid. Una vez que aparezca tu identidad Orchid en la app, entra al ícono de engranaje y pulsa Importar Cuenta, pega o selecciona la dirección del financiador (correspondiente a la dirección de la cartera que usaste para crear la cuenta y acceder a ella en la dApp), luego elige la cadena en la que se financió la cuenta.</p>
 
 <p>Una vez que sea añadida, podrás ver el saldo y depósito asociados con la cuenta.</p>
-
-
-
