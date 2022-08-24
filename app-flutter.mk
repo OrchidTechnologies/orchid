@@ -21,7 +21,7 @@
 .PHONY: all
 all: 
 
-include ../env/common.mk
+include ./env/common.mk
 pwd/gui := ./gui
 $(call include,shared/target-all.mk)
 
