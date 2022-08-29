@@ -103,7 +103,7 @@ class BinanceExchangeRateSource extends ExchangeRateSource {
     return 'https://api.binance.com/api/v3/avgPrice?symbol=$pair';
   }
 
-  /// Return the rate USD/Token: Tokens * Rate = USD
+  /// Return the price, USD/Token: Tokens * Rate = USD
   Future<double> tokenToUsdRate(TokenType tokenType) async {
     var rate = await _getPrice(tokenType);
     return inverted ? _invert(rate) : rate;

@@ -15,6 +15,9 @@ class ObservablePreference<T> {
   T Function(UserPreferenceKey key) getValue;
   Future Function(UserPreferenceKey key, T value) putValue;
 
+  ObservablePreference(
+      {@required this.key, @required this.getValue, @required this.putValue});
+
   /// Subscribe to the value stream. This method ensures that the stream is
   /// initialized with the first value from the underlying user preference.
   Stream<T> stream() {
@@ -62,8 +65,6 @@ class ObservablePreference<T> {
     _subject.add(value);
   }
 
-  ObservablePreference(
-      {@required this.key, @required this.getValue, @required this.putValue});
 }
 
 class ObservableStringPreference extends ObservablePreference<String> {

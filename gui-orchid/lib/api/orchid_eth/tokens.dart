@@ -2,6 +2,7 @@
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
+import 'package:orchid/util/units.dart';
 import 'chains.dart';
 import 'token_type.dart';
 
@@ -39,7 +40,7 @@ class Tokens {
 
   static const TokenType TOK = TokenType(
     symbol: 'TOK',
-    exchangeRateSource: ZeroPriceToken(),
+    exchangeRateSource: FixedPriceToken.zero,
     chainId: Chains.GANACHE_TEST_CHAINID,
     iconPath: OrchidAssetSvgToken.unknown_token_path,
   );
@@ -119,13 +120,15 @@ class Tokens {
   );
 }
 
-class ZeroPriceToken extends ExchangeRateSource {
+class FixedPriceToken extends ExchangeRateSource {
+  final USD usdPrice;
 
-  const ZeroPriceToken();
+  static const zero = const FixedPriceToken(USD.zero);
+
+  const FixedPriceToken(this.usdPrice);
 
   @override
   Future<double> tokenToUsdRate(TokenType tokenType) async {
-    return 0;
+    return usdPrice.value;
   }
-
 }

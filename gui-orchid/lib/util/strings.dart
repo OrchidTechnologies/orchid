@@ -12,4 +12,7 @@ extension StringExtensions on String {
     }
   }
 
+  bool get looksLikeUrl {
+    return this.toLowerCase().startsWith('https://');
+  }
 }

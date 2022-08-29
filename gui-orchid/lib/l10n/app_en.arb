@@ -483,5 +483,6 @@
 	"tapToMinimize": "Tap to Minimize",
 	"connectWallet": "CONNECT WALLET",
 	"checkWallet": "Check Wallet",
-	"checkYourWalletAppOrExtensionFor": "Check your Wallet app or extension for a pending request."
+	"checkYourWalletAppOrExtensionFor": "Check your Wallet app or extension for a pending request.",
+	"test": "Test"
 }

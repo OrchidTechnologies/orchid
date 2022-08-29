@@ -8,6 +8,7 @@ import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.da
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
+import 'package:orchid/util/units.dart';
 import 'token_type.dart';
 import 'package:orchid/util/collections.dart';
 import 'tokens.dart';
@@ -41,7 +42,7 @@ class Chains {
       // unknown token type
       nativeCurrency: TokenType(
         symbol: 'TOK',
-        exchangeRateSource: ZeroPriceToken(),
+        exchangeRateSource: FixedPriceToken.zero,
         chainId: chainId,
         iconPath: OrchidAssetSvgToken.unknown_token_path,
       ),
@@ -226,13 +227,21 @@ class Chains {
   /// The map of supported chains, filtered to remove disabled chains.
   static Map<int, Chain> get map {
     // Remove disabled chains
-    final disabled = UserPreferences()
+    final Iterable<int> disabled = UserPreferences()
         .chainConfig
         .get()
         .where((e) => !e.enabled)
         .map((e) => e.chainId);
-    var map = Map.of(_map);
+    Map<int, Chain> map = Map.of(_map);
     map.removeWhere((key, _) => disabled.contains(key));
+
+    final userConfiguredChainsMap = UserPreferences()
+        .userConfiguredChains
+        .get()
+        .toMap(withKey: (e) => e.chainId, withValue: (e) => e);
+
+    map.addAll(userConfiguredChainsMap);
+
     return map;
   }
 
@@ -331,6 +340,71 @@ class Chain {
 
   @override
   String toString() {
-    return 'Chain{chainId: $chainId, name: $name}';
+    return 'Chain{chainId: $chainId, name: $name, nativeCurrency: $nativeCurrency, defaultProviderUrl: $defaultProviderUrl, requiredConfirmations: $requiredConfirmations, supportsLogs: $supportsLogs, iconPath: $iconPath, hasNonstandardTransactionFees: $hasNonstandardTransactionFees, explorerUrl: $explorerUrl}';
   }
+}
+
+class UserConfiguredChain extends Chain {
+  UserConfiguredChain({
+    String name,
+    int chainId,
+    String defaultProviderUrl,
+    USD tokenPriceUSD,
+  }) : super(
+          chainId: chainId,
+          name: name,
+          defaultProviderUrl: defaultProviderUrl,
+          nativeCurrency: userConfiguredTokenType(chainId, tokenPriceUSD),
+        );
+
+  UserConfiguredChain.fromJson(Map<String, dynamic> json)
+      : this(
+          name: json['name'],
+          chainId: json['chainId'],
+          defaultProviderUrl: json['url'],
+          tokenPriceUSD: USD(double.parse(json['tokenPrice'])),
+        );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'chainId': chainId,
+        'url': defaultProviderUrl,
+        // TODO: FixedToken price USD
+        'tokenPrice': (nativeCurrency.exchangeRateSource as FixedPriceToken)
+            .usdPrice
+            .value
+            .toString(),
+      };
+
+  static TokenType userConfiguredTokenType(int chainId, USD tokenPriceUSD) {
+    return TokenType(
+      symbol: 'TOK',
+      // TODO: Support a more general user-specified pricing source
+      exchangeRateSource: FixedPriceToken(tokenPriceUSD),
+      chainId: chainId,
+      // TODO: Support user-pasted chain SVG.
+      iconPath: OrchidAssetSvgToken.unknown_token_path,
+    );
+  }
+
+  @override
+  String get iconPath => OrchidAssetSvgChain.unknown_chain_path;
+
+  // TODO: Support user-pasted chain SVG.
+  SvgPicture get icon {
+    return SvgPicture.asset(iconPath);
+  }
+
+  @override
+  bool get supportsLogs => false;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is UserConfiguredChain &&
+          runtimeType == other.runtimeType;
+
+  @override
+  int get hashCode => super.hashCode;
 }

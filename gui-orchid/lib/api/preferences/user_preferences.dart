@@ -3,6 +3,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_chain_config.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/preferences/user_configured_chain_preferences.dart';
 import 'package:orchid/api/preferences/user_preferences_mock.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
@@ -289,12 +290,22 @@ class UserPreferences {
       ObservableStringPreference(UserPreferenceKey.LanguageOverride);
 
   /// User Chain config overrides
+  // Note: Now that we have fully user-configurable chains we should probably
+  // Note: fold this into that structure.
   ObservableChainConfigPreference chainConfig =
       ObservableChainConfigPreference(UserPreferenceKey.ChainConfig);
 
+  /// User Chain config overrides
+  // Note: Now that we have fully user-configurable chains we should probably
+  // Note: fold this into that structure.
   ChainConfig chainConfigFor(int chainId) {
     return ChainConfig.map(chainConfig.get())[chainId];
   }
+
+  /// Fully user configured chains.
+  ObservableUserConfiguredChainPreference userConfiguredChains =
+      ObservableUserConfiguredChainPreference(
+          UserPreferenceKey.UserConfiguredChains);
 }
 
 enum UserPreferenceKey {
@@ -310,5 +321,6 @@ enum UserPreferenceKey {
   RoutingEnabled,
   MonitoringEnabled,
   LanguageOverride,
-  ChainConfig
+  ChainConfig,
+  UserConfiguredChains
 }
