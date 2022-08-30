@@ -63,7 +63,7 @@ class _RpcPageState extends State<RpcPage> {
   }
 
   Widget _buildChains() {
-    final knownChains = Chains.unfiltered.values.toList();
+    final knownChains = Chains.knownChains.values.toList();
     // bump Ethereum to the top of the list
     knownChains.remove(Chains.Ethereum);
     knownChains.insert(0, Chains.Ethereum);

@@ -220,8 +220,15 @@ class Chains {
     // Telos,
   ].toMap(withKey: (e) => e.chainId, withValue: (e) => e);
 
-  static Map<int, Chain> get unfiltered {
+  static Map<int, Chain> get knownChains {
     return _map;
+  }
+
+  static Map<int, Chain> get userConfiguredChains {
+    return UserPreferences()
+        .userConfiguredChains
+        .get()
+        .toMap(withKey: (e) => e.chainId, withValue: (e) => e);
   }
 
   /// The map of supported chains, filtered to remove disabled chains.
@@ -232,15 +239,9 @@ class Chains {
         .get()
         .where((e) => !e.enabled)
         .map((e) => e.chainId);
-    Map<int, Chain> map = Map.of(_map);
+    Map<int, Chain> map = Map.of(knownChains);
     map.removeWhere((key, _) => disabled.contains(key));
-
-    final userConfiguredChainsMap = UserPreferences()
-        .userConfiguredChains
-        .get()
-        .toMap(withKey: (e) => e.chainId, withValue: (e) => e);
-
-    map.addAll(userConfiguredChainsMap);
+    map.addAll(userConfiguredChains);
 
     return map;
   }
@@ -249,7 +250,7 @@ class Chains {
     if (OrchidUserParams().newchain) {
       return false;
     }
-    return unfiltered[chainId] != null;
+    return knownChains[chainId] != null;
   }
 
   // Get the chain for chainId
@@ -258,7 +259,7 @@ class Chains {
       return unknownChain(chainId);
     }
 
-    var chain = unfiltered[chainId];
+    var chain = knownChains[chainId];
     if (chain == null) {
       return unknownChain(chainId);
     }

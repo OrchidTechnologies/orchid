@@ -1,4 +1,5 @@
 // @dart=2.12
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/eth_rpc.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -119,9 +120,22 @@ class _UserConfiguredChainPanelState extends State<UserConfiguredChainPanel> {
       final result = await EthereumJsonRpc.ethJsonRpcCall(
           url: _url, method: 'eth_chainId');
       log("XXX: test rpc: result = $result");
-      _chainId = int.parse(Hex.remove0x(result), radix: 16);
-      _rpcTestPassed = true;
-      text = "Chain reachable.  Chain id: $_chainId.";
+      final chainId = int.parse(Hex.remove0x(result), radix: 16);
+
+      // Prevent shadowing other chains for now
+      var map = Map.of(Chains.knownChains);
+      map.addAll(Chains.userConfiguredChains);
+      final allowChainShadowing = OrchidUserConfig()
+          .getUserConfigJS()
+          .evalBoolDefault('allowChainShadowing', false);
+      if (map.containsKey(chainId) && !allowChainShadowing) {
+        text =
+            "Chain ${map[chainId]?.name ?? '?'} is already configured with chain id: $chainId";
+      } else {
+        _chainId = chainId;
+        _rpcTestPassed = true;
+        text = "Chain reachable.  Chain id: $_chainId.";
+      }
     } catch (err) {
       log("XXX: test rpc: err = $err");
       text = "Test failed: ``$err``";

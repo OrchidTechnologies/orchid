@@ -47,12 +47,12 @@ class OrchidUserParams {
     return get(name) != null;
   }
 
-  // testing flag
+  /// testing flag
   bool get test {
     return get('test') != null;
   }
 
-  // testing new chain flag
+  /// Support testing of unknown chain functionality by forcing unrecognized chain.
   bool get newchain {
     return get('newchain') != null;
   }
