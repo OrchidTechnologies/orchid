@@ -29,13 +29,18 @@
 
 namespace orc {
 
-std::string Bearer(const std::string &aud, const Object &account, const std::map<std::string, std::string> &claims = {}) {
+std::string Bearer(const std::string &aud, const Object &account, const std::map<std::string, std::string> &claims) {
     return Bearer(aud, Str(account.at("client_email")), "RS256", Str(account.at("private_key_id")), Str(account.at("private_key")), claims);
+}
+
+std::string Bearer(const std::string &aud, const Object &account) {
+    const auto email(Str(account.at("client_email")));
+    return Bearer(aud, email, "RS256", Str(account.at("private_key_id")), Str(account.at("private_key")), {{"sub", email}});
 }
 
 task<std::string> Translate(const S<Base> &base, const Object &account, const std::string &content, const std::string &target, const std::string &source) {
     co_return Str(Parse((co_await base->Fetch("POST", {{"https", "translate.googleapis.com", "443"}, "/v3/projects/" + Str(account.at("project_id")) + ":translateText"}, {
-        {"authorization", "Bearer " + Bearer("https://translate.googleapis.com/", account, {{"sub", Str(account.at("client_email"))}})},
+        {"authorization", "Bearer " + Bearer("https://translate.googleapis.com/", account)},
         {"content-type", "application/json"},
     }, Unparse({
         {"contents", {content}},
