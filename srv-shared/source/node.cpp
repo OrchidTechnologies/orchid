@@ -21,6 +21,7 @@
 
 
 #include "baton.hpp"
+#include "load.hpp"
 #include "node.hpp"
 #include "site.hpp"
 #include "version.hpp"
@@ -29,6 +30,14 @@ namespace orc {
 
 void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params) {
     Site site;
+
+#if 0
+    site(http::verb::get, "/", [&](Request request) -> task<Response> {
+        co_return Respond(request, http::status::ok, {
+            {"content-type", "text/html"},
+        }, Load("index.html"));
+    });
+#endif
 
     site(http::verb::post, "/", [&](Request request) -> task<Response> {
         const auto offer(request.body());
