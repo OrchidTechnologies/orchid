@@ -25,33 +25,16 @@
 
 #include <string>
 
-#include <boost/filesystem/string_file.hpp>
-
-#include "syscall.hpp"
-
 namespace orc {
 
-inline void Create(const std::string &path) {
-#ifdef _WIN32
-    orc_syscall(mkdir(path.c_str()), ERROR_ALREADY_EXISTS);
-#else
-    orc_syscall(mkdir(path.c_str(), 0755));
-#endif
-}
+void Create(const std::string &path);
+void Delete(const std::string &file);
 
-inline bool Exists(const std::string &path) {
-    return orc_syscall(access(path.c_str(), F_OK), ENOENT) == 0;
-}
+bool Exists(const std::string &path);
+uint64_t Modified(const std::string &file);
 
-inline std::string Load(const std::string &file) { orc_block({
-    std::string data;
-    boost::filesystem::load_string_file(file, data);
-    return data;
-}, "loading from " << file); }
-
-inline void Save(const std::string &file, const std::string &data) { orc_block({
-    boost::filesystem::save_string_file(file, data);
-}, "saving to " << file); }
+std::string Load(const std::string &file);
+void Save(const std::string &file, const std::string &data);
 
 }
 
