@@ -78,7 +78,7 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
 
     return SizedBox(
       // Note: We seem to have to set a fixed height outside the scaffold here.
-      height: _selectedTab == 2 ? 900 : 600,
+      height: [450.0, 400.0, 760.0][_selectedTab],
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PreferredSize(

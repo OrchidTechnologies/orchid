@@ -306,6 +306,11 @@ class UserPreferences {
   ObservableUserConfiguredChainPreference userConfiguredChains =
       ObservableUserConfiguredChainPreference(
           UserPreferenceKey.UserConfiguredChains);
+
+  /// Identicons UI
+  ObservableBoolPreference useBlockiesIdenticons = ObservableBoolPreference(
+      UserPreferenceKey.UseBlockiesIdenticons,
+      defaultValue: true);
 }
 
 enum UserPreferenceKey {
@@ -322,5 +327,6 @@ enum UserPreferenceKey {
   MonitoringEnabled,
   LanguageOverride,
   ChainConfig,
-  UserConfiguredChains
+  UserConfiguredChains,
+  UseBlockiesIdenticons,
 }

@@ -1,24 +1,23 @@
 import 'package:orchid/orchid.dart';
 
-// TODO: refactor with _buildExpandableMenuItem
 /// A PopupMenuItem that builds its child with a builder accepting an expanded flag.
 /// Tapping on this (parent) menu item toggles the expanded flag.
-class SubmenuPopopMenuItem<T> extends PopupMenuItem<T> {
+class SubmenuPopopMenuItemBuilder<T> extends PopupMenuItem<T> {
   final Widget Function(bool expanded) builder;
 
-  SubmenuPopopMenuItem({
+  SubmenuPopopMenuItemBuilder({
     Key key,
     this.builder,
     VoidCallback onTap,
   }) : super(key: key, onTap: onTap, child: Container());
 
   @override
-  PopupMenuItemState<T, SubmenuPopopMenuItem<T>> createState() =>
+  PopupMenuItemState<T, SubmenuPopopMenuItemBuilder<T>> createState() =>
       SubmenuPopupMenuItemState<T>();
 }
 
 class SubmenuPopupMenuItemState<T>
-    extends PopupMenuItemState<T, SubmenuPopopMenuItem<T>> {
+    extends PopupMenuItemState<T, SubmenuPopopMenuItemBuilder<T>> {
   bool expanded = false;
 
   @override

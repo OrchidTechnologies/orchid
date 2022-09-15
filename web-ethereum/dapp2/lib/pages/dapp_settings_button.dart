@@ -1,7 +1,5 @@
-import 'package:orchid/api/orchid_web3/v1/orchid_contract_deployment_v1.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_language.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/menu/submenu_popup_menu_item.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
@@ -66,16 +64,16 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
         });
 
         return [
-          SubmenuPopopMenuItem<String>(
+          SubmenuPopopMenuItemBuilder<String>(
             builder: _buildIdenticonsPref,
           ),
           PopupMenuDivider(height: 1.0),
-          SubmenuPopopMenuItem<String>(
+          SubmenuPopopMenuItemBuilder<String>(
             builder: _buildLanguagePref,
           ),
           if (showContractVersions) ...[
             PopupMenuDivider(height: 1.0),
-            SubmenuPopopMenuItem<String>(
+            SubmenuPopopMenuItemBuilder<String>(
               builder: _buildContractVerionsPref,
             ),
           ],
@@ -114,52 +112,15 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     }));
   }
 
-  // TODO: Move this into ExpandingPopopMenuItem
-  Widget _buildExpandableMenuItem({
-    bool expanded,
-    String title,
-    String currentSelectionText,
-    double expandedHeight,
-    Widget expandedContent,
-  }) {
-    return Column(
-      children: [
-        SizedBox(
-          height: _height,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: _textStyle),
-              Row(
-                children: [
-                  Text(currentSelectionText, style: _textStyle),
-                  padx(8),
-                  Icon(expanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                      color: Colors.white),
-                ],
-              ),
-            ],
-          ),
-        ),
-        AnimatedContainer(
-          height: expanded ? expandedHeight : 0,
-          duration: Duration(milliseconds: 250),
-          child: expanded
-              ? SingleChildScrollView(child: expandedContent)
-              : Container(),
-        ),
-      ],
-    );
-  }
-
   Widget _buildLanguagePref(bool expanded) {
     return UserPreferences().languageOverride.builder((languageOverride) {
-      return _buildExpandableMenuItem(
+      return ExpandingPopupMenuItem(
         expanded: expanded,
         title: s.language,
         currentSelectionText: OrchidLanguage.languages[languageOverride] ?? '',
         expandedContent: _languageOptions(languageOverride),
         expandedHeight: 690,
+        textStyle: _textStyle,
       );
     });
   }
@@ -203,13 +164,14 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
         if (useBlockies == null) {
           return Container();
         }
-        return _buildExpandableMenuItem(
+        return ExpandingPopupMenuItem(
           expanded: expanded,
           title: s.identiconStyle,
           currentSelectionText:
               (!expanded ? (useBlockies ? s.blockies : s.jazzicon) : ''),
           expandedContent: _identiconOptions(useBlockies),
           expandedHeight: 108,
+          textStyle: _textStyle,
         );
       },
     );
@@ -243,12 +205,13 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
   Widget _buildContractVerionsPref(bool expanded) {
     final available = widget.contractVersionsAvailable;
     final selected = widget.contractVersionSelected;
-    return _buildExpandableMenuItem(
+    return ExpandingPopupMenuItem(
       expanded: expanded,
       title: s.contractVersion,
       currentSelectionText: (!expanded ? selected.toString() : ''),
       expandedContent: _contractVersionOptions(),
       expandedHeight: available.length * 54.0,
+      textStyle: _textStyle,
     );
   }
 
@@ -273,6 +236,59 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
       title: title,
       onTap: onTap,
       textStyle: _textStyle,
+    );
+  }
+}
+
+class ExpandingPopupMenuItem extends StatelessWidget {
+  final bool expanded;
+  final String title;
+  final String currentSelectionText;
+  final double expandedHeight;
+  final Widget expandedContent;
+  final TextStyle textStyle;
+  final double collapsedHeight;
+
+  const ExpandingPopupMenuItem({
+    Key key,
+    @required this.expanded,
+    @required this.title,
+    @required this.currentSelectionText,
+    @required this.expandedHeight,
+    @required this.expandedContent,
+    @required this.textStyle,
+    this.collapsedHeight = 50.0,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: collapsedHeight,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: textStyle),
+              Row(
+                children: [
+                  Text(currentSelectionText, style: textStyle),
+                  padx(8),
+                  Icon(expanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                      color: Colors.white),
+                ],
+              ),
+            ],
+          ),
+        ),
+        AnimatedContainer(
+          height: expanded ? expandedHeight : 0,
+          duration: Duration(milliseconds: 250),
+          child: expanded
+              ? SingleChildScrollView(child: expandedContent)
+              : Container(),
+        ),
+      ],
     );
   }
 }

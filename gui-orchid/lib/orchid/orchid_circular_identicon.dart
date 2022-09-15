@@ -29,14 +29,8 @@ class OrchidCircularIdenticon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var active = address != null || image != null;
-
-    // var icon = image != null
-    //     ? SizedBox(
-    //         width: size,
-    //         height: size,
-    //         child: FittedBox(fit: BoxFit.contain, child: image))
-    //     : OrchidIdenticon(value: address, size: size);
-    var icon = image ?? OrchidIdenticon(value: address, size: size);
+    // var icon = image ?? OrchidLegacyIdenticon(value: address, size: size);
+    var icon = image ?? OrchidIdenticon(address: address);
 
     var borderDecoration = BoxDecoration(
       borderRadius: BorderRadius.circular(size / 2),

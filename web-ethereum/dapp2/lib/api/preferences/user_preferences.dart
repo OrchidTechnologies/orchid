@@ -233,7 +233,7 @@ class UserPreferences {
   /// Identicons UI
   ObservableBoolPreference useBlockiesIdenticons = ObservableBoolPreference(
       UserPreferenceKey.UseBlockiesIdenticons,
-      defaultValue: false);
+      defaultValue: true);
 
   /// User selected locale override (e.g. en, pt_BR)
   ObservableStringPreference languageOverride =

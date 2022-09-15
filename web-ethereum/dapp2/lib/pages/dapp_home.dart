@@ -185,7 +185,7 @@ class _DappHomeState extends State<DappHome> {
       children: [
         _buildHeader().padx(24).top(30).bottom(24),
         _buildMainColumn(),
-        _buildFooter().padx(24).top(14).bottom(24),
+        // _buildFooter().padx(24).top(14).bottom(24),
       ],
     );
   }
@@ -219,7 +219,7 @@ class _DappHomeState extends State<DappHome> {
                   Text('Need more help getting started?').body2.top(24),
                   Text('View the step-by-step guide.')
                       .linkStyle
-                      .link(url: OrchidUrls.partsOfOrchidAccount)
+                      .link(url: OrchidUrls.join)
                       .top(8),
                 ],
               ).pad(20),
@@ -331,6 +331,8 @@ class _DappHomeState extends State<DappHome> {
                       constraints: BoxConstraints(maxWidth: altColumnWidth),
                       child: _buildTabs(),
                     ).padx(8).top(16),
+
+                    _buildFooter().padx(24).bottom(24),
                   ],
                 ),
               ),

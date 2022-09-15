@@ -4,7 +4,7 @@ import 'package:orchid/orchid.dart';
 import 'package:orchid/orchid/builder/token_price_builder.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/common/tap_copy_text.dart';
-import 'package:orchid/orchid/orchid_wallet_identicon.dart';
+import 'package:orchid/orchid/orchid_identicon.dart';
 import '../api/orchid_eth/token_type.dart';
 import '../util/units.dart';
 import 'dapp_button.dart';
@@ -84,7 +84,7 @@ class DappWalletInfoPanel extends StatelessWidget {
           SizedBox(
               width: 28,
               height: 28,
-              child: OrchidWalletIdenticon(address: web3Context.walletAddress)),
+              child: OrchidIdenticon(address: web3Context.walletAddress)),
           Text(
             web3Context.walletAddress.toString(elide: true),
             style: OrchidText.title,

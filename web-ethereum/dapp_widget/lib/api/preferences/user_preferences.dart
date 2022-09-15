@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../orchid_eth/orchid_chain_config.dart';
 import '../orchid_log_api.dart';
 import 'chain_config_preferences.dart';
+import 'user_configured_chain_preferences.dart';
 
 class UserPreferences {
   static final UserPreferences _singleton = UserPreferences._internal();
@@ -92,6 +93,12 @@ class UserPreferences {
   ChainConfig chainConfigFor(int chainId) {
     return ChainConfig.map(chainConfig.get())[chainId];
   }
+
+  // TODO: This is not really applicable in the dapp context.
+  /// Fully user configured chains.
+  ObservableUserConfiguredChainPreference userConfiguredChains =
+      ObservableUserConfiguredChainPreference(
+          UserPreferenceKey.UserConfiguredChains);
 }
 
 // TODO: Remove unneeded items.
@@ -103,4 +110,5 @@ enum UserPreferenceKey {
   Transactions,
   LanguageOverride,
   ChainConfig,
+  UserConfiguredChains,
 }
