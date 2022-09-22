@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:orchid/api/orchid_web3/v1/orchid_contract_deployment_v1.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
@@ -270,6 +272,8 @@ class _DappHomeState extends State<DappHome> {
     );
   }
 
+  int _txStatusIndex = 0;
+
   // main info column
   Expanded _buildMainColumn() {
     // final showAccountCard = _contractVersionSelected != null;
@@ -324,7 +328,8 @@ class _DappHomeState extends State<DappHome> {
                       partialAccountSignerAddress: _signer,
                     ),
 
-                    _buildTransactionsList(),
+                    _buildTransactionsList().top(24),
+
                     // tabs
                     // Divider(color: Colors.white.withOpacity(0.3)).bottom(8),
                     ConstrainedBox(
@@ -399,7 +404,6 @@ class _DappHomeState extends State<DappHome> {
   }
 
   Widget _buildTabs() {
-    log("_accountDetail = $_accountDetail");
     switch (_contractVersionSelected) {
       case 0:
         return DappTabsV0(
@@ -430,24 +434,42 @@ class _DappHomeState extends State<DappHome> {
         return Container();
       }
 
+      // REMOVE: TESTING
+      // txs = txs + txs + txs + txs;
+
       var txWidgets = txs
-          .map((tx) => Padding(
-                padding: const EdgeInsets.only(top: 32),
-                child: TransactionStatusPanel(
-                  context: _web3Context,
-                  tx: tx,
-                  onDismiss: _dismissTransaction,
-                  onTransactionUpdated: () {
-                    _refreshUserData();
-                  },
-                ),
+          .map((tx) => TransactionStatusPanel(
+                context: _web3Context,
+                tx: tx,
+                onDismiss: _dismissTransaction,
+                onTransactionUpdated: () {
+                  _refreshUserData();
+                },
               ))
+          .toList()
+          // show latest first
+          .reversed
           .toList();
+
+      final colWidth = min(MediaQuery.of(context).size.width, mainColumnWidth);
+      var viewportFraction = min(0.75, 334 / colWidth);
+
       return AnimatedSwitcher(
-        duration: Duration(milliseconds: 400),
-        child: Column(
-          key: Key(txWidgets.length.toString()),
-          children: txWidgets,
+        duration: millis(400),
+        child: SizedBox(
+          height: 180,
+          child: PageView.builder(
+            itemCount: txWidgets.length,
+            controller: PageController(viewportFraction: viewportFraction),
+            onPageChanged: (int index) =>
+                setState(() => _txStatusIndex = index),
+            itemBuilder: (_, i) {
+              return AnimatedScale(
+                  duration: millis(300),
+                  scale: i == _txStatusIndex ? 1 : 0.9,
+                  child: Center(child: txWidgets[i]));
+            },
+          ),
         ),
       );
     });

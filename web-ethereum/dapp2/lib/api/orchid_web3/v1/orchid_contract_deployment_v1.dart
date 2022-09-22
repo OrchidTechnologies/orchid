@@ -70,7 +70,10 @@ class OrchidContractDeployment {
                 ),
               );
 
-      UserPreferences().addTransaction(DappTransaction(transactionHash: response1.hash, chainId: chainId));
+      UserPreferences().addTransaction(DappTransaction(
+          transactionHash: response1.hash,
+          chainId: chainId,
+          description: "Fund Contract Deployer"));
       final receipt1 = await response1.wait();
       log('fund deployer result: ${receipt1}');
     }
@@ -79,7 +82,10 @@ class OrchidContractDeployment {
     // Note: this does not trigger a metamask confirmation!
     log("Deploying orchid singleton factory...");
     final response2 = await web3.sendTransaction(factory_deploy_tx_data);
-    UserPreferences().addTransaction(DappTransaction(transactionHash: response2.hash, chainId: chainId));
+    UserPreferences().addTransaction(DappTransaction(
+        transactionHash: response2.hash,
+        chainId: chainId,
+        description: "Deploy Singleton Factory"));
     final receipt2 = await response2.wait();
     log('deploy singleton factory result: ${receipt2}');
   }
@@ -104,7 +110,10 @@ class OrchidContractDeployment {
             nounce: nonce,
           ),
         );
-    UserPreferences().addTransaction(DappTransaction(transactionHash: response.hash, chainId: chainId));
+    UserPreferences().addTransaction(DappTransaction(
+        transactionHash: response.hash,
+        chainId: chainId,
+        description: "Deploy Contract"));
     final receipt = await response.wait();
     log('deploy contract v1 result: ${receipt}');
   }

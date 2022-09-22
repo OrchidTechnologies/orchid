@@ -114,7 +114,10 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
         withdrawEscrow: _withdrawEscrowField.value,
       );
       UserPreferences().addTransaction(DappTransaction(
-          transactionHash: txHash, chainId: widget.context.chain.chainId));
+        transactionHash: txHash,
+        chainId: widget.context.chain.chainId,
+        description: "Withdraw Funds",
+      ));
       _withdrawBalanceField.clear();
       _withdrawEscrowField.clear();
       setState(() {});

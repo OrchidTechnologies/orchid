@@ -455,7 +455,10 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
       );
 
       UserPreferences().addTransaction(DappTransaction(
-          transactionHash: txHash, chainId: widget.context.chain.chainId));
+        transactionHash: txHash,
+        chainId: widget.context.chain.chainId,
+        description: "Account Changes"
+      ));
       _balanceField.clear();
       _depositField.clear();
       _moveField.clear();

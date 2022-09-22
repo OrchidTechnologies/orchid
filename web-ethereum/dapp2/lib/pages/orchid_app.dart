@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/orchid/orchid_desktop_dragscroll.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/pages/dapp_home.dart';
 
@@ -35,6 +36,7 @@ class _OrchidAppState extends State<OrchidApp> {
           //log('generate route: $settings');
           return MaterialPageRoute(builder: (_) => OrchidAppNoTabs());
         },
+        scrollBehavior: OrchidDesktopDragScrollBehavior(),
       );
     });
   }

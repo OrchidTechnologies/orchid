@@ -1,3 +1,4 @@
+import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -95,6 +96,9 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
                 child: Text("Deploy Contract", style: _textStyle),
               ),
             ),
+          SubmenuPopopMenuItemBuilder<String>(
+            builder: _buildAbout,
+          ),
         ];
       },
       child: FittedBox(
@@ -177,6 +181,24 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     );
   }
 
+  Widget _buildAbout(bool expanded) {
+    final buildCommit =
+        const String.fromEnvironment('build_commit', defaultValue: '...');
+    return ExpandingPopupMenuItem(
+      expanded: expanded,
+      title: "About",
+      expandedContent: _listMenuItem(
+        selected: false,
+        title: "Dapp Version:  $buildCommit",
+        onTap: () async {
+          TapToCopyText.copyTextToClipboard(buildCommit);
+        },
+      ),
+      expandedHeight: 58,
+      textStyle: _textStyle,
+    );
+  }
+
   Widget _identiconOptions(bool useBlockies) {
     final pref = UserPreferences().useBlockiesIdenticons;
     return Column(
@@ -216,7 +238,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
   }
 
   Widget _contractVersionOptions() {
-    return DappSettingsButtonUtils.contractVersionOptions(
+    return contractVersionOptions(
       context: context,
       available: widget.contractVersionsAvailable,
       selected: widget.contractVersionSelected,
@@ -225,75 +247,6 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     );
   }
 
-  Widget _listMenuItem({
-    @required bool selected,
-    @required String title,
-    @required VoidCallback onTap,
-  }) {
-    return DappSettingsButtonUtils.listMenuItem(
-      context: context,
-      selected: selected,
-      title: title,
-      onTap: onTap,
-      textStyle: _textStyle,
-    );
-  }
-}
-
-class ExpandingPopupMenuItem extends StatelessWidget {
-  final bool expanded;
-  final String title;
-  final String currentSelectionText;
-  final double expandedHeight;
-  final Widget expandedContent;
-  final TextStyle textStyle;
-  final double collapsedHeight;
-
-  const ExpandingPopupMenuItem({
-    Key key,
-    @required this.expanded,
-    @required this.title,
-    @required this.currentSelectionText,
-    @required this.expandedHeight,
-    @required this.expandedContent,
-    @required this.textStyle,
-    this.collapsedHeight = 50.0,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: collapsedHeight,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: textStyle),
-              Row(
-                children: [
-                  Text(currentSelectionText, style: textStyle),
-                  padx(8),
-                  Icon(expanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                      color: Colors.white),
-                ],
-              ),
-            ],
-          ),
-        ),
-        AnimatedContainer(
-          height: expanded ? expandedHeight : 0,
-          duration: Duration(milliseconds: 250),
-          child: expanded
-              ? SingleChildScrollView(child: expandedContent)
-              : Container(),
-        ),
-      ],
-    );
-  }
-}
-
-class DappSettingsButtonUtils {
   static Widget contractVersionOptions({
     BuildContext context,
     Set<int> available,
@@ -325,7 +278,7 @@ class DappSettingsButtonUtils {
     List<PopupMenuItem> list = [];
     if (available.contains(0)) {
       list.add(
-        listMenuItem(
+        DappSettingsButtonUtils.listMenuItem(
           context: context,
           textStyle: textStyle,
           selected: selected == 0,
@@ -338,7 +291,7 @@ class DappSettingsButtonUtils {
     }
     if (available.contains(1)) {
       list.add(
-        listMenuItem(
+        DappSettingsButtonUtils.listMenuItem(
           context: context,
           textStyle: textStyle,
           selected: selected == 1,
@@ -352,10 +305,80 @@ class DappSettingsButtonUtils {
     return list;
   }
 
+  Widget _listMenuItem({
+    @required bool selected,
+    @required String title,
+    @required VoidCallback onTap,
+  }) {
+    return DappSettingsButtonUtils.listMenuItem(
+      context: context,
+      selected: selected,
+      title: title,
+      onTap: onTap,
+      textStyle: _textStyle,
+    );
+  }
+}
+
+class ExpandingPopupMenuItem extends StatelessWidget {
+  final bool expanded;
+  final String title;
+  final String currentSelectionText;
+  final double expandedHeight;
+  final Widget expandedContent;
+  final TextStyle textStyle;
+  final double collapsedHeight;
+
+  const ExpandingPopupMenuItem({
+    Key key,
+    @required this.expanded,
+    @required this.title,
+    this.currentSelectionText,
+    @required this.expandedHeight,
+    @required this.expandedContent,
+    @required this.textStyle,
+    this.collapsedHeight = 50.0,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: collapsedHeight,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: textStyle),
+              Row(
+                children: [
+                  if (currentSelectionText != null)
+                    Text(currentSelectionText, style: textStyle).right(8),
+                  Icon(expanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                      color: Colors.white),
+                ],
+              ),
+            ],
+          ),
+        ),
+        AnimatedContainer(
+          height: expanded ? expandedHeight : 0,
+          duration: Duration(milliseconds: 250),
+          child: expanded
+              ? SingleChildScrollView(child: expandedContent)
+              : Container(),
+        ),
+      ],
+    );
+  }
+}
+
+class DappSettingsButtonUtils {
   static PopupMenuItem listMenuItem({
     @required BuildContext context,
     @required bool selected,
-    @required String title,
+    String title,
+    Widget body,
     @required VoidCallback onTap,
     @required TextStyle textStyle,
   }) {
@@ -364,7 +387,7 @@ class DappSettingsButtonUtils {
       child: ListTile(
         selected: selected,
         selectedTileColor: OrchidColors.selected_color_dark,
-        title: Text(title, style: textStyle),
+        title: body ?? Text(title, style: textStyle),
         onTap: () {
           // Close the menu item
           Navigator.pop(context);

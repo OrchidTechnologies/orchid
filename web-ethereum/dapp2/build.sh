@@ -6,7 +6,8 @@ base=$(dirname "$0"); cd $base
 rm -rf build
 
 #$FLUTTER build web --web-renderer canvaskit --dart-define mock=true
-$FLUTTER build web --web-renderer canvaskit
+commit=$(git rev-parse --short HEAD)
+$FLUTTER build web --web-renderer canvaskit --dart-define build_commit=$commit
 
 # move js to hash named file
 uuid=$(uuidgen)

@@ -1,18 +1,25 @@
+import '../../orchid.dart';
+
 class DappTransaction {
   final String transactionHash;
   final int chainId;
+  final String description;
 
-  DappTransaction({this.transactionHash, this.chainId});
+  DappTransaction({
+    @required this.transactionHash,
+    @required this.chainId,
+    @required this.description,
+  });
 
   DappTransaction.fromJson(Map<String, dynamic> json)
       : this.transactionHash = json['tx'],
-        // this.chainId = int.parse(json['chainId']);
-        this.chainId = json['chainId'];
+        this.chainId = json['chainId'],
+        this.description = json['description'];
 
   Map<String, dynamic> toJson() => {
         'tx': transactionHash,
-        // 'chainId': chainId.toString(),
         'chainId': chainId,
+        'description': description,
       };
 
   static List<DappTransaction> fromList(List<dynamic> list) {
@@ -23,6 +30,6 @@ class DappTransaction {
 
   @override
   String toString() {
-    return 'DappTransaction{transactionHash: $transactionHash, chainId: $chainId}';
+    return 'DappTransaction{transactionHash: $transactionHash, chainId: $chainId, description: $description}';
   }
 }

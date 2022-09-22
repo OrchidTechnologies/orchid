@@ -53,12 +53,17 @@ class DappWalletInfoPanel extends StatelessWidget {
   }
 
   static Widget buildExplorerLink(
-      BuildContext context, TextStyle textStyle, String link,
-      {MainAxisAlignment alignment = MainAxisAlignment.start,
-      bool disabled = false}) {
+    BuildContext context,
+    TextStyle textStyle,
+    String link, {
+    MainAxisAlignment alignment = MainAxisAlignment.start,
+    MainAxisSize size = MainAxisSize.max,
+    bool disabled = false,
+  }) {
     final text =
         context.s.blockExplorer + (disabled ? ' (' + "unknown" + ')' : '');
     return Row(
+      mainAxisSize: size,
       mainAxisAlignment: alignment,
       children: [
         Transform.rotate(

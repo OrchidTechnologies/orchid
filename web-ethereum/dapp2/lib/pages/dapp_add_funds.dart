@@ -145,7 +145,6 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
     return !txPending && _netAddValid;
   }
 
-
   bool get _netAddValid {
     if (walletBalance == null) {
       return false;
@@ -185,7 +184,10 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
 
       // Persisting the transaction(s) will update the UI elsewhere.
       UserPreferences().addTransactions(txHashes.map((hash) => DappTransaction(
-          transactionHash: hash, chainId: widget.context.chain.chainId)));
+            transactionHash: hash,
+            chainId: widget.context.chain.chainId,
+            description: "Add Funds",
+          )));
 
       _addBalanceField.clear();
       _addDepositField.clear();

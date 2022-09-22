@@ -314,7 +314,10 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
         warnDeposit: _unlockDeposit,
       );
       UserPreferences().addTransaction(DappTransaction(
-          transactionHash: txHash, chainId: widget.context.chain.chainId));
+        transactionHash: txHash,
+        chainId: widget.context.chain.chainId,
+        description: "Withdraw Funds",
+      ));
       _balanceField.clear();
       _depositField.clear();
       _unlockDeposit = false;
