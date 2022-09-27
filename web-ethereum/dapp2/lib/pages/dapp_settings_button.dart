@@ -4,6 +4,7 @@ import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/menu/submenu_popup_menu_item.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import '../orchid/menu/orchid_popup_menu_button.dart';
 
 class DappSettingsButton extends StatefulWidget {
@@ -184,6 +185,8 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
   Widget _buildAbout(bool expanded) {
     final buildCommit =
         const String.fromEnvironment('build_commit', defaultValue: '...');
+    final githubUrl =
+        'https://github.com/OrchidTechnologies/orchid/tree/$buildCommit/web-ethereum/dapp2';
     return ExpandingPopupMenuItem(
       expanded: expanded,
       title: "About",
@@ -191,7 +194,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
         selected: false,
         title: "Dapp Version:  $buildCommit",
         onTap: () async {
-          TapToCopyText.copyTextToClipboard(buildCommit);
+          launchUrlString(githubUrl);
         },
       ),
       expandedHeight: 58,
