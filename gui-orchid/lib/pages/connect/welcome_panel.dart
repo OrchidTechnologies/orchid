@@ -153,7 +153,10 @@ class _WelcomePanelState extends State<WelcomePanel> {
                       )
                     : Container())
                 .width(48),
-            Text(title.text).withStyle(style),
+            Flexible(
+                child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(title.text).withStyle(style))),
             ((title.showDismiss)
                     ? IconButton(
                         onPressed: () {
@@ -316,7 +319,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
           style: OrchidText.body2,
           text: s.enterAnExistingOrchidIdentity + ':',
           tags: tags,
-        ).height(20).top(24).padx(24),
+        ).top(24).padx(24),
         OrchidLabeledIdentityField(
           label: s.orchidIdentity,
           onChange: (ParseOrchidIdentityResult result) async {
@@ -455,7 +458,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
           tags: {
             'bold': StyledTextTag(style: OrchidText.body2.bold),
           },
-        ).height(70).top(24),
+        ).top(24),
         Row(
           children: [
             OrchidCheckbox(
