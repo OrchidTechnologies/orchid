@@ -36,8 +36,8 @@ class _UserConfiguredChainPanelState extends State<UserConfiguredChainPanel> {
       children: [
         // String name,
         OrchidLabeledTextField(
-          label: "Chain name" + ':',
-          hintText: "Name...",
+          label: s.chainName + ':',
+          hintText: s.name+"...",
           controller: _name,
           // TODO:
           onChanged: (_) => _updateForm(),
@@ -46,7 +46,7 @@ class _UserConfiguredChainPanelState extends State<UserConfiguredChainPanel> {
 
         // String defaultProviderUrl,
         OrchidLabeledTextField(
-          label: "RPC Url" + ':',
+          label: s.rpcUrl + ':',
           hintText: "https://...",
           controller: _providerUrl,
           onChanged: (_) => _updateForm(),
@@ -55,7 +55,7 @@ class _UserConfiguredChainPanelState extends State<UserConfiguredChainPanel> {
 
         // double token USD price
         OrchidLabeledNumericField(
-          label: "Token Price USD" + ':',
+          label: s.tokenPriceUsd + ':',
           controller: _tokenPrice,
           onChange: (_) => setState(() {}),
           // onClear: () => setState(() {}),

@@ -49,7 +49,7 @@ class _RpcPageState extends State<RpcPage> {
   Future<void> _addUserConfiguredChain() async {
     return AppDialogs.showAppDialog(
       context: context,
-      title: "Add Chain",
+      title: s.addChain,
       body: UserConfiguredChainPanel(),
       showActions: false,
     );
@@ -240,7 +240,7 @@ class _ChainItemState extends State<_ChainItem> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        SizedBox(width: labelWidth, child: Text("Token Price" + ':').title),
+        SizedBox(width: labelWidth, child: Text(s.tokenPrice + ':').title),
         Expanded(
           child: OrchidTextField(
             // TODO:
@@ -329,8 +329,8 @@ class _ChainItemState extends State<_ChainItem> {
   Future<void> _confirmDelete(UserConfiguredChain userConfiguredChain) async {
     return AppDialogs.showConfirmationDialog(
         context: context,
-        title: "Delete Chain?",
-        bodyText: "Delete user-configured chain: " + userConfiguredChain.name,
+        title: s.deleteChainQuestion,
+        bodyText: s.deleteUserConfiguredChain + ': ' + userConfiguredChain.name,
         commitAction: () async {
           await UserPreferences()
               .userConfiguredChains

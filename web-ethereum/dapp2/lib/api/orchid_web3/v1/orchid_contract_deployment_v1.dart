@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid.dart';
@@ -38,7 +39,7 @@ class OrchidContractDeployment {
 
   Future<void> deploySingletonFactory() async {
     final factoryDeployerBalance = await web3.getBalance(factory_deployer_addr);
-    log("factory_deployer_balance: ${factoryDeployerBalance / e18} ETH");
+    log('factory_deployer_balance: ${factoryDeployerBalance / e18} ETH');
 
     // The gas price specified in the factory deploy tx
     final factoryDeployGasPrice = BigInt.from(500) * e9; // 500 GWEI
@@ -52,13 +53,13 @@ class OrchidContractDeployment {
 
     final payToFactoryDeployer =
         factoryDeployFundsNeeded - factoryDeployerBalance;
-    log("toFundFactoryDeployer = ${payToFactoryDeployer / e18}");
+    log('toFundFactoryDeployer = ${payToFactoryDeployer / e18}');
 
     if (payToFactoryDeployer <= BigInt.zero) {
-      log("Factory deployer funds sufficient.");
+      log('Factory deployer funds sufficient.');
     } else {
       // Fund the single-use address
-      log("Funding factory deployer account with: ${payToFactoryDeployer / e18}");
+      log('Funding factory deployer account with: ${payToFactoryDeployer / e18}');
       final nonce = await web3.getTransactionCount(walletAddress, 'pending');
       final TransactionResponse response1 =
           await web3.getSigner().sendTransaction(
@@ -73,6 +74,7 @@ class OrchidContractDeployment {
       UserPreferences().addTransaction(DappTransaction(
           transactionHash: response1.hash,
           chainId: chainId,
+          // TODO:
           description: "Fund Contract Deployer"));
       final receipt1 = await response1.wait();
       log('fund deployer result: ${receipt1}');
@@ -80,14 +82,15 @@ class OrchidContractDeployment {
 
     // Send the pre-signed factory create tx
     // Note: this does not trigger a metamask confirmation!
-    log("Deploying orchid singleton factory...");
+    log('Deploying orchid singleton factory...');
     final response2 = await web3.sendTransaction(factory_deploy_tx_data);
     UserPreferences().addTransaction(DappTransaction(
         transactionHash: response2.hash,
         chainId: chainId,
+        // TODO:
         description: "Deploy Singleton Factory"));
     final receipt2 = await response2.wait();
-    log('deploy singleton factory result: ${receipt2}');
+    log('Deploy singleton factory result: ${receipt2}');
   }
 
   Future<void> deployV1Contract() async {
@@ -113,6 +116,7 @@ class OrchidContractDeployment {
     UserPreferences().addTransaction(DappTransaction(
         transactionHash: response.hash,
         chainId: chainId,
+        // TODO:
         description: "Deploy Contract"));
     final receipt = await response.wait();
     log('deploy contract v1 result: ${receipt}');
@@ -121,14 +125,14 @@ class OrchidContractDeployment {
   Future<bool> v1ContractDeployed() async {
     final code = await web3.getCode(v1_addr);
     final deployed = code != '0x';
-    log(" Contract deployed : $deployed");
+    log('Contract deployed : $deployed');
     return deployed;
   }
 
   Future<bool> singletonFactoryDeployed() async {
     final code = await web3.getCode(factory_addr);
     final deployed = code != '0x';
-    log("Singleton factory deployed: $deployed");
+    log('Singleton factory deployed: $deployed');
     return deployed;
   }
 

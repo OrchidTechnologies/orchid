@@ -94,7 +94,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
               height: _height,
               child: SizedBox(
                 width: _width,
-                child: Text("Deploy Contract", style: _textStyle),
+                child: Text(s.deployContract, style: _textStyle),
               ),
             ),
           SubmenuPopopMenuItemBuilder<String>(
@@ -189,10 +189,10 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
         'https://github.com/OrchidTechnologies/orchid/tree/$buildCommit/web-ethereum/dapp2';
     return ExpandingPopupMenuItem(
       expanded: expanded,
-      title: "About",
+      title: s.about,
       expandedContent: _listMenuItem(
         selected: false,
-        title: "Dapp Version:  $buildCommit",
+        title: s.dappVersion + ': ' + buildCommit,
         onTap: () async {
           launchUrlString(githubUrl);
         },

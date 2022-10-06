@@ -35,6 +35,7 @@ class Chains {
   static Chain unknownChain(int chainId) {
     return Chain(
       chainId: chainId,
+      // TODO:
       name: "Unknown",
       defaultProviderUrl: null,
       iconPath: OrchidAssetSvgChain.unknown_chain_path,

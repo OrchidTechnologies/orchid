@@ -186,7 +186,7 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
       UserPreferences().addTransactions(txHashes.map((hash) => DappTransaction(
             transactionHash: hash,
             chainId: widget.context.chain.chainId,
-            description: "Add Funds",
+            description: s.addFunds2,
           )));
 
       _addBalanceField.clear();

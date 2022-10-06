@@ -26,7 +26,7 @@ class ConfigChangeDialogs {
     var warning = warn ? s.changesWillTakeEffectInstruction : "";
     return AppDialogs.showAppDialog(
         context: context,
-        title: s.saved + "!",
+        title: s.saved + '!',
         bodyText: s.configurationSaved + " " + warning);
   }
 
@@ -35,7 +35,7 @@ class ConfigChangeDialogs {
     S s = S.of(context);
     AppDialogs.showAppDialog(
         context: context,
-        title: s.whoops + "!",
+        title: s.whoops + '!',
         bodyText: s.configurationFailedInstruction +
             (errorText != null ? '\n\n' + errorText : ""));
   }

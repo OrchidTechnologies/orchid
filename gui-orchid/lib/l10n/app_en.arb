@@ -231,6 +231,7 @@
 	"accounts": "Accounts",
 	"orchidIdentity": "Orchid Identity",
 	"addFunds": "ADD FUNDS",
+	"addFunds2": "Add Funds",
 	"gb": "GB",
 	"@gb": {
 		"description": "Gigabytes"
@@ -338,6 +339,7 @@
 	"withdrawFundsFromYourOrchidAccountToYourCurrentWallet": "Withdraw funds from your Orchid Account to your current wallet.",
 	"withdrawAndUnlockFunds": "WITHDRAW AND UNLOCK FUNDS",
 	"withdrawFunds": "WITHDRAW FUNDS",
+	"withdrawFunds2": "Withdraw Funds",
 	"withdraw": "Withdraw",
 	"submitTransaction": "SUBMIT TRANSACTION",
 	"move": "Move",
@@ -371,6 +373,7 @@
 	"orchidIsntOnThisChain": "Orchid isn't on this chain.",
 	"theOrchidContractHasntBeenDeployedOnThisChainYet": "The Orchid contract hasn't been deployed on this chain yet.",
 	"moveFunds": "MOVE FUNDS",
+	"moveFunds2": "Move Funds",
 	"lockUnlock": "LOCK / UNLOCK",
 	"yourDepositOfAmountIsUnlocked": "Your deposit of {amount} is unlocked.",
 	"@yourDepositOfAmountIsUnlocked": {
@@ -484,5 +487,21 @@
 	"connectWallet": "CONNECT WALLET",
 	"checkWallet": "Check Wallet",
 	"checkYourWalletAppOrExtensionFor": "Check your Wallet app or extension for a pending request.",
-	"test": "Test"
+	"test": "Test",
+	"chainName": "Chain name",
+	"rpcUrl": "RPC Url",
+	"tokenPrice": "Token Price",
+	"tokenPriceUsd": "Token Price USD",
+	"addChain": "Add Chain",
+	"deleteChainQuestion": "Delete Chain?",
+	"deleteUserConfiguredChain": "Delete user-configured chain",
+	"fundContractDeployer": "Fund Contract Deployer",
+	"deploySingletonFactory": "Deploy Singleton Factory",
+	"deployContract": "Deploy Contract",
+	"about": "About",
+	"dappVersion": "Dapp Version",
+	"viewContractOnEtherscan": "View Contract on Etherscan",
+	"viewContractOnGithub": "View Contract on Github",
+	"accountChanges": "Account Changes",
+	"name": "Name"
 }

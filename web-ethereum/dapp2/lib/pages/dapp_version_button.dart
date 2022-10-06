@@ -73,7 +73,7 @@ class _DappVersionButtonState extends State<DappVersionButton> {
         body: Row(
           children: [
             Icon(Icons.launch, color: Colors.white),
-            Text("View Contract on Etherscan", style: textStyle).left(12),
+            Text(context.s.viewContractOnEtherscan, style: textStyle).left(12),
           ],
         ),
         onTap: () {
@@ -91,7 +91,7 @@ class _DappVersionButtonState extends State<DappVersionButton> {
         body: Row(
           children: [
             Icon(Icons.launch, color: Colors.white),
-            Text("View Contract on Github", style: textStyle).left(12),
+            Text(context.s.viewContractOnGithub, style: textStyle).left(12),
           ],
         ),
         onTap: () {
