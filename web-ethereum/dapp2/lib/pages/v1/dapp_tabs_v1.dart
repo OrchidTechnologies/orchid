@@ -87,7 +87,7 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
             controller: tabController,
             indicatorColor: OrchidColors.tappable,
             tabs: [
-              tab("Add", 0),
+              tab(s.add1, 0),
               tab(s.withdraw, 1),
               tab(s.advanced1, 2),
             ],

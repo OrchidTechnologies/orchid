@@ -185,7 +185,7 @@ class _AccountCardState extends State<AccountCard>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildFunderIconAddress(),
-              _buildSignerIconAddress(),
+              _buildSignerIconAddress().left(8),
             ],
           ).padx(16),
 
@@ -276,8 +276,12 @@ class _AccountCardState extends State<AccountCard>
   }) {
     final signer = widget.accountDetail?.signerAddress ??
         widget.partialAccountSignerAddress;
-    return _identiconAddressRow(signer, s.orchidIdentity,
-        textStyle: textStyle, pad: pad);
+    return _identiconAddressRow(
+      signer,
+      s.orchidIdentity,
+      textStyle: textStyle,
+      pad: pad,
+    );
   }
 
   Widget _identiconAddressRow(
@@ -299,15 +303,20 @@ class _AccountCardState extends State<AccountCard>
           // show border for placeholder only
           showBorder: !active,
         ),
-        TapToCopyText(
-          text,
-          displayText: displayText,
-          padding: EdgeInsets.zero,
-          style: style,
-          textAlign: TextAlign.left,
-          // disable when empty
-          onTap: !active ? (_) {} : null,
-        ).top(3).left(pad ?? 8),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 150),
+          child: FittedBox(
+            child: TapToCopyText(
+              text,
+              displayText: displayText,
+              padding: EdgeInsets.zero,
+              style: style,
+              textAlign: TextAlign.left,
+              // disable when empty
+              onTap: !active ? (_) {} : null,
+            ).top(3).left(pad ?? 8),
+          ),
+        ),
       ],
     );
   }
