@@ -115,7 +115,7 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
   }
 
   Widget _buildStatus() {
-    log("XXX: widget.tx = ${widget.tx}");
+    // log("XXX: widget.tx = ${widget.tx}");
     var message = _receipt != null
         ? s.confirmations + ': ${_receipt.confirmations}'
         : s.pending;
