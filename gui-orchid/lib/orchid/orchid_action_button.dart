@@ -72,7 +72,11 @@ class OrchidActionButton extends StatelessWidget {
               gradient: enabled ? radialGradient : null,
             ),
             child: Center(
-                child: Text(text, style: textStyle ?? OrchidText.button.black)),
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(text, style: textStyle ?? OrchidText.button.black)
+                      .padx(8)),
+            ),
           ),
           // If onPressed is null this does not render the background color
           onPressed: onPressed),

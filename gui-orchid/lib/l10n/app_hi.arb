@@ -507,5 +507,8 @@
 	"tokenPriceUsd": "टोकन मूल्य USD",
 	"viewContractOnEtherscan": "इथरस्कैन पर अनुबंध देखें",
 	"viewContractOnGithub": "गीथूब पर अनुबंध देखें",
-	"withdrawFunds2": "धन निकालना"
+	"withdrawFunds2": "धन निकालना",
+	"step1": "<bold>चरण 1.</bold> ERC-20 वॉलेट को <link>पर्याप्त टोकन</link> के साथ कनेक्ट करें।",
+	"step2": "<bold>चरण 2.</bold> खाते प्रबंधित करें और फिर पते पर टैप करके आर्किड ऐप से आर्किड पहचान की प्रतिलिपि बनाएँ।",
+	"connectOrCreate": "कनेक्ट करें या आर्किड खाता बनाएं"
 }

@@ -503,5 +503,8 @@
 	"viewContractOnEtherscan": "View Contract on Etherscan",
 	"viewContractOnGithub": "View Contract on Github",
 	"accountChanges": "Account Changes",
-	"name": "Name"
+	"name": "Name",
+	"step1": "<bold>Step 1.</bold> Connect an ERC-20 wallet with <link>enough tokens</link> in it.",
+	"step2": "<bold>Step 2.</bold> Copy the Orchid Identity from the Orchid App by going to Manage Accounts then tapping the address.",
+	"connectOrCreate": "Connect or create Orchid Account"
 }

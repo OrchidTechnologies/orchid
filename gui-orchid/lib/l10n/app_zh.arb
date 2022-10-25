@@ -507,5 +507,8 @@
 	"tokenPriceUsd": "代币价格 USD",
 	"viewContractOnEtherscan": "在 Etherscan 上查看合约",
 	"viewContractOnGithub": "在 Github 上查看合约",
-	"withdrawFunds2": "提款"
+	"withdrawFunds2": "提款",
+	"step1": "<bold>第 1 步。</bold> 连接一个 ERC-20 钱包，其中有 <link>足够的令牌</link> 。",
+	"step2": "<bold>第 2 步。</bold> 从 Orchid 应用程序复制 Orchid 身份，方法是转到管理帐户，然后点按地址。",
+	"connectOrCreate": "连接或创建 Orchid 帐户"
 }

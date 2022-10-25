@@ -203,7 +203,7 @@ class _DappHomeState extends State<DappHome> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Connect or create Orchid Account').subtitle.bold,
+                  Text(s.connectOrCreate).subtitle.bold,
                   _buildStep1Text().top(8),
                   AnimatedCrossFade(
                     duration: millis(300),
@@ -257,8 +257,7 @@ class _DappHomeState extends State<DappHome> {
   StyledText _buildStep1Text() {
     return StyledText(
       style: OrchidText.body2,
-      text:
-          '<bold>Step 1.</bold> Connect an ERC-20 wallet with <link>enough tokens</link> in it.',
+      text: s.step1,
       tags: _textTags,
     );
   }
@@ -266,8 +265,7 @@ class _DappHomeState extends State<DappHome> {
   StyledText _buildStep2Text() {
     return StyledText(
       style: OrchidText.body2,
-      text:
-          '<bold>Step 2.</bold> Copy the Orchid Identity from the Orchid App by going to Manage Accounts then tapping the address.',
+      text: s.step2,
       tags: _textTags,
     );
   }

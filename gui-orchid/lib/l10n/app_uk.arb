@@ -507,5 +507,8 @@
 	"tokenPriceUsd": "Ціна токена в доларах США",
 	"viewContractOnEtherscan": "Переглянути контракт на Etherscan",
 	"viewContractOnGithub": "Переглянути договір на Github",
-	"withdrawFunds2": "вивести кошти"
+	"withdrawFunds2": "вивести кошти",
+	"step1": "<bold>Крок 1.</bold> Підключіть гаманець ERC-20 із <link>достатньою кількістю токенів</link> у ньому.",
+	"step2": "<bold>Крок 2.</bold> Скопіюйте Orchid Identity із програми Orchid, перейшовши до «Керування обліковими записами» та торкнувшись адреси.",
+	"connectOrCreate": "Підключіть або створіть обліковий запис Orchid"
 }

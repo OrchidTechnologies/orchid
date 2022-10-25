@@ -507,5 +507,8 @@
 	"tokenPriceUsd": "Precio del token USD",
 	"viewContractOnEtherscan": "Ver contrato en Etherscan",
 	"viewContractOnGithub": "Ver contrato en Github",
-	"withdrawFunds2": "Retirar Fondos"
+	"withdrawFunds2": "Retirar Fondos",
+	"step1": "<bold>Paso 1.</bold> Conecte una billetera ERC-20 con <link>tokens suficientes</link> en ella.",
+	"step2": "<bold>Paso 2.</bold> Copie la identidad de Orchid desde la aplicación Orchid yendo a Administrar cuentas y luego tocando la dirección.",
+	"connectOrCreate": "Conectar o crear Cuenta Orquídea"
 }
