@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 /// A text span that is styled as a link and launches an external web viewer
 /// for the associated URL.
@@ -11,7 +11,7 @@ class LinkTextSpan extends TextSpan {
             text: text ?? url,
             recognizer: TapGestureRecognizer()
               ..onTap = () {
-                launch(url, forceSafariVC: false);
+                launchUrlString(url);
               });
 }
 
@@ -37,6 +37,6 @@ class LinkText extends StatelessWidget {
   }
 
   _openURL() {
-    launch(url, forceSafariVC: false);
+    launchUrlString(url);
   }
 }

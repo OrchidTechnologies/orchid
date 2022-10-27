@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/link_text.dart';
+import '../orchid.dart';
 import 'orchid_colors.dart';
 import 'package:styled_text/styled_text.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -317,11 +318,12 @@ extension OrchidTextExtensions on Text {
 
   Widget link({@required String url, TextStyle style}) {
     return RichText(
+        key: Key(url),
         text: LinkTextSpan(
-      text: this.data,
-      style: style ?? this.style,
-      url: url,
-    ));
+          text: this.data,
+          style: style ?? this.style,
+          url: url,
+        ));
   }
 
   Widget linkButton({@required VoidCallback onTapped, TextStyle style}) {
