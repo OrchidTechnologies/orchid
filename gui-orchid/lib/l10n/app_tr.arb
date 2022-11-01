@@ -510,5 +510,7 @@
 	"withdrawFunds2": "Para çekme",
 	"step1": "<bold>1. Adım.</bold> İçinde <link>yeterli jeton</link> bulunan bir ERC-20 cüzdanı bağlayın.",
 	"step2": "<bold>Adım 2.</bold> Hesapları Yönet'e gidip adrese dokunarak Orkide Uygulamasından Orkide Kimliğini kopyalayın.",
-	"connectOrCreate": "Bağlanın veya Orkide Hesabı oluşturun"
+	"connectOrCreate": "Bağlanın veya Orkide Hesabı oluşturun",
+	"lockDeposit2": "Depozitoyu Kilitle",
+	"unlockDeposit2": "Depozito kilidini aç"
 }

@@ -510,5 +510,7 @@
 	"withdrawFunds2": "자금 인출",
 	"step1": "<bold>1단계.</bold>  <link>충분한 토큰</link> 이 있는 ERC-20 지갑을 연결합니다.",
 	"step2": "<bold>2단계.</bold> 계정 관리로 이동한 다음 주소를 탭하여 Orchid 앱에서 Orchid ID를 복사합니다.",
-	"connectOrCreate": "Orchid 계정 연결 또는 생성"
+	"connectOrCreate": "Orchid 계정 연결 또는 생성",
+	"lockDeposit2": "예치금 잠금",
+	"unlockDeposit2": "보증금 잠금 해제"
 }

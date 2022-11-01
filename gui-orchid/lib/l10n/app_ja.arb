@@ -510,5 +510,7 @@
 	"withdrawFunds2": "資金を引き出す",
 	"step1": "<bold>ステップ 1.</bold> ERC-20 ウォレットに <link>十分な数のトークン</link> を接続します。",
 	"step2": "<bold>ステップ 2.</bold> [アカウントの管理] に移動し、アドレスをタップして、Orchid アプリから Orchid ID をコピーします。",
-	"connectOrCreate": "Orchid アカウントを接続または作成する"
+	"connectOrCreate": "Orchid アカウントを接続または作成する",
+	"lockDeposit2": "ロックデポジット",
+	"unlockDeposit2": "デポジットのロックを解除する"
 }

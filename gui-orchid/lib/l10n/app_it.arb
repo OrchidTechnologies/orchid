@@ -510,5 +510,7 @@
 	"withdrawFunds2": "Prelevare fondi",
 	"step1": "<bold>Passaggio 1.</bold> Collega un portafoglio ERC-20 con <link>token sufficienti</link> al suo interno.",
 	"step2": "<bold>Passaggio 2.</bold> Copia l'identità Orchid dall'app Orchid andando su Gestisci account e toccando l'indirizzo.",
-	"connectOrCreate": "Collega o crea un account Orchid"
+	"connectOrCreate": "Collega o crea un account Orchid",
+	"lockDeposit2": "Deposito a chiave",
+	"unlockDeposit2": "Sblocca il deposito"
 }

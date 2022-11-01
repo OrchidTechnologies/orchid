@@ -85,7 +85,8 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
     if (widget.context == null) {
       return Container();
     }
-    return SizedBox(width: 334.0, child: IntrinsicHeight(child: _buildStatusContainer()));
+    return SizedBox(
+        width: 334.0, child: IntrinsicHeight(child: _buildStatusContainer()));
   }
 
   Widget _buildStatusContainer() {
@@ -121,6 +122,7 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
         : s.pending;
 
     final explorerLink = Chains.chainFor(widget.tx.chainId).explorerUrl;
+    final description = widget.tx.description(context);
 
     return Column(
       children: <Widget>[
@@ -135,10 +137,10 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
           Column(
             children: [
               // description
-              if (widget.tx.description != null)
+              if (description != null)
                 Column(
                   children: [
-                    Text(widget.tx.description).subtitle.bottom(8),
+                    Text(description).subtitle.bottom(8),
                     SizedBox(
                         width: 100,
                         child:

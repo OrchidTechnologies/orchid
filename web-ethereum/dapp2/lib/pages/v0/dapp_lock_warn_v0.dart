@@ -110,9 +110,12 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
         signer: widget.signer,
       );
       UserPreferences().addTransaction(DappTransaction(
-          transactionHash: txHash,
-          chainId: widget.context.chain.chainId,
-          description: lock ? "Lock Deposit" : "Unlock Deposit"));
+        transactionHash: txHash,
+        chainId: widget.context.chain.chainId,
+        type: lock
+            ? DappTransactionType.lockDeposit
+            : DappTransactionType.unlockDeposit,
+      ));
       setState(() {});
     } catch (err) {
       log('Error on move funds: $err');

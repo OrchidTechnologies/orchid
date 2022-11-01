@@ -316,7 +316,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
       UserPreferences().addTransaction(DappTransaction(
         transactionHash: txHash,
         chainId: widget.context.chain.chainId,
-        description: s.withdrawFunds2,
+        type: DappTransactionType.withdrawFunds,
       ));
       _balanceField.clear();
       _depositField.clear();

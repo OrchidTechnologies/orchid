@@ -1,13 +1,15 @@
 #!/bin/sh
+set -euxo pipefail
 
 FLUTTER="${FLUTTER:-$FLUTTER_STABLE}"; $FLUTTER --version | grep -i channel
 base=$(dirname "$0"); cd $base
 
 rm -rf build
 
+#_profile="--profile"
 #$FLUTTER build web --web-renderer canvaskit --dart-define mock=true
 commit=$(git rev-parse --short HEAD)
-$FLUTTER build web --web-renderer canvaskit --dart-define build_commit=$commit
+$FLUTTER build web ${_profile:-} --web-renderer canvaskit --dart-define build_commit=$commit
 
 # move js to hash named file
 uuid=$(uuidgen)

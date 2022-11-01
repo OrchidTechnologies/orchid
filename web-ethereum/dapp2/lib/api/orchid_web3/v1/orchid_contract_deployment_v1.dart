@@ -72,10 +72,10 @@ class OrchidContractDeployment {
               );
 
       UserPreferences().addTransaction(DappTransaction(
-          transactionHash: response1.hash,
-          chainId: chainId,
-          // TODO:
-          description: "Fund Contract Deployer"));
+        transactionHash: response1.hash,
+        chainId: chainId,
+        type: DappTransactionType.fundContractDeployer,
+      ));
       final receipt1 = await response1.wait();
       log('fund deployer result: ${receipt1}');
     }
@@ -85,10 +85,10 @@ class OrchidContractDeployment {
     log('Deploying orchid singleton factory...');
     final response2 = await web3.sendTransaction(factory_deploy_tx_data);
     UserPreferences().addTransaction(DappTransaction(
-        transactionHash: response2.hash,
-        chainId: chainId,
-        // TODO:
-        description: "Deploy Singleton Factory"));
+      transactionHash: response2.hash,
+      chainId: chainId,
+      type: DappTransactionType.deploySingletonFactory,
+    ));
     final receipt2 = await response2.wait();
     log('Deploy singleton factory result: ${receipt2}');
   }
@@ -114,10 +114,10 @@ class OrchidContractDeployment {
           ),
         );
     UserPreferences().addTransaction(DappTransaction(
-        transactionHash: response.hash,
-        chainId: chainId,
-        // TODO:
-        description: "Deploy Contract"));
+      transactionHash: response.hash,
+      chainId: chainId,
+      type: DappTransactionType.deployContract,
+    ));
     final receipt = await response.wait();
     log('deploy contract v1 result: ${receipt}');
   }

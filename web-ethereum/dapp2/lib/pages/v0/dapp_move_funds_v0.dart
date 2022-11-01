@@ -96,9 +96,10 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
         moveAmount: _moveBalanceField.value,
       );
       UserPreferences().addTransaction(DappTransaction(
-          transactionHash: txHash,
-          chainId: widget.context.chain.chainId,
-          description: s.moveFunds2));
+        transactionHash: txHash,
+        chainId: widget.context.chain.chainId,
+        type: DappTransactionType.moveFunds,
+      ));
       _moveBalanceField.clear();
       setState(() {});
     } catch (err) {
