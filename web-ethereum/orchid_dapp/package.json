@@ -27,7 +27,7 @@
     "react-intl": "^3.12.1",
     "react-responsive": "^8.2.0",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "^3.4.4",
+    "react-scripts": "^5.0.1",
     "rxjs": "^6.6.3",
     "typescript": "^4.1.2",
     "web3": "1.2.11",
