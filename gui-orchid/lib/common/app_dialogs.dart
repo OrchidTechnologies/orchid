@@ -1,4 +1,5 @@
 import 'package:orchid/orchid.dart';
+import 'app_buttons_undeprecated.dart';
 import 'app_colors.dart';
 import 'app_text.dart';
 
@@ -29,7 +30,7 @@ class AppDialogs {
           content: body ?? Text(bodyText ?? '', style: OrchidText.body2),
           actions: <Widget>[
             if (linkSettings)
-              FlatButton(
+              FlatButtonDeprecated(
                 child: Text(s.settingsButtonTitle, style: AppText.dialogButton),
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -37,7 +38,7 @@ class AppDialogs {
                 },
               ),
             if (showActions)
-              FlatButton(
+              FlatButtonDeprecated(
                 child: Text(s.ok,
                     style:
                         OrchidText.button.copyWith(color: OrchidColors.purple_bright)),

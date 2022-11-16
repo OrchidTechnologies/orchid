@@ -1,18 +1,19 @@
-import 'package:flutter/foundation.dart';
+// @dart=2.12
 import 'package:orchid/api/orchid_log_api.dart';
 
-bool _logCaching = false;
+bool _logCaching = true;
 
 class Cache<K, T> {
-  final Duration duration;
+  final Duration? duration;
   final Map<K, _Cached<T>> map = {};
   final String name; // for logging
 
-  Cache({@required this.duration, this.name = 'cache'});
+  /// Duration may be null to indicate no expiration
+  Cache({this.duration, this.name = 'cache'});
 
   Future<T> get({
-    K key,
-    Future<T> Function(K key) producer,
+    required K key,
+    required Future<T> Function(K key) producer,
     bool refresh = false,
   }) async {
     var cached = map[key];
@@ -41,24 +42,24 @@ class Cache<K, T> {
 class SingleCache<T> {
   final Duration duration;
   final String name; // for logging
-  _Cached<T> cached;
+  _Cached<T>? cached;
 
-  SingleCache({@required this.duration, this.name = 'cache'});
+  SingleCache({required this.duration, this.name = 'cache'});
 
   Future<T> get({
-    Future<T> Function() producer,
+    required Future<T> Function() producer,
     bool refresh = false,
   }) async {
-    if (!refresh && cached != null && !cached.isExpired(duration)) {
+    if (!refresh && cached != null && !cached!.isExpired(duration)) {
       log("cache: ($name): returning cached value");
-      return cached.value;
+      return cached!.value;
     }
     log("cache: ($name):${refresh ? ' [refresh]' : ''} updating value");
     Future<T> value = producer();
     cached = _Cached(value);
     return value;
   }
-  
+
   void log(String text) {
     if (_logCaching) {
       OrchidLogAPI.defaultLogAPI.write(text);
@@ -73,7 +74,11 @@ class _Cached<T> {
 
   _Cached(this.value);
 
-  bool isExpired(Duration duration) {
+  bool isExpired(Duration? duration) {
+    // null duration means never expire
+    if (duration == null) {
+      return false;
+    }
     return DateTime.now().difference(time) > duration;
   }
 }

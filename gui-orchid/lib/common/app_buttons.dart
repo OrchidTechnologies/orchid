@@ -5,8 +5,7 @@ import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/common/app_text.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/util/on_off.dart';
-
+import 'app_buttons_undeprecated.dart';
 import 'formatting.dart';
 
 /// A rounded rectangle text button.
@@ -38,7 +37,7 @@ class RoundedRectButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RaisedButton(
+    return RaisedButtonDeprecated(
       elevation: elevation,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16))),
@@ -51,7 +50,10 @@ class RoundedRectButton extends StatelessWidget {
                 icon != null ? padx(14) : Container(),
                 Padding(
                   padding: EdgeInsets.only(
-                      top: 8, bottom: 8, left: 24, right: trailing == null ? 24 : 0),
+                      top: 8,
+                      bottom: 8,
+                      left: 24,
+                      right: trailing == null ? 24 : 0),
                   child: Text(text,
                       style: style ??
                           OrchidText.button.copyWith(
@@ -91,7 +93,7 @@ class RoundTitledRaisedImageButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        RaisedButton(
+        RaisedButtonDeprecated(
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           padding: EdgeInsets.all(padding),
           color: OrchidColors.purple_ffb88dfc,
@@ -136,7 +138,7 @@ class TextControlButton extends StatelessWidget {
         AppText.buttonStyle.copyWith(color: color, letterSpacing: 1.25);
     var textChild = Text(text, textAlign: alignment, style: textStyle);
 
-    return FlatButton(
+    return FlatButtonDeprecated(
       onPressed: onPressed,
       child: textChild,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
@@ -222,7 +224,7 @@ class TitleIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlatButton(
+    return FlatButtonDeprecated(
       color: backgroundColor,
       onPressed: onPressed,
       shape: RoundedRectangleBorder(

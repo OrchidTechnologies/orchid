@@ -39,6 +39,8 @@ class Chains {
       name: "Unknown",
       defaultProviderUrl: null,
       iconPath: OrchidAssetSvgChain.unknown_chain_path,
+      blocktime: 0,
+      eip1559: false,
 
       // unknown token type
       nativeCurrency: TokenType(
@@ -58,6 +60,7 @@ class Chains {
     nativeCurrency: Tokens.TOK,
     defaultProviderUrl: 'http://127.0.0.1:7545/',
     iconPath: OrchidAssetSvgChain.unknown_chain_path,
+    blocktime: 0,
   );
 
   // Ethereum (ETH)
@@ -71,6 +74,7 @@ class Chains {
     iconPath: ethIconPath,
     explorerUrl: 'https://etherscan.io/',
     supportsLogs: true,
+    blocktime: 12,
   );
 
   // Gnosis (xDAI)
@@ -84,6 +88,7 @@ class Chains {
     iconPath: OrchidAssetSvgChain.gnossis_chain_path,
     explorerUrl: 'https://blockscout.com/xdai/mainnet/',
     supportsLogs: true,
+    blocktime: 5,
   );
 
   // Avalanch (AVAX)
@@ -96,6 +101,7 @@ class Chains {
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
     explorerUrl: 'https://snowtrace.io/',
     supportsLogs: false,
+    blocktime: 3,
   );
 
   // Binance Smart Chain (BSC)
@@ -107,6 +113,8 @@ class Chains {
     defaultProviderUrl: 'https://bsc-dataseed1.binance.org',
     iconPath: OrchidAssetSvgChain.binance_smart_chain_path,
     explorerUrl: 'https://bscscan.com',
+    blocktime: 3,
+    eip1559: false,
   );
 
   // Polygon (MATIC)
@@ -118,6 +126,7 @@ class Chains {
     defaultProviderUrl: 'https://polygon-rpc.com/',
     iconPath: OrchidAssetSvgToken.matic_token_path,
     explorerUrl: 'https://polygonscan.com/',
+    blocktime: 2,
   );
 
   // Optimism (OETH)
@@ -132,6 +141,8 @@ class Chains {
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
     supportsLogs: true,
+    blocktime: 0, // non-standard transaction structure...
+    eip1559: false,
   );
 
   // Arbitrum One (AETH)
@@ -144,6 +155,7 @@ class Chains {
     // TODO: missing chain icon
     iconPath: OrchidAssetSvgChain.unknown_chain_path,
     explorerUrl: 'https://arbiscan.io/',
+    blocktime: 0,
   );
 
   // Aurora (NEAR)
@@ -158,6 +170,8 @@ class Chains {
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
     supportsLogs: true,
+    blocktime: 1,
+    eip1559: false,
   );
 
   // Fantom (FTM)
@@ -170,6 +184,7 @@ class Chains {
     iconPath: OrchidAssetSvgToken.fantom_ftm_token_path,
     explorerUrl: 'https://ftmscan.com',
     supportsLogs: true,
+    blocktime: 1,
   );
 
   // Telos (TLOS)
@@ -181,6 +196,7 @@ class Chains {
     defaultProviderUrl: 'https://mainnet.telos.net/evm',
     iconPath: OrchidAssetSvgToken.telos_tlos_token_path,
     explorerUrl: 'https://teloscan.io',
+    blocktime: 0.5,
   );
 
 // RSK (BTC)
@@ -192,6 +208,8 @@ class Chains {
     defaultProviderUrl: 'https://public-node.rsk.co',
     iconPath: OrchidAssetSvgChain.rsk_chain_path,
     explorerUrl: 'https://explorer.rsk.co',
+    blocktime: 0,
+    eip1559: false,
   );
 
   // Celo (CELO)
@@ -203,6 +221,7 @@ class Chains {
     defaultProviderUrl: 'https://forno.celo.org',
     iconPath: OrchidAssetSvgChain.celo_chain_path,
     explorerUrl: 'https://explorer.celo.org',
+    blocktime: 5,
   );
 
   static Map<int, Chain> _map = [
@@ -276,6 +295,8 @@ class Chain {
   final int requiredConfirmations;
   final bool supportsLogs;
   final String iconPath;
+  final double blocktime; // average, seconds
+  final bool eip1559;
 
   /// Indicates that transaction may incur additional fees outside the standard
   /// gas fees.
@@ -294,11 +315,13 @@ class Chain {
     @required this.name,
     @required this.nativeCurrency,
     @required this.defaultProviderUrl,
+    @required this.blocktime,
     this.requiredConfirmations = 1,
     this.iconPath,
     this.explorerUrl,
     this.hasNonstandardTransactionFees = false,
     this.supportsLogs = false,
+    this.eip1559 = true,
   });
 
   String get providerUrl {
@@ -357,6 +380,8 @@ class UserConfiguredChain extends Chain {
           name: name,
           defaultProviderUrl: defaultProviderUrl,
           nativeCurrency: userConfiguredTokenType(chainId, tokenPriceUSD),
+          blocktime: 0,
+          eip1559: false,
         );
 
   UserConfiguredChain.fromJson(Map<String, dynamic> json)

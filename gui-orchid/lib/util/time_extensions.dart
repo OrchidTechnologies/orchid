@@ -21,4 +21,8 @@ extension DateTimeExtensions on DateTime {
   String toShortString() {
     return DateFormat('MM/dd/yyyy HH:mm:ss').format(this);
   }
+
+  String toShortDateString() {
+    return DateFormat('MM/dd/yyyy').format(this);
+  }
 }

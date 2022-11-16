@@ -20,6 +20,10 @@ class AbiEncode {
     return value.toUnsigned(128).toRadixString(16).padLeft(64, '0');
   }
 
+  static String uint80(BigInt value) {
+    return value.toUnsigned(80).toRadixString(16).padLeft(64, '0');
+  }
+
   static String uint64(BigInt value) {
     return value.toUnsigned(64).toRadixString(16).padLeft(64, '0');
   }

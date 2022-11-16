@@ -1,3 +1,4 @@
+import 'package:orchid/common/app_buttons_undeprecated.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/common/gradient_border.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
@@ -61,7 +62,7 @@ class OrchidActionButton extends StatelessWidget {
       strokeWidth: 1.5,
       radius: 16,
       gradient: OrchidGradients.verticalTransparentGradient,
-      child: FlatButton(
+      child: FlatButtonDeprecated(
           color: backgroundColor ?? Color(0xffaca3bc),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(16))),
