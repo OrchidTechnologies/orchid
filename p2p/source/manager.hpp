@@ -36,8 +36,6 @@ class Manager :
   public:
     void GetNetworks(NetworkList *networks) const override {
         rtc::BasicNetworkManager::GetNetworks(networks);
-        for (auto network : *networks)
-            Log() << "NET: " << network->ToString() << "@" << network->GetBestIP().ToString() << std::endl;
         networks->erase(std::remove_if(networks->begin(), networks->end(), [](auto network) {
             return Host(network->GetBestIP()) == Host_;
         }), networks->end());
