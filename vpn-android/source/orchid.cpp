@@ -25,8 +25,6 @@ S<BufferSink<Capture>> capture_;
 extern "C" JNIEXPORT void JNICALL
 Java_net_orchid_Orchid_OrchidVpnService_runTunnel(JNIEnv* env, jobject thiz, jint file, jstring dir)
 {
-    Log() << "runTunnel:" << file << std::endl;
-
     Initialize();
 
     orc_assert(file != -1);
@@ -38,7 +36,6 @@ Java_net_orchid_Orchid_OrchidVpnService_runTunnel(JNIEnv* env, jobject thiz, jin
     env->ReleaseStringUTFChars(dir, cDir);
 
     std::string config = files_dir + std::string("/orchid.cfg");
-    Log() << config << std::endl;
 
     auto capture(Break<BufferSink<Capture>>(Break<Local>(), local));
     auto connection(std::make_unique<File<asio::posix::stream_descriptor>>(Context(), file));
