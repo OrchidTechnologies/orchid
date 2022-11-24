@@ -61,7 +61,7 @@
 #endif  // WEBRTC_WIN
 
 #if 1
-#define IP_MTU 14  // Until this is integrated from linux/in.h to netinet/in.h
+//#define IP_MTU 14  // Until this is integrated from linux/in.h to netinet/in.h
 typedef void* SockOptArg;
 
 #endif  // WEBRTC_POSIX
