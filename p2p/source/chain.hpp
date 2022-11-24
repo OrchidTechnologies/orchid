@@ -220,12 +220,15 @@ class Chain :
                 operator ()("eth_getStorageAt", {contract, uint256_t(args), block.height_})...));
             std::tuple<Account, typename Result_<Args_>::type...> result(Account(
                 uint256_t(std::get<0>(hypothesis).asString()),
-                uint256_t(std::get<1>(hypothesis).asString())));
+                uint256_t(std::get<1>(hypothesis).asString())
+            ),
+                typename Result_<Args_>::type()...);
             Get<1, 2>(result, hypothesis, std::index_sequence_for<Args_...>());
             co_return result;
         } else {
             const auto proof(co_await operator ()("eth_getProof", {contract, {Number<uint256_t>(std::forward<Args_>(args))...}, block.height_}));
-            std::tuple<Account, typename Result_<Args_>::type...> result(Account(proof, block));
+            std::tuple<Account, typename Result_<Args_>::type...> result(Account(proof, block),
+                typename Result_<Args_>::type()...);
             Number<uint256_t> root(proof["storageHash"].asString());
             Get<1, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
             co_return result;
