@@ -94,7 +94,7 @@ cflags += -DBOOST_ASIO_DISABLE_CONNECTEX
 # XXX: this is because I am still using an old version of libc++
 cflags += -DBOOST_FILESYSTEM_NO_CXX20_ATOMIC_REF
 
-ifeq ($(target),mac)
-# the MacOS12 SDK unconditionally defines _LIBCPP_HAS_ALIGNED_ALLOC but it requires MacOS 10.15+
+ifneq ($(filter ios mac,$(target)),)
+# newer Xcode unconditionally defines _LIBCPP_HAS_ALIGNED_ALLOC but it requires MacOS 10.15+ / iOS 13.0+
 cflags += -DBOOST_ASIO_DISABLE_STD_ALIGNED_ALLOC
 endif
