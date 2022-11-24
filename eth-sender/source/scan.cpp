@@ -85,7 +85,7 @@ task<void> Scan(const Brick<32> &root, Code_ &&code, Each_ &&each) {
                 } break;
 
                 case 17: {
-                    const auto scalar(proof[Bless(hash[offset++])]);
+                    const auto &scalar(proof[Bless(hash[offset++])]);
                     check = scalar.zero() ? EmptyVector : Brick<32>(scalar.buf());
 
                     orc_assert(proof[16].buf().done());

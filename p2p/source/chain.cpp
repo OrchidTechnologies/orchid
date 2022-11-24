@@ -166,7 +166,7 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
         Bless(value["input"].asString()),
         [&]() {
             std::remove_const_t<decltype(access_)> access;
-            if (const auto list = value["accessList"])
+            if (const auto &list = value["accessList"])
                 for (const auto &entry : list) {
                     std::vector<Bytes32> keys;
                     for (const auto &key : entry["storageKeys"])
@@ -323,7 +323,7 @@ Account::Account(const Json::Value &value, const Block &block) :
 }
 
 uint256_t Chain::Get(Json::Value::ArrayIndex index, const Json::Value &storages, const Region &root, const uint256_t &key) const {
-    const auto storage(storages[index]);
+    const auto &storage(storages[index]);
     orc_assert(uint256_t(storage["key"].asString()) == key);
     const uint256_t value(storage["value"].asString());
     const auto leaf(Verify(storage["proof"], root, HashK(Number<uint256_t>(key))));

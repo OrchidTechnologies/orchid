@@ -262,7 +262,7 @@ class Chain :
             const auto proof(co_await operator ()("eth_getProof", {contract, numbers, block.height_}));
             std::tuple<Account, std::vector<uint256_t>> result(Account(proof, block), {});
             Number<uint256_t> root(proof["storageHash"].asString());
-            auto storages(proof["storageProof"]);
+            const auto &storages(proof["storageProof"]);
             for (Json::Value::ArrayIndex e(Fit(args.size())), i(0); i != e; ++i)
                 std::get<1>(result).emplace_back(Get(i, storages, root, args[i]));
             co_return result;
