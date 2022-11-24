@@ -110,14 +110,14 @@ qflags += -Wno-nonportable-include-path
 
 cflags += -I$(pwd)/mingw
 
-mingw := git-8.0.0.6001.98dad1fe
+mingw := git-9.0.0.6454.b4445ee52
 
 msys2 := 
 msys2 += crt-$(mingw)-1
 msys2 += dlfcn-1.2.0-2
 msys2 += gcc-10.2.0-6
 msys2 += headers-$(mingw)-1
-msys2 += winpthreads-$(mingw)-3
+msys2 += winpthreads-$(mingw)-1
 
 define _
 temp := $(output)/$(1)/mingw$(bits/$(1))/mingw
