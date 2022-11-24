@@ -55,6 +55,7 @@ cflags/$(pwd/wireshark)/ += -Wno-format
 cflags/$(pwd/wireshark)/epan/dissectors/packet-smb2.c += -D_MSC_VER=1800
 cflags/$(pwd/wireshark)/wsutil/getopt_long.c += -DNO_OLDNAMES
 cflags/$(pwd/wireshark)/wsutil/filesystem.c += -Wno-unused-function
+cflags/$(pwd/wireshark)/wsutil/strptime.c += -Wno-unused-but-set-variable
 cflags/$(pwd/wireshark)/wsutil/win32-utils.c += -Wno-missing-braces
 else
 wireshark := $(filter-out \
