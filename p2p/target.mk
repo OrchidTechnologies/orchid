@@ -31,6 +31,7 @@ cflags += -Wno-tautological-overlap-compare
 
 
 cflags += -fcoroutines-ts
+cflags += -Wno-deprecated-coroutine
 cflags += -Wno-deprecated-experimental-coroutine
 
 cflags += -I$(pwd)/extra
