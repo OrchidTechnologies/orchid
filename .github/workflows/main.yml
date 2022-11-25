@@ -358,6 +358,8 @@ jobs:
       with:
         name: orchidd-lnx-amd64
 
+    - run: chmod +x orchidd
+    - run: diff -u <(./usr/sbin/orchidd --version) <(./orchidd --version)
     - run: diff -u <(xxd usr/sbin/orchidd) <(xxd orchidd)
 
 
