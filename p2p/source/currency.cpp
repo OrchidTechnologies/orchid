@@ -40,6 +40,8 @@ task<Currency> Currency::New(unsigned milliseconds, const S<Ethereum> &ethereum,
         co_return (co_await Token::BTC(milliseconds, ethereum)).currency_;
     else if (name == "DAI")
         co_return Currency::USD();
+    else if (name == "ETH")
+        co_return (co_await Token::ETH(milliseconds, ethereum)).currency_;
     else if (name == "FTM")
         co_return (co_await Token::FTM(milliseconds, ethereum)).currency_;
     else if (name == "MATIC")
