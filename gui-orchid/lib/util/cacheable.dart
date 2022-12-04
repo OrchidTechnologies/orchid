@@ -1,7 +1,7 @@
 // @dart=2.12
 import 'package:orchid/api/orchid_log_api.dart';
 
-bool _logCaching = true;
+bool _logCaching = false;
 
 class Cache<K, T> {
   final Duration? duration;
