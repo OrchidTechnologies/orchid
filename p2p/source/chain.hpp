@@ -116,6 +116,8 @@ struct Entry {
     std::vector<Bytes32> topics_;
 };
 
+std::ostream &operator <<(std::ostream &out, const Entry &value);
+
 class Chain :
     public Valve,
     public Endpoint

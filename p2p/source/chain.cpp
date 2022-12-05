@@ -322,6 +322,14 @@ Account::Account(const Json::Value &value, const Block &block) :
     }
 }
 
+std::ostream &operator <<(std::ostream &out, const Entry &value) {
+    out << std::dec << value.block_ << ":" << value.data_ << "{";
+    for (const auto &topic : value.topics_)
+        out << topic << ",";
+    out << "}";
+    return out;
+}
+
 uint256_t Chain::Get(Json::Value::ArrayIndex index, const Json::Value &storages, const Region &root, const uint256_t &key) const {
     const auto &storage(storages[index]);
     orc_assert(uint256_t(storage["key"].asString()) == key);
