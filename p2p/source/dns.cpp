@@ -58,6 +58,9 @@ task<std::vector<asio::ip::tcp::endpoint>> Base::Resolve(const std::string &host
 }, "resolving " << host << ":" << port); }
 
 cppcoro::shared_task<Hosts> Base::Resolve_(Base &base, std::string host) {
+    if (host == "one.one.one.one")
+        co_return Hosts{"1.0.0.1"};
+
     dns_question_t question{(host += ".").c_str(), RR_A, CLASS_IN};
 
     dns_query_t query{
@@ -92,10 +95,9 @@ cppcoro::shared_task<Hosts> Base::Resolve_(Base &base, std::string host) {
     size_t size(sizeof(packet));
     orc_assert(dns_encode(packet, &size, &query) == RCODE_OKAY);
 
-    const Query result((co_await base.Fetch("POST", {{"https", "1.0.0.1", "443"}, "/dns-query"}, {
+    const Query result((co_await base.Fetch("POST", {{"https", "one.one.one.one", "443"}, "/dns-query"}, {
         {"accept", "application/dns-message"},
         {"content-type", "application/dns-message"},
-        {"host", "one.one.one.one"},
     }, std::string(reinterpret_cast<const char *>(packet), size))).ok());
 
     orc_assert_(result->rcode == RCODE_OKAY, dns_rcode_text(result->rcode));
