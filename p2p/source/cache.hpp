@@ -31,7 +31,7 @@
 
 namespace orc {
 
-template <typename Type_, typename Value_, typename Args_, Type_ (*Code_)(Value_, const Args_ &)>
+template <typename Type_, typename Value_, typename Args_, Type_ (*Code_)(Value_, Args_)>
 class Cache {
   private:
     Value_ value_;

@@ -32,11 +32,16 @@ namespace orc {
 class Query {
   private:
     dns_decoded_t data_[DNS_DECODEBUF_4K];
-    size_t size_ = sizeof(data_);
 
   public:
     Query(const Span<const uint8_t> &data) {
-        orc_assert(dns_decode(data_, &size_, reinterpret_cast<const dns_packet_t *>(data.data()), data.size()) == RCODE_OKAY);
+        size_t size(sizeof(data_));
+        orc_assert(dns_decode(data_, &size, reinterpret_cast<const dns_packet_t *>(data.data()), data.size()) == RCODE_OKAY);
+    }
+
+    Query(const std::string &data) :
+        Query(Span(reinterpret_cast<const uint8_t *>(data.data()), data.size()))
+    {
     }
 
     const dns_query_t *operator ->() const {

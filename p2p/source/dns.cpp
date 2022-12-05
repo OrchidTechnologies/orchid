@@ -31,6 +31,7 @@
 #include "error.hpp"
 #include "locator.hpp"
 #include "notation.hpp"
+#include "query.hpp"
 
 namespace orc {
 
@@ -48,25 +49,67 @@ task<std::vector<asio::ip::tcp::endpoint>> Base::Resolve(const std::string &host
         for (auto &endpoint : endpoints)
             results.emplace_back(endpoint);
     } else {
-        const auto &result(co_await cache_(host));
-        const auto status(static_cast<dns_rcode_t>(Num<uint16_t>(result.at("Status"))));
-        orc_assert_(status == RCODE_OKAY, dns_rcode_text(status));
-
-        for (const auto &answer : result.at("Answer").as_array())
-            if (static_cast<dns_type>(Num<uint16_t>(answer.at("type"))) == RR_A) {
-                const auto endpoints(resolver.resolve(Str(answer.at("data")), port));
-                for (const auto &endpoint : endpoints)
-                    results.emplace_back(endpoint);
-            }
+        const auto number(To<uint16_t>(port));
+        for (const auto &result : co_await cache_(host))
+            results.emplace_back(Socket(result, number));
     }
 
     co_return std::move(results);
 }, "resolving " << host << ":" << port); }
 
-cppcoro::shared_task<Any> Base::Resolve_(Base &base, const std::string &host) {
-    co_return Parse((co_await base.Fetch("GET", {{"https", "1.0.0.1", "443"}, "/dns-query?type=A&name=" + host}, {
-        {"accept", "application/dns-json"}
-    }, {})).ok());
+cppcoro::shared_task<Hosts> Base::Resolve_(Base &base, std::string host) {
+    dns_question_t question{(host += ".").c_str(), RR_A, CLASS_IN};
+
+    dns_query_t query{
+        .id = 0x0000,
+        .query = true,
+        .opcode = OP_QUERY,
+
+        .aa = false,
+        .tc = false,
+        .rd = true,
+        .ra = false,
+
+        .z = false,
+
+        .ad = false,
+        .cd = false,
+
+        .rcode = RCODE_OKAY,
+
+        .qdcount = 1,
+        .ancount = 0,
+        .nscount = 0,
+        .arcount = 0,
+
+        .questions = &question,
+        .answers = nullptr,
+        .nameservers = nullptr,
+        .additional = nullptr,
+    };
+
+    dns_packet_t packet[DNS_BUFFER_UDP];
+    size_t size(sizeof(packet));
+    orc_assert(dns_encode(packet, &size, &query) == RCODE_OKAY);
+
+    const Query result((co_await base.Fetch("POST", {{"https", "1.0.0.1", "443"}, "/dns-query"}, {
+        {"accept", "application/dns-message"},
+        {"content-type", "application/dns-message"},
+        {"host", "one.one.one.one"},
+    }, std::string(reinterpret_cast<const char *>(packet), size))).ok());
+
+    orc_assert_(result->rcode == RCODE_OKAY, dns_rcode_text(result->rcode));
+
+    Hosts hosts;
+
+    for (size_t i(0); i != result->ancount; ++i) {
+        const auto &answer(result->answers[i]);
+        if (answer.generic.type != RR_A) continue;
+        orc_assert(answer.generic.dclass == CLASS_IN);
+        hosts.emplace_back(boost::endian::big_to_native(answer.a.address));
+    }
+
+    co_return std::move(hosts);
 }
 
 }
