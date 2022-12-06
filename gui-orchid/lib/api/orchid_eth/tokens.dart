@@ -33,7 +33,7 @@ class Tokens {
 
   static const TokenType XDAI = TokenType(
     symbol: 'xDAI',
-    // Binance lists DAIUSDT but the value is bogus. The real pair is USDTDAI, so invert.
+    configSymbolOverride: 'DAI',
     exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'xdai'),
     chainId: Chains.GNOSIS_CHAINID,
     iconPath: OrchidAssetSvgToken.xdai_token_path,
@@ -108,6 +108,7 @@ class Tokens {
 
   static const TokenType RBTC = TokenType(
     symbol: 'RTBC',
+    configSymbolOverride: 'BTC',
     exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'bitcoin'),
     chainId: Chains.RSK_CHAINID,
     iconPath: OrchidAssetSvgToken.bitcoin_btc_token_path,
