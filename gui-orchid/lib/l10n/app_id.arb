@@ -512,5 +512,6 @@
 	"step2": "<bold>Langkah 2.</bold> Salin Identitas Anggrek dari Aplikasi Anggrek dengan membuka Kelola Akun, lalu ketuk alamatnya.",
 	"connectOrCreate": "Hubungkan atau buat Akun Anggrek",
 	"lockDeposit2": "Kunci Deposit",
-	"unlockDeposit2": "Buka kunci deposit"
+	"unlockDeposit2": "Buka kunci deposit",
+	"enterYourWeb3": "Masukkan alamat dompet web3 Anda."
 }

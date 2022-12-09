@@ -512,5 +512,6 @@
 	"step2": "<bold>Etapa 2.</bold> Copie a identidade da orquídea do aplicativo Orchid acessando Gerenciar contas e tocando no endereço.",
 	"connectOrCreate": "Conecte ou crie uma conta Orchid",
 	"lockDeposit2": "Depósito de bloqueio",
-	"unlockDeposit2": "Desbloquear depósito"
+	"unlockDeposit2": "Desbloquear depósito",
+	"enterYourWeb3": "Digite o endereço da sua carteira web3."
 }

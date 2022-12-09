@@ -512,5 +512,6 @@
 	"step2": "<bold>Passaggio 2.</bold> Copia l'identità Orchid dall'app Orchid andando su Gestisci account e toccando l'indirizzo.",
 	"connectOrCreate": "Collega o crea un account Orchid",
 	"lockDeposit2": "Deposito a chiave",
-	"unlockDeposit2": "Sblocca il deposito"
+	"unlockDeposit2": "Sblocca il deposito",
+	"enterYourWeb3": "Inserisci l'indirizzo del tuo portafoglio web3."
 }

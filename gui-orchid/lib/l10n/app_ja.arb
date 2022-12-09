@@ -512,5 +512,6 @@
 	"step2": "<bold>ステップ 2.</bold> [アカウントの管理] に移動し、アドレスをタップして、Orchid アプリから Orchid ID をコピーします。",
 	"connectOrCreate": "Orchid アカウントを接続または作成する",
 	"lockDeposit2": "ロックデポジット",
-	"unlockDeposit2": "デポジットのロックを解除する"
+	"unlockDeposit2": "デポジットのロックを解除する",
+	"enterYourWeb3": "web3 ウォレットのアドレスを入力します。"
 }

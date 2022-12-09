@@ -508,5 +508,6 @@
 	"step2": "<bold>Step 2.</bold> Copy the Orchid Identity from the Orchid App by going to Manage Accounts then tapping the address.",
 	"connectOrCreate": "Connect or create Orchid Account",
 	"lockDeposit2": "Lock Deposit",
-	"unlockDeposit2": "Unlock Deposit"
+	"unlockDeposit2": "Unlock Deposit",
+	"enterYourWeb3": "Enter your web3 wallet address."
 }

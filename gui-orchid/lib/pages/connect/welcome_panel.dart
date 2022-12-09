@@ -194,7 +194,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
 
       case _State.setup_account:
         return _TitleContent(
-          text: s.accountSetUp,
+          text: s.linkAnOrchidAccount,
           backState: _selectedIdentity == _generatedIdentity
               ? _State.backup_identity
               : _State.setup_choice,
@@ -257,7 +257,8 @@ class _WelcomePanelState extends State<WelcomePanel> {
         OrchidActionButton(
           height: 50,
           enabled: true,
-          text: s.setUpAccount,
+          // text: s.setUpAccount,
+          text: s.importAccount.toUpperCase(),
           onPressed: () {
             setState(() {
               _state = _State.setup_choice;
@@ -358,7 +359,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
                     .toString(prefix: true, elide: false))
             .center
             .top(16),
-        Text(s.pasteTheWeb3WalletAddress).body2.top(32),
+        Text(s.enterYourWeb3).body2.top(32),
         OrchidLabeledAddressField(
           label: s.funderWalletAddress,
           onChange: (value) {
