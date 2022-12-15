@@ -1,5 +1,5 @@
 import 'package:orchid/orchid.dart';
-import 'app_buttons_undeprecated.dart';
+import 'app_buttons_deprecated.dart';
 import 'app_colors.dart';
 import 'app_text.dart';
 

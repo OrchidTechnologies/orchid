@@ -15,6 +15,7 @@ import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
@@ -493,7 +494,7 @@ class _PurchasePageState extends State<PurchasePage> {
                 Text(s.confirmPurchase).title,
                 Container(
                   width: 20,
-                  child: FlatButton(
+                  child: FlatButtonDeprecated(
                     padding: EdgeInsets.zero,
                     child: Icon(Icons.close, color: Colors.white),
                     onPressed: () {

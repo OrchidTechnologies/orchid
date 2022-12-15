@@ -7,6 +7,7 @@ import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/common/qrcode_scan.dart';
 import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
@@ -154,7 +155,7 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
   }
 
   Widget _buildQRImportExportButton() {
-    return FlatButton(
+    return FlatButtonDeprecated(
         child: Container(
           decoration: BoxDecoration(
               border: Border.all(width: 1, color: Colors.black54)),

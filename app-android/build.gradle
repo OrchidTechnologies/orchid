@@ -82,6 +82,10 @@ android {
         // this library is now used by a35e3fe4a34b94a9b624f56e81ad4ff040230a40
         // but, flutter fails to add a dependency to ensure it gets embedded :/
         implementation "androidx.activity:activity:1.0.0"
+
+        // XXX: upgrading to Flutter 3.3 caused these to be required somehow :/
+        implementation "androidx.core:core:1.6.0"
+        implementation "androidx.tracing:tracing:1.0.0"
     }
 
     lintOptions {

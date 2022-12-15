@@ -17,7 +17,7 @@ dependencies:
   # XXX: use https://pub.dev/packages/firebase_ml_vision
   # that said, this library has been *discontinued*
   # this library can be upgraded to at least 3.0.1
-  barcode_scan: 2.0.2
+  #barcode_scan: 2.0.2
   browser_detector: ^2.0.0
   cupertino_icons: 1.0.2
   dartjsengine: 1.0.1
@@ -43,7 +43,7 @@ dependencies:
   qr_flutter: 4.0.0
   rxdart: 0.25.0
   shared_preferences: 2.0.12
-  styled_text: 3.0.4
+  styled_text: 6.0.0
   sqflite: 2.0.0+3
   url_launcher: 6.0.3
   uuid: 3.0.5

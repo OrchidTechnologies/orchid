@@ -1,4 +1,4 @@
-import 'package:orchid/common/app_buttons_undeprecated.dart';
+import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/common/gradient_border.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';

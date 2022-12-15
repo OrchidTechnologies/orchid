@@ -80,9 +80,6 @@ ifeq ($(target),mac)
 else
 	$(rsync) --filter '- $(framework)' $(engine)/$(framework).xcframework/$(xcframework)/Flutter.framework $(dir $(embed))
 	xcrun bitcode_strip -r $(engine)/$(framework).xcframework/$(xcframework)/Flutter.framework/Flutter -o $(embed)/$(framework)
-ifeq ($(target),ios)
-	lipo $(patsubst %,-extract %,$(archs)) $(embed)/$(framework) -output $(embed)/$(framework)
-endif
 endif
 	$(rsync) $(output)/flutter/App.framework $(dir $(app))
 	touch $(patsubst %,%$(versions)$(resources)/Info.plist,$(app) $(embed))

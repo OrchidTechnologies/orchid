@@ -1,10 +1,11 @@
-import 'package:barcode_scan/barcode_scan.dart';
+//import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/services.dart';
 
 class QRCode {
   // Return the scan or null if the user cancels the operation.
   // Throws an exception on various other error states.
   static Future<String> scan() async {
+    /*
     try {
       return await BarcodeScanner.scan();
     } on PlatformException catch (e) {
@@ -25,6 +26,7 @@ class QRCode {
       // 'Unknown error
       print("barcode unknown exception: $e");
     }
+    */
     throw Exception("scan failed");
   }
 }

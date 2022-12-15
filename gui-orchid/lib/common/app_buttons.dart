@@ -5,7 +5,7 @@ import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/common/app_text.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'app_buttons_undeprecated.dart';
+import 'app_buttons_deprecated.dart';
 import 'formatting.dart';
 
 /// A rounded rectangle text button.
