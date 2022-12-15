@@ -82,6 +82,7 @@ else
 	xcrun bitcode_strip -r $(engine)/$(framework).xcframework/$(xcframework)/Flutter.framework/Flutter -o $(embed)/$(framework)
 endif
 	$(rsync) $(output)/flutter/App.framework $(dir $(app))
+	find $(dir $(app)) ! -perm 755 -a ! -perm 644 -exec chmod -v 644 {} +
 	touch $(patsubst %,%$(versions)$(resources)/Info.plist,$(app) $(embed))
 
 signed += $(app)$(versions)$(signature)
