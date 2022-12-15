@@ -15,6 +15,7 @@ path = $(1)
 .PHONY:
 all:
 
+uname-m := $(shell uname -m)
 uname-s := $(shell uname -s)
 uname-o := $(shell uname -o 2>/dev/null)
 -include $(pwd)/uname-$(uname-s).mk
