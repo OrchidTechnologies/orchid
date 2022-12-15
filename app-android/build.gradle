@@ -93,7 +93,7 @@ android {
 }
 
 import groovy.json.JsonSlurper
-def plugins = new JsonSlurper().parseText(new File(orcInterface + "/.flutter-plugins-dependencies").text)
+def plugins = new JsonSlurper().parseText(file(orcInterface + "/.flutter-plugins-dependencies").text)
 plugins.plugins.android.each { dependency ->
     def plugin = project.rootProject.findProject(":${dependency.name}")
 
