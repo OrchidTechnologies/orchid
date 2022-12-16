@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:in_app_purchase/store_kit_wrappers.dart';
+import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import '../orchid_api.dart';
 import '../orchid_log_api.dart';
 import 'orchid_pac.dart';

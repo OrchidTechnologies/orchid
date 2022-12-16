@@ -33,8 +33,8 @@ dependencies:
   flutter_svg: 1.0.3
   font_awesome_flutter: 9.0.0
   http: 0.13.4
-  in_app_purchase:
-    path: in_app_purchase
+  in_app_purchase_storekit: 0.3.4
+  in_app_purchase_android: 0.2.3+7
   intl: 0.17.0
   jdenticon_dart: 2.0.0
   percent_indicator: 3.0.1

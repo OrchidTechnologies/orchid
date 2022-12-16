@@ -4,7 +4,7 @@ import 'orchid_pac.dart';
 import 'orchid_pac_server.dart';
 import 'orchid_pac_transaction.dart';
 import 'orchid_purchase.dart';
-import 'package:in_app_purchase/billing_client_wrappers.dart';
+import 'package:in_app_purchase_android/billing_client_wrappers.dart';
 
 class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
   AndroidOrchidPurchaseAPI() : super.internal();

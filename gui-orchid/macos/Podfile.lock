@@ -3,7 +3,8 @@ PODS:
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/standard (2.7.5)
-  - in_app_purchase (0.0.1):
+  - in_app_purchase_storekit (0.0.1):
+    - Flutter
     - FlutterMacOS
   - shared_preferences_macos (0.0.1):
     - FlutterMacOS
@@ -17,7 +18,7 @@ PODS:
 
 DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
-  - in_app_purchase (from `Flutter/ephemeral/.symlinks/plugins/in_app_purchase/macos`)
+  - in_app_purchase_storekit (from `Flutter/ephemeral/.symlinks/plugins/in_app_purchase_storekit/macos`)
   - shared_preferences_macos (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_macos/macos`)
   - sqflite (from `Flutter/ephemeral/.symlinks/plugins/sqflite/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
@@ -30,8 +31,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   FlutterMacOS:
     :path: Flutter/ephemeral
-  in_app_purchase:
-    :path: Flutter/ephemeral/.symlinks/plugins/in_app_purchase/macos
+  in_app_purchase_storekit:
+    :path: Flutter/ephemeral/.symlinks/plugins/in_app_purchase_storekit/macos
   shared_preferences_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_macos/macos
   sqflite:
@@ -44,12 +45,12 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   FlutterMacOS: ae6af50a8ea7d6103d888583d46bd8328a7e9811
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
-  in_app_purchase: 2f8c1b5fb9138954a295fce2a313575b0646991d
-  shared_preferences_macos: 480ce071d0666e37cef23fe6c702293a3d21799e
+  in_app_purchase_storekit: 6b297e2b5eab9fa3251a492d57301722e4132a71
+  shared_preferences_macos: a64dc611287ed6cbe28fd1297898db1336975727
   sqflite: a5789cceda41d54d23f31d6de539d65bb14100ea
   url_launcher_macos: 45af3d61de06997666568a7149c1be98b41c95d4
   window_size: 339dafa0b27a95a62a843042038fa6c3c48de195
 
-PODFILE CHECKSUM: ef3c04ac491bdc2013db9b8ca9c26af12d4c542e
+PODFILE CHECKSUM: ce32ab99a0089086c289cf0789c8382f403ce92b
 
 COCOAPODS: 1.11.3
