@@ -14,10 +14,6 @@ environment:
 
 dependencies:
   badges: 1.2.0
-  # XXX: use https://pub.dev/packages/firebase_ml_vision
-  # that said, this library has been *discontinued*
-  # this library can be upgraded to at least 3.0.1
-  #barcode_scan: 2.0.2
   browser_detector: ^2.0.0
   cupertino_icons: 1.0.2
   dartjsengine: 1.0.1
@@ -37,6 +33,7 @@ dependencies:
   in_app_purchase_android: 0.2.3+7
   intl: 0.17.0
   jdenticon_dart: 2.0.0
+  mobile_scanner: ^2.1.0
   percent_indicator: 3.0.1
   pointycastle: 3.5.0
   provider: 5.0.0

@@ -1,22 +1,16 @@
-import 'package:flutter/material.dart';
+import 'package:orchid/orchid.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_import.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/common/qrcode_scan.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/app_dialogs.dart';
-import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
-import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/pages/settings/advanced_configuration_page.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 enum ImportExportMode { Import, Export }
 
@@ -67,6 +61,7 @@ class ImportExportConfig extends StatefulWidget {
 class _ImportExportConfigState extends State<ImportExportConfig> {
   String _configFileTextLastSaved;
   final _configFileTextController = TextEditingController();
+  bool _showQRScanner = false;
 
   // The import or copy action is enabled, subject to mode
   BehaviorSubject<bool> _actionEnabled = BehaviorSubject<bool>.seeded(false);
@@ -106,64 +101,75 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
 
   Widget buildPage(BuildContext context) {
     bool showQRImportExportButton = widget.mode == ImportExportMode.Export ||
-        (widget.mode == ImportExportMode.Import && !OrchidPlatform.isMacOS);
+        (widget.mode == ImportExportMode.Import &&
+            OrchidPlatform.supportsScanning);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                    left: 16, right: 16, top: 16, bottom: 24),
-                child: OrchidConfigTextBox(
-                  textController: _configFileTextController,
-                  readOnly: widget.mode == ImportExportMode.Export,
-                ),
-              ),
-            ),
+        child: _showQRScanner
+            ? QRCodeScanner(
+                onCode: (String text) {
+                  setState(() {
+                    _configFileTextController.text = text;
+                  });
+                },
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          left: 16, right: 16, top: 16, bottom: 24),
+                      child: OrchidConfigTextBox(
+                        textController: _configFileTextController,
+                        readOnly: widget.mode == ImportExportMode.Export,
+                      ),
+                    ),
+                  ),
 
-            // Import / Export button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                if (showQRImportExportButton) ...[
-                  _buildQRImportExportButton(),
-                  padx(8),
+                  // Import / Export button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      if (showQRImportExportButton) ...[
+                        _buildQRImportExportButton(),
+                        padx(8),
+                      ],
+                      Container(
+                        child: StreamBuilder<Object>(
+                            stream: _actionEnabled.stream,
+                            builder: (context, snapshot) {
+                              return RoundedRectButton(
+                                  text: widget.mode == ImportExportMode.Import
+                                      ? s.import.toUpperCase()
+                                      : s.copy.toUpperCase(),
+                                  textColor: Colors.black,
+                                  onPressed:
+                                      _actionEnabled.value ? _doAction : null);
+                            }),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 24)
                 ],
-                Container(
-                  child: StreamBuilder<Object>(
-                      stream: _actionEnabled.stream,
-                      builder: (context, snapshot) {
-                        return RoundedRectButton(
-                            text: widget.mode == ImportExportMode.Import
-                                ? s.import.toUpperCase()
-                                : s.copy.toUpperCase(),
-                            textColor: Colors.black,
-                            onPressed: _actionEnabled.value ? _doAction : null);
-                      }),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 24)
-          ],
-        ),
+              ),
       ),
     );
   }
 
   Widget _buildQRImportExportButton() {
     return FlatButtonDeprecated(
-        child: Container(
-          decoration: BoxDecoration(
-              border: Border.all(width: 1, color: Colors.black54)),
-          child: widget.mode == ImportExportMode.Export
-              ? OrchidAsset.svg.qr_scan
-              : OrchidAsset.svg.scan,
-        ),
-        onPressed: _doQRCodeAction);
+      child: Container(
+        decoration:
+            BoxDecoration(border: Border.all(width: 1, color: Colors.black54)),
+        child: widget.mode == ImportExportMode.Export
+            ? OrchidAsset.svg.qr_scan
+            : OrchidAsset.svg.scan,
+      ),
+      onPressed: _doQRCodeAction,
+    );
   }
 
   void _doAction() {
@@ -198,16 +204,9 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
   }
 
   void _importQR() async {
-    String text = await QRCode.scan();
-    if (text == null) {
-      log("user cancelled scan");
-      return;
-    }
-    if (widget.validator(text)) {
-      setState(() {
-        _configFileTextController.text = text;
-      });
-    }
+    setState(() {
+      _showQRScanner = true;
+    });
   }
 
   void _exportQR() {

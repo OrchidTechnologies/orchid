@@ -319,7 +319,7 @@ class _ConnectPageState extends State<ConnectPage>
                 }
                 // AccountFinder.shared?.refresh();
               },
-            ).pady(40),
+            ).pady(40).top(24),
           )
       ],
     );
