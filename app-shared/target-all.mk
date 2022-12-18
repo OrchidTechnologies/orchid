@@ -50,6 +50,7 @@ dart += $(pwd/gui)/.packages
 $(pwd/gui)/.dart_tool/package_config%json $(pwd/gui)/%flutter-plugins $(pwd/gui)/%packages $(generated): $(pwd/gui)/pubspec.yaml $(pwd/gui)/pubspec.lock $(pwd/flutter)/packages/flutter/pubspec.lock $(forks)
 	@mkdir -p $(pwd/gui)/{android,ios,linux,macos,windows}
 	@rm -f $(pwd/gui)/.flutter-plugins
+	! grep ': ^' $(pwd/gui)/pubspec.yaml
 	cd $(pwd/gui) && $(flutter) pub get
 	@touch $(pwd/gui)/.packages
 

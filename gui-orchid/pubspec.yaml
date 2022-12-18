@@ -14,7 +14,7 @@ environment:
 
 dependencies:
   badges: 1.2.0
-  browser_detector: ^2.0.0
+  browser_detector: 2.0.0
   cupertino_icons: 1.0.2
   dartjsengine: 1.0.1
   dotted_border: 2.0.0+2
@@ -22,7 +22,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_cupertino_localizations: 1.0.1
-  flutter_html: ^3.0.0-alpha.3
+  flutter_html: 3.0.0-alpha.6
   flutter_localizations:
     sdk: flutter
   #flutter_secure_storage: 3.3.5 # XXX: macOS
@@ -33,7 +33,7 @@ dependencies:
   in_app_purchase_android: 0.2.3+7
   intl: 0.17.0
   jdenticon_dart: 2.0.0
-  mobile_scanner: ^2.1.0
+  mobile_scanner: 2.1.0
   percent_indicator: 3.0.1
   pointycastle: 3.5.0
   provider: 5.0.0
@@ -49,7 +49,7 @@ dependencies:
     path: flutter-desktop-embedding/plugins/window_size
 
 dev_dependencies:
-  dart_code_metrics: ^4.16.0
+  dart_code_metrics: 4.21.3
   flutter_test:
     sdk: flutter
   pedantic: 1.11.0
