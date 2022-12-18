@@ -12,6 +12,11 @@ jobs:
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
 
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
     - run: ./app-flutter.sh orchid && cd app-flutter && make
 
 
