@@ -18,3 +18,9 @@
 # }}}
 
 
+ifeq ($(target),ios)
+frameworks += MLKitBarcodeScanning
+frameworks += MLKitVision
+frameworks += MLImage
+frameworks += MLKitCommon
+endif
