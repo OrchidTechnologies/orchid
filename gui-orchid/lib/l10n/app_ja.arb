@@ -513,5 +513,11 @@
 	"connectOrCreate": "Orchid アカウントを接続または作成する",
 	"lockDeposit2": "ロックデポジット",
 	"unlockDeposit2": "デポジットのロックを解除する",
-	"enterYourWeb3": "web3 ウォレットのアドレスを入力します。"
+	"enterYourWeb3": "web3 ウォレットのアドレスを入力します。",
+	"circuitGenerated": "生成された回路",
+	"copyIdentity": "ID をコピー",
+	"generateNewIdentity": "新しいアイデンティティを生成する",
+	"purchaseComplete": "購入完了",
+	"usingYourOrchidAccount": "Orchid アカウントを使用して、シングル ホップ サーキットが生成されました。これは回路ビルダー画面から管理できます。",
+	"yourPurchaseIsComplete": "購入が完了し、現在 xDai ブロックチェーンによって処理されています。これには数分かかる場合があります。このアカウントを使用して、デフォルトの回線が生成されました。ホーム画面またはアカウントマネージャーで利用可能な残高を監視できます。"
 }

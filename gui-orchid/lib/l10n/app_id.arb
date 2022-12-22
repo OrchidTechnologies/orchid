@@ -513,5 +513,11 @@
 	"connectOrCreate": "Hubungkan atau buat Akun Anggrek",
 	"lockDeposit2": "Kunci Deposit",
 	"unlockDeposit2": "Buka kunci deposit",
-	"enterYourWeb3": "Masukkan alamat dompet web3 Anda."
+	"enterYourWeb3": "Masukkan alamat dompet web3 Anda.",
+	"circuitGenerated": "Sirkuit Dihasilkan",
+	"copyIdentity": "Salin Identitas",
+	"generateNewIdentity": "Menghasilkan Identitas baru",
+	"purchaseComplete": "Pembelian Selesai",
+	"usingYourOrchidAccount": "Menggunakan akun Orchid Anda, satu sirkuit hop telah dibuat. Anda dapat mengelola ini dari layar pembuat sirkuit.",
+	"yourPurchaseIsComplete": "Pembelian Anda selesai dan sekarang sedang diproses oleh blockchain xDai, yang bisa memakan waktu beberapa menit. Sirkuit default telah dibuat untuk Anda menggunakan akun ini. Anda dapat memantau saldo yang tersedia di layar beranda atau di pengelola akun."
 }

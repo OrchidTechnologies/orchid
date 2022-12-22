@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/purchase/orchid_pac_seller.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
@@ -85,6 +86,10 @@ class _WelcomePanelState extends State<WelcomePanel> {
             break;
         }
       }
+
+      // TESTING....
+      // _state = _State.processing_chain;
+
       if (mounted) {
         setState(() {});
       }
@@ -209,9 +214,11 @@ class _WelcomePanelState extends State<WelcomePanel> {
         return _TitleContent(text: s.fundYourAccount);
 
       case _State.processing_pac:
-      case _State.processing_chain:
       case _State.processing_timeout:
         return _TitleContent(text: s.processing, showDismiss: true);
+
+      case _State.processing_chain:
+        return _TitleContent(text: s.purchaseComplete, showDismiss: false);
     }
     throw Exception();
   }
@@ -294,7 +301,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text("Generate a new Identity" + ':').body2.top(32).padx(24),
+        Text(s.generateNewIdentity + ':').body2.top(32).padx(24),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -519,7 +526,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
       child: Row(
         children: [
           Icon(Icons.copy, color: OrchidColors.tappable, size: 20),
-          Text(label ?? "Copy Identity").body2.tappable.left(14).top(2),
+          Text(label ?? s.copyIdentity).body2.tappable.left(14).top(2),
           SizedBox(width: 20),
         ],
       ),
@@ -577,7 +584,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
         text = s.yourPurchaseIsInProgress;
         break;
       case _State.processing_chain:
-        text = s.yourPurchaseIsCompleteAndIsNowBeingProcessedBy;
+        text = s.yourPurchaseIsComplete;
         break;
       case _State.processing_timeout:
         text = s.thisPurchaseIsTakingLongerThanExpectedToProcessAnd;
@@ -594,10 +601,14 @@ class _WelcomePanelState extends State<WelcomePanel> {
     }
 
     bool timeout;
+    bool complete = false;
     switch (_state) {
       case _State.processing_pac:
+        timeout = false;
+        break;
       case _State.processing_chain:
         timeout = false;
+        complete = true;
         break;
       case _State.processing_timeout:
       case _State.welcome:
@@ -615,15 +626,22 @@ class _WelcomePanelState extends State<WelcomePanel> {
       mainAxisSize: MainAxisSize.min,
       children: [
         pady(24),
-        if (timeout)
+
+        // icon
+        if (complete)
+          Icon(Icons.check, color: OrchidColors.green, size: 40)
+        else if (timeout)
           Icon(Icons.error, color: Color(0xFFF88B9F), size: 40)
         else
           OrchidCircularProgressIndicator.smallIndeterminate(
               size: 30, stroke: 4),
-        if (!timeout) ...[
+
+        // wait message
+        if (!timeout && !complete) ...[
           pady(24),
           Text(s.thisMayTakeAMinute).subtitle,
         ],
+
         pady(24),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 48.0),
@@ -637,7 +655,28 @@ class _WelcomePanelState extends State<WelcomePanel> {
           ),
         ),
         pady(24),
-        if (timeout) ...[
+
+        if (complete) ...[
+          // User hits continue, returning the new PAC account.
+          TextButton(
+            onPressed: () async {
+              _dismiss();
+              final funderAddress = OrchidPacSeller.sellerContractAddress;
+              final account = Account.fromSignerKey(
+                  signerKey: _selectedIdentity.ref(),
+                  funder: funderAddress,
+                  chainId: Chains.GNOSIS_CHAINID,
+                  version: 1);
+              await UserPreferences().addCachedDiscoveredAccounts([account]);
+              widget.onAccount(account);
+            },
+            child: Text(
+              s.continueButton,
+              style: OrchidText.button.tappable,
+            ),
+          ),
+          pady(32),
+        ] else if (timeout) ...[
           TextButton(
             onPressed: () {
               AppRoutes.pushAccountManager(context);

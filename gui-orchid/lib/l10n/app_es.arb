@@ -513,5 +513,11 @@
 	"connectOrCreate": "Conectar o crear Cuenta Orquídea",
 	"lockDeposit2": "Depósito de bloqueo",
 	"unlockDeposit2": "Desbloquear depósito",
-	"enterYourWeb3": "Ingrese la dirección de su billetera web3."
+	"enterYourWeb3": "Ingrese la dirección de su billetera web3.",
+	"circuitGenerated": "circuito generado",
+	"copyIdentity": "Copiar identidad",
+	"generateNewIdentity": "Generar una nueva Identidad",
+	"purchaseComplete": "Compra completada",
+	"usingYourOrchidAccount": "Con su cuenta Orchid, se ha generado un circuito de un solo salto. Puede administrar esto desde la pantalla del generador de circuitos.",
+	"yourPurchaseIsComplete": "Su compra está completa y ahora está siendo procesada por la cadena de bloques xDai, lo que podría demorar unos minutos. Se ha generado un circuito predeterminado para usted utilizando esta cuenta. Puede monitorear el saldo disponible en la pantalla de inicio o en el administrador de cuenta."
 }

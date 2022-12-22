@@ -112,8 +112,8 @@ class CircuitUtils {
     SchedulerBinding.instance.addPostFrameCallback(
       (_) => AppDialogs.showAppDialog(
         context: context,
-        title: s.accountFound,
-        bodyText: s.weFoundAnAccountAssociatedWithYourIdentitiesAndCreated,
+        title: s.circuitGenerated,
+        bodyText: s.usingYourOrchidAccount,
       ),
     );
   }
@@ -145,7 +145,8 @@ class CircuitUtils {
   }
    */
 
-  static Future<void> findAccountsAndDefaultCircuitIfNeeded(BuildContext context) async {
+  static Future<void> findAccountsAndDefaultCircuitIfNeeded(
+      BuildContext context) async {
     log("connect: No accounts in cache, starting account finder.");
     AccountFinder.shared = AccountFinder()
         .withPollingInterval(Duration(seconds: 20))

@@ -513,5 +513,11 @@
 	"connectOrCreate": "Bağlanın veya Orkide Hesabı oluşturun",
 	"lockDeposit2": "Depozitoyu Kilitle",
 	"unlockDeposit2": "Depozito kilidini aç",
-	"enterYourWeb3": "web3 cüzdan adresinizi girin."
+	"enterYourWeb3": "web3 cüzdan adresinizi girin.",
+	"circuitGenerated": "Devre Oluşturuldu",
+	"copyIdentity": "Kimlik Kopyala",
+	"generateNewIdentity": "Yeni bir Kimlik oluştur",
+	"purchaseComplete": "Satın Alma İşlemi Tamamlandı",
+	"usingYourOrchidAccount": "Orchid hesabınız kullanılarak tek bir sekme devresi oluşturuldu. Bunu devre oluşturucu ekranından yönetebilirsiniz.",
+	"yourPurchaseIsComplete": "Satın alma işleminiz tamamlandı ve şu anda xDai blok zinciri tarafından işleniyor, bu işlem birkaç dakika sürebilir. Bu hesabı kullanarak sizin için varsayılan bir devre oluşturuldu. Kullanılabilir bakiyeyi ana ekranda veya hesap yöneticisinde izleyebilirsiniz."
 }

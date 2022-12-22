@@ -513,5 +513,11 @@
 	"connectOrCreate": "Collega o crea un account Orchid",
 	"lockDeposit2": "Deposito a chiave",
 	"unlockDeposit2": "Sblocca il deposito",
-	"enterYourWeb3": "Inserisci l'indirizzo del tuo portafoglio web3."
+	"enterYourWeb3": "Inserisci l'indirizzo del tuo portafoglio web3.",
+	"circuitGenerated": "Circuito generato",
+	"copyIdentity": "Copia identità",
+	"generateNewIdentity": "Genera una nuova identità",
+	"purchaseComplete": "Acquisto completato",
+	"usingYourOrchidAccount": "Utilizzando il tuo account Orchid, è stato generato un singolo circuito hop. Puoi gestirlo dalla schermata del costruttore di circuiti.",
+	"yourPurchaseIsComplete": "Il tuo acquisto è completo ed è ora in fase di elaborazione da parte della blockchain xDai, operazione che potrebbe richiedere alcuni minuti. È stato generato un circuito predefinito per te utilizzando questo account. Puoi monitorare il saldo disponibile nella schermata principale o nel gestore dell'account."
 }

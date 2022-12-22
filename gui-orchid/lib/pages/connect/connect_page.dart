@@ -122,6 +122,7 @@ class _ConnectPageState extends State<ConnectPage>
         : _keys.reduce((a, b) => a.time.isAfter(b.time) ? a : b);
   }
 
+  // May be empty but not null once loaded.
   bool get _initialized => _hasAccounts != null && _keys != null;
 
   // Show the welcome pane if the user has not created any accounts.
