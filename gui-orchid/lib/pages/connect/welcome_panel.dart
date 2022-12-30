@@ -87,9 +87,6 @@ class _WelcomePanelState extends State<WelcomePanel> {
         }
       }
 
-      // TESTING....
-      // _state = _State.processing_chain;
-
       if (mounted) {
         setState(() {});
       }
@@ -663,7 +660,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
               _dismiss();
               final funderAddress = OrchidPacSeller.sellerContractAddress;
               final account = Account.fromSignerKey(
-                  signerKey: _selectedIdentity.ref(),
+                  signerKey: _generatedIdentity.ref(),
                   funder: funderAddress,
                   chainId: Chains.GNOSIS_CHAINID,
                   version: 1);
