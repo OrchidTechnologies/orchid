@@ -18,6 +18,9 @@ class AddFundsPane extends StatefulWidget {
   final EthereumAddress signer;
   final bool enabled;
 
+  // Token type can override the default currency for use in V0.
+  final tokenType;
+
   // Callback to add the funds
   final Future<List<String>> Function({
     OrchidWallet wallet,
@@ -31,6 +34,7 @@ class AddFundsPane extends StatefulWidget {
     @required this.context,
     @required this.signer,
     @required this.addFunds,
+    @required this.tokenType,
     this.enabled,
   }) : super(key: key);
 
@@ -45,6 +49,9 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
   TypedTokenValueFieldController _addDepositField;
 
   @override
+  TokenType get tokenType => widget.tokenType;
+
+  @override
   void initState() {
     super.initState();
     // Note: The field controller captures the token type so this form must be
@@ -57,6 +64,7 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
 
   @override
   Widget build(BuildContext context) {
+    // log("dapp add funds: tokentype = $tokenType");
     var allowance = wallet?.allowanceOf(tokenType) ?? tokenType.zero;
     return TokenPriceBuilder(
         tokenType: tokenType,
@@ -125,20 +133,20 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
 
   bool get _addBalanceFieldValid {
     var value = _addBalanceField.value;
-    return value != null && value <= (walletBalance ?? tokenType.zero);
+    return value != null && value <= (walletBalanceOf(tokenType) ?? tokenType.zero);
   }
 
   bool get _addBalanceFieldError {
-    return walletBalance != null && !_addBalanceFieldValid;
+    return walletBalanceOf(tokenType) != null && !_addBalanceFieldValid;
   }
 
   bool get _addDepositFieldValid {
     var value = _addDepositField.value;
-    return value != null && value <= (walletBalance ?? tokenType.zero);
+    return value != null && value <= (walletBalanceOf(tokenType) ?? tokenType.zero);
   }
 
   bool get _addDepositFieldError {
-    return walletBalance != null && !_addDepositFieldValid;
+    return walletBalanceOf(tokenType) != null && !_addDepositFieldValid;
   }
 
   bool get _addFundsFormEnabled {
@@ -146,13 +154,13 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
   }
 
   bool get _netAddValid {
-    if (walletBalance == null) {
+    if (walletBalanceOf(tokenType) == null) {
       return false;
     }
     final zero = tokenType.zero;
     if (_addBalanceFieldValid && _addDepositFieldValid) {
       var total = _totalAdd;
-      return total > zero && total <= walletBalance;
+      return total > zero && total <= walletBalanceOf(tokenType);
     }
     return false;
   }

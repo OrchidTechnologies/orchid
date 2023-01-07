@@ -60,7 +60,7 @@ class MarketConditionsV0 implements MarketConditions {
     GWEI gasPrice =
         GWEI.fromWei((await Chains.Ethereum.getGasPrice()).intValue);
     ETH ethGasCostToRedeem =
-        (gasPrice * OrchidContractV0.gasCostToRedeemTicketV0).toEth();
+        (gasPrice * OrchidContractV0.gasLimitToRedeemTicketV0).toEth();
 
     PricingV0 pricingV0 = await OrchidPricingAPIV0().getPricing();
     OXT oxtCostToRedeem = pricingV0.ethToOxt(ethGasCostToRedeem);

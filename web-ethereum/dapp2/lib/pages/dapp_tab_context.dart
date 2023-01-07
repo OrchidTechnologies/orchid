@@ -14,6 +14,8 @@ mixin DappTabWalletContext {
   // The wallet balance of the configured token type or null if no tokens known
   Token get walletBalance => wallet?.balance;
 
+  Token walletBalanceOf(TokenType token) => wallet?.balanceOf(token);
+
   // The native token type of the chain or TOK as a default
   TokenType get tokenType => web3Context?.chain?.nativeCurrency ?? Tokens.TOK;
 }

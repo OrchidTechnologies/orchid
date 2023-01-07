@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -103,6 +104,8 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
           children: [
             tabView(
               AddFundsPane(
+                tokenType:
+                    widget.web3Context?.chain?.nativeCurrency ?? Tokens.TOK,
                 key: contextKey,
                 enabled: _enabled,
                 context: widget.web3Context,

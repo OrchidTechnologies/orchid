@@ -322,6 +322,7 @@ class _AccountCardState extends State<AccountCard>
   }
 
   Stack _buildChainEfficiencyIcon() {
+    log("XXX: market details: ${widget.accountDetail}");
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -339,8 +340,8 @@ class _AccountCardState extends State<AccountCard>
 
   String _balanceText() {
     return widget.accountDetail == null
-        ? formatCurrency(0.0, locale: context.locale, digits: 2)
-        : (pot?.balance?.formatCurrency(locale: context.locale, digits: 2));
+        ? formatCurrency(0.0, locale: context.locale, precision: 2)
+        : (pot?.balance?.formatCurrency(locale: context.locale, precision: 2));
   }
 
   Widget _buildExpandedContent(USD price) {
@@ -466,7 +467,7 @@ class _AccountCardState extends State<AccountCard>
   // display token value and symbol on a row with usd price in a row below
   Widget _buildTokenValueTextRow({Token value, USD price, Color textColor}) {
     final valueText = ((value ?? (tokenType ?? Tokens.TOK).zero)
-        .formatCurrency(locale: context.locale, digits: 2, showSuffix: false));
+        .formatCurrency(locale: context.locale, precision: 2, showSuffix: false));
     final valueWidget =
         Text(valueText).extra_large.withColor(textColor ?? Colors.white);
     return TokenValueWidgetRow(

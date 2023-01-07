@@ -50,9 +50,11 @@ class OrchidContractV0 {
   // The ABI identifier for the `look` method.
   static var lotteryLookMethodHash = '1554ad5d';
 
-  static int gasCostToRedeemTicketV0 = 100000;
-  static int gasCostLotteryPush = 175000;
-  static int gasCostCreateAccount = gasCostLotteryPush;
+  static int gasLimitToRedeemTicketV0 = 100000;
+  static int gasLimitLotteryPush = 175000;
+  static int gasLimitCreateAccount = gasLimitLotteryPush;
+
+  static int gasLimitApprove = 200000;
 }
 
 enum OrchidTransactionTypeV0 {

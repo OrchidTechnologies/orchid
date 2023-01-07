@@ -52,7 +52,7 @@ class ConnectStatusPanel extends StatelessWidget {
             width: 40, height: 35, color: Colors.white),
         text: bandwidthAvailableGB != null
             ? toFixedLocalized(bandwidthAvailableGB,
-                locale: context.locale, digits: 1)
+                locale: context.locale, precision: 1)
             : '...',
         subtext: s.gb);
   }

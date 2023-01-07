@@ -1,5 +1,6 @@
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 
 import '../orchid_crypto.dart';
 import '../orchid_log_api.dart';
@@ -27,7 +28,8 @@ class OrchidERC20 {
   }
 
   /// Get the OXT allowance for this wallet
-  Future<Token> getERC20Allowance({EthereumAddress owner, EthereumAddress spender}) async {
+  Future<Token> getERC20Allowance(
+      {EthereumAddress owner, EthereumAddress spender}) async {
     // allowance(address owner, address spender) external view returns (uint256)",
     var allowance = await _contract.call('allowance', [
       owner.toString(),
@@ -49,10 +51,7 @@ class OrchidERC20 {
     // This mitigates the potential for rounding errors in calculated amounts.
     amount = Token.min(amount, walletBalance);
 
-    log('XXX: do approve: ${[
-      spender.toString(),
-      amount.intValue.toString()
-    ]}');
+    log('XXX: do approve: ${[spender.toString(), amount.intValue.toString()]}');
 
     // approve(address spender, uint256 amount) external returns (bool)
     var contract = _contract.connect(context.web3.getSigner());
@@ -62,6 +61,8 @@ class OrchidERC20 {
         spender.toString(),
         amount.intValue.toString(),
       ],
+      TransactionOverride(
+          gasLimit: BigInt.from(OrchidContractV0.gasLimitApprove)),
     );
     log('XXX: approveHash = ${tx.hash}');
     return tx.hash;
