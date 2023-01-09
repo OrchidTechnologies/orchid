@@ -9,7 +9,7 @@ shift 2
 name=orchid
 
 docker rm -f "env-${name}" &>/dev/null || true
-docker run -i --name "env-${name}" -v "${PWD}/env:/mnt" ubuntu:"${distro}" /mnt/setup-sys.sh "$@"
+docker run --platform linux/amd64 -i --name "env-${name}" -v "${PWD}/env:/mnt" ubuntu:"${distro}" /mnt/setup-sys.sh "$@"
 
 rm -rf "${sysroot}"
 mkdir -p "${sysroot}"
