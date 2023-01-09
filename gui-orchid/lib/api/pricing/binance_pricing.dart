@@ -13,10 +13,9 @@ class BinanceExchangeRateSource extends ExchangeRateSource {
   /// the rate consistent with that. e.g. for DAI we must use 1/USDTDAI and
   /// not DAIUSDT since DAIUSDT was delisted.
   final bool inverted;
+  final String symbolOverride;
 
-  const BinanceExchangeRateSource(
-      {this.inverted = false, String symbolOverride})
-      : super(symbolOverride: symbolOverride); // Binance exchange rates
+  const BinanceExchangeRateSource({this.inverted = false, this.symbolOverride});
 
   // https://api.binance.com/api/v3/avgPrice?symbol=ETHUSDT
   String _url(TokenType tokenType) {

@@ -103,28 +103,31 @@ class OrchidPACServer {
 
     // Submit to the server
     try {
-      await _apiSupport(); // support testing
+      if (await _testingSupport()) {
+        tx.serverResponse = 'mock server response';
+        tx.state = PacTransactionState.Complete;
+      } else {
+        String response;
+        switch (tx.type) {
+          case PacTransactionType.None:
+            log('iap: Unknown transaction type.');
+            return;
+            break;
+          case PacTransactionType.AddBalance:
+            response = await _callAddBalance(tx);
+            break;
+          case PacTransactionType.SubmitSellerTransaction:
+            response = await _callSubmitSellerTx(tx);
+            break;
+          case PacTransactionType.PurchaseTransaction:
+            response = await _callPurchase(tx);
+            break;
+        }
 
-      String response;
-      switch (tx.type) {
-        case PacTransactionType.None:
-          log('iap: Unknown transaction type.');
-          return;
-          break;
-        case PacTransactionType.AddBalance:
-          response = await _callAddBalance(tx);
-          break;
-        case PacTransactionType.SubmitSellerTransaction:
-          response = await _callSubmitSellerTx(tx);
-          break;
-        case PacTransactionType.PurchaseTransaction:
-          response = await _callPurchase(tx);
-          break;
+        // Success: store the response.
+        tx.serverResponse = response;
+        tx.state = PacTransactionState.Complete;
       }
-
-      // Success: store the response.
-      tx.serverResponse = response;
-      tx.state = PacTransactionState.Complete;
     } catch (err, stack) {
       // Server error
       log('iap: error in pac submit: $err, $stack');
@@ -147,14 +150,24 @@ class OrchidPACServer {
     await tx.save();
   }
 
-  Future<void> _apiSupport() async {
+  // This method may throw exceptions to mock failure,
+  // return true indicating that the call should simulate a successful result,
+  // or return false indicating that no action should be taken.
+  Future<bool> _testingSupport() async {
     var apiConfig = await OrchidPurchaseAPI().apiConfig();
 
-    // Fail server calls for the mock api unless we have a test receipt
-    if (OrchidAPI.mockAPI && apiConfig.testReceipt == null) {
-      log('iap: mock api, delay and throw exception');
+    if (OrchidAPI.mockAPI) {
+      // simulate delay
       await Future.delayed(Duration(seconds: 2), () {});
-      throw Exception('iap: mock api');
+
+      // Mock passing server calls for the mock api unless we have a test receipt
+      if (apiConfig.testReceipt != null) {
+        log('iap: mock api has test receipt, allowing real interaction');
+        return false; // no action
+      } else {
+        log('iap: mock api successful server interaction');
+        return true; // mock success
+      }
     }
 
     // Fail if we are configured to fail
@@ -162,6 +175,8 @@ class OrchidPACServer {
       await Future.delayed(Duration(seconds: 2));
       throw Exception('iap: mock failure!');
     }
+
+    return false; // no action
   }
 
   Future<String> _callAddBalance(PacAddBalanceTransaction tx) async {

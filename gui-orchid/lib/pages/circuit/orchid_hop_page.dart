@@ -15,6 +15,7 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/instructions_view.dart';
 import 'package:orchid/common/link_text.dart';
@@ -243,7 +244,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                 child: Container(
                   //width: 60,
                   //color: Colors.red,
-                  child: FlatButton(
+                  child: FlatButtonDeprecated(
                       child: Icon(
                         Icons.chevron_right,
                         color: Colors.white,

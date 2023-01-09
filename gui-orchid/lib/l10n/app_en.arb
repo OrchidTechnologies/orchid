@@ -508,5 +508,12 @@
 	"step2": "<bold>Step 2.</bold> Copy the Orchid Identity from the Orchid App by going to Manage Accounts then tapping the address.",
 	"connectOrCreate": "Connect or create Orchid Account",
 	"lockDeposit2": "Lock Deposit",
-	"unlockDeposit2": "Unlock Deposit"
+	"unlockDeposit2": "Unlock Deposit",
+	"enterYourWeb3": "Enter your web3 wallet address.",
+	"purchaseComplete": "Purchase Complete",
+	"generateNewIdentity": "Generate a new Identity",
+	"copyIdentity": "Copy Identity",
+	"yourPurchaseIsComplete": "Your purchase is complete and is now being processed by the xDai blockchain, which could take a few minutes.  A default circuit has been generated for you using this account. You can monitor the available balance on the home screen or in the account manager.",
+	"circuitGenerated": "Circuit Generated",
+	"usingYourOrchidAccount": "Using your Orchid account, a single hop circuit has been generated. You may manage this from the circuit builder screen."
 }

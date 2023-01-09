@@ -64,9 +64,7 @@ class OrchidPricing {
 }
 
 abstract class ExchangeRateSource {
-  final String symbolOverride;
-
-  const ExchangeRateSource({this.symbolOverride});
+  const ExchangeRateSource();
 
   /// Return the price (USD/Token): tokens * Rate = USD
   Future<double> tokenToUsdRate(TokenType tokenType);
@@ -79,4 +77,3 @@ abstract class ExchangeRateSource {
     return 1.0 / rate;
   }
 }
-

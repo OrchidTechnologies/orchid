@@ -136,9 +136,13 @@ public class OrchidVpnService extends VpnService {
     }
 
     public void startForeground() {
+        int immutable = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            immutable |= PendingIntent.FLAG_IMMUTABLE;
+
         Intent startIntent = new Intent(this, MainActivity.class);
         startIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, startIntent, 0);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, startIntent, immutable);
         Notification.Builder builder = getBuilder();
         builder.setContentTitle(getText(R.string.app));
         builder.setContentText(getText(R.string.connected));
@@ -146,7 +150,7 @@ public class OrchidVpnService extends VpnService {
         builder.setOngoing(true);
         builder.setSmallIcon(R.drawable.ic_vpn);
         Intent i = new Intent();
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, i, 0);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, i, immutable);
         builder.addAction(R.drawable.ic_vpn, "Stop", pendingIntent);
         Notification n = builder.build();
         startForeground(1, n);

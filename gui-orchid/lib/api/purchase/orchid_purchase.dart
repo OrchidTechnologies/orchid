@@ -110,7 +110,7 @@ abstract class OrchidPurchaseAPI {
   /// Return the API config allowing overrides from configuration.
   static Future<PacApiConfig> apiConfigWithOverrides(
       PacApiConfig prodAPIConfig) async {
-    var jsConfig = await OrchidUserConfig().getUserConfigJS();
+    var jsConfig = OrchidUserConfig().getUserConfigJS();
     return PacApiConfig(
       enabled: jsConfig.evalBoolDefault('pacs.enabled', prodAPIConfig.enabled),
       url: jsConfig.evalStringDefault('pacs.url', prodAPIConfig.url),
@@ -119,8 +119,7 @@ abstract class OrchidPurchaseAPI {
       testReceipt:
           jsConfig.evalStringDefault('pacs.receipt', prodAPIConfig.testReceipt),
       debug: jsConfig.evalBoolDefault('pacs.debug', prodAPIConfig.debug),
-      serverFail:
-          jsConfig.evalBoolDefault('pacs.serverFail', prodAPIConfig.debug),
+      serverFail: jsConfig.evalBoolDefault('pacs.serverFail', prodAPIConfig.debug),
     );
   }
 

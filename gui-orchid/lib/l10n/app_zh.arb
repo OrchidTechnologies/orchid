@@ -512,5 +512,12 @@
 	"step2": "<bold>第 2 步。</bold> 从 Orchid 应用程序复制 Orchid 身份，方法是转到管理帐户，然后点按地址。",
 	"connectOrCreate": "连接或创建 Orchid 帐户",
 	"lockDeposit2": "锁定存款",
-	"unlockDeposit2": "解锁存款"
+	"unlockDeposit2": "解锁存款",
+	"enterYourWeb3": "输入您的 web3 钱包地址。",
+	"circuitGenerated": "电路生成",
+	"copyIdentity": "复制身份",
+	"generateNewIdentity": "生成新身份",
+	"purchaseComplete": "购买完成",
+	"usingYourOrchidAccount": "使用您的 Orchid 帐户，已生成单跳电路。您可以从电路构建器屏幕管理它。",
+	"yourPurchaseIsComplete": "您的购买已完成，现在正在由 xDai 区块链处理，这可能需要几分钟时间。已使用此帐户为您生成默认电路。您可以在主屏幕或账户管理器中监控可用余额。"
 }

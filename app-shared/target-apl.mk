@@ -80,11 +80,9 @@ ifeq ($(target),mac)
 else
 	$(rsync) --filter '- $(framework)' $(engine)/$(framework).xcframework/$(xcframework)/Flutter.framework $(dir $(embed))
 	xcrun bitcode_strip -r $(engine)/$(framework).xcframework/$(xcframework)/Flutter.framework/Flutter -o $(embed)/$(framework)
-ifeq ($(target),ios)
-	lipo $(patsubst %,-extract %,$(archs)) $(embed)/$(framework) -output $(embed)/$(framework)
-endif
 endif
 	$(rsync) $(output)/flutter/App.framework $(dir $(app))
+	find $(app) ! -perm 755 -a ! -perm 644 -exec chmod -v 644 {} +
 	touch $(patsubst %,%$(versions)$(resources)/Info.plist,$(app) $(embed))
 
 signed += $(app)$(versions)$(signature)

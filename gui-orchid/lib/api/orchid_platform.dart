@@ -18,7 +18,9 @@ class OrchidPlatform {
     }
   }
 
-  static bool doesNotSupportScanning = OrchidPlatform.isMacOS ||
+  // TODO: our package does support it on macos and web
+  static bool doesNotSupportScanning =
+      OrchidPlatform.isMacOS ||
       OrchidPlatform.isWeb ||
       OrchidPlatform.isWindows ||
       OrchidPlatform.isLinux;

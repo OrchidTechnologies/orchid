@@ -117,7 +117,7 @@ signed += $(bundle)/$(name)
 $(bundle)/$(name): $(patsubst %,$(output)/$(machine)/%,$(local)) $(output)/XCBuildData/build.db
 	@mkdir -p $(dir $@)
 	@echo [LD] $@
-	@$(cxx) $(more/$(machine)) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) $(output)/Release-$(sdk)/libPods-Runner.a $(output)/Release-$(sdk)/*/lib*.a
+	@$(cxx) $(more/$(machine)) $(wflags) -o $@ $(filter %.o,$^) $(lflags) -rpath /usr/lib/swift -rpath "@executable_path/Frameworks" $(patsubst %,-framework %,$(frameworks)) $(output)/Release-$(sdk)/libPods-Runner.a $(output)/Release-$(sdk)/*/lib*.a $(foreach pod,$(wildcard $(pwd/gui)/ios/Pods/*/Frameworks/*.framework),-F$(dir $(pod))) -L$(isysroot)/usr/lib/swift -L$(toolchain)/usr/lib/swift{-5.0,}/$(sdk) -lobjc
 
 signed += $(bundle)/Info.plist
 $(bundle)/Info.plist: info-app.plist.in

@@ -1,31 +1,48 @@
-import 'package:barcode_scan/barcode_scan.dart';
-import 'package:flutter/services.dart';
+// @dart=2.12
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/orchid.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
-class QRCode {
-  // Return the scan or null if the user cancels the operation.
-  // Throws an exception on various other error states.
-  static Future<String> scan() async {
-    try {
-      return await BarcodeScanner.scan();
-    } on PlatformException catch (e) {
-      print("barcode platform exception: $e");
-      if (e.code == BarcodeScanner.UserCanceled) {
-        return null;
-      }
-      if (e.code == BarcodeScanner.CameraAccessDenied) {
-        // 'The user did not grant the camera permission!';
-        // TODO: Offer to send the user back to settings?
-      } else {
-        // 'Unknown error
-      }
-    } on FormatException {
-      // 'null (User returned using the "back"-button before scanning anything. Result)'
-      print("barcode format exception");
-    } catch (e) {
-      // 'Unknown error
-      print("barcode unknown exception: $e");
-    }
-    throw Exception("scan failed");
+class QRCodeScanner extends StatelessWidget {
+  final Function(String) onCode;
+
+  const QRCodeScanner({
+    Key? key,
+    required this.onCode,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MobileScanner(
+      allowDuplicates: false,
+      onDetect: (barcode, args) {
+        if (barcode.rawValue == null) {
+          log('XXX: QRScanner, failed to scan');
+        } else {
+          final String? code = barcode.rawValue;
+          log('XXX: QRScanner, found: $code');
+          onCode(code ?? '');
+        }
+      },
+    );
+  }
+
+  // dialogue version
+  static void scan(
+    BuildContext context,
+    Function(String) onCode,
+  ) {
+    var size = MediaQuery.of(context).size;
+    AppDialogs.showAppDialog(
+      context: context,
+      title: "Scan QR Code",
+      body: SizedBox(
+          width: size.width,
+          height: size.height * 0.5,
+          child: QRCodeScanner(onCode: (String code){
+            onCode(code);
+            Navigator.of(context).pop();
+          })),
+    );
   }
 }
-

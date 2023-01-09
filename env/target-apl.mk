@@ -16,6 +16,7 @@ exe :=
 
 meson := darwin
 
+lflags += -Wl,-ObjC
 lflags += -Wl,-dead_strip
 lflags += -Wl,-no_dead_strip_inits_and_terms
 

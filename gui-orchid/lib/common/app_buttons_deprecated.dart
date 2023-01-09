@@ -74,10 +74,10 @@ class RaisedButtonDeprecated extends StatelessWidget {
       tapTargetSize: materialTapTargetSize,
       disabledBackgroundColor: disabledColor,
     );
-    ElevatedButton(
+    return ElevatedButton(
       style: raisedButtonStyle,
       onPressed: onPressed,
-      child: Text('Looks like a RaisedButton'),
+      child: child,
     );
   }
 }

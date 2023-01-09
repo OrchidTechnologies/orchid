@@ -11,7 +11,7 @@ import 'orchid_pricing.dart';
 class CoinGeckoExchangeRateSource extends ExchangeRateSource {
   final String tokenId;
 
-  const CoinGeckoExchangeRateSource({required this.tokenId}) : super();
+  const CoinGeckoExchangeRateSource({required this.tokenId});
 
   /// Return the price, USD/Token: Tokens * Rate = USD
   Future<double?> tokenToUsdRate(TokenType tokenType) async {
