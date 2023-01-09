@@ -114,9 +114,9 @@ $(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/
 
 rust := PATH=$${PATH}:~/.cargo/bin
 
-.PHONY: $(output)/%.rustup
 $(output)/%.rustup:
 	$(rust) rustup target add $*
+	@touch $@
 
 ifneq ($(uname-o),Cygwin)
 export RUSTC_WRAPPER=$(CURDIR)/env/rustc-wrapper
