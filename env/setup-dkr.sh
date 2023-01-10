@@ -18,12 +18,12 @@ export ANDROID_HOME=/usr/local/lib/android/sdk
 
 env/setup-ndk.sh
 
-uid=$1
-shift
-# XXX: this is a horrible workaround for env/docker.sh due to the limited way git fixed CVE-2022-24765
+uid=$(stat -c %u /mnt)
 if [[ ${uid} -eq 0 ]]; then
     exec "$@"
 else
+    # newer versions of sudo and/or Ubuntu disallow using sudo to become a user that doesn't exist? :/
+    useradd --badnames -oM -u "${uid}" -d "${HOME}" user # XXX: if I'm doing this can't I just use su?
     apt-get -y install sudo
     chmod 755 ~
     chown -R "${uid}" ~

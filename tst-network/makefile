@@ -22,6 +22,8 @@ args :=
 include ../chains.mk
 args += --tls ../network.p12
 
+# XXX: there is a note about this in cli-shared's makefile
+distro := ubuntu bionic
 include env/target.mk
 
 version := 0.9
