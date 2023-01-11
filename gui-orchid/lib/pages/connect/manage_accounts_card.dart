@@ -269,9 +269,9 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
         : signerAddress.toString(elide: true);
     final textWidth = signerAddress == null ? null : 120.0;
     final balanceText = signerAddress == null
-        ? formatCurrency(0.0, locale: context.locale, digits: 2)
+        ? formatCurrency(0.0, locale: context.locale, precision: 2)
         : (_selectedAccount.lotteryPot?.balance
-                ?.formatCurrency(digits: 2, locale: context.locale) ??
+                ?.formatCurrency(precision: 2, locale: context.locale) ??
             "...");
     final efficiency = _selectedAccount?.marketConditions?.efficiency;
     var showBadge = (_selectedAccount?.marketConditions?.efficiency ?? 1.0) <

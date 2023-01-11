@@ -18,9 +18,8 @@ class OrchidPlatform {
     }
   }
 
-  // TODO: our package does support it on macos and web
+  // TODO: The MobilScanner package does support web but we do not have it set up.
   static bool doesNotSupportScanning =
-      OrchidPlatform.isMacOS ||
       OrchidPlatform.isWeb ||
       OrchidPlatform.isWindows ||
       OrchidPlatform.isLinux;

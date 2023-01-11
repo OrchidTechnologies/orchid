@@ -100,18 +100,22 @@ class OrchidCircularProgressIndicator extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           ImageFiltered(
-              imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation(color),
-                value: value,
-                strokeWidth: stroke,
-              )),
+            imageFilter: ImageFilter.blur(
+              sigmaX: blur,
+              sigmaY: blur,
+              tileMode: TileMode.decal,
+            ),
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation(color),
+              value: value,
+              strokeWidth: stroke,
+            ),
+          ),
           CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation(glowColor),
             strokeWidth: stroke,
             value: value,
             backgroundColor: backgroundColor,
-            // value: 0.5,
           ),
         ],
       ),

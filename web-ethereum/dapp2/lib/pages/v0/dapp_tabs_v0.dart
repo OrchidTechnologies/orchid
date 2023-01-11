@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
@@ -72,6 +73,7 @@ class _DappTabsV0State extends State<DappTabsV0> {
                     child: SizedBox(
                   width: 500,
                   child: AddFundsPane(
+                    tokenType: Tokens.OXT,
                     enabled: _enabled,
                     context: widget.web3Context,
                     signer: widget.signer,
