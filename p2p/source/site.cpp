@@ -184,6 +184,7 @@ void Site::Run(const std::string &path) {
             asio::local::stream_protocol::socket connection(Context());
             co_await acceptor.async_accept(connection, Adapt());
             Spawn([this, connection = std::move(connection)]() mutable noexcept -> task<void> {
+                // XXX: NOLINTNEXTLINE (clang-analyzer-core.NullDereference)
                 co_await Handle<false>(connection, Socket());
             }, "Site::handle");
         }
