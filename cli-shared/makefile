@@ -35,6 +35,10 @@ all: $(output)/$(machine)/orchidcd$(exe)
 test: $(output)/$(machine)/orchidcd$(exe)
 	sudo $< $(args)
 
+.PHONY: run
+run:
+	sudo $(output)/$(machine)/orchidcd$(exe) $(args)
+
 .PHONY: leak
 leak: $(output)/$(machine)/orchidcd$(exe)
 	sudo bash -c 'MallocStackLogging=1 $< $(args)'
