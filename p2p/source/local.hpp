@@ -32,6 +32,8 @@ namespace orc {
 class Local :
     public Base
 {
+    static rtc::Thread &Thread_();
+
   private:
     Local(U<rtc::NetworkManager> manager);
   public:

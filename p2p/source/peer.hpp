@@ -103,7 +103,7 @@ class Peer :
     }
 
     webrtc::PeerConnectionInterface *operator->() {
-        return peer_;
+        return peer_.get();
     }
 
     task<cricket::Candidate> Candidate();

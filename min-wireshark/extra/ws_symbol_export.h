@@ -4,6 +4,7 @@
 #define WS_DLL_PUBLIC_DEF
 #define WS_DLL_LOCAL
 #define WS_DLL_PUBLIC extern
+#define WSUTIL_EXPORT WS_DLL_PUBLIC
 #else
 #include_next "ws_symbol_export.h"
 #endif

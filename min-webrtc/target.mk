@@ -21,12 +21,15 @@ webrtc :=
 
 webrtc += $(filter-out \
     %/create_peerconnection_factory.cc \
+    %/field_trials_registry.cc \
 ,$(wildcard $(pwd)/webrtc/api/*.cc))
 
 webrtc += $(wildcard $(pwd)/webrtc/api/crypto/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/transport/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/transport/media/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/units/*.cc)
+
+webrtc += $(pwd)/webrtc/api/field_trials_registry.cc
 
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
 webrtc += $(pwd)/webrtc/api/call/transport.cc
@@ -35,6 +38,7 @@ webrtc += $(pwd)/webrtc/api/numerics/samples_stats_counter.cc
 webrtc += $(pwd)/webrtc/api/rtc_event_log/rtc_event.cc
 webrtc += $(pwd)/webrtc/api/rtc_event_log/rtc_event_log.cc
 
+webrtc += $(pwd)/webrtc/api/task_queue/pending_task_safety_flag.cc
 webrtc += $(pwd)/webrtc/api/task_queue/task_queue_base.cc
 
 webrtc += $(pwd)/webrtc/api/video/color_space.cc
@@ -46,7 +50,9 @@ webrtc += $(pwd)/webrtc/api/video/video_frame_metadata.cc
 webrtc += $(pwd)/webrtc/api/video/video_source_interface.cc
 webrtc += $(pwd)/webrtc/api/video/video_timing.cc
 
+webrtc += $(pwd)/webrtc/api/video_codecs/av1_profile.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/h264_profile_level_id.cc
+webrtc += $(pwd)/webrtc/api/video_codecs/scalability_mode.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/sdp_video_format.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/video_codec.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/vp9_profile.cc
@@ -94,10 +100,14 @@ webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/source/deprecated/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/modules/utility/source/*.cc)
 
+webrtc += $(pwd)/webrtc/modules/utility/maybe_worker_thread.cc
+
 webrtc += $(pwd)/webrtc/modules/video_coding/chain_diff_calculator.cc
 webrtc += $(pwd)/webrtc/modules/video_coding/frame_dependencies_calculator.cc
 
-webrtc += $(shell find $(pwd)/webrtc/net -name '*.cc' | LC_COLLATE=C sort)
+webrtc += $(filter-out \
+    %/reassembly_streams.cc \
+,$(shell find $(pwd)/webrtc/net -name '*.cc' | LC_COLLATE=C sort))
 
 webrtc += $(wildcard $(pwd)/webrtc/p2p/base/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/p2p/client/*.cc)
@@ -127,6 +137,8 @@ webrtc += $(wildcard $(pwd)/webrtc/system_wrappers/source/*.cc)
 
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/internal/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/crc/*.cc)
+webrtc += $(wildcard $(pwd)/abseil-cpp/absl/crc/internal/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/debugging/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/debugging/internal/*.cc)
 webrtc += $(wildcard $(pwd)/abseil-cpp/absl/numeric/*.cc)
@@ -203,6 +215,13 @@ webrtc := $(foreach v,$(webrtc),$(if $(findstring /virtual_,$(v)),,$(v)))
 source += $(webrtc)
 
 
+$(output)/$(pwd/webrtc)/experiments/registered_field_trials.h: $(pwd/webrtc)/experiments/field_trials.py
+	@mkdir -p $(dir $@)
+	python3 $< header >$@
+header += $(output)/$(pwd/webrtc)/experiments/registered_field_trials.h
+cflags += -I$(output)/$(pwd/webrtc)
+
+
 cflags += -DWEBRTC_HAVE_SCTP
 cflags += -DWEBRTC_HAVE_DCSCTP
 
@@ -234,7 +253,7 @@ cflags += -DSCTP_USE_OPENSSL_SHA1
 # disable dcsctp congestion controller
 chacks/$(pwd/webrtc)/media/sctp/dcsctp_transport.cc += s/ options;/ options{.cwnd_mtus_initial = 10000, .cwnd_mtus_min = 10000};/g;
 # disallow blocking signaling thread
-chacks/$(pwd/webrtc)/rtc_base/event.cc += /::Wait(/{s/\/\*//;s/\*\///;s/$$/ if (warn_after_ms != kForever) std::terminate();/;};
+chacks/$(pwd/webrtc)/rtc_base/event.cc += /::Wait(/{s/\/\*//;s/\*\///;s/$$/ if (warn_after != kForever) std::terminate();/;};
 # do not allocate statistics collector
 chacks/$(pwd/webrtc)/pc/rtc_stats_collector.cc += s/rtc::make_ref_counted<RTCStatsCollector>([^;]*/nullptr/g;
 

@@ -299,6 +299,9 @@ class Middle :
             return true;
         }
 
+        int vpn_mtu() const noexcept override {
+            return 0; }
+
         std::string tun_name() const noexcept override {
             return "tun_name()"; }
 

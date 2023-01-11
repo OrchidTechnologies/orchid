@@ -47,6 +47,7 @@
 #include "rtc_base/null_socket_server.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/time_utils.h"
+#include "system_wrappers/include/field_trial.h"
 
 #if 0
 #include <linux/sockios.h>
@@ -96,6 +97,12 @@ class ScopedSetTrue {
  private:
   bool* value_;
 };
+
+// Returns true if the the client is in the experiment to get timestamps
+// from the socket implementation.
+bool IsScmTimeStampExperimentEnabled() {
+  return webrtc::field_trial::IsEnabled("WebRTC-SCM-Timestamp");
+}
 }  // namespace
 
 namespace orc {
@@ -105,7 +112,8 @@ LwipSocket::LwipSocket(LwipSocketServer* ss, SOCKET s)
       s_(s),
       error_(0),
       state_((s == INVALID_SOCKET) ? CS_CLOSED : CS_CONNECTED),
-      resolver_(nullptr) {
+      resolver_(nullptr),
+      read_scm_timestamp_experiment_(IsScmTimeStampExperimentEnabled()) {
   if (s_ != INVALID_SOCKET) {
     SetEnabledEvents(DE_READ | DE_WRITE);
 
@@ -355,7 +363,7 @@ int LwipSocket::SendTo(const void* buffer,
 
 int LwipSocket::Recv(void* buffer, size_t length, int64_t* timestamp) {
   int received =
-      ::lwip_recv(s_, static_cast<char*>(buffer), static_cast<int>(length), 0);
+      DoReadFromSocket(buffer, length, /*out_addr*/ nullptr, timestamp);
   if ((received == 0) && (length != 0)) {
     // Note: on graceful shutdown, recv can return 0.  In this case, we
     // pretend it is blocking, and then signal close, so that simplifying
@@ -367,9 +375,7 @@ int LwipSocket::Recv(void* buffer, size_t length, int64_t* timestamp) {
     SetError(EWOULDBLOCK);
     return SOCKET_ERROR;
   }
-  if (timestamp) {
-    *timestamp = GetSocketRecvTimestamp_(s_);
-  }
+
   UpdateLastError();
   int error = GetError();
   bool success = (received >= 0) || IsBlockingError(error);
@@ -386,17 +392,8 @@ int LwipSocket::RecvFrom(void* buffer,
                              size_t length,
                              SocketAddress* out_addr,
                              int64_t* timestamp) {
-  sockaddr_storage addr_storage;
-  socklen_t addr_len = sizeof(addr_storage);
-  sockaddr* addr = reinterpret_cast<sockaddr*>(&addr_storage);
-  int received = ::lwip_recvfrom(s_, static_cast<char*>(buffer),
-                            static_cast<int>(length), 0, addr, &addr_len);
-  if (timestamp) {
-    *timestamp = GetSocketRecvTimestamp_(s_);
-  }
+  int received = DoReadFromSocket(buffer, length, out_addr, timestamp);
   UpdateLastError();
-  if ((received >= 0) && (out_addr != nullptr))
-    SocketAddressFromSockAddrStorage(addr_storage, out_addr);
   int error = GetError();
   bool success = (received >= 0) || IsBlockingError(error);
   if (udp_ || success) {
@@ -406,6 +403,84 @@ int LwipSocket::RecvFrom(void* buffer,
     RTC_LOG_F(LS_VERBOSE) << "Error = " << error;
   }
   return received;
+}
+
+int LwipSocket::DoReadFromSocket(void* buffer,
+                                     size_t length,
+                                     SocketAddress* out_addr,
+                                     int64_t* timestamp) {
+  sockaddr_storage addr_storage;
+  socklen_t addr_len = sizeof(addr_storage);
+  sockaddr* addr = reinterpret_cast<sockaddr*>(&addr_storage);
+
+#if 0
+  int received = 0;
+  if (read_scm_timestamp_experiment_) {
+    iovec iov = {.iov_base = buffer, .iov_len = length};
+    msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
+    if (out_addr) {
+      out_addr->Clear();
+      msg.msg_name = addr;
+      msg.msg_namelen = addr_len;
+    }
+    char control[CMSG_SPACE(sizeof(struct timeval))] = {};
+    if (timestamp) {
+      *timestamp = -1;
+      msg.msg_control = &control;
+      msg.msg_controllen = sizeof(control);
+    }
+    received = ::lwip_recvmsg(s_, &msg, 0);
+    if (received <= 0) {
+      // An error occured or shut down.
+      return received;
+    }
+    if (timestamp) {
+      struct cmsghdr* cmsg;
+      for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+        if (cmsg->cmsg_level != SOL_SOCKET)
+          continue;
+        if (cmsg->cmsg_type == SCM_TIMESTAMP) {
+          timeval* ts = reinterpret_cast<timeval*>(CMSG_DATA(cmsg));
+          *timestamp =
+              rtc::kNumMicrosecsPerSec * static_cast<int64_t>(ts->tv_sec) +
+              static_cast<int64_t>(ts->tv_usec);
+          break;
+        }
+      }
+    }
+    if (out_addr) {
+      SocketAddressFromSockAddrStorage(addr_storage, out_addr);
+    }
+  } else {  // !read_scm_timestamp_experiment_
+    if (out_addr) {
+      received = ::lwip_recvfrom(s_, static_cast<char*>(buffer),
+                            static_cast<int>(length), 0, addr, &addr_len);
+      SocketAddressFromSockAddrStorage(addr_storage, out_addr);
+    } else {
+      received =
+          ::lwip_recv(s_, static_cast<char*>(buffer), static_cast<int>(length), 0);
+    }
+    if (timestamp) {
+      *timestamp = GetSocketRecvTimestamp_(s_);
+    }
+  }
+  return received;
+
+#else
+  int received = 0;
+  if (out_addr) {
+    received = ::lwip_recvfrom(s_, static_cast<char*>(buffer),
+                          static_cast<int>(length), 0, addr, &addr_len);
+    SocketAddressFromSockAddrStorage(addr_storage, out_addr);
+  } else {
+    received =
+        ::lwip_recv(s_, static_cast<char*>(buffer), static_cast<int>(length), 0);
+  }
+  if (timestamp) {
+    *timestamp = -1;
+  }
+  return received;
+#endif
 }
 
 int LwipSocket::Listen(int backlog) {
@@ -603,7 +678,16 @@ bool SocketDispatcher::Initialize() {
   ioctlsocket(s_, FIONBIO, &argp);
 #elif 1
   lwip_fcntl(s_, F_SETFL, lwip_fcntl(s_, F_GETFL, 0) | O_NONBLOCK);
+  if (IsScmTimeStampExperimentEnabled()) {
+    int value = 1;
+    // Attempt to get receive packet timestamp from the socket.
+    if (::lwip_setsockopt(s_, SOL_SOCKET, -1, &value, sizeof(value)) !=
+        0) {
+      RTC_DLOG(LS_ERROR) << "::setsockopt failed. errno: " << LAST_SYSTEM_ERROR;
+    }
+  }
 #endif
+
 #if 0
   // iOS may kill sockets when the app is moved to the background
   // (specifically, if the app doesn't use the "voip" UIBackgroundMode). When
@@ -611,7 +695,9 @@ bool SocketDispatcher::Initialize() {
   // default will terminate the process, which we don't want. By specifying
   // this socket option, SIGPIPE will be disabled for the socket.
   int value = 1;
-  ::lwip_setsockopt(s_, SOL_SOCKET, SO_NOSIGPIPE, &value, sizeof(value));
+  if (::lwip_setsockopt(s_, SOL_SOCKET, SO_NOSIGPIPE, &value, sizeof(value)) != 0) {
+    RTC_DLOG(LS_ERROR) << "::setsockopt failed. errno: " << LAST_SYSTEM_ERROR;
+  }
 #endif
   ss_->Add(this);
   return true;
@@ -1137,12 +1223,20 @@ void LwipSocketServer::Update(Dispatcher* pdispatcher) {
 #endif
 }
 
+int LwipSocketServer::ToCmsWait(webrtc::TimeDelta max_wait_duration) {
+  return max_wait_duration == Event::kForever
+             ? kForeverMs
+             : max_wait_duration.RoundUpTo(webrtc::TimeDelta::Millis(1)).ms();
+}
+
 #if 1
 
-bool LwipSocketServer::Wait(int cmsWait, bool process_io) {
+bool LwipSocketServer::Wait(webrtc::TimeDelta max_wait_duration,
+                            bool process_io) {
   // We don't support reentrant waiting.
   RTC_DCHECK(!waiting_);
   ScopedSetTrue s(&waiting_);
+  const int cmsWait = ToCmsWait(max_wait_duration);
 #if 0
   // We don't keep a dedicated "epoll" descriptor containing only the non-IO
   // (i.e. signaling) dispatcher, so "poll" will be used instead of the default
@@ -1229,7 +1323,7 @@ bool LwipSocketServer::WaitSelect(int cmsWait, bool process_io) {
   struct timeval* ptvWait = nullptr;
   struct timeval tvWait;
   int64_t stop_us;
-  if (cmsWait != kForever) {
+  if (cmsWait != kForeverMs) {
     // Calculate wait timeval
     tvWait.tv_sec = cmsWait / 1000;
     tvWait.tv_usec = (cmsWait % 1000) * 1000;
@@ -1427,7 +1521,7 @@ bool LwipSocketServer::WaitEpoll(int cmsWait) {
   RTC_DCHECK(epoll_fd_ != INVALID_SOCKET);
   int64_t tvWait = -1;
   int64_t tvStop = -1;
-  if (cmsWait != kForever) {
+  if (cmsWait != kForeverMs) {
     tvWait = cmsWait;
     tvStop = TimeAfter(cmsWait);
   }
@@ -1472,7 +1566,7 @@ bool LwipSocketServer::WaitEpoll(int cmsWait) {
       }
     }
 
-    if (cmsWait != kForever) {
+    if (cmsWait != kForeverMS) {
       tvWait = TimeDiff(tvStop, TimeMillis());
       if (tvWait <= 0) {
         // Return success on timeout.
@@ -1488,7 +1582,7 @@ bool LwipSocketServer::WaitPoll(int cmsWait, Dispatcher* dispatcher) {
   RTC_DCHECK(dispatcher);
   int64_t tvWait = -1;
   int64_t tvStop = -1;
-  if (cmsWait != kForever) {
+  if (cmsWait != kForeverMs) {
     tvWait = cmsWait;
     tvStop = TimeAfter(cmsWait);
   }
@@ -1539,7 +1633,7 @@ bool LwipSocketServer::WaitPoll(int cmsWait, Dispatcher* dispatcher) {
       ProcessEvents(dispatcher, readable, writable, error, error);
     }
 
-    if (cmsWait != kForever) {
+    if (cmsWait != kForeverMs) {
       tvWait = TimeDiff(tvStop, TimeMillis());
       if (tvWait < 0) {
         // Return success on timeout.
@@ -1556,11 +1650,13 @@ bool LwipSocketServer::WaitPoll(int cmsWait, Dispatcher* dispatcher) {
 #endif  // WEBRTC_POSIX
 
 #if 0
-bool LwipSocketServer::Wait(int cmsWait, bool process_io) {
+bool LwipSocketServer::Wait(webrtc::TimeDelta max_wait_duration,
+                            bool process_io) {
   // We don't support reentrant waiting.
   RTC_DCHECK(!waiting_);
   ScopedSetTrue s(&waiting_);
 
+  int cmsWait = ToCmsWait(max_wait_duration);
   int64_t cmsTotal = cmsWait;
   int64_t cmsElapsed = 0;
   int64_t msStart = Time();
@@ -1607,7 +1703,7 @@ bool LwipSocketServer::Wait(int cmsWait, bool process_io) {
     // Which is shorter, the delay wait or the asked wait?
 
     int64_t cmsNext;
-    if (cmsWait == kForever) {
+    if (cmsWait == kForeverMs) {
       cmsNext = cmsWait;
     } else {
       cmsNext = std::max<int64_t>(0, cmsTotal - cmsElapsed);
@@ -1723,7 +1819,7 @@ bool LwipSocketServer::Wait(int cmsWait, bool process_io) {
     if (!fWait_)
       break;
     cmsElapsed = TimeSince(msStart);
-    if ((cmsWait != kForever) && (cmsElapsed >= cmsWait)) {
+    if ((cmsWait != kForeverMs) && (cmsElapsed >= cmsWait)) {
       break;
     }
   }

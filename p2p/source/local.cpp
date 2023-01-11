@@ -106,7 +106,7 @@ Local::Local(const class Host &host) :
 }
 
 Local::Local() :
-    Local(std::make_unique<Manager>())
+    Local(std::make_unique<Manager>(Thread_().socketserver()))
 {
 }
 
@@ -115,7 +115,7 @@ class Host Local::Host() {
     return Host_;
 }
 
-rtc::Thread &Local::Thread() {
+rtc::Thread &Local::Thread_() {
     static const std::unique_ptr<rtc::Thread> thread([&]() {
         auto thread(rtc::Thread::CreateWithSocketServer());
         thread->SetName("orchid:local", nullptr);
@@ -124,6 +124,10 @@ rtc::Thread &Local::Thread() {
     }());
 
     return *thread;
+}
+
+rtc::Thread &Local::Thread() {
+    return Thread_();
 }
 
 rtc::BasicPacketSocketFactory &Local::Factory() {

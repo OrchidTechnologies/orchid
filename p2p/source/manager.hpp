@@ -34,11 +34,17 @@ class Manager :
     public rtc::BasicNetworkManager
 {
   public:
-    void GetNetworks(NetworkList *networks) const override {
-        rtc::BasicNetworkManager::GetNetworks(networks);
-        networks->erase(std::remove_if(networks->begin(), networks->end(), [](auto network) {
+    Manager(rtc::SocketFactory *factory) :
+        rtc::BasicNetworkManager(nullptr, factory, nullptr)
+    {
+    }
+
+    std::vector<const rtc::Network *> GetNetworks() const override {
+        auto networks(rtc::BasicNetworkManager::GetNetworks());
+        networks.erase(std::remove_if(networks.begin(), networks.end(), [](auto network) {
             return Host(network->GetBestIP()) == Host_;
-        }), networks->end());
+        }), networks.end());
+        return networks;
     }
 };
 
@@ -73,9 +79,12 @@ class Assistant :
     void StopUpdating() override {
     }
 
-    void GetNetworks(NetworkList *networks) const override {
-        networks->clear();
-        networks->emplace_back(&network_);
+    std::vector<const rtc::Network *> GetAnyAddressNetworks() override {
+        orc_insist(false);
+    }
+
+    std::vector<const rtc::Network *> GetNetworks() const override {
+        return {&network_};
     }
 };
 

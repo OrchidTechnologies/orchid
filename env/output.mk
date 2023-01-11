@@ -90,6 +90,7 @@ endef
 $(each)
 
 %/configure: %/configure.ac
+	cd $(dir $@) && git clean -fxd .
 	env/autogen.sh $(dir $@)
 
 $(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot) $$(call head,$$(folder))

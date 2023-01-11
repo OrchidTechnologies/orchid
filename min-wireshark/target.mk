@@ -52,6 +52,12 @@ cflags/$(pwd/wireshark)/ += -DUNICODE
 cflags/$(pwd/wireshark)/ += -DSTRSAFE_NO_DEPRECATE
 cflags/$(pwd/wireshark)/ += -Wno-format
 
+# XXX: submit this to their issue tracker :/
+# wslog.c:848:30: error: too many arguments in call to 'load_registry' [-Werror]
+#     load_registry(vcmdarg_err);
+#     ~~~~~~~~~~~~~            ^
+cflags/$(pwd/wireshark)/wsutil/wslog.c += -Wno-error
+
 cflags/$(pwd/wireshark)/epan/dissectors/packet-smb2.c += -D_MSC_VER=1800
 cflags/$(pwd/wireshark)/wsutil/getopt_long.c += -DNO_OLDNAMES
 cflags/$(pwd/wireshark)/wsutil/filesystem.c += -Wno-unused-function
@@ -102,6 +108,7 @@ endif
 wireshark := $(filter-out \
     %/exntest.c \
     %/tvbtest.c \
+    %/test_epan.c \
     %/test_wsutil.c \
     %_test.c \
 ,$(wireshark))

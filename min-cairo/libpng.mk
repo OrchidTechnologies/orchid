@@ -9,6 +9,8 @@
 # }}}
 
 
+# XXX: this relied on pre-_.a behavior of archive
+
 p_libpng := -I$(CURDIR)/$(pwd)/zlb/libz
 l_libpng := -L@/$(pwd)/zlb
 
