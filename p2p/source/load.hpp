@@ -43,6 +43,8 @@ inline bool Exists(const std::string &path) {
     return orc_syscall(access(path.c_str(), F_OK), ENOENT) == 0;
 }
 
+// XXX: boost's string_file has been deprecated for some reason :(
+
 inline std::string Load(const std::string &file) { orc_block({
     std::string data;
     boost::filesystem::load_string_file(file, data);

@@ -34,6 +34,7 @@ boost += container
 boost += container_hash
 boost += core
 boost += date_time
+boost += describe
 boost += detail
 boost += endian
 boost += exception
@@ -72,6 +73,7 @@ boost += serialization
 boost += signals2
 boost += smart_ptr
 boost += static_assert
+boost += static_string
 boost += system
 boost += throw_exception
 boost += tokenizer
@@ -82,6 +84,7 @@ boost += type_traits
 boost += utility
 boost += uuid
 boost += variant
+boost += variant2
 boost += winapi
 cflags += $(patsubst %,-I$(pwd)/boost/libs/%/include,$(boost))
 
@@ -93,6 +96,7 @@ cflags += -DBOOST_ASIO_DISABLE_CONNECTEX
 
 # XXX: this is because I am still using an old version of libc++
 cflags += -DBOOST_FILESYSTEM_NO_CXX20_ATOMIC_REF
+cflags += -DBOOST_NO_CXX20_HDR_CONCEPTS
 
 ifneq ($(filter ios mac,$(target)),)
 # newer Xcode unconditionally defines _LIBCPP_HAS_ALIGNED_ALLOC but it requires MacOS 10.15+ / iOS 13.0+

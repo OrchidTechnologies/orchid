@@ -32,16 +32,16 @@ namespace orc {
 
 using boost::multiprecision::checked_int256_t;
 
-template <unsigned Bits_, boost::multiprecision::cpp_integer_type Sign_, boost::multiprecision::cpp_int_check_type Check_>
+template <size_t Bits_, boost::multiprecision::cpp_integer_type Sign_, boost::multiprecision::cpp_int_check_type Check_>
 using Integer = boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, Sign_, Check_>>;
 
-template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
 Integer<Bits_, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked> Complement(const Integer<Bits_, boost::multiprecision::signed_magnitude, Check_> &value) {
     typedef Integer<Bits_, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked> Value;
     return Value(value);
 }
 
-template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
 Integer<Bits_, boost::multiprecision::signed_magnitude, boost::multiprecision::checked> Complement(const Integer<Bits_, boost::multiprecision::unsigned_magnitude, Check_> &value) {
     typedef Integer<Bits_, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked> Value;
     return bit_test(value, Bits_ - 1) ? -Value(~value + 1) : Value(value);
