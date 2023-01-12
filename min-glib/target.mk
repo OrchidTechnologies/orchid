@@ -28,6 +28,8 @@ endif
 temp := $(patsubst %,$(pwd)/glib/%,$(glib))
 
 $(call depend,$(pwd)/glib/build.ninja,@/usr/include/iconv.h @/usr/lib/libiconv.a)
+$(call depend,$(pwd)/glib/build.ninja,@/usr/include/pcre2.h @/usr/lib/libpcre2-8.a)
+
 $(call depend,$(pwd)/glib/glib/glibconfig.h,@/$(pwd)/glib/build.ninja)
 
 $(subst @,%,$(patsubst %,$(output)/@/%,$(temp))): $(output)/%/$(pwd)/glib/build.ninja
@@ -58,3 +60,6 @@ $(output)/$(1)/usr/include/%.h $(output)/$(1)/usr/lib/lib%.a: $(output)/$(1)/$(p
 endef
 $(each)
 # }}}
+
+$(call include,pcr/target.mk)
+$(call include,zlb/target.mk)

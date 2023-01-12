@@ -17,3 +17,5 @@ qflags += -DCHROMIUM_ZLIB_NO_CHROMECONF
 cflags += -I$(pwd)/libz
 cflags += -I$(pwd)/extra
 cflags += -I$(pwd)
+
+export PWD_ZLIB := $(pwd)/libz

@@ -103,6 +103,9 @@
 [submodule "libcxx"]
 	path = env/libcxx
 	url = https://github.com/llvm-mirror/libcxx.git
+[submodule "pkg-config"]
+	path = env/pkg-config
+	url = https://gitlab.freedesktop.org/pkg-config/pkg-config.git
 [submodule "quickjs"]
 	path = vpn-shared/quickjs
 	url = https://github.com/bellard/quickjs.git

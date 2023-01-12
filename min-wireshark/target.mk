@@ -277,4 +277,3 @@ $(each)
 # }}}
 
 $(call include,glib/target.mk)
-$(call include,pcr/target.mk)

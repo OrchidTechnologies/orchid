@@ -70,7 +70,7 @@ ld = 'ld'
 ar = '${ar}'
 strip = '${strip}'
 windres = '${windres}'
-pkgconfig = '${curdir}/env/pkg-config'
+pkgconfig = '${curdir}/env/pkg-config.sh'
 
 [properties]
 needs_exe_wrapper = true

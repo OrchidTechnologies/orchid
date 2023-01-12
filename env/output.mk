@@ -90,6 +90,16 @@ $(output)/%.rc.o: $$(specific) $$(folder).rc $$(code)
 	@echo [RC] $(target)/$(arch) $<
 	$(job)@$(prefix) $(windres/$(arch)) -o $@ $< $(filter -I%,$(flags) $(xflags))
 
+$(output)/%/pkg-config/Makefile: env/pkg-config/configure
+	@mkdir -p $(dir $@)
+	cd $(dir $@) && $(CURDIR)/$< --enable-static --prefix=$(CURDIR)/$(output)/$*/usr --with-internal-glib
+
+$(output)/%/usr/bin/pkg-config: $(output)/%/pkg-config/Makefile
+	$(MAKE) -C $(dir $<) install
+
+export ENV_CURDIR := $(CURDIR)
+export ENV_OUTPUT := $(output)
+
 define _
 $(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc) $(more/$(1))' '$(cxx) $(more/$(1))' '$(objc) $(more/$(1))' '$(qflags)' '$(wflags)' '$(xflags)' '$(mflags)')
 endef
@@ -97,25 +107,27 @@ $(each)
 
 %/configure: %/configure.ac
 	cd $(dir $@) && git clean -fxd .
+	@# XXX: https://gitlab.freedesktop.org/pkg-config/pkg-config/-/issues/55
+	@sed -i -e 's/^m4_copy(/m4_copy_force(/' $(dir $@)/glib/m4macros/glib-gettext.m4 || true
 	env/autogen.sh $(dir $@)
 
-$(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot) $$(call head,$$(folder))
+$(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot) $$(call head,$$(folder)) $(output)/$$(arch)/usr/bin/pkg-config
 	$(specific)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
-	cd $(dir $@) && $(CURDIR)/$< --host=$(host/$(arch)) --prefix=$(CURDIR)/$(output)/$(arch)/usr \
+	cd $(dir $@) && $(unshare) $(CURDIR)/$< --host=$(host/$(arch)) --prefix=$(CURDIR)/$(output)/$(arch)/usr \
 	    CC="$(cc) $(more/$(arch))" CFLAGS="$(qflags)" CXX="$(cxx) $(more/$(arch))" CXXFLAGS="$(qflags) $(xflags)" \
-	    RANLIB="$(ranlib/$(arch))" AR="$(ar/$(arch))" PKG_CONFIG="$(CURDIR)/env/pkg-config" \
+	    RANLIB="$(ranlib/$(arch))" AR="$(ar/$(arch))" PKG_CONFIG="$(CURDIR)/env/pkg-config.sh" ENV_ARCH="$(arch)" \
 	    CPPFLAGS="$(patsubst -I@/%,-I$(CURDIR)/$(output)/$(arch)/%,$(p_$(notdir $(patsubst %/configure,%,$<))))" \
 	    LDFLAGS="$(wflags) $(patsubst -L@/%,-L$(CURDIR)/$(output)/$(arch)/%,$(l_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))" \
 	    --enable-static --disable-shared $(subst =@/,=$(CURDIR)/$(output)/$(arch)/,$(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))
 
-$(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt $(sysroot) $$(call head,$$(folder))
+$(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt $(sysroot) $$(call head,$$(folder)) $(output)/$$(arch)/usr/bin/pkg-config
 	$(specific)
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
-	cd $(dir $<) && meson --cross-file $(CURDIR)/$(output)/$(arch)/meson.txt $(CURDIR)/$(dir $@) \
+	cd $(dir $<) && ENV_ARCH="$(arch)" $(unshare) meson --cross-file $(CURDIR)/$(output)/$(arch)/meson.txt $(CURDIR)/$(dir $@) \
 	    -Ddefault_library=static $(w_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/meson.build,%,$<))))
 
@@ -129,7 +141,7 @@ ifneq ($(uname-o),Cygwin)
 export RUSTC_WRAPPER=$(CURDIR)/env/rustc-wrapper
 endif
 
-$(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$(arch)).rustup $(sysroot) $$(call head,$$(folder))
+$(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$(arch)).rustup $(sysroot) $$(call head,$$(folder)) $(output)/$$(arch)/usr/bin/pkg-config
 	$(specific)
 	@mkdir -p $(dir $@)
 	
@@ -141,7 +153,7 @@ $(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$
 	@# https://github.com/buildroot/buildroot/commit/4b2be770b8a853a7dd97b5788d837f0d84923fa1
 	cd $(folder) && RUST_BACKTRACE=1 $(rust):$(dir $(word 1,$(cc))) \
 	    $(ccrs)_CC='$(cc) $(more/$(arch)) $(qflags)' $(ccrs)_AR='$(ar/$(arch))' \
-	    PKG_CONFIG_ALLOW_CROSS=1 PKG_CONFIG="$(CURDIR)/env/pkg-config" ENV_ARCH="$(arch)" \
+	    PKG_CONFIG_ALLOW_CROSS=1 PKG_CONFIG="$(CURDIR)/env/pkg-config.sh" ENV_ARCH="$(arch)" \
 	    CARGO_HOME='$(call path,$(CURDIR)/$(output)/cargo)' CARGO_INCREMENTAL=0 \
 	    __CARGO_TEST_CHANNEL_OVERRIDE_DO_NOT_USE_THIS=nightly CARGO_TARGET_APPLIES_TO_HOST=false \
 	    CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(arch))))_LINKER='$(firstword $(cc))' \
