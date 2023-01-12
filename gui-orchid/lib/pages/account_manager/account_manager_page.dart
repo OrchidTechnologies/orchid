@@ -36,6 +36,7 @@ import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
 import 'package:orchid/util/dispose.dart';
 import 'package:orchid/util/strings.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_sizes.dart';
@@ -450,8 +451,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                 style:
                     OrchidText.caption.copyWith(color: OrchidColors.tappable),
                 onTap: (String text) async {
-                  await TapToCopyText.copyTextToClipboard(text);
-                  _showOrchidAccountAddressWarning();
+                  _copyAndShowOrchidAccountAddressWarning(
+                      qrCodeText: text, showQRCode: false);
+                },
+                onLongPress: (String text) async {
+                  _copyAndShowOrchidAccountAddressWarning(
+                      qrCodeText: text, showQRCode: true);
                 },
               ),
             ),
@@ -462,9 +467,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
-  Future<void> _showOrchidAccountAddressWarning() async {
+  Future<void> _copyAndShowOrchidAccountAddressWarning(
+      {@required String qrCodeText, bool showQRCode = false}) async {
+    await TapToCopyText.copyTextToClipboard(qrCodeText);
     var title = s.copiedOrchidIdentity;
-    var body = StyledText(
+    final bodyText = StyledText(
       style: OrchidText.body2,
       newLineAsBreaks: true,
       text: '<alarm/> <bold>' +
@@ -485,10 +492,31 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             color: OrchidColors.purple_bright)
       },
     );
+    final qrCode = () => Container(
+          width: 250,
+          height: 250,
+          child: Center(
+            child: QrImage(
+              data: qrCodeText,
+              backgroundColor: Colors.white,
+              version: QrVersions.auto,
+              size: 250.0,
+            ),
+          ),
+        );
+
     return AppDialogs.showAppDialog(
       context: context,
       title: title,
-      body: body,
+      body: showQRCode
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                bodyText,
+                qrCode().top(24),
+              ],
+            )
+          : bodyText,
     );
   }
 
