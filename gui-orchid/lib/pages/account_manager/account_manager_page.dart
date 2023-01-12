@@ -27,6 +27,7 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
+import 'package:orchid/pages/circuit/circuit_utils.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 import 'package:orchid/pages/circuit/orchid_account_entry.dart';
@@ -125,8 +126,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Future<void> _doOpenOptions() async {
     // Open to the supplied account
     if (widget.openToAccount != null) {
-      // log("open to account: ${widget.openToAccount}");
-      _setSelectedIdentity(await widget.openToAccount.signerKey);
+      // log('open to account: ${widget.openToAccount}');
+      _setSelectedIdentity(widget.openToAccount.signerKey);
     }
 
     // Open the import dialog after the UI has rendered.
@@ -267,7 +268,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           _setSelectedIdentity(result.signer);
 
           // Support onboarding by prodding the account finder if it exists
-          AccountFinder.shared?.refresh();
+          // AccountFinder.shared?.refresh();
 
           // trigger a refresh
           _refreshIndicatorKey.currentState.show();
@@ -280,11 +281,13 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     // State used by the dialog
     Account _accountToImport;
 
-    final onPressed = (BuildContext context) async {
+    final doImport = (BuildContext context) async {
       await UserPreferences().addCachedDiscoveredAccounts([_accountToImport]);
 
       // Set the identity and refresh
       _setSelectedIdentity(_accountToImport.signerKey);
+
+      final account = _accountToImport;
 
       setState(() {
         _accountToImport = null;
@@ -292,11 +295,14 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       // dismiss the dialog
       Navigator.pop(context);
 
-      // Support onboarding by prodding the account finder if it exists
-      AccountFinder.shared?.refresh();
-
       // trigger a refresh
-      _refreshIndicatorKey.currentState.show();
+      await _refreshIndicatorKey.currentState.show();
+
+      // Support onboarding by prodding the account finder if it exists
+      // AccountFinder.shared?.refresh();
+      if (await CircuitUtils.defaultCircuitIfNeededFrom(account)) {
+        CircuitUtils.showDefaultCircuitCreatedDialog(context);
+      }
     };
 
     AppDialogs.showAppDialog(
@@ -315,7 +321,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                   OrchidAccountEntry(
                     onChange: (account) {
                       setState(() {
-                        log("XXX: onChange = $account");
+                        log('XXX: onChange = $account');
                         _accountToImport = account;
                       });
                     },
@@ -324,7 +330,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                   OrchidActionButton(
                     text: s.importAccount.toUpperCase(),
                     enabled: _accountToImport != null,
-                    onPressed: () => onPressed(context),
+                    onPressed: () => doImport(context),
                   ),
                 ],
               ),
@@ -350,7 +356,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     if (identity == null) {
       return;
     }
-    var config = 'account={ secret: "${identity.formatSecretFixed()}" }';
+    var config = identity.toExportString();
     var title = s.exportThisOrchidKey;
     // var bodyStyle = AppText.dialogBody.copyWith(fontSize: 15);
     var bodyStyle = OrchidText.body2;
@@ -461,14 +467,14 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     var body = StyledText(
       style: OrchidText.body2,
       newLineAsBreaks: true,
-      text: "<alarm/> <bold>" +
+      text: '<alarm/> <bold>' +
           s.thisIsNotAWalletAddress +
-          "</bold>" +
-          "  " +
+          '</bold>' +
+          '  ' +
           s.doNotSendTokensToThisAddress +
-          "\n\n" +
+          '\n\n' +
           s.yourOrchidIdentityUniquelyIdentifiesYouOnTheNetwork +
-          "  " +
+          '  ' +
           s.learnMoreAboutYourLinkorchidIdentitylink,
       tags: {
         'bold': StyledTextTag(
@@ -566,6 +572,15 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
         // Look for new accounts
         return _accountStore.refresh(); // Return the load future
+
+        // return _accountStore.refresh().then((value) async {
+        //   final accounts = _accountStore.accounts;
+        //   if (await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
+        //       accounts)) {
+        //     CircuitUtils.showDefaultCircuitCreatedDialog(context);
+        //   }
+        //   return null;
+        // }); // Return the load future
       },
       child: accountListView,
     );
@@ -598,7 +613,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Future<void> _addFunds() async {
     var signerKey = _selectedIdentity;
     if (signerKey == null) {
-      throw Exception("iap: no signer!");
+      throw Exception('iap: no signer!');
     }
     return Navigator.push(
       context,
@@ -609,7 +624,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                 signerKey: signerKey,
                 cancellable: true,
                 completion: () {
-                  log("purchase complete");
+                  log('purchase complete');
+                  CircuitUtils.findAccountsAndDefaultCircuitIfNeeded(context);
                 });
           }),
     );

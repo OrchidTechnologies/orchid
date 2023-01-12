@@ -1,10 +1,13 @@
+import 'package:orchid/orchid.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/orchid/account/account_finder.dart';
 import 'add_hop_page.dart';
 import 'model/circuit.dart';
 import 'model/circuit_hop.dart';
@@ -80,6 +83,15 @@ class CircuitUtils {
     OrchidAPI().circuitConfigurationChanged.add(null);
   }
 
+  static Future<bool> defaultCircuitFromMostEfficientAccountIfNeeded(
+      Set<Account> accounts) async {
+    var sorted = await Account.sortAccountsByEfficiency(accounts);
+    if (sorted.isNotEmpty) {
+      return await CircuitUtils.defaultCircuitIfNeededFrom(sorted.first);
+    }
+    return false;
+  }
+
   /// If the circuit is empty create a default single hop circuit using the
   /// supplied account.
   /// Returns true if a circuit was created.
@@ -93,5 +105,59 @@ class CircuitUtils {
       return true;
     }
     return false;
+  }
+
+  static void showDefaultCircuitCreatedDialog(BuildContext context) {
+    final s = context.s;
+    SchedulerBinding.instance.addPostFrameCallback(
+      (_) => AppDialogs.showAppDialog(
+        context: context,
+        title: s.circuitGenerated,
+        bodyText: s.usingYourOrchidAccount,
+      ),
+    );
+  }
+
+  /// As part of new user onboarding we scan for accounts continually until
+  /// the first one is found and create a default single hop route from it.
+  /*
+  Future<void> _scanForAccountsIfNeeded() async {
+    // If cached discovered accounts is empty should start the search.
+    if ((UserPreferences().cachedDiscoveredAccounts.get()).isNotEmpty) {
+      log("connect: Found cached accounts, not starting account finder.");
+      return;
+    }
+
+    log("connect: No accounts in cache, starting account finder.");
+    AccountFinder.shared = AccountFinder()
+        .withPollingInterval(Duration(seconds: 20))
+        .find((accounts) async {
+      var created =
+          await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
+              accounts);
+      log("connect: default circuit: $created");
+      if (created) {
+        CircuitUtils.showDefaultCircuitCreatedDialog(context);
+      }
+    });
+    // As an optimization we listen for PAC purchases and increase the rate
+    // UserPreferences().pacTransaction.stream().listen((event) { });
+  }
+   */
+
+  static Future<void> findAccountsAndDefaultCircuitIfNeeded(
+      BuildContext context) async {
+    log("connect: No accounts in cache, starting account finder.");
+    AccountFinder.shared = AccountFinder()
+        .withPollingInterval(Duration(seconds: 20))
+        .find((accounts) async {
+      var created =
+          await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
+              accounts);
+      log("connect: default circuit: $created");
+      if (created) {
+        CircuitUtils.showDefaultCircuitCreatedDialog(context);
+      }
+    });
   }
 }

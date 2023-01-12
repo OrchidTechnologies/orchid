@@ -74,10 +74,7 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
     logDetail("Fetching gas price for chain: $chain");
     String result =
         await _jsonRPC(url: chain.providerUrl, method: "eth_gasPrice");
-    if (result.startsWith('0x')) {
-      result = result.substring(2);
-    }
-
+    result = Hex.remove0x(result);
     TokenType tokenType = chain.nativeCurrency;
     return tokenType.fromInt(BigInt.parse(result, radix: 16));
   }

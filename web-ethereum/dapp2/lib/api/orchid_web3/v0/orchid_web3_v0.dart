@@ -79,6 +79,8 @@ class OrchidWeb3V0 {
         totalOXT.intValue.toString(),
         addEscrow.intValue.toString(),
       ],
+      TransactionOverride(
+          gasLimit: BigInt.from(OrchidContractV0.gasLimitLotteryPush)),
     );
     txHashes.add(tx.hash);
     return txHashes;

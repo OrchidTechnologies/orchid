@@ -1,5 +1,5 @@
-import 'package:browser_detector/browser_detector.dart';
-import 'package:flutter/services.dart';
+import 'dart:math';
+import 'package:orchid/api/orchid_web3/v1/orchid_contract_deployment_v1.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
 import 'package:flutter_web3/flutter_web3.dart';
@@ -16,8 +16,8 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
+import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
-import 'package:orchid/orchid/orchid_text_field.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
@@ -25,7 +25,8 @@ import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
 import 'package:orchid/util/gestures.dart';
 import 'package:styled_text/styled_text.dart';
 import 'dapp_button.dart';
-import 'dapp_chain_selector_button.dart';
+import '../orchid/menu/orchid_chain_selector_menu.dart';
+import 'dapp_pricing_panel.dart';
 import 'dapp_settings_button.dart';
 import 'dapp_version_button.dart';
 import 'dapp_wallet_button.dart';
@@ -44,10 +45,12 @@ class _DappHomeState extends State<DappHome> {
   OrchidWeb3Context _web3Context;
   EthereumAddress _signer;
 
-  // TODO: Encapsulate this in a provider widget
+  // TODO: Encapsulate this in a provider builder widget (ala TokenPriceBuilder)
+  // TODO: Before that we need to add a controller to our PollingBuilder to allow
+  // TODO: for refresh on demand.
   AccountDetailPoller _accountDetail;
 
-  final _signerField = TextEditingController();
+  final _signerField = AddressValueFieldController();
   final _scrollController = ScrollController();
 
   /// The contract version defaulted or selected by the user.
@@ -60,7 +63,7 @@ class _DappHomeState extends State<DappHome> {
 
   void _selectContractVersion(int version) {
     // if (version == _contractVersionSelected) { return; }
-    log("XXX: version = $version");
+    log('XXX: version = $version');
     _contractVersionSelectedValue = version;
     if (version != null) {
       _onContractVersionChanged(version);
@@ -99,7 +102,7 @@ class _DappHomeState extends State<DappHome> {
         _connectEthereum();
         _signer =
             EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
-        _signerField.text = _signer.toString();
+        _signerField.textController.text = _signer.toString();
         _showConnectPanel = true;
       });
     }
@@ -111,26 +114,22 @@ class _DappHomeState extends State<DappHome> {
     try {
       var accounts = await ethereum.getAccounts();
       if (accounts.isNotEmpty) {
-        log("connect: User already has accounts, connecting.");
+        log('connect: User already has accounts, connecting.');
         await Future.delayed(Duration(seconds: 0), () {
           _connectEthereum();
         });
       } else {
-        log("connect: No connected accounts, require the user to initiate.");
+        log('connect: No connected accounts, require the user to initiate.');
       }
     } catch (err) {
-      log("connect: Error checking getAccounts: $err");
+      log('connect: Error checking getAccounts: $err');
     }
   }
 
   void _signerFieldChanged() {
     // signer field changed?
     var oldSigner = _signer;
-    try {
-      _signer = EthereumAddress.from(_signerField.text);
-    } catch (err) {
-      _signer = null;
-    }
+    _signer = _signerField.value;
     if (_signer != oldSigner) {
       _selectedAccountChanged();
     }
@@ -145,7 +144,6 @@ class _DappHomeState extends State<DappHome> {
 
   // TODO: replace this account detail management with a provider builder
   void _clearAccountDetail() {
-    // log("XXX: clearAccountDetail");
     _accountDetail?.cancel();
     _accountDetail?.removeListener(_accountDetailUpdated);
     _accountDetail = null;
@@ -157,18 +155,21 @@ class _DappHomeState extends State<DappHome> {
     // log("XXX: selectedAccountChanged");
     _clearAccountDetail();
     if (_hasAccount) {
-      var account = Account.fromSignerAddress(
-        signerAddress: _signer,
-        version: _contractVersionSelected,
-        funder: _web3Context.walletAddress,
-        chainId: _web3Context.chain.chainId,
-      );
-      _accountDetail = AccountDetailPoller(
-        account: account,
-        pollingPeriod: Duration(seconds: 5),
-      );
-      _accountDetail.addListener(_accountDetailUpdated);
-      _accountDetail.startPolling();
+      // Avoid starting the poller in the rare case where there are no contracts
+      if (_contractVersionSelected != null) {
+        var account = Account.fromSignerAddress(
+          signerAddress: _signer,
+          version: _contractVersionSelected,
+          funder: _web3Context.walletAddress,
+          chainId: _web3Context.chain.chainId,
+        );
+        _accountDetail = AccountDetailPoller(
+          account: account,
+          pollingPeriod: Duration(seconds: 10),
+        );
+        _accountDetail.addListener(_accountDetailUpdated);
+        _accountDetail.startPolling();
+      }
 
       _showConnectPanel = false;
     }
@@ -186,7 +187,7 @@ class _DappHomeState extends State<DappHome> {
       children: [
         _buildHeader().padx(24).top(30).bottom(24),
         _buildMainColumn(),
-        _buildFooter().padx(24).top(14).bottom(24),
+        // _buildFooter().padx(24).top(14).bottom(24),
       ],
     );
   }
@@ -202,7 +203,7 @@ class _DappHomeState extends State<DappHome> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Connect or create Orchid Account').subtitle.bold,
+                  Text(s.connectOrCreate).subtitle.bold,
                   _buildStep1Text().top(8),
                   AnimatedCrossFade(
                     duration: millis(300),
@@ -220,7 +221,7 @@ class _DappHomeState extends State<DappHome> {
                   Text('Need more help getting started?').body2.top(24),
                   Text('View the step-by-step guide.')
                       .linkStyle
-                      .link(url: OrchidUrls.partsOfOrchidAccount)
+                      .link(url: OrchidUrls.join)
                       .top(8),
                 ],
               ).pad(20),
@@ -235,8 +236,7 @@ class _DappHomeState extends State<DappHome> {
                       size: 20,
                       color: OrchidColors.tappable,
                     ).right(4),
-                    Text("Tap to Minimize",
-                        style: OrchidText.linkStyle.size(14)),
+                    Text(s.tapToMinimize, style: OrchidText.linkStyle.size(14)),
                   ],
                 ),
               ).pady(8)
@@ -257,8 +257,7 @@ class _DappHomeState extends State<DappHome> {
   StyledText _buildStep1Text() {
     return StyledText(
       style: OrchidText.body2,
-      text:
-          '<bold>Step 1.</bold> Connect an ERC-20 wallet with <link>enough tokens</link> in it.',
+      text: s.step1,
       tags: _textTags,
     );
   }
@@ -266,11 +265,12 @@ class _DappHomeState extends State<DappHome> {
   StyledText _buildStep2Text() {
     return StyledText(
       style: OrchidText.body2,
-      text:
-          '<bold>Step 2.</bold> Copy the Orchid Identity from the Orchid App by going to Manage Accounts then tapping the address.',
+      text: s.step2,
       tags: _textTags,
     );
   }
+
+  int _txStatusIndex = 0;
 
   // main info column
   Expanded _buildMainColumn() {
@@ -300,10 +300,24 @@ class _DappHomeState extends State<DappHome> {
                       child: _buildConnectPanel().bottom(32).padx(20),
                     ),
 
-                    // AnimatedSize(
-                    //   duration: millis(1000),
-                    //   child: _showConnectPanel ? _buildConnectPanel().bottom(32).padx(20) : Container(),
-                    // ),
+                    if (_contractVersionsAvailable != null &&
+                        _contractVersionsAvailable.isEmpty)
+                      RoundedRect(
+                        backgroundColor: OrchidColors.dark_background,
+                        child: Text(s
+                                .theOrchidContractHasntBeenDeployedOnThisChainYet)
+                            .subtitle
+                            .height(1.7)
+                            .withColor(OrchidColors.status_yellow)
+                            .pad(24),
+                      ).center.bottom(24),
+
+                    // Market conditions
+                    // if (_connected)
+                    //   HistoricalPricingPanel(
+                    //           key: Key(_web3Context.chain.chainId.toString()),
+                    //           chain: _web3Context.chain)
+                    //       .bottom(24),
 
                     // account card
                     AccountCard(
@@ -317,13 +331,16 @@ class _DappHomeState extends State<DappHome> {
                       partialAccountSignerAddress: _signer,
                     ),
 
-                    _buildTransactionsList(),
+                    _buildTransactionsList().top(24),
+
                     // tabs
                     // Divider(color: Colors.white.withOpacity(0.3)).bottom(8),
                     ConstrainedBox(
                       constraints: BoxConstraints(maxWidth: altColumnWidth),
                       child: _buildTabs(),
                     ).padx(8).top(16),
+
+                    _buildFooter().padx(24).bottom(24),
                   ],
                 ),
               ),
@@ -365,16 +382,6 @@ class _DappHomeState extends State<DappHome> {
           : MainAxisAlignment.center,
       children: [
         _buildVersionButton(),
-        // StyledText(
-        //   style: OrchidText.body1,
-        //   textAlign: TextAlign.center,
-        //   text: "Need help?  "
-        //       "For guidance on creating an\n"
-        //       "Orchid Account see our <link>step-by-step guide</link>.",
-        //   tags: {
-        //     'link': OrchidText.body1.linkStyle.link(OrchidUrls.join),
-        //   },
-        // ).padx(16),
         if (_contractVersionSelected != null)
           SizedBox(width: 48)
         else
@@ -385,7 +392,7 @@ class _DappHomeState extends State<DappHome> {
 
   Widget _buildVersionButton() {
     return AnimatedSwitcher(
-      duration: millis(300),
+      duration: millis(500),
       child: _contractVersionSelected != null
           ? _buildVersionButtonImpl()
           : Container(),
@@ -423,74 +430,64 @@ class _DappHomeState extends State<DappHome> {
   Widget _buildTransactionsList() {
     return UserPreferences().transactions.builder((txs) {
       // Limit to currently selected chain
-      txs = (txs ?? []).where((tx) => tx.chainId == _web3Context?.chain?.chainId).toList();
+      txs = (txs ?? [])
+          .where((tx) => tx.chainId == _web3Context?.chain?.chainId)
+          .toList();
       if (txs.isEmpty) {
         return Container();
       }
 
+      // REMOVE: TESTING
+      // txs = txs + txs + txs + txs;
+
       var txWidgets = txs
-          .map((tx) => Padding(
-                padding: const EdgeInsets.only(top: 32),
-                child: TransactionStatusPanel(
-                  context: _web3Context,
-                  tx: tx,
-                  onDismiss: _dismissTransaction,
-                  onTransactionUpdated: () {
-                    _refreshUserData();
-                  },
-                ),
+          .map((tx) => TransactionStatusPanel(
+                context: _web3Context,
+                tx: tx,
+                onDismiss: _dismissTransaction,
+                onTransactionUpdated: () {
+                  _refreshUserData();
+                },
               ))
+          .toList()
+          // show latest first
+          .reversed
           .toList();
+
+      final colWidth = min(MediaQuery.of(context).size.width, mainColumnWidth);
+      var viewportFraction = min(0.75, 334 / colWidth);
+
       return AnimatedSwitcher(
-        duration: Duration(milliseconds: 400),
-        child: Column(
-          key: Key(txWidgets.length.toString()),
-          children: txWidgets,
+        duration: millis(400),
+        child: SizedBox(
+          height: 180,
+          child: PageView.builder(
+            itemCount: txWidgets.length,
+            controller: PageController(viewportFraction: viewportFraction),
+            onPageChanged: (int index) =>
+                setState(() => _txStatusIndex = index),
+            itemBuilder: (_, i) {
+              return AnimatedScale(
+                  duration: millis(300),
+                  scale: i == _txStatusIndex ? 1 : 0.9,
+                  child: Center(child: txWidgets[i]));
+            },
+          ),
         ),
       );
     });
   }
 
   Widget _buildPasteSignerField() {
-    final showPaste = !BrowserDetector().browser.isFirefox;
-    return RoundedRect(
-      backgroundColor: Colors.white.withOpacity(0.1),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(s.orchidIdentity + ':').body1.left(18).top(20).bottom(4),
-          OrchidTextField(
-            border: false,
-            hintText: '0x...',
-            style: OrchidText.title.copyWith(fontSize: 22, height: 1.0),
-            controller: _signerField,
-            trailing: showPaste
-                ? IconButton(
-                    icon: Icon(Icons.paste, color: Colors.white),
-                    onPressed: _onPaste,
-                  ).bottom(4)
-                : null,
-            contentPadding:
-                EdgeInsets.only(top: 8, bottom: 14, left: 16, right: 16),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _onPaste() async {
-    try {
-      ClipboardData data = await Clipboard.getData('text/plain');
-      setState(() {
-        _signerField.text = data.text;
-      });
-    } catch (err) {
-      print("Can't get clipboard: $err");
-    }
+    return OrchidLabeledAddressField(
+        label: s.orchidIdentity, controller: _signerField);
   }
 
   Widget _buildHeader() {
     final _showWalletConnect = OrchidUserParams().has('wc');
+    final deploy = (_contractVersionsAvailable?.contains(1) ?? false)
+        ? null
+        : _deployContract;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -506,6 +503,7 @@ class _DappHomeState extends State<DappHome> {
               contractVersionsAvailable: _contractVersionsAvailable,
               contractVersionSelected: _contractVersionSelected,
               selectContractVersion: _selectContractVersion,
+              deployContract: deploy,
               // onDisconnect: _disconnect,
             ).left(16),
           ],
@@ -514,10 +512,17 @@ class _DappHomeState extends State<DappHome> {
     );
   }
 
+  void _deployContract() async {
+    final deploy = OrchidContractDeployment(_web3Context);
+    if (await deploy.deployIfNeeded()) {
+      _onAccountOrChainChange();
+    }
+  }
+
   Widget _buildWalletConnectTMButton() {
     return DappButton(
       // 'WalletConnect' is a name, not a description
-      text: "WalletConnect",
+      text: 'WalletConnect',
       onPressed: _connected ? null : _connectWalletConnect,
       trailing: Padding(
         padding: const EdgeInsets.only(left: 10.0, right: 16.0),
@@ -552,7 +557,7 @@ class _DappHomeState extends State<DappHome> {
           // width: reallyNarrow ? 140 : null,
           width: double.infinity,
           textStyle: OrchidText.medium_18_025.black.copyWith(height: 1.8),
-          text: "CONNECT WALLET",
+          text: s.connectWallet,
           onPressed: _connected ? null : _connectEthereum,
         ),
       ),
@@ -610,12 +615,14 @@ class _DappHomeState extends State<DappHome> {
     final size = AppSize(context);
     final narrow = (_connected && size.narrowerThanWidth(700)) ||
         size.narrowerThanWidth(600);
+    final chain = _web3Context?.chain;
+
     return SizedBox(
       width: narrow ? 40 : 190,
       height: 40,
-      child: DappChainSelectorButton(
+      child: OrchidChainSelectorMenu(
         iconOnly: narrow,
-        selected: _web3Context?.chain,
+        selected: chain,
         onSelection: _switchOrAddChain,
         enabled: _web3Context != null,
       ),
@@ -691,8 +698,8 @@ class _DappHomeState extends State<DappHome> {
   void _showRequestPendingMessage() {
     AppDialogs.showAppDialog(
       context: context,
-      title: "Check Wallet",
-      bodyText: "Check your Wallet app or extension for a pending request.",
+      title: s.checkWallet,
+      bodyText: s.checkYourWalletAppOrExtensionFor,
     );
   }
 
@@ -706,10 +713,10 @@ class _DappHomeState extends State<DappHome> {
     }
 
     // Check chain before constructing web3
-    var chainId = await ethereum.getChainId();
-    if (!Chains.isKnown(chainId)) {
-      return _invalidChain();
-    }
+    // var chainId = await ethereum.getChainId();
+    // if (!Chains.isKnown(chainId)) {
+    //   return _invalidChain();
+    // }
 
     var web3 = await OrchidWeb3Context.fromEthereum(ethereum);
     _setNewContex(web3);
@@ -772,22 +779,22 @@ class _DappHomeState extends State<DappHome> {
     try {
       _setAppWeb3Provider(web3Context);
     } catch (err, stack) {
-      log("set new context: error setting app web3 provider: $err,\n$stack");
+      log('set new context: error setting app web3 provider: $err,\n$stack');
     }
 
     // The context was replaced or updated. Check various attributes.
     // check the contract
-    if (_web3Context != null) {
-      if (_contractVersionsAvailable == null ||
-          _contractVersionsAvailable.isEmpty) {
-        return _noContract();
-      }
-    }
+    // if (_web3Context != null) {
+    //   if (_contractVersionsAvailable == null ||
+    //       _contractVersionsAvailable.isEmpty) {
+    //     await _noContract();
+    //   }
+    // }
 
     try {
       _web3Context?.refresh();
     } catch (err) {
-      log("set new context: error in refreshing context: $err");
+      log('set new context: error in refreshing context: $err');
     }
 
     // Default the contract version
@@ -809,7 +816,7 @@ class _DappHomeState extends State<DappHome> {
     try {
       _selectedAccountChanged();
     } catch (err) {
-      log("set new context: error in selected account changed: $err");
+      log('set new context: error in selected account changed: $err');
     }
     setState(() {});
   }
@@ -834,10 +841,10 @@ class _DappHomeState extends State<DappHome> {
     }
 
     // Check chain before constructing web3
-    var chainId = await ethereum.getChainId();
-    if (!Chains.isKnown(chainId)) {
-      return _invalidChain();
-    }
+    // var chainId = await ethereum.getChainId();
+    // if (!Chains.isKnown(chainId)) {
+    //   return _invalidChain();
+    // }
 
     // Recreate the context wrapper
     var context = null;
@@ -850,7 +857,7 @@ class _DappHomeState extends State<DappHome> {
             _web3Context.walletConnectProvider);
       }
     } catch (err) {
-      log("Error constructing web context:");
+      log('Error constructing web context:');
     }
     _setNewContex(context);
   }
@@ -869,6 +876,9 @@ class _DappHomeState extends State<DappHome> {
   // Refresh the wallet and account balances
   void _refreshUserData() {
     _web3Context?.refresh();
+    // TODO: Encapsulate this in a provider builder widget (ala TokenPriceBuilder)
+    // TODO: Before that we need to add a controller to our PollingBuilder to allow
+    // TODO: for refresh on demand.
     _accountDetail?.refresh();
   }
 
@@ -881,13 +891,13 @@ class _DappHomeState extends State<DappHome> {
     _setNewContex(null);
   }
 
-  void _noContract() {
-    AppDialogs.showAppDialog(
+  Future<void> _noContract() {
+    return AppDialogs.showAppDialog(
         context: context,
         title: s.orchidIsntOnThisChain,
         bodyText: s.theOrchidContractHasntBeenDeployedOnThisChainYet);
 
-    _setNewContex(null);
+    // _setNewContex(null);
   }
 
   void _disconnect() async {

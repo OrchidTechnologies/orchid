@@ -1,7 +1,7 @@
 import 'package:orchid/orchid.dart';
 
-/// Rounded rect popup menu button with the dapp theme.
-class DappHeaderPopupMenuButton<T> extends StatelessWidget {
+/// Rounded rect popup menu button with the Orchid theme including a selected state.
+class OrchidPopupMenuButton<T> extends StatelessWidget {
   final PopupMenuItemSelected<T> onSelected;
   final PopupMenuCanceled onCanceled;
   final PopupMenuItemBuilder<T> itemBuilder;
@@ -11,7 +11,10 @@ class DappHeaderPopupMenuButton<T> extends StatelessWidget {
   final bool showBorder;
   final Offset offset;
 
-  const DappHeaderPopupMenuButton({
+  // When true the button shows a disabled appearance (but continues to trigger the menu).
+  final bool disabledAppearance;
+
+  const OrchidPopupMenuButton({
     Key key,
     @required this.itemBuilder,
     @required this.selected,
@@ -22,17 +25,19 @@ class DappHeaderPopupMenuButton<T> extends StatelessWidget {
     this.height,
     this.showBorder = false,
     this.offset,
+    this.disabledAppearance = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    var buttonColor =
+        selected ? OrchidColors.new_purple_divider : OrchidColors.new_purple;
+    buttonColor = disabledAppearance ? OrchidColors.disabled : buttonColor;
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: selected
-            ? OrchidColors.new_purple_divider
-            : OrchidColors.new_purple,
+        color: buttonColor,
         border: showBorder ? Border.all(color: Colors.white) : null,
         borderRadius: BorderRadius.all(
           Radius.circular(16.0),
@@ -49,6 +54,7 @@ class DappHeaderPopupMenuButton<T> extends StatelessWidget {
         child: PopupMenuButton<T>(
           padding: EdgeInsets.zero,
           offset: offset ?? Offset(0, 40.0 + 12.0),
+          // The color of the dropdown menu item background
           color: OrchidColors.new_purple,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(

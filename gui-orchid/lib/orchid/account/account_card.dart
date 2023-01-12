@@ -1,8 +1,7 @@
 import 'package:orchid/orchid.dart';
-import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
-import 'package:orchid/common/token_price_builder.dart';
+import 'package:orchid/orchid/builder/token_price_builder.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
@@ -11,6 +10,7 @@ import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/gradient_border.dart';
 import 'package:orchid/common/tap_copy_text.dart';
+import 'package:orchid/orchid/field/token_value_widget_row.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
@@ -113,22 +113,16 @@ class _AccountCardState extends State<AccountCard>
             Padding(
               padding: EdgeInsets.only(
                   right: checkExtraWidth, bottom: checkExtraHeight),
-              child: AnimatedBuilder(
-                  animation: _gradientAnim,
-                  builder: (context, snapshot) {
-                    return OrchidPanel.vertical(
-                      key: Key(widget.selected?.toString() ?? ''),
-                      highlight: widget.active ?? false,
-                      highlightAnimation: _gradientAnim.value,
-                      child: AnimatedSize(
-                        alignment: Alignment.topCenter,
-                        duration: expandDuration,
-                        child: IntrinsicHeight(
-                          child: _buildCardContent(context),
-                        ),
-                      ),
-                    );
-                  }),
+              child: OrchidPanel(
+                key: Key(widget.selected?.toString() ?? ''),
+                highlight: widget.active ?? false,
+                highlightAnimation: _gradientAnim.value,
+                child: AnimatedSize(
+                  alignment: Alignment.topCenter,
+                  duration: millis(500),
+                  child: _buildCardContent(context),
+                ),
+              ),
             ),
             // checkmark selection button
             if (_hasSelection)
@@ -191,7 +185,7 @@ class _AccountCardState extends State<AccountCard>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildFunderIconAddress(),
-              _buildSignerIconAddress(),
+              _buildSignerIconAddress().left(8),
             ],
           ).padx(16),
 
@@ -282,8 +276,12 @@ class _AccountCardState extends State<AccountCard>
   }) {
     final signer = widget.accountDetail?.signerAddress ??
         widget.partialAccountSignerAddress;
-    return _identiconAddressRow(signer, s.orchidIdentity,
-        textStyle: textStyle, pad: pad);
+    return _identiconAddressRow(
+      signer,
+      s.orchidIdentity,
+      textStyle: textStyle,
+      pad: pad,
+    );
   }
 
   Widget _identiconAddressRow(
@@ -305,20 +303,26 @@ class _AccountCardState extends State<AccountCard>
           // show border for placeholder only
           showBorder: !active,
         ),
-        TapToCopyText(
-          text,
-          displayText: displayText,
-          padding: EdgeInsets.zero,
-          style: style,
-          textAlign: TextAlign.left,
-          // disable when empty
-          onTap: !active ? (_) {} : null,
-        ).top(3).left(pad ?? 8),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 150),
+          child: FittedBox(
+            child: TapToCopyText(
+              text,
+              displayText: displayText,
+              padding: EdgeInsets.zero,
+              style: style,
+              textAlign: TextAlign.left,
+              // disable when empty
+              onTap: !active ? (_) {} : null,
+            ).top(3).left(pad ?? 8),
+          ),
+        ),
       ],
     );
   }
 
   Stack _buildChainEfficiencyIcon() {
+    log("XXX: market details: ${widget.accountDetail}");
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -336,8 +340,8 @@ class _AccountCardState extends State<AccountCard>
 
   String _balanceText() {
     return widget.accountDetail == null
-        ? formatCurrency(0.0, locale: context.locale, digits: 2)
-        : (pot?.balance?.formatCurrency(locale: context.locale, digits: 2));
+        ? formatCurrency(0.0, locale: context.locale, precision: 2)
+        : (pot?.balance?.formatCurrency(locale: context.locale, precision: 2));
   }
 
   Widget _buildExpandedContent(USD price) {
@@ -463,7 +467,7 @@ class _AccountCardState extends State<AccountCard>
   // display token value and symbol on a row with usd price in a row below
   Widget _buildTokenValueTextRow({Token value, USD price, Color textColor}) {
     final valueText = ((value ?? (tokenType ?? Tokens.TOK).zero)
-        .formatCurrency(locale: context.locale, digits: 2, showSuffix: false));
+        .formatCurrency(locale: context.locale, precision: 2, showSuffix: false));
     final valueWidget =
         Text(valueText).extra_large.withColor(textColor ?? Colors.white);
     return TokenValueWidgetRow(
@@ -601,67 +605,5 @@ class _AccountCardState extends State<AccountCard>
   // cross-fade when the child changes
   Widget _fade(Widget child) {
     return AnimatedSwitcher(duration: millis(500), child: child);
-  }
-}
-
-// Display token value (child widget) and symbol on a row with usd price in a row below
-class TokenValueWidgetRow extends StatelessWidget {
-  final BuildContext context;
-  final Widget child;
-  final TokenType tokenType;
-  final Token value;
-  final USD price;
-  final bool enabled;
-
-  // Used for the token symbol
-  final Color textColor;
-
-  bool get disabled => !enabled;
-
-  const TokenValueWidgetRow({
-    Key key,
-    @required this.context,
-    @required this.child,
-    @required this.tokenType,
-    @required this.value,
-    @required this.price,
-    this.enabled = true,
-    this.textColor,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final usdValueText = USD.formatUSDValue(
-        context: context, price: price, tokenAmount: value, showSuffix: false);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Token value
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            child,
-            Text((tokenType ?? Tokens.TOK).symbol)
-                .extra_large
-                .withColor(textColor)
-                .inactiveIf(disabled),
-          ],
-        ).top(8).height(26),
-        // USD value
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(usdValueText)
-                .caption
-                .medium
-                .new_purple_bright
-                .inactiveIf(disabled),
-            Text('USD').caption.medium.new_purple_bright.inactiveIf(disabled),
-          ],
-        ).height(24),
-      ],
-    );
   }
 }

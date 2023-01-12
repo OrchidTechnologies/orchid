@@ -82,7 +82,7 @@ class OrchidVPNConfigGenerate {
     };
 
     var chain = hop.account.chain;
-    var currency = chain.nativeCurrency.exchangeRateSource.symbolOverride ??
+    var currency = chain.nativeCurrency.configSymbolOverride ??
         chain.nativeCurrency.symbol;
 
     // V1 fields

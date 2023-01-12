@@ -18,6 +18,9 @@ class TokenType {
   final ExchangeRateSource exchangeRateSource;
   final String iconPath;
 
+  /// The symbol name to be used in the Orchid config for the back-end.
+  final String configSymbolOverride;
+
   /// The ERC20 contract address if this is a non-native token on its chain.
   final EthereumAddress erc20Address;
 
@@ -37,6 +40,7 @@ class TokenType {
   const TokenType({
     @required this.chainId,
     @required this.symbol,
+    this.configSymbolOverride,
     this.exchangeRateSource,
     this.decimals = 18,
     this.erc20Address,
@@ -98,16 +102,16 @@ class Token {
   }
 
   /// No token symbol
-  String toFixedLocalized({@required Locale locale, int digits = 4}) {
-    return units.formatCurrency(floatValue, locale: locale, digits: digits);
+  String toFixedLocalized({@required Locale locale, int precision = 4}) {
+    return units.formatCurrency(floatValue, locale: locale, precision: precision);
   }
 
   /// Format as value with the symbol suffixed
   String formatCurrency(
-      {@required Locale locale, int digits = 4, bool showSuffix = true}) {
+      {@required Locale locale, int precision = 4, bool showSuffix = true}) {
     return units.formatCurrency(floatValue,
         locale: locale,
-        digits: digits,
+        precision: precision,
         suffix: showSuffix ? type.symbol : null);
   }
 

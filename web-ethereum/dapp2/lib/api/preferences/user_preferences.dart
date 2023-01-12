@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/preferences/user_configured_chain_preferences.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../orchid_eth/orchid_chain_config.dart';
-import '../orchid_log_api.dart';
+import 'package:orchid/api/orchid_eth/orchid_chain_config.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'accounts_preferences.dart';
 import 'chain_config_preferences.dart';
 import 'dapp_transaction.dart';
@@ -232,7 +233,7 @@ class UserPreferences {
   /// Identicons UI
   ObservableBoolPreference useBlockiesIdenticons = ObservableBoolPreference(
       UserPreferenceKey.UseBlockiesIdenticons,
-      defaultValue: false);
+      defaultValue: true);
 
   /// User selected locale override (e.g. en, pt_BR)
   ObservableStringPreference languageOverride =
@@ -247,6 +248,12 @@ class UserPreferences {
   ChainConfig chainConfigFor(int chainId) {
     return ChainConfig.map(chainConfig.get())[chainId];
   }
+
+  // TODO: This is not really applicable in the dapp context.
+  /// Fully user configured chains.
+  ObservableUserConfiguredChainPreference userConfiguredChains =
+      ObservableUserConfiguredChainPreference(
+          UserPreferenceKey.UserConfiguredChains);
 }
 
 // TODO: Remove unneeded items.
@@ -258,4 +265,5 @@ enum UserPreferenceKey {
   UseBlockiesIdenticons,
   LanguageOverride,
   ChainConfig,
+  UserConfiguredChains
 }

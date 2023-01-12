@@ -149,7 +149,7 @@ class OrchidEthereumV0 {
           AbiEncode.address(funder, prefix: true),
           AbiEncode.address(signer, prefix: true)
         ],
-        "fromBlock": "0x" + startBlock.toRadixString(16)
+        "fromBlock": '0x' + startBlock.toRadixString(16)
       }
     ];
     dynamic results = await _jsonRpc(method: 'eth_getLogs', params: params);
@@ -171,7 +171,7 @@ class OrchidEthereumV0 {
           "null", // no funder topic for index 1
           AbiEncode.address(signer, prefix: true)
         ],
-        "fromBlock": "0x" + startBlock.toRadixString(16)
+        "fromBlock": '0x' + startBlock.toRadixString(16)
       }
     ];
     dynamic results = await _jsonRpc(method: 'eth_getLogs', params: params);

@@ -35,21 +35,21 @@ class OrchidPACServer {
   /// Apply the receipt to any pending pac receipt transaction and advance it.
   Future<void> advancePACTransactionsWithReceipt(
       String receiptIn, ReceiptType receiptType) async {
-    log("iap: advance transaction with receipt.");
+    log('iap: advance transaction with receipt.');
 
     // Allow override of receipts with the test receipt.
     var apiConfig = await OrchidPurchaseAPI().apiConfig();
     if (apiConfig.testReceipt != null) {
-      log("iap: Using test receipt: ${apiConfig.testReceipt.prefix(8)}");
+      log('iap: Using test receipt: ${apiConfig.testReceipt.prefix(8)}');
     }
     var receipt = apiConfig.testReceipt ?? receiptIn;
 
     //  Get the current transaction
     var tx = await PacTransaction.shared.get();
     if (tx == null) {
-      log("iap: receipt with no corresponding pac tx.");
+      log('iap: receipt with no corresponding pac tx.');
       // TODO: We'd like to salvage the receipt but what identity should we use?
-      // tx = await PacAddBalanceTransaction.pending(signer: signer, productId: "unknown").save();
+      // tx = await PacAddBalanceTransaction.pending(signer: signer, productId: 'unknown').save();
       return;
     }
 
@@ -57,7 +57,7 @@ class OrchidPACServer {
     if (tx is ReceiptTransaction) {
       await tx.addReceipt(receipt, receiptType).save();
     } else {
-      throw Exception("Unknown pending transaction not ready for receipt: $tx");
+      throw Exception('Unknown pending transaction not ready for receipt: $tx');
     }
 
     return advancePACTransactions();
@@ -66,11 +66,11 @@ class OrchidPACServer {
   /// Process the current PAC transaction if required. This method can be
   /// called at any time to attempt to move the process to the next state.
   Future<void> advancePACTransactions() async {
-    log("iap: advance pac transactions");
+    log('iap: advance pac transactions');
 
     var tx = await PacTransaction.shared.get();
     if (tx == null) {
-      log("iap: pac tx null, return");
+      log('iap: pac tx null, return');
       return;
     }
 
@@ -82,64 +82,67 @@ class OrchidPACServer {
       case PacTransactionState.Error:
       case PacTransactionState.WaitingForUserAction:
         // Nothing to be done.
-        log("iap: Nothing to do: ${tx.state}");
+        log('iap: Nothing to do: ${tx.state}');
         return;
         break;
       case PacTransactionState.WaitingForRetry:
         // Assume it's retry time.
-        log("iap: timed retry");
+        log('iap: timed retry');
         tx.retries++;
         continue nextCase;
       nextCase:
       case PacTransactionState.Ready:
-        log("iap: ready to process");
+        log('iap: ready to process');
         break;
     }
 
     // Begin processing the PAC tx
-    log("iap: set pac tx to in-progress");
+    log('iap: set pac tx to in-progress');
     tx.state = PacTransactionState.InProgress;
     await tx.save(); // update the UI
 
     // Submit to the server
     try {
-      await _apiSupport(); // support testing
+      if (await _testingSupport()) {
+        tx.serverResponse = 'mock server response';
+        tx.state = PacTransactionState.Complete;
+      } else {
+        String response;
+        switch (tx.type) {
+          case PacTransactionType.None:
+            log('iap: Unknown transaction type.');
+            return;
+            break;
+          case PacTransactionType.AddBalance:
+            response = await _callAddBalance(tx);
+            break;
+          case PacTransactionType.SubmitSellerTransaction:
+            response = await _callSubmitSellerTx(tx);
+            break;
+          case PacTransactionType.PurchaseTransaction:
+            response = await _callPurchase(tx);
+            break;
+        }
 
-      String response;
-      switch (tx.type) {
-        case PacTransactionType.None:
-          log("iap: Unknown transaction type.");
-          return;
-          break;
-        case PacTransactionType.AddBalance:
-          response = await _callAddBalance(tx);
-          break;
-        case PacTransactionType.SubmitSellerTransaction:
-          response = await _callSubmitSellerTx(tx);
-          break;
-        case PacTransactionType.PurchaseTransaction:
-          response = await _callPurchase(tx);
-          break;
+        // Success: store the response.
+        tx.serverResponse = response;
+        tx.state = PacTransactionState.Complete;
       }
-
-      // Success: store the response.
-      tx.serverResponse = response;
-      tx.state = PacTransactionState.Complete;
     } catch (err, stack) {
       // Server error
-      log("iap: error in pac submit: $err, $stack");
-      tx.serverResponse = "Client side error: $err";
+      log('iap: error in pac submit: $err, $stack');
+      tx.serverResponse = 'Client side error: $err';
 
       // Schedule retry
       if (tx.retries < 2) {
-        log("iap: scheduling retry, delayed");
+        log('iap: scheduling retry, delayed');
         tx.state = PacTransactionState.WaitingForRetry;
         var delay = Duration(seconds: 5);
         Future.delayed(delay).then((_) async {
           advancePACTransactions();
         });
       } else {
-        log("iap: waiting for user action");
+        log('iap: waiting for user action');
         tx.state = PacTransactionState.WaitingForUserAction;
       }
     }
@@ -147,14 +150,24 @@ class OrchidPACServer {
     await tx.save();
   }
 
-  Future<void> _apiSupport() async {
+  // This method may throw exceptions to mock failure,
+  // return true indicating that the call should simulate a successful result,
+  // or return false indicating that no action should be taken.
+  Future<bool> _testingSupport() async {
     var apiConfig = await OrchidPurchaseAPI().apiConfig();
 
-    // Fail server calls for the mock api unless we have a test receipt
-    if (OrchidAPI.mockAPI && apiConfig.testReceipt == null) {
-      log("iap: mock api, delay and throw exception");
+    if (OrchidAPI.mockAPI) {
+      // simulate delay
       await Future.delayed(Duration(seconds: 2), () {});
-      throw Exception("iap: mock api");
+
+      // Mock passing server calls for the mock api unless we have a test receipt
+      if (apiConfig.testReceipt != null) {
+        log('iap: mock api has test receipt, allowing real interaction');
+        return false; // no action
+      } else {
+        log('iap: mock api successful server interaction');
+        return true; // mock success
+      }
     }
 
     // Fail if we are configured to fail
@@ -162,10 +175,12 @@ class OrchidPACServer {
       await Future.delayed(Duration(seconds: 2));
       throw Exception('iap: mock failure!');
     }
+
+    return false; // no action
   }
 
   Future<String> _callAddBalance(PacAddBalanceTransaction tx) async {
-    log("iap: submit add balance tx to PAC server");
+    log('iap: submit add balance tx to PAC server');
     if (tx.receipt == null) {
       log('iap: null receipt');
       throw Exception('receipt is null');
@@ -180,9 +195,9 @@ class OrchidPACServer {
 
   Future<String> _callSubmitSellerTx(
       PacSubmitSellerTransaction sellerTx) async {
-    log("iap: submit seller tx to PAC server: ${sellerTx.toJson()}");
+    log('iap: submit seller tx to PAC server: ${sellerTx.toJson()}');
     var tx = sellerTx.txParams;
-    print("iap: tx = $tx, tx.chainId = ${tx.chainId}");
+    print('iap: tx = $tx, tx.chainId = ${tx.chainId}');
     var chainId = tx.chainId;
     var chain = Chains.chainFor(chainId);
     var signerKey = sellerTx.signerKey.get();
@@ -203,17 +218,17 @@ class OrchidPACServer {
   }
 
   Future<String> _callPurchase(PacPurchaseTransaction tx) async {
-    log("iap: submit purchase tx to PAC server");
+    log('iap: submit purchase tx to PAC server');
 
     // Note: The add balance call should be idempotent, so guarding this
     // Note: is not really necessary.
     if (tx.addBalance.state != PacTransactionState.Complete) {
-      log("iap: purchase tx: add balance");
+      log('iap: purchase tx: add balance');
       tx.addBalance.serverResponse = await _callAddBalance(tx.addBalance);
       tx.addBalance.state = PacTransactionState.Complete;
     }
 
-    log("iap: purchase tx: submit raw");
+    log('iap: purchase tx: submit raw');
 
     // If we are retrying a one-shot purchase refresh the transaction params
     // (account for gas price or calculation changes, etc.)
@@ -276,7 +291,7 @@ class OrchidPACServer {
     log('pac_server: sending payment to method: $method');
     var result =
         await _postJson(method: method, paramsIn: params, apiConfig: apiConfig);
-    print("pac_server: add balance result = " + result.toString());
+    print('pac_server: add balance result = ' + result.toString());
     return result.toString();
   }
 
@@ -294,7 +309,7 @@ class OrchidPACServer {
     // optional override supports testing
     PacApiConfig apiConfig,
   }) async {
-    log("iap: submit seller transaction with key and params");
+    log('iap: submit seller transaction with key and params');
 
     var adjust = escrowParam;
     var editTx = OrchidPacSeller.sellerEditTransaction(
@@ -323,22 +338,22 @@ class OrchidPACServer {
       'sig': '0x' + hex.encode(rsv)
     };
 
-    // print("iap: seller tx: send raw json = ${jsonEncode(params)}");
+    // log('iap: seller tx: send raw json = ${jsonEncode(params)}');
     var result = await _postJson(
         method: 'send_raw', paramsIn: params, apiConfig: apiConfig);
-    // print("iap: seller tx: send raw result = " + result.toString());
+    // log('iap: seller tx: send raw result = ' + result.toString());
 
     return result.toString();
   }
 
   /// V1 pac store status.  This method returns down in the event of error.
   Future<PACStoreStatus> storeStatus() async {
-    log("iap: check PAC server status");
+    log('iap: check PAC server status');
 
     bool overrideDown = (await OrchidUserConfig().getUserConfigJS())
         .evalBoolDefault('pacs.storeDown', false);
     if (overrideDown) {
-      log("iap: override server status");
+      log('iap: override server status');
       return PACStoreStatus.down;
     }
 
@@ -347,7 +362,7 @@ class OrchidPACServer {
     try {
       responseJson = await _postJson(method: 'store_status', paramsIn: {});
     } catch (err, stack) {
-      log("iap: pac server status response error: $err, $stack");
+      log('iap: pac server status response error: $err, $stack');
       return PACStoreStatus.down;
     }
 
@@ -364,7 +379,7 @@ class OrchidPACServer {
     // TODO: ...
 
     // Testing...
-    // message = "Testing store message...";
+    // message = 'Testing store message...';
     // return PACStoreStatus.down;
 
     return PACStoreStatus(open: storeStatus == 1, message: message);
@@ -415,7 +430,7 @@ class OrchidPACServer {
 
     // Do the http post
     var postBody = jsonEncode(params);
-    logWrapped("iap: posting to $url, json = $postBody");
+    logWrapped('iap: posting to $url, json = $postBody');
     var response = await http.post(Uri.parse(url),
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
@@ -424,10 +439,10 @@ class OrchidPACServer {
         body: postBody);
 
     // Validate the response status and content
-    log("iap: pac server response: ${response.statusCode}, ${response.body}");
+    log('iap: pac server response: ${response.statusCode}, ${response.body}');
     if (response.statusCode != 200) {
       throw Exception(
-          "Error response: code=${response.statusCode} body=${response.body}");
+          'Error response: code=${response.statusCode} body=${response.body}');
     }
     return json.decode(response.body);
   }
@@ -435,7 +450,7 @@ class OrchidPACServer {
 
 class PACStoreStatus {
   static PACStoreStatus down = PACStoreStatus(
-      open: false, message: "The store is temporarily unavailable.");
+      open: false, message: 'The store is temporarily unavailable.');
 
   // overall store status
   final bool open;

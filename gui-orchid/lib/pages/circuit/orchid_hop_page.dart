@@ -10,14 +10,12 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/pricing/orchid_pricing.dart';
-import 'package:orchid/api/pricing/orchid_pricing_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/app_buttons.dart';
-import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/instructions_view.dart';
 import 'package:orchid/common/link_text.dart';
@@ -27,7 +25,7 @@ import 'package:orchid/orchid/account/market_stats_dialog.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/units.dart';
@@ -35,9 +33,9 @@ import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
 import 'curator_page.dart';
-import 'funder_selection.dart';
+import '../../orchid/menu/orchid_funder_selector_menu.dart';
 import 'hop_editor.dart';
-import 'key_selection.dart';
+import 'package:orchid/orchid/menu/orchid_key_selector_menu.dart';
 import 'model/circuit_hop.dart';
 import 'model/orchid_hop.dart';
 import 'orchid_account_entry.dart';
@@ -246,7 +244,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                 child: Container(
                   //width: 60,
                   //color: Colors.red,
-                  child: FlatButton(
+                  child: FlatButtonDeprecated(
                       child: Icon(
                         Icons.chevron_right,
                         color: Colors.white,
@@ -370,10 +368,10 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         Row(
           children: <Widget>[
             Expanded(
-              child: KeySelectionDropdown(
+              child: OrchidKeySelectorMenu(
                   key: ValueKey(_initialSelectedKeyItem.toString()),
                   enabled: widget.editable(),
-                  initialSelection: _initialSelectedKeyItem,
+                  selected: _initialSelectedKeyItem,
                   onSelection: (_) {}),
             ),
             // Copy key button
@@ -404,12 +402,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         Row(
           children: <Widget>[
             Expanded(
-              child: FunderSelectionDropdown(
+              child: OrchidFunderSelectorMenu(
                   signer: _selectedKeyItem?.keyRef,
                   key: ValueKey(_selectedKeyItem?.toString() ??
                       _initialSelectedKeyItem.toString()),
                   enabled: widget.editable(),
-                  initialSelection:
+                  selected:
                       _selectedFunderItem ?? _initialSelectedFunderItem,
                   onSelection: (_) {}),
             ),

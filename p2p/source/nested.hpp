@@ -108,7 +108,7 @@ class Nested {
     {
     }
 
-    template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+    template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
     Nested(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value) :
         scalar_(true),
         value_(Stripped(value))

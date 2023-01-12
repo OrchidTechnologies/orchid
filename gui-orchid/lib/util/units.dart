@@ -179,11 +179,11 @@ class USD extends ScalarValue<double> {
 
   String formatCurrency(
       {@required Locale locale,
-      int digits = 2,
+      int precision = 2,
       bool showPrefix = true,
       showSuffix = false}) {
     return (showPrefix ? '\$' : '') +
-        _formatCurrency(this.value, locale: locale, digits: digits) +
+        _formatCurrency(this.value, locale: locale, precision: precision) +
         (showSuffix ? ' USD' : '');
   }
 
@@ -196,29 +196,32 @@ class USD extends ScalarValue<double> {
   }) {
     return ((price ?? USD.zero) * (tokenAmount ?? Tokens.TOK.zero).floatValue)
         .formatCurrency(
-        locale: context.locale,
-        digits: 2,
-        showPrefix: false,
-        showSuffix: showSuffix);
+            locale: context.locale,
+            precision: 2,
+            showPrefix: false,
+            showSuffix: showSuffix);
   }
 }
 
 String toFixedLocalized(num value,
-    {int digits = 2, String ifNull = "...", @required Locale locale}) {
-  return formatCurrency(value, locale: locale, ifNull: ifNull, digits: digits);
+    {int precision = 2, String ifNull = "...", @required Locale locale}) {
+  return formatCurrency(value, locale: locale, ifNull: ifNull, precision: precision);
 }
 
 /// Format a currency to default two digits of precision with an optional suffix
 /// and null behavior.
-String formatCurrency(num value,
-    {String suffix,
-    int digits = 2,
-    String ifNull = "...",
-    @required Locale locale}) {
+String formatCurrency(
+  num value, {
+  String suffix,
+  int precision = 2,
+  String ifNull = "...",
+  @required Locale locale,
+}) {
   if (value == null) {
     return ifNull;
   }
-  return NumberFormat("#0." + "0" * digits, locale?.toLanguageTag()) .format(value) +
+  return NumberFormat("#0." + "0" * precision, locale?.toLanguageTag())
+          .format(value) +
       (suffix != null ? " $suffix" : "");
 }
 

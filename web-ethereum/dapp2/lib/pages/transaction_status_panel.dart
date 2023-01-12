@@ -85,7 +85,8 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
     if (widget.context == null) {
       return Container();
     }
-    return SizedBox(width: 334.0, child: _buildStatusContainer());
+    return SizedBox(
+        width: 334.0, child: IntrinsicHeight(child: _buildStatusContainer()));
   }
 
   Widget _buildStatusContainer() {
@@ -115,14 +116,18 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
   }
 
   Widget _buildStatus() {
+    // log("XXX: widget.tx = ${widget.tx}");
     var message = _receipt != null
         ? s.confirmations + ': ${_receipt.confirmations}'
         : s.pending;
+
+    final explorerLink = Chains.chainFor(widget.tx.chainId).explorerUrl;
+    final description = widget.tx.description(context);
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text(s.orchidTransaction ?? '').body1,
-        pady(16),
+        pady(8),
         if (!_txComplete)
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
@@ -131,28 +136,53 @@ class _TransactionStatusPanelState extends State<TransactionStatusPanel> {
         if (_receipt?.transactionHash != null)
           Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              // description
+              if (description != null)
+                Column(
+                  children: [
+                    Text(description).subtitle.bottom(8),
+                    SizedBox(
+                        width: 100,
+                        child:
+                            Divider(height: 1, color: Colors.white).bottom(16)),
+                  ],
+                ),
+
+              // tx hash
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(s.txHash).caption,
-                  SizedBox(
-                    width: 95,
-                    child: TapToCopyText(
-                      _receipt.transactionHash,
-                      displayText: EthereumAddress.elideAddressString(
-                          _receipt.transactionHash),
-                      overflow: TextOverflow.ellipsis,
-                      style: OrchidText.caption.tappable,
-                      padding: EdgeInsets.zero,
-                    ),
-                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(s.txHash).caption,
+                      SizedBox(
+                        width: 95,
+                        child: TapToCopyText(
+                          _receipt.transactionHash,
+                          displayText: EthereumAddress.elideAddressString(
+                              _receipt.transactionHash),
+                          overflow: TextOverflow.ellipsis,
+                          style: OrchidText.caption.tappable,
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
+                  ).bottom(8),
+
+                  // confirmation status
+                  Text(message ?? '').caption.bottom(12),
                 ],
-              ).bottom(8),
-              Text(message ?? '').caption.bottom(12),
+              ),
+
+              // explorer link
               DappWalletInfoPanel.buildExplorerLink(
+                context,
                 OrchidText.caption.tappable,
-                Chains.chainFor(widget.tx.chainId).explorerUrl,
+                explorerLink,
                 alignment: MainAxisAlignment.center,
+                size: MainAxisSize.min,
+                disabled: explorerLink == null,
               ),
             ],
           ),

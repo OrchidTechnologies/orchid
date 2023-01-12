@@ -1,6 +1,5 @@
+import 'package:orchid/orchid.dart';
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/monitoring/restart_manager.dart';
@@ -36,7 +35,6 @@ import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
 import 'package:orchid/util/dispose.dart';
 import 'package:orchid/util/units.dart';
-
 import 'connect_status_panel.dart';
 
 /// The main page containing the connect button.
@@ -80,13 +78,6 @@ class _ConnectPageState extends State<ConnectPage>
     return _circuitHops > 0;
   }
 
-  // Show the welcome pane if the user has a default (singular) identity key
-  // and no (cached) accounts have yet been created on it. (_hasAccounts is initially null).
-  bool get _showWelcomePane => _hasDefaultIdentity && _hasAccounts == false;
-
-  // User toggle for display of the panel
-  bool _showWelcomePaneMinimized = false;
-
   // The hop selected on the manage accounts card
   int _selectedIndex = 0;
 
@@ -115,15 +106,30 @@ class _ConnectPageState extends State<ConnectPage>
 
   NeonOrchidLogoController _logoController;
 
-  // If the user has exactly one identity this is the default, else null
-  StoredEthereumKey _defaultIdentity;
+  // True if there are cached accounts for any identity. Initially null.
+  bool _hasAccounts;
 
-  bool get _hasDefaultIdentity {
-    return _defaultIdentity != null;
+  // True if the user has one or more identities (keys).  Initially null.
+  // bool _hasIdentity;
+
+  // The user's keys (null until initialized).
+  List<StoredEthereumKey> _keys;
+
+  // The most recently generated or imported key or null if there are none.
+  StoredEthereumKey get _latestKey {
+    return (_keys ?? []).isEmpty
+        ? null
+        : _keys.reduce((a, b) => a.time.isAfter(b.time) ? a : b);
   }
 
-  // True if there are cached accounts for any identity (initially null)
-  bool _hasAccounts;
+  // May be empty but not null once loaded.
+  bool get _initialized => _hasAccounts != null && _keys != null;
+
+  // Show the welcome pane if the user has not created any accounts.
+  bool get _showWelcomePane => _initialized && !_hasAccounts;
+
+  // User toggle for display of the panel
+  bool _showWelcomePaneMinimized = false;
 
   @override
   void initState() {
@@ -135,9 +141,8 @@ class _ConnectPageState extends State<ConnectPage>
     _updateStatsTimer = Timer.periodic(Duration(seconds: 30), _updateStats);
     _updateStats(null);
 
-    _releaseVersionCheck();
-
-    _scanForAccountsIfNeeded();
+    _launchCheckItems();
+    // _scanForAccountsIfNeeded();
 
     _logoController = NeonOrchidLogoController(vsync: this);
 
@@ -227,9 +232,8 @@ class _ConnectPageState extends State<ConnectPage>
 
     // Monitor identities
     UserPreferences().keys.stream().listen((keys) async {
-      log("XXX: keys = $keys");
       setState(() {
-        _defaultIdentity = (keys ?? []).length == 1 ? keys.first : null;
+        _keys = keys;
       });
     }).dispose(_subs);
 
@@ -247,16 +251,16 @@ class _ConnectPageState extends State<ConnectPage>
 
   @override
   Widget build(BuildContext context) {
-    /*
     try {
       log("XXX: first launch: "
-          "_hasDefaultIdentity = $_hasDefaultIdentity, "
+          "_initialized == $_initialized, "
           "_hasAccounts == $_hasAccounts, "
+          "_keys = $_keys,"
+          "_latestKey == $_latestKey, "
           "_showWelcomePane = $_showWelcomePane");
     } catch (err) {
       log("first launch: Error should not happen: $err");
     }
-     */
 
     return Stack(
       children: <Widget>[
@@ -303,13 +307,20 @@ class _ConnectPageState extends State<ConnectPage>
           Align(
             alignment: Alignment.center,
             child: WelcomePanel(
-              identity: _defaultIdentity,
+              defaultIdentity: _latestKey,
               onDismiss: () {
                 setState(() {
                   _showWelcomePaneMinimized = true;
                 });
               },
-            ),
+              onAccount: (account) async {
+                log("XXX: account import: $account");
+                if (await CircuitUtils.defaultCircuitIfNeededFrom(account)) {
+                  CircuitUtils.showDefaultCircuitCreatedDialog(context);
+                }
+                // AccountFinder.shared?.refresh();
+              },
+            ).pady(40).top(24),
           )
       ],
     );
@@ -511,15 +522,15 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   /// Do first launch and per-release activities.
-  Future<void> _releaseVersionCheck() async {
+  Future<void> _launchCheckItems() async {
+    // Support migration from very early versions of the app.
     await _doMigrationActivities();
 
-    var lastVersion = await _getReleaseVersionWithOverride();
-
+    // Show release notes if needed
     log("first launch: check.");
+    var lastVersion = await _getReleaseVersionWithOverride();
     if (lastVersion.isFirstLaunch) {
       log("first launch: is first launch");
-      await _doFirstLaunchActivities();
     } else {
       // show any release notes since the last viewed
       log("connect: check release notes since version: $lastVersion");
@@ -562,45 +573,6 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
-  /// As part of new user onboarding we scan for accounts continually until
-  /// the first one is found and create a default single hop route from it.
-  Future<void> _scanForAccountsIfNeeded() async {
-    // If cached discovered accounts is empty should start the search.
-    if ((UserPreferences().cachedDiscoveredAccounts.get()).isNotEmpty) {
-      log("connect: Found cached accounts, not starting account finder.");
-      return;
-    }
-
-    log("connect: No accounts in cache, starting account finder.");
-    AccountFinder.shared = AccountFinder()
-        .withPollingInterval(Duration(seconds: 20))
-        .find((accounts) async {
-      var sorted = await Account.sortAccountsByEfficiency(accounts);
-      if (sorted.isNotEmpty) {
-        var created =
-            await CircuitUtils.defaultCircuitIfNeededFrom(sorted.first);
-        log("connect: default circuit: $created");
-        if (created) {
-          SchedulerBinding.instance.addPostFrameCallback(
-            (_) => AppDialogs.showAppDialog(
-              context: context,
-              title: s.accountFound,
-              bodyText:
-                  s.weFoundAnAccountAssociatedWithYourIdentitiesAndCreated,
-            ),
-          );
-        }
-      }
-    });
-    // As an optimization we listen for PAC purchases and increase the rate
-    // UserPreferences().pacTransaction.stream().listen((event) { });
-  }
-
-  Future<void> _doFirstLaunchActivities() async {
-    await _createFirstIdentity();
-    await _migrateActiveAccountTo1Hop();
-  }
-
   Future<void> _doMigrationActivities() async {
     await _migrateActiveAccountTo1Hop();
   }
@@ -632,19 +604,6 @@ class _ConnectPageState extends State<ConnectPage>
             accounts[0].isIdentityPlaceholder
         ? null
         : accounts[0];
-  }
-
-  Future<void> _createFirstIdentity() async {
-    log("first launch: Do first launch activities.");
-    // If this is a new user with no identities create one.
-    var identities = UserPreferences().keys.get();
-    if (identities.isEmpty) {
-      log("first launch: Creating default identity");
-      var key = StoredEthereumKey.generate();
-      await UserPreferences().addKey(key);
-    }
-    // Update the UI after first identity created
-    setState(() {});
   }
 
   Future _circuitConfigurationChanged() async {
@@ -691,7 +650,7 @@ class _ConnectPageState extends State<ConnectPage>
   void dispose() {
     super.dispose();
     ScreenOrientation.reset();
-    AccountFinder.shared?.dispose();
+    // AccountFinder.shared?.dispose();
     _updateStatsTimer.cancel();
     _subs.dispose();
   }

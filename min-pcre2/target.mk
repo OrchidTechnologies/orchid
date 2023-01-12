@@ -12,6 +12,10 @@
 pwd/pcre2 := $(pwd)/pcre2
 
 cflags += -DPCRE2_CODE_UNIT_WIDTH=8
+cflags += -DPCRE2_STATIC
+
+cflags/$(pwd)/ += -DSUPPORT_UNICODE
+
 cflags += -I$(pwd)/extra
 
 cflags/$(pwd)/ += -include $(pwd/pcre2)/src/config.h.generic
@@ -21,16 +25,23 @@ cflags/$(pwd)/pcre2_chartables.c += -I$(pwd/pcre2)/src
 
 source += $(pwd/pcre2)/src/pcre2_auto_possess.c
 source += $(pwd/pcre2)/src/pcre2_compile.c
+source += $(pwd/pcre2)/src/pcre2_config.c
 source += $(pwd/pcre2)/src/pcre2_context.c
+source += $(pwd/pcre2)/src/pcre2_dfa_match.c
 source += $(pwd/pcre2)/src/pcre2_error.c
+source += $(pwd/pcre2)/src/pcre2_extuni.c
 source += $(pwd/pcre2)/src/pcre2_find_bracket.c
 source += $(pwd/pcre2)/src/pcre2_jit_compile.c
 source += $(pwd/pcre2)/src/pcre2_match.c
 source += $(pwd/pcre2)/src/pcre2_match_data.c
 source += $(pwd/pcre2)/src/pcre2_newline.c
+source += $(pwd/pcre2)/src/pcre2_ord2utf.c
+source += $(pwd/pcre2)/src/pcre2_pattern_info.c
 source += $(pwd/pcre2)/src/pcre2_script_run.c
 source += $(pwd/pcre2)/src/pcre2_string_utils.c
 source += $(pwd/pcre2)/src/pcre2_study.c
+source += $(pwd/pcre2)/src/pcre2_substring.c
 source += $(pwd/pcre2)/src/pcre2_tables.c
 source += $(pwd/pcre2)/src/pcre2_ucd.c
 source += $(pwd/pcre2)/src/pcre2_valid_utf.c
+source += $(pwd/pcre2)/src/pcre2_xclass.c

@@ -79,4 +79,12 @@ extension WidgetExtensions on Widget {
   Widget size(double width, double height) {
     return SizedBox(width: width, height: height, child: this);
   }
+
+  Widget square(double size) {
+    return SizedBox(width: size, height: size, child: this);
+  }
+
+  Widget get center {
+    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [this]);
+  }
 }

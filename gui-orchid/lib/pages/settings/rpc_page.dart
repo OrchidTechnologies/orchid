@@ -1,17 +1,22 @@
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_chain_config.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
+import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_switch.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
+import 'package:orchid/pages/settings/user_configured_chain_panel.dart';
 
 class RpcPage extends StatefulWidget {
   @override
@@ -29,44 +34,55 @@ class _RpcPageState extends State<RpcPage> {
     return TitledPage(
         title: s.chainSettings,
         constrainWidth: false,
-        child: buildPage(context));
+        child: buildPage(context),
+        actions: OrchidUserConfig.isTester ? [_buildAddButton()] : []);
   }
 
   Widget buildPage(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          // mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            pady(8),
-            _buildChains(),
-            pady(24),
-          ],
-        ).padx(20),
-      ),
+      child: UserPreferences().userConfiguredChains.builder((_) {
+        return _buildChains().padx(20).top(8).bottom(24);
+      }),
     );
   }
 
+  Future<void> _addUserConfiguredChain() async {
+    return AppDialogs.showAppDialog(
+      context: context,
+      title: s.addChain,
+      body: UserConfiguredChainPanel(),
+      showActions: false,
+    );
+  }
+
+  Widget _buildAddButton() {
+    return IconButton(
+      icon: Icon(Icons.add_circle_outline),
+      onPressed: _addUserConfiguredChain,
+    ).right(8);
+  }
+
   Widget _buildChains() {
-    var chains = Chains.unfiltered.values.toList();
-
+    final knownChains = Chains.knownChains.values.toList();
     // bump Ethereum to the top of the list
-    chains.remove(Chains.Ethereum);
-    chains.insert(0, Chains.Ethereum);
+    knownChains.remove(Chains.Ethereum);
+    knownChains.insert(0, Chains.Ethereum);
 
+    final userConfiguredChains = UserPreferences().userConfiguredChains.get();
+    final chains =
+        userConfiguredChains.cast<Chain>() + knownChains.cast<Chain>();
     final config = ChainConfig.map(UserPreferences().chainConfig.get());
-    return Column(
-        children: chains.map((chain) {
-      return _ChainItem(
-        chain: chain,
-        config: config[chain.chainId],
-        showEnableSwitch: chain != Chains.Ethereum,
-      ).bottom(16);
-    }).toList()
-        // .cast<Widget>()
-        // .separatedWith(Divider(color: Colors.white)),
-        );
+
+    return ListView.builder(
+        itemCount: chains.length,
+        itemBuilder: (context, index) {
+          final chain = chains[index];
+          return _ChainItem(
+            chain: chain,
+            config: config[chain.chainId],
+            showEnableSwitch: chain != Chains.Ethereum,
+          ).bottom(16);
+        });
   }
 
   @override
@@ -96,21 +112,42 @@ class _ChainItem extends StatefulWidget {
 }
 
 class _ChainItemState extends State<_ChainItem> {
-  var _controller = TextEditingController();
+  var _rpcController = TextEditingController();
+  var _priceController = NumericValueFieldController();
   bool _show;
   List<Widget> _testResults = [];
 
   @override
   void initState() {
     super.initState();
-    _controller.text = widget.config?.rpcUrl;
+    _rpcController.text = widget.config?.rpcUrl;
     _show = widget.config?.enabled ?? true;
   }
 
+  bool get isUserConfigured => widget.chain is UserConfiguredChain;
+
   @override
   Widget build(BuildContext context) {
-    final labelWidth = 65.0;
+    return _buildPanel();
+  }
+
+  OrchidPanel _buildPanel() {
+    final labelWidth = isUserConfigured ? 130.0 : 65.0;
+    final backgroundFillColor = isUserConfigured
+        ? OrchidColors.purpleCaption
+        : OrchidPanel.defaultBackgroundFill;
+    final backgroundGradient = isUserConfigured
+        ? LinearGradient(colors: [
+            Colors.black,
+            Colors.black,
+          ])
+        : OrchidPanel.defaultBackgroundGradient;
+    final showEnabledSwitch = widget.showEnableSwitch && !isUserConfigured;
+    final showDelete = isUserConfigured;
+
     return OrchidPanel(
+      backgroundFillColor: backgroundFillColor,
+      backgroundGradient: backgroundGradient,
       child: Column(
         children: [
           // header
@@ -120,41 +157,25 @@ class _ChainItemState extends State<_ChainItem> {
               SizedBox(height: 24, width: 24, child: widget.chain.icon),
               Text(widget.chain.name).title.height(1.8).left(12),
               Spacer(),
-              if (widget.showEnableSwitch)
+              if (showEnabledSwitch)
                 Row(
                   children: [
                     Text(s.show + ':').button,
                     _buildSwitch(_show),
                   ],
-                )
+                ),
+              if (showDelete) _buildDelete(widget.chain as UserConfiguredChain),
             ],
           ),
 
-          // body
           AnimatedVisibility(
             show: _show,
             child: Column(
               children: [
-                // rpc field
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    SizedBox(width: labelWidth, child: Text(s.rpc + ':').title),
-                    Expanded(
-                      child: OrchidTextField(
-                        controller: _controller,
-                        onChanged: (_) {
-                          _update();
-                        },
-                        onClear: _update,
-                        hintText: widget.chain.defaultProviderUrl ==
-                                Chains.Ethereum.defaultProviderUrl
-                            ? widget.chain.defaultProviderUrl.substring(0, 34)
-                            : widget.chain.defaultProviderUrl,
-                      ),
-                    ),
-                  ],
-                ).top(12).right(12),
+                // body
+                _buildRPCRow(labelWidth).top(12).right(12),
+                if (isUserConfigured)
+                  _buildPriceRow(labelWidth).top(8).right(12),
 
                 // last test results
                 if (_testResults.isNotEmpty)
@@ -178,10 +199,10 @@ class _ChainItemState extends State<_ChainItem> {
                 if (_show)
                   OrchidActionButton(
                     width: 110,
-                    text: "TEST",
+                    text: s.test.toUpperCase(),
                     onPressed: _testRpc,
-                    enabled: _controller.text == null ||
-                        _controller.text.isEmpty ||
+                    enabled: _rpcController.text == null ||
+                        _rpcController.text.isEmpty ||
                         _rpcIsValid(),
                   ).top(20).bottom(8),
               ],
@@ -189,6 +210,52 @@ class _ChainItemState extends State<_ChainItem> {
           ),
         ],
       ).padx(20).top(8).bottom(16),
+    );
+  }
+
+  Row _buildRPCRow(double labelWidth) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        SizedBox(width: labelWidth, child: Text(s.rpc + ':').title),
+        Expanded(
+          child: OrchidTextField(
+            enabled: !isUserConfigured,
+            controller: _rpcController,
+            onChanged: (_) {
+              _update();
+            },
+            onClear: _update,
+            hintText: widget.chain.defaultProviderUrl ==
+                    Chains.Ethereum.defaultProviderUrl
+                ? widget.chain.defaultProviderUrl.substring(0, 34)
+                : widget.chain.defaultProviderUrl,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Row _buildPriceRow(double labelWidth) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        SizedBox(width: labelWidth, child: Text(s.tokenPrice + ':').title),
+        Expanded(
+          child: OrchidTextField(
+            // TODO:
+            numeric: true,
+            enabled: false,
+            controller: _priceController.textController,
+            // onChanged: (_) { _update(); },
+            // onClear: _update,
+            hintText: (widget.chain.nativeCurrency.exchangeRateSource
+                    as FixedPriceToken)
+                .usdPrice
+                .toStringAsFixed(2),
+          ),
+        ),
+      ],
     );
   }
 
@@ -232,14 +299,14 @@ class _ChainItemState extends State<_ChainItem> {
   }
 
   bool _rpcIsValid() {
-    return _controller.text.toLowerCase().startsWith('https://');
+    return _rpcController.text.looksLikeUrl;
   }
 
   void _update() async {
     setState(() {
       _testResults = [];
     });
-    var text = _rpcIsValid() ? _controller.text : null;
+    var text = _rpcIsValid() ? _rpcController.text : null;
     int chainId = widget.chain.chainId;
     var newConfig = ChainConfig(
       chainId: chainId,
@@ -257,6 +324,30 @@ class _ChainItemState extends State<_ChainItem> {
     }
     await UserPreferences().chainConfig.set(list);
     setState(() {});
+  }
+
+  Future<void> _confirmDelete(UserConfiguredChain userConfiguredChain) async {
+    return AppDialogs.showConfirmationDialog(
+        context: context,
+        title: s.deleteChainQuestion,
+        bodyText: s.deleteUserConfiguredChain + ': ' + userConfiguredChain.name,
+        commitAction: () async {
+          await UserPreferences()
+              .userConfiguredChains
+              .remove(userConfiguredChain);
+        });
+  }
+
+  Widget _buildDelete(UserConfiguredChain userConfiguredChain) {
+    return IconButton(
+      icon: Icon(
+        Icons.delete_forever,
+        color: Colors.white,
+      ),
+      onPressed: () {
+        _confirmDelete(userConfiguredChain);
+      },
+    );
   }
 
   Widget _buildSwitch(bool value) {

@@ -5,7 +5,7 @@ runs:
       id: git-submodule-status
       shell: bash
       run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       with:
         path: .git/modules
         key: git-modules-${{ steps.git-submodule-status.outputs.hash }}

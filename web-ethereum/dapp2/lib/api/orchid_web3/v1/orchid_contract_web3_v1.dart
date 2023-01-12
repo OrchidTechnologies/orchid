@@ -14,10 +14,10 @@ class OrchidContractWeb3V1 {
   }
 
   static List<String> _lotteryAbi = [
-    "event Create(address indexed token, address indexed funder, address indexed signer)",
-    "event Update(bytes32 indexed key, uint256 escrow_amount)",
-    "event Delete(bytes32 indexed key, uint256 unlock_warned)",
-    "function read(address token, address funder, address signer) external view returns (uint256, uint256)",
-    "function edit(address signer, int256 adjust, int256 warn, uint256 retrieve) external payable",
+    'event Create(address indexed token, address indexed funder, address indexed signer)',
+    'event Update(bytes32 indexed key, uint256 escrow_amount)',
+    'event Delete(bytes32 indexed key, uint256 unlock_warned)',
+    'function read(address token, address funder, address signer) external view returns (uint256, uint256)',
+    'function edit(address signer, int256 adjust, int256 warn, uint256 retrieve) external payable',
   ];
 }

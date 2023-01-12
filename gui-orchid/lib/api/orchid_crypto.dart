@@ -204,6 +204,10 @@ class StoredEthereumKey {
     return private.toRadixString(16).padLeft(64, '0');
   }
 
+  String toExportString() {
+    return 'account={ secret: "${formatSecretFixed()}" }';
+  }
+
   static Map<String, StoredEthereumKey> map(List<StoredEthereumKey> list) {
     return {for (var key in list) key.uid: key};
   }
@@ -280,6 +284,10 @@ class StoredEthereumKeyRef {
     } catch (err) {
       throw Exception("getFrom(key) error: $err");
     }
+  }
+
+  bool isFoundIn(List<StoredEthereumKey> keys) {
+    return keys.map((e) => e.ref().keyUid).contains(keyUid);
   }
 
   @override

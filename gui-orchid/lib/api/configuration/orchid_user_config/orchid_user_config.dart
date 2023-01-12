@@ -31,4 +31,9 @@ class OrchidUserConfig {
     }
     return JSConfig('');
   }
+
+  static bool get isTester {
+    var jsConfig = OrchidUserConfig().getUserConfigJS();
+    return jsConfig.evalBoolDefault('tester', false);
+  }
 }

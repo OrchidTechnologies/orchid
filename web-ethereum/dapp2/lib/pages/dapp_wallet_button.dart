@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
-import 'package:orchid/orchid/orchid_wallet_identicon.dart';
+import 'package:orchid/orchid/orchid_identicon.dart';
 
 class DappWalletButton extends StatelessWidget {
   final OrchidWeb3Context web3Context;
@@ -58,7 +58,7 @@ class DappWalletButton extends StatelessWidget {
         SizedBox(
           width: 20,
           height: 20,
-          child: OrchidWalletIdenticon(address: web3Context.walletAddress),
+          child: OrchidIdenticon(address: web3Context.walletAddress),
         ).left(16),
         Text(
           addressText,

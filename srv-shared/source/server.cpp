@@ -417,7 +417,7 @@ task<void> Server::Shut() noexcept {
 }
 
 task<std::string> Server::Respond(const S<Base> &base, const std::string &offer, std::vector<std::string> ice) {
-    auto incoming(co_await Post([&]() { return Incoming::New(self_, base, local_, std::move(ice)); }, RTC_FROM_HERE));
+    auto incoming(co_await Post([&]() { return Incoming::New(self_, base, local_, std::move(ice)); }));
     auto answer(co_await incoming->Answer(offer));
     co_return answer;
     co_return Filter(true, answer);

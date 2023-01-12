@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'orchid.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/pages/orchid_app.dart';

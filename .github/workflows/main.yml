@@ -12,6 +12,11 @@ jobs:
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
 
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
     - run: ./app-flutter.sh orchid && cd app-flutter && make
 
 
@@ -358,6 +363,8 @@ jobs:
       with:
         name: orchidd-lnx-amd64
 
+    - run: chmod +x orchidd
+    - run: diff -u <(./usr/sbin/orchidd --version) <(./orchidd --version)
     - run: diff -u <(xxd usr/sbin/orchidd) <(xxd orchidd)
 
 

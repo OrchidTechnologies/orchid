@@ -70,8 +70,10 @@ template <bool Expires_, typename Stream_>
 task<bool> Site::Handle(Stream_ &stream, const Socket &socket) {
     beast::flat_buffer buffer;
 
+    // XXX: NOLINTNEXTLINE (clang-analyzer-core.NullDereference)
     for (;;) {
         Request request(socket);
+        // XXX: NOLINTNEXTLINE (clang-analyzer-core.NullDereference)
         if (!co_await Adapted(http::async_read(stream, buffer, request, Adapt())))
             co_return false;
 
@@ -152,9 +154,11 @@ void Site::Run(const asio::ip::address &bind, uint16_t port, const std::string &
             asio::ip::tcp::endpoint endpoint;
             co_await acceptor.async_accept(connection, endpoint, Adapt());
             Spawn([this, connection = std::move(connection), endpoint = std::move(endpoint), &ssl]() mutable noexcept -> task<void> { try {
+                // XXX: NOLINTNEXTLINE (clang-analyzer-core.NullDereference)
                 beast::ssl_stream<beast::tcp_stream> stream(std::move(connection), ssl);
                 beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(30));
 
+                // XXX: NOLINTNEXTLINE (clang-analyzer-core.NullDereference)
                 if (!co_await Adapted(stream.async_handshake(asio::ssl::stream_base::server, Adapt())))
                     co_return;
                 if (!co_await Handle<true>(stream, endpoint))
@@ -180,6 +184,7 @@ void Site::Run(const std::string &path) {
             asio::local::stream_protocol::socket connection(Context());
             co_await acceptor.async_accept(connection, Adapt());
             Spawn([this, connection = std::move(connection)]() mutable noexcept -> task<void> {
+                // XXX: NOLINTNEXTLINE (clang-analyzer-core.NullDereference)
                 co_await Handle<false>(connection, Socket());
             }, "Site::handle");
         }

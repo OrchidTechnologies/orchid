@@ -1,2 +1,2 @@
 cd ../..
-../app-shared/flutter/bin/flutter gen-l10n
+$FLUTTER gen-l10n

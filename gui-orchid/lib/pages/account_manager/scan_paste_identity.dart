@@ -9,9 +9,11 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/util/localization.dart';
 
+// TODO: Replacing this with orchid/field/...
+@deprecated
 class ScanOrPasteOrchidIdentity extends StatefulWidget {
   /// Callback fires on changes with either a valid parsed account or null if the form state is invalid or incomplete.
   final void Function(ParseOrchidIdentityResult parsed) onChange;
@@ -85,19 +87,20 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
 
   /// Scan a QR Code and add the text to the field
   void _scanCode() async {
-    try {
-      String text = await QRCode.scan();
-      if (text == null) {
-        log("user cancelled scan");
-        return;
+    QRCodeScanner.scan(context, (String text) {
+      try {
+        if (text == null) {
+          log("user cancelled scan");
+          return;
+        }
+        setState(() {
+          _pasteField.text = text;
+        });
+      } catch (err) {
+        print("error scanning orchid account: $err");
       }
-      setState(() {
-        _pasteField.text = text;
-      });
-    } catch (err) {
-      print("error scanning orchid account: $err");
-    }
-    _validateCodeAndFireCallback(fromScan: true);
+      _validateCodeAndFireCallback(fromScan: true);
+    });
   }
 
   /// Paste code from the clipboard via the paste button

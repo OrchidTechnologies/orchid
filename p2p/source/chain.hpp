@@ -116,6 +116,8 @@ struct Entry {
     std::vector<Bytes32> topics_;
 };
 
+std::ostream &operator <<(std::ostream &out, const Entry &value);
+
 class Chain :
     public Valve,
     public Endpoint
@@ -220,12 +222,15 @@ class Chain :
                 operator ()("eth_getStorageAt", {contract, uint256_t(args), block.height_})...));
             std::tuple<Account, typename Result_<Args_>::type...> result(Account(
                 uint256_t(std::get<0>(hypothesis).asString()),
-                uint256_t(std::get<1>(hypothesis).asString())));
+                uint256_t(std::get<1>(hypothesis).asString())
+            ),
+                typename Result_<Args_>::type()...);
             Get<1, 2>(result, hypothesis, std::index_sequence_for<Args_...>());
             co_return result;
         } else {
             const auto proof(co_await operator ()("eth_getProof", {contract, {Number<uint256_t>(std::forward<Args_>(args))...}, block.height_}));
-            std::tuple<Account, typename Result_<Args_>::type...> result(Account(proof, block));
+            std::tuple<Account, typename Result_<Args_>::type...> result(Account(proof, block),
+                typename Result_<Args_>::type()...);
             Number<uint256_t> root(proof["storageHash"].asString());
             Get<1, 0>(result, proof["storageProof"], root, std::forward<Args_>(args)...);
             co_return result;
@@ -259,7 +264,7 @@ class Chain :
             const auto proof(co_await operator ()("eth_getProof", {contract, numbers, block.height_}));
             std::tuple<Account, std::vector<uint256_t>> result(Account(proof, block), {});
             Number<uint256_t> root(proof["storageHash"].asString());
-            auto storages(proof["storageProof"]);
+            const auto &storages(proof["storageProof"]);
             for (Json::Value::ArrayIndex e(Fit(args.size())), i(0); i != e; ++i)
                 std::get<1>(result).emplace_back(Get(i, storages, root, args[i]));
             co_return result;

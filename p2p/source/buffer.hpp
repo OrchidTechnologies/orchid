@@ -139,7 +139,7 @@ struct Cast<Type_, typename std::enable_if<std::is_arithmetic<Type_>::value>::ty
     }
 };
 
-template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
 struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type> {
     static auto Load(const uint8_t *data, size_t size) {
         orc_assert(size == Bits_ / 8);
@@ -149,7 +149,7 @@ struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_i
     }
 };
 
-template <unsigned Bits_>
+template <size_t Bits_>
 struct Cast<intx::uint<Bits_>, typename std::enable_if<Bits_ % 8 == 0>::type> {
     static auto Load(const uint8_t *data, size_t size) {
         orc_assert(size == Bits_ / 8);
@@ -752,7 +752,7 @@ class Number<Type_, true> final :
     }
 };
 
-template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
 class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, false> final :
     public Data<(Bits_ >> 3)>
 {
@@ -1005,7 +1005,7 @@ inline typename std::enable_if<std::is_arithmetic<Type_>::value && !std::is_same
     return Number<Type_>(value).each(code);
 }
 
-template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
 inline typename std::enable_if<Bits_ % 8 == 0, bool>::type Each(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value, const std::function<bool (const uint8_t *, size_t)> &code) {
     return Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>>(value).each(code);
 }
@@ -1311,7 +1311,7 @@ static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
     return Taker<Index_ + 1, Taking_...>::Take(tuple, window, std::forward<Buffer_>(buffer));
 } };
 
-template <size_t Index_, unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_, typename... Taking_>
+template <size_t Index_, size_t Bits_, boost::multiprecision::cpp_int_check_type Check_, typename... Taking_>
 struct Taking<Index_, boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type, Taking_...> final {
 template <typename Tuple_, typename Buffer_>
 static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {

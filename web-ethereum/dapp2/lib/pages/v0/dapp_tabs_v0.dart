@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
@@ -31,7 +32,6 @@ class DappTabsV0 extends StatefulWidget {
 }
 
 class _DappTabsV0State extends State<DappTabsV0> {
-
   @override
   void initState() {
     super.initState();
@@ -58,10 +58,10 @@ class _DappTabsV0State extends State<DappTabsV0> {
             child: TabBar(
               indicatorColor: OrchidColors.tappable,
               tabs: [
-                Tab(child: FittedBox(child: Text("Add", style: tabStyle))),
+                Tab(child: FittedBox(child: Text(s.add1, style: tabStyle))),
                 Tab(child: FittedBox(child: Text(s.withdraw, style: tabStyle))),
                 Tab(child: FittedBox(child: Text(s.move).button)),
-                Tab(child: FittedBox(child: Text("Lock / Unlock").button)),
+                Tab(child: FittedBox(child: Text(s.lockUnlock1).button)),
               ],
             ),
           ),
@@ -73,6 +73,7 @@ class _DappTabsV0State extends State<DappTabsV0> {
                     child: SizedBox(
                   width: 500,
                   child: AddFundsPane(
+                    tokenType: Tokens.OXT,
                     enabled: _enabled,
                     context: widget.web3Context,
                     signer: widget.signer,

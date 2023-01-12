@@ -1,10 +1,6 @@
 import 'dart:math';
-
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
-import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/util/units.dart';
-
 import '../../pricing/orchid_pricing_v0.dart';
 import '../orchid_market.dart';
 import '../chains.dart';
@@ -64,7 +60,7 @@ class MarketConditionsV0 implements MarketConditions {
     GWEI gasPrice =
         GWEI.fromWei((await Chains.Ethereum.getGasPrice()).intValue);
     ETH ethGasCostToRedeem =
-        (gasPrice * OrchidContractV0.gasCostToRedeemTicketV0).toEth();
+        (gasPrice * OrchidContractV0.gasLimitToRedeemTicketV0).toEth();
 
     PricingV0 pricingV0 = await OrchidPricingAPIV0().getPricing();
     OXT oxtCostToRedeem = pricingV0.ethToOxt(ethGasCostToRedeem);

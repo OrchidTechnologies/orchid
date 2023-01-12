@@ -41,6 +41,7 @@ struct Token {
     static task<Token> AVAX(unsigned milliseconds, S<Ethereum> ethereum);
     static task<Token> BNB(unsigned milliseconds, S<Ethereum> ethereum);
     static task<Token> BTC(unsigned milliseconds, S<Ethereum> ethereum);
+    static task<Token> ETH(unsigned milliseconds, S<Ethereum> ethereum);
     static task<Token> FTM(unsigned milliseconds, S<Ethereum> ethereum);
     static task<Token> MATIC(unsigned milliseconds, S<Ethereum> ethereum);
     static task<Token> OXT(unsigned milliseconds, S<Ethereum> ethereum);

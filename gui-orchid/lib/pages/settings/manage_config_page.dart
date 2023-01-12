@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_generate.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_import.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
 import 'package:orchid/common/screen_orientation.dart';
@@ -45,7 +46,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
           pady(16),
           PageTile(
             title: s.exportHopsConfiguration,
-            trailing: RaisedButton(
+            trailing: RaisedButtonDeprecated(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(24))),
               color: OrchidColors.purple_bright,
@@ -76,7 +77,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
           pady(16),
           PageTile(
             title: s.importHopsConfiguration,
-            trailing: RaisedButton(
+            trailing: RaisedButtonDeprecated(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(24))),
               color: OrchidColors.purple_bright,

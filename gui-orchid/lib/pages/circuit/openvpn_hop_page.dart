@@ -7,7 +7,7 @@ import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/orchid/orchid_text_field.dart';
+import 'package:orchid/orchid/field/orchid_text_field.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
 import 'hop_editor.dart';
@@ -94,7 +94,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                           // TODO: This screen is being told it's in landscape mode in the simulator?
                           //hideInLandscape: false,
                           title: s.enterYourCredentials,
-                          body: s.enterLoginInformationInstruction + " ",
+                          body: s.enterLoginInformationInstruction + ' ',
                         ),
                       ),
                       pady(24)
@@ -114,7 +114,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         pady(16),
-        Text(s.password + ":",
+        Text(s.password + ':',
             style: AppText.textLabelStyle.copyWith(fontSize: 20).white),
         pady(8),
         OrchidTextField(
@@ -129,7 +129,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         pady(16),
-        Text(s.username + ":",
+        Text(s.username + ':',
             style: AppText.textLabelStyle.copyWith(fontSize: 20).white),
         pady(8),
         OrchidTextField(

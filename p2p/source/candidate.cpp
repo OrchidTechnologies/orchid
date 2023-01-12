@@ -41,7 +41,7 @@ task<cricket::Candidate> Peer::Candidate() {
         const auto connection(internal->selected_connection());
         orc_assert(connection != nullptr);
         return connection->remote_candidate();
-    }, RTC_FROM_HERE, base_->Thread());
+    }, base_->Thread());
 }
 
 std::string Strip(const std::string &sdp) {

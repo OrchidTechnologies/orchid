@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
+import 'package:orchid/util/units.dart';
 import 'token_type.dart';
 import 'package:orchid/util/collections.dart';
 import 'tokens.dart';
@@ -30,6 +32,26 @@ class Chains {
     return jsConfig.evalStringDefault('rpc', _defaultEthereumProviderUrl);
   }
 
+  static Chain unknownChain(int chainId) {
+    return Chain(
+      chainId: chainId,
+      // TODO:
+      name: "Unknown",
+      defaultProviderUrl: null,
+      iconPath: OrchidAssetSvgChain.unknown_chain_path,
+      blocktime: 0,
+      eip1559: false,
+
+      // unknown token type
+      nativeCurrency: TokenType(
+        symbol: 'TOK',
+        exchangeRateSource: FixedPriceToken.zero,
+        chainId: chainId,
+        iconPath: OrchidAssetSvgToken.unknown_token_path,
+      ),
+    );
+  }
+
   // Ganache Test
   static const int GANACHE_TEST_CHAINID = 1337;
   static Chain GanacheTest = Chain(
@@ -38,6 +60,7 @@ class Chains {
     nativeCurrency: Tokens.TOK,
     defaultProviderUrl: 'http://127.0.0.1:7545/',
     iconPath: OrchidAssetSvgChain.unknown_chain_path,
+    blocktime: 0,
   );
 
   // Ethereum (ETH)
@@ -51,6 +74,7 @@ class Chains {
     iconPath: ethIconPath,
     explorerUrl: 'https://etherscan.io/',
     supportsLogs: true,
+    blocktime: 12,
   );
 
   // Gnosis (xDAI)
@@ -64,6 +88,7 @@ class Chains {
     iconPath: OrchidAssetSvgChain.gnossis_chain_path,
     explorerUrl: 'https://blockscout.com/xdai/mainnet/',
     supportsLogs: true,
+    blocktime: 5,
   );
 
   // Avalanch (AVAX)
@@ -76,6 +101,7 @@ class Chains {
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
     explorerUrl: 'https://snowtrace.io/',
     supportsLogs: false,
+    blocktime: 3,
   );
 
   // Binance Smart Chain (BSC)
@@ -87,6 +113,8 @@ class Chains {
     defaultProviderUrl: 'https://bsc-dataseed1.binance.org',
     iconPath: OrchidAssetSvgChain.binance_smart_chain_path,
     explorerUrl: 'https://bscscan.com',
+    blocktime: 3,
+    eip1559: false,
   );
 
   // Polygon (MATIC)
@@ -98,6 +126,7 @@ class Chains {
     defaultProviderUrl: 'https://polygon-rpc.com/',
     iconPath: OrchidAssetSvgToken.matic_token_path,
     explorerUrl: 'https://polygonscan.com/',
+    blocktime: 2,
   );
 
   // Optimism (OETH)
@@ -112,6 +141,8 @@ class Chains {
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
     supportsLogs: true,
+    blocktime: 0, // non-standard transaction structure...
+    eip1559: false,
   );
 
   // Arbitrum One (AETH)
@@ -124,6 +155,7 @@ class Chains {
     // TODO: missing chain icon
     iconPath: OrchidAssetSvgChain.unknown_chain_path,
     explorerUrl: 'https://arbiscan.io/',
+    blocktime: 0,
   );
 
   // Aurora (NEAR)
@@ -138,6 +170,8 @@ class Chains {
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
     supportsLogs: true,
+    blocktime: 1,
+    eip1559: false,
   );
 
   // Fantom (FTM)
@@ -150,6 +184,7 @@ class Chains {
     iconPath: OrchidAssetSvgToken.fantom_ftm_token_path,
     explorerUrl: 'https://ftmscan.com',
     supportsLogs: true,
+    blocktime: 1,
   );
 
   // Telos (TLOS)
@@ -161,6 +196,7 @@ class Chains {
     defaultProviderUrl: 'https://mainnet.telos.net/evm',
     iconPath: OrchidAssetSvgToken.telos_tlos_token_path,
     explorerUrl: 'https://teloscan.io',
+    blocktime: 0.5,
   );
 
 // RSK (BTC)
@@ -172,6 +208,8 @@ class Chains {
     defaultProviderUrl: 'https://public-node.rsk.co',
     iconPath: OrchidAssetSvgChain.rsk_chain_path,
     explorerUrl: 'https://explorer.rsk.co',
+    blocktime: 0,
+    eip1559: false,
   );
 
   // Celo (CELO)
@@ -183,6 +221,7 @@ class Chains {
     defaultProviderUrl: 'https://forno.celo.org',
     iconPath: OrchidAssetSvgChain.celo_chain_path,
     explorerUrl: 'https://explorer.celo.org',
+    blocktime: 5,
   );
 
   static Map<int, Chain> _map = [
@@ -201,32 +240,48 @@ class Chains {
     // Telos,
   ].toMap(withKey: (e) => e.chainId, withValue: (e) => e);
 
-  static Map<int, Chain> get unfiltered {
+  static Map<int, Chain> get knownChains {
     return _map;
+  }
+
+  static Map<int, Chain> get userConfiguredChains {
+    return UserPreferences()
+        .userConfiguredChains
+        .get()
+        .toMap(withKey: (e) => e.chainId, withValue: (e) => e);
   }
 
   /// The map of supported chains, filtered to remove disabled chains.
   static Map<int, Chain> get map {
     // Remove disabled chains
-    final disabled = UserPreferences()
+    final Iterable<int> disabled = UserPreferences()
         .chainConfig
         .get()
         .where((e) => !e.enabled)
         .map((e) => e.chainId);
-    var map = Map.of(_map);
+    Map<int, Chain> map = Map.of(knownChains);
     map.removeWhere((key, _) => disabled.contains(key));
+    map.addAll(userConfiguredChains);
+
     return map;
   }
 
   static bool isKnown(int chainId) {
-    return unfiltered[chainId] != null;
+    if (OrchidUserParams().newchain) {
+      return false;
+    }
+    return knownChains[chainId] != null;
   }
 
   // Get the chain for chainId
   static Chain chainFor(int chainId) {
-    var chain = unfiltered[chainId];
+    if (OrchidUserParams().newchain) {
+      return unknownChain(chainId);
+    }
+
+    var chain = knownChains[chainId];
     if (chain == null) {
-      throw Exception('no chain for chainId: $chainId');
+      return unknownChain(chainId);
     }
     return chain;
   }
@@ -240,6 +295,8 @@ class Chain {
   final int requiredConfirmations;
   final bool supportsLogs;
   final String iconPath;
+  final double blocktime; // average, seconds
+  final bool eip1559;
 
   /// Indicates that transaction may incur additional fees outside the standard
   /// gas fees.
@@ -258,11 +315,13 @@ class Chain {
     @required this.name,
     @required this.nativeCurrency,
     @required this.defaultProviderUrl,
+    @required this.blocktime,
     this.requiredConfirmations = 1,
     this.iconPath,
     this.explorerUrl,
     this.hasNonstandardTransactionFees = false,
     this.supportsLogs = false,
+    this.eip1559 = true,
   });
 
   String get providerUrl {
@@ -290,6 +349,10 @@ class Chain {
     return this == Chains.Ethereum;
   }
 
+  bool get isKnown {
+    return Chains.isKnown(chainId);
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -302,6 +365,73 @@ class Chain {
 
   @override
   String toString() {
-    return 'Chain{chainId: $chainId, name: $name}';
+    return 'Chain{chainId: $chainId, name: $name, nativeCurrency: $nativeCurrency, defaultProviderUrl: $defaultProviderUrl, requiredConfirmations: $requiredConfirmations, supportsLogs: $supportsLogs, iconPath: $iconPath, hasNonstandardTransactionFees: $hasNonstandardTransactionFees, explorerUrl: $explorerUrl}';
   }
+}
+
+class UserConfiguredChain extends Chain {
+  UserConfiguredChain({
+    String name,
+    int chainId,
+    String defaultProviderUrl,
+    USD tokenPriceUSD,
+  }) : super(
+          chainId: chainId,
+          name: name,
+          defaultProviderUrl: defaultProviderUrl,
+          nativeCurrency: userConfiguredTokenType(chainId, tokenPriceUSD),
+          blocktime: 0,
+          eip1559: false,
+        );
+
+  UserConfiguredChain.fromJson(Map<String, dynamic> json)
+      : this(
+          name: json['name'],
+          chainId: json['chainId'],
+          defaultProviderUrl: json['url'],
+          tokenPriceUSD: USD(double.parse(json['tokenPrice'])),
+        );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'chainId': chainId,
+        'url': defaultProviderUrl,
+        // TODO: FixedToken price USD
+        'tokenPrice': (nativeCurrency.exchangeRateSource as FixedPriceToken)
+            .usdPrice
+            .value
+            .toString(),
+      };
+
+  static TokenType userConfiguredTokenType(int chainId, USD tokenPriceUSD) {
+    return TokenType(
+      symbol: 'TOK',
+      // TODO: Support a more general user-specified pricing source
+      exchangeRateSource: FixedPriceToken(tokenPriceUSD),
+      chainId: chainId,
+      // TODO: Support user-pasted chain SVG.
+      iconPath: OrchidAssetSvgToken.unknown_token_path,
+    );
+  }
+
+  @override
+  String get iconPath => OrchidAssetSvgChain.unknown_chain_path;
+
+  // TODO: Support user-pasted chain SVG.
+  SvgPicture get icon {
+    return SvgPicture.asset(iconPath);
+  }
+
+  @override
+  bool get supportsLogs => false;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is UserConfiguredChain &&
+          runtimeType == other.runtimeType;
+
+  @override
+  int get hashCode => super.hashCode;
 }

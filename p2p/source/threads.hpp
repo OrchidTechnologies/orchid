@@ -58,9 +58,7 @@ class Result<void> {
 };
 
 template <typename Code_>
-class Invoker :
-    public rtc::MessageHandler
-{
+class Invoker {
   private:
     typedef decltype(std::declval<Code_>()()) Type_;
 
@@ -70,28 +68,27 @@ class Invoker :
     Result<Type_> result_;
     Event ready_;
 
-  protected:
-    void OnMessage(rtc::Message *message) override {
-        try {
-            result_.set(code_);
-        } catch (const std::exception &exception) {
-            error_ = std::current_exception();
-        }
-
-        ready_();
-    }
-
   public:
     Invoker(Code_ code) :
         code_(std::move(code))
     {
     }
 
-    task<Result<Type_>> operator ()(const rtc::Location &location, rtc::Thread &thread) {
-        // potentially pass value/ready as MessageData
+    task<Result<Type_>> operator ()(rtc::Thread &thread) {
         orc_assert(!ready_);
-        thread.Post(location, this);
+
+        thread.PostTask([this]() {
+            try {
+                result_.set(code_);
+            } catch (const std::exception &exception) {
+                error_ = std::current_exception();
+            }
+
+            ready_();
+        });
+
         co_await *ready_;
+
         if (error_)
             std::rethrow_exception(error_);
         co_return std::move(result_);
@@ -109,13 +106,13 @@ class Threads {
 };
 
 template <typename Code_>
-auto Post(Code_ code, const rtc::Location &location, rtc::Thread &thread) noexcept(noexcept(code())) -> task<decltype(code())> {
-    co_return (co_await Invoker(std::move(code))(location, thread)).get();
+auto Post(Code_ code, rtc::Thread &thread) noexcept(noexcept(code())) -> task<decltype(code())> {
+    co_return (co_await Invoker(std::move(code))(thread)).get();
 }
 
 template <typename Code_>
-auto Post(Code_ code, const rtc::Location &location) noexcept(noexcept(code())) -> task<decltype(code())> {
-    co_return co_await Post(std::move(code), location, *Threads::Get().signals_);
+auto Post(Code_ code) noexcept(noexcept(code())) -> task<decltype(code())> {
+    co_return co_await Post(std::move(code), *Threads::Get().signals_);
 }
 
 }

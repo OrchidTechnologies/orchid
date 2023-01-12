@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/common/app_colors.dart';
-import 'package:orchid/common/app_text.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/orchid.dart';
+import 'app_buttons_deprecated.dart';
+import 'app_colors.dart';
+import 'app_text.dart';
 
 class AppDialogs {
   /// Show a styled Orchid app dialog with title, body, OK button, and optional link to settings.
@@ -28,11 +26,11 @@ class AppDialogs {
           // insetPadding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(16.0))),
-          title: title != null ? Text(title, style: OrchidText.title) : null,
+          title: title != null ? Text(title, style: OrchidText.title): null,
           content: body ?? Text(bodyText ?? '', style: OrchidText.body2),
           actions: <Widget>[
             if (linkSettings)
-              FlatButton(
+              FlatButtonDeprecated(
                 child: Text(s.settingsButtonTitle, style: AppText.dialogButton),
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -40,7 +38,7 @@ class AppDialogs {
                 },
               ),
             if (showActions)
-              FlatButton(
+              FlatButtonDeprecated(
                 child: Text(s.ok,
                     style:
                         OrchidText.button.copyWith(color: OrchidColors.purple_bright)),

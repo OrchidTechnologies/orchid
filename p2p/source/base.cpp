@@ -47,7 +47,8 @@ Base::~Base() = default;
 
 U<cricket::PortAllocator> Base::Allocator() {
     auto &factory(Factory());
-    return Thread().Invoke<U<cricket::PortAllocator>>(RTC_FROM_HERE, [&]() {
+    // XXX: should this really block?
+    return Thread().BlockingCall([&]() {
         return std::make_unique<cricket::BasicPortAllocator>(manager_.get(), &factory);
     });
 }

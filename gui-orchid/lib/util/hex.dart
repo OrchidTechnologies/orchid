@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_log_api.dart';
 
 class Hex {
   static String remove0x(String text) {
@@ -9,6 +10,24 @@ class Hex {
 
   static String hex(dynamic val) {
     return '0x' + val.toRadixString(16);
+  }
+
+  static BigInt parseBigInt(String str) {
+    try {
+      return BigInt.parse(Hex.remove0x(str), radix: 16);
+    } catch (err) {
+      log("parseBigInt: $err");
+      throw err;
+    }
+  }
+
+  static int parseInt(String str) {
+    try {
+      return int.parse(remove0x(str), radix: 16);
+    } catch (err) {
+      log("parseInt: $err");
+      throw err;
+    }
   }
 }
 
@@ -38,21 +57,31 @@ class HexStringBuffer {
   int takeMethodId() {
     return take(8).toInt();
   }
+
   BigInt takeBytes32() {
     return take(64);
   }
+
   BigInt takeAddress() {
     return take(64);
   }
+
   BigInt takeUint256() {
     return take(64);
   }
+
   BigInt takeUint128() {
     return take(64);
   }
+
+  BigInt takeUint80() {
+    return take(64);
+  }
+
   BigInt takeUint64() {
     return take(64);
   }
+
   BigInt takeUint8() {
     return take(64);
   }

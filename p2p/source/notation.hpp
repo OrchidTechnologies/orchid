@@ -45,7 +45,7 @@ class Argument final {
     {
     }
 
-    template <unsigned Bits_, boost::multiprecision::cpp_int_check_type Check_>
+    template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
     Argument(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value) :
         value_("0x" + value.str(0, std::ios::hex))
     {
@@ -198,10 +198,12 @@ std::tuple<Elements_...> Parse(const std::string &data) {
 template <typename Type_>
 inline std::enable_if_t<std::is_integral_v<Type_>, std::string> Str(const Type_ &value) {
     return std::to_string(value); }
-inline std::string Str(const boost::string_view &value) {
+inline std::string Str(const std::string_view &value) {
     return std::string(value); }
+inline std::string Str(const boost::json::string_view &value) {
+    return Str(value.operator std::string_view()); }
 inline std::string Str(const boost::json::string &value) {
-    return Str(value.operator boost::string_view()); }
+    return Str(value.operator std::string_view()); }
 inline std::string Str(const Any &value) { orc_block({
     return Str(value.as_string()); }, "casting " << value); }
 

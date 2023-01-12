@@ -1,7 +1,10 @@
 // ignore_for_file: non_constant_identifier_names
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
+import 'package:orchid/api/pricing/binance_pricing.dart';
+import 'package:orchid/api/pricing/coingecko_pricing.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
+import 'package:orchid/util/units.dart';
 import 'chains.dart';
 import 'token_type.dart';
 
@@ -11,7 +14,7 @@ class Tokens {
 
   // Override the symbol to ETH so that ETH-equivalent tokens care share this.
   static const ETHExchangeRateSource =
-      BinanceExchangeRateSource(symbolOverride: 'ETH');
+      CoinGeckoExchangeRateSource(tokenId: 'ethereum');
 
   static const TokenType ETH = TokenType(
     symbol: 'ETH',
@@ -22,7 +25,7 @@ class Tokens {
 
   static TokenType OXT = TokenType(
     symbol: 'OXT',
-    exchangeRateSource: BinanceExchangeRateSource(),
+    exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'orchid-protocol'),
     chainId: Chains.ETH_CHAINID,
     erc20Address: OrchidContractV0.oxtContractAddress,
     iconPath: OrchidAssetSvgToken.orchid_oxt_token_path,
@@ -30,37 +33,36 @@ class Tokens {
 
   static const TokenType XDAI = TokenType(
     symbol: 'xDAI',
-    // Binance lists DAIUSDT but the value is bogus. The real pair is USDTDAI, so invert.
-    exchangeRateSource:
-        BinanceExchangeRateSource(symbolOverride: 'DAI', inverted: true),
+    configSymbolOverride: 'DAI',
+    exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'xdai'),
     chainId: Chains.GNOSIS_CHAINID,
     iconPath: OrchidAssetSvgToken.xdai_token_path,
   );
 
   static const TokenType TOK = TokenType(
     symbol: 'TOK',
-    exchangeRateSource: ZeroPriceToken(),
+    exchangeRateSource: FixedPriceToken.zero,
     chainId: Chains.GANACHE_TEST_CHAINID,
     iconPath: OrchidAssetSvgToken.unknown_token_path,
   );
 
   static const TokenType AVAX = TokenType(
     symbol: 'AVAX',
-    exchangeRateSource: BinanceExchangeRateSource(),
+    exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'avalanche-2'),
     chainId: Chains.AVALANCHE_CHAINID,
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,
   );
 
   static const TokenType BNB = TokenType(
     symbol: 'BNB',
-    exchangeRateSource: BinanceExchangeRateSource(),
+    exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'binancecoin'),
     chainId: Chains.BSC_CHAINID,
     iconPath: OrchidAssetSvgToken.binance_coin_bnb_token_path,
   );
 
   static const TokenType MATIC = TokenType(
     symbol: 'MATIC',
-    exchangeRateSource: BinanceExchangeRateSource(),
+    exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'matic-network'),
     chainId: Chains.POLYGON_CHAINID,
     iconPath: OrchidAssetSvgToken.matic_token_path,
   );
@@ -92,40 +94,60 @@ class Tokens {
 
   static const TokenType FTM = TokenType(
     symbol: 'FTM',
-    exchangeRateSource: BinanceExchangeRateSource(),
+    exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'fantom'),
     chainId: Chains.FANTOM_CHAINID,
     iconPath: OrchidAssetSvgToken.fantom_ftm_token_path,
   );
 
   static const TokenType TLOS = TokenType(
     symbol: 'TLOS',
-    exchangeRateSource: NoExchangeRateSource,
+    exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'telos'),
     chainId: Chains.TELOS_CHAINID,
     iconPath: OrchidAssetSvgToken.telos_tlos_token_path,
   );
 
   static const TokenType RBTC = TokenType(
     symbol: 'RTBC',
-    exchangeRateSource: BinanceExchangeRateSource(symbolOverride: 'BTC'),
+    configSymbolOverride: 'BTC',
+    exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'bitcoin'),
     chainId: Chains.RSK_CHAINID,
     iconPath: OrchidAssetSvgToken.bitcoin_btc_token_path,
   );
 
   static const TokenType CELO = TokenType(
     symbol: 'CELO',
-    exchangeRateSource: BinanceExchangeRateSource(),
+    exchangeRateSource: CoinGeckoExchangeRateSource(tokenId: 'celo'),
     chainId: Chains.CELO_CHAINID,
     iconPath: OrchidAssetSvgToken.celo_token_path,
   );
+
+  static List<TokenType> all = [
+    ETH,
+    OXT,
+    XDAI,
+    TOK,
+    AVAX,
+    BNB,
+    MATIC,
+    OETH,
+    AURORA_ETH,
+    FTM,
+    CELO,
+    // ARBITRUM_ETH,
+    // RBTC,
+    // TLOS,
+  ];
 }
 
-class ZeroPriceToken extends ExchangeRateSource {
+class FixedPriceToken extends ExchangeRateSource {
+  final USD usdPrice;
 
-  const ZeroPriceToken();
+  static const zero = const FixedPriceToken(USD.zero);
+
+  const FixedPriceToken(this.usdPrice);
 
   @override
   Future<double> tokenToUsdRate(TokenType tokenType) async {
-    return 0;
+    return usdPrice.value;
   }
-
 }

@@ -5,18 +5,21 @@ import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/common/token_price_builder.dart';
+import 'package:orchid/orchid/builder/token_price_builder.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 import 'dapp_button.dart';
 import 'dapp_error_row.dart';
 import 'dapp_tab_context.dart';
-import 'orchid_form_fields.dart';
+import '../orchid/field/orchid_labeled_token_value_field.dart';
 
 class AddFundsPane extends StatefulWidget {
   final OrchidWeb3Context context;
   final EthereumAddress signer;
   final bool enabled;
+
+  // Token type can override the default currency for use in V0.
+  final tokenType;
 
   // Callback to add the funds
   final Future<List<String>> Function({
@@ -31,6 +34,7 @@ class AddFundsPane extends StatefulWidget {
     @required this.context,
     @required this.signer,
     @required this.addFunds,
+    @required this.tokenType,
     this.enabled,
   }) : super(key: key);
 
@@ -45,6 +49,9 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
   TypedTokenValueFieldController _addDepositField;
 
   @override
+  TokenType get tokenType => widget.tokenType;
+
+  @override
   void initState() {
     super.initState();
     // Note: The field controller captures the token type so this form must be
@@ -57,6 +64,7 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
 
   @override
   Widget build(BuildContext context) {
+    // log("dapp add funds: tokentype = $tokenType");
     var allowance = wallet?.allowanceOf(tokenType) ?? tokenType.zero;
     return TokenPriceBuilder(
         tokenType: tokenType,
@@ -70,7 +78,7 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
                         allowance.formatCurrency(locale: context.locale)))
                     .body2
                     .top(8),
-              LabeledTokenValueField(
+              OrchidLabeledTokenValueField(
                 enabled: widget.enabled,
                 type: tokenType,
                 controller: _addBalanceField,
@@ -78,7 +86,7 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
                 usdPrice: tokenPrice,
                 error: _addBalanceFieldError || _netAddError,
               ).top(16),
-              LabeledTokenValueField(
+              OrchidLabeledTokenValueField(
                 enabled: widget.enabled,
                 type: tokenType,
                 controller: _addDepositField,
@@ -125,20 +133,20 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
 
   bool get _addBalanceFieldValid {
     var value = _addBalanceField.value;
-    return value != null && value <= (walletBalance ?? tokenType.zero);
+    return value != null && value <= (walletBalanceOf(tokenType) ?? tokenType.zero);
   }
 
   bool get _addBalanceFieldError {
-    return walletBalance != null && !_addBalanceFieldValid;
+    return walletBalanceOf(tokenType) != null && !_addBalanceFieldValid;
   }
 
   bool get _addDepositFieldValid {
     var value = _addDepositField.value;
-    return value != null && value <= (walletBalance ?? tokenType.zero);
+    return value != null && value <= (walletBalanceOf(tokenType) ?? tokenType.zero);
   }
 
   bool get _addDepositFieldError {
-    return walletBalance != null && !_addDepositFieldValid;
+    return walletBalanceOf(tokenType) != null && !_addDepositFieldValid;
   }
 
   bool get _addFundsFormEnabled {
@@ -146,13 +154,13 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
   }
 
   bool get _netAddValid {
-    if (walletBalance == null) {
+    if (walletBalanceOf(tokenType) == null) {
       return false;
     }
     final zero = tokenType.zero;
     if (_addBalanceFieldValid && _addDepositFieldValid) {
       var total = _totalAdd;
-      return total > zero && total <= walletBalance;
+      return total > zero && total <= walletBalanceOf(tokenType);
     }
     return false;
   }
@@ -184,7 +192,10 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
 
       // Persisting the transaction(s) will update the UI elsewhere.
       UserPreferences().addTransactions(txHashes.map((hash) => DappTransaction(
-          transactionHash: hash, chainId: widget.context.chain.chainId)));
+            transactionHash: hash,
+            chainId: widget.context.chain.chainId,
+            type: DappTransactionType.addFunds,
+          )));
 
       _addBalanceField.clear();
       _addDepositField.clear();

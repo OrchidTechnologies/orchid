@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -29,7 +30,11 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
   TabController tabController;
 
   bool get _enabled {
-    return widget.web3Context != null && widget.signer != null;
+    return widget.web3Context != null &&
+        widget.signer != null
+        // right now this is a stand-in to make sure the contacts are found and working
+        &&
+        widget.accountDetail?.lotteryPot != null;
   }
 
   static int _initialIndex = 0;
@@ -74,7 +79,7 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
 
     return SizedBox(
       // Note: We seem to have to set a fixed height outside the scaffold here.
-      height: _selectedTab == 2 ? 900 : 600,
+      height: [450.0, 400.0, 760.0][_selectedTab],
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PreferredSize(
@@ -83,9 +88,9 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
             controller: tabController,
             indicatorColor: OrchidColors.tappable,
             tabs: [
-              tab("Add", 0),
+              tab(s.add1, 0),
               tab(s.withdraw, 1),
-              tab("Advanced", 2),
+              tab(s.advanced1, 2),
             ],
             onTap: (index) {
               setState(() {
@@ -99,6 +104,8 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
           children: [
             tabView(
               AddFundsPane(
+                tokenType:
+                    widget.web3Context?.chain?.nativeCurrency ?? Tokens.TOK,
                 key: contextKey,
                 enabled: _enabled,
                 context: widget.web3Context,

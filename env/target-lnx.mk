@@ -58,7 +58,7 @@ meson/mips := mips
 bits/mips := 32
 
 ifeq ($(machine),)
-machine := $(shell uname -m)
+machine := $(uname-m)
 endif
 
 include $(pwd)/target-elf.mk

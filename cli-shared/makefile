@@ -20,6 +20,10 @@
 
 args := --config ../orchid.cfg
 
+# XXX: decide whether to give up on old CentOS or follow this issue
+# https://gitlab.gnome.org/GNOME/glib/-/issues/2861
+# https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3120#note_1627293
+distro := ubuntu bionic
 include env/target.mk
 
 version := 0.9
@@ -30,6 +34,10 @@ all: $(output)/$(machine)/orchidcd$(exe)
 .PHONY: test
 test: $(output)/$(machine)/orchidcd$(exe)
 	sudo $< $(args)
+
+.PHONY: run
+run:
+	sudo $(output)/$(machine)/orchidcd$(exe) $(args)
 
 .PHONY: leak
 leak: $(output)/$(machine)/orchidcd$(exe)

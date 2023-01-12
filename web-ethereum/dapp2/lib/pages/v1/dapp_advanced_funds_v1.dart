@@ -11,8 +11,8 @@ import 'package:orchid/util/units.dart';
 import '../dapp_button.dart';
 import '../dapp_error_row.dart';
 import '../dapp_tab_context.dart';
-import '../orchid_form_fields.dart';
-import 'package:orchid/common/token_price_builder.dart';
+import '../../orchid/field/orchid_labeled_token_value_field.dart';
+import 'package:orchid/orchid/builder/token_price_builder.dart';
 
 class AdvancedFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -136,7 +136,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
   }
 
   Widget _buildBalanceField(TokenType tokenType, USD tokenPrice) {
-    return LabeledTokenValueField(
+    return OrchidLabeledTokenValueField(
       enabled: widget.enabled,
       labelWidth: 100,
       label: s.balance,
@@ -159,7 +159,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
   }
 
   Widget _buildDepositField(TokenType tokenType, USD tokenPrice) {
-    return LabeledTokenValueField(
+    return OrchidLabeledTokenValueField(
       enabled: widget.enabled,
       labelWidth: 100,
       label: s.deposit,
@@ -182,7 +182,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
   }
 
   Widget _buildMoveField(TokenType tokenType, USD tokenPrice) {
-    return LabeledTokenValueField(
+    return OrchidLabeledTokenValueField(
       enabled: widget.enabled,
       labelWidth: 100,
       label: s.move,
@@ -219,8 +219,8 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
     currentAmount.value = pot?.warned ?? tokenType.zero;
 
     final warnLabelText = (connected && pot.isWarned)
-        ? "Change Warned Amount To"
-        : "Set Warned Amount To";
+        ? s.changeWarnedAmountTo
+        : s.setWarnedAmountTo;
 
     return [
       Visibility(
@@ -228,13 +228,13 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
         child: Column(
           children: [
             // Current warned amount
-            LabeledTokenValueField(
+            OrchidLabeledTokenValueField(
               enabled: false,
               readOnly: true,
               labelWidth: 260,
               type: tokenType,
               controller: currentAmount,
-              label: "Current Warned Amount" + ':',
+              label: s.currentWarnedAmount + ':',
               usdPrice: tokenPrice,
             ),
             // Current available time
@@ -249,7 +249,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
       ),
 
       // User warned amount field
-      LabeledTokenValueField(
+      OrchidLabeledTokenValueField(
         enabled: widget.enabled,
         labelWidth: 260,
         type: tokenType,
@@ -264,7 +264,7 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
             _warnedField.value.gtZero() &&
             !_warnFieldError,
         child: Text(
-          "All warned funds will be locked until" + ':  ' + futureUnlockText,
+          s.allWarnedFundsWillBeLockedUntil + ':  ' + futureUnlockText,
           maxLines: 2,
         ).body1.top(16),
       ),
@@ -455,7 +455,10 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
       );
 
       UserPreferences().addTransaction(DappTransaction(
-          transactionHash: txHash, chainId: widget.context.chain.chainId));
+        transactionHash: txHash,
+        chainId: widget.context.chain.chainId,
+        type: DappTransactionType.accountChanges,
+      ));
       _balanceField.clear();
       _depositField.clear();
       _moveField.clear();
@@ -497,7 +500,7 @@ class _AddWithdrawDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final style = OrchidText.body1.withHeight(1.7).inactiveIf(!enabled);
+    final style = OrchidText.body1.withHeight(1.7).disabledIf(!enabled);
     return Theme(
       data: Theme.of(context).copyWith(
         canvasColor: OrchidColors.dark_background,
@@ -545,7 +548,7 @@ class _MoveDirectionDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.s;
-    final style = OrchidText.body1.withHeight(1.7).inactiveIf(!enabled);
+    final style = OrchidText.body1.withHeight(1.7).disabledIf(!enabled);
     return Theme(
       data: Theme.of(context).copyWith(
         canvasColor: OrchidColors.dark_background,
@@ -561,11 +564,11 @@ class _MoveDirectionDropdown extends StatelessWidget {
           value: value,
           items: [
             DropdownMenuItem(
-              child: Text("Balance to Deposit").withStyle(style),
+              child: Text(s.balanceToDeposit1).withStyle(style),
               value: _MoveDirection.BalanceToDeposit,
             ),
             DropdownMenuItem(
-              child: Text("Deposit to Balance").withStyle(style),
+              child: Text(s.depositToBalance1).withStyle(style),
               value: _MoveDirection.DepositToBalance,
             ),
           ],

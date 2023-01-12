@@ -299,7 +299,7 @@ int Main(int argc, const char *const argv[]) {
 
                     auto lottery0(Break<Lottery0>(Token{market,
                         co_await what_.Call(*market.chain_, "latest", contract, 90000),
-                        co_await Binance(milliseconds, base, "OXT")
+                        (co_await Token::OXT(milliseconds, ethereum)).currency_
                     }, contract));
 
                     lottery0->Open();

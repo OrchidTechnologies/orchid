@@ -12,7 +12,6 @@
 # glib {{{
 w_glib := 
 w_glib += -Dlibmount=disabled
-w_glib += -Diconv=external
 
 m_glib := 
 
@@ -36,15 +35,15 @@ $(subst @,%,$(patsubst %,$(output)/@/%,$(temp))): $(output)/%/$(pwd)/glib/build.
 
 linked += $(temp)
 
-header += @/$(pwd)/glib/build.ninja
+header += @/$(pwd)/glib/glib/libglib-2.0.a
+
+cflags += -I@/$(pwd)/glib
 cflags += -I@/$(pwd)/glib/glib
 
 cflags += -I$(pwd)/glib
 cflags += -I$(pwd)/glib/glib
-cflags += -I$(pwd)/glib/gmodule
 
-#cflags += -I@/$(pwd)/glib
-#glib += gio/libgio-2.0.a
+cflags += -I$(pwd)/glib/gmodule
 # }}}
 # libiconv {{{
 export GNULIB_SRCDIR := $(CURDIR)/$(pwd)/gnulib

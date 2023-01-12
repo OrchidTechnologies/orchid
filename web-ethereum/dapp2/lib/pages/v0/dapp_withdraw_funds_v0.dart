@@ -9,7 +9,7 @@ import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import '../dapp_button.dart';
-import '../orchid_form_fields.dart';
+import '../../orchid/field/orchid_labeled_token_value_field.dart';
 import 'package:orchid/util/localization.dart';
 
 class WithdrawFundsPaneV0 extends StatefulWidget {
@@ -56,14 +56,14 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LabeledTokenValueField(
+        OrchidLabeledTokenValueField(
           enabled: widget.enabled,
           type: tokenType,
           controller: _withdrawBalanceField,
           label: s.balance,
         ),
         pady(4),
-        LabeledTokenValueField(
+        OrchidLabeledTokenValueField(
           enabled: widget.enabled,
           type: tokenType,
           controller: _withdrawEscrowField,
@@ -114,7 +114,10 @@ class _WithdrawFundsPaneV0State extends State<WithdrawFundsPaneV0> {
         withdrawEscrow: _withdrawEscrowField.value,
       );
       UserPreferences().addTransaction(DappTransaction(
-          transactionHash: txHash, chainId: widget.context.chain.chainId));
+        transactionHash: txHash,
+        chainId: widget.context.chain.chainId,
+        type: DappTransactionType.withdrawFunds,
+      ));
       _withdrawBalanceField.clear();
       _withdrawEscrowField.clear();
       setState(() {});

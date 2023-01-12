@@ -9,7 +9,7 @@ import 'package:orchid/api/preferences/dapp_transaction.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/formatting.dart';
 import '../dapp_button.dart';
-import '../orchid_form_fields.dart';
+import '../../orchid/field/orchid_labeled_token_value_field.dart';
 import 'package:orchid/util/localization.dart';
 
 class MoveFundsPaneV0 extends StatefulWidget {
@@ -54,11 +54,11 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LabeledTokenValueField(
+        OrchidLabeledTokenValueField(
           enabled: widget.enabled,
           type: tokenType,
           controller: _moveBalanceField,
-          label: "Balance to Deposit",
+          label: s.balanceToDeposit1,
           labelWidth: 180,
         ),
         pady(32),
@@ -96,7 +96,10 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
         moveAmount: _moveBalanceField.value,
       );
       UserPreferences().addTransaction(DappTransaction(
-          transactionHash: txHash, chainId: widget.context.chain.chainId));
+        transactionHash: txHash,
+        chainId: widget.context.chain.chainId,
+        type: DappTransactionType.moveFunds,
+      ));
       _moveBalanceField.clear();
       setState(() {});
     } catch (err) {

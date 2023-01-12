@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -16,6 +14,9 @@ class ObservablePreference<T> {
 
   T Function(UserPreferenceKey key) getValue;
   Future Function(UserPreferenceKey key, T value) putValue;
+
+  ObservablePreference(
+      {@required this.key, @required this.getValue, @required this.putValue});
 
   /// Subscribe to the value stream. This method ensures that the stream is
   /// initialized with the first value from the underlying user preference.
@@ -64,8 +65,6 @@ class ObservablePreference<T> {
     _subject.add(value);
   }
 
-  ObservablePreference(
-      {@required this.key, @required this.getValue, @required this.putValue});
 }
 
 class ObservableStringPreference extends ObservablePreference<String> {

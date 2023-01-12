@@ -180,7 +180,7 @@ void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::Ic
 
                     self->Stop();
                     self = nullptr;
-                }, RTC_FROM_HERE);
+                });
             }, __FUNCTION__);
         break;
 

@@ -32,7 +32,7 @@ task<Token> Token::New(unsigned milliseconds, S<Chain> chain, const char *name, 
     auto [bid, fiat] = *co_await Parallel(
         Opened(Updating(milliseconds, [chain]() -> task<uint256_t> { co_return co_await chain->Bid(); }, "Bid")),
         Opened(Updating(milliseconds, [chain, pool, adjust]() -> task<std::pair<Float, Float>> {
-            const auto [under, other] = *co_await Parallel(Uniswap3(*chain, Uniswap3USDCETH, Ten6), Uniswap3(*chain, pool, adjust));
+            const auto [under, other] = *co_await Parallel(Uniswap3(*chain, Uniswap3USDCETH, Ten6), pool == Address{} ? Freebie(Float(1)) : Uniswap3(*chain, pool, adjust));
             const auto ether(1 / under / Ten18);
             co_return std::make_tuple(ether, ether * other);
         }, name))
@@ -54,6 +54,10 @@ task<Token> Token::BNB(unsigned milliseconds, S<Ethereum> ethereum) {
 
 task<Token> Token::BTC(unsigned milliseconds, S<Ethereum> ethereum) {
     co_return co_await New(milliseconds, ethereum->chain_, "BTC", {}, "0x4585fe77225b41b697c938b018e2ac67ac5a20c0", Float("100000"));
+}
+
+task<Token> Token::ETH(unsigned milliseconds, S<Ethereum> ethereum) {
+    co_return co_await New(milliseconds, ethereum->chain_, "ETH", {}, {});
 }
 
 task<Token> Token::FTM(unsigned milliseconds, S<Ethereum> ethereum) {

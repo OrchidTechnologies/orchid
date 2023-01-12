@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -15,6 +14,7 @@ import 'package:orchid/api/purchase/orchid_pac_server.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/common/app_buttons.dart';
+import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/link_text.dart';
@@ -23,7 +23,7 @@ import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:in_app_purchase/store_kit_wrappers.dart';
+import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
@@ -493,7 +493,7 @@ class _PurchasePageState extends State<PurchasePage> {
                 Text(s.confirmPurchase).title,
                 Container(
                   width: 20,
-                  child: FlatButton(
+                  child: FlatButtonDeprecated(
                     padding: EdgeInsets.zero,
                     child: Icon(Icons.close, color: Colors.white),
                     onPressed: () {

@@ -63,14 +63,14 @@ class OrchidPacSeller {
     final escrowMax = currency.fromDouble(USD(0.25).value * usdToTokenRate);
     final escrow = Token.min(useableTokenValue * escrowPercentage, escrowMax);
 
-    log("pac: createFundingTransaction "
-        "totalUsdValue = $totalUsdValue, "
-        "usdToTokenRate = $usdToTokenRate, "
-        "totalTokenValue = $totalTokenValue, "
-        "gasCost = gasPrice * gas = $gasPrice * $gas = $gasCost, "
-        "useableTokenValueFudgeFactor = $useableTokenValueFudgeFactor, "
-        "useableTokenValue = (total - gas) * fudge = $useableTokenValue, "
-        "escrow = useableTokenValue * $escrowPercentage capped at $escrowMax = $escrow");
+    log('pac: createFundingTransaction '
+        'totalUsdValue = $totalUsdValue, '
+        'usdToTokenRate = $usdToTokenRate, '
+        'totalTokenValue = $totalTokenValue, '
+        'gasCost = gasPrice * gas = $gasPrice * $gas = $gasCost, '
+        'useableTokenValueFudgeFactor = $useableTokenValueFudgeFactor, '
+        'useableTokenValue = (total - gas) * fudge = $useableTokenValue, '
+        'escrow = useableTokenValue * $escrowPercentage capped at $escrowMax = $escrow');
 
     final txParams = EthereumTransactionParams(
       from: signer,
@@ -134,7 +134,7 @@ class OrchidPacSeller {
       data: encodedSellerEditCall,
       nonce: l2Nonce,
     );
-    log("pac: pac seller, unsigned tx = ${tx.toJson()}");
+    log('pac: pac seller, unsigned tx = ${tx.toJson()}');
 
     return tx;
   }
@@ -263,16 +263,16 @@ class OrchidPacSeller {
   static Future<int> getL3Nonce({Chain chain, EthereumAddress signer}) async {
     var params = [
       {
-        "to": "$sellerContractAddress",
-        "data": "0x$readMethodHash${AbiEncode.address(signer)}"
+        'to': '$sellerContractAddress',
+        'data': '0x$readMethodHash${AbiEncode.address(signer)}'
       },
-      "latest"
+      'latest'
     ];
     String result =
         await EthereumJsonRpc.ethCall(url: chain.providerUrl, params: params);
     var buff = HexStringBuffer(result);
     var nonce = buff.takeUint256().toUnsigned(64).toInt();
-    log("pac: getL3Nonce result = $result, nonce = $nonce");
+    log('pac: getL3Nonce result = $result, nonce = $nonce');
     return nonce;
   }
 }

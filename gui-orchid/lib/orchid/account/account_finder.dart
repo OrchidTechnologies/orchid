@@ -16,7 +16,6 @@ import 'account_store.dart';
 /// Note: This could be generalized to an API providing continuous notification of
 /// Note: "new accounts" to the UI but currently mainly supports finding the first
 /// Note: account while onboading new users.
-
 class AccountFinder {
   /// This is not a factory API but if there is a long running account finder
   /// it may be stashed here to allow adjustment to the polling interval.

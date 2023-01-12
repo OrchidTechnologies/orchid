@@ -12,8 +12,8 @@ import 'package:orchid/util/timed_builder.dart';
 import 'package:orchid/util/units.dart';
 import '../../api/orchid_eth/orchid_account_mock.dart';
 import '../dapp_button.dart';
-import '../orchid_form_fields.dart';
-import 'package:orchid/common/token_price_builder.dart';
+import '../../orchid/field/orchid_labeled_token_value_field.dart';
+import 'package:orchid/orchid/builder/token_price_builder.dart';
 
 class WithdrawFundsPaneV1 extends StatefulWidget {
   final OrchidWeb3Context context;
@@ -94,7 +94,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
             builder: (USD tokenPrice) {
               return Column(
                 children: [
-                  LabeledTokenValueField(
+                  OrchidLabeledTokenValueField(
                     label: s.balance,
                     enabled: connected,
                     labelWidth: 100,
@@ -103,7 +103,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
                     usdPrice: tokenPrice,
                     error: _balanceFieldError,
                   ),
-                  LabeledTokenValueField(
+                  OrchidLabeledTokenValueField(
                     label: s.deposit,
                     trailing: _depositLockIndicator(),
                     bottomBanner: _depositBottomBanner(),
@@ -192,7 +192,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
                 color: OrchidColors.status_yellow,
                 size: 18,
               ),
-              Text("Locked")
+              Text(s.locked1)
                   .body1
                   .copyWith(style: TextStyle(color: OrchidColors.status_yellow))
                   .left(12),
@@ -219,7 +219,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
     if (!active || pot.isWarned) {
       return Container();
     }
-    final style = OrchidText.body2.activeIf(active);
+    final style = OrchidText.body2.enabledIf(active);
 
     return RoundedRect(
       backgroundColor: OrchidColors.dark_background_2,
@@ -248,7 +248,7 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
                   },
                 ),
               ),
-              Text("Unlock deposit").withStyle(style).height(1.7).left(8),
+              Text(s.unlockDeposit1).withStyle(style).height(1.7).left(8),
             ],
           ).top(8).left(8).bottom(8),
         ],
@@ -314,7 +314,10 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
         warnDeposit: _unlockDeposit,
       );
       UserPreferences().addTransaction(DappTransaction(
-          transactionHash: txHash, chainId: widget.context.chain.chainId));
+        transactionHash: txHash,
+        chainId: widget.context.chain.chainId,
+        type: DappTransactionType.withdrawFunds,
+      ));
       _balanceField.clear();
       _depositField.clear();
       _unlockDeposit = false;
