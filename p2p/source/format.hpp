@@ -35,6 +35,13 @@ class F :
         return str(); }
 };
 
+inline std::string Slash(const std::vector<std::string> &parts) {
+    std::ostringstream slashed;
+    for (const auto &part : parts)
+        slashed << '/' << part;
+    return slashed.str();
+}
+
 }
 
 #endif//ORCHID_FORMAT_HPP

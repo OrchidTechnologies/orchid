@@ -113,13 +113,6 @@ struct Platform {
     unsigned count_;
 };
 
-std::string Slash(const std::vector<std::string> &parts) {
-    std::ostringstream slashed;
-    for (const auto &part : parts)
-        slashed << '/' << part;
-    return slashed.str();
-}
-
 task<void> RunApple(const S<Base> &base, const std::string &root, const std::string &iss, const std::string &kid, const std::string &app) {
     Apple apple(base, iss, kid);
 
