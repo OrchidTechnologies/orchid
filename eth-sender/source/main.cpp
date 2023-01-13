@@ -639,6 +639,11 @@ task<int> Main(int argc, const char *const argv[]) { try {
         static Selector<void, std::vector<Gift>> giftv("giftv");
         std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, seller, total, giftv(gifts))).hex() << std::endl;
 
+    } else if (command == "orchid:move") {
+        const auto [url, tls, gpg] = Options<Bytes, Bytes, Bytes>(args);
+        static Selector<void, Bytes, Bytes, Bytes> move("move");
+        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD", 0, move(url, tls, gpg))).hex() << std::endl;
+
     } else if (command == "orchid:read") {
         const auto [seller, token, signer] = Options<Address, Address, Address>(args);
         orc_assert(token == Address(0));
