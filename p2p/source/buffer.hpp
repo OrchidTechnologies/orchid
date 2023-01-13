@@ -1178,7 +1178,7 @@ class Window final :
 
     // XXX: consider returning a buffer
     Beam Take(size_t size) {
-        orc_assert(have(size));
+        orc_assert_(have(size), "cannot take " << size);
         Beam beam(size);
         Take(beam.data(), beam.size());
         copied_ += size;
