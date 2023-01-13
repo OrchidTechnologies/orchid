@@ -32,6 +32,7 @@
 #include <boost/program_options/variables_map.hpp>
 
 #include "baton.hpp"
+#include "format.hpp"
 #include "load.hpp"
 #include "local.hpp"
 #include "markup.hpp"
@@ -81,10 +82,11 @@ int Main(int argc, const char *const argv[]) {
 
     po::options_description options;
 
-    { po::options_description group("network endpoint");
+    { po::options_description group("specific command line");
     group.add_options()
         ("port", po::value<uint16_t>()->default_value(443), "port to advertise on blockchain")
         ("tls", po::value<std::string>(), "tls keys and chain (pkcs#12 encoded)")
+        ("root", po::value<std::string>(), "root directory of website to share")
     ; options.add(group); }
 
     po::store(po::parse_command_line(argc, argv, po::options_description()
@@ -106,22 +108,30 @@ int Main(int argc, const char *const argv[]) {
 
     Site site;
 
-    site(http::verb::get, "/([a-zA-Z0-9/_\\-]*\\.[ot]tf)"_ctre, [&](Matches1 matches, Request request) -> task<Response> {
-        co_return Respond(request, http::status::ok, {
-            {"content-type", "application/octet-stream"},
-        }, Load("/mnt/orchid/" + matches.get<1>().str()));
-    });
+    std::map<std::string, std::string> types{
+        {"frag", "text/plain"},
+        {"html", "text/html"},
+        {"js", "text/javascript"},
+        {"json", "application/json"},
+        {"otf", "application/octet-stream"},
+        {"png", "image/png"},
+        {"ttf", "application/octet-stream"},
+        {"wasm", "application/wasm"},
+    };
 
-    site(http::verb::get, "/([a-zA-Z0-9/_\\-]*\\.png)"_ctre, [&](Matches1 matches, Request request) -> task<Response> {
+    const std::string root(args["root"].as<std::string>());
+
+    site(http::verb::get, "(/(?:[_a-zA-Z0-9\\-]+/)*(?:[_a-zA-Z0-9\\-]+\\.)+([a-z]+))(?:\\?.*)?"_ctre, [&](Matches2 matches, Request request) -> task<Response> {
         co_return Respond(request, http::status::ok, {
-            {"content-type", "image/png"},
-        }, Load("/mnt/orchid/" + matches.get<1>().str()));
+            {"content-type", types.at(matches.get<2>().str())},
+            {"expires", "0"},
+        }, Load(F() << root << matches.get<1>().str()));
     });
 
     site(http::verb::get, "(|/[a-zA-Z0-9/_\\-]*)/"_ctre, [&](Matches1 matches, Request request) -> task<Response> {
         Markup markup("index");
         std::ostringstream body;
-        auto dir(opendir(("/mnt/orchid" + matches.get<1>().str()).c_str()));
+        auto dir(opendir((root + matches.get<1>().str()).c_str()));
         orc_assert(dir != nullptr);
         _scope({ closedir(dir); });
         while (auto file = readdir(dir))
@@ -129,6 +139,7 @@ int Main(int argc, const char *const argv[]) {
         markup << body.str();
         co_return Respond(request, http::status::ok, {
             {"content-type", "text/html"},
+            {"expires", "0"},
         }, markup());
     });
 
