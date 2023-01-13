@@ -691,6 +691,10 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [signature, message] = Options<Signature, Bytes>(args);
         std::cout << ToUncompressed(Recover(HashK(message), signature)).hex() << std::endl;
 
+    } else if (command == "resolve") {
+        const auto [name] = Options<std::string>(args);
+        std::cout << co_await Resolve(*chain_, (co_await block()).height_, name) << std::endl;
+
     } else if (command == "rlp-decode") {
         const auto [data] = Options<Bytes>(args);
         Window window(data);
