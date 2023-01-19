@@ -16,7 +16,7 @@ import 'package:orchid/util/localization.dart';
 @deprecated
 class ScanOrPasteOrchidIdentity extends StatefulWidget {
   /// Callback fires on changes with either a valid parsed account or null if the form state is invalid or incomplete.
-  final void Function(ParseOrchidIdentityResult parsed) onChange;
+  final void Function(ParseOrchidIdentityOrAccountResult parsed) onChange;
   final double spacing;
   final bool pasteOnly;
 
@@ -154,8 +154,8 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
         bodyText: s.theCodeYouPastedDoesNot);
   }
 
-  ParseOrchidIdentityResult _parse(String text) {
-    return ParseOrchidIdentityResult.parse(text);
+  ParseOrchidIdentityOrAccountResult _parse(String text) {
+    return ParseOrchidIdentityOrAccountResult.parse(text);
   }
 
   @override

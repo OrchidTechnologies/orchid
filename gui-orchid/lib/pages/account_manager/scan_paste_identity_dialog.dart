@@ -10,7 +10,7 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/localization.dart';
 
 typedef ImportAccountCompletion = void Function(
-    ParseOrchidIdentityResult result);
+    ParseOrchidIdentityOrAccountResult result);
 
 // Used from the AccountManagerPage and AdHopPage:
 // Dialog that contains the two button scan/paste control.
@@ -40,7 +40,7 @@ class ScanOrPasteIdentityDialog extends StatefulWidget {
 }
 
 class _ScanOrPasteIdentityDialogState extends State<ScanOrPasteIdentityDialog> {
-  ParseOrchidIdentityResult _parsed;
+  ParseOrchidIdentityOrAccountResult _parsed;
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +92,7 @@ class _ScanOrPasteIdentityDialogState extends State<ScanOrPasteIdentityDialog> {
                               ? 8
                               : 16,
                           pasteOnly: pasteOnly,
-                          onChange: (ParseOrchidIdentityResult parsed) {
+                          onChange: (ParseOrchidIdentityOrAccountResult parsed) {
                             setState(() {
                               _parsed = parsed;
                             });

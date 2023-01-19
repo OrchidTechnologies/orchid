@@ -13,7 +13,7 @@ class OrchidLabeledIdentityField extends StatefulWidget {
   final String label;
 
   /// Callback fires on changes with either a valid parsed account or null if the form state is invalid or incomplete.
-  final void Function(ParseOrchidIdentityResult parsed) onChange;
+  final void Function(ParseOrchidIdentityOrAccountResult parsed) onChange;
   final double spacing;
 
   const OrchidLabeledIdentityField({
@@ -158,8 +158,8 @@ class _OrchidLabeledIdentityFieldState
         bodyText: s.theCodeYouPastedDoesNot);
   }
 
-  ParseOrchidIdentityResult _parse(String text) {
-    return ParseOrchidIdentityResult.parse(text);
+  ParseOrchidIdentityOrAccountResult _parse(String text) {
+    return ParseOrchidIdentityOrAccountResult.parse(text);
   }
 
   @override

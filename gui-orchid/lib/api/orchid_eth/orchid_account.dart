@@ -217,6 +217,15 @@ class Account {
       chainId.hashCode ^
       funder.hashCode;
 
+  String toExportString() {
+    return 'account={ '
+        'secret: "${signerKey.formatSecretFixed()}", '
+        'funder: "${funder.toString(prefix: true, elide: false)}", '
+        'chainid: $chainId, '
+        'version: $version'
+        '}';
+  }
+
   @override
   String toString() {
     return 'Account{signerKeyUid: $signerKeyUid, chainId: $chainId, version: $version, funder: $funder}';

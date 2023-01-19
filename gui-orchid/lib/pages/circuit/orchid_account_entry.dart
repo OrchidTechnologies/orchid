@@ -5,7 +5,6 @@ import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/menu/orchid_chain_selector_menu.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
@@ -135,8 +134,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
         Text(
           s.orchidIdentity + ':',
           style: OrchidText.title.copyWith(
-              color:
-                  _keyRefValid() ? OrchidColors.valid : OrchidColors.invalid),
+              color: _keyRefValid ? OrchidColors.valid : OrchidColors.invalid),
         ),
         pady(8),
         Row(
@@ -161,14 +159,21 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
               // TODO: Saving the key should be deferred until the caller of this form
               // TODO: decides to save the account.  Doing so will require extending the
               // TODO: return data and modifying KeySelectionDropdown to handle transient keys.
-              if (result.isNew) {
-                await UserPreferences().addKey(result.signer);
-                _updateAccounts();
+              if (result != null) {
+                if (result.isNew) {
+                  await result.save();
+                  _updateAccounts();
+                }
+                setState(() {
+                  _selectedKeyItem =
+                      KeySelectionItem(keyRef: result.signer.ref());
+                  _selectedFunderItem =
+                      FunderSelectionItem(funderAccount: result.account);
+                  _pastedOrOverriddenFunderChainSelection =
+                      result.account.chain;
+                });
+                fireUpdate();
               }
-              setState(() {
-                _selectedKeyItem =
-                    KeySelectionItem(keyRef: result.signer.ref());
-              });
             },
             pasteOnly: pasteOnly,
           ).top(24),
@@ -184,9 +189,8 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
       children: <Widget>[
         Text(s.funderAddress + ':',
             style: OrchidText.title.copyWith(
-                color: _funderValid()
-                    ? OrchidColors.valid
-                    : OrchidColors.invalid)),
+                color:
+                    _funderValid ? OrchidColors.valid : OrchidColors.invalid)),
         pady(8),
 
         Row(
@@ -195,7 +199,8 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
               child: OrchidFunderSelectorMenu(
                   signer: _selectedKeyItem?.keyRef,
                   // Update on change in key
-                  key: ValueKey(_selectedKeyItem?.toString() ?? _initialSelectedKeyItem.toString()),
+                  key: ValueKey(_selectedKeyItem?.toString() ??
+                      _initialSelectedKeyItem.toString()),
                   enabled: true,
                   selected: _selectedFunderItem ?? _initialSelectedFunderItem,
                   onSelection: _onFunderSelected),
@@ -216,9 +221,8 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
         pady(16),
         Text(s.chain + ':',
             style: OrchidText.title.copyWith(
-                color: _funderValid()
-                    ? OrchidColors.valid
-                    : OrchidColors.invalid)),
+                color:
+                    _funderValid ? OrchidColors.valid : OrchidColors.invalid)),
         pady(8),
 
         OrchidChainSelectorMenu(
@@ -296,7 +300,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
   // Validation
   //
 
-  bool _keyRefValid() {
+  bool get _keyRefValid {
     // invalid selection
     if (_selectedKeyItem == null) {
       return false;
@@ -308,25 +312,26 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
     return false;
   }
 
-  bool _funderValid() {
+  bool get _funderValid {
     return (_selectedFunderItem != null &&
             _selectedFunderItem.option !=
                 OrchidFunderSelectorMenu.pasteAddressOption) ||
-        _pastedFunderAndChainValid();
+        _pastedFunderAndChainValid;
   }
 
-  bool _pastedFunderAndChainValid() {
+  bool get _pastedFunderAndChainValid {
     return EthereumAddress.isValid(_pastedFunderField.text) &&
         _pastedOrOverriddenFunderChainSelection != null;
   }
 
-  bool _formValid() {
-    return _funderValid() && _keyRefValid();
+  bool get _formValid {
+    log("XXX: _funderValid: $_funderValid, _keyRefValid: $_keyRefValid");
+    return _funderValid && _keyRefValid;
   }
 
   // Evaluate the state of the form and notify listeners
   void fireUpdate() {
-    if (!_formValid()) {
+    if (!_formValid) {
       return widget.onChange(null);
     }
 

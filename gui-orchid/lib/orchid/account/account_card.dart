@@ -14,6 +14,7 @@ import 'package:orchid/orchid/field/token_value_widget_row.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
+import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/util/timed_builder.dart';
 import 'package:orchid/util/units.dart';
 import '../orchid_panel.dart';
@@ -402,15 +403,35 @@ class _AccountCardState extends State<AccountCard>
                 .top(16),
 
             // contract version
-            _labeledRow(
-              title: s.contract,
-              child: Text(versionText, style: OrchidText.extra_large).top(8),
-            ).top(16),
-
-            pady(16)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _labeledRow(
+                  title: s.contract,
+                  child:
+                      Text(versionText, style: OrchidText.extra_large).top(8),
+                ),
+                _buildShareButton().top(16),
+              ],
+            ).pady(16),
           ],
         ).padx(40),
       ],
+    );
+  }
+
+  Widget _buildShareButton() {
+    return GestureDetector(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Icon(Icons.ios_share, color: Colors.white),
+        ],
+      ),
+      onTap: () async {
+        final String config = widget.accountDetail.account.toExportString();
+        await AccountManagerPageUtil.export(context, config);
+      },
     );
   }
 
@@ -466,8 +487,8 @@ class _AccountCardState extends State<AccountCard>
 
   // display token value and symbol on a row with usd price in a row below
   Widget _buildTokenValueTextRow({Token value, USD price, Color textColor}) {
-    final valueText = ((value ?? (tokenType ?? Tokens.TOK).zero)
-        .formatCurrency(locale: context.locale, precision: 2, showSuffix: false));
+    final valueText = ((value ?? (tokenType ?? Tokens.TOK).zero).formatCurrency(
+        locale: context.locale, precision: 2, showSuffix: false));
     final valueWidget =
         Text(valueText).extra_large.withColor(textColor ?? Colors.white);
     return TokenValueWidgetRow(
