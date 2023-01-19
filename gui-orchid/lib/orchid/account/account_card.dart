@@ -403,16 +403,9 @@ class _AccountCardState extends State<AccountCard>
                 .top(16),
 
             // contract version
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _labeledRow(
-                  title: s.contract,
-                  child:
-                      Text(versionText, style: OrchidText.extra_large).top(8),
-                ),
-                _buildShareButton().top(16),
-              ],
+            _labeledRow(
+              title: s.contract,
+              child: Text(versionText, style: OrchidText.extra_large).top(8),
             ).pady(16),
           ],
         ).padx(40),
@@ -420,6 +413,7 @@ class _AccountCardState extends State<AccountCard>
     );
   }
 
+  /*
   Widget _buildShareButton() {
     return GestureDetector(
       child: Row(
@@ -434,6 +428,7 @@ class _AccountCardState extends State<AccountCard>
       },
     );
   }
+   */
 
   Widget _buildTicketsRow(
       AccountBalanceChartTicketModel chartModel, double efficiency) {
