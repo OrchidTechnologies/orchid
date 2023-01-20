@@ -123,7 +123,8 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
     _validateCodeAndFireCallback();
   }
 
-  void _validateCodeAndFireCallback({bool fromPaste, bool fromScan}) {
+  void _validateCodeAndFireCallback(
+      {bool fromPaste = false, bool fromScan = false}) {
     try {
       final parsed = _parse(_pasteField.text);
       widget.onChange(parsed);

@@ -167,10 +167,12 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
                 setState(() {
                   _selectedKeyItem =
                       KeySelectionItem(keyRef: result.signer.ref());
-                  _selectedFunderItem =
-                      FunderSelectionItem(funderAccount: result.account);
-                  _pastedOrOverriddenFunderChainSelection =
-                      result.account.chain;
+                  if (result.account != null) {
+                    _selectedFunderItem =
+                        FunderSelectionItem(funderAccount: result.account);
+                    _pastedOrOverriddenFunderChainSelection =
+                        result.account.chain;
+                  }
                 });
                 fireUpdate();
               }
