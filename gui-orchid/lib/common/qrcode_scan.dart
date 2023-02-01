@@ -14,14 +14,18 @@ class QRCodeScanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MobileScanner(
-      allowDuplicates: false,
-      onDetect: (barcode, args) {
-        if (barcode.rawValue == null) {
+      // allowDuplicates: false,
+      onDetect: (capture) {
+        if (capture.barcodes.isEmpty) {
           log('XXX: QRScanner, failed to scan');
         } else {
-          final String? code = barcode.rawValue;
-          log('XXX: QRScanner, found: $code');
-          onCode(code ?? '');
+          final String? code = capture.barcodes.first.rawValue;
+          if (code == null) {
+            log('XXX: QRScanner, empty code');
+          } else {
+            log('XXX: QRScanner, found: $code');
+            onCode(code);
+          }
         }
       },
     );
@@ -39,7 +43,7 @@ class QRCodeScanner extends StatelessWidget {
       body: SizedBox(
           width: size.width,
           height: size.height * 0.5,
-          child: QRCodeScanner(onCode: (String code){
+          child: QRCodeScanner(onCode: (String code) {
             onCode(code);
             Navigator.of(context).pop();
           })),

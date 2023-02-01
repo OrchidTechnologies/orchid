@@ -6,7 +6,7 @@ PODS:
   - in_app_purchase_storekit (0.0.1):
     - Flutter
     - FlutterMacOS
-  - mobile_scanner (0.0.1):
+  - mobile_scanner (3.0.0):
     - FlutterMacOS
   - shared_preferences_macos (0.0.1):
     - FlutterMacOS
@@ -51,7 +51,7 @@ SPEC CHECKSUMS:
   FlutterMacOS: ae6af50a8ea7d6103d888583d46bd8328a7e9811
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   in_app_purchase_storekit: 6b297e2b5eab9fa3251a492d57301722e4132a71
-  mobile_scanner: 35dc92ffdbd7934b0dbc411b1c731bc2ef23c2dc
+  mobile_scanner: 9c643c89604da4c76917f7bd37266fcdd48bda75
   shared_preferences_macos: a64dc611287ed6cbe28fd1297898db1336975727
   sqflite: a5789cceda41d54d23f31d6de539d65bb14100ea
   url_launcher_macos: 45af3d61de06997666568a7149c1be98b41c95d4

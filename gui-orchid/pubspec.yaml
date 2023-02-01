@@ -1,5 +1,6 @@
 name: orchid
 description: Silicon Valley (Season 4)
+publish_to: none
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -33,7 +34,14 @@ dependencies:
   in_app_purchase_android: 0.2.3+7
   intl: 0.17.0
   jdenticon_dart: 2.0.0
-  mobile_scanner: 2.1.0
+
+  # Tracking this issue which has been merged but is not yet in a tagged release.
+  # https://github.com/juliansteenbakker/mobile_scanner/issues/241
+  mobile_scanner:
+    git:
+      url: https://github.com/juliansteenbakker/mobile_scanner.git
+      ref: 9e4e9a167980f8413c1d8860873e582d0747edd9
+
   percent_indicator: 3.0.1
   pointycastle: 3.5.0
   provider: 5.0.0
