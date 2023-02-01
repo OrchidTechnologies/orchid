@@ -56,8 +56,8 @@ more/$(1) += -target $(host/$(1))18.5.0
 endef
 $(each)
 
+# XXX: needed for ___isPlatformVersionAtLeast
 resource := $(shell $(clang) -print-resource-dir)
-more += -resource-dir $(resource)
 lflags += $(resource)/lib/darwin/libclang_rt.$(runtime).a
 
 more += -B$(dir $(clang))
