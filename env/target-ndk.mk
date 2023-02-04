@@ -29,18 +29,16 @@ export ANDROID_HOME := $(wildcard $(shell cygpath '$(USERPROFILE)')/AppData/Loca
 endif
 endif
 
-ndk := $(ANDROID_NDK_HOME)
-
 ifneq ($(ANDROID_HOME),)
-ifeq ($(ndk),)
-ndk := $(wildcard $(ANDROID_HOME)/ndk-bundle)
-endif
-
 ifeq ($(ndk),)
 ndk := $(shell ls $(ANDROID_HOME)/ndk 2>/dev/null | sort -nr | head -n1)
 ifneq ($(ndk),)
 ndk := $(ANDROID_HOME)/ndk/$(ndk)
 endif
+endif
+
+ifeq ($(ndk),)
+ndk := $(wildcard $(ANDROID_HOME)/ndk-bundle)
 endif
 endif
 
@@ -53,12 +51,12 @@ ndk := $(wildcard /usr/lib/android-ndk)
 endif
 
 ifeq ($(ndk),)
-$(error install Android NDK and export ANDROID_NDK_HOME)
+$(error install Android NDK)
 endif
 
-ifeq ($(ANDROID_NDK_HOME),)
+export ANDROID_NDK := $(ndk)
 export ANDROID_NDK_HOME := $(ndk)
-endif
+export ANDROID_NDK_ROOT := $(ndk)
 
 llvm := $(ndk)/toolchains/llvm/prebuilt/$(prebuilt)
 #export PATH := $(PATH):$(llvm)/bin
