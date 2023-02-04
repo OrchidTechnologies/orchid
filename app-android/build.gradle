@@ -30,12 +30,12 @@ apply plugin: 'kotlin-android'
 def flutter = files(orcFlutter)
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId orcUnique
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionCode orcMonotonic.toInteger() - 946684800
         versionName orcVersion
         manifestPlaceholders = [orcUnique: orcUnique, orcName: orcName]

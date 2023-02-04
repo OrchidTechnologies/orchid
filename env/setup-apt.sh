@@ -11,6 +11,7 @@ apt-get -y install \
     libc++-dev libc++abi-dev \
     g++-multilib gcc-multilib \
     python3-pip python3-setuptools \
+    openjdk-11-jre-headless \
     bison flex gperf \
     gettext groff texinfo \
     autoconf autoconf-archive automake libtool \

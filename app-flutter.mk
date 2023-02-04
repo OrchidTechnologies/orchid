@@ -31,7 +31,7 @@ $(foreach fork,$(forks),$(shell ln -sf $(patsubst %/pubspec.yaml,%,$(fork)) >/de
 create: $(pwd/flutter)/packages/flutter/pubspec.lock
 	$(flutter) create -i objc -a java --no-pub --project-name orchid .
 	$(flutter) pub get
-	sed -ie 's/flutter\.compileSdkVersion/32/g;s/flutter.minSdkVersion/21/g' android/app/build.gradle
+	sed -ie 's/flutter\.compileSdkVersion/33/g;s/flutter.minSdkVersion/21/g' android/app/build.gradle
 	sed -ie "/^platform :osx/{s/,.*/, '10.15'/g;}" macos/Podfile
 	sed -ie "/MACOSX_DEPLOYMENT_TARGET =/{s/=.*/= 10.15;/g;}" macos/Runner.xcodeproj/project.pbxproj
 
