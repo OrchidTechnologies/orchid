@@ -8,7 +8,7 @@
 	"trafficMonitoringOnly": "Лише відстеження трафіку",
 	"orchidConnecting": "Підключення Orchid",
 	"orchidDisconnecting": "Відключення Orchid",
-	"numHopsConfigured": "{num, plural, one {} few {{num} стрибки сконфігуровано} many {{num} стрибків сконфігуровано} =0{стрибків сконфігуровано} =1{один стрибок сконфігуровано} =2{два стрибки сконфігуровано} other{{num} стрибків сконфігуровано}}",
+	"numHopsConfigured": "{num, plural, few {{num} стрибки сконфігуровано} many {{num} стрибків сконфігуровано} =0{стрибків сконфігуровано} =1{один стрибок сконфігуровано} =2{два стрибки сконфігуровано} other{{num} стрибків сконфігуровано}}",
 	"@numHopsConfigured": {
 		"type": "text",
 		"placeholders": {

@@ -1,33 +1,25 @@
 import 'package:orchid/orchid.dart';
 import 'dart:async';
-import 'package:badges/badges.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:badges/badges.dart' as badge;
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/account_chart.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_buttons_deprecated.dart';
-import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/instructions_view.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/orchid/account/market_stats_dialog.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
-import 'package:orchid/util/localization.dart';
 import 'package:orchid/util/units.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
@@ -474,9 +466,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Widget _buildMarketStatsButton() {
-    return Badge(
+    return badge.Badge(
       showBadge: _showMarketStatsAlert,
-      position: BadgePosition.topEnd(top: 9, end: 55),
+      position: badge.BadgePosition.topEnd(top: 9, end: 55),
       badgeContent:
           Text('!', style: TextStyle(color: Colors.white, fontSize: 12)),
       padding: EdgeInsets.all(8),

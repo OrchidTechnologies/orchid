@@ -2,7 +2,7 @@ import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/orchid/builder/token_price_builder.dart';
-import 'package:badges/badges.dart';
+import 'package:badges/badges.dart' as badge;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -14,7 +14,6 @@ import 'package:orchid/orchid/field/token_value_widget_row.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
-import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/util/timed_builder.dart';
 import 'package:orchid/util/units.dart';
 import '../orchid_panel.dart';
@@ -234,7 +233,7 @@ class _AccountCardState extends State<AccountCard>
           SizedBox(
             key: Key(balanceText ?? ''),
             child: balanceText != null
-                ? Badge(
+                ? badge.Badge(
                     // ignorePointer: true,
                     showBadge: showBadge,
                     elevation: 0,
@@ -244,7 +243,7 @@ class _AccountCardState extends State<AccountCard>
                         .bottom(5),
                     padding: EdgeInsets.zero,
                     toAnimate: false,
-                    position: BadgePosition.topEnd(top: -5, end: -30),
+                    position: badge.BadgePosition.topEnd(top: -5, end: -30),
                     child: Text(balanceText, style: OrchidText.highlight),
                   )
                 : Align(

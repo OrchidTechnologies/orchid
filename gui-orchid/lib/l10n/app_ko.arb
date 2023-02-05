@@ -392,7 +392,7 @@
 			}
 		}
 	},
-	"theFundsWillBeAvailableForWithdrawalInTime": "${time} 후 자금을 인출할 수 있습니다.",
+	"theFundsWillBeAvailableForWithdrawalInTime": "{time} 후 자금을 인출할 수 있습니다.",
 	"@theFundsWillBeAvailableForWithdrawalInTime": {
 		"placeholders": {
 			"time": {

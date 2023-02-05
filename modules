@@ -18,7 +18,7 @@ tag p2p/sqlite 'version-[0-9.]*'
 head[env/libcxx]=origin/release_90
 head[env/libcxxabi]=origin/release_90
 
-head[app-shared/flutter]=3.3.9
+head[app-shared/flutter]=3.7.1
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
 # boringtun is stuck, by https://github.com/cloudflare/boringtun/pull/235
