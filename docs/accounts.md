@@ -30,7 +30,7 @@ Orchid takes your in-app purchase funds and adds the equivalent xDAI to the sele
 
 ## Orchid account efficiency
 
-Orchid’s nanopayments work on a simple principle: instead of giving your provider $1 one hundred times, it’s better for you to give them 100 scratch-off tickets with a 1% chance of winning $100. That way, even though the provider still receives $100 on average, you only pay for one transaction, instead of one hundred.The transmitted value is determined by comparing the amount of the total ticket value to the value lost to transaction fees; if your ticket was worth $100 and the L1 network fees to process the transaction cost $10, your ticket has a 90% efficiency to the provider.
+Orchid’s nanopayments work on a simple principle: instead of giving your provider $1 one hundred times, it’s better for you to give them 100 scratch-off tickets with a 1% chance of winning $100. That way, even though the provider still receives $100 on average, you only pay for one transaction, instead of one hundred. The transmitted value is determined by comparing the amount of the total ticket value to the value lost to transaction fees; if your ticket was worth $100 and the L1 network fees to process the transaction cost $10, your ticket has a 90% efficiency to the provider.
 
 When the efficiency of an account drops below 0%, providers will no longer accept payments from that account, because the network fees are greater than the amount of value they could receive from a winning ticket. 
 
@@ -57,7 +57,7 @@ Market conditions are constantly changing, which includes fluctuations in networ
 
 ## Balance
 
-The balance of the Orchid account is the amount of currency held to pay providers. When the account is in use, the tickets are backed by funds in the balance. When a ticket “wins”, the face value of the ticket is withdrawn from the user’s account balance and deposited into the provider’s account with an on-chain transaction. The Lottery contract governs this behavroir. 
+The balance of the Orchid account is the amount of currency held to pay providers. When the account is in use, the tickets are backed by funds in the balance. When a ticket “wins”, the face value of the ticket is withdrawn from the user’s account balance and deposited into the provider’s account with an on-chain transaction. The Lottery contract governs this behavior. 
 
 As a practical matter, a user's balance will remain unchanged for long periods of time; this is because you can sometimes receive significant amounts of service before a payment ticket “wins”, funds are claimed, and your balance is adjusted.
 
