@@ -46,6 +46,7 @@
 
 namespace orc {
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern std::atomic<uint64_t> copied_;
 
 inline void Copy(void *dst, const void *src, size_t len) noexcept {
@@ -60,7 +61,10 @@ class Range {
     size_t size_;
 
   public:
-    Range() = default;
+    Range() :
+        size_(0)
+    {
+    }
 
     Range(Type_ data, size_t size) :
         data_(data),
@@ -87,6 +91,8 @@ class Beam;
 
 class Buffer {
   public:
+    virtual ~Buffer() = default;
+
     virtual bool each(const std::function<bool (const uint8_t *, size_t)> &code) const = 0;
 
     virtual size_t size() const;
@@ -436,8 +442,8 @@ class Subset final :
     {
     }
 
-    Subset(const Segment &segment) :
-        segment_(segment)
+    Subset(Segment segment) :
+        segment_(std::move(segment))
     {
     }
 
@@ -511,6 +517,8 @@ class Bounded :
     {
     }
 
+    // XXX: this check seems to incorrectly track delegation
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     Bounded(const std::array<uint8_t, Size_> &data) :
         Bounded(data.data())
     {
@@ -567,6 +575,8 @@ class Data :
     std::array<uint8_t, Size_> data_;
 
   public:
+    // XXX: I'm pretty sure data_ is always initialized, no?
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     Data() = default;
 
     Data(const Span<const uint8_t> &span) {
@@ -657,6 +667,7 @@ class Brick final :
     }
 
     uint8_t &operator [](size_t index) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         return this->data_[index];
     }
 
@@ -664,6 +675,7 @@ class Brick final :
     std::enable_if_t<Offset_ + Count_ <= Size_, Brick<Count_>> Clip() {
         Brick<Count_> value;
         for (size_t i(0); i != Count_; ++i)
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
             value[i] = this->data_[Offset_ + i];
         return value;
     }
@@ -710,6 +722,7 @@ class Number<Type_, true> final :
     Type_ value_;
 
   public:
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     Number() = default;
 
     constexpr Number(Type_ value) noexcept :
@@ -757,7 +770,6 @@ class Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_
     public Data<(Bits_ >> 3)>
 {
   public:
-    // NOLINTNEXTLINE (modernize-use-equals-default)
     using Data<(Bits_ >> 3)>::Data;
 
     Number(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value, uint8_t pad = 0) {
@@ -779,9 +791,9 @@ class Flat final :
     public Region
 {
   private:
-    bool copy_;
-    size_t size_;
     const uint8_t *data_;
+    size_t size_;
+    bool copy_;
 
   protected:
     void destroy() {
@@ -790,8 +802,9 @@ class Flat final :
     }
 
   public:
-    Flat(const Buffer &buffer) {
-        data_ = nullptr;
+    Flat(const Buffer &buffer) :
+        data_(nullptr)
+    {
         if ((copy_ = !buffer.each([&](const uint8_t *data, size_t size) {
             if (data_ != nullptr)
                 return false;
@@ -800,14 +813,14 @@ class Flat final :
             return true;
         }))) {
             size_ = buffer.size();
-            // NOLINTNEXTLINE (cppcoreguidelines-owning-memory)
+            // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
             const auto data(new uint8_t[size_]);
             data_ = data;
             buffer.copy(data, size_);
         }
     }
 
-    ~Flat() {
+    ~Flat() override {
         destroy();
     }
 
@@ -821,8 +834,9 @@ class Flat final :
 
     void clear() {
         destroy();
-        size_ = 0;
         data_ = nullptr;
+        size_ = 0;
+        copy_ = false;
     }
 };
 
@@ -881,7 +895,7 @@ class Beam final :
         rhs.data_ = nullptr;
     }
 
-    virtual ~Beam() {
+    ~Beam() override {
         destroy();
     }
 
@@ -916,7 +930,7 @@ class Beam final :
 
     void size(size_t value) override {
         if (size_ == 0)
-            // NOLINTNEXTLINE (cppcoreguidelines-owning-memory)
+            // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
             data_ = new uint8_t[value];
         else
             orc_assert(size_ >= value);
@@ -1161,9 +1175,7 @@ class Window final :
     }
 
     uint8_t Take() {
-        uint8_t value;
-        Take(&value, 1);
-        return value;
+        return Take<uint8_t>();
     }
 
     template <size_t Size_>
@@ -1189,6 +1201,14 @@ class Window final :
     void Take(Type_ *value) {
         static_assert(std::is_pod<Type_>::value);
         Take(reinterpret_cast<uint8_t *>(value), sizeof(Type_));
+    }
+
+    template <typename Type_>
+    Type_ Take() {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
+        Type_ value;
+        Take(&value);
+        return value;
     }
 
     void Skip(size_t size) {

@@ -49,6 +49,7 @@ void Random(uint8_t *data, size_t size) {
     generator.generate(data, data + size);
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 StateK::StateK() {
     sha3_Init256(this);
     sha3_SetFlags(this, SHA3_FLAGS_KECCAK);
@@ -150,6 +151,7 @@ Signature::Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v) :
 
 Signature::Signature(const Brick<64> &data, uint8_t v) {
     std::tie(r_, s_) = Take<Brick<32>, Brick<32>>(data);
+    // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
     v_ = v;
 
     static const uint256_t n_("115792089237316195423570985008687907852837564279074904382605163141518161494337");
@@ -160,12 +162,14 @@ Signature::Signature(const Brick<64> &data, uint8_t v) {
     }
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 Signature::Signature(const Brick<65> &data) {
     std::tie(r_, s_, v_) = Take<Brick<32>, Brick<32>, Number<uint8_t>>(data);
 }
 
 
 static const secp256k1_context *Curve() {
+    // NOLINTNEXTLINE(misc-redundant-expression)
     static std::unique_ptr<secp256k1_context, decltype(&secp256k1_context_destroy)> context_{secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY), &secp256k1_context_destroy};
     return context_.get();
 }

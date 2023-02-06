@@ -93,7 +93,7 @@ bool Server::Bill(const Buffer &data, bool force) {
         return true;
 
     const auto amount(cashier_->Bill(data.size()));
-    const auto floor(cashier_->Bill(128*1024));
+    const auto floor(cashier_->Bill(1024UZ*128));
 
     S<Server> self;
 
@@ -212,14 +212,12 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
         orc_assert(locked->expected_.emplace(digest, expected).second);
         ++locked->serial_;
 
-        // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
         const auto winner(HashK(Tie(reveal, issued, nonce)).skip<16>().num<uint128_t>() <= ratio);
         if (winner && locked->reveal_->first == commit)
             Commit(locked);
     std::make_tuple(reveal, winner); });
 
     // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
-    // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
     nest_.Hatch([&, &commit = commit, &issued = issued, &nonce = nonce, &v = v, &r = r, &s = s, &amount = amount, &ratio = ratio, &start = start, &range = range, &funder = funder, &recipient = recipient, &reveal = reveal, &winner = winner]() noexcept { return [=]() noexcept -> task<void> { try {
         const auto usable(co_await lottery->Check(signer, funder, recipient));
         const auto valid(usable >= amount);
@@ -320,14 +318,12 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
         orc_assert(locked->expected_.emplace(digest, expected).second);
         ++locked->serial_;
 
-        // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
         const auto winner(HashK(Tie(reveal, issued, nonce)).skip<24>().num<uint64_t>() <= ratio);
         if (winner && locked->reveal_->first == commit)
             Commit(locked);
     std::make_tuple(reveal, winner); });
 
     // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
-    // NOLINTNEXTLINE (clang-analyzer-optin.performance.Padding)
     nest_.Hatch([&, &amount = amount, &funder = funder, &recipient = recipient, &reveal = reveal, &winner = winner]() noexcept { return [=]() noexcept -> task<void> { try {
         const auto usable(co_await lottery->Check(signer, funder, recipient));
         const auto valid(usable >= amount);

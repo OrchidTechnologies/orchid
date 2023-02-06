@@ -31,6 +31,8 @@
 
 #include <malloc/malloc.h>
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
+
 namespace orc {
 
 static int file_(-1);
@@ -43,6 +45,7 @@ class Out {
     char *next_;
 
   public:
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     Out() :
         next_(data_)
     {
@@ -90,7 +93,7 @@ class Out {
     }
 
     Out &operator <<(void *pointer) {
-        uintptr_t value(reinterpret_cast<uintptr_t>(pointer));
+        auto value(reinterpret_cast<uintptr_t>(pointer));
         char buffer[32];
         char *end(buffer + sizeof(buffer));
         *--end = '\0';
@@ -230,6 +233,7 @@ void Hook() {
     return;
 
     Log() << "TMPDIR : " << getenv("TMPDIR") << std::endl;
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     file_ = orc_syscall(open((std::string(getenv("TMPDIR")) + "/hook.log").c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644));
 
     if (file_ == -1)
@@ -262,3 +266,5 @@ namespace orc {
 void Hook() {
 } }
 #endif
+
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)

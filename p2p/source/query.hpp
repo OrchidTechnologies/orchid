@@ -34,6 +34,7 @@ class Query {
     dns_decoded_t data_[DNS_DECODEBUF_4K];
 
   public:
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     Query(const Span<const uint8_t> &data) {
         size_t size(sizeof(data_));
         orc_assert(dns_decode(data_, &size, reinterpret_cast<const dns_packet_t *>(data.data()), data.size()) == RCODE_OKAY);

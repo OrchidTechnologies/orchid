@@ -63,7 +63,7 @@ void Trace(const char *type, bool send, bool deep, const Buffer &data) { try {
             std::unique_lock<std::mutex> lock(mutex_);
 
             // clang-tidy somehow treats ORC_TRACE as an integer?!?
-            // NOLINTNEXTLINE (readability-implicit-bool-conversion)
+            // NOLINTNEXTLINE(readability-implicit-bool-conversion)
             std::cerr << "\e[" << (send != ORC_TRACE ? "35" : "33") << (deep ? "" : ";1") << "m" << (send ? "SEND" : "RECV") <<
                 " " << type << " " << std::dec << time << " [" << flags << "]" <<
                 " " << Socket(boost::endian::big_to_native(ip4.saddr), tcp.source) << " > " << Socket(boost::endian::big_to_native(ip4.daddr), tcp.dest) <<

@@ -43,8 +43,6 @@ std::ostream &operator <<(std::ostream &out, const Response &response);
 struct Response :
     public http::response<http::string_body>
 {
-    // XXX: this lint is so useful and yet so broken :/
-    // NOLINTNEXTLINE (modernize-use-equals-default)
     using http::response<http::string_body>::response;
 
     Response(const Response &response) = delete;

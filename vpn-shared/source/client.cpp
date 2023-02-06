@@ -41,7 +41,7 @@ void Client::Transfer(size_t size, bool send) {
     { const auto locked(locked_());
     (send ? locked->output_ : locked->input_) += size;
     const auto updated(locked->output_ + locked->input_);
-    if (updated - locked->updated_ < 1024*256)
+    if (updated - locked->updated_ < 1024ULL*256)
         return;
     locked->updated_ = updated; }
     Update();

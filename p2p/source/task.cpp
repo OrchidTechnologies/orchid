@@ -27,6 +27,7 @@
 
 namespace orc {
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Locked<std::set<Fiber *>> fibers_;
 
 Fiber::Fiber(const char *name, Fiber *parent) :

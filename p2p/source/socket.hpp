@@ -41,6 +41,7 @@ class Host {
   private:
     std::array<uint8_t, 16> data_;
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     explicit Host(const uint8_t *data) {
         memcpy(data_.data(), data, 16);
     }
@@ -120,12 +121,14 @@ class Host {
     }
 
     operator in6_addr() const {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
         in6_addr address;
         memcpy(address.s6_addr, data_.data(), 16);
         return address;
     }
 
     operator in_addr() const {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
         in_addr address;
         address.s_addr = boost::endian::native_to_big(operator uint32_t());
         return address;

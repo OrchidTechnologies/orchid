@@ -28,6 +28,7 @@
 
 namespace orc {
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern bool Verbose;
 
 class Fiber;
@@ -44,6 +45,7 @@ std::string Cause();
 
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 inline constexpr orc::Fiber *const orc_fiber = nullptr;
 
 #define orc_head \

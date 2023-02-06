@@ -69,14 +69,14 @@ $(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 ifeq ($(filter notidy,$(debug)),)
-	@if [[ $< =~ $(filter) && ! $< =~ .*/(lwip|monitor)\.cpp ]]; then \
+	@if [[ $< =~ $(filter) && ! $< =~ .*/(base58|lwip|monitor)\.cpp ]]; then \
 	    echo [CT] $(target)/$(arch) $<; \
-	    $(tidy) $< --quiet --warnings-as-errors='*' --header-filter='$(filter)' --config='{Checks: "$(checks)", CheckOptions: [{key: "performance-move-const-arg.CheckTriviallyCopyableMove", value: 0}, {key: "bugprone-exception-escape.IgnoredExceptions", value: "broken_promise"}]}' -- \
-	        $(wordlist 2,$(words $(cxx)),$(cxx)) $(more/$(arch)) -std=c++2a -Wconversion -Wno-sign-conversion $(flags) $(xflags); \
+	    $(tidy) $< --quiet --warnings-as-errors='*' --header-filter='$(filter)' --config='{Checks: "$(checks)", CheckOptions: [$(foreach v,$(filter checks/%,$(.VARIABLES)),{key: "$(patsubst checks/%,%,$(v))", value: $($(v))}$(comma) )]}' -- \
+	        $(wordlist 2,$(words $(cxx)),$(cxx)) $(more/$(arch)) -std=c++2b -Wconversion -Wno-sign-conversion $(flags) $(xflags); \
 	fi
 endif
 	@echo [CC] $(target)/$(arch) $<
-	$(call compile,cxx,c++,-std=c++2a)
+	$(call compile,cxx,c++,-std=c++2b)
 
 $(output)/%.rc.o: $$(specific) $$(folder).rc $$(code)
 	$(specific)

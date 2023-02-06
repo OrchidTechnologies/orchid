@@ -31,6 +31,8 @@ namespace orc {
 template <typename Type_>
 class Sewer {
   public:
+    virtual ~Sewer() = default;
+
     virtual void Land(Type_ data, Socket socket) = 0;
     virtual void Stop(const std::string &error = std::string()) noexcept = 0;
 };

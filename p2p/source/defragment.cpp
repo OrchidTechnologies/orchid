@@ -37,8 +37,7 @@ void Defragment::Land(const Buffer &data) {
         case uint8_t(openvpn::IPCommon::IPv4): {
             // XXX: this is really slow :(
             Window window(data);
-            openvpn::IPv4Header ip4;
-            window.Take(&ip4);
+            const auto ip4(window.Take<openvpn::IPv4Header>());
 
             const uint16_t fragoff(boost::endian::big_to_native(ip4.frag_off));
             const auto offset(uint16_t(fragoff << 3));

@@ -10,75 +10,80 @@
 
 
 checks := 
-# XXX: this check simply doesn't work. I'm fixing it :/
-#checks += bugprone-exception-escape
-checks += bugprone-forwarding-reference-overload
-checks += bugprone-misplaced-widening-cast
-checks += bugprone-move-forwarding-reference
-checks += bugprone-parent-virtual-call
-checks += bugprone-suspicious-missing-comma
-checks += bugprone-too-small-loop-variable
-checks += bugprone-undefined-memory-manipulation
-checks += bugprone-unhandled-self-assignment
-checks += bugprone-use-after-move
-# XXX: move all of our global statics with function local
-#checks += cert-err58-cpp
-checks += cert-err60-cpp
-checks += cppcoreguidelines-interfaces-global-init
-checks += cppcoreguidelines-narrowing-conversions
-checks += cppcoreguidelines-no-malloc
-checks += cppcoreguidelines-owning-memory
-# XXX: somehow string constants with iostreams trigger this
-#checks += cppcoreguidelines-pro-bounds-array-to-pointer-decay
-#checks += cppcoreguidelines-pro-bounds-constant-array-index
-#checks += cppcoreguidelines-pro-bounds-pointer-arithmetic
-checks += cppcoreguidelines-pro-type-const-cast
-checks += cppcoreguidelines-pro-type-cstyle-cast
-#checks += cppcoreguidelines-pro-type-member-init
-#checks += cppcoreguidelines-pro-type-reinterpret-cast
-checks += cppcoreguidelines-pro-type-static-cast-downcast
-# XXX: r22 clang-tidy mis-flags non-const char * as va_list
-#checks += cppcoreguidelines-pro-type-vararg
-checks += cppcoreguidelines-slicing
-# XXX: it isn't clear to me whether this is overkill or not
-#checks += cppcoreguidelines-special-member-functions
-# XXX: I need to replace boost multiprecision for Address
+
+checks += bugprone-*
+checks/bugprone-argument-comment.StrictMode := true
+checks += -bugprone-branch-clone
+checks += -bugprone-easily-swappable-parameters
+# XXX: this is higher priority but I'm not ready for this yet
+checks += -bugprone-exception-escape
+checks/bugprone-exception-escape.IgnoredExceptions := "broken_promise"
+checks += -bugprone-lambda-function-name
+checks += -bugprone-macro-parentheses
+checks += -bugprone-reserved-identifier
+# XXX: look into these cases and maybe use new(std::nothrow)
+checks += -bugprone-unhandled-exception-at-new
+
+checks += cert-*
+# XXX: this check won't tell me where the issue was :(
+checks += -cert-dcl16-c
+checks += -cert-dcl37-c
+checks += -cert-dcl51-cpp
+checks += -cert-dcl58-cpp
+checks += -cert-env33-c
+checks += -cert-err58-cpp
+
+checks += clang-analyzer-*
+
+checks += cppcoreguidelines-*
+checks += -cppcoreguidelines-avoid-c-arrays
+# this check is the exact opposite of a good guideline :/
+checks += -cppcoreguidelines-avoid-const-or-ref-data-members
+checks += -cppcoreguidelines-avoid-do-while
+checks += -cppcoreguidelines-avoid-goto
+# this check is probably more worthwhile working with amateurs
+checks += -cppcoreguidelines-avoid-magic-numbers
+checks/cppcoreguidelines-avoid-magic-numbers.IgnorePowersOf2IntegerValues := true
+checks += -cppcoreguidelines-avoid-reference-coroutine-parameters
+# this check would be less annoying if it ignored "next statement uses &variable"
+checks += -cppcoreguidelines-init-variables
+# XXX: I didn't pay any attention to whether this check was interesting or not
+checks += -cppcoreguidelines-macro-usage
+checks += -cppcoreguidelines-non-private-member-variables-in-classes
+# XXX: the code which most hates this apparently does allow for memory leaks :(
+checks += -cppcoreguidelines-prefer-member-initializer
+# this check flags all const char[] -> const char *, including __FUNCTION__ :/
+checks += -cppcoreguidelines-pro-bounds-array-to-pointer-decay
+checks += -cppcoreguidelines-pro-bounds-pointer-arithmetic
+checks += -cppcoreguidelines-pro-type-reinterpret-cast
+checks += -cppcoreguidelines-pro-type-union-access
+# this check makes utility classes super frustrating :/
+checks += -cppcoreguidelines-special-member-functions
+
+# XXX: I'm using a lot of statically constructed objects
 #checks += fuchsia-statically-constructed-objects
 checks += fuchsia-virtual-inheritance
-checks += google-build-namespaces
-checks += misc-definitions-in-headers
-checks += misc-noexcept-moveconstructor
-checks += misc-non-copyable-objects
-# XXX: the r20 clang-tidy doesn't seem to do this correctly
-#checks += misc-non-private-member-variables-in-classes
-checks += misc-static-assert
-checks += misc-throw-by-value-catch-by-reference
-checks += misc-unconventional-assign-operator
-checks += modernize-deprecated-headers
-checks += modernize-deprecated-ios-base-aliases
-checks += modernize-make-shared
-checks += modernize-make-unique
-checks += modernize-redundant-void-arg
-checks += modernize-replace-auto-ptr
-checks += modernize-return-braced-init-list
-checks += modernize-unary-static-assert
-checks += modernize-use-bool-literals
-checks += modernize-use-emplace
-checks += modernize-use-equals-default
-checks += modernize-use-equals-delete
-# XXX: this check is super verbose on clang 9
-#checks += modernize-use-nodiscard
-checks += modernize-use-noexcept
-checks += modernize-use-nullptr
-checks += modernize-use-override
-checks += performance-for-range-copy
-checks += performance-implicit-conversion-in-loop
-checks += performance-inefficient-string-concatenation
-checks += performance-move-const-arg
-checks += performance-move-constructor-init
-checks += performance-noexcept-move-constructor
-checks += performance-unnecessary-copy-initialization
-checks += performance-unnecessary-value-param
+
+checks += google-build-*
+
+checks += misc-*
+checks += -misc-no-recursion
+# this check doesn't allow for any protected members :/
+checks += -misc-non-private-member-variables-in-classes
+checks/misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic := 1
+checks += -misc-unused-parameters
+
+checks += modernize-*
+checks += -modernize-avoid-c-arrays
+checks += -modernize-use-default-member-init
+checks += -modernize-use-nodiscard
+checks += -modernize-use-trailing-return-type
+# XXX: I like this idea, but don't want to do it today
+checks += -modernize-use-using
+
+checks += performance-*
+checks/performance-move-const-arg.CheckTriviallyCopyableMove := 0
+
 checks += readability-const-return-type
 checks += readability-container-size-empty
 checks += readability-deleted-default
@@ -88,26 +93,19 @@ checks += readability-isolate-declaration
 checks += readability-redundant-member-init
 checks += readability-redundant-smartptr-get
 checks += readability-redundant-string-cstr
-#checks += readability-redundant-string-init
+checks += readability-redundant-string-init
 checks += readability-static-definition-in-anonymous-namespace
 checks += readability-uniqueptr-delete-release
-# XXX: boost asio reactor::per_descriptor_data reactor_data_
-checks += -clang-analyzer-optin.cplusplus.UninitializedObject
-# XXX: ./vpn/source/client.hpp:78:12: note: Excessive padding in 'struct orc::Client::Locked_' (32 padding bytes, where 0 is optimal). Optimal fields order: spent_, balance_, recipient_, updated_, benefit_, serial_, ring_, pending_, commit_, consider reordering the fields or adding explicit padding members
-checks += -clang-analyzer-optin.performance.Padding
-# XXX: boost multiprecision causes this issue constantly :/
-checks += -clang-analyzer-core.StackAddressEscape
+
 ifeq ($(target),and)
 # XXX: boost multiprecision on android
-checks += -clang-analyzer-core.UndefinedBinaryOperatorResult
+#checks += -clang-analyzer-core.UndefinedBinaryOperatorResult
 endif
+
 ifeq ($(target),win)
-# XXX: boost asio threading on win32
+# XXX: boost::asio::detail::do_throw_error should be [[noreturn]]
+# (though, marking it [[noreturn]] didn't actually make it work)
 checks += -clang-analyzer-cplusplus.NewDelete
-checks += -clang-analyzer-cplusplus.NewDeleteLeaks
-# XXX: -Wno-nonportable-include-path isn't working
+# XXX: this accidentally flags correct includes due to my workarounds
 checks += -clang-diagnostic-nonportable-include-path
-# XXX: https://github.com/chriskohlhoff/asio/issues/898
-checks += -clang-diagnostic-reorder
-cflags += -Wno-reorder -Wno-reorder-ctor
 endif

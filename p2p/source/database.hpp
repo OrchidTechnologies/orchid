@@ -44,6 +44,7 @@ class Database {
     sqlite3 *database_;
 
   public:
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     Database(const std::string &path, bool readonly = false) {
         orc_sqlcall(sqlite3_open_v2(path.c_str(), &database_, readonly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr));
     }
@@ -122,23 +123,20 @@ class Statement :
     orc_bind(int64, sqlite3_int64, value)
     orc_bind(null, nullptr_t)
 
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
+    // NOLINTBEGIN(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr)
+
     orc_bind(blob, const std::vector<uint8_t> &, value.data(), value.size(), SQLITE_TRANSIENT)
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(blob, const Region &, value.data(), value.size(), SQLITE_TRANSIENT)
 
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text, const char *, value, -1, SQLITE_TRANSIENT)
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text, const std::string &, value.c_str(), value.size(), SQLITE_TRANSIENT)
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
-    orc_bind(text, const std::string_view &, value.data(), value.size(), SQLITE_TRANSIENT)
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
+    orc_bind(text, const std::string_view &, value.data(), Fit(value.size()), SQLITE_TRANSIENT)
     orc_bind(text, const View &, value.data(), value.size(), SQLITE_TRANSIENT)
 
     // XXX: maybe this is supposed to be size() * 2?
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     orc_bind(text16, const std::u16string &, value.data(), value.size(), SQLITE_TRANSIENT)
+
+    // NOLINTEND(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr)
 
     template <unsigned Index_, typename Type_, typename... Rest_>
     void Bind(const std::optional<Type_> &value, Rest_ &&...rest) {

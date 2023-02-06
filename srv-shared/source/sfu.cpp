@@ -90,6 +90,7 @@ inline Kind ToKind(const std::string &kind) {
 
 
 // XXX: this is a stupid way of doing this
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static uint32_t Ssrc_(13371337);
 
 struct Codec {
@@ -562,7 +563,7 @@ void Worker::Stop() noexcept {
 }
 
 S<Worker> Worker::New() {
-    const auto worker(Break<Worker>());
+    auto worker(Break<Worker>());
 
     std::vector<int> handles;
 
@@ -598,8 +599,8 @@ void Worker::Open(int rcfd, int wcfd, int rpfd, int wpfd) {
         args.emplace_back("");
         args.emplace_back("--rtcMinPort=32768");
         args.emplace_back("--rtcMaxPort=65535");
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-const-cast)
-        orc_assert(run_worker(args.size(), const_cast<char **>(args.data()), "0.9", rcfd, wcfd, rpfd, wpfd) == 0);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        orc_assert(run_worker(Fit(args.size()), const_cast<char **>(args.data()), "0.9", rcfd, wcfd, rpfd, wpfd) == 0);
     });
 }
 

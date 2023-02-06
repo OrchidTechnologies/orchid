@@ -56,10 +56,10 @@ orc_trace();
     }
 };
 
-Channel::Channel(BufferDrain &drain, const S<Peer> &peer, const rtc::scoped_refptr<webrtc::DataChannelInterface> &channel) :
+Channel::Channel(BufferDrain &drain, const S<Peer> &peer, rtc::scoped_refptr<webrtc::DataChannelInterface> channel) :
     Pump(typeid(*this).name(), drain),
     peer_(peer),
-    channel_(channel)
+    channel_(std::move(channel))
 {
     channel_->RegisterObserver(this);
     peer_->channels_.insert(this);
@@ -217,7 +217,7 @@ task<void> Channel::Send(const Buffer &data) {
 #if 0
         provider->SendData(sctp->id(), params, buffer, &result);
 #else
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
         const auto controller(static_cast<webrtc::DataChannelController *>(provider));
         (controller->*Loot<DataChannelController$DataChannelSendData>::pointer)(sctp->id(), params, buffer, &result);
 #endif
@@ -231,7 +231,7 @@ task<void> Channel::Send(const Buffer &data) {
 
     const auto sctp(reinterpret_cast<webrtc::SctpDataChannel *const *>(channel_.get() + 1)[1]);
     const auto provider(sctp->*Loot<SctpDataChannel$controller_>::pointer);
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
     const auto controller(static_cast<webrtc::DataChannelController *>(provider));
 
     co_await Post([&]() {
@@ -243,7 +243,7 @@ task<void> Channel::Send(const Buffer &data) {
 #if 1 // XXX
         interface->SendData(sctp->id(), params, buffer);
 #else
-        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
         const auto transport(static_cast<webrtc::SctpDataChannelTransport *>(interface));
         cricket::SendDataResult result;
         (transport->*Loot<SctpDataChannelTransport$sctp_transport_>::pointer)->SendData(sctp->id(), params, buffer, &result);

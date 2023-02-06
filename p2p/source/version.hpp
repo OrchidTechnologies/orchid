@@ -27,8 +27,8 @@
 
 namespace orc {
 
-extern const char *VersionData;
-extern size_t VersionSize;
+extern const char *const VersionData;
+extern const size_t VersionSize;
 
 }
 

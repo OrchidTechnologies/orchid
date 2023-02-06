@@ -32,6 +32,7 @@ namespace orc {
 
 class Valve {
   public:
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     static uint64_t Unique_;
     const uint64_t unique_ = ++Unique_;
 

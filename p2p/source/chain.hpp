@@ -100,7 +100,7 @@ struct Account final {
     const Brick<32> storage_;
     const Brick<32> code_;
 
-    Account(const uint256_t &nonce, const uint256_t &balance);
+    Account(uint256_t nonce, uint256_t balance);
     Account(const Json::Value &value);
     Account(const Json::Value &value, const Block &block);
 };
@@ -259,6 +259,7 @@ class Chain :
             orc_insist(false);
         } else {
             std::vector<Number<uint256_t>> numbers;
+            numbers.reserve(args.size());
             for (const auto &arg : args)
                 numbers.emplace_back(arg);
             const auto proof(co_await operator ()("eth_getProof", {contract, numbers, block.height_}));

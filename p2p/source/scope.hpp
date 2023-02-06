@@ -55,7 +55,6 @@ class scope {
     }
 
     // XXX: consider if this Impactor behavior is sane
-    // NOLINTNEXTLINE (bugprone-exception-escape)
     ~scope() noexcept(false) {
         if (!function_);
         else if (std::uncaught_exceptions() == uncaught_)

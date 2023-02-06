@@ -27,6 +27,8 @@
 
 namespace orc {
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
+
 template <typename Tag_>
 struct Loot {
     typedef typename Tag_::type type;
@@ -46,6 +48,8 @@ struct Pirate : Loot<Tag_> {
 
 template <typename Tag_, typename Tag_::type Pointer_>
 typename Pirate<Tag_, Pointer_>::Value Pirate<Tag_, Pointer_>::value;
+
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 }
 

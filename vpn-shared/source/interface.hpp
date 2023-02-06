@@ -27,6 +27,7 @@
 
 namespace orc {
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern pthread_key_t protect_;
 
 }

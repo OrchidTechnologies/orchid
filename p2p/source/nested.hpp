@@ -131,8 +131,8 @@ class Nested {
     Nested(std::initializer_list<Nested> list) :
         scalar_(false)
     {
-        for (auto nested(list.begin()); nested != list.end(); ++nested)
-            array_.emplace_back(*nested);
+        for (auto &nested : list)
+            array_.emplace_back(nested);
     }
 
     // XXX: this should just be "any iterable"

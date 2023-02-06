@@ -42,15 +42,16 @@ extern "C" {
 
 namespace orc {
 
+// XXX: this function has ill-defined semantics
+
 std::string guid_to_name(const char *guid)
 {
     HKEY network_connections_key;
-    // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     LONG status = RegOpenKeyExA(HKEY_LOCAL_MACHINE, NETWORK_CONNECTIONS_KEY, 0, KEY_READ, &network_connections_key);
 
     if (status != ERROR_SUCCESS) {
         Log() << "Error opening registry key: " << NETWORK_CONNECTIONS_KEY << std::endl;
-        return nullptr;
+        return "";
     }
 
     for (int i = 0; ; i++) {
@@ -69,7 +70,6 @@ std::string guid_to_name(const char *guid)
         auto connection_string = std::string(NETWORK_CONNECTIONS_KEY) + "\\" + enum_name + "\\Connection";
 
         HKEY connection_key;
-        // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
         status = RegOpenKeyExA(HKEY_LOCAL_MACHINE, connection_string.c_str(), 0, KEY_READ, &connection_key);
 
         if (status != ERROR_SUCCESS) {
@@ -96,17 +96,15 @@ std::string guid_to_name(const char *guid)
     }
 
     RegCloseKey(network_connections_key);
-    return nullptr;
+    return "";
 }
 
 void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &)> &code) {
 
     std::string actual_name;
-    // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     HANDLE h = INVALID_HANDLE_VALUE;
 
     HKEY adapter_key;
-    // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
     LONG status = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ADAPTER_KEY, 0, KEY_READ, &adapter_key);
 
     if (status != ERROR_SUCCESS) {
@@ -128,7 +126,6 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
         auto unit_string = std::string(ADAPTER_KEY) + "\\" + std::string(enum_name);
 
         HKEY unit_key;
-        // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
         status = RegOpenKeyExA(HKEY_LOCAL_MACHINE, unit_string.c_str(), 0, KEY_READ, &unit_key);
 
         if (status != ERROR_SUCCESS) {
@@ -168,7 +165,6 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
                         OPEN_EXISTING,
                         FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_OVERLAPPED,
                         nullptr);
-        // XXX: NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
         if (h == INVALID_HANDLE_VALUE) {
             continue;
         }

@@ -75,6 +75,7 @@ namespace po = boost::program_options;
 
 struct Global {
     uint64_t benefit_ = 0;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 }; Locked<Global> global_;
 
 struct Report {
@@ -186,6 +187,7 @@ struct State {
     }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::shared_ptr<State> state_;
 
 void Print(std::ostream &body, const std::string &name, const Maybe<Report> &maybe) {
@@ -524,6 +526,7 @@ int Main(int argc, const char *const argv[]) {
             {"content-type", "application/json"},
         }, UnparseO(Multi{
             {"jobRunID", Str(Parse(request.body()).at("id"))},
+            // NOLINTNEXTLINE(clang-analyzer-core.StackAddressEscape)
             {"data", Multi{{"price", median().str()}}},
         }));
     });
