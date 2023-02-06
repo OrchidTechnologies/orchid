@@ -59,19 +59,20 @@ rsync := rsync -a --delete $(patsubst %,--filter "- %",.DS_Store _CodeSignature 
 
 $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%plist: $(dart) $(temp)
 	rm -rf .dart_tool/flutter_build $(output)/flutter
-	cd $(pwd/gui) && $(flutter) assemble \
+	cd $(pwd/gui) && MACOSX_DEPLOYMENT_TARGET=10.15 $(flutter) assemble \
+	    -dAction="build" \
 	    -dTargetPlatform="$(platform)" \
 	    -dTargetFile="lib/main.dart" \
 	    -dSdkRoot="$(isysroot)" \
 	    -dBuildMode="$(mode)" \
-	    -dIosArchs="$(machine)" \
+	    -d$(capped)Archs="$(machine)" \
 	    -dTreeShakeIcons="false" \
-	    -dTrackWidgetCreation="" \
+	    -dTrackWidgetCreation="true" \
 	    -dDartObfuscation="false" \
 	    -dSplitDebugInfo="" \
-	    -dEnableBitcode="" \
-	    -dDartDefines="" \
-	    -dExtraFrontEndOptions="" \
+	    --DartDefines="" \
+	    --ExtraGenSnapshotOptions="" \
+	    --ExtraFrontEndOptions="" \
 	    --output="$(CURDIR)/$(output)/flutter" \
 	    $(mode)_$(assemble)_bundle_flutter_assets
 	@mkdir -p $(dir $(app)) $(dir $(embed))

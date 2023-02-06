@@ -22,7 +22,7 @@ forks :=
 include $(pwd/gui)/target.mk
 
 pwd/flutter := $(pwd)/flutter
-flutter := $(CURDIR)/$(pwd/flutter)/bin/flutter --suppress-analytics --verbose
+flutter := $(CURDIR)/$(pwd/flutter)/bin/flutter --suppress-analytics --verbose --no-version-check
 
 # -a is needed as flutter (incorrectly) only installs files for windows *target* on windows *host*
 # https://github.com/flutter/flutter/issues/58379
