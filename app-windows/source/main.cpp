@@ -45,7 +45,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE hPrevInstance,
     FlutterWindow window(project);
     Win32Window::Point origin(10, 10);
     Win32Window::Size size(360, 640);
-    if (!window.CreateAndShow(L"orchid", origin, size))
+    if (!window.Create(L"orchid", origin, size))
         return EXIT_FAILURE;
     window.SetQuitOnClose(true);
 
