@@ -1,5 +1,5 @@
+// @dart=2.9
 import 'dart:async' show Future;
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 

@@ -1,6 +1,4 @@
-
-/// Flutter code sample for ReorderableListView
-
+// @dart=2.9
 import 'package:flutter/material.dart';
 
 void main() => runApp(const MyApp());

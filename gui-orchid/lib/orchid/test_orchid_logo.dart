@@ -1,6 +1,6 @@
+// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:orchid/util/test_app.dart';
-
 import 'orchid_logo.dart';
 
 void main() {

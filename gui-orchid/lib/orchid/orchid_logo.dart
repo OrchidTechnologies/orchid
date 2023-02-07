@@ -1,5 +1,5 @@
+// @dart=2.9
 import 'package:flutter/material.dart';
-
 import 'orchid_asset.dart';
 
 /// A wrapper that controls an AnimationController with logic for the logo.

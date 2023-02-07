@@ -61,7 +61,7 @@ class _UserConfiguredChainPanelState extends State<UserConfiguredChainPanel> {
           // onClear: () => setState(() {}),
         ).top(8),
 
-        if (_testResult != null) _testResult.top(24).left(8),
+        if (_testResult != null) _testResult!.top(24).left(8),
 
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

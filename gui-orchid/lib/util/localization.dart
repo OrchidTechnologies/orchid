@@ -1,4 +1,4 @@
-// import 'package:orchid/util/localization.dart';
+// @dart=2.9
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/widgets.dart';
 

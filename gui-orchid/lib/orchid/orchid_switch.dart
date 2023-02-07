@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:orchid/orchid.dart';
 
 class OrchidSwitch extends StatelessWidget {

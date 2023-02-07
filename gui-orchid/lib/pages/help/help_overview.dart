@@ -1,14 +1,11 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/widgets.dart';
-import 'package:orchid/api/orchid_docs.dart';
+// @dart=2.9
 import 'package:orchid/orchid.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:orchid/api/orchid_docs.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:flutter_html/flutter_html.dart';
-import 'package:orchid/orchid/orchid_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpOverviewPage extends StatefulWidget {

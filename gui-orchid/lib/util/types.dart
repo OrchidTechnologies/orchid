@@ -1,3 +1,4 @@
+// @dart=2.9
 
 T tryCast<T>(dynamic x, {T orElse}){
   try {

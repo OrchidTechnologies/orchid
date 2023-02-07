@@ -1,6 +1,6 @@
+// @dart=2.9
 import 'package:flutter/cupertino.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-
 import 'account_detail_poller.dart';
 
 

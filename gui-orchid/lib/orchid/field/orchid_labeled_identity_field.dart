@@ -1,12 +1,12 @@
-import 'package:browser_detector/browser_detector.dart';
+// @dart=2.9
 import 'package:orchid/orchid.dart';
+import 'package:browser_detector/browser_detector.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/common/qrcode_scan.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
-import 'package:orchid/orchid/orchid_asset.dart';
 
 /// Scan or paste an identity
 class OrchidLabeledIdentityField extends StatefulWidget {

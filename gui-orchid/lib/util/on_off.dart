@@ -1,6 +1,6 @@
+// @dart=2.9
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 /// Sometimes useful for comparing or debugging visual effects
 class OnOff extends StatefulWidget {

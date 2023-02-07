@@ -1,10 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+// @dart=2.9
+import '../orchid.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/link_text.dart';
-import '../orchid.dart';
-import 'orchid_colors.dart';
 import 'package:styled_text/styled_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 

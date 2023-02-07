@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:orchid/orchid.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_import.dart';

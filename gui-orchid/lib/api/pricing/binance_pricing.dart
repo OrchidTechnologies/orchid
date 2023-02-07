@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;

@@ -1,7 +1,6 @@
+// @dart=2.9
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
-import 'package:orchid/util/units.dart';
-
 import 'chains.dart';
 import 'token_type.dart';
 

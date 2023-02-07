@@ -1,9 +1,9 @@
+// @dart=2.9
 import 'dart:async';
 import 'dart:core';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-
 import 'account_store.dart';
 
 /// A thin wrapper around the user's list of identities that supports searching

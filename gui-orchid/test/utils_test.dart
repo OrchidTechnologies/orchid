@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -5,7 +6,6 @@ import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/util/cacheable.dart';
-import 'package:orchid/util/enums.dart';
 import 'package:orchid/util/json.dart';
 import 'package:orchid/util/strings.dart';
 import 'package:orchid/util/units.dart';
@@ -17,11 +17,12 @@ void main() {
     //
 
     test('enums', () {
-      expect(Enums.toStringValue(PacTransactionType.None), equals('None'));
-      expect(Enums.fromString(PacTransactionType.values, 'None'),
-          equals(PacTransactionType.None));
-      expect(Enums.fromString(PacTransactionType.values, 'none'),
-          equals(PacTransactionType.None));
+      // expect(Enums.toStringValue(PacTransactionType.None), equals('None'));
+      expect(PacTransactionType.None.name, equals('None'));
+      // expect(Enums.fromString(PacTransactionType.values, 'None'), equals(PacTransactionType.None));
+      expect(PacTransactionType.values.byName('None'), equals(PacTransactionType.None));
+      // expect(Enums.fromString(PacTransactionType.values, 'none'), equals(PacTransactionType.None));
+      // expect(PacTransactionType.values.byName('none'), equals(PacTransactionType.None));
     });
 
     test('eth address', () {

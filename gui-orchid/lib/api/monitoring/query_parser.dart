@@ -1,3 +1,4 @@
+// @dart=2.9
 
 /// Parse queries for the analysis db.
 class QueryParser {
