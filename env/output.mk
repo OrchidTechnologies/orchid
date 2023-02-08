@@ -140,8 +140,9 @@ $(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$
 	    __CARGO_TEST_CHANNEL_OVERRIDE_DO_NOT_USE_THIS=nightly CARGO_TARGET_APPLIES_TO_HOST=false \
 	    CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(arch))))_LINKER='$(firstword $(cc))' \
 	    CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(arch))))_RUSTFLAGS='$(foreach arg,$(wordlist 2,$(words $(cc)),$(cc)) $(more/$(arch)) $(wflags),-C link-arg=$(arg)) $(rflags)' \
-	    cargo build --verbose --lib --release --target $(triple/$(arch)) -Z target-applies-to-host \
-	    --target-dir $(call path,$(CURDIR)/$(output)/$(arch)/$(folder))
+	    cargo build --verbose --lib --release --features "$(features/$(folder))" \
+	        --target $(triple/$(arch)) -Z target-applies-to-host \
+	        --target-dir $(call path,$(CURDIR)/$(output)/$(arch)/$(folder))
 	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/lib$(subst -,_,$(notdir $(folder))).a $@
 
 .PHONY: clean

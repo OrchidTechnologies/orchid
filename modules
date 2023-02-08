@@ -21,9 +21,6 @@ head[env/libcxxabi]=origin/release_90
 head[app-shared/flutter]=3.7.1
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
-# boringtun is stuck, by https://github.com/cloudflare/boringtun/pull/235
-head[p2p/boringtun]=42710c904605bf1efe6e1e52fd6f7b16c099e06c
-
 # url is stuck due to https://forums.developer.apple.com/thread/120977 :/
 # (I tried to use a local copy of libcxx on Apple, but crashed on iOS 14)
 head[p2p/url]=7c822cb9873b1422e09be5131f30e9d83d487096
