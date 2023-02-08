@@ -28,11 +28,6 @@ flutter := $(CURDIR)/$(pwd/flutter)/bin/flutter --suppress-analytics --verbose -
 # https://github.com/flutter/flutter/issues/58379
 precache := --android --ios --linux --macos --windows -a
 
-ifeq ($(uname-s) $(uname-m),Darwin arm64)
-# XXX: macOS arm64 fails to download linux-arm for some reason
-precache := $(filter-out --linux -a,$(precache)) --no-linux
-endif
-
 $(pwd/flutter)/packages/flutter/pubspec.lock: $(pwd/flutter)/packages/flutter/pubspec.yaml $(call head,$(pwd/flutter))
 	cd $(pwd/flutter) && git clean -fxd
 	cd $(pwd/flutter) && bin/flutter config --enable-linux-desktop
