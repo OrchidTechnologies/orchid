@@ -154,7 +154,7 @@ $(output)/$(pwd/wireshark)/epan/ps.c: $(pwd/wireshark)/tools/rdps.py $(pwd/wires
 source += $(output)/$(pwd/wireshark)/epan/ps.c
 
 
-ifeq ($(meson),darwin)
+ifeq (,)
 source += $(pwd/wireshark)/../dissectors.c
 else
 $(output)/$(pwd/wireshark)/epan/dissectors.c: $(pwd/wireshark)/tools/make-regs.py $(filter $(pwd/wireshark)/epan/dissectors/%.c,$(wireshark))
