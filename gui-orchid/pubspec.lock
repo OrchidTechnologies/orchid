@@ -353,10 +353,10 @@ packages:
     dependency: "direct main"
     description:
       name: in_app_purchase_storekit
-      sha256: "638fa34bb1e5ff8015f6c6ecc88a3648add182368ad69ad0156e67b157a3e32f"
+      sha256: "34ae209cb68b91ad0e67aa3413a97ed4df4bd4117c687c91f4cfeda616a76188"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.4"
+    version: "0.3.5+2"
   intl:
     dependency: "direct main"
     description:
