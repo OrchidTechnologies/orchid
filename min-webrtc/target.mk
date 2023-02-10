@@ -258,8 +258,6 @@ cflags += -DSCTP_USE_OPENSSL_SHA1
 
 # disable dcsctp congestion controller
 chacks/$(pwd/webrtc)/media/sctp/dcsctp_transport.cc += s/ options;/ options{.cwnd_mtus_initial = 10000, .cwnd_mtus_min = 10000};/g;
-# disallow blocking signaling thread
-chacks/$(pwd/webrtc)/rtc_base/event.cc += /::Wait(/{s/\/\*//;s/\*\///;s/$$/ if (warn_after != kForever) std::terminate();/;};
 # do not allocate statistics collector
 chacks/$(pwd/webrtc)/pc/rtc_stats_collector.cc += s/rtc::make_ref_counted<RTCStatsCollector>([^;]*/nullptr/g;
 
