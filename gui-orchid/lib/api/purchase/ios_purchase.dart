@@ -40,8 +40,10 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
     SKPaymentQueueWrapper().setTransactionObserver(this);
     await SKPaymentQueueWrapper().startObservingTransactionQueue();
     final pendingTx = await SKPaymentQueueWrapper().transactions();
-    log("iap: Pending transactions exist on start!: $pendingTx");
-    updatedTransactions(transactions: pendingTx);
+    if ((pendingTx ?? []).isNotEmpty) {
+      log("iap: Pending transactions exist on start!: $pendingTx");
+      updatedTransactions(transactions: pendingTx);
+    }
   }
 
   @override

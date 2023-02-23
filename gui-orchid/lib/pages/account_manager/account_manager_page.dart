@@ -538,6 +538,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             children: [pady(8), footer()],
           )
         : ListView.separated(
+            physics: const BouncingScrollPhysics(
+                decelerationRate: ScrollDecelerationRate.normal),
             separatorBuilder: (BuildContext context, int index) =>
                 Container(height: 24),
             key: PageStorageKey('account list view'),
