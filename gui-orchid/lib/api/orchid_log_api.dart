@@ -59,7 +59,7 @@ class LogLine {
         this.date = DateTime.now();
 
   String toStringWithDate() {
-    final timeStamp = DateTime.now().toIso8601String();
+    final timeStamp = date.toIso8601String();
     return timeStamp + ': ' + text;
   }
 
