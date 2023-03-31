@@ -202,6 +202,8 @@ static Address _(std::string_view arg) {
     if (false);
     else if (arg == "0") {
         return "0x0000000000000000000000000000000000000000"; }
+    else if (arg == "this") {
+        return executor_->operator Address(); }
 
     else if (arg == "factory@100") {
         return "0x7A0D94F55792C434d74a40883C6ed8545E406D12"; }
