@@ -91,7 +91,10 @@ lflags += -Wl,-Xlink=-force:multiple
 cflags += -DWIN32_LEAN_AND_MEAN=
 cflags += -D_CRT_RAND_S=
 
-cflags += -fms-extensions
+# XXX: this breaks std::to_string(uint64_t)
+# https://github.com/llvm/llvm-project/issues/52709
+#cflags += -fms-extensions
+
 #cflags += -fms-compatibility
 #cflags += -D__GNUC__
 

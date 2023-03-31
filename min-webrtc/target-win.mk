@@ -25,6 +25,7 @@ lflags += -lole32
 lflags += -lbcrypt
 
 lflags += -lcrypt32
+lflags += -ldbghelp
 lflags += -liphlpapi
 lflags += -lpsapi
 lflags += -lsecur32
