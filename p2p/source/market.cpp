@@ -20,11 +20,11 @@
 /* }}} */
 
 
-#include "binance.hpp"
 #include "chain.hpp"
 #include "locator.hpp"
 #include "market.hpp"
 #include "parallel.hpp"
+#include "pricing.hpp"
 #include "sequence.hpp"
 #include "updater.hpp"
 

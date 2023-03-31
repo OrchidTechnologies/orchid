@@ -34,22 +34,18 @@
 #include <system_wrappers/include/field_trial.h>
 
 #include "baton.hpp"
-#include "binance.hpp"
 #include "boring.hpp"
 #include "chainlink.hpp"
 #include "chart.hpp"
 #include "client0.hpp"
 #include "client1.hpp"
-#include "coinbase.hpp"
 #include "crypto.hpp"
 #include "currency.hpp"
 #include "dns.hpp"
-#include "exchange.hpp"
 #include "float.hpp"
 #include "fiat.hpp"
 #include "huobi.hpp"
 #include "jsonrpc.hpp"
-#include "kraken.hpp"
 #include "load.hpp"
 #include "local.hpp"
 #include "markup.hpp"
@@ -57,6 +53,7 @@
 #include "notation.hpp"
 #include "oracle.hpp"
 #include "pile.hpp"
+#include "pricing.hpp"
 #include "remote.hpp"
 #include "site.hpp"
 #include "sleep.hpp"
@@ -337,9 +334,6 @@ int Main(int argc, const char *const argv[]) {
         co_return *co_await Parallel(Chainlink(*ethereum, ChainlinkETHUSD, 0, Ten8 * Ten18), Chainlink(*ethereum, ChainlinkOXTUSD, 0, Ten8 * Ten18));
     }, "Chainlink"))));
     // }}}
-
-
-    Exchange exchange(base);
 
 
     const auto account(Wait(Opened(Updating(milliseconds, [ethereum, funder, signer = Address(Derive(secret))]() -> task<std::pair<uint128_t, uint128_t>> {

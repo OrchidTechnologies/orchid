@@ -45,7 +45,6 @@
 #include <rtc_base/ssl_fingerprint.h>
 
 #include "baton.hpp"
-#include "binance.hpp"
 #include "boring.hpp"
 #include "butcher.hpp"
 #include "cashier.hpp"
@@ -62,6 +61,7 @@
 #include "lottery0.hpp"
 #include "lottery1.hpp"
 #include "node.hpp"
+#include "pricing.hpp"
 #include "remote.hpp"
 #include "scope.hpp"
 #include "sequence.hpp"

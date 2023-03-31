@@ -20,20 +20,26 @@
 /* }}} */
 
 
-#ifndef ORCHID_KRAKEN_HPP
-#define ORCHID_KRAKEN_HPP
+#ifndef ORCHID_PRICING_HPP
+#define ORCHID_PRICING_HPP
 
 #include <string>
 
 #include "float.hpp"
+#include "shared.hpp"
 #include "task.hpp"
 
 namespace orc {
 
 class Base;
+struct Currency;
 
+task<Float> Binance(Base &base, const std::string &pair, const Float &adjust = Ten18);
+task<Float> Coinbase(Base &base, const std::string &pair, const Float &adjust = Ten18);
 task<Float> Kraken(Base &base, const std::string &pair, const Float &adjust = Ten18);
+
+task<Currency> Binance(unsigned milliseconds, S<Base> base, std::string currency);
 
 }
 
-#endif//ORCHID_KRAKEN_HPP
+#endif//ORCHID_PRICING_HPP

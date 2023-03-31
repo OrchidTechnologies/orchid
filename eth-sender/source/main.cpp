@@ -27,7 +27,6 @@
 #include <boost/program_options/variables_map.hpp>
 
 #include "base58.hpp"
-#include "binance.hpp"
 #include "currency.hpp"
 #include "decimal.hpp"
 #include "executor.hpp"
@@ -35,6 +34,7 @@
 #include "load.hpp"
 #include "local.hpp"
 #include "nested.hpp"
+#include "pricing.hpp"
 #include "segwit.hpp"
 #include "signed.hpp"
 #include "sleep.hpp"

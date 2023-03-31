@@ -20,8 +20,8 @@
 /* }}} */
 
 
-#include "binance.hpp"
 #include "currency.hpp"
+#include "pricing.hpp"
 #include "token.hpp"
 
 namespace orc {
