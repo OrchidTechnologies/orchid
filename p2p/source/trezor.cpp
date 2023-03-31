@@ -94,7 +94,7 @@ task<Response_> TrezorSession::Call(uint16_t type, const Request_ &request) cons
         case tzr::MessageType_PinMatrixRequest: {
             ORC_RESPONSE(tzr::common::PinMatrixRequest);
             tzr::common::PinMatrixAck request;
-            std::cout << "pin: " << std::flush;
+            std::cerr << "pin: " << std::flush;
             std::string pin;
             std::getline(std::cin, pin);
             request.set_pin(pin);
@@ -114,7 +114,7 @@ task<Response_> TrezorSession::Call(uint16_t type, const Request_ &request) cons
         case tzr::MessageType_PassphraseRequest: {
             ORC_RESPONSE(tzr::common::PassphraseRequest);
             tzr::common::PassphraseAck request;
-            std::cout << "passphrase: " << std::flush;
+            std::cerr << "passphrase: " << std::flush;
             std::string passphrase;
             std::getline(std::cin, passphrase);
             request.set_passphrase(passphrase);
