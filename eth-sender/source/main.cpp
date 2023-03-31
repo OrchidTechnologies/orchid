@@ -202,29 +202,56 @@ static Address _(std::string_view arg) {
     if (false);
     else if (arg == "0") {
         return "0x0000000000000000000000000000000000000000"; }
+
     else if (arg == "factory@100") {
         return "0x7A0D94F55792C434d74a40883C6ed8545E406D12"; }
     else if (arg == "factory@500") {
         return "0x83aa38958768B9615B138339Cbd8601Fc2963D4d"; }
+
     else if (arg == "lottery0") {
         return "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"; }
     else if (arg == "lottery1") {
         return "0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82"; }
+
     else if (arg == "eip1820") {
         return "0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24"; }
     else if (arg == "eip2470") {
         return "0xce0042B868300000d44A59004Da54A005ffdcf9f"; }
+
     else if (arg == "transferv") {
         return TransferV; }
+
     else if (arg == "OTT") {
         orc_assert_(*chain_ == 1, "OTT is not on chain " << chain_);
         return "0xff9978B7b309021D39a76f52Be377F2B95D72394"; }
     else if (arg == "OXT") {
         orc_assert_(*chain_ == 1, "OXT is not on chain " << chain_);
         return "0x4575f41308EC1483f3d399aa9a2826d74Da13Deb"; }
+
+    else if (arg == "DAI") {
+        orc_assert_(*chain_ == 1, "DAI is not on chain " << chain_);
+        return "0x6B175474E89094C44Da98b954EedeAC495271d0F"; }
+    else if (arg == "GUSD") {
+        orc_assert_(*chain_ == 1, "GUSD is not on chain " << chain_);
+        return "0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd"; }
+    else if (arg == "USDC") {
+        orc_assert_(*chain_ == 1, "USDC is not on chain " << chain_);
+        return "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"; }
+
     else if (arg == "WAVAX") {
         orc_assert_(*chain_ == 43114, "WAVAX is not on chain " << chain_);
         return "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"; }
+
+    else if (arg == "DAI-PSM-GUSD") {
+        orc_assert_(*chain_ == 1, "DAI is not on chain " << chain_);
+        return "0x204659B2Fd2aD5723975c362Ce2230Fba11d3900"; }
+    else if (arg == "DAI-PSM-USDC") {
+        orc_assert_(*chain_ == 1, "DAI is not on chain " << chain_);
+        return "0x89B78CfA322F6C5dE0aBcEecab66Aee45393cC5A"; }
+    else if (arg == "DAI-PSM-USDP") {
+        orc_assert_(*chain_ == 1, "DAI is not on chain " << chain_);
+        return "0x961Ae24a1Ceba861D1FDf723794f6024Dc5485Cf"; }
+
     else return arg;
 } };
 
@@ -444,6 +471,16 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "create2") {
         auto [factory, salt, code, data] = Options<Address, uint256_t, Bytes, Bytes>(args);
         std::cout << Address(HashK(Tie(uint8_t(0xff), factory, salt, HashK(Tie(code, data)))).skip<12>().num<uint160_t>()) << std::endl;
+
+    } else if (command == "dai:buygem") {
+        auto [psm, buyer, amount] = Options<Address, Address, uint256_t>(args);
+        static Selector<void, Address, uint256_t> buyGem("buyGem");
+        std::cout << (co_await executor_->Send(*chain_, {.gas = gas_}, psm, 0, buyGem(buyer, amount))).hex() << std::endl;
+
+    } else if (command == "dai:sellgem") {
+        auto [psm, seller, amount] = Options<Address, Address, uint256_t>(args);
+        static Selector<void, Address, uint256_t> sellGem("sellGem");
+        std::cout << (co_await executor_->Send(*chain_, {.gas = gas_}, psm, 0, sellGem(seller, amount))).hex() << std::endl;
 
     } else if (command == "debug") {
         const auto [block] = Options<Bytes32>(args);
