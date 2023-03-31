@@ -28,6 +28,7 @@
 #include <functional>
 #include <iostream>
 #include <list>
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -305,6 +306,14 @@ auto Split(const View &value, const View &delimeter) {
 }
 
 std::string Join(const std::string &delimeter, const std::vector<std::string> &args);
+
+template <typename Value_>
+auto Keys(const std::map<std::string, Value_> &args) {
+    std::vector<std::string> keys;
+    for (const auto &[key, value] : args)
+        keys.emplace_back(key);
+    return keys;
+}
 
 class Subset;
 
