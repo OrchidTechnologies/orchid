@@ -36,8 +36,6 @@ class Address :
     private uint160_t
 {
   public:
-    // XXX: clang-tidy should really exempt this particular situation
-    // NOLINTNEXTLINE (modernize-use-equals-default)
     using uint160_t::uint160_t;
 
     Address(const uint160_t &value) :

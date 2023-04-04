@@ -34,13 +34,13 @@ namespace orc {
 extern const Socket Port_;
 typedef std::tuple<uint32_t, Bytes32> Header;
 
-static uint32_t Magic_(0xff0fce1d);
-static uint32_t Stamp_(0xee6d796e);
+static const uint32_t Magic_(0xff0fce1d);
+static const uint32_t Stamp_(0xee6d796e);
 
-static uint32_t Submit0_(0xfd90e312);
-static uint32_t Submit1_(0xf0ece7ca);
+static const uint32_t Submit0_(0xfd90e312);
+static const uint32_t Submit1_(0xf0ece7ca);
 
-static uint32_t Invoice0_(0x01959987);
+static const uint32_t Invoice0_(0x01959987);
 
 void Scan(const Buffer &data, const std::function<void (const Buffer &)> &code);
 

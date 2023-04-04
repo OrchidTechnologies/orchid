@@ -37,6 +37,7 @@ class Updated {
 
   public:
     Updated() = default;
+    virtual ~Updated() = default;
 
     Updated(Type_ &&value) :
         value_(std::move(value))

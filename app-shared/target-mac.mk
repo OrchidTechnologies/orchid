@@ -20,6 +20,7 @@
 
 assemble := macos
 platform := darwin-x64
+capped := Darwin
 
 generated := $(pwd/gui)/macos/Flutter/GeneratedPluginRegistrant%swift
 

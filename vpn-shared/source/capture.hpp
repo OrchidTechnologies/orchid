@@ -62,6 +62,8 @@ class Internal :
 class MonitorLogger
 {
   public:
+    virtual ~MonitorLogger() = default;
+
     virtual void AddFlow(Five const &five) = 0;
     virtual void GotHostname(Five const &five, const std::string_view hostname) = 0;
     virtual void GotProtocol(Five const &five, const std::string_view protocol, const std::string_view protocol_chain) = 0;

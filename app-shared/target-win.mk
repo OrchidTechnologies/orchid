@@ -47,6 +47,7 @@ cflags/$(pwd)/ += -DUNICODE
 lflags += -municode
 
 lflags += $(engine)/flutter_windows.dll.lib
+lflags += -ldwmapi
 lflags += -lole32
 
 $(output)/package/flutter_windows.dll: $(engine)/flutter_windows.dll

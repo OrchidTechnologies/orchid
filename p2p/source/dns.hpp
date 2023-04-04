@@ -31,9 +31,7 @@
 #include "shared.hpp"
 #include "task.hpp"
 
-namespace boost {
-namespace asio {
-namespace ip {
+namespace boost::asio::ip {
 
 template <typename Protocol_>
 std::ostream &operator <<(std::ostream &out, const std::vector<asio::ip::basic_endpoint<Protocol_>> &endpoints) {
@@ -53,6 +51,6 @@ std::ostream &operator <<(std::ostream &out, const boost::asio::ip::basic_resolv
     return out;
 }
 
-} } }
+}
 
 #endif//ORCHID_DNS_HPP

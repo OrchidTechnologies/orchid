@@ -56,7 +56,7 @@ PODS:
     - MLImage (= 1.0.0-beta3)
     - MLKitCommon (~> 8.0)
     - Protobuf (~> 3.12)
-  - mobile_scanner (0.0.1):
+  - mobile_scanner (3.0.0):
     - Flutter
     - GoogleMLKit/BarcodeScanning (~> 3.2.0)
   - nanopb (2.30909.0):
@@ -127,7 +127,7 @@ SPEC CHECKSUMS:
   MLKitBarcodeScanning: d92fe1911001ec36870162c5a0eb206f612b7169
   MLKitCommon: f6da6c5659618c070b50a80db01248ebe2964175
   MLKitVision: 96c96571190b7f63eddf4a12068ce8a8689e0d2c
-  mobile_scanner: 0cf06f3d5224576aa24ade02a6f73d8b2551c7bf
+  mobile_scanner: 004f7ad2fe4e2b5a3e6ed0bc4b83ca9c5b5dd975
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
   PromisesObjC: ab77feca74fa2823e7af4249b8326368e61014cb
   Protobuf: 120350fc38646e2dedc26f49ecba778184ea1de2

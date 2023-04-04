@@ -1,12 +1,11 @@
+// @dart=2.9
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:orchid/common/formatting.dart';
-import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/util/on_off.dart';
 import 'package:orchid/util/test_app.dart';
 import 'orchid_logo.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 
 void main() {
   runApp(TestApp(content: _Test()));

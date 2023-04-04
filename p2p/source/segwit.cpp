@@ -20,6 +20,7 @@
 /* }}} */
 
 
+// NOLINTNEXTLINE(bugprone-suspicious-include)
 #include <segwit_addr.cpp>
 
 #include "segwit.hpp"

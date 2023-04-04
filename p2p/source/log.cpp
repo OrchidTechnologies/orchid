@@ -39,6 +39,8 @@ extern "C" void NSLog(NSString *, ...);
 #include "task.hpp"
 #include "time.hpp"
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
+
 #ifdef __APPLE__
 extern "C" const char *__crashreporter_info__ = nullptr;
 asm(".desc ___crashreporter_info__, 0x10");
@@ -52,6 +54,8 @@ namespace {
     std::mutex mutex_;
     std::string cause_;
 }
+
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 void Log_(std::ostream &out, Fiber *fiber) {
     if (fiber == nullptr)
@@ -82,9 +86,10 @@ Log::~Log() { try {
 
 #if 0
 #elif defined(__APPLE__)
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,cppcoreguidelines-pro-type-cstyle-cast)
     NSLog((NSString *)CFSTR("%s"), log.c_str());
 #elif defined(__ANDROID__)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     __android_log_print(ANDROID_LOG_VERBOSE, "orchid", "%s", log.c_str());
 #else
     std::cerr << log << std::endl;

@@ -314,8 +314,6 @@ class Punch :
     {
     }
 
-    virtual ~Punch() = default;
-
     task<void> Send(const Buffer &data, const Socket &socket) {
         co_return co_await Inner().Send(data, socket);
     }
@@ -323,6 +321,8 @@ class Punch :
 
 class Plant {
   public:
+    virtual ~Plant() = default;
+
     virtual task<void> Pull(const Four &four) noexcept = 0;
 };
 
@@ -464,6 +464,7 @@ class Transform :
     // https://superuser.com/questions/1056492/rst-sequence-number-and-window-size/1075512
     void Reset(const Socket &source, const Socket &destination, uint32_t sequence, uint32_t acknowledge) noexcept {
         // XXX: rename this to data
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
         struct {
             openvpn::IPv4Header ip4;
             openvpn::TCPHeader tcp;
@@ -480,7 +481,7 @@ class Transform :
         header.ip4.saddr = boost::endian::native_to_big(source.Host().operator uint32_t());
         header.ip4.daddr = boost::endian::native_to_big(destination.Host().operator uint32_t());
 
-        // NOLINTNEXTLINE (clang-analyzer-core.uninitialized.Assign)
+        // NOLINTNEXTLINE(clang-analyzer-core.uninitialized.Assign)
         header.ip4.check = openvpn::IPChecksum::checksum(&header.ip4, sizeof(header.ip4));
 
         header.tcp.source = boost::endian::native_to_big(source.Port());
@@ -493,7 +494,7 @@ class Transform :
         header.tcp.check = 0;
         header.tcp.urgent_p = 0;
 
-        // NOLINTNEXTLINE (clang-analyzer-core.UndefinedBinaryOperatorResult)
+        // NOLINTNEXTLINE(clang-analyzer-core.UndefinedBinaryOperatorResult)
         header.tcp.check = openvpn::udp_checksum(
             reinterpret_cast<uint8_t *>(&header.tcp),
             sizeof(header.tcp),
@@ -688,6 +689,7 @@ static JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueCon
     Log() << std::string(data, size) << std::endl;
     return JS_UNDEFINED;
 } catch (const std::exception &error) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     return JS_ThrowInternalError(context, "%s", error.what());
 } }
 

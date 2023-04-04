@@ -27,7 +27,9 @@
 
 namespace orc {
 
+// NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ctre::literals;
+
 typedef ctre::regex_results<const char *> Matches0;
 typedef ctre::regex_results<const char *, ctre::captured_content<1>> Matches1;
 typedef ctre::regex_results<const char *, ctre::captured_content<1>, ctre::captured_content<2>> Matches2;

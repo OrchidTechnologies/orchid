@@ -61,7 +61,7 @@ DWORD getTunIndex() {
         if (curAddress->FirstUnicastAddress == nullptr) {
             continue;
         }
-        sockaddr_in *sin = reinterpret_cast<sockaddr_in*>(curAddress->FirstUnicastAddress->Address.lpSockaddr);
+        const auto sin = reinterpret_cast<sockaddr_in*>(curAddress->FirstUnicastAddress->Address.lpSockaddr);
         if (sin->sin_addr.s_addr == htonl(Host_.operator uint32_t())) {
             return curAddress->IfIndex;
         }
@@ -101,6 +101,7 @@ std::pair<DWORD, DWORD> default_gateway_outside_tun(u_long dest)
     DWORD metric = ULONG_MAX;
     DWORD nextHop = 0;
     for (DWORD i = 0; i < pIpForwardTable->dwNumEntries; i++) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         PMIB_IPFORWARDROW row = &pIpForwardTable->table[i];
         if (row->dwForwardType == MIB_IPROUTE_TYPE_INVALID) {
             continue;
@@ -165,7 +166,7 @@ int Protect(SOCKET socket, int (*attach)(SOCKET, const sockaddr *, socklen_t), c
     if (address->sa_family != AF_INET) {
         return attach(socket, address, length);
     }
-    const sockaddr_in *sin = reinterpret_cast<const sockaddr_in *>(address);
+    const auto sin = reinterpret_cast<const sockaddr_in *>(address);
 
     auto [index, gateway] = default_gateway_outside_tun(sin->sin_addr.s_addr);
 
@@ -207,7 +208,7 @@ int Protect(SOCKET socket, int (*attach)(SOCKET, const sockaddr *, socklen_t), c
         bool done = false;
         for (auto ua = curAddress->FirstUnicastAddress; ua != nullptr; ua = ua->Next) {
             auto a = ua->Address;
-            sockaddr_in *sin = reinterpret_cast<sockaddr_in*>(a.lpSockaddr);
+            const auto sin = reinterpret_cast<sockaddr_in*>(a.lpSockaddr);
             ULONG mask;
             ConvertLengthToIpv4Mask(ua->OnLinkPrefixLength, &mask);
             if (SUBNET_EQ(sin->sin_addr.s_addr, mask, gateway)) {

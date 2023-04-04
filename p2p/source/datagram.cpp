@@ -33,8 +33,7 @@ namespace orc {
 bool Datagram(const Buffer &data, const std::function<bool (const Socket &, const Socket &, Window)> &code) { orc_block({
     Window window(data);
 
-    openvpn::IPv4Header ip4;
-    window.Take(&ip4);
+    const auto ip4(window.Take<openvpn::IPv4Header>());
 
     if (openvpn::IPCommon::version(ip4.version_len) != uint8_t(openvpn::IPCommon::IPv4))
         return false;
@@ -50,8 +49,7 @@ bool Datagram(const Buffer &data, const std::function<bool (const Socket &, cons
     if (offset != 0 || !last)
         return false;
 
-    openvpn::UDPHeader udp;
-    window.Take(&udp);
+    const auto udp(window.Take<openvpn::UDPHeader>());
     orc_assert(window.size() == boost::endian::big_to_native(udp.len) - sizeof(udp));
 
     Socket source(boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));

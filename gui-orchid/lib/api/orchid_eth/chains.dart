@@ -1,5 +1,5 @@
+// @dart=2.9
 // ignore_for_file: non_constant_identifier_names
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
@@ -84,7 +84,7 @@ class Chains {
     chainId: GNOSIS_CHAINID,
     name: 'Gnosis',
     nativeCurrency: Tokens.XDAI,
-    defaultProviderUrl: 'https://rpc.gnosischain.com/',
+    defaultProviderUrl: 'https://rpc.gnosis.gateway.fm',
     iconPath: OrchidAssetSvgChain.gnossis_chain_path,
     explorerUrl: 'https://blockscout.com/xdai/mainnet/',
     supportsLogs: true,

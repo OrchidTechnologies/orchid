@@ -31,9 +31,9 @@
 
 namespace orc {
 
-typedef boost::json::value Any;
-typedef boost::json::object Object;
-typedef boost::json::array Array;
+using Any = boost::json::value;
+using Object = boost::json::object;
+using Array = boost::json::array;
 
 class Argument final {
   private:
@@ -105,24 +105,24 @@ class Argument final {
         value_(Json::arrayValue)
     {
         int index(0);
-        for (auto arg(args.begin()); arg != args.end(); ++arg)
-            value_[index++] = std::move(arg->value_);
+        for (auto &arg : args)
+            value_[index++] = std::move(arg.value_);
     }
 
     template <typename Type_>
-    Argument(const std::vector<Type_> &args) :
+    Argument(std::vector<Type_> args) :
         value_(Json::arrayValue)
     {
         int index(0);
-        for (const auto &arg : args)
-            value_[index++] = std::move(Argument(arg).value_);
+        for (auto &arg : args)
+            value_[index++] = std::move(Argument(std::move(arg)).value_);
     }
 
     Argument(std::map<std::string, Argument> args) :
         value_(Json::objectValue)
     {
-        for (auto arg(args.begin()); arg != args.end(); ++arg)
-            value_[arg->first] = std::move(arg->second);
+        for (auto &arg : args)
+            value_[arg.first] = std::move(arg.second);
     }
 
     template <typename Type_>

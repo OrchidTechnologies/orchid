@@ -39,11 +39,14 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
     auto &sync(family.Wire<Sync<asio::generic::datagram_protocol::socket, SyncConnection>>(Context(), asio::generic::datagram_protocol(PF_SYSTEM, SYSPROTO_CONTROL)));
     auto file(sync->native_handle());
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     ctl_info info;
     memset(&info, 0, sizeof(info));
     orc_assert(strlcpy(info.ctl_name, UTUN_CONTROL_NAME, sizeof(info.ctl_name)) < sizeof(info.ctl_name));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     orc_syscall(ioctl(file, CTLIOCGINFO, &info));
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     struct sockaddr_ctl address;
     address.sc_id = info.ctl_id;
     address.sc_len = sizeof(address);

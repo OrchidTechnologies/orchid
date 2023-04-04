@@ -41,7 +41,7 @@ class CreateObserver :
     public webrtc::CreateSessionDescriptionObserver
 {
   public:
-    webrtc::SessionDescriptionInterface *description_;
+    webrtc::SessionDescriptionInterface *description_ = nullptr;
 
   protected:
     void OnSuccess(webrtc::SessionDescriptionInterface *description) noexcept override {

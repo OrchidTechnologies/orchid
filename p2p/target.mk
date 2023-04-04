@@ -168,7 +168,8 @@ source += $(pwd)/challenge-bypass-ristretto-ffi/src/wrapper.cpp
 
 
 linked += $(pwd)/boringtun/librust.a
-cflags += -I$(pwd)/boringtun/src
+cflags += -I$(pwd)/boringtun/boringtun/src
+features/$(pwd)/boringtun += ffi-bindings
 
 
 source += $(pwd)/SPCDNS/src/codec.c

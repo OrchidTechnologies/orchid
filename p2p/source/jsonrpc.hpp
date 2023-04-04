@@ -406,7 +406,7 @@ struct Coded<std::tuple<Args_...>, void> {
 
     static std::tuple<Args_...> Decode(const Beam &data) {
         Window window(data);
-        const auto value(Decode(window));
+        auto value(Decode(window));
         window.Stop();
         return value;
     }

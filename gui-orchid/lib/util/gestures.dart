@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:flutter/widgets.dart';
 
 class TripleTapGestureDetector extends StatelessWidget {

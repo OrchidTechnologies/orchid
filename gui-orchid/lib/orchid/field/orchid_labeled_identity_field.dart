@@ -1,19 +1,19 @@
-import 'package:browser_detector/browser_detector.dart';
+// @dart=2.9
 import 'package:orchid/orchid.dart';
+import 'package:browser_detector/browser_detector.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/common/qrcode_scan.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
-import 'package:orchid/orchid/orchid_asset.dart';
 
 /// Scan or paste an identity
 class OrchidLabeledIdentityField extends StatefulWidget {
   final String label;
 
   /// Callback fires on changes with either a valid parsed account or null if the form state is invalid or incomplete.
-  final void Function(ParseOrchidIdentityResult parsed) onChange;
+  final void Function(ParseOrchidIdentityOrAccountResult parsed) onChange;
   final double spacing;
 
   const OrchidLabeledIdentityField({
@@ -158,8 +158,8 @@ class _OrchidLabeledIdentityFieldState
         bodyText: s.theCodeYouPastedDoesNot);
   }
 
-  ParseOrchidIdentityResult _parse(String text) {
-    return ParseOrchidIdentityResult.parse(text);
+  ParseOrchidIdentityOrAccountResult _parse(String text) {
+    return ParseOrchidIdentityOrAccountResult.parse(text);
   }
 
   @override

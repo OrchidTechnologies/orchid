@@ -1,5 +1,6 @@
+// @dart=2.9
 
-// TODO: Migrate to .name / .byName() when dart version of the app allows.
+// TODO: Migrate to .name / values.byName()
 @deprecated
 class Enums {
   static void _assertEnum(enumValue) {
@@ -18,7 +19,7 @@ class Enums {
 
   /// Pick an enum value based on the suffix only, ignoring case.
   /// e.g. "none" => TransactionType.None
-  static T fromString<T>(List<T> enumValues, String value) {
+  static T fromStringIgnoringCase<T>(List<T> enumValues, String value) {
     if (value == null) {
       return null;
     }

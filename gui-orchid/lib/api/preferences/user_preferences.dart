@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:convert';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_chain_config.dart';
@@ -156,13 +157,6 @@ class UserPreferences {
     }
   }
 
-  /// Add a key to the user's keystore.
-  // Note: Minimizes exposure to the full setKeys()
-  Future<void> addKey(StoredEthereumKey key) async {
-    var allKeys = ((keys.get()) ?? []) + [key];
-    return await keys.set(allKeys);
-  }
-
   /// Remove a key from the user's keystore.
   Future<bool> removeKey(StoredEthereumKeyRef keyRef) async {
     var keysList = ((keys.get()) ?? []);
@@ -174,6 +168,13 @@ class UserPreferences {
     }
     await keys.set(keysList);
     return true;
+  }
+
+  /// Add a key to the user's keystore.
+  // Note: Minimizes exposure to the full setKeys()
+  Future<void> addKey(StoredEthereumKey key) async {
+    var allKeys = ((keys.get()) ?? []) + [key];
+    return await keys.set(allKeys);
   }
 
   /// Add a list of keys to the user's keystore.

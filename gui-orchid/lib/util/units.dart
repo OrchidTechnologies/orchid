@@ -1,10 +1,8 @@
-import 'dart:ui';
-
-import 'package:flutter/foundation.dart';
+// @dart=2.9
+import 'package:orchid/orchid.dart';
 import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
-import 'package:orchid/orchid.dart';
 
 class ScalarValue<T extends num> {
   final T value;

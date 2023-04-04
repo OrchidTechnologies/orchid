@@ -55,7 +55,7 @@ class Client1 :
     void Invoice(const Bytes32 &id, const Buffer &data) override;
 
   public:
-    Client1(BufferDrain &drain, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder, const uint128_t &face);
+    Client1(BufferDrain &drain, S<Updated<Prices>> oracle, Market market, Address lottery, const Secret &secret, Address funder, uint128_t face);
 
     static task<Client1 &> Wire(BufferSunk &sunk, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder);
 

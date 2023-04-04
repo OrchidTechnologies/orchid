@@ -18,11 +18,10 @@ tag p2p/sqlite 'version-[0-9.]*'
 head[env/libcxx]=origin/release_90
 head[env/libcxxabi]=origin/release_90
 
-head[app-shared/flutter]=3.3.9
+head[app-shared/flutter]=3.7.1
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
-# boringtun is stuck, by https://github.com/cloudflare/boringtun/pull/235
-head[p2p/boringtun]=42710c904605bf1efe6e1e52fd6f7b16c099e06c
+# pcre2 is stuck due to https://github.com/PCRE2Project/pcre2/issues/205
 
 # url is stuck due to https://forums.developer.apple.com/thread/120977 :/
 # (I tried to use a local copy of libcxx on Apple, but crashed on iOS 14)

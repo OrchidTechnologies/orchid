@@ -70,13 +70,13 @@ void Client1::Invoice(const Bytes32 &id, const Buffer &data) {
     Client::Invoice(id, data);
 }
 
-Client1::Client1(BufferDrain &drain, S<Updated<Prices>> oracle, Market market, const Address &lottery, const Secret &secret, const Address &funder, const uint128_t &face) :
+Client1::Client1(BufferDrain &drain, S<Updated<Prices>> oracle, Market market, Address lottery, const Secret &secret, Address funder, uint128_t face) :
     Client(drain, std::move(oracle)),
     market_(std::move(market)),
-    lottery_(lottery),
+    lottery_(std::move(lottery)),
     secret_(secret),
-    funder_(funder),
-    face_(face)
+    funder_(std::move(funder)),
+    face_(std::move(face))
 {
 }
 

@@ -28,6 +28,7 @@
 
 namespace orc {
 
+// NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ctre::literals;
 
 Address::Address(const std::string_view &address) :

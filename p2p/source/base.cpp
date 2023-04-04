@@ -33,6 +33,7 @@
 #include "layer.hpp"
 #include "locator.hpp"
 #include "pirate.hpp"
+#include "threads.hpp"
 
 namespace orc {
 
@@ -48,9 +49,9 @@ Base::~Base() = default;
 U<cricket::PortAllocator> Base::Allocator() {
     auto &factory(Factory());
     // XXX: should this really block?
-    return Thread().BlockingCall([&]() {
+    return Wait(Post([&]() -> U<cricket::PortAllocator> {
         return std::make_unique<cricket::BasicPortAllocator>(manager_.get(), &factory);
-    });
+    }, Thread()));
 }
 
 task<Response> Base::Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead orc_block({

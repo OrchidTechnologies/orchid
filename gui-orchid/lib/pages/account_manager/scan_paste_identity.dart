@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
+// @dart=2.9
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/common/qrcode_scan.dart';
@@ -16,7 +15,7 @@ import 'package:orchid/util/localization.dart';
 @deprecated
 class ScanOrPasteOrchidIdentity extends StatefulWidget {
   /// Callback fires on changes with either a valid parsed account or null if the form state is invalid or incomplete.
-  final void Function(ParseOrchidIdentityResult parsed) onChange;
+  final void Function(ParseOrchidIdentityOrAccountResult parsed) onChange;
   final double spacing;
   final bool pasteOnly;
 
@@ -123,7 +122,8 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
     _validateCodeAndFireCallback();
   }
 
-  void _validateCodeAndFireCallback({bool fromPaste, bool fromScan}) {
+  void _validateCodeAndFireCallback(
+      {bool fromPaste = false, bool fromScan = false}) {
     try {
       final parsed = _parse(_pasteField.text);
       widget.onChange(parsed);
@@ -154,8 +154,8 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
         bodyText: s.theCodeYouPastedDoesNot);
   }
 
-  ParseOrchidIdentityResult _parse(String text) {
-    return ParseOrchidIdentityResult.parse(text);
+  ParseOrchidIdentityOrAccountResult _parse(String text) {
+    return ParseOrchidIdentityOrAccountResult.parse(text);
   }
 
   @override

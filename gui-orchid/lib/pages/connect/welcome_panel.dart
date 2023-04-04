@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:flutter/services.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -50,6 +51,9 @@ class _WelcomePanelState extends State<WelcomePanel> {
   // This could be either the imported or generated identity, depending on whether
   // the user hits the "back" button.
   StoredEthereumKey _selectedIdentity;
+
+  EthereumAddress _funderAddress;
+  Chain _chain;
 
   @override
   void initState() {
@@ -327,14 +331,23 @@ class _WelcomePanelState extends State<WelcomePanel> {
         ).top(24).padx(24),
         OrchidLabeledIdentityField(
           label: s.orchidIdentity,
-          onChange: (ParseOrchidIdentityResult result) async {
+          onChange: (ParseOrchidIdentityOrAccountResult result) async {
             if (result != null) {
-              if (result.isNew) {
-                await UserPreferences().addKey(result.signer);
+              await result.saveIfNeeded();
+
+              if (result.account != null) {
+                // Populate the form even though it is not currently shown.
+                _funderAddress = result.account.funder;
+                _chain = Chains.chainFor(result.account.chainId);
+                // We don't have a version selector in account import yet
+                // _version = result.account.version;
+                widget.onAccount(result.account);
               }
+
               setState(() {
                 _importedIdentity = result.signer;
                 _selectedIdentity = _importedIdentity;
+
                 _state = _State.setup_account;
               });
             }
@@ -343,9 +356,6 @@ class _WelcomePanelState extends State<WelcomePanel> {
       ],
     );
   }
-
-  EthereumAddress _funderAddress;
-  Chain _chain;
 
   Widget _buildContentSetupAccountState() {
     if (_selectedIdentity == null) {
@@ -786,10 +796,11 @@ class _WelcomePanelState extends State<WelcomePanel> {
       return;
     }
     final account = Account.fromSignerKey(
-        signerKey: _selectedIdentity.ref(),
-        funder: _funderAddress,
-        chainId: _chain.chainId,
-        version: 1);
+      signerKey: _selectedIdentity.ref(),
+      funder: _funderAddress,
+      chainId: _chain.chainId,
+      version: 1,
+    );
     await UserPreferences().addCachedDiscoveredAccounts([account]);
     log("XXX: saved account: $account");
     widget.onAccount(account);

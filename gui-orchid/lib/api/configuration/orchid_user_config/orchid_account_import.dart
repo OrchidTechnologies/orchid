@@ -1,24 +1,57 @@
-import 'dart:async';
+// @dart=2.12
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/util/hex.dart';
-import '../../../util/js_config.dart';
+import 'package:orchid/util/js_config.dart';
 
 /// Import orchid accounts
 class OrchidAccountImport {
-  /// Parse a V1 account identity config from JavaScript (not JSON), e.g.
-  /// account = {secret:"0xfb5d5..."}
-  static ParseOrchidIdentityResult parseOrchidIdentity(
+  /// Parse an account config from JavaScript (not JSON), e.g.
+  /// account = {
+  ///   version: 1,
+  ///   secret:"0xfb5d5...",
+  ///   funder: "0x1234...",
+  ///   chainid: 100,
+  /// }
+  static ParseOrchidIdentityOrAccountResult parseOrchidAccount(
       String js, List<StoredEthereumKey> existingKeys) {
     try {
-      var config = JSConfig(js);
+      // signer
+      final config = JSConfig(js);
       var secret = config.evalString('account.secret');
       var newKeys = <StoredEthereumKey>[]; // type required here
       var signer = resolveImportedKey(secret, existingKeys, newKeys);
-      return ParseOrchidIdentityResult(signer, newKeys.isNotEmpty);
+      log("XXX signer = $signer");
+
+      // account info
+      final String? funder = config.evalStringDefault('account.funder', null);
+      if (funder != null) {
+        final version = config.evalIntDefault('account.version', 1);
+        final chainid = config.evalIntDefault('account.chainid', 1);
+        final account = Account.fromSignerKey(
+          signerKey: signer.ref(),
+          funder: EthereumAddress.from(funder),
+          version: version,
+          chainId: chainid,
+        );
+        final accountIsNew =
+            !UserPreferences().cachedDiscoveredAccounts.get().contains(account);
+        return ParseOrchidIdentityOrAccountResult(
+          signer: signer,
+          isSignerNew: newKeys.isNotEmpty,
+          account: account,
+          isAccountNew: accountIsNew,
+        );
+      } else {
+        return ParseOrchidIdentityOrAccountResult(
+          signer: signer,
+          isSignerNew: newKeys.isNotEmpty,
+        );
+      }
     } catch (err) {
-      print("Error parsing orchid identity: $err");
+      print("Error parsing orchid account: $err");
       throw err;
     }
   }
@@ -26,7 +59,7 @@ class OrchidAccountImport {
   /// Parse a 64 character raw hex encoded key with leading zeroes if required.
   /// The string may optionally be prefixed with "0x" making it 66 characters.
   /// The string is trimmed and case is ignored.
-  static ParseOrchidIdentityResult parseRawKey(
+  static ParseOrchidIdentityOrAccountResult parseRawKey(
       String secretIn, List<StoredEthereumKey> existingKeys) {
     var secret = secretIn.toLowerCase().trim();
     RegExp hexEncodedSecret = RegExp(r'^(0x)?[a-f0-9]{64}$');
@@ -35,9 +68,9 @@ class OrchidAccountImport {
     }
     try {
       var newKeys = <StoredEthereumKey>[];
-      var signer = resolveImportedKey(
-          secret, existingKeys, newKeys);
-      return ParseOrchidIdentityResult(signer, newKeys.isNotEmpty);
+      var signer = resolveImportedKey(secret, existingKeys, newKeys);
+      return ParseOrchidIdentityOrAccountResult(
+          signer: signer, isSignerNew: newKeys.isNotEmpty);
     } catch (err) {
       print("Error parsing orchid identity: $err");
       throw err;
@@ -48,9 +81,6 @@ class OrchidAccountImport {
   /// add it to the newKeys list.  In both cases the key is returned.
   static StoredEthereumKey resolveImportedKey(String secret,
       List<StoredEthereumKey> existingKeys, List<StoredEthereumKey> newKeys) {
-    if (secret == null) {
-      throw Exception("missing secret");
-    }
     secret = Hex.remove0x(secret);
     StoredEthereumKey key;
     try {
@@ -87,33 +117,64 @@ class OrchidAccountImport {
   }
 }
 
-/// This class imports a V0 or V1 style account identity or raw key.
-class ParseOrchidIdentityResult {
+/// A valid parse result will include at least a signer key and an indication
+/// of whether the signer key is new or resolved to an existing (saved) key.
+/// The parse may optionally include full account info (version, funder, chain)
+/// referencing the included signer.
+class ParseOrchidIdentityOrAccountResult {
+  /// The parsed signer key, which may or may not be new.
   final StoredEthereumKey signer;
-  final bool isNew;
 
-  ParseOrchidIdentityResult(this.signer, this.isNew);
+  /// The signer is new and is not yet saved.
+  final bool isSignerNew;
 
-  static ParseOrchidIdentityResult parse(
-      String config, {
-        List<StoredEthereumKey> keys,
-      }) {
-    var existingKeys = keys ?? UserPreferences().keys.get();
+  /// A parsed account referencing the above signer key.
+  /// Null if no account information was included in the parse.
+  final Account? account;
 
-    // Try to parse as a V1 identity (which may be a subset of a V0 account)
+  /// The account is new and not yet saved.
+  final bool isAccountNew;
+
+  bool get isNew => isSignerNew || isAccountNew;
+
+  ParseOrchidIdentityOrAccountResult({
+    required this.signer,
+    required this.isSignerNew,
+    this.account,
+    this.isAccountNew = false,
+  });
+
+  static ParseOrchidIdentityOrAccountResult parse(String config,
+      {List<StoredEthereumKey>? keys}) {
+    final existingKeys = keys ?? UserPreferences().keys.get();
+
+    // Parse an account or identity (full account or signer key only).
     try {
-      return OrchidAccountImport.parseOrchidIdentity(config, existingKeys);
+      return OrchidAccountImport.parseOrchidAccount(config, existingKeys);
     } catch (err) {
-      // fall through to raw key test
+      // fall through to next test
     }
 
-    // Try to parse as a raw hex key
+    // Try to parse as a raw hex signer key
     return OrchidAccountImport.parseRawKey(config, existingKeys);
+  }
+
+  Future<void> save() async {
+    saveIfNeeded();
+  }
+
+  Future<void> saveIfNeeded() async {
+    if (isSignerNew) {
+      await UserPreferences().addKey(signer);
+    }
+    // https://stackoverflow.com/questions/65456958/dart-null-safety-doesnt-work-with-class-fields/65457221#65457221
+    if (account != null && isAccountNew) {
+      await UserPreferences().addCachedDiscoveredAccounts([account!]);
+    }
   }
 
   @override
   String toString() {
-    return 'ParseOrchidIdentityResult{signer: $signer, isNew: $isNew}';
+    return 'ParseOrchidIdentityOrAccountResult{signer: $signer, isSignerNew: $isSignerNew, account: $account, isAccountNew: $isAccountNew}';
   }
 }
-

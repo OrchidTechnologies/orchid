@@ -57,9 +57,11 @@ class Nest final :
         }
 
         Count(Count &&count) noexcept :
-            nest_(count.nest_)
+            nest_(count.nest_),
+            count_(count.count_)
         {
             count.nest_ = nullptr;
+            count.count_ = 0;
         }
 
         ~Count() {

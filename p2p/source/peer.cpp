@@ -33,14 +33,13 @@
 namespace orc {
 
 // XXX: should this task really be delegated to WebRTC?
-// NOLINTNEXTLINE (fuchsia-statically-constructed-objects)
-namespace { struct Setup {
+namespace { const struct Setup {
     Setup() { rtc::InitializeSSL(); }
     ~Setup() { rtc::CleanupSSL(); }
 } setup_; }
 
 #ifndef _WIN32
-struct Logger :
+const struct Logger :
     public rtc::LogSink
 {
     Logger() {
@@ -227,7 +226,7 @@ void Peer::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> interf
 
 rtc::scoped_refptr<rtc::RTCCertificate> Certify() {
     return rtc::RTCCertificate::Create(rtc::OpenSSLIdentity::CreateWithExpiration(
-        "WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), 60*60*24
+        "WebRTC", rtc::KeyParams(rtc::KT_DEFAULT), time_t(24)*60*60
     ));
 }
 

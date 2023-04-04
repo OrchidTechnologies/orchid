@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:async';
 import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import '../orchid_api.dart';
@@ -37,6 +38,12 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
   @override
   Future<void> initStoreListenerImpl() async {
     SKPaymentQueueWrapper().setTransactionObserver(this);
+    await SKPaymentQueueWrapper().startObservingTransactionQueue();
+    final pendingTx = await SKPaymentQueueWrapper().transactions();
+    if ((pendingTx ?? []).isNotEmpty) {
+      log("iap: Pending transactions exist on start!: $pendingTx");
+      updatedTransactions(transactions: pendingTx);
+    }
   }
 
   @override
@@ -177,6 +184,7 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
   // Return a map of PAC by product id
   @override
   Future<Map<String, PAC>> requestProducts({bool refresh = false}) async {
+    // if (OrchidAPI.mockAPI && !OrchidPurchaseAPI.allowPurchaseWithMock) {
     if (OrchidAPI.mockAPI) {
       return OrchidPurchaseAPI.mockPacs();
     }
@@ -208,7 +216,7 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
     var pacs = productResponse.products.map(toPAC).toList();
     Map<String, PAC> products = {for (var pac in pacs) pac.productId: pac};
     productsCached = products;
-    log('iap: returning products');
+    log('iap: returning products: $products');
     return products;
   }
 
@@ -220,7 +228,9 @@ class IOSOrchidPurchaseAPI extends OrchidPurchaseAPI
   }
 
   @override
-  void paymentQueueRestoreCompletedTransactionsFinished() {}
+  void paymentQueueRestoreCompletedTransactionsFinished() {
+    log('iap: paymentQueueRestoreCompletedTransactionsFinished');
+  }
 
   @override
   void removedTransactions({List<SKPaymentTransactionWrapper> transactions}) {

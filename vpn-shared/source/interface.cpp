@@ -43,10 +43,10 @@ extern "C" int orchid_bind(SOCKET socket, const struct sockaddr *address, sockle
 #endif
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 pthread_key_t protect_;
 
-// NOLINTNEXTLINE (fuchsia-statically-constructed-objects)
-namespace { struct Setup {
+namespace { const struct Setup {
     Setup() { orc_assert(pthread_key_create(&protect_, nullptr) == 0); }
 } setup_; }
 
@@ -57,6 +57,7 @@ extern "C" int orchid_connect(SOCKET socket, const struct sockaddr *address, soc
         goto connect;
     }
 {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     union {
         sockaddr sa;
         sockaddr_in in;

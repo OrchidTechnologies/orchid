@@ -92,6 +92,8 @@ class Bonded {
     }
 
   public:
+    virtual ~Bonded() = default;
+
     BufferSink<Bonding> &Bond() {
         // XXX: this is non-obviously incorrect
         const auto locked(locked_());

@@ -1,5 +1,5 @@
+// @dart=2.9
 import 'dart:math';
-import 'dart:ui';
 import 'package:flutter/painting.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_crypto.dart';

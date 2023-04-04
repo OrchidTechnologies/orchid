@@ -1,10 +1,8 @@
+// @dart=2.9
+import 'package:orchid/orchid.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/material.dart';
 import 'package:orchid/api/monitoring/analysis_db.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/pages/monitoring/traffic_view.dart';
 
 class TrafficViewDetail extends StatefulWidget {

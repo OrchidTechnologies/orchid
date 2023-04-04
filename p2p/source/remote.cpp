@@ -502,6 +502,7 @@ void Remote::Stop(const std::string &error) noexcept {
     Base::Stop();
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 Remote::Remote(const class Host &host) :
     Base(typeid(*this).name(), std::make_unique<Assistant>(host)),
     host_(host)
@@ -519,6 +520,7 @@ Remote::Remote(const class Host &host) :
     orc_lwipcall(netifapi_netif_add, (&interface_, &address, &netmask, &gateway, this, &Initialize, &ip_input));
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static uint8_t quad_(3);
 
 Remote::Remote() :

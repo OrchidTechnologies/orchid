@@ -11,6 +11,10 @@
 
 pwd/openssl := $(pwd)/openssl
 
+# XXX: __ANDROID_API__ was replaced by __ANDROID_MIN_SDK_VERSION__
+# now the former is defined to the latter, causing macro redefined
+# unfortunately, OpenSSL looks for the former to set the API level
+
 $(output)/%/openssl/Makefile $(subst @,%,$(patsubst %,$(output)/@/openssl/include/openssl/%.h,opensslconf opensslv)): $(pwd/openssl)/Configure $(pwd/openssl)/include/openssl/opensslv.h $(sysroot)
 	rm -rf $(output)/$*/openssl
 	mkdir -p $(output)/$*/openssl

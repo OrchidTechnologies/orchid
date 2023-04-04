@@ -54,7 +54,7 @@ namespace orc {
 void Initialize() {
     // XXX: leak this on purpose as this API is annoying
     new openvpn::InitProcess::Init();
-    // NOLINTNEXTLINE (clang-analyzer-cplusplus.NewDeleteLeaks)
+    // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
 }
 
 class Transport :
@@ -169,7 +169,7 @@ class Transport :
             //Log() << "\e[35mSEND " << buffer.size() << " " << buffer << "\e[0m" << std::endl;
             co_await Inner().Send(buffer);
         // XXX: like half of clang-tidy, this lint doesn't work! :/
-        // NOLINTNEXTLINE (clang-analyzer-cplusplus.NewDeleteLeaks)
+        // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
         }; }, __FUNCTION__);
 
         return true;
@@ -221,9 +221,9 @@ class Factory :
     openvpn::ExternalTransport::Config config_;
 
   public:
-    Factory(S<Base> base, const openvpn::ExternalTransport::Config &config) :
+    Factory(S<Base> base, openvpn::ExternalTransport::Config config) :
         base_(std::move(base)),
-        config_(config)
+        config_(std::move(config))
     {
     }
 
@@ -252,9 +252,9 @@ class Middle :
         openvpn::TunClientParent &parent_;
 
       public:
-        Tunnel(Middle &middle, const openvpn::ExternalTun::Config &config, openvpn_io::io_context &context, openvpn::TunClientParent &parent) :
+        Tunnel(Middle &middle, openvpn::ExternalTun::Config config, openvpn_io::io_context &context, openvpn::TunClientParent &parent) :
             middle_(middle),
-            config_(config),
+            config_(std::move(config)),
             context_(context),
             parent_(parent)
         {
@@ -324,9 +324,9 @@ class Middle :
         openvpn::ExternalTun::Config config_;
 
       public:
-        Factory(Middle &middle, const openvpn::ExternalTun::Config &config) :
+        Factory(Middle &middle, openvpn::ExternalTun::Config config) :
             middle_(middle),
-            config_(config)
+            config_(std::move(config))
         {
         }
 

@@ -8,7 +8,7 @@
 	"trafficMonitoringOnly": "Только мониторинг трафика",
 	"orchidConnecting": "Orchid подключается",
 	"orchidDisconnecting": "Orchid отключается",
-	"numHopsConfigured": "{num, plural, one {{num} подключение настроено} few {{num} подключения настроено} many {{num} подключений настроено} =0{Подключения не настроены} =1{Одно подключение настроено} =2{Два подключения настроено} other{{num} подключения настроено}}",
+	"numHopsConfigured": "{num, plural, few {{num} подключения настроено} many {{num} подключений настроено} =0{Подключения не настроены} =1{Одно подключение настроено} =2{Два подключения настроено} other{{num} подключения настроено}}",
 	"@numHopsConfigured": {
 		"type": "text",
 		"placeholders": {

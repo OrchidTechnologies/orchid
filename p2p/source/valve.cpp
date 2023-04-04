@@ -35,6 +35,7 @@ namespace orc {
 
 static const bool tracking_ = false;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 uint64_t Valve::Unique_ = 0;
 
 struct Tracker {

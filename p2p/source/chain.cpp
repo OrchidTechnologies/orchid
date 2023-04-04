@@ -280,9 +280,9 @@ Block::Block(const uint256_t &chain, Json::Value &&value) :
     // XXX: verify transaction root
 }
 
-Account::Account(const uint256_t &nonce, const uint256_t &balance) :
-    nonce_(nonce),
-    balance_(balance),
+Account::Account(uint256_t nonce, uint256_t balance) :
+    nonce_(std::move(nonce)),
+    balance_(std::move(balance)),
     storage_(Zero<32>()),
     code_(Zero<32>())
 {
@@ -333,7 +333,7 @@ std::ostream &operator <<(std::ostream &out, const Entry &value) {
 uint256_t Chain::Get(Json::Value::ArrayIndex index, const Json::Value &storages, const Region &root, const uint256_t &key) const {
     const auto &storage(storages[index]);
     orc_assert_(uint256_t(storage["key"].asString()) == key, "incorrect response for " << key << " at " << index << ": " << storage);
-    const uint256_t value(storage["value"].asString());
+    uint256_t value(storage["value"].asString());
     const auto leaf(Verify(storage["proof"], root, HashK(Number<uint256_t>(key))));
     orc_assert(leaf.num() == value);
     return value;

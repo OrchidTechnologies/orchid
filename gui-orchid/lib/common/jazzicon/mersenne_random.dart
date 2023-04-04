@@ -18,7 +18,7 @@ class MersenneTwisterRandom {
   static const LOW = 0x7fffffff;
 
   List<int> state = new List.filled(N, 0, growable: false);
-  int index;
+  int index = -1;
 
   MersenneTwisterRandom(int seed) {
     _seed(seed);

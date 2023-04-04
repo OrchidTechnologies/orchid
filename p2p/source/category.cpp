@@ -28,9 +28,11 @@
 
 namespace orc {
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 static std::mutex mutex_;
 static std::map<int, std::exception_ptr> errors_;
 static int index_(0);
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 std::string Category::message(int index) const {
     try {
@@ -50,7 +52,7 @@ std::exception_ptr Category::Convert(int index) noexcept {
 boost::system::error_code Category::Convert(const std::exception_ptr &error) noexcept {
     std::unique_lock<std::mutex> lock(mutex_);
     // XXX: clang-tidy might need fixing, as this just bans ?:
-    // NOLINTNEXTLINE (readability-implicit-bool-conversion)
+    // NOLINTNEXTLINE(readability-implicit-bool-conversion)
     while (!errors_.try_emplace(++index_ ?: ++index_, error).second);
     return {index_, orchid_category()};
 }

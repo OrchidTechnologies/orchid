@@ -35,7 +35,7 @@ namespace orc {
 typedef boost::multiprecision::cpp_bin_float_oct Float;
 
 static const Float Ten9("1000000000");
-static const Float Ten18("1000000000000000000");
+static const Float Ten18(Ten9 * Ten9);
 
 template <typename Type_>
 std::enable_if_t<std::is_same_v<Type_, double>, Type_> To(const std::string_view &value) {

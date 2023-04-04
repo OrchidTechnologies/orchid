@@ -1,5 +1,6 @@
+// @dart=2.9
 import 'dart:math';
-import 'package:badges/badges.dart';
+import 'package:badges/badges.dart' as badge;
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/common/formatting.dart';
@@ -318,13 +319,13 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
   Widget _buildManageAccountsButton(BuildContext context, bool showBadge) {
     return GestureDetector(
       onTap: widget.onManageAccountsPressed,
-      child: Badge(
+      child: badge.Badge(
         showBadge: showBadge,
         elevation: 0,
         badgeContent: Text('!', style: OrchidText.caption),
         padding: EdgeInsets.only(left: 8, right: 8, bottom: 4, top: 8),
         toAnimate: false,
-        position: BadgePosition.topEnd(top: -8, end: -34),
+        position: badge.BadgePosition.topEnd(top: -8, end: -34),
         child: SizedBox(
           height: 16,
           child: Text(

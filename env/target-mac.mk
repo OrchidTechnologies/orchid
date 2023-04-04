@@ -29,7 +29,7 @@ endif
 
 sdk := macosx
 runtime := osx
-more := -mmacosx-version-min=10.14
+more := -mmacosx-version-min=10.15
 include $(pwd)/target-apl.mk
 
 contents := /Contents

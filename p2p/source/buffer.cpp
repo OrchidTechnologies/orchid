@@ -28,6 +28,7 @@
 
 namespace orc {
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::atomic<uint64_t> copied_(0);
 
 size_t Buffer::size() const {
@@ -173,7 +174,7 @@ std::tuple<View, View> Split(const View &value, const Range<> &range) {
 cppcoro::generator<View> Split(const View &value, std::string delimeter) {
     for (auto data(value.data()), stop(data + value.size());; ) {
         // XXX: this clang-tidy check should not trigger on ?:
-        // NOLINTNEXTLINE (readability-implicit-bool-conversion)
+        // NOLINTNEXTLINE(readability-implicit-bool-conversion)
         const auto next(static_cast<const char *>(memmem(data, stop - data, delimeter.data(), delimeter.size())) ?: stop);
         co_yield View(data, next - data);
         if (next == stop)

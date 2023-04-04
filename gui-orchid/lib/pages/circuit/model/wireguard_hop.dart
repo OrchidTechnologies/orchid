@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'circuit_hop.dart';
 
 class WireGuardHop extends CircuitHop {

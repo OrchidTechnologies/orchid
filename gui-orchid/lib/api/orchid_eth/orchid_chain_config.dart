@@ -1,5 +1,5 @@
+// @dart=2.9
 import 'package:orchid/orchid.dart';
-import 'package:orchid/util/collections.dart';
 
 /// User overrides for default chain configuration
 class ChainConfig {

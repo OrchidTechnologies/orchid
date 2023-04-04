@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:dartjsengine/dartjsengine.dart';
 import 'package:jsparser/jsparser.dart';
 import 'package:orchid/api/orchid_log_api.dart';

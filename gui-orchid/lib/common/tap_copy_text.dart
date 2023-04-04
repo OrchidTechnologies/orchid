@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:orchid/orchid.dart';
 import 'package:flutter/services.dart';
 
@@ -16,6 +17,7 @@ class TapToCopyText extends StatefulWidget {
 
   // Callback to be used in lieu of the default copy functionality
   final void Function(String text) onTap;
+  final void Function(String text) onLongPress;
 
   const TapToCopyText(
     this.text, {
@@ -25,6 +27,7 @@ class TapToCopyText extends StatefulWidget {
     this.style,
     this.padding,
     this.onTap,
+    this.onLongPress,
     this.overflow,
     this.textAlign,
   }) : super(key: key);
@@ -68,6 +71,13 @@ class _TapToCopyTextState extends State<TapToCopyText> {
       onTap: () {
         if (widget.onTap != null) {
           widget.onTap(widget.text);
+        } else {
+          _doCopy();
+        }
+      },
+      onLongPress: () {
+        if (widget.onTap != null) {
+          widget.onLongPress(widget.text);
         } else {
           _doCopy();
         }

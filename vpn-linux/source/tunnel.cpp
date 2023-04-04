@@ -29,12 +29,15 @@
 namespace orc {
 
 void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<void (const std::string &)> &code) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     auto &sync(sunk.Wire<Sync<asio::posix::stream_descriptor, SyncFile>>(Context(), open("/dev/net/tun", O_RDWR)));
     auto file(sync->native_handle());
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     struct ifreq request;
     request.ifr_flags = IFF_TUN | IFF_NO_PI;
     strncpy(request.ifr_name, device.c_str(), IFNAMSIZ);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     orc_syscall(ioctl(file, TUNSETIFF, &request));
     code(request.ifr_name);
 

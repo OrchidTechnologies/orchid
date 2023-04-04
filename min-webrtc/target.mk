@@ -27,6 +27,7 @@ webrtc += $(filter-out \
 webrtc += $(wildcard $(pwd)/webrtc/api/crypto/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/transport/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/transport/media/*.cc)
+webrtc += $(wildcard $(pwd)/webrtc/api/transport/rtp/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/units/*.cc)
 
 webrtc += $(pwd)/webrtc/api/field_trials_registry.cc
@@ -64,6 +65,8 @@ webrtc += $(pwd)/webrtc/call/rtp_demuxer.cc
 webrtc += $(pwd)/webrtc/call/rtp_payload_params.cc
 webrtc += $(pwd)/webrtc/call/rtp_transport_controller_send.cc
 webrtc += $(pwd)/webrtc/call/rtp_video_sender.cc
+
+webrtc += $(pwd)/webrtc/common_video/generic_frame_descriptor/generic_frame_info.cc
 
 webrtc += $(pwd)/webrtc/common_video/h264/h264_common.cc
 webrtc += $(pwd)/webrtc/common_video/h264/pps_parser.cc
@@ -103,7 +106,10 @@ webrtc += $(wildcard $(pwd)/webrtc/modules/utility/source/*.cc)
 webrtc += $(pwd)/webrtc/modules/utility/maybe_worker_thread.cc
 
 webrtc += $(pwd)/webrtc/modules/video_coding/chain_diff_calculator.cc
+webrtc += $(pwd)/webrtc/modules/video_coding/encoded_frame.cc
 webrtc += $(pwd)/webrtc/modules/video_coding/frame_dependencies_calculator.cc
+# XXX: why is this in the include folder?!
+webrtc += $(pwd)/webrtc/modules/video_coding/include/video_codec_interface.cc
 
 webrtc += $(filter-out \
     %/reassembly_streams.cc \
@@ -252,8 +258,6 @@ cflags += -DSCTP_USE_OPENSSL_SHA1
 
 # disable dcsctp congestion controller
 chacks/$(pwd/webrtc)/media/sctp/dcsctp_transport.cc += s/ options;/ options{.cwnd_mtus_initial = 10000, .cwnd_mtus_min = 10000};/g;
-# disallow blocking signaling thread
-chacks/$(pwd/webrtc)/rtc_base/event.cc += /::Wait(/{s/\/\*//;s/\*\///;s/$$/ if (warn_after != kForever) std::terminate();/;};
 # do not allocate statistics collector
 chacks/$(pwd/webrtc)/pc/rtc_stats_collector.cc += s/rtc::make_ref_counted<RTCStatsCollector>([^;]*/nullptr/g;
 

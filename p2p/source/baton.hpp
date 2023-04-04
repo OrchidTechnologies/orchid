@@ -85,6 +85,7 @@ class Baton<void, asio::error_code> :
 };
 
 template <typename Value_>
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 class Baton<void, asio::error_code, Value_> :
     public Baton<void, asio::error_code>
 {
@@ -124,8 +125,7 @@ class Handler {
 
 }
 
-namespace boost {
-namespace asio {
+namespace boost::asio {
 
 template <typename Type_, typename... Values_>
 struct async_result<orc::Adapt, Type_ (Values_...)> {
@@ -141,6 +141,6 @@ struct async_result<orc::Adapt, Type_ (Values_...)> {
     }
 };
 
-} }
+}
 
 #endif//ORCHID_BATON_HPP

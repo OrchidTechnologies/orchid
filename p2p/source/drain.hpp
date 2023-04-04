@@ -29,6 +29,8 @@ namespace orc {
 
 class Basin {
   public:
+    virtual ~Basin() = default;
+
     // XXX: make this take an std::exception_ptr
     virtual void Stop(const std::string &error = std::string()) noexcept = 0;
 };
@@ -43,6 +45,9 @@ class Drain :
 
 template <typename Type_>
 class Sunken {
+  public:
+    virtual ~Sunken() = default;
+
   protected:
     virtual Type_ &Inner() noexcept = 0;
 
@@ -69,6 +74,8 @@ class Sunk {
     virtual Drain_ &Gave() noexcept = 0;
 
   public:
+    virtual ~Sunk() = default;
+
     bool Wired() noexcept {
         return inner_ != nullptr;
     }

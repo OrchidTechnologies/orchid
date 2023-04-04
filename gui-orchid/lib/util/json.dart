@@ -1,3 +1,4 @@
+// @dart=2.9
 class Json {
   /// Recursively descend the json and trim long strings
   static Map<String, dynamic> trimLongStrings(Map<String, dynamic> json,

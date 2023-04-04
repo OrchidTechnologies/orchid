@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:async';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/orchid_crypto.dart';
@@ -18,8 +19,8 @@ class OrchidVPNConfigGenerate {
   static Future<String> generateConfig({
     bool forExport = false,
   }) async {
-    Circuit circuit = await UserPreferences().circuit.get();
-    List<StoredEthereumKey> keys = await UserPreferences().keys.get();
+    Circuit circuit = UserPreferences().circuit.get();
+    List<StoredEthereumKey> keys = UserPreferences().keys.get();
     List<CircuitHop> hops = circuit?.hops ?? [];
 
     var hopsConfig = await Future.wait(hops.map((hop) {

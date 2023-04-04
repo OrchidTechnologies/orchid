@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:orchid/api/orchid_log_api.dart';
 
 class Hex {

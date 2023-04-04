@@ -165,7 +165,6 @@ class Task {
 
 template <typename Type_>
 Task<Type_> Freebie(Type_ value) {
-    // NOLINTNEXTLINE (clang-analyzer-cplusplus.Move)
     co_return value;
 }
 
@@ -194,7 +193,7 @@ class Promise {
     }
 
     auto await_transform(decltype(orc_optic)) {
-        // NOLINTNEXTLINE (clang-analyzer-core.CallAndMessage)
+        // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage)
         return Ready<Fiber *>(
 #ifdef ORC_FIBER
             fiber_
@@ -207,7 +206,7 @@ class Promise {
 #ifdef ORC_FIBER
     template <typename Type_>
     auto &&await_transform(Task<Type_> &&task) {
-        // NOLINTNEXTLINE (clang-analyzer-core.CallAndMessage)
+        // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage)
         task.Set(fiber_);
         return std::forward<Task<Type_>>(task);
     }

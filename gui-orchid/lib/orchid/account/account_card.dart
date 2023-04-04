@@ -1,8 +1,9 @@
+// @dart=2.9
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/orchid/builder/token_price_builder.dart';
-import 'package:badges/badges.dart';
+import 'package:badges/badges.dart' as badge;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -233,7 +234,7 @@ class _AccountCardState extends State<AccountCard>
           SizedBox(
             key: Key(balanceText ?? ''),
             child: balanceText != null
-                ? Badge(
+                ? badge.Badge(
                     // ignorePointer: true,
                     showBadge: showBadge,
                     elevation: 0,
@@ -243,7 +244,7 @@ class _AccountCardState extends State<AccountCard>
                         .bottom(5),
                     padding: EdgeInsets.zero,
                     toAnimate: false,
-                    position: BadgePosition.topEnd(top: -5, end: -30),
+                    position: badge.BadgePosition.topEnd(top: -5, end: -30),
                     child: Text(balanceText, style: OrchidText.highlight),
                   )
                 : Align(
@@ -405,14 +406,29 @@ class _AccountCardState extends State<AccountCard>
             _labeledRow(
               title: s.contract,
               child: Text(versionText, style: OrchidText.extra_large).top(8),
-            ).top(16),
-
-            pady(16)
+            ).pady(16),
           ],
         ).padx(40),
       ],
     );
   }
+
+  /*
+  Widget _buildShareButton() {
+    return GestureDetector(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Icon(Icons.ios_share, color: Colors.white),
+        ],
+      ),
+      onTap: () async {
+        final String config = widget.accountDetail.account.toExportString();
+        await AccountManagerPageUtil.export(context, config);
+      },
+    );
+  }
+   */
 
   Widget _buildTicketsRow(
       AccountBalanceChartTicketModel chartModel, double efficiency) {
@@ -466,8 +482,8 @@ class _AccountCardState extends State<AccountCard>
 
   // display token value and symbol on a row with usd price in a row below
   Widget _buildTokenValueTextRow({Token value, USD price, Color textColor}) {
-    final valueText = ((value ?? (tokenType ?? Tokens.TOK).zero)
-        .formatCurrency(locale: context.locale, precision: 2, showSuffix: false));
+    final valueText = ((value ?? (tokenType ?? Tokens.TOK).zero).formatCurrency(
+        locale: context.locale, precision: 2, showSuffix: false));
     final valueWidget =
         Text(valueText).extra_large.withColor(textColor ?? Colors.white);
     return TokenValueWidgetRow(

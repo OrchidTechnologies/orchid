@@ -30,6 +30,7 @@ namespace orc {
 typedef int SOCKET;
 #endif  // WEBRTC_POSIX
 
+// NOLINTNEXTLINE(google-build-using-namespace)
 using namespace rtc;
 
 // Event constants for the Dispatcher class.

@@ -28,17 +28,17 @@
 namespace orc {
 
 std::string ToBase64(const Region &data) {
-    using namespace boost::beast::detail::base64;
+    namespace base64 = boost::beast::detail::base64;
     std::string encoded;
-    encoded.resize(encoded_size(data.size()));
-    encoded.resize(encode(&encoded[0], data.data(), data.size()));
+    encoded.resize(base64::encoded_size(data.size()));
+    encoded.resize(base64::encode(&encoded[0], data.data(), data.size()));
     return encoded;
 }
 
 Beam FromBase64(const std::string &data) {
-    using namespace boost::beast::detail::base64;
-    Beam decoded(decoded_size(data.size()));
-    const auto result(decode(decoded.data(), data.data(), data.size()));
+    namespace base64 = boost::beast::detail::base64;
+    Beam decoded(base64::decoded_size(data.size()));
+    const auto result(base64::decode(decoded.data(), data.data(), data.size()));
     orc_assert(result.second <= data.size());
     // XXX: I must misunderstand this API, right? there's no way this doesn't count =
     for (auto i(result.second); i != data.size(); ++i)

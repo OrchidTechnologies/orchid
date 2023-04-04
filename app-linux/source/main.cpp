@@ -30,6 +30,7 @@ struct _MyApplication {
     GtkApplication parent_instance;
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables,performance-no-int-to-ptr)
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
 static void my_application_activate(GApplication *application) {
@@ -59,6 +60,7 @@ static void my_application_init(MyApplication *self) {
 }
 
 MyApplication *my_application_new() {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     return MY_APPLICATION(g_object_new(my_application_get_type(), "application-id", "net.orchid.Orchid", nullptr));
 }
 

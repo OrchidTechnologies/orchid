@@ -20,6 +20,7 @@
 
 assemble := ios
 platform := ios
+capped := Ios
 
 generated := $(pwd/gui)/ios/Runner/GeneratedPluginRegistrant%m
 generated += $(pwd/gui)/ios/Runner/GeneratedPluginRegistrant%h

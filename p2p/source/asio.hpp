@@ -25,6 +25,7 @@
 
 #ifndef ASIO_STANDALONE
 namespace asio {
+    // NOLINTNEXTLINE(google-build-using-namespace)
     using namespace boost::asio;
     using boost::system::error_code;
     using boost::system::system_category;

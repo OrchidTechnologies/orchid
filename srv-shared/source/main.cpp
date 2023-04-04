@@ -233,7 +233,7 @@ int Main(int argc, const char *const argv[]) {
 
 
     // XXX: the return type of OpenSSLIdentity::FromPEMStrings should be changed :/
-    // NOLINTNEXTLINE (cppcoreguidelines-pro-type-static-cast-downcast)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
     //U<rtc::OpenSSLIdentity> identity(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(store.Key(), store.Certificates()));
 
     rtc::scoped_refptr<rtc::RTCCertificate> certificate(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(store.Key(), store.Certificates())));

@@ -1,30 +1,22 @@
+// @dart=2.9
 import 'dart:async';
-
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/orchid/account/account_card.dart';
-import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/orchid/account/account_store.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
-import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
-import 'package:orchid/orchid/orchid_colors.dart';
-import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/account/account_detail_store.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/pages/account_manager/scan_paste_identity_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
-import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/pages/circuit/circuit_utils.dart';
@@ -34,8 +26,7 @@ import 'package:orchid/pages/circuit/orchid_account_entry.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
-import 'package:orchid/util/dispose.dart';
-import 'package:orchid/util/strings.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
 
 import '../../common/app_sizes.dart';
@@ -260,11 +251,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   void _importIdentity() {
     ScanOrPasteIdentityDialog.show(
       context: context,
-      onImportAccount: (ParseOrchidIdentityResult result) async {
+      onImportAccount: (ParseOrchidIdentityOrAccountResult result) async {
         if (result != null) {
-          if (result.isNew) {
-            await UserPreferences().addKey(result.signer);
-          }
+          await result.saveIfNeeded();
           _setSelectedIdentity(result.signer);
 
           // Support onboarding by prodding the account finder if it exists
@@ -357,29 +346,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
       return;
     }
     var config = identity.toExportString();
-    var title = s.exportThisOrchidKey;
-    // var bodyStyle = AppText.dialogBody.copyWith(fontSize: 15);
-    var bodyStyle = OrchidText.body2;
-    // var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
-    var linkStyle = OrchidText.body2.copyWith(color: Colors.deepPurple);
-
-    var body = StyledText(
-      style: bodyStyle,
-      newLineAsBreaks: true,
-      text: s.aQrCodeAndTextForAllTheOrchidAccounts +
-          '  ' +
-          s.weRecommendBackingItUp +
-          '\n\n' +
-          s.importThisKeyOnAnotherDeviceToShareAllThe,
-      tags: {
-        'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),
-      },
-    );
-
-    return AppDialogs.showAppDialog(
-        context: context,
-        title: title,
-        body: ExportIdentityDialog(body: body, config: config));
+    AccountManagerPageUtil.export(context, config);
   }
 
   // Delete the active identity after in-use check and user confirmation.
@@ -450,8 +417,12 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                 style:
                     OrchidText.caption.copyWith(color: OrchidColors.tappable),
                 onTap: (String text) async {
-                  await TapToCopyText.copyTextToClipboard(text);
-                  _showOrchidAccountAddressWarning();
+                  _copyAndShowOrchidAccountAddressWarning(
+                      qrCodeText: text, showQRCode: false);
+                },
+                onLongPress: (String text) async {
+                  _copyAndShowOrchidAccountAddressWarning(
+                      qrCodeText: text, showQRCode: true);
                 },
               ),
             ),
@@ -462,9 +433,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
-  Future<void> _showOrchidAccountAddressWarning() async {
+  Future<void> _copyAndShowOrchidAccountAddressWarning(
+      {@required String qrCodeText, bool showQRCode = false}) async {
+    await TapToCopyText.copyTextToClipboard(qrCodeText);
     var title = s.copiedOrchidIdentity;
-    var body = StyledText(
+    final bodyText = StyledText(
       style: OrchidText.body2,
       newLineAsBreaks: true,
       text: '<alarm/> <bold>' +
@@ -485,10 +458,31 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             color: OrchidColors.purple_bright)
       },
     );
+    final qrCode = () => Container(
+          width: 250,
+          height: 250,
+          child: Center(
+            child: QrImage(
+              data: qrCodeText,
+              backgroundColor: Colors.white,
+              version: QrVersions.auto,
+              size: 250.0,
+            ),
+          ),
+        );
+
     return AppDialogs.showAppDialog(
       context: context,
       title: title,
-      body: body,
+      body: showQRCode
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                bodyText,
+                qrCode().top(24),
+              ],
+            )
+          : bodyText,
     );
   }
 
@@ -544,6 +538,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
             children: [pady(8), footer()],
           )
         : ListView.separated(
+            physics: const BouncingScrollPhysics(
+                decelerationRate: ScrollDecelerationRate.normal),
             separatorBuilder: (BuildContext context, int index) =>
                 Container(height: 24),
             key: PageStorageKey('account list view'),
@@ -647,6 +643,35 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   S get s {
     return S.of(context);
+  }
+}
+
+class AccountManagerPageUtil {
+  static Future<void> export(BuildContext context, String config) async {
+    final s = context.s;
+    var title = s.exportThisOrchidKey;
+    // var bodyStyle = AppText.dialogBody.copyWith(fontSize: 15);
+    var bodyStyle = OrchidText.body2;
+    // var linkStyle = AppText.linkStyle.copyWith(fontSize: 15);
+    var linkStyle = OrchidText.body2.copyWith(color: Colors.deepPurple);
+
+    var body = StyledText(
+      style: bodyStyle,
+      newLineAsBreaks: true,
+      text: s.aQrCodeAndTextForAllTheOrchidAccounts +
+          '  ' +
+          s.weRecommendBackingItUp +
+          '\n\n' +
+          s.importThisKeyOnAnotherDeviceToShareAllThe,
+      tags: {
+        'link': linkStyle.link(OrchidUrls.partsOfOrchidAccount),
+      },
+    );
+
+    return AppDialogs.showAppDialog(
+        context: context,
+        title: title,
+        body: ExportIdentityDialog(body: body, config: config));
   }
 }
 

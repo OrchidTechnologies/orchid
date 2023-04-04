@@ -2,7 +2,7 @@ import 'package:fixnum/fixnum.dart';
 
 // Ported from https://github.com/download13/blockies (WTFPL)
 class XorShiftRandom {
-  List<int> _state;
+  List<int> _state = [];
 
   XorShiftRandom(String seedValue) {
     _seed(seedValue);

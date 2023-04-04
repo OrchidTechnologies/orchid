@@ -150,7 +150,6 @@ task<Socket> Local::Unlid(Sunk<BufferSewer, Opening> &sunk) {
 
 task<U<Stream>> Local::Connect(const Socket &endpoint) {
     auto connection(std::make_unique<Connection>(Context()));
-    // NOLINTNEXTLINE (clang-analyzer-optin.cplusplus.VirtualCall)
     co_await connection->Open(endpoint);
     co_return connection;
 }

@@ -1,5 +1,6 @@
 name: orchid
 description: Silicon Valley (Season 4)
+publish_to: none
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -10,7 +11,7 @@ description: Silicon Valley (Season 4)
 version: 0.9.0+1
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.19.1 <3.0.0"
 
 dependencies:
   badges: 1.2.0
@@ -29,18 +30,25 @@ dependencies:
   flutter_svg: 1.0.3
   font_awesome_flutter: 9.0.0
   http: 0.13.4
-  in_app_purchase_storekit: 0.3.4
+  in_app_purchase_storekit: 0.3.5+2
   in_app_purchase_android: 0.2.3+7
   intl: 0.17.0
   jdenticon_dart: 2.0.0
-  mobile_scanner: 2.1.0
+
+  # Tracking this issue which has been merged but is not yet in a tagged release.
+  # https://github.com/juliansteenbakker/mobile_scanner/issues/241
+  mobile_scanner:
+    git:
+      url: https://github.com/juliansteenbakker/mobile_scanner.git
+      ref: 9e4e9a167980f8413c1d8860873e582d0747edd9
+
   percent_indicator: 3.0.1
   pointycastle: 3.5.0
   provider: 5.0.0
   qr_flutter: 4.0.0
   rxdart: 0.25.0
   shared_preferences: 2.0.12
-  styled_text: 6.0.0
+  styled_text: 7.0.0
   sqflite: 2.0.0+3
   url_launcher: 6.0.3
   uuid: 3.0.5

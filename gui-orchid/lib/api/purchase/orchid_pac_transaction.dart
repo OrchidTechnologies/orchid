@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
@@ -6,7 +7,6 @@ import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/util/enums.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/json.dart';
 
@@ -85,8 +85,8 @@ class PacTransaction {
   }
 
   Map<String, dynamic> toJson() => {
-        'type': Enums.toStringValue(type),
-        'state': Enums.toStringValue(state),
+        'type': type.name,
+        'state': state.name,
         'date': date.toIso8601String(),
         'retries': retries.toString(),
         'serverResponse': serverResponse
@@ -144,12 +144,12 @@ class PacTransaction {
 
   // Return the state matching the string name ignoring case
   static PacTransactionState toTransactionState(String s) {
-    return Enums.fromString(PacTransactionState.values, s);
+    return PacTransactionState.values.byName(s);
   }
 
   // Return the transaction type matching the string name ignoring case
   static PacTransactionType toTransactionType(String s) {
-    return Enums.fromString(PacTransactionType.values, s);
+    return PacTransactionType.values.byName(s);
   }
 }
 
@@ -191,7 +191,7 @@ class PacAddBalanceTransaction extends PacTransaction
     signer = EthereumAddress.fromNullable(json['signer']);
     productId = json['productId'];
     receipt = json['receipt'];
-    receiptType = Enums.fromString(ReceiptType.values, json['receiptType']);
+    receiptType = ReceiptType.values.byName(json['receiptType']);
   }
 
   @override
@@ -213,7 +213,7 @@ class PacAddBalanceTransaction extends PacTransaction
       'signer': signer?.toString() ?? null,
       'productId': productId,
       'receipt': receipt,
-      'receiptType': receiptType != null ? Enums.toStringValue(receiptType) : null,
+      'receiptType': receiptType != null ? receiptType.name : null,
     });
     return json;
   }
@@ -339,7 +339,7 @@ class PacPurchaseTransaction extends PacTransaction
   Map<String, dynamic> toJson() {
     var json = super.toJson();
     json.addAll({
-      'type': Enums.toStringValue(type),
+      'type': type.name,
       'addBalance': addBalance,
       'submitRaw': submitRaw,
     });

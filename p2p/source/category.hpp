@@ -27,6 +27,7 @@
 
 namespace orc {
 
+// NOLINTNEXTLINE(cppcoreguidelines-virtual-class-destructor)
 class Category :
     public boost::system::error_category
 {

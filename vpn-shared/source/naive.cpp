@@ -58,7 +58,6 @@ task<U<Stream>> Naive::Connect(const Socket &endpoint) {
     // XXX: this is only temporarily--and, even then, only barely--safe here
     orc_assert(pthread_setspecific(protect_, __FUNCTION__) == 0);
     //Specific specific(protect_, __FUNCTION__);
-    // NOLINTNEXTLINE (clang-analyzer-optin.cplusplus.VirtualCall)
     co_await connection->Open(endpoint);
     co_return connection;
 }

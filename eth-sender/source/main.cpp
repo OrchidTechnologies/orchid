@@ -45,8 +45,7 @@
 
 namespace orc {
 
-namespace po = boost::program_options;
-
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 S<Base> base_;
 S<Chain> chain_;
 S<Executor> executor_;
@@ -56,6 +55,7 @@ std::optional<uint256_t> nonce_;
 std::optional<uint64_t> gas_;
 std::optional<uint64_t> height_;
 Locator rpc_{{"http", "127.0.0.1", "8545"}, "/"};
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 class Args :
     public std::deque<std::string>
@@ -79,7 +79,7 @@ class Args :
 
     auto operator ()() {
         orc_assert(!empty());
-        const auto value(std::move(front()));
+        auto value(std::move(front()));
         pop_front();
         return value;
     }
@@ -194,7 +194,7 @@ static checked_int256_t _(std::string_view arg) {
     return -checked_int256_t(value);
 } };
 
-static Address TransferV("0x2c1820DBc112149b30b8616Bf73D552BEa4C9F1F");
+static const Address TransferV("0x2c1820DBc112149b30b8616Bf73D552BEa4C9F1F");
 
 template <>
 struct Option<Address> {
@@ -329,6 +329,7 @@ std::tuple<Types_...> Options(Args &args, std::index_sequence<Indices_...>) {
 
 template <typename ...Types_>
 auto Options(Args &args) {
+    // NOLINTNEXTLINE(clang-analyzer-core.StackAddressEscape)
     orc_assert(args.size() == sizeof...(Types_));
     return Options<Types_...>(args, std::index_sequence_for<Types_...>());
 }
@@ -351,7 +352,7 @@ task<int> Main(int argc, const char *const argv[]) { try {
     Flags flags;
 
     const auto command([&]() { for (;;) {
-        const auto arg(args());
+        auto arg(args());
         orc_assert(!arg.empty());
         if (arg[0] != '-')
             return arg;

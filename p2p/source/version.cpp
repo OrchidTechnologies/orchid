@@ -28,7 +28,7 @@ const char Version[] = {
 #include "revision.hpp"
 };
 
-const char *VersionData = Version;
-size_t VersionSize = sizeof(Version);
+const char *const VersionData = Version;
+const size_t VersionSize = sizeof(Version);
 
 }

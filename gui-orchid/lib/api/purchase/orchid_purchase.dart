@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -51,6 +52,7 @@ abstract class OrchidPurchaseAPI {
 
     OrchidPurchaseAPI.initPacLogListener();
 
+    // if (!OrchidAPI.mockAPI || allowPurchaseWithMock) {
     if (!OrchidAPI.mockAPI) {
       await initStoreListenerImpl();
     }
@@ -78,6 +80,7 @@ abstract class OrchidPurchaseAPI {
     log("iap: purchase pac");
 
     // Mock support
+    // if (OrchidAPI.mockAPI && !allowPurchaseWithMock) {
     if (OrchidAPI.mockAPI) {
       log("iap: mock purchase, delay");
       Future.delayed(Duration(seconds: 2)).then((_) async {
@@ -165,7 +168,7 @@ abstract class OrchidPurchaseAPI {
 
   static Future<void> recoverTx() async {
     // Reset any existing tx after an app restart.
-    var tx = await PacTransaction.shared.get();
+    var tx = PacTransaction.shared.get();
     if (tx != null && tx.state != PacTransactionState.Complete) {
       log("iap: Found PAC tx in progress after app startup: $tx");
       tx.state = PacTransactionState.WaitingForUserAction;
