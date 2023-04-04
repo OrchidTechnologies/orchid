@@ -332,7 +332,7 @@ std::ostream &operator <<(std::ostream &out, const Entry &value) {
 
 uint256_t Chain::Get(Json::Value::ArrayIndex index, const Json::Value &storages, const Region &root, const uint256_t &key) const {
     const auto &storage(storages[index]);
-    orc_assert(uint256_t(storage["key"].asString()) == key);
+    orc_assert_(uint256_t(storage["key"].asString()) == key, "incorrect response for " << key << " at " << index << ": " << storage);
     const uint256_t value(storage["value"].asString());
     const auto leaf(Verify(storage["proof"], root, HashK(Number<uint256_t>(key))));
     orc_assert(leaf.num() == value);
