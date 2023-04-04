@@ -34,9 +34,6 @@
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
-#include "libplatform/libplatform.h"
-#include "v8.h"
-
 #include <api/jsep_session_description.h>
 #include <pc/webrtc_sdp.h>
 
@@ -375,16 +372,6 @@ int Main(int argc, const char *const argv[]) {
 }
 
 int main(int argc, const char *const argv[]) { try {
-    v8::V8::InitializeICUDefaultLocation(argv[0]);
-    v8::V8::InitializeExternalStartupData(argv[0]);
-
-    const auto platform(v8::platform::NewDefaultPlatform());
-    v8::V8::InitializePlatform(platform.get());
-    _scope({ v8::V8::ShutdownPlatform(); });
-
-    v8::V8::Initialize();
-    _scope({ v8::V8::Dispose(); });
-
     return orc::Main(argc, argv);
 } catch (const std::exception &error) {
     std::cerr << error.what() << std::endl;

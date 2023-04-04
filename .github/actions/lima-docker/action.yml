@@ -1,0 +1,11 @@
+runs:
+  using: "composite"
+  steps:
+    - run: brew install docker lima
+      shell: bash
+    - run: limactl start template://docker
+      shell: bash
+    - run: docker context create lima-docker --docker "host=unix://${HOME}/.lima/docker/sock/docker.sock"
+      shell: bash
+    - run: docker context use lima-docker
+      shell: bash

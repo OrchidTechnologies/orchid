@@ -1,0 +1,9 @@
+runs:
+  using: "composite"
+  steps:
+    - run: brew install lima
+      shell: bash
+    - run: limactl start default
+      shell: bash
+    - run: echo "ENV_DOCKER=nerdctl.lima" >>"${GITHUB_ENV}"
+      shell: bash

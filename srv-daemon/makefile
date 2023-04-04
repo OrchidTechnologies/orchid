@@ -21,6 +21,7 @@
 args := 
 include ../chains.mk
 
+distro := ubuntu bionic 7
 include env/target.mk
 
 binary := $(output)/$(machine)/orchidd$(exe)
@@ -53,7 +54,6 @@ cflags += -I$(pwd)/extra
 cflags += -I$(pwd)/source
 
 $(call include,p2p/target.mk)
-$(call include,cv8/target.mk)
 
 cflags += -Iall/vpn-shared/source
 ifeq ($(target),lnx)
@@ -61,25 +61,17 @@ cflags += -Iall/vpn-linux/source
 source += all/vpn-linux/source/tunnel.cpp
 endif
 
+kernel/$(output)/$(machine)/kernel: force
+	$(MAKE) -C kernel target=lnx machine=$(machine)
 
-# XXX: this should be done as part of env/output.mk for all autoconf builds
-p_libuv := -D__FILE__='\"libuv/*\"' -Wno-builtin-macro-redefined
+$(output)/embed: env/embed.c
+	clang -o $@ $<
 
-libuv := 
-libuv += libuv.a
-libuv := $(patsubst %,$(pwd)/libuv/.libs/%,$(libuv))
+$(output)/$(machine)/extra/kernel.xxd: kernel/$(output)/$(machine)/kernel $(output)/embed
+	@mkdir -p $(dir $@)
+	$(output)/embed kernel $< >$@
 
-$(subst @,%,$(patsubst %,$(output)/@/%,$(libuv))) \
-: $(output)/%/$(pwd)/libuv/Makefile $(sysroot)
-	$(MAKE) -C $(dir $<)
-
-linked += $(libuv)
-
-cflags += -I$(pwd)/libuv/include
-
-
-include mediasoup.mk
-
+$(call depend,$(pwd)/source/kernel.cpp.o,$(output)/$(machine)/extra/kernel.xxd)
 
 include env/output.mk
 

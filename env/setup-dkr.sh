@@ -17,9 +17,9 @@ uid=$(stat -c %u /mnt)
 if [[ ${uid} -eq 0 ]]; then
     exec "$@"
 else
-    # newer versions of sudo and/or Ubuntu disallow using sudo to become a user that doesn't exist? :/
-    useradd --badnames -oM -u "${uid}" -d "${HOME}" user # XXX: if I'm doing this can't I just use su?
+    useradd --badnames -oM -u "${uid}" -d "${HOME}" user
     apt-get -y install sudo
+    echo 'user ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
     chmod 755 ~
     chown -R "${uid}" ~
     exec sudo -u "#${uid}" "$@"

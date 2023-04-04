@@ -40,8 +40,9 @@ jobs:
 
     - uses: actions/checkout@v2
     - run: env/setup.sh
-    - run: env/setup-ndk.sh
     - uses: ./.github/actions/submodule
+
+    - run: env/setup-ndk.sh
 
     - run: make -j3 -C app-android precache='--no-ios'
 
@@ -111,17 +112,20 @@ jobs:
   build-mac-srv:
     runs-on: macos-latest
 
+    if: ${{ false }} # XXX: Hypervisor.framework
     steps:
     - uses: actions/checkout@v2
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
 
-    - run: make -j3 -C srv-shared
+    - uses: ./.github/actions/nerdctl
+
+    - run: make -j3 -C srv-daemon
 
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-mac
-        path: srv-shared/out-mac/x86_64/orchidd
+        path: srv-daemon/out-mac/x86_64/orchidd
 
     - run: git status
 
@@ -131,11 +135,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
-
     - uses: actions/checkout@v2
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
+
+    - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
     - run: debug=crossndk make -j3 -C app-windows ./env/dotdot/gui-orchid/.flutter-plugins
     - run: debug=crossndk make -j3 -C app-windows target=win precache='--no-android --no-ios --windows -a'
@@ -150,11 +154,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
-
     - uses: actions/checkout@v2
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
+
+    - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
     - run: make -j3 -C eth-sender target=win
 
@@ -168,11 +172,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
-
     - uses: actions/checkout@v2
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
+
+    - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
     - run: make -j3 -C cli-shared target=win
 
@@ -185,19 +189,21 @@ jobs:
   build-win-srv:
     runs-on: macos-latest
 
+    if: ${{ false }} # XXX: use Hyper-V
     steps:
-    - run: brew install mingw-w64 coreutils
-
     - uses: actions/checkout@v2
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
 
-    - run: make -j3 -C srv-shared target=win
+    - uses: ./.github/actions/nerdctl
+    - run: brew install mingw-w64 coreutils
+
+    - run: make -j3 -C srv-daemon target=win
 
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-w64
-        path: srv-shared/out-win/x86_64/orchidd.exe
+        path: srv-daemon/out-win/x86_64/orchidd.exe
 
     - run: git status
 
@@ -252,40 +258,29 @@ jobs:
         path: cli-shared/out-lnx/${{ matrix.machine }}/orchidcd
 
 
-  build-lnx-srv-amd64:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - run: env/setup.sh
-    - run: env/setup-ndk.sh
-    - uses: ./.github/actions/submodule
-
-    - run: debug=crossndk make -j3 -C srv-shared
-
-    - run: git status
-
-
   build-lnx-srv:
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        machine: [arm64, armhf]
+        # XXX: armhf is missing rcrt1.o
+        machine: [x86_64, arm64]
 
     steps:
     - uses: actions/checkout@v2
     - run: env/setup.sh
-    - run: env/setup-ndk.sh
     - uses: ./.github/actions/submodule
 
-    - run: debug=crossndk make -j3 -C srv-shared machine=${{ matrix.machine }}
+    - run: env/setup-ndk.sh
+
+    - run: debug=crossndk make -j3 -C srv-daemon machine=${{ matrix.machine }}
 
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-lnx-${{ matrix.machine }}
-        path: srv-shared/out-lnx/${{ matrix.machine }}/orchidd
+        path: srv-daemon/out-lnx/${{ matrix.machine }}/orchidd
+      if: ${{ matrix.machine != 'x86_64' }}
 
     - run: git status
 
@@ -300,7 +295,7 @@ jobs:
     - run: env/setup-git.sh
     - uses: ./.github/actions/submodule
 
-    - run: cd srv-shared && env/docker.sh -j3
+    - run: cd srv-daemon && env/docker.sh -j3
 
 
   build-lnx-bld:
@@ -326,15 +321,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: env/setup.sh
-    - run: env/setup-ndk.sh
     - uses: ./.github/actions/submodule
 
-    - run: make -j3 -C srv-shared target=lnx
+    - uses: ./.github/actions/nerdctl
+    - run: env/setup-ndk.sh
+
+    - run: make -j3 -C srv-daemon target=lnx
 
     - uses: actions/upload-artifact@v1
       with:
         name: orchidd-lnx-amd64
-        path: srv-shared/out-lnx/x86_64/orchidd
+        path: srv-daemon/out-lnx/x86_64/orchidd
 
 
   build-lnx-bad:
@@ -345,7 +342,7 @@ jobs:
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
 
-    - run: make -j3 -C srv-shared
+    - run: make -j3 -C srv-daemon
 
 
   build-lnx-all:

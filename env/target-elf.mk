@@ -10,7 +10,8 @@
 
 
 include $(pwd)/target-lld.mk
+lflags += -Wl,-error-limit=0
 lflags += -Wl,--build-id=none
 lflags += -Wl,-z,relro
 lflags += -Wl,--no-undefined
-qflags += -fPIC
+qflags += -fpic

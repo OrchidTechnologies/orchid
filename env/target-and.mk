@@ -52,15 +52,12 @@ aver := 21
 
 ifeq ($(uname-o),Android)
 
-cc := clang
-cxx := clang++
+include $(pwd)/kit-default.mk
 
 openssl/arm64-v8a := linux-aarch64
 
 define _
 more/$(1) := 
-ranlib/$(1) := ranlib
-ar/$(1) := ar
 strip/$(1) := strip
 windres/$(1) := false
 endef
@@ -71,7 +68,7 @@ else
 more = --sysroot=$(llvm)/sysroot
 # https://github.com/android-ndk/ndk/issues/884
 more += -fno-addrsig
-include $(pwd)/target-ndk.mk
+include $(pwd)/kit-android.mk
 
 cxx += -stdlib=libc++
 lflags += -static-libstdc++
@@ -82,8 +79,6 @@ arch := $$(word 1,$$(temp))
 temp := $$(subst $$(space),-,$$(wordlist 2,3,$$(temp)))
 more/$(1) := -target $$(arch)-unknown-$$(temp)$(aver)
 temp := $(word 1,$(meson/$(1)))-$$(temp)
-ranlib/$(1) := $(llvm)/bin/llvm-ranlib
-ar/$(1) := $(llvm)/bin/llvm-ar
 strip/$(1) := $(llvm)/bin/$$(temp)-strip
 windres/$(1) := false
 endef

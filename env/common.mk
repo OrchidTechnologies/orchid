@@ -14,6 +14,8 @@
 .SECONDEXPANSION:
 .SUFFIXES:
 
+.PHONY: force
+
 MAKEFLAGS += --no-builtin-rules
 MAKEFLAGS += --no-builtin-variables
 

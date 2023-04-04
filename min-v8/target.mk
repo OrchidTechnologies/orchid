@@ -117,17 +117,8 @@ vflags += -DV8_31BIT_SMIS_ON_64BIT_ARCH
 vflags += -DV8_ADVANCED_BIGINT_ALGORITHMS
 vflags += -DV8_ATOMIC_MARKING_STATE
 vflags += -DV8_ATOMIC_OBJECT_FIELD_WRITES
-ifeq ($(bits/$(machine)),64)
-vflags += -DV8_COMPRESS_POINTERS
-vflags += -DV8_COMPRESS_POINTERS_IN_ISOLATE_CAGE
-endif
 vflags += -DV8_DEPRECATION_WARNINGS
 vflags += -DV8_ENABLE_LAZY_SOURCE_POSITIONS
-ifeq ($(machine),x86_64)
-vflags += -DV8_ENABLE_MAGLEV
-else
-v8src := $(filter-out $(pwd/v8)/src/maglev/%,$(v8src))
-endif
 vflags += -DV8_ENABLE_REGEXP_INTERPRETER_THREADED_DISPATCH
 vflags += -DV8_ENABLE_WEBASSEMBLY
 vflags += -DV8_IMMINENT_DEPRECATION_WARNINGS
@@ -136,6 +127,18 @@ vflags += -DV8_SNAPSHOT_COMPRESSION
 vflags += -DV8_TYPED_ARRAY_MAX_SIZE_IN_HEAP=64
 #vflags += -DV8_USE_EXTERNAL_STARTUP_DATA
 vflags += -DV8_WIN64_UNWINDING_INFO
+
+ifeq ($(bits/$(machine)),64)
+#vflags += -DV8_COMPRESS_POINTERS
+#vflags += -DV8_COMPRESS_POINTERS_IN_ISOLATE_CAGE
+#vflags += -DV8_SHORT_BUILTIN_CALLS
+endif
+
+ifeq ($(machine),x86_64)
+vflags += -DV8_ENABLE_MAGLEV
+else
+v8src := $(filter-out $(pwd/v8)/src/maglev/%,$(v8src))
+endif
 
 cflags += -DICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_STATIC
 
@@ -178,6 +181,9 @@ header += $(output)/$(pwd/v8)/builtins-generated/bytecodes-builtins-list.h
 
 
 torque := $(patsubst ./%,%,$(sort $(shell cd $(pwd)/v8 && find . -name '*.tq')))
+
+# XXX: because I stopped using -DV8_INTL_SUPPORT
+#torque := $(filter-out $(shell sed $(pwd)/v8/BUILD.gn -e '/^if (v8_enable_i18n_support) {/,/^}/!d;/tq"/!d;s/^ *"//;s/".*//'),$(torque))
 
 # XXX: this now needs to be per target (due to -m$(bits))
 
@@ -224,9 +230,12 @@ header += $(filter %.h %.inc,$(tqsrc))
 
 
 cflags += $(vflags)
-cflags += -iquote$(pwd/v8)/include
 cflags += -I$(pwd/v8)/src
+cflags += -I$(pwd/v8)/include
 cflags += -I$(pwd)/extra
+
+# XXX: this is un-breaking something the -iquote for sed hacks is breaking in cppgc
+cflags += -iquote$(pwd/v8)/include
 
 # XXX: v8 is using internal ICU API ListFormatter::createInstance
 cflags += -DU_SHOW_INTERNAL_API

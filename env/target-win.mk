@@ -37,7 +37,7 @@ endif
 include $(pwd)/target-gnu.mk
 
 define _
-more/$(1) := -target $(1)-pc-windows-gnu 
+more/$(1) := -target $(1)-pc-windows-gnu
 more/$(1) += --sysroot $(CURDIR)/$(output)/$(1)/mingw$(bits/$(1))
 temp := $(shell which $(1)-w64-mingw32-ld)
 ifeq ($$(temp),)
@@ -51,18 +51,19 @@ more := -D_WIN32_WINNT=0x0601
 
 ifeq ($(filter crossndk,$(debug))$(uname-o),Cygwin)
 
-cc := clang$(suffix) $(more)
-cxx := clang++$(suffix) $(more)
-
 ifeq ($(tidy)$(filter notidy,$(debug)),)
 debug += notidy
 endif
 
-ar := llvm-ar
-
+include $(pwd)/kit-default.mk
+# XXX: did just running ar not work?
+define _
+ar/$(1) := llvm-ar
+ranlib/$(1) := $(1)-w64-mingw32-ranlib
+endef
+$(each)
 else
-include $(pwd)/target-ndk.mk
-ar := $(llvm)/bin/llvm-ar
+include $(pwd)/kit-android.mk
 endif
 
 include $(pwd)/target-cxx.mk
@@ -73,8 +74,6 @@ cflags += -D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS
 lflags += -nostdlib++ -lsupc++
 
 define _
-ranlib/$(1) := $(1)-w64-mingw32-ranlib
-ar/$(1) := $(ar)
 strip/$(1) := $(1)-w64-mingw32-strip
 windres/$(1) := $(1)-w64-mingw32-windres
 endef

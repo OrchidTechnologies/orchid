@@ -23,8 +23,7 @@
 #ifndef ORCHID_SCOPE_HPP
 #define ORCHID_SCOPE_HPP
 
-#include <cstdlib>
-#include <functional>
+#include <utility>
 
 // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4152.pdf
 
@@ -42,26 +41,29 @@ inline int uncaught_exceptions() noexcept {
 } }
 #endif
 
+template <typename Code_>
 class scope {
   private:
 #ifdef __cpp_exceptions
     const int uncaught_;
 #endif
-    std::function<void ()> function_;
+    bool valid_;
+    Code_ function_;
 
   public:
-    scope(std::function<void ()> function) :
+    scope(Code_ &&function) :
 #ifdef __cpp_exceptions
         uncaught_(std::uncaught_exceptions()),
 #endif
+        valid_(true),
         function_(std::move(function))
     {
     }
 
     // XXX: consider if this Impactor behavior is sane
     ~scope() noexcept(false) {
+        if (!valid_);
 #ifdef __cpp_exceptions
-        if (!function_);
         else if (std::uncaught_exceptions() == uncaught_)
             function_();
         else try {
@@ -69,7 +71,8 @@ class scope {
         } catch (...) {
         }
 #else
-        function_();
+        else
+            function_();
 #endif
     }
 
@@ -80,7 +83,7 @@ class scope {
     }
 
     void clear() {
-        function_ = nullptr;
+        valid_ = false;
     }
 };
 

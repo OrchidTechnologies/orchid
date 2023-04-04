@@ -37,19 +37,19 @@ tst-win:
 
 .PHONY: srv-and
 srv-and:
-	$(MAKE) -C srv-shared target=and
+	$(MAKE) -C srv-daemon target=and
 
 .PHONY: srv-lnx
 srv-lnx:
-	$(MAKE) -C srv-shared target=lnx
+	$(MAKE) -C srv-daemon target=lnx
 
 .PHONY: srv-mac
 srv-mac:
-	$(MAKE) -C srv-shared target=mac
+	$(MAKE) -C srv-daemon target=mac
 
 .PHONY: srv-win
 srv-win:
-	$(MAKE) -C srv-shared target=win
+	$(MAKE) -C srv-daemon target=win
 
 .PHONY: app-ios
 app-ios:

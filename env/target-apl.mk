@@ -39,16 +39,8 @@ more/$(1) := -arch $(1)
 endef
 $(each)
 
-clang := clang
-objc := $(clang) $(more)
-
 ifeq ($(filter crossndk,$(debug)),)
-cc := $(clang) $(more)
-cxx := clang++ $(more)
-
-ifeq ($(tidy)$(filter notidy,$(debug)),)
-debug += notidy
-endif
+include $(pwd)/kit-default.mk
 else
 
 define _
@@ -57,12 +49,13 @@ endef
 $(each)
 
 # XXX: needed for ___isPlatformVersionAtLeast
-resource := $(shell $(clang) -print-resource-dir)
+resource := $(shell clang -print-resource-dir)
 lflags += $(resource)/lib/darwin/libclang_rt.$(runtime).a
 
-more += -B$(dir $(clang))
+# XXX: this is obsolete but feels right
+#more += -B$(dir $(clang))
 more += -fno-strict-return
-include $(pwd)/target-ndk.mk
+include $(pwd)/kit-android.mk
 cxx += -stdlib=libc++
 
 xflags += -nostdinc++
@@ -73,9 +66,9 @@ wflags += -fuse-ld=/usr/bin/ld
 
 endif
 
+objc := clang $(more)
+
 define _
-ranlib/$(1) := ranlib
-ar/$(1) := ar
 strip/$(1) := strip
 windres/$(1) := false
 endef

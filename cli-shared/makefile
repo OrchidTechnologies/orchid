@@ -23,7 +23,7 @@ args := --config ../orchid.cfg
 # XXX: decide whether to give up on old CentOS or follow this issue
 # https://gitlab.gnome.org/GNOME/glib/-/issues/2861
 # https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3120#note_1627293
-distro := ubuntu bionic
+distro := ubuntu bionic 7
 include env/target.mk
 
 version := 0.9

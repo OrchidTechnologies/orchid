@@ -38,14 +38,14 @@
     if ((long) _value != -1) \
         break; \
     int error(orc_errno); \
-    if (error == EINTR) \
-        continue; \
     _value = 0; \
     for (auto success : std::initializer_list<long>{__VA_ARGS__}) \
         if (error == success) \
             _value = (decltype(expr)) -success; \
     if (_value != 0) \
         break; \
+    if (error == EINTR) \
+        continue; \
     orc_throw(error << "=\"" << strerror(error) << "\" calling " << #expr); \
 } _value; })
 

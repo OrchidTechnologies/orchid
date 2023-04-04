@@ -71,6 +71,12 @@ $(output)/%.cc.o: $$(specific) $$(folder).cc $$(code)
 	@echo [CC] $(target)/$(arch) $<
 	$(call compile,cxx,c++,-std=c++17)
 
+$(output)/%.c++.o: $$(specific) $$(folder).c++ $$(code)
+	$(specific)
+	@mkdir -p $(dir $@)
+	@echo [CC] $(target)/$(arch) $<
+	$(call compile,cxx,c++,-std=c++20)
+
 $(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)

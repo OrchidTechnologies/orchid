@@ -16,9 +16,6 @@
 [submodule "libsrtp"]
 	path = min-webrtc/libsrtp
 	url = https://chromium.googlesource.com/chromium/deps/libsrtp
-[submodule "usrsctp"]
-	path = srv-shared/usrsctp
-	url = https://github.com/sctplab/usrsctp.git
 [submodule "webrtc"]
 	path = min-webrtc/webrtc
 	url = https://webrtc.googlesource.com/src
@@ -59,7 +56,7 @@
 	path = p2p/secp256k1
 	url = https://github.com/bitcoin-core/secp256k1.git
 [submodule "openssl"]
-	path = min-webrtc/openssl
+	path = min-openssl/openssl
 	url = https://github.com/openssl/openssl
 [submodule "libssh"]
 	path = vpn-shared/libssh
@@ -188,13 +185,13 @@
 	path = p2p/pugixml
 	url = https://github.com/zeux/pugixml.git
 [submodule "mediasoup"]
-	path = srv-shared/mediasoup
+	path = eng-mediasoup/mediasoup
 	url = https://github.com/versatica/mediasoup.git
 [submodule "json"]
-	path = srv-shared/json
+	path = eng-mediasoup/json
 	url = https://github.com/nlohmann/json.git
 [submodule "libuv"]
-	path = srv-shared/libuv
+	path = eng-mediasoup/libuv
 	url = https://github.com/libuv/libuv.git
 [submodule "crc32c"]
 	path = min-webrtc/crc32c
@@ -205,3 +202,24 @@
 [submodule "pcre2"]
 	path = min-pcre2/pcre2
 	url = https://github.com/PhilipHazel/pcre2.git
+[submodule "jemalloc"]
+	path = srv-worker/jemalloc
+	url = https://github.com/jemalloc/jemalloc.git
+[submodule "glibc"]
+	path = srv-worker/glibc
+	url = https://sourceware.org/git/glibc.git
+[submodule "capnproto"]
+	path = srv-worker/capnproto
+	url = https://github.com/capnproto/capnproto.git
+[submodule "workerd"]
+	path = srv-worker/workerd
+	url = https://github.com/cloudflare/workerd.git
+[submodule "uscsctp"]
+	path = eng-mediasoup/usrsctp
+	url = https://github.com/sctplab/usrsctp.git
+[submodule "proot"]
+	path = env/proot
+	url = https://github.com/proot-me/proot.git
+[submodule "debootstrap"]
+	path = env/debootstrap
+	url = https://salsa.debian.org/installer-team/debootstrap.git

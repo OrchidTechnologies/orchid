@@ -64,6 +64,12 @@ llvm := $(ndk)/toolchains/llvm/prebuilt/$(prebuilt)
 cc := $(llvm)/bin/clang $(more)
 cxx := $(llvm)/bin/clang++ $(more)
 
+define _
+ar/$(1) := $(llvm)/bin/llvm-ar
+ranlib/$(1) := $(llvm)/bin/llvm-ranlib
+endef
+$(each)
+
 tidy := $(llvm)/bin/clang-tidy
 
 $(shell rm -f $(output)/ndk && mkdir -p $(output) && ln -sf $(llvm) $(output)/ndk)

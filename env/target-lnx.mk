@@ -61,75 +61,63 @@ ifeq ($(machine),)
 machine := $(uname-m)
 endif
 
-include $(pwd)/target-elf.mk
-lflags += -Wl,--hash-style=gnu
-
-ifeq ($(filter crossndk,$(debug))$(uname-s),Linux)
+more := --gcc-toolchain=$(CURDIR)/$(output)/sysroot/usr
 
 define _
-ranlib/$(1) := ranlib
-ar/$(1) := ar
-strip/$(1) := strip
-windres/$(1) := false
-endef
-$(each)
-
-cc := clang$(suffix)
-cxx := clang++$(suffix)
-
-include $(pwd)/target-cxx.mk
-
-tidy := $(shell which clang-tidy 2>/dev/null)
-ifeq ($(tidy)$(filter notidy,$(debug)),)
-debug += notidy
-endif
-
-else
-
-more := 
-more += --gcc-toolchain=$(CURDIR)/$(output)/sysroot/usr
-include $(pwd)/target-ndk.mk
-include $(pwd)/target-cxx.mk
-
-lflags += -lrt
-
-define _
-more/$(1) := 
+more/$(1) := -target $(host/$(1))
 ifneq ($(centos/$(1)),)
 more/$(1) += --sysroot $(CURDIR)/$(output)/sysroot
 else
 more/$(1) += --sysroot $(CURDIR)/$(output)/sysroot/usr/$(host/$(1))
 endif
-more/$(1) += -B$(llvm)/$(subst -$(libc),-android,$(host/$(1)))/bin
-more/$(1) += -target $(host/$(1))
-ranlib/$(1) := $(llvm)/bin/llvm-ranlib
-ar/$(1) := $(llvm)/bin/llvm-ar
-strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
-windres/$(1) := false
 endef
 $(each)
-
-# XXX: v8 requires armv6k for the "yield" instruction
-more/armhf += -march=armv6k -D__ARM_MAX_ARCH__=8
 
 ifeq ($(distro),)
 ifneq ($(centos/$(machine)),)
 distro := centos6 $(machine) $(centos/$(machine))
 else
-distro := ubuntu bionic
+distro := ubuntu bionic 7
 endif
 endif
 
+sysroot += $(output)/sysroot
+
 # XXX: consider naming sysroot folder after distro
 $(output)/sysroot: env/sys-$(word 1,$(distro)).sh env/setup-sys.sh
-	$< $@ $(wordlist 2,$(words $(distro)),$(distro)) || { rm -rf $@; false; }
+	+$< $@ $(wordlist 2,$(words $(distro)),$(distro)) || { rm -rf $@; false; }
 
 .PHONY: sysroot
 sysroot: $(output)/sysroot
 
-sysroot += $(output)/sysroot
+include $(pwd)/target-elf.mk
+lflags += -Wl,--hash-style=gnu
 
+ifeq ($(filter crossndk,$(debug))$(uname-s),Linux)
+include $(pwd)/kit-default.mk
+define _
+strip/$(1) := strip
+windres/$(1) := false
+endef
+$(each)
+else
+include $(pwd)/kit-android.mk
+define _
+strip/$(1) := $(llvm)/bin/$(1)-linux-android-strip
+windres/$(1) := false
+endef
+$(each)
+define _
+more/$(1) += -B$(llvm)/$(subst -$(libc),-android,$(host/$(1)))/bin
+endef
+$(each)
 endif
 
+include $(pwd)/target-cxx.mk
+
+# XXX: v8 requires armv6k for the "yield" instruction
+more/armhf += -march=armv6k -D__ARM_MAX_ARCH__=8
+
 lflags += -ldl
+lflags += -lrt
 lflags += -pthread

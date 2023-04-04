@@ -19,7 +19,7 @@
 
 
 target := lnx
-distro := ubuntu bionic libgtk-3-dev
+distro := ubuntu bionic 7 libgtk-3-dev
 include env/target.mk
 
 signed := 

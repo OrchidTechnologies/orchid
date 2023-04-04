@@ -6,8 +6,6 @@ git=$2
 shift 2
 [[ $# -eq 0 ]]
 
-make -j5 app-and {cli,srv}-{lnx,mac,win}
-
 tag=$(git describe --tags --match="v*" --exact-match)
 ver=${tag#v}
 
@@ -26,8 +24,8 @@ env/upload-gha.sh "${usr}" "${git}" "${rel}" cli-shared/out-lnx/x86_64/orchidcd 
 env/upload-gha.sh "${usr}" "${git}" "${rel}" cli-shared/out-mac/x86_64/orchidcd application/x-mach-binary orchidcd-mac_"${ver}"
 env/upload-gha.sh "${usr}" "${git}" "${rel}" cli-shared/out-win/x86_64/orchidcd.exe application/vnd.microsoft.portable-executable orchidcd-win_"${ver}".exe
 
-env/upload-gha.sh "${usr}" "${git}" "${rel}" srv-shared/out-lnx/x86_64/orchidd application/x-elf orchidd-lnx_"${ver}"
-env/upload-gha.sh "${usr}" "${git}" "${rel}" srv-shared/out-mac/x86_64/orchidd application/x-mach-binary orchidd-mac_"${ver}"
-env/upload-gha.sh "${usr}" "${git}" "${rel}" srv-shared/out-win/x86_64/orchidd.exe application/vnd.microsoft.portable-executable orchidd-win_"${ver}".exe
+env/upload-gha.sh "${usr}" "${git}" "${rel}" srv-daemon/out-lnx/x86_64/orchidd application/x-elf orchidd-lnx_"${ver}"
+#env/upload-gha.sh "${usr}" "${git}" "${rel}" srv-daemon/out-mac/x86_64/orchidd application/x-mach-binary orchidd-mac_"${ver}"
+#env/upload-gha.sh "${usr}" "${git}" "${rel}" srv-daemon/out-win/x86_64/orchidd.exe application/vnd.microsoft.portable-executable orchidd-win_"${ver}".exe
 
 curl -u "${usr}" --data-raw '{"draft": false}' "https://api.github.com/repos/${git}/releases/${rel}"

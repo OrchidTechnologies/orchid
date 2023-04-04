@@ -24,7 +24,7 @@ parts:
     artifacts:
       - out-lnx/orchid
     source: .
-    source-subdir: srv-shared
+    source-subdir: srv-daemon
     source-type: git
     build-packages:
       - curl

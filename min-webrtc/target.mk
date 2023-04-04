@@ -271,6 +271,6 @@ chacks/$(pwd/webrtc)/p2p/base/dtls_transport.cc += /Should not happen\./,/;/d;
 cflags/$(pwd/webrtc)/rtc_base/checks.cc += -Wno-unused-result
 
 
-include $(pwd)/openssl.mk
-
 include $(pwd)/target-$(target).mk
+
+$(call include,ssl/target.mk)

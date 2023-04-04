@@ -5,8 +5,10 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 
 apt-get -y install \
-    bc curl git-core rsync tcl vim-common \
-    capnproto cpio rpm unzip zstd \
+    bc tcl xxd \
+    curl git-core rsync wget \
+    fakeroot libtalloc-dev \
+    cpio rpm unzip zstd \
     clang clang-tidy lld \
     libc++-dev libc++abi-dev \
     g++-multilib gcc-multilib \
@@ -14,8 +16,8 @@ apt-get -y install \
     openjdk-11-jre-headless \
     bison flex gperf \
     gettext groff texinfo \
-    autoconf autoconf-archive automake libtool \
-    ninja-build pkg-config \
+    autoconf autoconf-archive automake \
+    libtool ninja-build pkg-config \
 
 function usable() {
     # Ubuntu bionic ships meson 0.45, which is too old to build glib

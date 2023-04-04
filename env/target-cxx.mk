@@ -14,11 +14,22 @@ xflags += -isystem $(CURDIR)/$(pwd)/libcxx/include
 xflags += -isystem $(CURDIR)/$(pwd)/libcxxabi/include
 
 source += $(wildcard $(pwd)/libcxx/src/*.cpp)
-cflags/$(pwd)/libcxx/ += -D_LIBCPP_BUILDING_LIBRARY
-cflags/$(pwd)/libcxx/ += -D__GLIBCXX__
 qflags += -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
 
-ifeq ($(target),lnx)
+cflags/$(pwd)/libcxx/ += -D_LIBCPP_BUILDING_LIBRARY=
+cflags/$(pwd)/libcxxabi/ += -D_LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS=
+
+cflags/$(pwd)/libcxx/ += -D__GLIBCXX__
+
+cflags/$(pwd)/libcxx/src/exception.cpp += -Wno-\#warnings
+cflags/$(pwd)/libcxxabi/src/cxa_thread_atexit.cpp += -Wno-pointer-bool-conversion
+
 source += env/libcxxabi/src/abort_message.cpp
+source += env/libcxxabi/src/cxa_demangle.cpp
+source += env/libcxxabi/src/cxa_guard.cpp
+source += env/libcxxabi/src/cxa_virtual.cpp
+
+ifneq ($(target),win)
+# this requires _LIBCXXABI_WEAK to be defined
 source += env/libcxxabi/src/cxa_thread_atexit.cpp
 endif

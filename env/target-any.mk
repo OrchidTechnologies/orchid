@@ -136,7 +136,6 @@ rflags += --remap-path-prefix=$(CURDIR)/$(output)/cargo/=~/.cargo/
 
 qflags += -fno-ident
 
-.PHONY: force
 $(output)/%/extra/revision.hpp: force
 	@mkdir -p $(dir $@)
 ifeq ($(filter nodiff,$(debug)),)

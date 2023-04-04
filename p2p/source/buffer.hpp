@@ -62,14 +62,15 @@ class Range {
     size_t size_;
 
   public:
-    Range() :
-        size_(0)
-    {
-    }
-
     Range(Type_ data, size_t size) :
         data_(data),
         size_(size)
+    {
+    }
+
+    Range() :
+        data_{},
+        size_(0)
     {
     }
 
@@ -446,6 +447,8 @@ class Subset final :
     const Segment segment_;
 
   public:
+    // https://stackoverflow.com/questions/63624014/why-does-clang-using-libstdc-delete-the-explicitly-defaulted-constructor-on
+    // NOLINTNEXTLINE(modernize-use-equals-default)
     explicit Subset() :
         segment_()
     {
