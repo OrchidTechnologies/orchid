@@ -1,26 +1,34 @@
 // @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_language.dart';
+import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/orchid_desktop_dragscroll.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 
 /*
   e.g.
+  // Note: This redundant import of material is required in the main dart file.
   import 'package:flutter/material.dart';
   import 'package:orchid/util/test_app.dart';
   void main() {
-    runApp(TestApp(content: _Test()));
+    TestApp.run(scale: 1.0, content: _Test());
   }
  */
 class TestApp extends StatelessWidget {
   final Widget content;
   final double scale;
 
-  const TestApp({
+  TestApp({
     Key key,
     @required this.content,
     this.scale = 1.0,
   }) : super(key: key);
+
+  static void run({double scale, Widget content}) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await UserPreferences.init();
+    runApp(TestApp(scale: scale, content: content));
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -5,8 +5,11 @@ import 'package:orchid/util/test_app.dart';
 import 'account_card.dart';
 import 'account_detail_poller.dart';
 
-void main() {
-  runApp(TestApp(scale: 1.0, content: _Test()));
+// Note: This redundant import of material is required in the main dart file.
+import 'package:flutter/material.dart';
+
+void main() async {
+  TestApp.run(scale: 1.0, content: _Test());
 }
 
 class _Test extends StatefulWidget {

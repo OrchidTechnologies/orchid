@@ -155,7 +155,7 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
   }
 
   ParseOrchidIdentityOrAccountResult _parse(String text) {
-    return ParseOrchidIdentityOrAccountResult.parse(text);
+    return OrchidAccountImport.parse(text);
   }
 
   @override

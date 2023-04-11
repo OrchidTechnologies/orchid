@@ -149,7 +149,7 @@ class CircuitUtils {
     log("connect: No accounts in cache, starting account finder.");
     AccountFinder.shared = AccountFinder()
         .withPollingInterval(Duration(seconds: 20))
-        .find((accounts) async {
+        .find(callback: (accounts) async {
       var created =
           await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
               accounts);

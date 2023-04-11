@@ -44,6 +44,8 @@ class AccountCard extends StatefulWidget {
   /// Produces a shorter card
   final bool minHeight;
 
+  final bool allowExpand;
+
   const AccountCard({
     Key key,
     this.accountDetail,
@@ -54,6 +56,7 @@ class AccountCard extends StatefulWidget {
     this.minHeight = false,
     this.partialAccountFunderAddress,
     this.partialAccountSignerAddress,
+    this.allowExpand = true,
   }) : super(key: key);
 
   @override
@@ -103,6 +106,9 @@ class _AccountCardState extends State<AccountCard>
     var checkExtraWidth = _hasSelection ? 16.0 : 0.0;
     return GestureDetector(
       onTap: () {
+        if (!widget.allowExpand) {
+          return;
+        }
         setState(() {
           expanded = !expanded;
         });
@@ -323,7 +329,7 @@ class _AccountCardState extends State<AccountCard>
   }
 
   Stack _buildChainEfficiencyIcon() {
-    log("XXX: market details: ${widget.accountDetail}");
+    // log("XXX: market details: ${widget.accountDetail}");
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -586,8 +592,10 @@ class _AccountCardState extends State<AccountCard>
   Widget _buildToggleButton({bool checked}) {
     return GestureDetector(
       onTap: () {
-        _gradientAnim.reset();
-        _gradientAnim.forward();
+        if (widget.active ?? false) {
+          _gradientAnim.reset();
+          _gradientAnim.forward();
+        }
         if (widget.onSelected != null) {
           widget.onSelected();
         }

@@ -12,7 +12,7 @@ import 'package:orchid/pages/circuit/model/orchid_hop.dart';
 /// Discovers on-chain and persistently caches accounts for a single signer identity.
 class AccountStore extends ChangeNotifier {
   /// Identity
-  final StoredEthereumKeyRef identity;
+  final EthereumKeyRef identity;
 
   /// If true the account store attempts to find all accounts for the user's
   /// identities.  This involves loading previously cached accounts as well as

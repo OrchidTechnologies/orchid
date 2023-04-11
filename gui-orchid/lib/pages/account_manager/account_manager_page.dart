@@ -10,11 +10,14 @@ import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/orchid/account/account_card.dart';
+import 'package:orchid/orchid/account/account_selector.dart';
 import 'package:orchid/orchid/account/account_store.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/account/account_detail_store.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
+import 'package:orchid/orchid/orchid_panel.dart';
+import 'package:orchid/orchid/orchid_titled_panel.dart';
 import 'package:orchid/pages/account_manager/scan_paste_identity_dialog.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/tap_copy_text.dart';
@@ -22,7 +25,8 @@ import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/pages/circuit/circuit_utils.dart';
 import 'package:orchid/pages/circuit/model/circuit.dart';
 import 'package:orchid/pages/circuit/model/orchid_hop.dart';
-import 'package:orchid/pages/circuit/orchid_account_entry.dart';
+import 'package:orchid/orchid/account/orchid_account_entry.dart';
+import 'package:orchid/pages/connect/welcome_panel.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/pages/purchase/purchase_status.dart';
 import 'package:orchid/util/listenable_builder.dart';
@@ -142,6 +146,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   @override
   Widget build(BuildContext context) {
+    bool identitiesEmpty = _accountStore == null;
+    bool accountsEmpty = (_accountStore?.accounts ?? {}).isEmpty;
+    log("XXX identities empty = $identitiesEmpty");
+    log("XXX accounts empty = $accountsEmpty");
+
     return TitledPage(
       title: s.accounts,
       actions: [
@@ -150,8 +159,8 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           child: _buildIdentitySelectorDropdownMenu(),
         )
       ],
-      child: _accountStore == null
-          ? Container(color: Colors.transparent)
+      child: identitiesEmpty
+          ? _buildNoIdentitiesEmptyState()
           : ListenableBuilder(
               listenable: _accountStore,
               builder: (context, snapshot) {
@@ -172,7 +181,10 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                             ),
                             pady(8),
                             Divider(height: 1),
-                            Expanded(child: _buildAccountListAnnotatedActive()),
+                            Expanded(
+                                child: accountsEmpty
+                                    ? _buildNoAccountsEmptyState()
+                                    : _buildAccountListAnnotatedActive()),
                           ],
                         ),
                       ),
@@ -227,7 +239,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
           return items +
               [
                 PopupMenuItem<_IdentitySelectorMenuItem>(
-                    value: _IdentitySelectorMenuItem(action: _newIdentity),
+                    value: _IdentitySelectorMenuItem(action: _generateIdentity),
                     child: Text(s.newIdentity, style: style)),
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(action: _importIdentity),
@@ -251,17 +263,32 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   void _importIdentity() {
     ScanOrPasteIdentityDialog.show(
       context: context,
-      onImportAccount: (ParseOrchidIdentityOrAccountResult result) async {
-        if (result != null) {
-          await result.saveIfNeeded();
-          _setSelectedIdentity(result.signer);
+      onImport: _onImportIdentity,
+    );
+  }
 
-          // Support onboarding by prodding the account finder if it exists
-          // AccountFinder.shared?.refresh();
+  void _onImportIdentity(ParseOrchidIdentityOrAccountResult result) async {
+    if (result != null) {
+      if (result.hasMultipleAccounts) {
+        await _importMultipleAccounts(result.accounts);
+      } else {
+        await result.saveIfNeeded();
+        _setSelectedIdentity(result.signer);
+      }
+      _refreshIndicatorKey.currentState?.show();
+    }
+  }
 
-          // trigger a refresh
-          _refreshIndicatorKey.currentState.show();
-        }
+  Future<void> _importMultipleAccounts(List<Account> accounts) async {
+    // Without this the dialog will not appear... why?
+    await Future.delayed(millis(0));
+    await AccountSelectorDialog.show(
+      context: context,
+      accounts: accounts,
+      onSelectedAccounts: (accounts) async {
+        log("XXX: onSelectedAccounts");
+        await ParseOrchidIdentityOrAccountResult.saveAccountsIfNeeded(accounts);
+        _setSelectedIdentity(accounts.first.signerKey);
       },
     );
   }
@@ -271,7 +298,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     Account _accountToImport;
 
     final doImport = (BuildContext context) async {
-      await UserPreferences().addCachedDiscoveredAccounts([_accountToImport]);
+      await UserPreferences().ensureSaved(_accountToImport);
 
       // Set the identity and refresh
       _setSelectedIdentity(_accountToImport.signerKey);
@@ -297,22 +324,33 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     AppDialogs.showAppDialog(
       context: context,
       showActions: false,
+      contentPadding: EdgeInsets.zero,
       // This stateful builder allows this dialog to rebuild in response to setstate
       // on the _accountToImport in the parent.
       body: StatefulBuilder(builder: (context, setState) {
         return SizedBox(
-            // Width here is effectively a max width and prevents dialog resizing
-            width: 370,
-            child: IntrinsicHeight(
-              child: Column(
+          // Width here is effectively a max width and prevents dialog resizing
+          width: 370,
+          child: IntrinsicHeight(
+            child: OrchidTitledPanel(
+              highlight: false,
+              opaque: true,
+              titleText: s.importAccount,
+              onDismiss: () {
+                Navigator.pop(context);
+              },
+              body: Column(
                 children: [
-                  Text(s.importAccount).title,
                   OrchidAccountEntry(
-                    onChange: (account) {
+                    onAccountUpdate: (Account account) {
                       setState(() {
                         log('XXX: onChange = $account');
                         _accountToImport = account;
                       });
+                    },
+                    onAccountsImport: (List<Account> accounts) async {
+                      await _importMultipleAccounts(accounts);
+                      Navigator.pop(context);
                     },
                     initialKeySelection: _selectedIdentity?.ref(),
                   ),
@@ -320,15 +358,17 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                     text: s.importAccount.toUpperCase(),
                     enabled: _accountToImport != null,
                     onPressed: () => doImport(context),
-                  ),
+                  ).bottom(32),
                 ],
-              ),
-            ));
+              ).padx(24),
+            ),
+          ),
+        );
       }),
     );
   }
 
-  void _newIdentity() async {
+  void _generateIdentity() async {
     var identity = StoredEthereumKey.generate();
     await UserPreferences().addKey(identity);
     _setSelectedIdentity(identity);
@@ -336,6 +376,18 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   void _deleteIdentity(StoredEthereumKey identity) async {
     await UserPreferences().removeKey(identity.ref());
+    // Remove accounts for this key.
+    var matchingAccounts = UserPreferences().cachedDiscoveredAccounts.get();
+
+    // TODO: TESTING
+    var matching = matchingAccounts
+        .where((account) => account.signerKeyRef == identity.ref());
+    log("XXX: delete identity removed ${matching.length} matching accounts");
+
+    matchingAccounts
+        .removeWhere((account) => account.signerKeyRef == identity.ref());
+
+    UserPreferences().cachedDiscoveredAccounts.set(matchingAccounts);
     _setSelectedIdentity(_chooseDefaultIdentity(_identities));
   }
 
@@ -486,6 +538,62 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
     );
   }
 
+  Widget _buildNoIdentitiesEmptyState() {
+    return OrchidTitledPanel(
+      highlight: false,
+      titleText: s.orchidIdentity,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("You need an Orchid Identity to use the App. Create one, or import an identity or configuration.")
+              .body2
+              .center
+              .padx(24)
+              .top(32),
+          OrchidActionButton(
+            enabled: true,
+            text: s.generateIdentity,
+            onPressed: _generateIdentity,
+          ).top(32),
+          OrchidOutlineButton(
+            text: s.importIdentity.toUpperCase(),
+            onPressed: _importIdentity,
+          ).top(16).bottom(40),
+        ],
+      ),
+    ).padx(32).top(24);
+  }
+
+  Widget _buildNoAccountsEmptyState() {
+    return _buildRefreshIndicator(
+      OrchidTitledPanel(
+        highlight: false,
+        titleText: "Add an account",
+        body: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("If you funded an account on the Orchid DApp, scan or manually add below.")
+                .body2
+                .center
+                .padx(24)
+                .top(32),
+            OrchidOutlineButton(
+              text: "MANUALLY IMPORT ACOUNT",
+              onPressed: _importAccount,
+            ).top(32),
+            OrchidOutlineButton(
+              text: "SCAN FOR ACCOUNTS",
+              onPressed: () async {
+                await _refreshIndicatorKey.currentState?.show();
+              },
+              borderColor: Colors.transparent,
+            ).top(16).bottom(40),
+          ],
+        ),
+      ),
+    ).padx(32).top(16);
+  }
+
   Widget _buildAccountListAnnotatedActive() {
     return StreamBuilder<Circuit>(
         stream: UserPreferences().circuit.stream(),
@@ -557,29 +665,35 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               );
             });
 
+    return _buildRefreshIndicator(accountListView);
+  }
+
+  RefreshIndicator _buildRefreshIndicator(Widget child) {
     return RefreshIndicator(
       key: _refreshIndicatorKey,
       color: Colors.white,
       backgroundColor: OrchidColors.purple_ffb88dfc,
       displacement: 0,
-      onRefresh: () async {
-        // Refresh the account details
-        _accountDetailStore.refresh();
-
-        // Look for new accounts
-        return _accountStore.refresh(); // Return the load future
-
-        // return _accountStore.refresh().then((value) async {
-        //   final accounts = _accountStore.accounts;
-        //   if (await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
-        //       accounts)) {
-        //     CircuitUtils.showDefaultCircuitCreatedDialog(context);
-        //   }
-        //   return null;
-        // }); // Return the load future
-      },
-      child: accountListView,
+      onRefresh: _doRefresh,
+      child: child,
     );
+  }
+
+  Future<void> _doRefresh() async {
+    // Refresh the account details
+    _accountDetailStore.refresh();
+
+    // Look for new accounts
+    return _accountStore.refresh(); // Return the load future
+
+    // return _accountStore.refresh().then((value) async {
+    //   final accounts = _accountStore.accounts;
+    //   if (await CircuitUtils.defaultCircuitFromMostEfficientAccountIfNeeded(
+    //       accounts)) {
+    //     CircuitUtils.showDefaultCircuitCreatedDialog(context);
+    //   }
+    //   return null;
+    // }); // Return the load future
   }
 
   Widget _buildAccountCard(AccountViewModel accountModel, int index) {

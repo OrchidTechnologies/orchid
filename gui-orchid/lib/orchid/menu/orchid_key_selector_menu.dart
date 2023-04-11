@@ -51,11 +51,18 @@ class _OrchidKeySelectorMenuState extends State<OrchidKeySelectorMenu> {
       setState(() {
         this._keys = keys;
 
+        // TODO: Support tentative imported keys
         // Guard that the selected key ref exists in the keystore,
         // else invalidate the selection.
         final keyRef = widget.selected?.keyRef;
         if (keyRef != null && !keyRef.isFoundIn(keys)) {
           widget.onSelection(null);
+        }
+
+        // If there are no keys to list default to the import key option.
+        if (keys.isEmpty) {
+          widget.onSelection(
+              KeySelectionItem(option: OrchidKeySelectorMenu.importKeyOption));
         }
       });
     }).dispose(_subs);
@@ -118,11 +125,10 @@ class KeySelectionMenuOption {
 /// An item in the key selection drop down list.
 /// Holds either a key or a key selection option.
 class KeySelectionItem {
-  StoredEthereumKeyRef keyRef;
+  EthereumKeyRef keyRef;
   KeySelectionMenuOption option;
 
-  KeySelectionItem(
-      {StoredEthereumKeyRef keyRef, KeySelectionMenuOption option}) {
+  KeySelectionItem({EthereumKeyRef keyRef, KeySelectionMenuOption option}) {
     assert(keyRef == null || option == null);
     this.keyRef = keyRef;
     this.option = option;

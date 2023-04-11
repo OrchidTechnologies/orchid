@@ -143,11 +143,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       s.reset.toUpperCase(),
                       style: buttonStyle,
                     ),
-                    onPressed: () {
-                      UserPreferences()
-                          .releaseVersion
-                          .set(ReleaseVersion.resetFirstLaunch());
-                    },
+                    onPressed: _resetFirstLaunch,
                   ),
                 )),
 
@@ -160,12 +156,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       s.clear.toUpperCase(),
                       style: buttonStyle,
                     ),
-                    onPressed: () async {
-                      log("Clearing cached discovered accounts");
-                      await UserPreferences().cachedDiscoveredAccounts.clear();
-                      AppDialogs.showAppDialog(
-                          context: context, title: "Cached accounts cleared.");
-                    },
+                    onPressed: _clearCachedAccounts,
                   ),
                 )),
 
@@ -178,29 +169,28 @@ class _SettingsPageState extends State<SettingsPage> {
                       s.remove.toUpperCase(),
                       style: buttonStyle,
                     ),
+                    onPressed: _confirmClearAllKeysAndAccounts,
+                  ),
+                )),
+
+              if (_tester)
+                _divided(PageTile(
+                  title: "[TESTER] Reset everything",
+                  trailing: RaisedButtonDeprecated(
+                    color: OrchidColors.tappable,
+                    child: Text(
+                      "RESET ALL",
+                      style: buttonStyle,
+                    ),
                     onPressed: () async {
-                      final activeKeyUids = await OrchidHop.getInUseKeyUids();
-                      if (activeKeyUids.isNotEmpty) {
-                        await AppDialogs.showAppDialog(
-                            context: context,
-                            title: s.orchidAccountInUse,
-                            bodyText:
-                                "One or more Orchid hops are using keys.  Unable to remove them.");
-                        return;
-                      }
                       AppDialogs.showConfirmationDialog(
-                          context: context,
-                          title: "Remove all identities?",
-                          actionText: "REMOVE",
-                          bodyText:
-                              "Are you sure you want to remove all stored keys? Have you backed them up?",
-                          commitAction: () async {
-                            log("Clearing identities");
-                            await UserPreferences()
-                                .cachedDiscoveredAccounts
-                                .clear();
-                            await UserPreferences().keys.clear();
-                          });
+                        context: context,
+                        title: "Reset EVERYTHING?",
+                        actionText: "RESET",
+                        bodyText:
+                            "Are you sure you want to reset all state including your keys?  Have you backed them up?",
+                        commitAction: _resetEverything,
+                      );
                     },
                   ),
                 )),
@@ -250,6 +240,55 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
+  }
+
+  void _resetEverything() async {
+    log("Clearing everything");
+    await UserPreferences().circuit.clear();
+    await _clearAllKeysAndAccounts();
+    await _resetFirstLaunch();
+    Navigator.pop(context);
+    Navigator.pop(context);
+  }
+
+  void _confirmClearAllKeysAndAccounts() async {
+    final activeKeyUids = await OrchidHop.getInUseKeyUids();
+    if (activeKeyUids.isNotEmpty) {
+      await AppDialogs.showAppDialog(
+          context: context,
+          title: s.orchidAccountInUse,
+          bodyText:
+              "One or more Orchid hops are using keys.  Unable to remove them.");
+      return;
+    }
+    AppDialogs.showConfirmationDialog(
+        context: context,
+        title: "Remove all identities?",
+        actionText: "REMOVE",
+        bodyText:
+            "Are you sure you want to remove all stored keys? Have you backed them up?",
+        commitAction: () async {
+          log("Clearing identities");
+          await _clearAllKeysAndAccounts();
+        });
+  }
+
+  Future<void> _clearAllKeysAndAccounts() async {
+    await UserPreferences().cachedDiscoveredAccounts.clear();
+    await UserPreferences().keys.clear();
+  }
+
+  void _clearCachedAccounts() async {
+    log("Clearing cached discovered accounts");
+    await UserPreferences().cachedDiscoveredAccounts.clear();
+    await AppDialogs.showAppDialog(
+        context: context, title: "Cached accounts cleared.");
+  }
+
+  Future<void> _resetFirstLaunch() async {
+    await UserPreferences()
+        .releaseVersion
+        .set(ReleaseVersion.resetFirstLaunch());
   }
 
   Widget _divided(Widget child) {

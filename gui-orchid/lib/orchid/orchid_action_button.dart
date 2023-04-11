@@ -45,7 +45,7 @@ class OrchidActionButton extends StatelessWidget {
               fit: BoxFit.scaleDown,
               child: SizedBox(
                 width: width ?? 294,
-                height: height ?? 40,
+                height: height ?? 50,
                 child: _buildButton(),
               ),
             ),
@@ -89,11 +89,13 @@ class OrchidActionButton extends StatelessWidget {
 class OrchidOutlineButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
+  final Color borderColor;
 
   const OrchidOutlineButton({
     Key key,
     @required this.text,
     @required this.onPressed,
+    this.borderColor,
   }) : super(key: key);
 
   @override
@@ -101,7 +103,8 @@ class OrchidOutlineButton extends StatelessWidget {
     // Color backgroundColor = OrchidColors.dark_background;
     final enabled = onPressed != null;
     Color backgroundColor = Colors.transparent;
-    Color borderColor = enabled ? OrchidColors.tappable : OrchidColors.disabled;
+    Color _borderColor = borderColor ??
+        (enabled ? OrchidColors.tappable : OrchidColors.disabled);
     Color textColor = enabled ? OrchidColors.tappable : OrchidColors.disabled;
     return FittedBox(
       fit: BoxFit.scaleDown,
@@ -113,7 +116,7 @@ class OrchidOutlineButton extends StatelessWidget {
               backgroundColor: backgroundColor,
               shape: RoundedRectangleBorder(
                   side: BorderSide(
-                      color: borderColor, width: 2, style: BorderStyle.solid),
+                      color: _borderColor, width: 2, style: BorderStyle.solid),
                   borderRadius: BorderRadius.all(Radius.circular(16)))),
           onPressed: onPressed,
           child: Text(

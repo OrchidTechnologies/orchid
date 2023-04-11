@@ -122,7 +122,7 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
     List<OrchidCreateEvent> createEvents =
         await _getCreateEvents(chain, signer.address);
     return createEvents.map((event) {
-      return Account.fromSignerKey(
+      return Account.fromSignerKeyRef(
           version: 1,
           signerKey: signer.ref(),
           chainId: chain.chainId,

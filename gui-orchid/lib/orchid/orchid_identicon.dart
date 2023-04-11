@@ -19,21 +19,21 @@ class OrchidIdenticon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<bool>(
-        stream: UserPreferences().useBlockiesIdenticons.stream(),
-        builder: (context, snapshot) {
-          final useBlockies = snapshot.data;
-          if (address == null || useBlockies == null) {
-            return Container();
-          }
-          return ClipOval(
-            child: useBlockies
-                ? Blockies().generate(address: address, size: 8, scale: 3)
-                : Jazzicon().generate(address: address, diameter: 24),
-          );
-        });
+    return UserPreferences().useBlockiesIdenticons.builder(
+      (bool useBlockies) {
+        if (address == null || useBlockies == null) {
+          return Container();
+        }
+        return ClipOval(
+          child: useBlockies
+              ? Blockies().generate(address: address, size: 8, scale: 3)
+              : Jazzicon().generate(address: address, diameter: 24),
+        );
+      },
+    );
   }
 }
+
 @deprecated
 class OrchidLegacyIdenticon extends StatelessWidget {
   final EthereumAddress value;
@@ -52,4 +52,3 @@ class OrchidLegacyIdenticon extends StatelessWidget {
         fit: BoxFit.contain, height: size, width: size);
   }
 }
-

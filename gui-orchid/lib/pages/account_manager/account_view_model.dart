@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
+import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
 
@@ -30,6 +31,18 @@ class AccountViewModel {
     @required this.detail,
     this.active,
   });
+
+  AccountViewModel.forAccount({
+    Account account,
+    @required AccountDetail detail,
+    @required bool active,
+  }) : this(
+          signerKey: account.signerKey,
+          funder: account.funder,
+          chain: account.chain,
+          detail: detail,
+          active: active,
+        );
 
   Token get balance {
     return detail.lotteryPot?.balance;

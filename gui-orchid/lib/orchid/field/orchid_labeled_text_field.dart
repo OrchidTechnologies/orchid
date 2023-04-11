@@ -34,7 +34,7 @@ class OrchidLabeledTextField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label).body1.left(18).top(16).bottom(4),
+          Text(label).body1.left(18).top(16),
           OrchidTextField(
             numeric: numeric,
             border: false,

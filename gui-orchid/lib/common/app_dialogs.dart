@@ -13,21 +13,23 @@ class AppDialogs {
     Widget body,
     bool linkSettings = false,
     bool showActions = true,
+    EdgeInsets contentPadding,
   }) {
     S s = S.of(context);
     return showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          // scrollable: true,
           backgroundColor: OrchidColors.dark_background,
-          // actionsPadding: EdgeInsets.zero,
+          actionsPadding: showActions ? null : EdgeInsets.zero,
           // buttonPadding: EdgeInsets.zero,
           // titlePadding: EdgeInsets.zero,
-          // contentPadding: EdgeInsets.zero,
+          contentPadding: contentPadding,
           // insetPadding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(16.0))),
-          title: title != null ? Text(title, style: OrchidText.title): null,
+          title: title != null ? Text(title, style: OrchidText.title) : null,
           content: body ?? Text(bodyText ?? '', style: OrchidText.body2),
           actions: <Widget>[
             if (linkSettings)
@@ -41,8 +43,8 @@ class AppDialogs {
             if (showActions)
               FlatButtonDeprecated(
                 child: Text(s.ok,
-                    style:
-                        OrchidText.button.copyWith(color: OrchidColors.purple_bright)),
+                    style: OrchidText.button
+                        .copyWith(color: OrchidColors.purple_bright)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -53,31 +55,42 @@ class AppDialogs {
     );
   }
 
-  static Future<bool> showConfirmationDialog(
-      {@required BuildContext context,
-      String title,
-      Widget body,
-      String bodyText,
-      String cancelText,
-      Color cancelColor = AppColors.purple_3,
-      actionText,
-      Color actionColor = AppColors.purple_3,
-      VoidCallback cancelAction,
-      VoidCallback commitAction}) {
+  static Future<bool> showConfirmationDialog({
+    @required BuildContext context,
+    String title,
+    Widget titleWidget,
+    Widget body,
+    String bodyText,
+    String cancelText,
+    Color cancelColor = AppColors.purple_3,
+    actionText,
+    Color actionColor = AppColors.purple_3,
+    VoidCallback cancelAction,
+    VoidCallback commitAction,
+    EdgeInsets contentPadding,
+    bool dark = false,
+  }) {
+    log("XXX: confirmation dialog show..");
     return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         S s = S.of(context);
         return AlertDialog(
+          contentPadding: contentPadding,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(8.0))),
-          backgroundColor: OrchidColors.blue_highlight,
-          title: title != null
-              ? Text(
-                  title,
-                  style: OrchidText.subtitle.black,
-                )
-              : null,
+          backgroundColor:
+              dark ? OrchidColors.dark_background : OrchidColors.blue_highlight,
+          title: titleWidget != null
+              ? titleWidget
+              : (title != null
+                  ? Text(
+                      title,
+                      style: dark
+                          ? OrchidText.subtitle.white
+                          : OrchidText.subtitle.black,
+                    )
+                  : null),
           content: body ??
               Text(
                 bodyText ?? s.confirmThisAction + "?",
@@ -87,14 +100,19 @@ class AppDialogs {
             // CANCEL
             OutlinedButton(
               style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-                side: BorderSide(color: OrchidColors.dark_background, width: 2),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.0)),
+                side: BorderSide(
+                  color: OrchidColors.dark_background,
+                  width: 2,
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(6),
                 child: Text(
                   cancelText ?? s.cancelButtonTitle,
-                  style: OrchidText.button.black,
+                  style:
+                      dark ? OrchidText.button.white : OrchidText.button.black,
                 ),
               ),
               onPressed: () {
@@ -107,7 +125,13 @@ class AppDialogs {
             // ACTION
             OutlinedButton(
               style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.0)),
+                side: BorderSide(
+                  color:
+                      dark ? OrchidColors.white : OrchidColors.dark_background,
+                  width: 2,
+                ),
                 backgroundColor: OrchidColors.dark_background,
               ),
               child: Padding(
