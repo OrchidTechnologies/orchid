@@ -1,8 +1,7 @@
+// @dart=2.9
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_web3/flutter_web3.dart';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -10,8 +9,6 @@ import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/orchid_web3/orchid_erc20.dart';
-import 'package:orchid/api/orchid_web3/v0/orchid_web3_v0.dart';
-
 import '../orchid_log_api.dart';
 
 /// This class abstracts over the flutter_web3 ethereum and wallet connect providers

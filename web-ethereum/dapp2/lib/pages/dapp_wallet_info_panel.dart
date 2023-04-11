@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
@@ -145,7 +146,11 @@ class DappWalletInfoPanel extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                balance.toFixedLocalized(locale: context.locale),
+                balance.toFixedLocalized(
+                  locale: context.locale,
+                  minPrecision: 1,
+                  maxPrecision: 18,
+                ),
                 style: numberStyle,
                 textAlign: TextAlign.right,
               ),

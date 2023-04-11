@@ -251,7 +251,7 @@ class _ChainItemState extends State<_ChainItem> {
             hintText: (widget.chain.nativeCurrency.exchangeRateSource
                     as FixedPriceToken)
                 .usdPrice
-                .toStringAsFixed(2),
+                .formatCurrency(locale: context.locale, precision: 2)
           ),
         ),
       ],

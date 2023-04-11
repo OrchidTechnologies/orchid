@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:flutter_web3/flutter_web3.dart';
 import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';

@@ -103,16 +103,38 @@ class Token {
   }
 
   /// No token symbol
-  String toFixedLocalized({@required Locale locale, int precision = 4}) {
-    return units.formatCurrency(floatValue, locale: locale, precision: precision);
+  String toFixedLocalized({
+    @required Locale locale,
+    int precision = 4,
+    int maxPrecision,
+    int minPrecision,
+    bool showPrecisionIndicator,
+  }) {
+    return units.formatCurrency(
+      floatValue,
+      locale: locale,
+      minPrecision: minPrecision,
+      maxPrecision: maxPrecision,
+      showPrecisionIndicator: showPrecisionIndicator,
+      precision: precision,
+    );
   }
 
   /// Format as value with the symbol suffixed
-  String formatCurrency(
-      {@required Locale locale, int precision = 4, bool showSuffix = true}) {
+  String formatCurrency({
+    @required Locale locale,
+    int precision = 4,
+    bool showSuffix = true,
+    int maxPrecision,
+    int minPrecision,
+    bool showPrecisionIndicator,
+  }) {
     return units.formatCurrency(floatValue,
         locale: locale,
         precision: precision,
+        minPrecision: minPrecision,
+        maxPrecision: maxPrecision,
+        showPrecisionIndicator: showPrecisionIndicator,
         suffix: showSuffix ? type.symbol : null);
   }
 

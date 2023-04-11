@@ -489,7 +489,12 @@ class _AccountCardState extends State<AccountCard>
   // display token value and symbol on a row with usd price in a row below
   Widget _buildTokenValueTextRow({Token value, USD price, Color textColor}) {
     final valueText = ((value ?? (tokenType ?? Tokens.TOK).zero).formatCurrency(
-        locale: context.locale, precision: 2, showSuffix: false));
+      locale: context.locale,
+      minPrecision: 1,
+      maxPrecision: 14,
+      showPrecisionIndicator: true,
+      showSuffix: false,
+    ));
     final valueWidget =
         Text(valueText).extra_large.withColor(textColor ?? Colors.white);
     return TokenValueWidgetRow(

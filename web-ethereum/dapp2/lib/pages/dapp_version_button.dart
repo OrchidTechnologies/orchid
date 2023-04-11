@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/pages/dapp_settings_button.dart';

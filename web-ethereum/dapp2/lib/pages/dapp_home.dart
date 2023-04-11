@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:math';
 import 'package:orchid/api/orchid_web3/v1/orchid_contract_deployment_v1.dart';
 import 'package:orchid/common/rounded_rect.dart';
@@ -26,7 +27,6 @@ import 'package:orchid/util/gestures.dart';
 import 'package:styled_text/styled_text.dart';
 import 'dapp_button.dart';
 import '../orchid/menu/orchid_chain_selector_menu.dart';
-import 'dapp_pricing_panel.dart';
 import 'dapp_settings_button.dart';
 import 'dapp_version_button.dart';
 import 'dapp_wallet_button.dart';
@@ -112,7 +112,7 @@ class _DappHomeState extends State<DappHome> {
   /// the user to hit the connect button.
   Future<void> _checkForExistingConnectedAccounts() async {
     try {
-      var accounts = await ethereum.getAccounts();
+      var accounts = await ethereum?.getAccounts() ?? [];
       if (accounts.isNotEmpty) {
         log('connect: User already has accounts, connecting.');
         await Future.delayed(Duration(seconds: 0), () {
