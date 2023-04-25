@@ -45,3 +45,9 @@ app.*.map.json
 /android/app/release
 web/*.min.js
 deploy-pat.sh
+
+# our modified version of this package
+flutter_web3
+ethers
+
+

@@ -1,0 +1,46 @@
+#
+# 0e589c069354da2304acf85edbdbf85384b94c45 v 2.1.9
+#
+diff --git a/lib/flutter_web3.dart b/lib/flutter_web3.dart
+index 921c3ab..deb6651 100644
+--- a/lib/flutter_web3.dart
++++ b/lib/flutter_web3.dart
+@@ -2,3 +2,4 @@ export './ethereum.dart';
+ export './ethers.dart';
+ export './src/constant.dart';
+ export './wallet_connect.dart';
++export './src/interop_wrapper.dart';
+diff --git a/lib/src/ethers/provider.dart b/lib/src/ethers/provider.dart
+index 35f27a9..5ae6c09 100644
+--- a/lib/src/ethers/provider.dart
++++ b/lib/src/ethers/provider.dart
+@@ -381,8 +381,8 @@ class Web3Provider extends Provider<_Web3ProviderImpl> {
+   factory Web3Provider(dynamic provider) {
+     assert(provider != null, 'Provider must not be null.');
+     assert(
+-        provider is Interop &&
+-            (provider is Ethereum || provider is WalletConnectProvider),
++        provider is Interop
++            /*&& (provider is Ethereum || provider is WalletConnectProvider)*/,
+         'Provider type must be valid.');
+     return Web3Provider._(
+       _Web3ProviderImpl((provider as Interop).impl),
+diff --git a/lib/src/interop_wrapper.dart b/lib/src/interop_wrapper.dart
+index a05eabe..f943c24 100644
+--- a/lib/src/interop_wrapper.dart
++++ b/lib/src/interop_wrapper.dart
+@@ -1,12 +1,12 @@
+ import 'package:meta/meta.dart';
+ 
+ /// Dart JS Interop Wrapper class.
+-@internal
++// @internal
+ abstract class Interop<T> {
+   /// Internal JS Object, should not be used directly.
+   @internal
+   final T impl;
+ 
+-  @internal
++  // @internal
+   const Interop.internal(this.impl);
+ }

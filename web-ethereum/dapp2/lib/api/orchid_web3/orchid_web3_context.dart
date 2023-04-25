@@ -9,6 +9,7 @@ import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/orchid_web3/orchid_erc20.dart';
+import 'package:orchid/pages/wallet_connect_eth_provider.dart';
 import '../orchid_log_api.dart';
 
 /// This class abstracts over the flutter_web3 ethereum and wallet connect providers
@@ -27,7 +28,7 @@ class OrchidWeb3Context {
   final Ethereum ethereumProvider;
 
   /// If the web3 provider wraps wallet connect this is the underlying provider.
-  final WalletConnectProvider walletConnectProvider;
+  final WalletConnectEthereumProvider walletConnectProvider;
 
   // Indicates that this context has been disconnected and should no longer be alive.
   // This is a workaround to ensure that listeners do not fire in this state.
@@ -82,16 +83,20 @@ class OrchidWeb3Context {
   }
 
   static Future<OrchidWeb3Context> fromWalletConnect(
-      WalletConnectProvider walletConnectProvider) async {
+      WalletConnectEthereumProvider walletConnectProvider) async {
     var walletAddress = walletConnectProvider.accounts.isNotEmpty
         ? EthereumAddress.from(walletConnectProvider.accounts.first)
         : null;
 
+    log("walletConnectProvider=$walletConnectProvider");
+    log("walletConnectProvider.chainId=${walletConnectProvider.chainId}");
     var context = OrchidWeb3Context._(
-      web3: Web3Provider.fromWalletConnect(walletConnectProvider),
+      // web3: Web3Provider.fromEthereum(walletConnectProvider as Ethereum), // ?
+      web3: Web3Provider(walletConnectProvider),
       ethereumProvider: null,
       walletConnectProvider: walletConnectProvider,
-      chain: Chains.chainFor(int.parse(walletConnectProvider.chainId)),
+      // chain: Chains.chainFor(int.parse(walletConnectProvider.chainId)),
+      chain: Chains.chainFor(walletConnectProvider.chainId),
       walletAddress: walletAddress,
     );
 

@@ -259,10 +259,9 @@ packages:
   flutter_web3:
     dependency: "direct main"
     description:
-      name: flutter_web3
-      sha256: d8bdcbead96352d9e4ee58ede7965f09a541472692ad61e72b0bd317005c08e9
-      url: "https://pub.dev"
-    source: hosted
+      path: flutter_web3
+      relative: true
+    source: path
     version: "2.1.9"
   flutter_web_plugins:
     dependency: transitive

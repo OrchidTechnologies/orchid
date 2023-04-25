@@ -1,5 +1,6 @@
 // @dart=2.9
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/util/test_app.dart';
@@ -17,11 +18,42 @@ class _Test extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          OrchidActionButton(text: "TEST 1.0", onPressed: () {}, enabled: true),
-          pady(24),
-          OrchidActionButton(text: "TEST 2.0", onPressed: () {}, enabled: false),
+          _buildSimpleButton(),
+          OrchidActionButton(
+                  text: "TEST 1.0",
+                  onPressed: () {
+                    log("Test 1");
+                  },
+                  enabled: true)
+              .top(24),
+          OrchidActionButton(
+                  text: "TEST 2.0",
+                  onPressed: () {
+                    log("Test 2");
+                  },
+                  enabled: false)
+              .top(24),
+          OrchidActionButton(text: "NEW TEST 2.0", onPressed: null).top(24),
+          OrchidOutlineButton(
+              text: "OUTLINE",
+              onPressed: () {
+                log("Test 2");
+              }).top(24),
         ],
       ),
+    );
+  }
+
+  TextButton _buildSimpleButton() {
+    return TextButton(
+      style: TextButton.styleFrom(
+        textStyle: const TextStyle(fontSize: 32),
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.deepPurple,
+        padding: EdgeInsets.all(16),
+      ),
+      onPressed: () {},
+      child: const Text('Simple Button'),
     );
   }
 }

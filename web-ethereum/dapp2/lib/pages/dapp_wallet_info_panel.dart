@@ -47,7 +47,7 @@ class DappWalletInfoPanel extends StatelessWidget {
         buildExplorerLink(context, _textStyle, link, disabled: link == null)
             .top(8),
         _buildWalletBalances(context).top(12),
-        // _buildDisconnectButton(context).top(24),
+        _buildDisconnectButton(context).top(24),
         pady(16)
       ],
     ).padx(24);
@@ -109,7 +109,7 @@ class DappWalletInfoPanel extends StatelessWidget {
         onPressed: () async {
           // Navigator.pop(context);
           onDisconnect();
-        });
+        }).center;
   }
 
   Widget _buildWalletBalances(BuildContext context) {

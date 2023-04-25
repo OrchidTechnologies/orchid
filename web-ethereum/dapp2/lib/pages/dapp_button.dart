@@ -31,6 +31,7 @@ class DappButton extends StatelessWidget {
       enabled: onPressed != null,
       width: width,
       backgroundColor: backgroundColor,
+      trailing: trailing,
     );
   }
 }
