@@ -156,13 +156,13 @@
 	url = https://github.com/arun11299/cpp-jwt.git
 [submodule "cairo"]
 	path = min-cairo/cairo
-	url = https://github.com/freedesktop/cairo.git
+	url = https://gitlab.freedesktop.org/cairo/cairo.git
 [submodule "libpng"]
 	path = min-cairo/libpng
 	url = https://git.code.sf.net/p/libpng/code
 [submodule "pixman"]
 	path = min-cairo/pixman
-	url = https://github.com/freedesktop/pixman.git
+	url = https://gitlab.freedesktop.org/pixman/pixman.git
 [submodule "chains"]
 	path = p2p/chains
 	url = https://github.com/ethereum-lists/chains.git
