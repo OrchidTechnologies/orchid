@@ -149,7 +149,7 @@ class DappWalletInfoPanel extends StatelessWidget {
                 balance.toFixedLocalized(
                   locale: context.locale,
                   minPrecision: 1,
-                  maxPrecision: 18,
+                  maxPrecision: 5,
                 ),
                 style: numberStyle,
                 textAlign: TextAlign.right,
