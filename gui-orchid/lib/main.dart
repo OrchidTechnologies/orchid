@@ -1,4 +1,5 @@
 // @dart=2.9
+import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'orchid.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
@@ -31,4 +32,6 @@ void main() async {
   }
 
   runApp(OrchidApp());
+
+  OrchidPricing.logTokenPrices();
 }

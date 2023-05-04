@@ -5,10 +5,10 @@ import 'package:orchid/api/orchid_budget_api.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 
 import '../orchid_web3_context.dart';
-import 'orchid_contract_web3_v1.dart';
 
 /// Read/write calls used in the dapp.
 class OrchidWeb3V1 {
@@ -16,7 +16,7 @@ class OrchidWeb3V1 {
   final Contract _lottery;
 
   OrchidWeb3V1(this.context)
-      : this._lottery = OrchidContractWeb3V1(context).contract();
+      : this._lottery = Contract(OrchidContractV1.lotteryContractAddressV1, OrchidContractV1.abi, context.web3);
 
   Chain get chain {
     return context.chain;

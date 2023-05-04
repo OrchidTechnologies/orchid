@@ -1,5 +1,6 @@
 // @dart=2.9
 import 'dart:math';
+import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_contract_deployment_v1.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
@@ -540,7 +541,9 @@ class _DappHomeState extends State<DappHome> {
             ? null
             : () => _uiGuardConnectingState(_connectWalletConnectImpl),
         trailing: _walletConnectionInProgress
-            ? OrchidCircularProgressIndicator.smallIndeterminate().left(14).right(16)
+            ? OrchidCircularProgressIndicator.smallIndeterminate()
+                .left(14)
+                .right(16)
             : Padding(
                 padding: const EdgeInsets.only(left: 10.0, right: 16.0),
                 child: Icon(Icons.qr_code_scanner, color: Colors.black),
@@ -754,6 +757,7 @@ class _DappHomeState extends State<DappHome> {
     } catch (err) {
       log("Unknown err in connect ethereum: $err");
     }
+
   }
 
   void _showRequestPendingMessage() {

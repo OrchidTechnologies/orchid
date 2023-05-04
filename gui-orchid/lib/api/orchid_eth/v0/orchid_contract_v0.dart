@@ -56,6 +56,19 @@ class OrchidContractV0 {
   static int gasLimitCreateAccount = gasLimitLotteryPush;
 
   static int gasLimitApprove = 200000;
+
+  static List<String> abi = [
+    'event Update(address indexed funder, address indexed signer, uint128 amount, uint128 escrow, uint256 unlock)',
+    'event Create(address indexed funder, address indexed signer)',
+    'event Bound(address indexed funder, address indexed signer)',
+    'function look(address funder, address signer) external view returns (uint128, uint128, uint256, address, bytes32, bytes memory)',
+    'function push(address signer, uint128 total, uint128 escrow)',
+    'function move(address signer, uint128 amount)',
+    'function warn(address signer)',
+    'function lock(address signer)',
+    'function pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow)',
+    'function yank(address signer, address payable target, bool autolock)',
+  ];
 }
 
 enum OrchidTransactionTypeV0 {

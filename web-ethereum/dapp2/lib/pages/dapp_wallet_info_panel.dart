@@ -150,6 +150,7 @@ class DappWalletInfoPanel extends StatelessWidget {
                   locale: context.locale,
                   minPrecision: 1,
                   maxPrecision: 5,
+                  showPrecisionIndicator: true,
                 ),
                 style: numberStyle,
                 textAlign: TextAlign.right,

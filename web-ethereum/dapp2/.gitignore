@@ -43,8 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-web/*.min.js
 deploy-pat.sh
+
+# packages needed at dev time that are installed by the build script
+web/*.min.js
 
 # our modified version of this package
 flutter_web3

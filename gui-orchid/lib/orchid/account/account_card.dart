@@ -491,7 +491,7 @@ class _AccountCardState extends State<AccountCard>
     final valueText = ((value ?? (tokenType ?? Tokens.TOK).zero).formatCurrency(
       locale: context.locale,
       minPrecision: 1,
-      maxPrecision: 14,
+      maxPrecision: 5,
       showPrecisionIndicator: true,
       showSuffix: false,
     ));

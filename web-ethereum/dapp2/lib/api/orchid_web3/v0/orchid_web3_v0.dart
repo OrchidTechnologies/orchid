@@ -11,7 +11,6 @@ import 'package:orchid/api/orchid_log_api.dart';
 import '../../orchid_budget_api.dart';
 import '../orchid_erc20.dart';
 import '../orchid_web3_context.dart';
-import 'orchid_contract_web3_v0.dart';
 
 /// Read/write calls used in the dapp.
 class OrchidWeb3V0 {
@@ -20,7 +19,10 @@ class OrchidWeb3V0 {
   final OrchidERC20 _oxt;
 
   OrchidWeb3V0(this.context)
-      : this._lotteryContract = OrchidContractWeb3V0(context).lotteryContract(),
+      : this._lotteryContract = Contract(
+            OrchidContractV0.lotteryContractAddressV0String,
+            OrchidContractV0.abi,
+            context.web3),
         this._oxt = OrchidERC20(context: context, tokenType: Tokens.OXT);
 
   Chain get chain {
