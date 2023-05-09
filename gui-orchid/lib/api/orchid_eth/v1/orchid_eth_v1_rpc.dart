@@ -9,7 +9,6 @@ import 'package:orchid/api/orchid_eth/uniswap_v3_contract.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/util/cacheable.dart';
 import 'package:orchid/util/hex.dart';
-import 'package:orchid/util/units.dart';
 
 import '../abi_encode.dart';
 import '../chains.dart';
@@ -153,8 +152,9 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
         balance: amount, deposit: escrow, unlock: unlock, warned: warned);
   }
 
+  /// Get a uniswap price from the specified pool
   Future<double> getUniswapPrice(
-      String poolAddress, int token0Decimals, int token1Decimals) async {
+      Chain chain, String poolAddress, int token0Decimals, int token1Decimals) async {
     // log("getUniswapPrice via rpc");
     // construct the abi encoded eth_call
     var params = [
@@ -163,7 +163,7 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
     ];
 
     String result = await EthereumJsonRpc.ethCall(
-        url: Chains.Ethereum.providerUrl, params: params);
+        url: chain.providerUrl, params: params);
     var buff = HexStringBuffer(result);
     // Q64.96 fixed-point number
     BigInt sqrtPriceX96 = buff.takeUint160();

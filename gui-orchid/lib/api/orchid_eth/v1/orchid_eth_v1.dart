@@ -30,7 +30,8 @@ abstract class OrchidEthereumV1 {
   Future<Token> getGasPrice(Chain chain, {bool refresh = false});
 
   // This call is generic and can be used with any contract version.
-  Future<double> getUniswapPrice(String poolAddress, int token0Decimals, int token1Decimals);
+  // Note: We currently only fetch uniswap prices from chains on main net.
+  // Future<double> getUniswapPrice(String poolAddress, int token0Decimals, int token1Decimals);
 
   Future<List<Account>> discoverAccounts(
       {Chain chain, StoredEthereumKey signer});

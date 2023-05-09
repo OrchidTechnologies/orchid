@@ -37,6 +37,8 @@ class OrchidEthereumV1Web3Impl implements OrchidEthereumV1 {
     return tokenType.fromInt(await _context.web3.getGasPrice());
   }
 
+  // Note: We currently only fetch uniswap prices from chains on main net.
+  /*
   Future<double> getUniswapPrice(
       String poolAddress, int token0Decimals, int token1Decimals) async {
     var contract = new Contract(poolAddress, UniswapV3Contract.abi, provider);
@@ -48,6 +50,7 @@ class OrchidEthereumV1Web3Impl implements OrchidEthereumV1 {
         pow(10, token1Decimals) /
         pow(2, 192); // 96 * 2 bits
   }
+   */
 
   Future<LotteryPot> getLotteryPot(
       {Chain chain, EthereumAddress funder, EthereumAddress signer}) async {
