@@ -1,6 +1,5 @@
 // @dart=2.9
 import 'dart:math';
-import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_contract_deployment_v1.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
@@ -25,7 +24,7 @@ import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
 import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
-import 'package:orchid/pages/wallet_connect_eth_provider.dart';
+import 'package:orchid/api/orchid_web3/wallet_connect_eth_provider.dart';
 import 'package:orchid/util/gestures.dart';
 import 'package:styled_text/styled_text.dart';
 import 'dapp_button.dart';
