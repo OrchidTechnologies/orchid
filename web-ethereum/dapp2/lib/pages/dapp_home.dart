@@ -796,8 +796,8 @@ class _DappHomeState extends State<DappHome> {
   }
 
   Future<void> _connectWalletConnectImpl() async {
-    // TODO:  This is a temporary WC project id; Replace with the Orchid final.
-    const walletConnectProjectId = 'bd5be579e9cae68defff05a6fa7b0049';
+    // const walletConnectProjectId = 'bd5be579e9cae68defff05a6fa7b0049'; // test
+    const walletConnectProjectId = 'afe2e392884aefdae72d4babb5482ced';
 
     final chain = _userDefaultChainSelection ?? Chains.Ethereum;
     var wc = await WalletConnectEthereumProvider.init(

@@ -104,12 +104,19 @@ class DappWalletInfoPanel extends StatelessWidget {
   }
 
   Widget _buildDisconnectButton(BuildContext context) {
-    return DappButton(
-        text: context.s.disconnect.toUpperCase(),
-        onPressed: () async {
-          // Navigator.pop(context);
-          onDisconnect();
-        }).center;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Flexible(
+          child: DappButton(
+              text: context.s.disconnect.toUpperCase(),
+              onPressed: () async {
+                // Navigator.pop(context);
+                onDisconnect();
+              }),
+        ),
+      ],
+    );
   }
 
   Widget _buildWalletBalances(BuildContext context) {
