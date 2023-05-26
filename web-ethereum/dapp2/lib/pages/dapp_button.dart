@@ -8,6 +8,7 @@ class DappButton extends StatelessWidget {
   final Widget trailing;
   final TextStyle textStyle;
   final double width;
+  final double height;
   final Color backgroundColor;
 
   const DappButton({
@@ -19,7 +20,7 @@ class DappButton extends StatelessWidget {
 
     /// use double.infinity for an expandable button, null for the default width
     this.width,
-    this.backgroundColor,
+    this.backgroundColor, this.height,
   }) : super(key: key);
 
   @override
@@ -30,6 +31,7 @@ class DappButton extends StatelessWidget {
       onPressed: onPressed ?? () {},
       enabled: onPressed != null,
       width: width,
+      height: height,
       backgroundColor: backgroundColor,
       trailing: trailing,
     );

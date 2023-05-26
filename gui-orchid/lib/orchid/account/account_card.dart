@@ -46,6 +46,10 @@ class AccountCard extends StatefulWidget {
 
   final bool allowExpand;
 
+  /// Additional options for the detail view
+  final bool showAddresses;
+  final bool showContractVersion;
+
   const AccountCard({
     Key key,
     this.accountDetail,
@@ -57,6 +61,8 @@ class AccountCard extends StatefulWidget {
     this.partialAccountFunderAddress,
     this.partialAccountSignerAddress,
     this.allowExpand = true,
+    this.showAddresses = true,
+    this.showContractVersion = true,
   }) : super(key: key);
 
   @override
@@ -395,24 +401,28 @@ class _AccountCardState extends State<AccountCard>
               _buildTicketsRow(chartModel, efficiency).top(20),
 
             // wallet
-            _labeledRow(
-              title: "Wallet address",
-              child: _buildFunderIconAddress(
-                  textStyle: OrchidText.extra_large, pad: 12),
-            ).top(16),
+            if (widget.showAddresses)
+              _labeledRow(
+                title: "Wallet address",
+                child: _buildFunderIconAddress(
+                    textStyle: OrchidText.extra_large, pad: 12),
+              ).top(16),
 
             // identity
-            _labeledRow(
-                    title: s.orchidIdentity,
-                    child: _buildSignerIconAddress(
-                        textStyle: OrchidText.extra_large, pad: 12))
-                .top(16),
+            if (widget.showAddresses)
+              _labeledRow(
+                      title: s.orchidIdentity,
+                      child: _buildSignerIconAddress(
+                          textStyle: OrchidText.extra_large, pad: 12))
+                  .top(16),
 
             // contract version
-            _labeledRow(
-              title: s.contract,
-              child: Text(versionText, style: OrchidText.extra_large).top(8),
-            ).pady(16),
+            if (widget.showContractVersion)
+              _labeledRow(
+                title: s.contract,
+                child: Text(versionText, style: OrchidText.extra_large).top(8),
+              ).top(16),
+            pady(16)
           ],
         ).padx(40),
       ],

@@ -47,6 +47,7 @@ deploy-pat.sh
 
 # packages needed at dev time that are installed by the build script
 web/*.min.js
+web/*walletconnect*
 
 # our modified version of this package
 flutter_web3

@@ -13,6 +13,7 @@ class OrchidLabeledTextField extends StatelessWidget {
   final bool numeric;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
+  final EdgeInsets contentPadding;
 
   const OrchidLabeledTextField({
     Key key,
@@ -24,6 +25,7 @@ class OrchidLabeledTextField extends StatelessWidget {
     this.onClear,
     this.error = false,
     this.numeric = false,
+    this.contentPadding,
   }) : super(key: key);
 
   @override
@@ -42,7 +44,8 @@ class OrchidLabeledTextField extends StatelessWidget {
             style: OrchidText.title.copyWith(fontSize: 22, height: 1.0),
             controller: controller,
             trailing: trailing,
-            contentPadding: EdgeInsets.only(top: 8, bottom: 14, left: 16, right: 16),
+            contentPadding: contentPadding ??
+                EdgeInsets.only(top: 8, bottom: 14, left: 16, right: 16),
             onChanged: onChanged,
             onClear: onClear,
           ),

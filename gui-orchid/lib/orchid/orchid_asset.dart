@@ -108,6 +108,8 @@ class OrchidAssetSvg {
   final hops_icon = SvgPicture.asset(hops_icon_path);
   static const inspector_icon_path = 'assets/svg/inspector_icon.svg';
   final inspector_icon = SvgPicture.asset(inspector_icon_path);
+  static const metamask_path = 'assets/svg/metamask.svg';
+  final metamask = SvgPicture.asset(metamask_path);
   static const openvpn_path = 'assets/svg/openvpn.svg';
   final openvpn = SvgPicture.asset(openvpn_path);
   static const orchid_logo_side_path = 'assets/svg/orchid_logo_side.svg';
@@ -136,6 +138,8 @@ class OrchidAssetSvg {
   final toggle_unchecked = SvgPicture.asset(toggle_unchecked_path);
   static const traffic_path = 'assets/svg/traffic.svg';
   final traffic = SvgPicture.asset(traffic_path);
+  static const walletconnect_path = 'assets/svg/walletconnect.svg';
+  final walletconnect = SvgPicture.asset(walletconnect_path);
   static const wireguard_path = 'assets/svg/wireguard.svg';
   final wireguard = SvgPicture.asset(wireguard_path);
   static const xdai_path = 'assets/svg/xdai.svg';

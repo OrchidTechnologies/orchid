@@ -10,12 +10,14 @@ class OrchidLabeledAddressField extends StatefulWidget {
   final String label;
   final AddressValueFieldController? controller;
   final ValueChanged<EthereumAddress?>? onChange;
+  final EdgeInsets? contentPadding;
 
   OrchidLabeledAddressField({
     Key? key,
     required this.label,
     this.controller,
     this.onChange,
+    this.contentPadding,
   }) : super(key: key);
 
   @override
@@ -46,6 +48,7 @@ class _OrchidLabeledAddressFieldState extends State<OrchidLabeledAddressField> {
       label: widget.label,
       controller: controller.textController,
       hintText: '0x...',
+      contentPadding: widget.contentPadding,
       trailing: showPaste
           ? IconButton(
                   icon: Icon(Icons.paste, color: Colors.white),
