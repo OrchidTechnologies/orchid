@@ -139,15 +139,22 @@ $(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/
 
 rust := PATH=$${PATH}:~/.cargo/bin
 
-$(output)/%.rustup:
-	$(rust) rustup target add $*
+# XXX: stuck on rustc 1.69.0 due to https://github.com/rust-lang/rust/issues/112368
+rustc := 1.69.0
+
+$(output)/rustup-install-%:
+	$(rust) rustup install $*
+	@touch $@
+	
+$(output)/rustup-target-%: $(output)/rustup-install-$(rustc)
+	$(rust) rustup target add $* --toolchain $(rustc)
 	@touch $@
 
 ifneq ($(uname-o),Cygwin)
 export RUSTC_WRAPPER=$(CURDIR)/env/rustc-wrapper
 endif
 
-$(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$(arch)).rustup $(sysroot) $$(call head,$$(folder)) $(output)/$$(arch)/usr/bin/pkg-config
+$(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/rustup-target-$$(triple/$$(arch)) $(sysroot) $$(call head,$$(folder)) $(output)/$$(arch)/usr/bin/pkg-config
 	$(specific)
 	@mkdir -p $(dir $@)
 	
@@ -164,7 +171,7 @@ $(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/$$(triple/$$
 	    __CARGO_TEST_CHANNEL_OVERRIDE_DO_NOT_USE_THIS=nightly CARGO_TARGET_APPLIES_TO_HOST=false \
 	    CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(arch))))_LINKER='$(firstword $(cc))' \
 	    CARGO_TARGET_$(subst -,_,$(call uc,$(triple/$(arch))))_RUSTFLAGS='$(foreach arg,$(wordlist 2,$(words $(cc)),$(cc)) $(more/$(arch)) $(wflags),-C link-arg=$(arg)) $(rflags)' \
-	    cargo build --verbose --lib --release --features "$(features/$(folder))" \
+	    cargo +$(rustc) build --verbose --lib --release --features "$(features/$(folder))" \
 	        --target $(triple/$(arch)) -Z target-applies-to-host \
 	        --target-dir $(call path,$(CURDIR)/$(output)/$(arch)/$(folder))
 	cp -f $(output)/$(arch)/$(folder)/$(triple/$(arch))/release/deps/lib$(subst -,_,$(notdir $(folder))).a $@
