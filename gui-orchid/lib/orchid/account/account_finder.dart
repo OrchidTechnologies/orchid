@@ -1,6 +1,7 @@
 // @dart=2.9
 import 'dart:async';
 import 'dart:core';
+import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_log_api.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
@@ -26,6 +27,9 @@ class AccountFinder {
   Timer _pollTimer;
 
   bool get _pollOnce => _duration == null;
+
+  // Additional keys to scan
+  List<EthereumKeyRef> _addIdentities;
 
   /// The polling interval may be updated while running
   AccountFinder setPollingInterval(Duration duration) {
@@ -64,7 +68,14 @@ class AccountFinder {
   /// are found after a complete scan of all supported chains.  The callback will be executed
   /// once and the finder will be cancelled.
   /// If no polling interval is set this will perform one complete scan and return any results.
-  AccountFinder find(Function(Set<Account>) callback) {
+  AccountFinder find({
+    /// Additional identities to scan which may not be stored
+    List<EthereumKeyRef> addIdentities,
+
+    /// Callback for accounts found
+    Function(Set<Account>) callback,
+  }) {
+    _addIdentities = addIdentities;
     _callback = callback;
     _start();
     return this;
@@ -74,13 +85,16 @@ class AccountFinder {
     log("account finder: polling for accounts");
     var keys = UserPreferences().keys.get();
     Set<Account> found = {};
-    for (var key in keys) {
+    List<EthereumKeyRef> keyRefs =
+        keys.map((e) => e.ref()).cast<EthereumKeyRef>().toList();
+    keyRefs += (_addIdentities ?? []);
+    for (var ref in keyRefs) {
       try {
-        var store = await AccountStore(identity: key.ref())
-            .load(waitForDiscovered: true);
+        var store =
+            await AccountStore(identity: ref).load(waitForDiscovered: true);
         found.addAll(store.accounts);
       } catch (err) {
-        log("account finder: error polling identity: $key");
+        log("account finder: error polling identity: $ref: $err");
       }
     }
 

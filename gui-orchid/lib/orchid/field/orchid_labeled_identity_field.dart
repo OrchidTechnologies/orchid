@@ -9,14 +9,14 @@ import 'package:flutter/services.dart';
 import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
 
 /// Scan or paste an identity
-class OrchidLabeledIdentityField extends StatefulWidget {
+class OrchidLabeledImportIdentityField extends StatefulWidget {
   final String label;
 
   /// Callback fires on changes with either a valid parsed account or null if the form state is invalid or incomplete.
   final void Function(ParseOrchidIdentityOrAccountResult parsed) onChange;
   final double spacing;
 
-  const OrchidLabeledIdentityField({
+  const OrchidLabeledImportIdentityField({
     Key key,
     @required this.label,
     @required this.onChange,
@@ -24,12 +24,12 @@ class OrchidLabeledIdentityField extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _OrchidLabeledIdentityFieldState createState() =>
-      _OrchidLabeledIdentityFieldState();
+  _OrchidLabeledImportIdentityFieldState createState() =>
+      _OrchidLabeledImportIdentityFieldState();
 }
 
-class _OrchidLabeledIdentityFieldState
-    extends State<OrchidLabeledIdentityField> {
+class _OrchidLabeledImportIdentityFieldState
+    extends State<OrchidLabeledImportIdentityField> {
   var _pasteField = TextEditingController();
 
   // cache the results of the last validation
@@ -159,7 +159,7 @@ class _OrchidLabeledIdentityFieldState
   }
 
   ParseOrchidIdentityOrAccountResult _parse(String text) {
-    return ParseOrchidIdentityOrAccountResult.parse(text);
+    return OrchidAccountImport.parse(text);
   }
 
   @override

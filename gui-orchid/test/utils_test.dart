@@ -1,5 +1,6 @@
 // @dart=2.9
 import 'package:flutter_test/flutter_test.dart';
+import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -15,6 +16,24 @@ import 'expect.dart';
 void main() {
   group('test utils', () {
     //
+
+    test('import account1', () {
+      // TEST account config text: random, not real accounts.
+      final config = 'account='
+          '{ funder: "0x6dd46c5f9f19ab8790f6249322f58028a3185087", secret: "3d15ba96c0aa8eff04f6df30d5e2d03f63c288d37dd5bef5c370274f9b76c747", chainid: 100, version: 1 }';
+      final account = OrchidAccountImport.parseSingleOrchidAccount(config, []);
+      print("account = $account");
+    });
+
+    test('import account2', () {
+      // TEST account config text: random, not real accounts.
+      final config = 'accounts=[ '
+          '{ funder: "0x6dd46c5f9f19ab8790f6249322f58028a3185087", secret: "3d15ba96c0aa8eff04f6df30d5e2d03f63c288d37dd5bef5c370274f9b76c747", chainid: 100, version: 1 },'
+          '{ funder: "0x7dd46c5f9f19ab8790f6249322f58028a3185087", secret: "c1f10dcf9133671051065231311315270ecd04cc5545fc3a151504bcb9d7813e", chainid: 100, version: 1 }, '
+          ']';
+      final accounts = OrchidAccountImport.parseMultipleOrchidAccounts(config, []);
+      print("accounts = $accounts");
+    });
 
     test('enums', () {
       // expect(Enums.toStringValue(PacTransactionType.None), equals('None'));

@@ -20,14 +20,18 @@ class ObservablePreference<T> {
       {@required this.key, @required this.getValue, @required this.putValue});
 
   /// Subscribe to the value stream. This method ensures that the stream is
-  /// initialized with the first value from the underlying user preference.
+  /// initialized with the first value from the underlying user preference,
+  /// however using builder() ensures that the value is passed as the initial data
+  /// value to the UI a StreamBuilder.
   Stream<T> stream() {
     _ensureInitialized();
     return _subject.asBroadcastStream();
   }
 
+  /// Return a stream builder for this preference that supplies the current value
+  /// as the initial stream data (thus avoiding a null data build pass).
   ObservablePreferenceBuilder<T> builder(Widget Function(T t) builder) {
-    return ObservablePreferenceBuilder(stream: stream(), builder: builder);
+    return ObservablePreferenceBuilder(preference: this, builder: builder);
   }
 
   T get() {
@@ -65,7 +69,6 @@ class ObservablePreference<T> {
     _initialized = true;
     _subject.add(value);
   }
-
 }
 
 class ObservableStringPreference extends ObservablePreference<String> {
@@ -99,19 +102,26 @@ class ObservableBoolPreference extends ObservablePreference<bool> {
             });
 }
 
+/// A builder stream building widget for an observable preference.
+/// This class codifies the fact that user preference data can be fetched
+/// synchronously and provided in the stream initial data.
 class ObservablePreferenceBuilder<T> extends StatelessWidget {
-  final Stream<T> stream;
   final Widget Function(T t) builder;
+  final T initialData;
+  final Stream<T> stream;
 
-  const ObservablePreferenceBuilder({
+  ObservablePreferenceBuilder({
     Key key,
-    this.stream,
+    ObservablePreference<T> preference,
     this.builder,
-  }) : super(key: key);
+  })  : this.initialData = preference.get(),
+        this.stream = preference.stream(),
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<T>(
+        initialData: initialData,
         stream: stream,
         builder: (context, snapshot) {
           return builder(snapshot.data);

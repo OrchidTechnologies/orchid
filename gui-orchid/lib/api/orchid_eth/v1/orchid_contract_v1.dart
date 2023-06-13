@@ -48,4 +48,11 @@ class OrchidContractV1 {
 // static add_funds_total_max_gas: number = OrchidContractV1.lottery_move_max_gas;
 // static stake_funds_total_max_gas: number = OrchidContractV1.add_funds_total_max_gas;
 
+  static List<String> abi = [
+    'event Create(address indexed token, address indexed funder, address indexed signer)',
+    'event Update(bytes32 indexed key, uint256 escrow_amount)',
+    'event Delete(bytes32 indexed key, uint256 unlock_warned)',
+    'function read(address token, address funder, address signer) external view returns (uint256, uint256)',
+    'function edit(address signer, int256 adjust, int256 warn, uint256 retrieve) external payable',
+  ];
 }

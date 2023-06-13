@@ -37,7 +37,7 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
           onBillingServiceDisconnected: () {
         log('iap: billing client disconnected');
       });
-
+      
       if (billingResult.responseCode == BillingResponse.ok) {
         log('iap: billing client setup done');
       } else {
@@ -76,7 +76,9 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
       log('iap: unexpected multiple purchases. Clearing: $purchases');
       (PacTransaction.shared.get()).error('iap failed 2').save();
       for (PurchaseWrapper purchase in purchases) {
-        await _billingClient.consumeAsync(purchase.purchaseToken);
+        if (purchase.purchaseState != PurchaseStateWrapper.purchased) {
+          await _billingClient.consumeAsync(purchase.purchaseToken);
+        }
       }
       return;
     }

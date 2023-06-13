@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid.dart';
@@ -11,12 +12,10 @@ import 'dapp_button.dart';
 
 class DappWalletInfoPanel extends StatelessWidget {
   final OrchidWeb3Context web3Context;
-  final VoidCallback onDisconnect;
 
   DappWalletInfoPanel({
     Key key,
     @required this.web3Context,
-    @required this.onDisconnect,
   }) : super(key: key);
 
   final _textStyle = OrchidText.medium_16_025.copyWith(height: 2.0);
@@ -41,7 +40,7 @@ class DappWalletInfoPanel extends StatelessWidget {
           children: [
             Text(context.s.connectedWithMetamask, style: _textStyle),
           ],
-        ).height(26).top(12),
+        ).height(26),
         _buildWalletAddressRow().top(16),
         buildExplorerLink(context, _textStyle, link, disabled: link == null)
             .top(8),
@@ -49,7 +48,7 @@ class DappWalletInfoPanel extends StatelessWidget {
         // _buildDisconnectButton(context).top(24),
         pady(16)
       ],
-    ).padx(24);
+    );
   }
 
   static Widget buildExplorerLink(
@@ -102,15 +101,6 @@ class DappWalletInfoPanel extends StatelessWidget {
     ).height(30);
   }
 
-  Widget _buildDisconnectButton(BuildContext context) {
-    return DappButton(
-        text: context.s.disconnect.toUpperCase(),
-        onPressed: () async {
-          // Navigator.pop(context);
-          onDisconnect();
-        });
-  }
-
   Widget _buildWalletBalances(BuildContext context) {
     final textStyle = OrchidText.normal_16_025.copyWith(height: 2.0);
     final wallet = web3Context?.wallet;
@@ -145,7 +135,12 @@ class DappWalletInfoPanel extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                balance.toFixedLocalized(locale: context.locale),
+                balance.toFixedLocalized(
+                  locale: context.locale,
+                  minPrecision: 1,
+                  maxPrecision: 5,
+                  showPrecisionIndicator: true,
+                ),
                 style: numberStyle,
                 textAlign: TextAlign.right,
               ),

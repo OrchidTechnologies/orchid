@@ -24,7 +24,7 @@ class CoinGeckoExchangeRateSource extends ExchangeRateSource {
 
   // Since we are fetching the entire list of coins in one call, cache them here.
   static SingleCache<Map<TokenType, double?>> cache =
-      SingleCache(duration: Duration(seconds: 30), name: "coingecko pricing");
+      SingleCache(duration: Duration(seconds: 300), name: "coingecko pricing");
 
   static List<TokenType> get _tokens {
     return Tokens.all

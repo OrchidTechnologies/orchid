@@ -170,11 +170,21 @@ class UserPreferences {
     return true;
   }
 
-  /// Add a key to the user's keystore.
-  // Note: Minimizes exposure to the full setKeys()
+  /// Add a key to the user's keystore if it does not already exist.
   Future<void> addKey(StoredEthereumKey key) async {
-    var allKeys = ((keys.get()) ?? []) + [key];
-    return await keys.set(allKeys);
+    return addKeyIfNeeded(key);
+  }
+
+  /// Add a key to the user's keystore if it does not already exist.
+  Future<void> addKeyIfNeeded(StoredEthereumKey key) async {
+    log("XXX: addKeyIfNeeded: add key if needed: $key");
+    var curKeys = keys.get() ?? [];
+    if (!curKeys.contains(key)) {
+      log("XXX: addKeyIfNeeded: adding key");
+      return await keys.set(curKeys + [key]);
+    } else {
+      log("XXX: addKeyIfNeeded: duplicate key");
+    }
   }
 
   /// Add a list of keys to the user's keystore.
@@ -236,7 +246,7 @@ class UserPreferences {
   ObservablePreference<List<Account>> activeAccounts =
       ObservableAccountListPreference(UserPreferenceKey.ActiveAccounts);
 
-  /// Add (set-wise) to the distinct set of discovered accounts.
+  /// Add to the set of discovered accounts.
   Future<void> addCachedDiscoveredAccounts(List<Account> accounts) async {
     if (accounts == null || accounts.isEmpty) {
       return;
@@ -249,11 +259,25 @@ class UserPreferences {
     return cachedDiscoveredAccounts.set(cached);
   }
 
+  Future<void> addAccountsIfNeeded(List<Account> accounts) async {
+    // Allow the set to prevent duplication.
+    log("XXX: adding accounts: $accounts");
+    return addCachedDiscoveredAccounts(accounts);
+  }
+
   /// A set of accounts previously discovered for user identities
   /// Returns {} empty set initially.
   ObservablePreference<Set<Account>> cachedDiscoveredAccounts =
       ObservableAccountSetPreference(
           UserPreferenceKey.CachedDiscoveredAccounts);
+
+  /// Add a potentially new identity (signer key) and account (funder, chain, version)
+  /// without duplication.
+  Future<void> ensureSaved(Account account) async {
+    await UserPreferences().addKeyIfNeeded(account.signerKey);
+    await UserPreferences().addCachedDiscoveredAccounts([account]); // setwise, safe
+  }
+
 
   /// An incrementing internal UI app release notes version used to track
   /// new release messaging.  See class [Release]

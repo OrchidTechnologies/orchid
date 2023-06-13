@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:math';
 import 'package:orchid/api/orchid_web3/v1/orchid_contract_deployment_v1.dart';
 import 'package:orchid/common/rounded_rect.dart';
@@ -9,7 +10,6 @@ import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/common/app_dialogs.dart';
@@ -17,20 +17,16 @@ import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/account/account_detail_poller.dart';
 import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
-import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/api/orchid_web3/v1/orchid_eth_v1_web3.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
 import 'package:orchid/pages/transaction_status_panel.dart';
 import 'package:orchid/pages/v0/dapp_tabs_v0.dart';
+import 'package:orchid/api/orchid_web3/wallet_connect_eth_provider.dart';
 import 'package:orchid/util/gestures.dart';
-import 'package:styled_text/styled_text.dart';
-import 'dapp_button.dart';
 import '../orchid/menu/orchid_chain_selector_menu.dart';
-import 'dapp_pricing_panel.dart';
 import 'dapp_settings_button.dart';
-import 'dapp_version_button.dart';
-import 'dapp_wallet_button.dart';
-import 'dapp_wallet_info_panel.dart';
+import 'dapp_wallet_info_button.dart';
+import 'dapp_wallet_select_button.dart';
 import 'v1/dapp_tabs_v1.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -49,6 +45,8 @@ class _DappHomeState extends State<DappHome> {
   // TODO: Before that we need to add a controller to our PollingBuilder to allow
   // TODO: for refresh on demand.
   AccountDetailPoller _accountDetail;
+
+  Chain _userDefaultChainSelection;
 
   final _signerField = AddressValueFieldController();
   final _scrollController = ScrollController();
@@ -78,8 +76,6 @@ class _DappHomeState extends State<DappHome> {
     return _web3Context != null;
   }
 
-  bool _showConnectPanel = false;
-
   bool get _hasAccount =>
       _signer != null && _web3Context?.walletAddress != null;
 
@@ -103,7 +99,6 @@ class _DappHomeState extends State<DappHome> {
         _signer =
             EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
         _signerField.textController.text = _signer.toString();
-        _showConnectPanel = true;
       });
     }
   }
@@ -112,7 +107,7 @@ class _DappHomeState extends State<DappHome> {
   /// the user to hit the connect button.
   Future<void> _checkForExistingConnectedAccounts() async {
     try {
-      var accounts = await ethereum.getAccounts();
+      var accounts = await ethereum?.getAccounts() ?? [];
       if (accounts.isNotEmpty) {
         log('connect: User already has accounts, connecting.');
         await Future.delayed(Duration(seconds: 0), () {
@@ -170,8 +165,6 @@ class _DappHomeState extends State<DappHome> {
         _accountDetail.addListener(_accountDetailUpdated);
         _accountDetail.startPolling();
       }
-
-      _showConnectPanel = false;
     }
     setState(() {});
   }
@@ -187,86 +180,7 @@ class _DappHomeState extends State<DappHome> {
       children: [
         _buildHeader().padx(24).top(30).bottom(24),
         _buildMainColumn(),
-        // _buildFooter().padx(24).top(14).bottom(24),
       ],
-    );
-  }
-
-  /// The toggleable panel that offers the connect wallet button and identity entry.
-  Widget _buildConnectPanel() {
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: altColumnWidth),
-        child: OrchidPanel.vertical(
-          child: Column(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(s.connectOrCreate).subtitle.bold,
-                  _buildStep1Text().top(8),
-                  AnimatedCrossFade(
-                    duration: millis(300),
-                    crossFadeState: !_connected
-                        ? CrossFadeState.showFirst
-                        : CrossFadeState.showSecond,
-                    firstChild: _buildConnectButton(),
-                    secondChild: DappWalletInfoPanel(
-                      web3Context: _web3Context,
-                      onDisconnect: _disconnect,
-                    ),
-                  ).top(16),
-                  _buildStep2Text().top(24),
-                  _buildPasteSignerField().top(16),
-                  Text('Need more help getting started?').body2.top(24),
-                  Text('View the step-by-step guide.')
-                      .linkStyle
-                      .link(url: OrchidUrls.join)
-                      .top(8),
-                ],
-              ).pad(20),
-              Divider(color: Colors.black, height: 1),
-              TextButton(
-                onPressed: _toggleShowConnectPanel,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.keyboard_arrow_up,
-                      size: 20,
-                      color: OrchidColors.tappable,
-                    ).right(4),
-                    Text(s.tapToMinimize, style: OrchidText.linkStyle.size(14)),
-                  ],
-                ),
-              ).pady(8)
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Map<String, StyledTextTagBase> _textTags = {
-    'bold': StyledTextTag(
-      style: OrchidText.body2.bold,
-    ),
-    'link': OrchidText.body2.linkStyle.link(OrchidUrls.widget),
-  };
-
-  StyledText _buildStep1Text() {
-    return StyledText(
-      style: OrchidText.body2,
-      text: s.step1,
-      tags: _textTags,
-    );
-  }
-
-  StyledText _buildStep2Text() {
-    return StyledText(
-      style: OrchidText.body2,
-      text: s.step2,
-      tags: _textTags,
     );
   }
 
@@ -294,12 +208,6 @@ class _DappHomeState extends State<DappHome> {
                 width: mainColumnWidth,
                 child: Column(
                   children: [
-                    AnimatedVisibility(
-                      duration: millis(500),
-                      show: _showConnectPanel,
-                      child: _buildConnectPanel().bottom(32).padx(20),
-                    ),
-
                     if (_contractVersionsAvailable != null &&
                         _contractVersionsAvailable.isEmpty)
                       RoundedRect(
@@ -312,35 +220,49 @@ class _DappHomeState extends State<DappHome> {
                             .pad(24),
                       ).center.bottom(24),
 
-                    // Market conditions
-                    // if (_connected)
-                    //   HistoricalPricingPanel(
-                    //           key: Key(_web3Context.chain.chainId.toString()),
-                    //           chain: _web3Context.chain)
-                    //       .bottom(24),
+                    _buildTransactionsList().top(24),
+
+                    // signer field
+                    ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: altColumnWidth),
+                        child: _buildPasteSignerField().top(24).padx(8)),
 
                     // account card
-                    AccountCard(
-                      // todo: the key here just allows us to expanded when details are available
-                      // todo: maybe make that the default behavior of the card
-                      key: Key(_accountDetail?.funder?.toString() ?? 'null'),
-                      accountDetail: _accountDetail,
-                      initiallyExpanded: _accountDetail != null,
-                      // partial values from the connection panel
-                      partialAccountFunderAddress: _web3Context?.walletAddress,
-                      partialAccountSignerAddress: _signer,
+                    AnimatedVisibility(
+                      show: _hasAccount,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                            minWidth: altColumnWidth, maxWidth: altColumnWidth),
+                        child: AccountCard(
+                          // todo: the key here just allows us to expanded when details are available
+                          // todo: maybe make that the default behavior of the card
+                          key:
+                              Key(_accountDetail?.funder?.toString() ?? 'null'),
+                          minHeight: true,
+                          showAddresses: false,
+                          showContractVersion: false,
+                          accountDetail: _accountDetail,
+                          // initiallyExpanded: _accountDetail != null,
+                          initiallyExpanded: false,
+                          // partial values from the connection panel
+                          partialAccountFunderAddress:
+                              _web3Context?.walletAddress,
+                          partialAccountSignerAddress: _signer,
+                        ).top(24).padx(8),
+                      ),
                     ),
-
-                    _buildTransactionsList().top(24),
 
                     // tabs
                     // Divider(color: Colors.white.withOpacity(0.3)).bottom(8),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: altColumnWidth),
-                      child: _buildTabs(),
-                    ).padx(8).top(16),
+                    AnimatedVisibility(
+                      show: _hasAccount,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: altColumnWidth),
+                        child: _buildTabs(),
+                      ).padx(8).top(16),
+                    ),
 
-                    _buildFooter().padx(24).bottom(24),
+                    // _buildFooter().padx(24).bottom(24),
                   ],
                 ),
               ),
@@ -373,37 +295,6 @@ class _DappHomeState extends State<DappHome> {
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
       return LoggingPage();
     }));
-  }
-
-  Widget _buildFooter() {
-    return Row(
-      mainAxisAlignment: (_contractVersionSelected != null)
-          ? MainAxisAlignment.spaceBetween
-          : MainAxisAlignment.center,
-      children: [
-        _buildVersionButton(),
-        if (_contractVersionSelected != null)
-          SizedBox(width: 48)
-        else
-          Container(),
-      ],
-    );
-  }
-
-  Widget _buildVersionButton() {
-    return AnimatedSwitcher(
-      duration: millis(500),
-      child: _contractVersionSelected != null
-          ? _buildVersionButtonImpl()
-          : Container(),
-    );
-  }
-
-  Widget _buildVersionButtonImpl() {
-    return DappVersionButton(
-        contractVersionSelected: _contractVersionSelected,
-        selectContractVersion: _selectContractVersion,
-        contractVersionsAvailable: _contractVersionsAvailable);
   }
 
   Widget _buildTabs() {
@@ -480,14 +371,17 @@ class _DappHomeState extends State<DappHome> {
 
   Widget _buildPasteSignerField() {
     return OrchidLabeledAddressField(
-        label: s.orchidIdentity, controller: _signerField);
+      label: s.orchidIdentity,
+      controller: _signerField,
+      contentPadding: EdgeInsets.only(top: 8, bottom: 18, left: 16, right: 16),
+    );
   }
 
   Widget _buildHeader() {
-    final _showWalletConnect = OrchidUserParams().has('wc');
     final deploy = (_contractVersionsAvailable?.contains(1) ?? false)
         ? null
         : _deployContract;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -496,16 +390,14 @@ class _DappHomeState extends State<DappHome> {
         Row(
           children: [
             _buildChainSelector().left(16),
-            _buildWalletButton().left(16),
-            if (_showWalletConnect) _buildWalletConnectTMButton().left(16),
-            // if (_contractVersionsAvailable != null) _buildVersionSwitch(),
+            _buildHeaderConnectWalletButton().left(16),
             DappSettingsButton(
               contractVersionsAvailable: _contractVersionsAvailable,
               contractVersionSelected: _contractVersionSelected,
               selectContractVersion: _selectContractVersion,
-              deployContract: deploy,
-              // onDisconnect: _disconnect,
+              deployContract: _connected ? deploy : null,
             ).left(16),
+
           ],
         ),
       ],
@@ -519,22 +411,21 @@ class _DappHomeState extends State<DappHome> {
     }
   }
 
-  Widget _buildWalletConnectTMButton() {
-    return DappButton(
-      // 'WalletConnect' is a name, not a description
-      text: 'WalletConnect',
-      onPressed: _connected ? null : _connectWalletConnect,
-      trailing: Padding(
-        padding: const EdgeInsets.only(left: 10.0, right: 16.0),
-        child: Icon(Icons.qr_code, color: Colors.black),
-      ),
-    );
-  }
-
-  /// The connect wallet button within the connect panel
-  Widget _buildConnectButton() {
+  /// The "connect" button in the header that toggles the connection panel
+  Widget _buildHeaderConnectWalletButton() {
     final narrow = AppSize(context).narrowerThanWidth(550);
-    // final reallyNarrow = AppSize(context).narrowerThanWidth(460);
+    final reallyNarrow = AppSize(context).narrowerThanWidth(385);
+
+    final textStyleBase =
+        OrchidText.medium_16_025.semibold.black.copyWith(height: 1.8);
+    final selectedTextStyle =
+        textStyleBase.copyWith(color: Colors.white.withOpacity(0.8));
+    final backgroundColor = OrchidColors.tappable;
+
+    final deploy = (_contractVersionsAvailable?.contains(1) ?? false)
+        ? null
+        : _deployContract;
+
     return AnimatedCrossFade(
       duration: Duration(milliseconds: 300),
       crossFadeState:
@@ -543,80 +434,43 @@ class _DappHomeState extends State<DappHome> {
       firstChild: SizedBox(
         // Hight must be set on each child
         height: 40,
-        child: DappWalletButton(
-          web3Context: _web3Context,
-          onDisconnect: _disconnect,
-          showBalance: !narrow,
-          onPressed: null,
-        ),
-      ),
-      // Connect button
-      secondChild: SizedBox(
-        height: 40,
-        child: DappButton(
-          // width: reallyNarrow ? 140 : null,
-          width: double.infinity,
-          textStyle: OrchidText.medium_18_025.black.copyWith(height: 1.8),
-          text: s.connectWallet,
-          onPressed: _connected ? null : _connectEthereum,
-        ),
-      ),
-    );
-  }
-
-  /// The "connect" button in the header that toggles the connection panel
-  Widget _buildWalletButton() {
-    final narrow = AppSize(context).narrowerThanWidth(550);
-    final reallyNarrow = AppSize(context).narrowerThanWidth(385);
-    final textStyleBase = OrchidText.medium_18_025.black.copyWith(height: 1.8);
-    final textStyle = _showConnectPanel
-        ? textStyleBase.copyWith(color: Colors.white.withOpacity(0.4))
-        : textStyleBase;
-    final backgroundColor =
-        _showConnectPanel ? OrchidColors.selected_color_dark : null;
-
-    return AnimatedCrossFade(
-      duration: Duration(milliseconds: 300),
-      crossFadeState:
-          _hasAccount ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-      // Wallet info button
-      firstChild: SizedBox(
-        // Hight must be set on each child
-        height: 40,
-        child: DappWalletButton(
+        child: DappWalletInfoButton(
           web3Context: _web3Context,
           onDisconnect: _disconnect,
           showBalance: !narrow,
           minimalAddress: reallyNarrow,
-          onPressed: _toggleShowConnectPanel,
+          // onPressed: _toggleShowConnectPanel,
+          disconnect: _disconnect,
+          contractVersionsAvailable: _contractVersionsAvailable,
+          contractVersionSelected: _contractVersionSelected,
+          selectContractVersion: _selectContractVersion,
+          deployContract: deploy,
         ),
       ),
       // Connect button
       secondChild: SizedBox(
         height: 40,
-        child: DappButton(
+        child: DappWalletSelectButton(
+          connected: _connected,
+          disconnect: _disconnect,
+          enabled: !_walletConnectionInProgress,
           width: reallyNarrow ? 115 : 164,
-          textStyle: textStyle,
+          unselectedTextStyle: textStyleBase,
+          selectedTextStyle: selectedTextStyle,
           backgroundColor: backgroundColor,
-          text: s.connect.toUpperCase(),
-          onPressed: _toggleShowConnectPanel,
+          connectMetamask: _connectEthereum,
+          connectWalletConnect: () =>
+              _uiGuardConnectingState(_connectWalletConnect),
         ),
       ),
     );
-  }
-
-  void _toggleShowConnectPanel() {
-    return setState(() {
-      _showConnectPanel = !_showConnectPanel;
-    });
   }
 
   Widget _buildChainSelector() {
     final size = AppSize(context);
     final narrow = (_connected && size.narrowerThanWidth(700)) ||
         size.narrowerThanWidth(600);
-    final chain = _web3Context?.chain;
-
+    final chain = _web3Context?.chain ?? _userDefaultChainSelection;
     return SizedBox(
       width: narrow ? 40 : 190,
       height: 40,
@@ -624,16 +478,31 @@ class _DappHomeState extends State<DappHome> {
         iconOnly: narrow,
         selected: chain,
         onSelection: _switchOrAddChain,
-        enabled: _web3Context != null,
+        enabled: true,
       ),
     );
   }
 
   void _switchOrAddChain(Chain chain) async {
+    // If there is no current context the user is selecting a default chain for future connection.
+    if (_web3Context == null) {
+      setState(() {
+        _userDefaultChainSelection = chain;
+      });
+      return;
+    }
     log("XXX: switch chain: $chain");
-    final ethereum = _web3Context.ethereumProvider;
+
+    // Handle a WalletConnect switch:
+    if (_web3Context.walletConnectProvider != null) {
+      await _switchOrAddChainWalletConnect(chain);
+      return;
+    }
+
     try {
-      await ethereum.walletSwitchChain(chain.chainId);
+      if (_web3Context.ethereumProvider != null) {
+        await _web3Context.ethereumProvider.walletSwitchChain(chain.chainId);
+      }
     } on EthereumUserRejected {
       log("XXX: user rejected switch");
     } on EthereumUnrecognizedChainException {
@@ -655,6 +524,32 @@ class _DappHomeState extends State<DappHome> {
     } catch (err) {
       log("Unknown err in switch chain: $err");
     }
+  }
+
+  // WalletConnect does have the notion of multiple chains per wallet connection,
+  // however they must be specified at connection time and the connection will fail
+  // if the wallet does not support the chain.  The "optional chains" parameter does not
+  // seem to work currently.  So for now we will create a new connection for chain switch.
+  // @see our WalletConnect provider switch chain method.  This has been tested and
+  // does work if the chain is specified at init() time.
+  void _switchOrAddChainWalletConnect(Chain chain) async {
+    log("switchOrAddChainWalletConnect");
+    // Dispatch this to avoid a flutter bug?
+    Future.delayed(millis(0), () {
+      AppDialogs.showConfirmationDialog(
+          context: context,
+          title: "Switch Chain",
+          bodyText:
+              "Switching to the ${chain.name} with WalletConnect will require a new connection.\n"
+              "Do you wish to drop this session and reconnect?",
+          commitAction: () async {
+            await _disconnect();
+            setState(() {
+              _userDefaultChainSelection = chain;
+            });
+            await _uiGuardConnectingState(_connectWalletConnect);
+          });
+    });
   }
 
   void _addChain(Chain chain) async {
@@ -679,7 +574,8 @@ class _DappHomeState extends State<DappHome> {
     }
   }
 
-  void _connectEthereum() async {
+  Future<void> _connectEthereum() async {
+    log("XXX: connectEthereum");
     try {
       await _tryConnectEthereum();
     } on EthereumException catch (err) {
@@ -712,26 +608,49 @@ class _DappHomeState extends State<DappHome> {
       return;
     }
 
-    // Check chain before constructing web3
-    // var chainId = await ethereum.getChainId();
-    // if (!Chains.isKnown(chainId)) {
-    //   return _invalidChain();
-    // }
-
     var web3 = await OrchidWeb3Context.fromEthereum(ethereum);
     _setNewContex(web3);
   }
 
-  void _connectWalletConnect() async {
-    var chain = Chains.Ethereum;
-    var wc = WalletConnectProvider.fromRpc(
-      {chain.chainId: chain.providerUrl},
-      chainId: chain.chainId,
-    );
+  var _walletConnectionInProgress = false;
+
+  Future<void> _uiGuardConnectingState(Future<void> Function() connect) async {
+    setState(() {
+      _walletConnectionInProgress = true;
+    });
     try {
+      await connect();
+    } finally {
+      setState(() {
+        _walletConnectionInProgress = false;
+      });
+    }
+  }
+
+  Future<void> _connectWalletConnect() async {
+    log("XXX: connectWalletConnect");
+    // const walletConnectProjectId = 'bd5be579e9cae68defff05a6fa7b0049'; // test
+    const walletConnectProjectId = 'afe2e392884aefdae72d4babb5482ced';
+
+    final chain = _userDefaultChainSelection ?? Chains.Ethereum;
+    var wc = await WalletConnectEthereumProvider.init(
+      projectId: walletConnectProjectId,
+      rpcMap: {
+        chain.chainId: chain.providerUrl,
+      },
+      chains: [chain.chainId],
+      // This does not seem to work, otherwise we could simply connect to all
+      // of our chains as optional and allow more straightforward switching.
+      // optionalChains: [Chains.Gnosis.chainId, 31411234],
+      showQrModal: true,
+    );
+    // consoleLog(wc.impl);
+    try {
+      log('Before wc connect');
       await wc.connect();
+      log('After wc connect');
     } catch (err) {
-      log('wc connect, err = $err');
+      log('wc connect/init, err = $err');
       return;
     }
     if (!wc.connected) {
@@ -742,7 +661,6 @@ class _DappHomeState extends State<DappHome> {
       return;
     }
 
-    // TODO: Check chain here
     var web3 = await OrchidWeb3Context.fromWalletConnect(wc);
     _setNewContex(web3);
   }
@@ -882,25 +800,7 @@ class _DappHomeState extends State<DappHome> {
     _accountDetail?.refresh();
   }
 
-  void _invalidChain() {
-    AppDialogs.showAppDialog(
-        context: context,
-        title: s.unknownChain,
-        bodyText: s.theOrchidAccountManagerDoesntSupportThisChainYet);
-
-    _setNewContex(null);
-  }
-
-  Future<void> _noContract() {
-    return AppDialogs.showAppDialog(
-        context: context,
-        title: s.orchidIsntOnThisChain,
-        bodyText: s.theOrchidContractHasntBeenDeployedOnThisChainYet);
-
-    // _setNewContex(null);
-  }
-
-  void _disconnect() async {
+  Future<void> _disconnect() async {
     _web3Context?.disconnect();
     setState(() {
       _clearAccountDetail();

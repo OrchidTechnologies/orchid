@@ -146,9 +146,8 @@ class _OrchidSelectorMenuState<T> extends State<OrchidSelectorMenu<T>> {
           value: value,
           style: OrchidText.body2,
         ),
-      ).padx(24),
+      ).padx(16),
       onTap: () {
-        log("XXX: onTap");
         // Close the menu item
         // Navigator.pop(context);
         widget.onSelection(value);

@@ -1,32 +1,38 @@
 // @dart=2.9
+import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
+import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/orchid.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_platform.dart';
+import 'package:orchid/orchid/field/orchid_labeled_identity_field.dart';
+import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
 import 'package:orchid/orchid/menu/orchid_chain_selector_menu.dart';
+import 'package:orchid/orchid/menu/orchid_funder_selector_menu.dart';
+import 'package:orchid/orchid/menu/orchid_version_selector_menu.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/orchid/account/account_finder.dart';
-import 'package:orchid/pages/account_manager/scan_paste_identity.dart';
-import '../../orchid/menu/orchid_funder_selector_menu.dart';
 import 'package:orchid/orchid/menu/orchid_key_selector_menu.dart';
-import 'model/orchid_hop.dart';
 
 /// Allow selection or manual entry of all components of an OrchidAccount
 class OrchidAccountEntry extends StatefulWidget {
-  final OrchidHop initialSelectionsFromHop;
   final StoredEthereumKeyRef initialKeySelection;
+  final Account initialFunderSelection;
 
   /// Callback fires on changes with either a valid account or null if the form state is invalid or
   /// incomplete. The account has not been persisted.
-  final void Function(Account account) onChange;
+  final void Function(Account account) onAccountUpdate;
+
+  /// Callback fires on import of multiple accounts via config pasted into the identity import field.
+  final void Function(List<Account> accounts) onAccountsImport;
 
   OrchidAccountEntry({
-    @required this.onChange,
-    this.initialSelectionsFromHop,
+    @required this.onAccountUpdate,
+    @required this.onAccountsImport,
     this.initialKeySelection,
+    this.initialFunderSelection,
   });
 
   @override
@@ -41,6 +47,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
   // Funder account selection
   var _pastedFunderField = TextEditingController();
   Chain _pastedOrOverriddenFunderChainSelection;
+  int _overriddenFunderVersionSelection;
   FunderSelectionItem _initialSelectedFunderItem;
   FunderSelectionItem _selectedFunderItem;
 
@@ -50,51 +57,56 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
   void initState() {
     super.initState();
 
-    // Init the UI from a supplied keyref and/or hop
-    final hop = widget.initialSelectionsFromHop;
+    // Init the UI from a supplied keyref and/or funder account info
     setState(() {
-      final keyRef = widget.initialKeySelection ?? hop?.keyRef;
+      final keyRef = widget.initialKeySelection;
       _initialSelectedKeyItem =
           keyRef != null ? KeySelectionItem(keyRef: keyRef) : null;
       _selectedKeyItem = _initialSelectedKeyItem;
 
-      _initialSelectedFunderItem = hop?.funder != null
-          ? FunderSelectionItem(funderAccount: hop.account)
-          : null;
+      final funder = widget.initialFunderSelection;
+      _initialSelectedFunderItem =
+          funder != null ? FunderSelectionItem(funderAccount: funder) : null;
       _selectedFunderItem = _initialSelectedFunderItem;
     });
 
     _pastedFunderField.addListener(_textFieldChanged);
 
-    _updateAccounts();
+    // _updateAccounts();
   }
 
-  void _updateAccounts() async {
+  /*
+  void _updateAccounts({List<EthereumKeyRef> addIdentities}) async {
     setState(() {
       _updatingAccounts = true;
     });
-    AccountFinder().find((accounts) async {
-      if (mounted) {
-        setState(() {
-          _updatingAccounts = false;
-        });
-      }
-    });
+    AccountFinder().find(
+      addIdentities: addIdentities,
+      callback: (accounts) async {
+        if (mounted) {
+          setState(() {
+            _updatingAccounts = false;
+          });
+        }
+      },
+    );
   }
+   */
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        pady(8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             // Signer
-            _buildSelectSignerField(),
+            _buildSelectIdentityField(),
+
             // Funder
-            if (_selectedKeyItem?.keyRef != null)
-              _buildSelectFunderField().top(16),
+            // We used to hide the funder field until a valid identity was selected.
+            // if (_selectedKeyItem?.keyRef != null)
+            _buildSelectFunderField().top(16),
           ],
         ).pady(24),
 
@@ -126,15 +138,20 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
   }
 
   // Build the signer key (identity) entry dropdown selector
-  Widget _buildSelectSignerField() {
-    final pasteOnly = OrchidPlatform.doesNotSupportScanning;
+  Widget _buildSelectIdentityField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          s.orchidIdentity + ':',
-          style: OrchidText.title.copyWith(
-              color: _keyRefValid ? OrchidColors.valid : OrchidColors.invalid),
+        Row(
+          children: [
+            Text(
+              s.orchidIdentity + ':',
+              style: OrchidText.title.copyWith(
+                  color:
+                      _keyRefValid ? OrchidColors.valid : OrchidColors.invalid),
+            ),
+            _buildCopyIdentityButton().bottom(4),
+          ],
         ),
         pady(8),
         Row(
@@ -150,100 +167,97 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
         ),
 
         // Show the import key field if the user has selected the option
-        Visibility(
-          visible:
+        AnimatedVisibility(
+          duration: millis(250),
+          show:
               _selectedKeyItem?.option == OrchidKeySelectorMenu.importKeyOption,
-          child: ScanOrPasteOrchidIdentity(
-            onChange: (result) async {
-              log("XXX: import identity = $result");
-              // TODO: Saving the key should be deferred until the caller of this form
-              // TODO: decides to save the account.  Doing so will require extending the
-              // TODO: return data and modifying KeySelectionDropdown to handle transient keys.
-              if (result != null) {
-                if (result.isNew) {
-                  await result.save();
-                  _updateAccounts();
-                }
-                setState(() {
-                  _selectedKeyItem =
-                      KeySelectionItem(keyRef: result.signer.ref());
-                  if (result.account != null) {
-                    _selectedFunderItem =
-                        FunderSelectionItem(funderAccount: result.account);
-                    _pastedOrOverriddenFunderChainSelection =
-                        result.account.chain;
-                  }
-                });
-                fireUpdate();
-              }
-            },
-            pasteOnly: pasteOnly,
+          child: OrchidLabeledImportIdentityField(
+            label: s.orchidIdentity,
+            onChange: _parsedValueChanged,
           ).top(24),
         )
       ],
     );
   }
 
+  Widget _buildCopyIdentityButton() {
+    final keyItem = _selectedKeyItem ?? _initialSelectedKeyItem;
+    final text = keyItem?.keyRef == null
+        ? null
+        : keyItem.address.toString(prefix: true, elide: false); // or null
+    return CopyTextButton(copyText: text);
+  }
+
+  void _parsedValueChanged(ParseOrchidIdentityOrAccountResult result) async {
+    log("XXX: import identity = $result");
+
+    if (result != null) {
+      if (result.hasMultipleAccounts) {
+        widget.onAccountsImport(result.accounts);
+      } else {
+        final keyRef = TransientEthereumKeyRef(result.signer);
+        setState(() {
+          _onKeySelected(KeySelectionItem(keyRef: keyRef));
+
+          if (result.account != null) {
+            _onFunderSelected(
+                FunderSelectionItem(funderAccount: result.account));
+          }
+        });
+        // _updateAccounts(addIdentities: [keyRef]);
+      }
+    }
+  }
+
   /// Select a funder account address for the selected signer identity
   Column _buildSelectFunderField() {
+    final _funderValidStyle = OrchidText.title.copyWith(
+        color: _funderValid ? OrchidColors.valid : OrchidColors.invalid);
+
+    final effectiveChainSelection = _pastedOrOverriddenFunderChainSelection ??
+        _selectedFunderItem?.account?.chain;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(s.funderAddress + ':',
-            style: OrchidText.title.copyWith(
-                color:
-                    _funderValid ? OrchidColors.valid : OrchidColors.invalid)),
-        pady(8),
-
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: OrchidFunderSelectorMenu(
-                  signer: _selectedKeyItem?.keyRef,
-                  // Update on change in key
-                  key: ValueKey(_selectedKeyItem?.toString() ??
-                      _initialSelectedKeyItem.toString()),
-                  enabled: true,
-                  selected: _selectedFunderItem ?? _initialSelectedFunderItem,
-                  onSelection: _onFunderSelected),
-            ),
-          ],
-        ),
-
+        Text(s.funderAddress + ':', style: _funderValidStyle),
         // Show the paste funder field if the user has selected the option
-        Visibility(
-          visible: _selectedFunderItem?.option ==
-              OrchidFunderSelectorMenu.pasteAddressOption,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 24),
-            child: _buildPasteFunderField(),
-          ),
-        ),
+        _buildPasteFunderField().top(8),
 
-        pady(16),
-        Text(s.chain + ':',
-            style: OrchidText.title.copyWith(
-                color:
-                    _funderValid ? OrchidColors.valid : OrchidColors.invalid)),
-        pady(8),
+        Text(s.chain + ':', style: _funderValidStyle).top(16),
 
         OrchidChainSelectorMenu(
-          key: Key(_selectedFunderItem?.toString() ?? ''),
           onSelection: _onChainSelectionChanged,
-          selected: _pastedOrOverriddenFunderChainSelection ??
-              _selectedFunderItem?.account?.chain,
-          enabled: _selectedFunderItem != null,
+          selected: effectiveChainSelection,
+          // enabled: _selectedFunderItem != null,
           width: double.infinity,
+        ).top(8),
+
+        if (effectiveChainSelection == Chains.Ethereum)
+          Text(s.contractVersion + ':', style: _funderValidStyle).top(16),
+
+        AnimatedVisibility(
+          show: effectiveChainSelection == Chains.Ethereum,
+          child: OrchidVersionSelectorMenu(
+            onSelection: _onVersionSelectionChanged,
+            selected: _overriddenFunderVersionSelection ??
+                _selectedFunderItem?.account?.version ?? 1,
+            // enabled: _selectedFunderItem != null,
+            enabled: true,
+            width: double.infinity,
+          ).top(8),
         ),
       ],
     );
   }
 
+  // TODO: Needs to highlight border with validation
   Column _buildPasteFunderField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        OrchidTextField(
+        OrchidLabeledTextField(
+          label: s.pasteAddress,
           hintText: '0x...',
           controller: _pastedFunderField,
           trailing: TextButton(
@@ -262,6 +276,14 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
   void _onChainSelectionChanged(Chain chain) {
     setState(() {
       _pastedOrOverriddenFunderChainSelection = chain;
+      _overriddenFunderVersionSelection = null;
+    });
+    fireUpdate();
+  }
+
+  void _onVersionSelectionChanged(int version) {
+    setState(() {
+      _overriddenFunderVersionSelection = version;
     });
     fireUpdate();
   }
@@ -272,16 +294,19 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
       _selectedFunderItem = null;
       _pastedFunderField.text = null;
       _pastedOrOverriddenFunderChainSelection = null;
+      _overriddenFunderVersionSelection = null;
     });
     _clearKeyboard();
     fireUpdate();
   }
 
   void _onFunderSelected(FunderSelectionItem funder) {
+    log("XXX: onFunderSelected: $funder");
     setState(() {
       _selectedFunderItem = funder;
       _pastedFunderField.text = null;
       _pastedOrOverriddenFunderChainSelection = null;
+      _overriddenFunderVersionSelection = null;
     });
     _clearKeyboard();
     fireUpdate();
@@ -334,7 +359,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
   // Evaluate the state of the form and notify listeners
   void fireUpdate() {
     if (!_formValid) {
-      return widget.onChange(null);
+      return widget.onAccountUpdate(null);
     }
 
     // Signer
@@ -352,17 +377,17 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
       chainId = _pastedOrOverriddenFunderChainSelection?.chainId ??
           funderAccount?.chainId;
 
-      // Note: Currently inferring contract version from chain selection here.
-      version = funderAccount?.version ??
+      version = _overriddenFunderVersionSelection ??
+          funderAccount?.version ??
           (_pastedOrOverriddenFunderChainSelection.isEthereum ? 0 : 1);
     } catch (err) {
       // e.g. invalid pasted address
-      return widget.onChange(null);
+      return widget.onAccountUpdate(null);
     }
 
     // Account
-    widget.onChange(Account.base(
-      signerKeyUid: signerKeyRef.keyUid,
+    widget.onAccountUpdate(Account.fromSignerKey(
+      signerKey: signerKeyRef.get(),
       version: version,
       chainId: chainId,
       funder: funderAddress,

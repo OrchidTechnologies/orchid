@@ -31,4 +31,5 @@ void main() async {
   }
 
   runApp(OrchidApp());
+  // OrchidPricing.logTokenPrices();
 }

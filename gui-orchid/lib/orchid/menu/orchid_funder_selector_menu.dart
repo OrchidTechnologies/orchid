@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'orchid_selector_menu.dart';
 
 typedef FunderSelectorCallback = void Function(FunderSelectionItem key);
@@ -13,7 +14,7 @@ class OrchidFunderSelectorMenu extends StatefulWidget {
   final FunderSelectorCallback onSelection;
   final FunderSelectionItem selected;
   final bool enabled;
-  final StoredEthereumKeyRef signer;
+  final EthereumKeyRef signer;
 
   // Fixed menu options
   static final pasteAddressOption =
@@ -61,6 +62,13 @@ class _OrchidFunderSelectorMenuState extends State<OrchidFunderSelectorMenu> {
       if (widget.selected?.account != null &&
           !_funderAccounts.contains(widget.selected?.account)) {
         _funderAccounts.add(widget.selected.account);
+      }
+
+      if (_funderAccounts.isEmpty) {
+        widget.onSelection(FunderSelectionItem(
+            option: OrchidFunderSelectorMenu.pasteAddressOption));
+      } else {
+        widget.onSelection(null);
       }
 
       if (mounted) {
@@ -149,7 +157,7 @@ class FunderSelectionItem {
 
   Widget icon() {
     if (account != null) {
-      return SizedBox(width: 24, height: 24, child: account.chain.icon);
+      return OrchidCircularIdenticon(address: account.funder, size: 24);
     } else {
       return null;
     }

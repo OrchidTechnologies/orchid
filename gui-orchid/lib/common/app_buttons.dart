@@ -253,6 +253,43 @@ class TitleIconButton extends StatelessWidget {
 }
 
 class CopyTextButton extends StatelessWidget {
+  final Widget child;
+  final String copyText;
+  final double size;
+
+  const CopyTextButton({
+    Key key,
+    this.copyText,
+    this.child,
+    this.size = 16,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      // Why is the feedback splash so weak?
+      // style: TextButton.styleFrom(primary: Colors.red),
+      // style: ButtonStyle( overlayColor: MaterialStateProperty.all(Colors.white), ),
+      // style: TextButton.styleFrom(
+      //   enableFeedback: true,
+      //   padding: EdgeInsets.zero,
+      //   backgroundColor: Colors.white,
+      // surfaceTintColor: Colors.white,
+      // ),
+      onPressed: () {
+        Clipboard.setData(ClipboardData(text: copyText));
+      },
+      child: child ??
+          Icon(
+            Icons.copy,
+            color: copyText != null ? OrchidColors.tappable : OrchidColors.disabled,
+            size: size,
+          ),
+    );
+  }
+}
+/*
+class CopyTextButton extends StatelessWidget {
   const CopyTextButton({
     Key key,
     @required this.copyText,
@@ -277,3 +314,4 @@ class CopyTextButton extends StatelessWidget {
     );
   }
 }
+*/

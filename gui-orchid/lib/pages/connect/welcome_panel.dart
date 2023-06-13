@@ -12,6 +12,7 @@ import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/api/purchase/orchid_pac.dart';
 import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/api/purchase/orchid_purchase.dart';
+import 'package:orchid/orchid/account/account_selector.dart';
 import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_identity_field.dart';
 import 'package:orchid/orchid/menu/orchid_chain_selector_menu.dart';
@@ -19,7 +20,7 @@ import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_checkbox.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
-import 'package:orchid/orchid/orchid_panel.dart';
+import 'package:orchid/orchid/orchid_titled_panel.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
 import 'package:orchid/util/units.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -111,74 +112,29 @@ class _WelcomePanelState extends State<WelcomePanel> {
     }
     return SizedBox(
       width: double.infinity,
-      child: Container(
-        color: Colors.black,
-        child: Container(
-          color: OrchidColors.dark_background.withOpacity(0.25),
-          child: OrchidPanel(
-            highlight: true,
-            child: AnimatedSize(
-                alignment: Alignment.topCenter,
-                duration: millis(250),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildTitle(),
-                    Flexible(
-                        child: SingleChildScrollView(child: _buildContent())),
-                  ],
-                )),
-          ),
-        ),
-      ),
+      child:
+          OrchidTitledPanel.title(title: _buildTitle(), body: _buildContent()),
     ).padx(28);
   }
 
   Widget _buildTitle() {
-    final style = OrchidText.title.withHeight(2.0);
-    final title = _getTitleContent();
-
-    return Opacity(
-      opacity: 0.99,
-      child: Container(
-        width: double.infinity,
-        height: 52,
-        color: Colors.white.withOpacity(0.1),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ((title.backState != null)
-                    ? IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _state = title.backState;
-                          });
-                        },
-                        icon: Icon(Icons.chevron_left),
-                        color: Colors.white,
-                      )
-                    : Container())
-                .width(48),
-            Flexible(
-                child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(title.text).withStyle(style))),
-            ((title.showDismiss)
-                    ? IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _dismiss();
-                          });
-                        },
-                        icon: Icon(Icons.close),
-                        color: Colors.white,
-                      )
-                    : Container())
-                .width(48),
-          ],
-        ),
-      ),
-    );
+    final titleContent = _getTitleContent();
+    return OrchidTitledPanelTitle(
+        titleText: titleContent.text,
+        onDismiss: titleContent.showDismiss
+            ? () {
+                setState(() {
+                  _dismiss();
+                });
+              }
+            : null,
+        onBack: titleContent.backState != null
+            ? () {
+                setState(() {
+                  _state = titleContent.backState;
+                });
+              }
+            : null);
   }
 
   // merge this with _buildContent
@@ -265,7 +221,6 @@ class _WelcomePanelState extends State<WelcomePanel> {
         OrchidActionButton(
           height: 50,
           enabled: true,
-          // text: s.setUpAccount,
           text: s.importAccount.toUpperCase(),
           onPressed: () {
             setState(() {
@@ -286,7 +241,8 @@ class _WelcomePanelState extends State<WelcomePanel> {
           ),
         ),
         pady(24),
-        Text(s.illDoThisLater).linkButton(onTapped: _dismiss),
+        if (widget.onDismiss != null)
+          Text(s.illDoThisLater).linkButton(onTapped: _dismiss),
         pady(40),
       ],
     );
@@ -329,31 +285,50 @@ class _WelcomePanelState extends State<WelcomePanel> {
           text: s.enterAnExistingOrchidIdentity + ':',
           tags: tags,
         ).top(24).padx(24),
-        OrchidLabeledIdentityField(
+        OrchidLabeledImportIdentityField(
           label: s.orchidIdentity,
           onChange: (ParseOrchidIdentityOrAccountResult result) async {
             if (result != null) {
-              await result.saveIfNeeded();
-
-              if (result.account != null) {
-                // Populate the form even though it is not currently shown.
-                _funderAddress = result.account.funder;
-                _chain = Chains.chainFor(result.account.chainId);
-                // We don't have a version selector in account import yet
-                // _version = result.account.version;
-                widget.onAccount(result.account);
+              if (result.hasMultipleAccounts) {
+                await _importMultipleAccounts(result.accounts);
+              } else {
+                await _importSingleAccount(result);
               }
-
-              setState(() {
-                _importedIdentity = result.signer;
-                _selectedIdentity = _importedIdentity;
-
-                _state = _State.setup_account;
-              });
             }
           },
         ).top(16).padx(24).bottom(40),
       ],
+    );
+  }
+
+  Future<void> _importSingleAccount(
+      ParseOrchidIdentityOrAccountResult result) async {
+    await result.saveIfNeeded();
+
+    if (result.account != null) {
+      // Populate the form even though it is not currently shown.
+      _funderAddress = result.account.funder;
+      _chain = Chains.chainFor(result.account.chainId);
+      // We don't have a version selector in account import yet
+      // _version = result.account.version;
+      widget.onAccount(result.account);
+    }
+    setState(() {
+      _importedIdentity = result.signer;
+      _selectedIdentity = _importedIdentity;
+      _state = _State.setup_account;
+    });
+  }
+
+  Future<void> _importMultipleAccounts(List<Account> accounts) async {
+    await AccountSelectorDialog.show(
+      context: context,
+      accounts: accounts,
+      onSelectedAccounts: (accounts) async {
+        await ParseOrchidIdentityOrAccountResult.saveAccountsIfNeeded(accounts);
+        // TODO
+        widget.onAccount(accounts.first);
+      },
     );
   }
 
@@ -565,7 +540,8 @@ class _WelcomePanelState extends State<WelcomePanel> {
           text: s.confirmPurchase,
           onPressed: _generateIdentityAndDoPurchase,
         ).top(40),
-        Text(s.illDoThisLater).linkButton(onTapped: _dismiss).top(24),
+        if (widget.onDismiss != null)
+          Text(s.illDoThisLater).linkButton(onTapped: _dismiss).top(24),
         StyledText(
           textAlign: TextAlign.center,
           style: OrchidText.caption.copyWith(fontSize: 12),
@@ -669,7 +645,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
             onPressed: () async {
               _dismiss();
               final funderAddress = OrchidPacSeller.sellerContractAddress;
-              final account = Account.fromSignerKey(
+              final account = Account.fromSignerKeyRef(
                   signerKey: _generatedIdentity.ref(),
                   funder: funderAddress,
                   chainId: Chains.GNOSIS_CHAINID,
@@ -795,7 +771,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
     if (_selectedIdentity == null || _funderAddress == null) {
       return;
     }
-    final account = Account.fromSignerKey(
+    final account = Account.fromSignerKeyRef(
       signerKey: _selectedIdentity.ref(),
       funder: _funderAddress,
       chainId: _chain.chainId,
@@ -832,12 +808,11 @@ enum _State {
 }
 
 class _TitleContent {
-  String text;
-
-  bool showDismiss;
+  final String text;
+  final bool showDismiss;
 
   // @nullable the state to return to if the back button is tapped.
-  _State backState;
+  final _State backState;
 
   _TitleContent({
     @required this.text,

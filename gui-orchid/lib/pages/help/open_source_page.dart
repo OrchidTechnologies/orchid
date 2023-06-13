@@ -1,8 +1,6 @@
 // @dart=2.9
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_docs.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/plain_text_box.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 
@@ -12,7 +10,7 @@ class OpenSourcePage extends StatefulWidget {
 }
 
 class _OpenSourcePageState extends State<OpenSourcePage> {
-  String _licenseText = "...";
+  String _licenseText = "\nLoading...";
 
   @override
   void initState() {
@@ -22,27 +20,23 @@ class _OpenSourcePageState extends State<OpenSourcePage> {
 
   void initStateAsync() async {
     _licenseText = await OrchidDocs.openSourceLicenses();
-    setState(() { });
+    _licenseText += '\n' + await OrchidDocs.flutterLicenseRegistryText();
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     String title = s.openSourceLicenses;
-    return TitledPage(title: title, child: buildPage(context));
+    return TitledPage(
+      title: title,
+      child: buildPage(context),
+      constrainWidth: false,
+    );
   }
 
   Widget buildPage(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            SizedBox(height: 24),
-            PlainTextBox(text: _licenseText),
-          ],
-        ),
-      ),
+      child: PlainTextBox(text: _licenseText).top(24).padx(16),
     );
   }
 

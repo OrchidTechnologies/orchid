@@ -71,6 +71,10 @@ class HexStringBuffer {
     return take(64);
   }
 
+  BigInt takeUint160() {
+    return take(64);
+  }
+
   BigInt takeUint128() {
     return take(64);
   }

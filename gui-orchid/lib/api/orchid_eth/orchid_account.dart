@@ -27,6 +27,9 @@ class Account {
   /// For an account that is created from a signer address this holds the address.
   EthereumAddress resolvedSignerAddress;
 
+  /// For an account created from a full signer key this is the resolved key.
+  StoredEthereumKey resolvedSignerKey;
+
   bool get hasKey {
     return signerKeyUid != null;
   }
@@ -38,13 +41,14 @@ class Account {
   Account.base({
     @required this.signerKeyUid,
     this.resolvedSignerAddress,
+    this.resolvedSignerKey,
     this.version = 0,
     this.chainId,
     this.funder,
   });
 
   /// Create an account with referencing a stored signer key
-  Account.fromSignerKey({
+  Account.fromSignerKeyRef({
     @required StoredEthereumKeyRef signerKey,
     int version = 0,
     int chainId,
@@ -52,6 +56,21 @@ class Account {
   }) : this.base(
           signerKeyUid: signerKey.keyUid,
           resolvedSignerAddress: null,
+          version: version,
+          chainId: chainId,
+          funder: funder,
+        );
+
+  /// Create an account with a full signer key
+  Account.fromSignerKey({
+    @required StoredEthereumKey signerKey,
+    int version = 0,
+    int chainId,
+    EthereumAddress funder,
+  }) : this.base(
+          signerKeyUid: signerKey.uid,
+          resolvedSignerAddress: null,
+          resolvedSignerKey: signerKey,
           version: version,
           chainId: chainId,
           funder: funder,
@@ -157,7 +176,10 @@ class Account {
   }
 
   StoredEthereumKey get signerKey {
-    return signerKeyRef.get();
+    if (resolvedSignerKey == null) {
+      resolvedSignerKey = signerKeyRef.get();
+    }
+    return resolvedSignerKey;
   }
 
   EthereumAddress get signerAddress {

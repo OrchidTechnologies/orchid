@@ -1,5 +1,3 @@
-// @dart=2.9
-import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/common/gradient_border.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
@@ -7,81 +5,104 @@ import 'package:orchid/orchid/orchid_gradients.dart';
 // Large floating rounded rect button with optional radial purple gradient
 class OrchidActionButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final double gradientRadius;
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   /// use double.infinity for an expandable button, null for the default width
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
 
-  final Color backgroundColor;
-  final Color textColor;
+  final Color? backgroundColor;
+  final Color? textColor;
+
+  final Widget? trailing;
 
   // TODO: Remove and behave like a regular button relying on onPress
-  final bool enabled;
+  final bool? enabled;
 
   const OrchidActionButton({
-    Key key,
-    @required this.text,
-    @required this.onPressed,
-    // TODO: Remove and behave like a regular button relying on onPress
-    @required this.enabled,
+    Key? key,
+    required this.text,
+    required this.onPressed,
     this.gradientRadius = 3.0,
     this.textStyle,
     this.width,
     this.height,
     this.backgroundColor,
     this.textColor,
+    this.trailing,
+    @deprecated
+    this.enabled,
   }) : super(key: key);
+
+  bool get isEnabled => enabled ?? (onPressed != null);
 
   @override
   Widget build(BuildContext context) {
-    return AbsorbPointer(
-      absorbing: !enabled,
-      child: width == double.infinity
-          ? _buildButton()
-          : FittedBox(
-              fit: BoxFit.scaleDown,
-              child: SizedBox(
-                width: width ?? 294,
-                height: height ?? 40,
-                child: _buildButton(),
-              ),
-            ),
+    return width == double.infinity
+        ? _buildButton()
+        : FittedBox(
+      fit: BoxFit.scaleDown,
+      child: SizedBox(
+        width: width ?? 294,
+        height: height ?? 50,
+        child: _buildButton(),
+      ),
     );
   }
 
-  GradientBorder _buildButton() {
-    Gradient radialGradient = backgroundColor == null
+  Widget _buildButton() {
+    Gradient? radialGradient = backgroundColor == null
         ? RadialGradient(
-            radius: gradientRadius,
-            colors: [Color(0xFFB88DFC), Color(0xFF8C61E1)],
-          )
+      radius: gradientRadius,
+      colors: [Color(0xFFB88DFC), Color(0xFF8C61E1)],
+    )
         : null;
+    final label = Text(text, style: textStyle ?? OrchidText.button.black);
+
+    final ButtonStyle buttonStyle = TextButton.styleFrom(
+      primary: Colors.black87,
+      minimumSize: Size(88, 36),
+      padding: EdgeInsets.zero,
+      backgroundColor: isEnabled ? null : (backgroundColor ?? Color(0xffaca3bc)),
+    );
+
+    final textButton = TextButton(
+      style: buttonStyle,
+      onPressed: isEnabled ? onPressed : null,
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            children: [
+              label,
+              trailing ?? Container(),
+            ],
+          ).padx(8),
+        ),
+      ),
+    );
+
     return GradientBorder(
       strokeWidth: 1.5,
       radius: 16,
       gradient: OrchidGradients.verticalTransparentGradient,
-      child: FlatButtonDeprecated(
-          color: backgroundColor ?? Color(0xffaca3bc),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(16))),
-          padding: EdgeInsets.zero,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(16)),
-              gradient: enabled ? radialGradient : null,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: <Widget>[
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: isEnabled ? radialGradient : null,
+                ),
+              ),
             ),
-            child: Center(
-              child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(text, style: textStyle ?? OrchidText.button.black)
-                      .padx(8)),
-            ),
-          ),
-          // If onPressed is null this does not render the background color
-          onPressed: onPressed),
+            textButton,
+          ],
+        ),
+      ),
     );
   }
 }
@@ -89,11 +110,13 @@ class OrchidActionButton extends StatelessWidget {
 class OrchidOutlineButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
+  final Color? borderColor;
 
   const OrchidOutlineButton({
-    Key key,
-    @required this.text,
-    @required this.onPressed,
+    Key? key,
+    required this.text,
+    required this.onPressed,
+    this.borderColor,
   }) : super(key: key);
 
   @override
@@ -101,7 +124,8 @@ class OrchidOutlineButton extends StatelessWidget {
     // Color backgroundColor = OrchidColors.dark_background;
     final enabled = onPressed != null;
     Color backgroundColor = Colors.transparent;
-    Color borderColor = enabled ? OrchidColors.tappable : OrchidColors.disabled;
+    Color _borderColor = borderColor ??
+        (enabled ? OrchidColors.tappable : OrchidColors.disabled);
     Color textColor = enabled ? OrchidColors.tappable : OrchidColors.disabled;
     return FittedBox(
       fit: BoxFit.scaleDown,
@@ -113,7 +137,7 @@ class OrchidOutlineButton extends StatelessWidget {
               backgroundColor: backgroundColor,
               shape: RoundedRectangleBorder(
                   side: BorderSide(
-                      color: borderColor, width: 2, style: BorderStyle.solid),
+                      color: _borderColor, width: 2, style: BorderStyle.solid),
                   borderRadius: BorderRadius.all(Radius.circular(16)))),
           onPressed: onPressed,
           child: Text(

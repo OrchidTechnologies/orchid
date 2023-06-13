@@ -113,6 +113,10 @@ class JSConfig {
     throw Exception("Expression not a string: $val");
   }
 
+  JsObject evalObject(String expression) {
+    return _eval(expression);
+  }
+
   JsObject _eval(String expression) {
     JsObject val = jsEngine.visitProgram(parsejs(expression, filename: "eval"));
     return val;

@@ -1,8 +1,12 @@
-import 'package:orchid/common/tap_copy_text.dart';
+// @dart=2.9
+import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/orchid.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/orchid/menu/expanding_popup_menu_item.dart';
+import 'package:orchid/orchid/menu/orchid_popup_menu_item_utils.dart';
 import 'package:orchid/orchid/menu/submenu_popup_menu_item.dart';
+import 'package:orchid/pages/help/open_source_page.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../orchid/menu/orchid_popup_menu_button.dart';
@@ -33,22 +37,18 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
 
   @override
   Widget build(BuildContext context) {
-    return OrchidPopupMenuButton<String>(
+    final buildCommit =
+    const String.fromEnvironment('build_commit', defaultValue: '...');
+    final githubUrl =
+        'https://github.com/OrchidTechnologies/orchid/tree/$buildCommit/web-ethereum/dapp2';
+    return OrchidPopupMenuButton<dynamic>(
       width: 40,
       height: 40,
       selected: _buttonSelected,
-      onSelected: (String item) {
+      onSelected: (item) {
         setState(() {
           _buttonSelected = false;
         });
-        switch (item) {
-          case 'logs':
-            _openLogsPage(context);
-            break;
-          case 'contract':
-            widget.deployContract();
-            break;
-        }
       },
       onCanceled: () {
         setState(() {
@@ -79,27 +79,71 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
               builder: _buildContractVerionsPref,
             ),
           ],
+
+          // View contract links
+          if (widget.contractVersionSelected != null)
+            ..._viewContractLinkMenuItems(
+                context: context,
+                available: widget.contractVersionsAvailable,
+                selected: widget.contractVersionSelected,
+                textStyle: _textStyle),
+
           PopupMenuDivider(height: 1.0),
+
           PopupMenuItem<String>(
-            value: 'logs',
+            onTap: () {
+              Future.delayed(millis(0), () async {
+                _openLogsPage(context);
+              });
+            },
             height: _height,
             child: SizedBox(
               width: _width,
               child: Text(s.viewLogs, style: _textStyle),
             ),
           ),
+
+          PopupMenuDivider(height: 1.0),
+          PopupMenuItem<String>(
+            onTap: () {
+              Future.delayed(millis(0), () async {
+                _openLicensePage(context);
+              });
+            },
+            height: _height,
+            child: SizedBox(
+              width: _width,
+              child: Text(s.openSourceLicenses, style: _textStyle),
+            ),
+          ),
+
+          PopupMenuDivider(height: 1.0),
           if (widget.deployContract != null)
             PopupMenuItem<String>(
-              value: 'contract',
+              onTap: () {
+                widget.deployContract();
+              },
               height: _height,
               child: SizedBox(
                 width: _width,
                 child: Text(s.deployContract, style: _textStyle),
               ),
             ),
+
+          // dapp version item
+          _listMenuItem(
+            selected: false,
+            title: s.dappVersion + ': ' + buildCommit,
+            onTap: () async {
+              launchUrlString(githubUrl);
+            },
+          ),
+          /*
+          // about submenu
           SubmenuPopopMenuItemBuilder<String>(
             builder: _buildAbout,
           ),
+           */
         ];
       },
       child: FittedBox(
@@ -110,10 +154,16 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
   }
 
   Future _openLogsPage(BuildContext context) {
-    log('XXX: open logs page');
     return Navigator.push(context,
         MaterialPageRoute(builder: (BuildContext context) {
       return LoggingPage();
+    }));
+  }
+
+  Future _openLicensePage(BuildContext context) {
+    return Navigator.push(context,
+        MaterialPageRoute(builder: (BuildContext context) {
+      return OpenSourcePage();
     }));
   }
 
@@ -182,6 +232,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     );
   }
 
+  /*
   Widget _buildAbout(bool expanded) {
     final buildCommit =
         const String.fromEnvironment('build_commit', defaultValue: '...');
@@ -201,6 +252,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
       textStyle: _textStyle,
     );
   }
+   */
 
   Widget _identiconOptions(bool useBlockies) {
     final pref = UserPreferences().useBlockiesIdenticons;
@@ -234,14 +286,14 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
       expanded: expanded,
       title: s.contractVersion,
       currentSelectionText: (!expanded ? selected.toString() : ''),
-      expandedContent: _contractVersionOptions(),
+      expandedContent: _buildContractVersionOptions(),
       expandedHeight: available.length * 54.0,
       textStyle: _textStyle,
     );
   }
 
-  Widget _contractVersionOptions() {
-    return contractVersionOptions(
+  Widget _buildContractVersionOptions() {
+    return _contractVersionOptions(
       context: context,
       available: widget.contractVersionsAvailable,
       selected: widget.contractVersionSelected,
@@ -250,7 +302,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     );
   }
 
-  static Widget contractVersionOptions({
+  static Widget _contractVersionOptions({
     BuildContext context,
     Set<int> available,
     int selected,
@@ -259,7 +311,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: contractVersionOptionsMenuItems(
+      children: _contractVersionOptionsMenuItems(
         context: context,
         available: available,
         selected: selected,
@@ -271,7 +323,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     );
   }
 
-  static List<PopupMenuEntry> contractVersionOptionsMenuItems({
+  static List<PopupMenuEntry> _contractVersionOptionsMenuItems({
     @required BuildContext context,
     @required Set<int> available,
     @required int selected,
@@ -281,7 +333,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     List<PopupMenuItem> list = [];
     if (available.contains(0)) {
       list.add(
-        DappSettingsButtonUtils.listMenuItem(
+        OrchidPopupMenuItemUtils.listMenuItem(
           context: context,
           textStyle: textStyle,
           selected: selected == 0,
@@ -294,7 +346,7 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     }
     if (available.contains(1)) {
       list.add(
-        DappSettingsButtonUtils.listMenuItem(
+        OrchidPopupMenuItemUtils.listMenuItem(
           context: context,
           textStyle: textStyle,
           selected: selected == 1,
@@ -308,95 +360,64 @@ class _DappSettingsButtonState extends State<DappSettingsButton> {
     return list;
   }
 
+  static List<PopupMenuEntry> _viewContractLinkMenuItems({
+    @required BuildContext context,
+    @required Set<int> available,
+    @required int selected,
+    @required TextStyle textStyle,
+  }) {
+    assert(selected < 2);
+    List<PopupMenuItem> list = [];
+    list.add(
+      OrchidPopupMenuItemUtils.listMenuItem(
+        context: context,
+        textStyle: textStyle,
+        selected: false,
+        body: Row(
+          children: [
+            Icon(Icons.launch, color: Colors.white),
+            Text(context.s.viewContractOnEtherscan, style: textStyle).left(12),
+          ],
+        ),
+        onTap: () {
+          launchUrlString(selected == 1
+              ? OrchidUrls.contractV1EtherscanUrl
+              : OrchidUrls.contractV0EtherscanUrl);
+        },
+      ),
+    );
+    list.add(
+      OrchidPopupMenuItemUtils.listMenuItem(
+        context: context,
+        textStyle: textStyle,
+        selected: false,
+        body: Row(
+          children: [
+            Icon(Icons.launch, color: Colors.white),
+            Text(context.s.viewContractOnGithub, style: textStyle).left(12),
+          ],
+        ),
+        onTap: () {
+          launchUrlString(selected == 1
+              ? OrchidUrls.contractV1GithubUrl
+              : OrchidUrls.contractV0GithubUrl);
+        },
+      ),
+    );
+    return list;
+  }
+
   Widget _listMenuItem({
     @required bool selected,
     @required String title,
     @required VoidCallback onTap,
   }) {
-    return DappSettingsButtonUtils.listMenuItem(
+    return OrchidPopupMenuItemUtils.listMenuItem(
       context: context,
       selected: selected,
       title: title,
       onTap: onTap,
       textStyle: _textStyle,
-    );
-  }
-}
-
-class ExpandingPopupMenuItem extends StatelessWidget {
-  final bool expanded;
-  final String title;
-  final String currentSelectionText;
-  final double expandedHeight;
-  final Widget expandedContent;
-  final TextStyle textStyle;
-  final double collapsedHeight;
-
-  const ExpandingPopupMenuItem({
-    Key key,
-    @required this.expanded,
-    @required this.title,
-    this.currentSelectionText,
-    @required this.expandedHeight,
-    @required this.expandedContent,
-    @required this.textStyle,
-    this.collapsedHeight = 50.0,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: collapsedHeight,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: textStyle),
-              Row(
-                children: [
-                  if (currentSelectionText != null)
-                    Text(currentSelectionText, style: textStyle).right(8),
-                  Icon(expanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                      color: Colors.white),
-                ],
-              ),
-            ],
-          ),
-        ),
-        AnimatedContainer(
-          height: expanded ? expandedHeight : 0,
-          duration: Duration(milliseconds: 250),
-          child: expanded
-              ? SingleChildScrollView(child: expandedContent)
-              : Container(),
-        ),
-      ],
-    );
-  }
-}
-
-class DappSettingsButtonUtils {
-  static PopupMenuItem listMenuItem({
-    @required BuildContext context,
-    @required bool selected,
-    String title,
-    Widget body,
-    @required VoidCallback onTap,
-    @required TextStyle textStyle,
-  }) {
-    return PopupMenuItem(
-      padding: EdgeInsets.zero,
-      child: ListTile(
-        selected: selected,
-        selectedTileColor: OrchidColors.selected_color_dark,
-        title: body ?? Text(title, style: textStyle),
-        onTap: () {
-          // Close the menu item
-          Navigator.pop(context);
-          onTap();
-        },
-      ),
     );
   }
 }

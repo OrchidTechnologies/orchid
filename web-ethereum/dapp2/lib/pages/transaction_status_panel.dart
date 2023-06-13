@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/orchid.dart';
 import 'dart:async';
@@ -6,7 +7,6 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/common/tap_copy_text.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
-
 import '../api/preferences/dapp_transaction.dart';
 import 'dapp_wallet_info_panel.dart';
 

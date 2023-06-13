@@ -17,6 +17,7 @@ import 'package:orchid/common/instructions_view.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
+import 'package:orchid/orchid/account/account_selector.dart';
 import 'package:orchid/orchid/account/market_stats_dialog.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
@@ -31,7 +32,6 @@ import 'hop_editor.dart';
 import 'package:orchid/orchid/menu/orchid_key_selector_menu.dart';
 import 'model/circuit_hop.dart';
 import 'model/orchid_hop.dart';
-import 'orchid_account_entry.dart';
 
 /// Create / edit / view an Orchid Hop
 // The OrchidHopEditor operates in a "settings"-like fashion and allows
@@ -60,6 +60,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   Timer _balanceTimer;
   bool _balancePollInProgress = false;
   bool _showMarketStatsAlert = false;
+  StreamSubscription<Set<Account>> _accountListener;
 
   @override
   void initState() {
@@ -87,6 +88,21 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       });
       _pollBalanceAndAccountDetails(); // kick one off immediately
     }
+
+    _accountListener = UserPreferences().cachedDiscoveredAccounts.stream().listen((accounts) {
+      // guard changes in accounts availability
+      if (!accounts.contains(_selectedAccount)) {
+        setState(() {
+          _selectedAccount = null;
+        });
+      }
+      // default a single account selection
+      if (_selectedAccount == null && accounts.length == 1) {
+        setState(() {
+          _selectedAccount = accounts.first;
+        });
+      }
+    });
   }
 
   @override
@@ -174,16 +190,24 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           text,
           pady(16),
           _buildAccountManagerLinkText(),
-
-          // The identity and funder selections
-          OrchidAccountEntry(
-            onChange: (Account account) {
-              log("XXX: _selectedAccount = $account");
-              setState(() {
-                _selectedAccount = account;
-              });
-            },
-          ),
+          StreamBuilder<Set<Account>>(
+              stream: UserPreferences().cachedDiscoveredAccounts.stream(),
+              builder: (context, snapshot) {
+                final accounts = snapshot.data;
+                if ((accounts ?? {}).isEmpty) {
+                  return Container();
+                }
+                return AccountSelectorDialog(
+                  accounts: accounts.toList(),
+                  singleSelection: true,
+                  selectedAccounts: Set.from([_selectedAccount]),
+                  selectedAccountsChanged: (Set<Account> selected) {
+                    setState(() {
+                      _selectedAccount = selected.first;
+                    });
+                  },
+                );
+              }),
           pady(24),
         ],
       ),
@@ -374,7 +398,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                   textColor: Colors.black,
                   text: s.copy.toUpperCase(),
                   onPressed: _onCopyButton),
-            ),
+            ).left(12),
           ],
         ),
       ],
@@ -400,8 +424,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                   key: ValueKey(_selectedKeyItem?.toString() ??
                       _initialSelectedKeyItem.toString()),
                   enabled: widget.editable(),
-                  selected:
-                      _selectedFunderItem ?? _initialSelectedFunderItem,
+                  selected: _selectedFunderItem ?? _initialSelectedFunderItem,
                   onSelection: (_) {}),
             ),
           ],
@@ -532,11 +555,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   /// Copy the wallet address to the clipboard
   void _onCopyButton() async {
     StoredEthereumKey key = _selectedKeyItem.keyRef.get();
-    Clipboard.setData(ClipboardData(text: key.get().addressString));
+    Clipboard.setData(ClipboardData(text: key.get().address.toString()));
   }
 
   // Participate in the save operation and then delegate to the on complete handler.
   void _onSave(CircuitHop result) async {
+    await UserPreferences().ensureSaved(_selectedAccount);
     // Pass on the updated hop
     widget.onAddFlowComplete(widget.editableHop.value.hop);
   }
@@ -561,6 +585,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     super.dispose();
     ScreenOrientation.reset();
     _balanceTimer?.cancel();
+    _accountListener?.cancel();
   }
 
   // TODO: Use AccountDetailPoller?
