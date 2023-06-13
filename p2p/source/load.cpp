@@ -51,7 +51,7 @@ bool Exists(const std::string &path) {
 }
 
 uint64_t Modified(const std::string &file) {
-    struct stat info;
+    struct stat info{};
     orc_syscall(stat(file.c_str(), &info));
     return info.st_mtime;
 }
