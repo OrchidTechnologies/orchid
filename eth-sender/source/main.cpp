@@ -757,6 +757,21 @@ task<int> Main(int argc, const char *const argv[]) { try {
             std::cout << " " << window << std::endl;
         std::cout << std::endl;
 
+    } else if (command == "run") {
+        const auto [code, recipient, amount, data] = Options<Bytes, std::optional<Address>, uint256_t, Bytes>(args);
+        const auto contract(recipient ? *recipient : Address(Random<20>()));
+        std::cout << Str(co_await chain_->Call("eth_call", {Multi{
+            {"from", executor_->operator Address()},
+            {"to", contract},
+            {"gas", gas_},
+            {"gasPrice", flags.bid_},
+            {"value", amount},
+            {"data", data},
+        }, (co_await block()).height_, Multi{
+            {executor_->operator Address().str(), Multi{{"balance", amount}}},
+            {contract.str(), Multi{{"code", code}}},
+        }})) << std::endl;
+
     } else if (command == "segwit") {
         const auto [prefix, version, key] = Options<std::string, std::optional<uint8_t>, Key>(args);
         std::cout << ToSegwit(prefix, version, HashR(Hash2(ToCompressed(key)))) << std::endl;

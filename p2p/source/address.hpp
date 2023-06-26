@@ -43,6 +43,11 @@ class Address :
     {
     }
 
+    Address(const Data<20> &data) :
+        Address(data.num<uint160_t>())
+    {
+    }
+
     Address(const std::string_view &address);
     Address(const std::string &address);
     Address(const char *address);
