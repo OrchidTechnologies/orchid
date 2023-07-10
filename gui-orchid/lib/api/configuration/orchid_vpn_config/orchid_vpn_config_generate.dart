@@ -12,6 +12,7 @@ class OrchidVPNConfigGenerate {
   /// The desired format is a JavaScript object literal assignment, e.g.:
   /// hops = [{protocol: "orchid", secret: "xxx", funder: "0xaaa"}, ...]
   ///
+  /// This format is also used in the export/import feature for user config management.
   /// If forExport is true the generated config will exclude any non-importable
   /// (strictly inferred) fields such as the chain RPC endpoint.  The 'currency'
   /// field may, while inferrable from chainid, is used to infer the contract
@@ -68,7 +69,7 @@ class OrchidVPNConfigGenerate {
      */
     var v0 = hop.account.isV0;
     var protocol = v0 ? 'orchid' : 'orch1d'; // leety!
-    var signerKey = await hop.account.signerKey;
+    var signerKey = hop.account.signerKey;
     var funder = hop.account.funder;
     var curator = hop.curator ??
         (UserPreferences().getDefaultCurator()) ??

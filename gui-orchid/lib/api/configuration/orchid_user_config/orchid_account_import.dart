@@ -160,7 +160,7 @@ class OrchidAccountImport {
     return key;
   }
 
-  static String removeNewlines(String text) {
+  static String removeUnencodedNewlines(String text) {
     text = text.replaceAll('\n', ' ');
     text = text.replaceAll('\r', ' ');
     return text;

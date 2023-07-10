@@ -20,7 +20,7 @@ class OrchidVPNConfigImport {
   static List<StoredEthereumKey> parseImportedKeysList(
       String js, List<StoredEthereumKey> existingKeys) {
     // Match a 'keys' variable assignment to a list of JS object literals:
-    js = OrchidAccountImport.removeNewlines(js);
+    js = OrchidAccountImport.removeUnencodedNewlines(js);
     RegExp exp = RegExp(r'\s*[Kk][Ee][Yy][Ss]\s*=\s*\[(.*)]\s*;?\s*');
     var match = exp.firstMatch(js);
     if (match == null) {
@@ -50,8 +50,9 @@ class OrchidVPNConfigImport {
 
     // Match a 'hops' variable assignment to a list of JS object literals:
     // hops = [{curator: "partners.orch1d.eth",...
-    js = OrchidAccountImport.removeNewlines(js);
-    RegExp exp = RegExp(r'\s*[Hh][Oo][Pp][Ss]\s*=\s*(\[.*?\])\s*;?\s*');
+    // This regex matches 'hops = [ ... }];\n' and legal variations on that including
+    // just the semicolong or just the newline.
+    RegExp exp = RegExp(r'\s*[Hh][Oo][Pp][Ss]\s*=\s*(\[.*?}\s*\])\s*([;\n])', dotAll: true);
     var match = exp.firstMatch(js);
     var hopsString = match.group(1);
 
