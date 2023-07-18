@@ -51,7 +51,7 @@ class OrchidVPNConfigImport {
     // Match a 'hops' variable assignment to a list of JS object literals:
     // hops = [{curator: "partners.orch1d.eth",...
     // This regex matches 'hops = [ ... }];\n' and legal variations on that including
-    // just the semicolong or just the newline.
+    // just the semicolon or just the newline.
     RegExp exp = RegExp(r'\s*[Hh][Oo][Pp][Ss]\s*=\s*(\[.*?}\s*\])\s*([;\n])', dotAll: true);
     var match = exp.firstMatch(js);
     var hopsString = match.group(1);
@@ -60,12 +60,10 @@ class OrchidVPNConfigImport {
     //  [{curator: "partners.orch1d.eth",...  => [{"curator": "partners.orch1d.eth",...
     hopsString = OrchidAccountImport.quoteKeysJsonStyle(hopsString);
 
+    // Decode the JSON
     // Wrap the top level JSON with a 'hops' key:
     // {"hops": [...]}
-    hopsString = '{"hops": $hopsString}';
-
-    // Decode the JSON
-    Map<String, dynamic> json = jsonDecode(hopsString);
+    Map<String, dynamic> json = { 'hops': jsonDecode(hopsString) };
 
     // For Orchid hops:
     // Resolve imported secrets to existing stored keys or new temporary keys
@@ -121,7 +119,7 @@ class OrchidVPNConfigImport {
   /// Import a new configuration file, replacing any existing configuration.
   /// Existing signer keys are unaffected.
   static Future<bool> importConfig(String config) async {
-    var existingKeys = await UserPreferences().keys.get();
+    var existingKeys = UserPreferences().keys.get();
     var parsedCircuit = parseCircuit(config, existingKeys);
 
     // Save any newly imported keys found in the circuit

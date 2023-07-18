@@ -170,7 +170,7 @@ class OrchidAccountImport {
   //  [curator: "partners.orch1d.eth",...  => ["curator": "partners.orch1d.eth",...
   static String quoteKeysJsonStyle(String text) {
     return text.replaceAllMapped(
-        RegExp(r'([A-Za-z0-9_-]{1,})\s*:'), (Match m) => '"${m[1]}":');
+        RegExp(r'([A-Za-z0-9_-]{1,})\s*:\s*"'), (Match m) => '"${m[1]}": "');
   }
 }
 
