@@ -226,6 +226,14 @@ inline Any One(const Array &value) {
     return value[0];
 }
 
+template <typename Type_>
+Array Arr(const std::vector<Type_> &values) {
+    Array array;
+    for (const auto &value : values)
+        array.emplace_back(value);
+    return array;
+}
+
 }
 
 #endif//ORCHID_NOTATION_HPP
