@@ -58,6 +58,7 @@ inline Brick<32> HashK(const std::string &data) {
     return HashK(Subset(data)); }
 
 Brick<64> Hash4(const Buffer &data);
+Brick<48> Hash3(const Buffer &data);
 Brick<32> Hash2(const Buffer &data);
 Brick<20> Hash1(const Buffer &data);
 
