@@ -43,7 +43,7 @@ class Duplex__ :
     public Stream
 {
   public:
-    virtual task<void> Open(const Locator &locator) = 0;
+    virtual task<void> Open(const Locator &locator, const std::map<std::string, std::string> &headers) = 0;
 };
 
 template <typename Inner_>
@@ -67,7 +67,12 @@ class Duplex_ final :
         return &inner_;
     }
 
-    task<void> Open(const Locator &locator) override {
+    task<void> Open(const Locator &locator, const std::map<std::string, std::string> &headers) override {
+        inner_.set_option(boost::beast::websocket::stream_base::decorator([&](auto  &request) {
+            for (const auto &[name, value] : headers)
+                request.insert(name, value);
+        }));
+
         co_await inner_.async_handshake(locator.origin_.host_, locator.path_, Adapt());
         // XXX: this needs to be configurable :/
         inner_.text(true);
@@ -106,9 +111,9 @@ class Duplex_ final :
     }
 };
 
-task<U<Stream>> Duplex(const S<Base> &base, const Locator &locator) { orc_block({
+task<U<Stream>> Duplex(const S<Base> &base, const Locator &locator, const std::map<std::string, std::string> &headers) { orc_block({
     co_return co_await Layer<Duplex_>(*base, locator, {}, [&](U<Duplex__> stream) -> task<U<Stream>> {
-        co_await stream->Open(locator);
+        co_await stream->Open(locator, headers);
         co_return stream;
     });
 }, "opening " << locator); }

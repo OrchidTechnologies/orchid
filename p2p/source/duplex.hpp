@@ -29,7 +29,7 @@
 
 namespace orc {
 
-task<U<Stream>> Duplex(const S<Base> &base, const Locator &locator);
+task<U<Stream>> Duplex(const S<Base> &base, const Locator &locator, const std::map<std::string, std::string> &headers = {});
 
 }
 
