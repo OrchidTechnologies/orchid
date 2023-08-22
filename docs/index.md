@@ -4,16 +4,11 @@
 Our vision is to enable secure access to the internet for everyone, everywhere.
 
 ## Overview
-Welcome to Orchid!
+Orchid is a decentralized marketplace for bandwidth. Providers run a server that talks to a decentralized [directory](https://github.com/OrchidTechnologies/orchid/tree/master/dir-ethereum) running on [Ethereum](https://etherscan.io/address/0x918101FB64f467414e9a785aF9566ae69C3e22C5) and stake OXT in it to compete for inbound service requests (stake-weighted random selection). Payment is settled via Orchid’s own L2/L3 using [streaming probabilistic nanopayments](https://github.com/OrchidTechnologies/orchid/tree/master/lot-ethereum).
 
-The Orchid network enables a decentralized virtual private network (VPN),
-allowing users to buy bandwidth from a decentralized pool of service providers.
+The Orchid project includes a VPN application and a lower-level client demon. The app is available for iOS/macOS/Android. The “VPN” app includes Wireshark for traffic analysis and has the ability to string multiple VPN server connections together to form multi-hop circuits. OpenVPN, WireGuard and Orchid protocol are all supported. The app can naturally purchase VPN service from the Orchid bandwidth marketplace by making a request to the directory and then connecting to a provider and paying for VPN service with nanopayments.
 
-To do this, Orchid uses an ERC-20 utility token called OXT, a new VPN protocol
-for token-incentivized bandwidth proxying, and smart-contracts with algorithmic
-advertising and payment functions. Orchid's users connect to bandwidth sellers
-using a provider directory, and they pay using probabilistic nanopayments so
-Ethereum transaction fees on packets are acceptably low.
+The Orchid L2/L3 can be best thought of as a “probabilistic rollup”. Money is sent off-chain as the equivalent of scratch lottery tickets. The payer creates an account and then can issue lottery tickets for payment. Each one has a win rate and amount. The provider can then examine the ticket and accept it for service. The win rate is configurable, and so the number of transactions a second that is possible with the scheme is really only limited by provider’s ability to read the tickets.
 
 ## Pick a Key Topic
 * [Orchid Accounts](accounts/): Orchid accounts are the decentralized entities that store digital currency on a blockchain to pay for services through nanopayments. The nanopayment smart contract governs Orchid accounts. The Orchid client requires an account in order to pay for VPN service. 
