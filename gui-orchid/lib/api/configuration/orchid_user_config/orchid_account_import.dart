@@ -160,7 +160,7 @@ class OrchidAccountImport {
     return key;
   }
 
-  static String removeNewlines(String text) {
+  static String removeUnencodedNewlines(String text) {
     text = text.replaceAll('\n', ' ');
     text = text.replaceAll('\r', ' ');
     return text;
@@ -168,9 +168,44 @@ class OrchidAccountImport {
 
   // Quote the keys in name-value key pairs, JSON style:
   //  [curator: "partners.orch1d.eth",...  => ["curator": "partners.orch1d.eth",...
-  static String quoteKeysJsonStyle(String text) {
-    return text.replaceAllMapped(
-        RegExp(r'([A-Za-z0-9_-]{1,})\s*:'), (Match m) => '"${m[1]}":');
+  // Should handle the colons in this example:
+  // in:  [{ protocol: "openvpn", ovpnfile: "test", url: "http://foo:1234", foo: 132 }];
+  // out: [{ "protocol": "openvpn", "ovpnfile": "test", "url": "http://foo:1234", "foo": 132 }];
+  static String quoteKeysJsonStyle(String input) {
+    StringBuffer result = StringBuffer();
+    bool insideQuotes = false;
+    bool isKey = false;
+    StringBuffer keyBuffer = StringBuffer();
+
+    for (int i = 0; i < input.length; i++) {
+      var char = input[i];
+
+      if (char == '"') {
+        insideQuotes = !insideQuotes;
+      }
+
+      // If outside quotes and encountering a new object or pair, it must be a key
+      if (!insideQuotes && (char == '{' || char == ',')) {
+        isKey = true;
+      }
+
+      // If in a key, write the character to keyBuffer unless it's a special character
+      if (isKey && char.trim().isNotEmpty && !': {,'.contains(char)) {
+        keyBuffer.write(char);
+      } else {
+        // If we've built up a key and encounter a colon, write the quoted key
+        if (keyBuffer.isNotEmpty && char == ':') {
+          result.write('"' + keyBuffer.toString() + '"');
+          keyBuffer.clear();
+        }
+        result.write(char);
+        if (char == ':') {
+          isKey = false;
+        }
+      }
+    }
+
+    return result.toString();
   }
 }
 

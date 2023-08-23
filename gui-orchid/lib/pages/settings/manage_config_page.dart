@@ -121,7 +121,7 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
   void _doExport() async {
     var config = '// Circuit\n' +
         (await OrchidVPNConfigGenerate.generateConfig(forExport: true));
-    var keys = (await UserPreferences().keys.get())
+    var keys = UserPreferences().keys.get()
         .map((storedKey) => storedKey.formatSecretFixed())
         .toList();
     config += '\n\n// All keys\nkeys=' + keys.toString();

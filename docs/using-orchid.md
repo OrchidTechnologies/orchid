@@ -108,7 +108,40 @@ The app scans blockchains using RPC servers for active accounts. If account dete
 
 ### WireGuard
 
-Orchid supports WireGuard. When you add a WireGuard server to your circuit, Orchid will connect to that specific WireGuard server. Go to the Circuit Builder, tap “Add a Hop”, paste in your WireGuard configuration file, and hit save.
+Orchid supports WireGuard. When you add a WireGuard server to your circuit, Orchid will connect to that specific WireGuard server.
+
+First, you will need access to your WireGuard configuration file. Each protocol will have its own method of accessing your configuration files; we have provided the steps for a few WireGuard protocols.
+
+**Surfshark:**
+
+
+
+1. Go to your [Surfshark account](https://my.surfshark.com/home/dashboard).
+2. In the sidebar, navigate to the VPN section, select “Manual setup” from the dropdown menu, then choose the WireGuard protocol.
+3. If this is your first time creating your WireGuard hop, select “I don’t have a key pair” to generate your private and public keys.
+4. Once you’ve chosen your preferred server location, download the configuration file, then open it in a text editor. You will need this information in the next step to set up your hop on the Orchid app.
+
+**Mullvad:**
+
+
+
+1. Find your [Mullvad VPN account](https://mullvad.net/en/account).
+2. In the account settings, navigate to the section titled [WireGuard configuration](https://mullvad.net/en/account/wireguard-config) under the “Downloads” section. Choose your desired platform, generate a key, and select a server from their list of available countries.
+3. Once you’ve completed the required fields, download the configuration file, then open it in a text editor. You will need this information in the next step to set up your hop on the Orchid app.
+
+
+
+**Proton:**
+
+
+
+1. Register for [ProtonVPN](https://account.protonvpn.com/signup?plan=free).
+2. Once you’ve created your account, navigate to the “Downloads” section. Note there are different server listings for OpenVPN and WireGuard; you’ll want to navigate to the WireGuard servers.
+3. Select the platform you’ll be using (iOS, Android, MacOS, Windows, etc.), and find a server you wish to connect to. From there, click “Create”, which will generate a configuration file for that server.
+
+
+Once you've found your configuration file, go to the Orchid app, and navigate to the Circuit Builder, either through the “Hop Circuit” button on the main menu, or through “Circuit Builder” on the sidebar menu. Select “Add New Hop”, and choose “Enter WireGuard Config”. Paste the entire body of your WireGuard config file into the text box, then press “Save”.
+
 
 ### OpenVPN
 
@@ -228,12 +261,12 @@ orchidcd**-win_.0.x.x.exe is the client, the other **orchidd**-win_.0.x.x.exe ex
 
 * Read the above section on Configuration Management. You will need to export or create a complete configuration file that includes the details of all your hops. This can be done simply by going to Settings, tapping on “Configuration Management”, selecting “Export Hops Configuration” and then copying the line starting at "hops =". For xDAI accounts, some modifications are necessary.
 * Paste your circuit from the configuration manager into a text editor. Note the chain used to fund the account..
-* Enter a newline and add in the Ethereum RPC with `rpc = "https://cloudflare-eth.com/";`
+* Enter a newline and add in the Ethereum RPC with `rpc = "https://ethereum.publicnode.com";`
 * The final format should look like this for OXT accounts on Ethereum: **Note: funder starts with 0x and secret does not**
 
 ```
 hops = [{curator: "partners.orch1d.eth", protocol: "orchid", funder: "0x000000000000000000000000000000000000000", secret: "00000000000000000000000000000000000000000000000000000000000000000"}];
-rpc = "https://cloudflare-eth.com/";
+rpc = "https://ethereum.publicnode.com";
 
 ```
 
@@ -241,7 +274,7 @@ rpc = "https://cloudflare-eth.com/";
 
 ```
 hops = [{protocol: "orch1d", curator: "partners.orch1d.eth", funder: "0x000000000000000000000000000000000000000", secret: "00000000000000000000000000000000000000000000000000000000000000000", chainid: 100, currency: "DAI", rpc="https://rpc.xdaichain.com/"}];
-rpc = "https://cloudflare-eth.com/";
+rpc = "https://ethereum.publicnode.com";
 
 ```
 

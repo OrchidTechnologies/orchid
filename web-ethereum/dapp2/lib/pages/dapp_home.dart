@@ -255,7 +255,8 @@ class _DappHomeState extends State<DappHome> {
                     // tabs
                     // Divider(color: Colors.white.withOpacity(0.3)).bottom(8),
                     AnimatedVisibility(
-                      show: _hasAccount,
+                      // show: _hasAccount,
+                      show: true,
                       child: ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: altColumnWidth),
                         child: _buildTabs(),
