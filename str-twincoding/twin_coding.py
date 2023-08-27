@@ -1,6 +1,7 @@
 import numpy as np
 import galois
 
+
 #
 # Twin Coding is a hybrid encoding scheme that works with any two linear
 # coding schemes and combines them to achieve a space-bandwidth tradeoff,
@@ -22,8 +23,8 @@ import galois
 #
 # The message is reshaped to a k x k matrix and encoded using the supplied
 # generator matrices of the code schemes into two, k x n, matrices. Each
-# column of the encoded matrices is then assigned to a node of its
-# respective type, resulting in two distinct sets of n nodes.
+# column of the encoded matrices is then assigned to a node of its respective
+# type, resulting in two distinct sets of n nodes.
 #
 # message:
 # The message to be encoded. This is an array of k^2 symbols length.
@@ -166,4 +167,3 @@ if __name__ == "__main__":
     passed = (recovered == original).all()
     print('Total symbols transferred = ', np.size(node_responses))
     print("Test passed." if passed else "Test failed.")
-
