@@ -29,29 +29,32 @@ import galois
 # message:
 # The message to be encoded. This is an array of k^2 symbols length.
 #
-# G0, G1:
+# C0, C1:
 # The supplied pair of coding schemes can be any k of n linear codes (e.g.
-# Reed-Solomon). They may be the same or different.
+# Reed-Solomon). They may be the same or different schemes. They should
+# share k but may have different encoded lengths n.
 #
 # Return:
 # This method returns the two lists of n column vectors to be stored at the
-# respective node types.
+# respective node types. The two node sets will be different sizes if the codes
+# have different n values.
 #
 # The original paper:
 # https://www.cs.cmu.edu/~nihars/publications/repairAnyStorageCode_ISIT2011.pdf
 #
-def twin_code(message: np.array, k: int, n: int, G0: np.matrix, G1: np.matrix):
-    M0 = message.reshape((k, k))  # Reshape the message into k x k matrix
+def twin_code(message: np.array, C0: 'Code', C1: 'Code'):
+    assert C0.k == C1.k
+    M0 = message.reshape((C0.k, C0.k))  # Reshape the message into k x k matrix
     M1 = M0.T  # M1 is the transpose of M0
 
     # Encode using G0 and G1
-    encoded_type_0 = np.dot(M0, G0)
-    encoded_type_1 = np.dot(M1, G1)
+    encoded_type_0 = np.dot(M0, C0.G)  # k x C0.n
+    encoded_type_1 = np.dot(M1, C1.G)  # k x C1.n
 
     # Nodes store k symbols corresponding to a column of the (k × n) encoded
     # matrix of their type.
-    type_0_nodes = [encoded_type_0[:, i] for i in range(n)]
-    type_1_nodes = [encoded_type_1[:, i] for i in range(n)]
+    type_0_nodes = [encoded_type_0[:, i] for i in range(C0.n)]
+    type_1_nodes = [encoded_type_1[:, i] for i in range(C1.n)]
 
     return np.array(type_0_nodes), np.array(type_1_nodes)
 
@@ -84,22 +87,33 @@ def rs_generator_matrix(GF: galois.GF, k: int, n: int):
     return matrix
 
 
+# The parameters of a linear coding scheme
+class Code:
+    def __init__(self, GF: galois.GF, k: int, n: int, G: np.matrix):
+        self.GF = GF  # The symbol space
+        self.k = k  # Dimension of message
+        self.n = n  # Dimension of the coded message
+        self.G = G  # Generator matrix
+
+
 #
 # Tests.
 #
 if __name__ == "__main__":
-    # Set up the code schemes
+    # The symbol space
     GF = galois.GF(2 ** 8)
-    k, n = 3, 5  # Note that n must be less than the field size
 
-    G0 = rs_generator_matrix(GF, k, n)
-    G1 = rs_generator_matrix(GF, k, n)
+    # The two coding schemes.
+    k = 3  # The schemes share k but may have different encoded lengths n
+    C0 = Code(k=k, n=5, GF=GF, G=rs_generator_matrix(GF, k=k, n=5))
+    C1 = Code(k=k, n=7, GF=GF, G=rs_generator_matrix(GF, k=k, n=7))
 
     message = GF([1, 2, 3, 5, 8, 13, 21, 34, 55])  # k^2 = 9 symbols in GF(2^8)
     print("message:", message)
 
     # Twin code the message
-    nodes0, nodes1 = twin_code(message, k, n, G0, G1)
+    nodes0, nodes1 = twin_code(message, C0, C1)
+    print(f"{len(nodes0)} type 0 nodes\n{len(nodes1)} type 1 nodes")
 
     #
     # Simulate regular data collection: Gather data from any k nodes and
@@ -109,7 +123,7 @@ if __name__ == "__main__":
     collect_from_node_type = 0
 
     nodes = nodes0 if collect_from_node_type == 0 else nodes1
-    G = G0 if collect_from_node_type == 0 else G1
+    G = C0.G if collect_from_node_type == 0 else C1.G
 
     # Download k columns from the set of nodes.
     cols = nodes[:k].T
@@ -131,7 +145,7 @@ if __name__ == "__main__":
     # Simulate node recovery: Cooperate with k nodes of the opposite type to
     # recover a lost node with minimal data transfer.
     #
-    print("\nSimulate node recovery")
+    print("\nSimulate node recovery:")
     failed_node_number = 1
     failed_node_type = 0
 
@@ -144,7 +158,7 @@ if __name__ == "__main__":
 
     # Use the encoding vector for the failed node, which is the i'th column
     # of the generator matrix of its type.
-    G = G0 if failed_node_type == 0 else G1
+    G = C0.G if failed_node_type == 0 else C1.G
     encoding_vector = G[:, failed_node_number]
 
     # Each helper node calculates the inner product of its k encoded symbols
@@ -162,8 +176,27 @@ if __name__ == "__main__":
 
     # Print the results
     original = my_nodes[failed_node_number]
-    print("original:", original)
-    print("recovered:", recovered)
+    print("Original:", original)
+    print("Recovered:", recovered)
     passed = (recovered == original).all()
     print('Total symbols transferred = ', np.size(node_responses))
     print("Test passed." if passed else "Test failed.")
+
+    """
+    message: [ 1  2  3  5  8 13 21 34 55]
+    5 type 0 nodes
+    7 type 1 nodes
+
+    Simulate data collection:
+    decoded: [ 1  2  3  5  8 13 21 34 55]
+    Total symbols transferred =  9
+    Test passed.
+
+    Simulate node recovery:
+    node_responses: [165  69 233]
+    Original: [  9  33 141]
+    Recovered: [  9  33 141]
+    Total symbols transferred =  3
+    Test passed.
+    """
+
