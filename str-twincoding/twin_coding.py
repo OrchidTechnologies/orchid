@@ -44,17 +44,19 @@ import galois
 #
 def twin_code(message: np.array, C0: 'Code', C1: 'Code'):
     assert C0.k == C1.k
-    M0 = message.reshape((C0.k, C0.k))  # Reshape the message into k x k matrix
+
+    # Reshape the message into k x k matrix
+    M0 = message.reshape((C0.k, C0.k))
     M1 = M0.T  # M1 is the transpose of M0
 
-    # Encode using G0 and G1
-    encoded_type_0 = np.dot(M0, C0.G)  # k x C0.n
-    encoded_type_1 = np.dot(M1, C1.G)  # k x C1.n
+    # Encode the messages using the respective coding schemes
+    E0 = M0 @ C0.G  # size k x C0.n
+    E1 = M1 @ C1.G  # size k x C1.n
 
     # Nodes store k symbols corresponding to a column of the (k × n) encoded
     # matrix of their type.
-    type_0_nodes = [encoded_type_0[:, i] for i in range(C0.n)]
-    type_1_nodes = [encoded_type_1[:, i] for i in range(C1.n)]
+    type_0_nodes = [E0[:, i] for i in range(C0.n)]
+    type_1_nodes = [E1[:, i] for i in range(C1.n)]
 
     return np.array(type_0_nodes), np.array(type_1_nodes)
 
@@ -123,12 +125,12 @@ if __name__ == "__main__":
     collect_from_node_type = 0
 
     nodes = nodes0 if collect_from_node_type == 0 else nodes1
-    G = C0.G if collect_from_node_type == 0 else C1.G
+    G_mine = C0.G if collect_from_node_type == 0 else C1.G
 
     # Download k columns from the set of nodes.
     cols = nodes[:k].T
     # Take the corresponding k columns of their generator matrix and invert it
-    g = G[:, 0:k]
+    g = G_mine[:, 0:k]
     ginv = np.linalg.inv(g)
 
     # Use it to decode the data
@@ -154,22 +156,25 @@ if __name__ == "__main__":
     # We contact k nodes of the opposite type and ask for their help.
     my_nodes, helper_nodes = (nodes0, nodes1) if failed_node_type == 0 else (
         nodes1, nodes0)
-    nodes_to_ask = helper_nodes[:k]
+
+    # Pick k random helper nodes to ask
+    nodes_to_ask = np.random.choice(helper_nodes.shape[0], k, replace=False)
+    print("Picking helper nodes:", nodes_to_ask)
 
     # Use the encoding vector for the failed node, which is the i'th column
     # of the generator matrix of its type.
-    G = C0.G if failed_node_type == 0 else C1.G
-    encoding_vector = G[:, failed_node_number]
+    G_mine, G_other = (C0.G, C1.G) if failed_node_type == 0 else (C1.G, C0.G)
+    encoding_vector = G_mine[:, failed_node_number]
 
     # Each helper node calculates the inner product of its k encoded symbols
     # and the encoding vector of the failed node.
-    node_responses = GF(
-        [np.dot(encoding_vector, GF(node)) for node in nodes_to_ask])
+    node_responses = GF([encoding_vector @ node_vector
+                         for node_vector in GF(helper_nodes[nodes_to_ask])])
     print("node_responses:", node_responses)
 
-    # We now treat the node responses as a vector and use our inverted
-    # generator matrix to recover the missing column.
-    g = G[:, 0:k]
+    # Now treat the responses as a vector and perform erasure decoding using the
+    # helper node type's encoding matrix.
+    g = G_other[:, nodes_to_ask]
     ginv = np.linalg.inv(g)
     recovered = node_responses @ ginv
     # TODO: concise explanation of why this works.
@@ -193,10 +198,10 @@ if __name__ == "__main__":
     Test passed.
 
     Simulate node recovery:
-    node_responses: [165  69 233]
+    Picking helper nodes: [3 1 5]
+    node_responses: [181  69 249]
     Original: [  9  33 141]
     Recovered: [  9  33 141]
     Total symbols transferred =  3
     Test passed.
     """
-
