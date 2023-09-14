@@ -55,7 +55,7 @@ $(temp): $(pwd/flutter)/packages/flutter_tools/templates/app_shared/ios.tmpl/Flu
 	cp -f $< $@
 endif
 
-rsync := rsync -a --delete $(patsubst %,--filter "- %",.DS_Store _CodeSignature Headers Modules)
+rsync := rsync -a --chmod=+rX --delete $(patsubst %,--filter "- %",.DS_Store _CodeSignature Headers Modules)
 
 $(app)$(versions)$(resources)/Info%plist $(embed)$(versions)$(resources)/Info%plist: $(dart) $(temp)
 	rm -rf .dart_tool/flutter_build $(output)/flutter
