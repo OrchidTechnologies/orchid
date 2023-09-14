@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 
 class AnimatedVisibility extends StatelessWidget {
@@ -7,10 +6,10 @@ class AnimatedVisibility extends StatelessWidget {
   final Duration duration;
 
   AnimatedVisibility({
-    Key key,
-    @required this.show,
-    @required this.child,
-    Duration duration,
+    Key? key,
+    required this.show,
+    required this.child,
+    Duration? duration,
   })  : this.duration = duration ?? Duration(milliseconds: 330),
         super(key: key);
 

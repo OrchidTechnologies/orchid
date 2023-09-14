@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'dart:ui';
 import 'package:orchid/util/color_extensions.dart';
 
@@ -37,10 +36,10 @@ class SvgBuilder {
 
 class SvgRect {
   int x, y, width, height;
-  double translateX, translateY;
-  double rotateDeg;
-  int rotateCenterX, rotateCenterY;
-  String fillColor;
+  double? translateX, translateY;
+  double? rotateDeg;
+  int? rotateCenterX, rotateCenterY;
+  String? fillColor;
 
   SvgRect(this.x, this.y, this.width, this.height);
 

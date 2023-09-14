@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:rxdart/rxdart.dart';
@@ -13,11 +12,11 @@ class ObservablePreference<T> {
 
   BehaviorSubject<T> _subject = BehaviorSubject();
 
-  T Function(UserPreferenceKey key) getValue;
-  Future Function(UserPreferenceKey key, T value) putValue;
+  T? Function(UserPreferenceKey key) getValue;
+  Future Function(UserPreferenceKey key, T? value) putValue;
 
   ObservablePreference(
-      {@required this.key, @required this.getValue, @required this.putValue});
+      {required this.key, required this.getValue, required this.putValue});
 
   /// Subscribe to the value stream. This method ensures that the stream is
   /// initialized with the first value from the underlying user preference,
@@ -30,21 +29,21 @@ class ObservablePreference<T> {
 
   /// Return a stream builder for this preference that supplies the current value
   /// as the initial stream data (thus avoiding a null data build pass).
-  ObservablePreferenceBuilder<T> builder(Widget Function(T t) builder) {
+  ObservablePreferenceBuilder<T> builder(Widget Function(T? t) builder) {
     return ObservablePreferenceBuilder(preference: this, builder: builder);
   }
 
-  T get() {
-    if (_initialized) {
+  T? get() {
+    if (_initialized && _subject.hasValue) {
       return _subject.value;
     } else {
-      T value = getValue(key);
+      T? value = getValue(key);
       _broadcast(value);
       return value;
     }
   }
 
-  Future<T> set(T value) async {
+  Future<T?> set(T? value) async {
     await putValue(key, value);
     // If the value is null attempt to load it again allowing the store method
     // to transform it if needed.
@@ -57,7 +56,7 @@ class ObservablePreference<T> {
   }
 
   Future<void> clear() async {
-    return set(null);
+    await set(null);
   }
 
   // This can be called during startup to block until the property has been initialized
@@ -65,9 +64,13 @@ class ObservablePreference<T> {
     get();
   }
 
-  void _broadcast(value) {
+  void _broadcast(T? value) {
     _initialized = true;
-    _subject.add(value);
+    // TODO: We should allow nulls in the streams
+    if (value != null) {
+      _subject.add(value);
+    }
+    // _subject.add(value);
   }
 }
 
@@ -97,6 +100,9 @@ class ObservableBoolPreference extends ObservablePreference<bool> {
                   defaultValue;
             },
             putValue: (key, value) async {
+              if (value == null) {
+                throw Exception("value may not be null");
+              }
               return (UserPreferences().sharedPreferences())
                   .setBool(key.toString(), value);
             });
@@ -106,14 +112,14 @@ class ObservableBoolPreference extends ObservablePreference<bool> {
 /// This class codifies the fact that user preference data can be fetched
 /// synchronously and provided in the stream initial data.
 class ObservablePreferenceBuilder<T> extends StatelessWidget {
-  final Widget Function(T t) builder;
-  final T initialData;
+  final Widget Function(T? t) builder;
+  final T? initialData;
   final Stream<T> stream;
 
   ObservablePreferenceBuilder({
-    Key key,
-    ObservablePreference<T> preference,
-    this.builder,
+    Key? key,
+    required ObservablePreference<T> preference,
+    required this.builder,
   })  : this.initialData = preference.get(),
         this.stream = preference.stream(),
         super(key: key);
@@ -126,29 +132,5 @@ class ObservablePreferenceBuilder<T> extends StatelessWidget {
         builder: (context, snapshot) {
           return builder(snapshot.data);
         });
-  }
-}
-
-// TODO: MOVE
-class ReleaseVersion {
-  final int version;
-
-  ReleaseVersion(this.version);
-
-  ReleaseVersion.resetFirstLaunch() : this.version = null;
-
-  /// This is represents a first launch of the app since the V1 UI.
-  bool get isFirstLaunch {
-    return version == null;
-  }
-
-  // Compare versions or return true if first launch.
-  bool isOlderThan(ReleaseVersion other) {
-    return version == null || version < other.version;
-  }
-
-  @override
-  String toString() {
-    return 'ReleaseVersion{version: $version}';
   }
 }

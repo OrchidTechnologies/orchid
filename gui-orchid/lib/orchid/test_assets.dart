@@ -1,16 +1,15 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
-import 'package:orchid/util/test_app.dart';
+import 'package:orchid/orchid/test_app.dart';
 
 void main() {
   runApp(TestApp(content: _Test()));
 }
 
 class _Test extends StatefulWidget {
-  const _Test({Key key}) : super(key: key);
+  const _Test({Key? key}) : super(key: key);
 
   @override
   __TestState createState() => __TestState();

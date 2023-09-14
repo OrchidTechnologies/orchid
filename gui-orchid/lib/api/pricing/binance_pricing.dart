@@ -1,8 +1,7 @@
-// @dart=2.9
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'orchid_pricing.dart';
 
@@ -14,7 +13,7 @@ class BinanceExchangeRateSource extends ExchangeRateSource {
   /// the rate consistent with that. e.g. for DAI we must use 1/USDTDAI and
   /// not DAIUSDT since DAIUSDT was delisted.
   final bool inverted;
-  final String symbolOverride;
+  final String? symbolOverride;
 
   const BinanceExchangeRateSource({this.inverted = false, this.symbolOverride});
 
@@ -27,8 +26,8 @@ class BinanceExchangeRateSource extends ExchangeRateSource {
 
   /// Return the price, USD/Token: Tokens * Rate = USD
   Future<double> tokenToUsdRate(TokenType tokenType) async {
-    var rate = await _getPrice(tokenType);
-    return inverted ? invert(rate) : rate;
+    double rate = await _getPrice(tokenType);
+    return inverted ? await invert(rate) : rate;
   }
 
   Future<double> _getPrice(TokenType tokenType) async {

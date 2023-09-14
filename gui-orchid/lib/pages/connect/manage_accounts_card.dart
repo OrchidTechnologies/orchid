@@ -1,28 +1,27 @@
-// @dart=2.9
 import 'dart:math';
 import 'package:badges/badges.dart' as badge;
 import 'package:flutter/material.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/account/account_detail_store.dart';
-import 'package:orchid/pages/circuit/model/circuit.dart';
-import 'package:orchid/pages/circuit/model/circuit_hop.dart';
-import 'package:orchid/pages/circuit/model/orchid_hop.dart';
+import 'package:orchid/vpn/model/circuit.dart';
+import 'package:orchid/vpn/model/circuit_hop.dart';
+import 'package:orchid/vpn/model/orchid_hop.dart';
 import 'package:orchid/util/localization.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/util/format_currency.dart';
 import '../../orchid/orchid_circular_identicon.dart';
 import '../../orchid/orchid_panel.dart';
 import '../../orchid/orchid_text.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/util/collections.dart';
 
 /// Displays the account info for each hop in the Circuit and offers
 /// the "manage accounts" button used on the connect page.
 class ManageAccountsCard extends StatefulWidget {
-  final Circuit circuit;
+  final Circuit? circuit;
 
   final int initiallySelectedIndex;
 
@@ -30,13 +29,13 @@ class ManageAccountsCard extends StatefulWidget {
   // (This is a small adjustment used when the screen is short.)
   final bool minHeight;
 
-  final VoidCallback onManageAccountsPressed;
+  final VoidCallback? onManageAccountsPressed;
 
-  final Function(int selectedIndex) onSelectIndex;
+  final Function(int selectedIndex)? onSelectIndex;
 
   const ManageAccountsCard({
-    Key key,
-    this.circuit,
+    Key? key,
+    required this.circuit,
     this.initiallySelectedIndex = 0,
     this.minHeight = false,
     this.onManageAccountsPressed,
@@ -48,29 +47,29 @@ class ManageAccountsCard extends StatefulWidget {
 }
 
 class _ManageAccountsCardState extends State<ManageAccountsCard> {
-  AccountDetailStore _accountDetailStore;
+  late AccountDetailStore _accountDetailStore;
 
   // The selected hop account index
-  int _selectedIndex;
+  late int _selectedIndex;
 
   void _setSelectedIndex(int i) {
     setState(() {
       _selectedIndex = i;
     });
     if (widget.onSelectIndex != null) {
-      widget.onSelectIndex(i);
+      widget.onSelectIndex!(i);
     }
   }
 
-  CircuitHop get _selectedHop {
+  CircuitHop? get _selectedHop {
     if (_hopCount <= _selectedIndex) {
       return null;
     }
-    return widget.circuit.hops[_selectedIndex];
+    return widget.circuit?.hops[_selectedIndex];
   }
 
   int get _hopCount {
-    return widget.circuit.hops.length;
+    return widget.circuit?.hops.length ?? 0;
   }
 
   @override
@@ -125,8 +124,9 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
           padx(212),
           TextButton(
             onPressed: () {
+              // null guarded by page logic
               _setSelectedIndex(
-                  min(_selectedIndex + 1, widget.circuit.hops.length - 1));
+                  min(_selectedIndex + 1, widget.circuit!.hops.length - 1));
             },
             child: Icon(
               Icons.chevron_right,
@@ -143,7 +143,8 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
       return OrchidCircularIdenticon(address: null);
     }
     // map the hops to icons
-    var icons = widget.circuit.hops
+    // null guarded by _hopsCount above
+    var icons = widget.circuit!.hops
         .mapIndexed((hop, i) {
           final selected = i == _selectedIndex;
           final afterSelected = i - 1 == _selectedIndex;
@@ -202,7 +203,6 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
           address: account.signerAddress,
           fade: selected ? 1.0 : fade,
         );
-        break;
       case HopProtocol.OpenVPN:
         return OrchidCircularIdenticon(
           image: Padding(
@@ -211,7 +211,6 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
           ),
           fade: selected ? 1.0 : fade,
         );
-        break;
       case HopProtocol.WireGuard:
         return OrchidCircularIdenticon(
           image: Padding(
@@ -220,9 +219,7 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
           ),
           fade: selected ? 1.0 : fade,
         );
-        break;
     }
-    throw Exception();
   }
 
   SizedBox _buildCardBody() {
@@ -234,7 +231,7 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
                 child: Padding(
           padding: const EdgeInsets.only(top: 17.0),
           child: _selectedHop != null
-              ? _buildCardContentForHop(_selectedHop)
+              ? _buildCardContentForHop(_selectedHop!)
               : _buildOrchidHopCardContent(null),
         ))));
   }
@@ -243,7 +240,6 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
     switch (hop.protocol) {
       case HopProtocol.Orchid:
         return _buildOrchidHopCardContent(hop as OrchidHop);
-        break;
       case HopProtocol.OpenVPN:
         // Note: duplicated in manage accounts card
         return Padding(
@@ -256,13 +252,11 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
           padding: const EdgeInsets.only(bottom: 17.0),
           child: Text(s.wireguardHop).title,
         );
-        break;
     }
-    throw Exception();
   }
 
-  Widget _buildOrchidHopCardContent(OrchidHop orchidHop) {
-    final _selectedAccount =
+  Widget _buildOrchidHopCardContent(OrchidHop? orchidHop) {
+    final AccountDetailPoller? _selectedAccount =
         orchidHop != null ? _accountDetailStore.get(orchidHop.account) : null;
     final signerAddress = _selectedAccount?.signerAddress;
     final text = signerAddress == null
@@ -271,8 +265,8 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
     final textWidth = signerAddress == null ? null : 120.0;
     final balanceText = signerAddress == null
         ? formatCurrency(0.0, locale: context.locale, precision: 2)
-        : (_selectedAccount.lotteryPot?.balance
-                ?.formatCurrency(precision: 2, locale: context.locale) ??
+        : (_selectedAccount?.lotteryPot?.balance
+                .formatCurrency(precision: 2, locale: context.locale) ??
             "...");
     final efficiency = _selectedAccount?.marketConditions?.efficiency;
     var showBadge = (_selectedAccount?.marketConditions?.efficiency ?? 1.0) <
@@ -321,10 +315,12 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
       onTap: widget.onManageAccountsPressed,
       child: badge.Badge(
         showBadge: showBadge,
-        elevation: 0,
+        badgeStyle: badge.BadgeStyle(
+          elevation: 0,
+          padding: EdgeInsets.only(left: 8, right: 8, bottom: 4, top: 8),
+        ),
         badgeContent: Text('!', style: OrchidText.caption),
-        padding: EdgeInsets.only(left: 8, right: 8, bottom: 4, top: 8),
-        toAnimate: false,
+        // toAnimate: false,
         position: badge.BadgePosition.topEnd(top: -8, end: -34),
         child: SizedBox(
           height: 16,
@@ -340,10 +336,6 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
 
   void _accountDetailChanged() {
     setState(() {}); // Trigger a UI refresh
-  }
-
-  S get s {
-    return S.of(context);
   }
 
   @override

@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -13,17 +12,16 @@ class WrappedSwitchController {
   // This allows observation of user input actions driving the switch.
   // Note: We could use another ValueNotifier here but there would then be
   // Note: ambiguity between the controlled and user driven values.
-  WrappedSwitchCallback onChange;
+  WrappedSwitchCallback? onChange;
 
-  WrappedSwitchController({bool initialValue = false}) {
-    this.controlledState = WrappedSwitchValueNotifier(initialValue);
-  }
+  WrappedSwitchController({bool initialValue = false})
+      : this.controlledState = WrappedSwitchValueNotifier(initialValue);
 }
 
 class WrappedSwitch extends StatefulWidget {
   final WrappedSwitchController controller;
 
-  const WrappedSwitch({Key key, this.controller}) : super(key: key);
+  const WrappedSwitch({Key? key, required this.controller}) : super(key: key);
 
   @override
   _WrappedSwitchState createState() => _WrappedSwitchState();

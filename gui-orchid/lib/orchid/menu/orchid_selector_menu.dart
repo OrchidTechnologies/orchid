@@ -1,26 +1,25 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'color_popup_menu_item.dart';
 import 'orchid_popup_menu_button.dart';
 
 /// A popup menu style selector that renders text items with optional icons
 /// and manages item selection and menu button appearance when open and closed.
 class OrchidSelectorMenu<T> extends StatefulWidget {
-  final ValueChanged<T> onSelection;
-  final T selected;
+  final ValueChanged<T>? onSelection;
+  final T? selected;
   final bool enabled;
   final double width;
 
   /// The list of items and generators for display
   final List<T> items;
-  final Widget Function(T item) iconForItem;
+  final Widget Function(T item)? iconForItem;
   final String Function(T item) titleForItem;
 
   /// The title to display when no item is selected
   final String titleUnselected;
 
   /// The title icon to display when no item is selected in icon only mode.
-  final Widget titleIconUnselected;
+  final Widget? titleIconUnselected;
 
   /// If true display the title instead of the title
   final bool titleIconOnly;
@@ -28,18 +27,20 @@ class OrchidSelectorMenu<T> extends StatefulWidget {
   // highlight the selected item in the menu
   final bool highlightSelected;
 
+  static const double DEFAULT_WIDTH = 273.0;
+
   OrchidSelectorMenu({
-    Key key,
+    Key? key,
     this.selected,
     this.onSelection,
     this.enabled = true,
-    this.width = 273.0,
-    @required this.titleUnselected,
+    this.width = DEFAULT_WIDTH,
+    required this.titleUnselected,
     this.titleIconUnselected,
     this.titleIconOnly = false,
-    @required this.items,
+    required this.items,
     this.iconForItem,
-    @required this.titleForItem,
+    required this.titleForItem,
     this.highlightSelected = true,
   }) : super(key: key);
 
@@ -112,7 +113,8 @@ class _OrchidSelectorMenuState<T> extends State<OrchidSelectorMenu<T>> {
       children: [
         Flexible(
           child: _buildItemRow(
-            value: widget.selected,
+            // widget select is not null here
+            value: widget.selected!,
             style: _textStyle,
             iconOnly: widget.titleIconOnly,
           ),
@@ -150,18 +152,20 @@ class _OrchidSelectorMenuState<T> extends State<OrchidSelectorMenu<T>> {
       onTap: () {
         // Close the menu item
         // Navigator.pop(context);
-        widget.onSelection(value);
+        if (widget.onSelection != null) {
+          widget.onSelection!(value);
+        }
       },
     );
   }
 
   Widget _buildItemRow({
-    T value,
-    TextStyle style,
+    required T value,
+    TextStyle? style,
     bool iconOnly = false,
   }) {
     final size = 20.0;
-    final icon = widget.iconForItem == null ? null : widget.iconForItem(value);
+    final icon = widget.iconForItem == null ? null : widget.iconForItem!(value);
     final title = widget.titleForItem(value);
     return Row(
       mainAxisAlignment:

@@ -1,14 +1,13 @@
-// @dart=2.9
 // ignore_for_file: non_constant_identifier_names
-import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/api/preferences/user_preferences_ui.dart';
+import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/api/pricing/usd.dart';
 import 'token_type.dart';
 import 'package:orchid/util/collections.dart';
 import 'tokens.dart';
@@ -27,7 +26,7 @@ class Chains {
 
   // Get the provider URL allowing override in the advanced config
   static String get _overriddenEthereumProviderUrl {
-    var jsConfig = OrchidUserConfig().getUserConfigJS();
+    var jsConfig = OrchidUserConfig().getUserConfig();
     // Note: This var is also used by the tunnel for the eth provider.
     return jsConfig.evalStringDefault('rpc', _defaultEthereumProviderUrl);
   }
@@ -35,9 +34,8 @@ class Chains {
   static Chain unknownChain(int chainId) {
     return Chain(
       chainId: chainId,
-      // TODO:
       name: "Unknown",
-      defaultProviderUrl: null,
+      defaultProviderUrl: '',
       iconPath: OrchidAssetSvgChain.unknown_chain_path,
       blocktime: 0,
       eip1559: false,
@@ -141,7 +139,8 @@ class Chains {
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
     supportsLogs: true,
-    blocktime: 0, // non-standard transaction structure...
+    blocktime: 0,
+    // non-standard transaction structure...
     eip1559: false,
   );
 
@@ -166,7 +165,7 @@ class Chains {
     nativeCurrency: Tokens.AURORA_ETH,
     defaultProviderUrl: 'https://mainnet.aurora.dev',
     iconPath: OrchidAssetSvgChain.near_aurora_chain_path,
-    // TODO: Missing explorer URL
+    explorerUrl: 'https://explorer.aurora.dev/',
     // Additional L1 fees.
     hasNonstandardTransactionFees: true,
     supportsLogs: true,
@@ -245,18 +244,18 @@ class Chains {
   }
 
   static Map<int, Chain> get userConfiguredChains {
-    return UserPreferences()
+    return UserPreferencesUI()
         .userConfiguredChains
-        .get()
+        .get()!
         .toMap(withKey: (e) => e.chainId, withValue: (e) => e);
   }
 
   /// The map of supported chains, filtered to remove disabled chains.
   static Map<int, Chain> get map {
     // Remove disabled chains
-    final Iterable<int> disabled = UserPreferences()
+    final Iterable<int> disabled = UserPreferencesUI()
         .chainConfig
-        .get()
+        .get()!
         .where((e) => !e.enabled)
         .map((e) => e.chainId);
     Map<int, Chain> map = Map.of(knownChains);
@@ -308,16 +307,16 @@ class Chain {
   }
 
   /// Optional explorer URL
-  final String explorerUrl;
+  final String? explorerUrl;
 
   const Chain({
-    @required this.chainId,
-    @required this.name,
-    @required this.nativeCurrency,
-    @required this.defaultProviderUrl,
-    @required this.blocktime,
+    required this.chainId,
+    required this.name,
+    required this.nativeCurrency,
+    required this.defaultProviderUrl,
+    required this.blocktime,
     this.requiredConfirmations = 1,
-    this.iconPath,
+    required this.iconPath,
     this.explorerUrl,
     this.hasNonstandardTransactionFees = false,
     this.supportsLogs = false,
@@ -325,7 +324,7 @@ class Chain {
   });
 
   String get providerUrl {
-    final config = UserPreferences().chainConfigFor(chainId);
+    final config = UserPreferencesUI().chainConfigFor(chainId);
 
     // TODO: Decide what we do with configured hops.
     // Prevent any usage of the chain if the user has it disabled.
@@ -371,18 +370,18 @@ class Chain {
 
 class UserConfiguredChain extends Chain {
   UserConfiguredChain({
-    String name,
-    int chainId,
-    String defaultProviderUrl,
-    USD tokenPriceUSD,
+    required String name,
+    required int chainId,
+    required String defaultProviderUrl,
+    required USD tokenPriceUSD,
   }) : super(
-          chainId: chainId,
-          name: name,
-          defaultProviderUrl: defaultProviderUrl,
-          nativeCurrency: userConfiguredTokenType(chainId, tokenPriceUSD),
-          blocktime: 0,
-          eip1559: false,
-        );
+            chainId: chainId,
+            name: name,
+            defaultProviderUrl: defaultProviderUrl,
+            nativeCurrency: userConfiguredTokenType(chainId, tokenPriceUSD),
+            blocktime: 0,
+            eip1559: false,
+            iconPath: OrchidAssetSvgChain.unknown_chain_path);
 
   UserConfiguredChain.fromJson(Map<String, dynamic> json)
       : this(

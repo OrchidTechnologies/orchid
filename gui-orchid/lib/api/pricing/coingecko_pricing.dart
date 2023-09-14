@@ -1,9 +1,8 @@
-// @dart=2.12
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:orchid/api/orchid_eth/tokens.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/util/cacheable.dart';
 import 'package:orchid/util/collections.dart';
 import 'orchid_pricing.dart';
@@ -14,12 +13,13 @@ class CoinGeckoExchangeRateSource extends ExchangeRateSource {
   const CoinGeckoExchangeRateSource({required this.tokenId});
 
   /// Return the price, USD/Token: Tokens * Rate = USD
-  Future<double?> tokenToUsdRate(TokenType tokenType) async {
+  Future<double> tokenToUsdRate(TokenType tokenType) async {
     final prices = await cache.get(producer: () async {
       return await _getPrices();
     });
     logDetail("XXX: coingecko prices = $prices");
-    return prices[tokenType];
+    // TODO: Need to propagate nulls through the API including our cache.
+    return prices[tokenType] ?? 0;
   }
 
   // Since we are fetching the entire list of coins in one call, cache them here.

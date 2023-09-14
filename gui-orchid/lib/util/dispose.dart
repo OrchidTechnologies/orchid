@@ -1,6 +1,5 @@
-// @dart=2.9
 import 'dart:async';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 
 extension DisposeTimerExtensions on Timer {
   Timer dispose(List disposal) {

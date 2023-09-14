@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 
 /// A widget that wraps its child in a tap gesture detector that clears focus.
@@ -7,8 +6,8 @@ import 'package:flutter/material.dart';
 ///
 class TapClearsFocus extends StatelessWidget {
   const TapClearsFocus({
-    Key key,
-    @required this.child,
+    Key? key,
+    required this.child,
   }) : super(key: key);
 
   final Widget child;

@@ -1,16 +1,15 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
-import 'package:orchid/util/test_app.dart';
+import 'package:orchid/orchid/test_app.dart';
 
 void main() {
   runApp(TestApp(scale: 1.0, content: _Test()));
 }
 
 class _Test extends StatelessWidget {
-  const _Test({Key key}) : super(key: key);
+  const _Test({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

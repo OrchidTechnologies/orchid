@@ -1,6 +1,4 @@
-// @dart=2.9
 import 'dart:math';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/orchid_crypto.dart';
@@ -9,7 +7,7 @@ import 'xorshift_random.dart';
 
 // Ported from https://github.com/download13/blockies (WTFPL)
 class Blockies {
-  XorShiftRandom _random;
+  late XorShiftRandom _random;
 
   double rand() {
     return _random.nextDouble();
@@ -56,7 +54,7 @@ class Blockies {
   }
 
   SvgPicture generate({
-    @required EthereumAddress address,
+    required EthereumAddress address,
     int size = 8,
     int scale = 16,
   }) {
@@ -69,7 +67,7 @@ class Blockies {
   }
 
   String renderSvg({
-    @required String seedValue,
+    required String seedValue,
     int size = 8,
     int scale = 4,
   }) {

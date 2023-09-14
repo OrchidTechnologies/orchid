@@ -1,12 +1,11 @@
-// @dart=2.9
 import 'dart:ui';
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/common/gradient_border.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 
 class OrchidPanel extends StatelessWidget {
-  final Widget child;
-  final Gradient edgeGradient;
+  final Widget? child;
+  final Gradient? edgeGradient;
   final Gradient backgroundGradient;
   final Color backgroundFillColor;
   final double edgeStrokeWidth;
@@ -37,7 +36,7 @@ class OrchidPanel extends StatelessWidget {
   }
 
   const OrchidPanel({
-    Key key,
+    Key? key,
     this.child,
     this.edgeGradient,
     this.backgroundGradient = defaultBackgroundGradient,
@@ -48,9 +47,9 @@ class OrchidPanel extends StatelessWidget {
   }) : super(key: key);
 
   OrchidPanel.vertical({
-    Key key,
-    Widget child,
-    Gradient edgeGradient,
+    Key? key,
+    Widget? child,
+    Gradient? edgeGradient,
     double edgeStrokeWidth = 1.5,
     bool highlight = false,
     double highlightAnimation = 0,

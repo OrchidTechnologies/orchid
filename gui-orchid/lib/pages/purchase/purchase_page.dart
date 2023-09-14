@@ -1,18 +1,17 @@
-// @dart=2.9
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_bandwidth_pricing.dart';
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'dart:async';
-import 'package:orchid/api/orchid_api_mock.dart';
+import 'package:orchid/vpn/orchid_api_mock.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/orchid_urls.dart';
-import 'package:orchid/api/purchase/ios_purchase.dart';
-import 'package:orchid/api/purchase/orchid_pac.dart';
-import 'package:orchid/api/purchase/orchid_pac_seller.dart';
-import 'package:orchid/api/purchase/orchid_pac_server.dart';
-import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
-import 'package:orchid/api/purchase/orchid_purchase.dart';
+import 'package:orchid/vpn/purchase/ios_purchase.dart';
+import 'package:orchid/vpn/purchase/orchid_pac.dart';
+import 'package:orchid/vpn/purchase/orchid_pac_seller.dart';
+import 'package:orchid/vpn/purchase/orchid_pac_server.dart';
+import 'package:orchid/vpn/purchase/orchid_pac_transaction.dart';
+import 'package:orchid/vpn/purchase/orchid_purchase.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/app_dialogs.dart';
@@ -23,7 +22,8 @@ import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/util/format_currency.dart';
+import 'package:orchid/api/pricing/usd.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
@@ -31,14 +31,14 @@ import '../../common/app_text.dart';
 typedef PurchasePageCompletion = void Function(); // TODO: return
 
 class PurchasePage extends StatefulWidget {
-  final StoredEthereumKey signerKey;
+  final StoredEthereumKey? signerKey;
   final PurchasePageCompletion completion;
   final bool cancellable; // show the close button instead of a back arrow
 
   const PurchasePage(
-      {Key key,
-      @required this.signerKey,
-      @required this.completion,
+      {Key? key,
+      required this.signerKey,
+      required this.completion,
       this.cancellable = false})
       : super(key: key);
 
@@ -48,10 +48,10 @@ class PurchasePage extends StatefulWidget {
 
 class _PurchasePageState extends State<PurchasePage> {
   List<StreamSubscription> _subscriptions = [];
-  PACStoreStatus _storeStatus;
-  List<PAC> _pacs;
+  PACStoreStatus? _storeStatus;
+  List<PAC>? _pacs;
   bool _storeMessageDimissed = false;
-  USD _bandwidthPrice;
+  USD? _bandwidthPrice;
 
   @override
   void initState() {
@@ -121,7 +121,7 @@ class _PurchasePageState extends State<PurchasePage> {
   Widget _buildStoreMessage() {
     Size size = MediaQuery.of(context).size;
     var text = _storeStatus?.message != null
-        ? _storeStatus.message
+        ? _storeStatus!.message
         : s.theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn;
     return Center(
         child: Container(
@@ -187,7 +187,7 @@ class _PurchasePageState extends State<PurchasePage> {
     final titleStyle = OrchidText.medium_24_050;
     var payPerUse = s.payPerUseVpnService;
     var price = (_bandwidthPrice != null && !MockOrchidAPI.hidePrices)
-        ? "\$" + formatCurrency(_bandwidthPrice.value, locale: context.locale)
+        ? "\$" + formatCurrency(_bandwidthPrice!.value, locale: context.locale)
         : "...";
     var currentAvgVPNPrice = s.averagePriceIsUSDPerGb(price);
     var notASub = s.notASubscriptionCreditsDontExpire;
@@ -273,7 +273,7 @@ class _PurchasePageState extends State<PurchasePage> {
     if (_pacs == null) {
       return LoadingIndicator(height: 50);
     }
-    if (_pacs.isEmpty) {
+    if (_pacs!.isEmpty) {
       return unavailableText;
     }
     return Column(
@@ -293,15 +293,15 @@ class _PurchasePageState extends State<PurchasePage> {
 
   // TODO: This assumes three pre-defined pac tiers rather than the list.
   List<Widget> _buildFixedPacList() {
-    if (_pacs.isEmpty || _pacs.length < 3) {
+    if (_pacs == null || _pacs!.isEmpty || _pacs!.length < 3) {
       log("iap: pacs not ready: $_pacs");
       return [];
     }
 
     // TODO: Hard-coded expected ids
-    var pac1 = OrchidPurchaseAPI.pacForTier(_pacs, 4);
-    var pac2 = OrchidPurchaseAPI.pacForTier(_pacs, 10);
-    var pac3 = OrchidPurchaseAPI.pacForTier(_pacs, 11);
+    var pac1 = OrchidPurchaseAPI.pacForTier(_pacs!, 4);
+    var pac2 = OrchidPurchaseAPI.pacForTier(_pacs!, 10);
+    var pac3 = OrchidPurchaseAPI.pacForTier(_pacs!, 11);
 
     return [
       _buildPurchaseCardView(
@@ -331,10 +331,10 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Widget _buildHighlightedPurchaseCardView({
-    PAC pac,
-    String title,
-    TextSpan subtitle,
-    String highlightText,
+    required PAC pac,
+    required String title,
+    required TextSpan subtitle,
+    required String highlightText,
   }) {
     return Stack(
       alignment: Alignment.bottomCenter,
@@ -365,9 +365,9 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Widget _buildPurchaseCardView({
-    PAC pac,
-    String title,
-    TextSpan subtitle,
+    required PAC pac,
+    required String title,
+    required TextSpan subtitle,
     bool highlight = false,
     double bottomPad = 16,
   }) {
@@ -385,7 +385,8 @@ class _PurchasePageState extends State<PurchasePage> {
       fontFamily: 'SFProText-Regular',
     );
 
-    var enabled = pac.localPrice != null && _storeUp == true;
+    // var enabled = pac.localPrice != null && _storeUp == true;
+    var enabled = _storeUp == true;
     var price =
         (MockOrchidAPI.hidePrices ? null : pac.localDisplayPrice) ?? '...';
 
@@ -450,7 +451,7 @@ class _PurchasePageState extends State<PurchasePage> {
     );
   }
 
-  TextSpan _buildPurchaseDescriptionText({String text}) {
+  TextSpan _buildPurchaseDescriptionText({required String text}) {
     const subtitleStyle = TextStyle(
       color: Colors.white,
       fontSize: 12.0,
@@ -467,7 +468,7 @@ class _PurchasePageState extends State<PurchasePage> {
   // TODO: See the alternate impl in the welcome pane
   // TODO: Rework this dialog to clean up formatting complexity and add
   // TODO: a standard close button somehow.
-  Future<void> _confirmPurchase({PAC pac}) async {
+  Future<void> _confirmPurchase({required PAC pac}) async {
     var style1 =
         OrchidText.medium_18_025.copyWith(height: 1.6); // heights should match
     var valueStyle = OrchidText.button.copyWith(height: 1.6);
@@ -588,10 +589,13 @@ class _PurchasePageState extends State<PurchasePage> {
         });
   }
 
-  Future<void> _purchase({PAC pac}) async {
+  Future<void> _purchase({required PAC pac}) async {
+    if (widget.signerKey == null) {
+      return;
+    }
     await PurchaseUtils.purchase(
       purchase: pac,
-      signerKey: widget.signerKey,
+      signerKey: widget.signerKey!,
       onError: _iapPurchaseError,
     );
     Navigator.of(context).pop();
@@ -633,7 +637,7 @@ class _PurchasePageState extends State<PurchasePage> {
     }
   }
 
-  Future<void> updateProducts({bool refresh}) async {
+  Future<void> updateProducts({required bool refresh}) async {
     if (refresh) {
       log("iap: purchase page refresh products");
     } else {
@@ -657,18 +661,14 @@ class _PurchasePageState extends State<PurchasePage> {
     ScreenOrientation.reset();
   }
 
-  S get s {
-    return S.of(context);
-  }
-
   // return up if not null
   bool get _storeUp {
-    return _storeStatus != null && _storeStatus.open;
+    return _storeStatus != null && _storeStatus!.open;
   }
 
   // return down if not null
   bool get _storeDown {
-    return _storeStatus != null && !_storeStatus.open;
+    return _storeStatus != null && !_storeStatus!.open;
   }
 
   bool get _showStoreMessage {
@@ -692,9 +692,9 @@ class _PurchasePageState extends State<PurchasePage> {
 
 class PurchaseUtils {
   static Future<void> purchase({
-    @required PAC purchase,
-    @required StoredEthereumKey signerKey,
-    Future<void> Function({bool rateLimitExceeded}) onError,
+    required PAC purchase,
+    required StoredEthereumKey signerKey,
+    required Future<void> Function({required bool rateLimitExceeded}) onError,
   }) async {
     log("iap: calling purchase: $purchase");
 

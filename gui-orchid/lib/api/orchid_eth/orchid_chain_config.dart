@@ -1,11 +1,10 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/util/collections.dart';
 
 /// User overrides for default chain configuration
 class ChainConfig {
   final int chainId;
   final bool enabled;
-  final String rpcUrl;
+  final String? rpcUrl;
 
   /// return true if this config is equivalent to no config for the chain
   bool get isEmpty {
@@ -13,8 +12,8 @@ class ChainConfig {
   }
 
   ChainConfig({
-    @required this.chainId,
-    @required this.enabled,
+    required this.chainId,
+    required this.enabled,
     this.rpcUrl,
   });
 

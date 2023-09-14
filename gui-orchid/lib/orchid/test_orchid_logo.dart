@@ -1,6 +1,5 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
-import 'package:orchid/util/test_app.dart';
+import 'package:orchid/orchid/test_app.dart';
 import 'orchid_logo.dart';
 
 void main() {
@@ -8,14 +7,14 @@ void main() {
 }
 
 class _Test extends StatefulWidget {
-  const _Test({Key key}) : super(key: key);
+  const _Test({Key? key}) : super(key: key);
 
   @override
   __TestState createState() => __TestState();
 }
 
 class __TestState extends State<_Test> with TickerProviderStateMixin {
-  NeonOrchidLogoController _controller;
+  late NeonOrchidLogoController _controller;
 
   @override
   void initState() {
@@ -33,7 +32,7 @@ class __TestState extends State<_Test> with TickerProviderStateMixin {
             alignment: Alignment.topCenter,
             child: AnimatedBuilder(
                 animation: _controller.listenable,
-                builder: (BuildContext context, Widget child) {
+                builder: (BuildContext context, Widget? _) {
                   return NeonOrchidLogo(
                     light: _controller.value,
                     offset: _controller.offset,

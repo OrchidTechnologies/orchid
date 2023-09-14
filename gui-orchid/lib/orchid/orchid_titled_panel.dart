@@ -1,4 +1,4 @@
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 
 class OrchidTitledPanel extends StatelessWidget {

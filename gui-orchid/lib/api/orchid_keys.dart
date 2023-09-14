@@ -1,6 +1,5 @@
-// @dart=2.12
-import 'package:orchid/orchid.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/api/orchid_log.dart';
+import 'package:orchid/api/preferences/user_preferences_keys.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 
 class StoredEthereumKey {
@@ -164,7 +163,7 @@ class StoredEthereumKeyRef extends EthereumKeyRef {
 
   @override
   StoredEthereumKey get() {
-    var keys = UserPreferences().keys.get();
+    var keys = UserPreferencesKeys().keys.get() ?? [];
     try {
       return getFrom(keys);
     } catch (err) {

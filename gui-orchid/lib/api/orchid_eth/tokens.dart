@@ -1,17 +1,15 @@
-// @dart=2.9
 // ignore_for_file: non_constant_identifier_names
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
 import 'package:orchid/api/pricing/coingecko_pricing.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/api/pricing/uniswap_pricing.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/api/pricing/usd.dart';
 import 'chains.dart';
 import 'token_type.dart';
+export 'tokens_legacy.dart';
 
 class Tokens {
-  // Indicates that we do not have a source for pricing information for the token.
-  static const ExchangeRateSource NoExchangeRateSource = null;
 
   static const ETHPriceSource = const UniswapETHPriceSource(
     // USDC / ETH 0.3%
@@ -157,7 +155,7 @@ class Tokens {
     // reference token that is externally priced or assumed. For now we will fix USDC at $1.
     exchangeRateSource: FixedPriceToken(USD(1.00)),
     chainId: Chains.ETH_CHAINID,
-    iconPath: null,
+    iconPath: OrchidAssetSvgToken.unknown_token_path,
     decimals: USDC_DECIMALS,
   );
 
@@ -179,15 +177,3 @@ class Tokens {
   ];
 }
 
-class FixedPriceToken extends ExchangeRateSource {
-  final USD usdPrice;
-
-  static const zero = const FixedPriceToken(USD.zero);
-
-  const FixedPriceToken(this.usdPrice);
-
-  @override
-  Future<double> tokenToUsdRate(TokenType tokenType) async {
-    return usdPrice.value;
-  }
-}

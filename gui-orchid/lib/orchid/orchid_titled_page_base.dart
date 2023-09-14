@@ -1,5 +1,5 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_text.dart';
@@ -11,19 +11,20 @@ class TitledPage extends StatelessWidget {
   final Widget child;
   final bool lightTheme;
   final List<Widget> actions;
-  final VoidCallback backAction;
+  final VoidCallback? backAction;
   final bool cancellable;
-  final BoxDecoration decoration;
+
+  // final BoxDecoration? decoration;
   final bool constrainWidth;
 
   TitledPage({
     this.title = '',
-    @required this.child,
+    required this.child,
     this.lightTheme = false,
     this.actions = const [],
     this.backAction,
     this.cancellable = false,
-    this.decoration,
+    // this.decoration,
     this.constrainWidth = true,
   });
 
@@ -35,17 +36,19 @@ class TitledPage extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-            leading: _buildBackButton(context),
-            actions: actions,
-            title: Text(this.title,
-                textAlign: TextAlign.center,
-                style: OrchidText.title
-                    .copyWith(color: _foregroundColor(), height: 2.0)),
-            titleSpacing: 0,
-            backgroundColor: Colors.transparent,
-            brightness: Brightness.dark,
-            // status bar
-            elevation: 0.0),
+          leading: _buildBackButton(context),
+          actions: actions,
+          title: Text(this.title,
+              textAlign: TextAlign.center,
+              style: OrchidText.title
+                  .copyWith(color: _foregroundColor(), height: 2.0)),
+          titleSpacing: 0,
+          backgroundColor: Colors.transparent,
+          // brightness: Brightness.dark,
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
+          // status bar
+          elevation: 0.0,
+        ),
         body: constrainWidth ? AppSize.constrainMaxSizeDefaults(child) : child,
 
         // Note: Setting this to false is a workaround for:
@@ -73,7 +76,7 @@ class TitledPage extends StatelessWidget {
 
   void _performBackAction(BuildContext context) async {
     if (backAction != null) {
-      backAction();
+      backAction!();
     } else {
       Navigator.pop(context);
     }

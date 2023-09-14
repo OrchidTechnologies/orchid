@@ -1,9 +1,8 @@
-// @dart=2.9
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
-import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
+import 'package:orchid/vpn/purchase/orchid_pac_transaction.dart';
 
 import 'expect.dart';
 
@@ -30,7 +29,7 @@ void main() {
     test('legacy', () {
       // legacy tx
       var legacyJson =
-          '{"productId":"1234","transactionId":null,"state":"PacTransactionStateV0.Pending","receipt":null,"date":"2021-03-01T22:56:14.085235","retries":"0","serverResponse":null}';
+          '{"productId":"1234","transactionId":null,"state":"Pending","receipt":null,"date":"2021-03-01T22:56:14.085235","retries":"0","serverResponse":null}';
       PacTransaction tx1 = PacTransaction.fromJson(jsonDecode(legacyJson));
       expectTrue(tx1.type == PacTransactionType.None);
       expect(tx1.date, isNotNull);
@@ -38,7 +37,7 @@ void main() {
 
     test('add balance error', () {
       var txIn = PacAddBalanceTransaction.error("error string");
-      PacAddBalanceTransaction tx = roundTrip(txIn);
+      var tx = roundTrip(txIn) as PacAddBalanceTransaction;
       expectTrue(tx is PacAddBalanceTransaction);
       expect(tx.state, PacTransactionState.Error);
       expect(tx.serverResponse, "error string");
@@ -53,7 +52,7 @@ void main() {
         escrow: BigInt.from(123),
       );
 
-      sellerTx = roundTrip(sellerTx);
+      sellerTx = roundTrip(sellerTx) as PacSubmitSellerTransaction;
       expect(sellerTx.state, PacTransactionState.Pending);
       expectTrue(sellerTx is PacSubmitSellerTransaction);
       expectTrue(
@@ -67,7 +66,7 @@ void main() {
       var tx =
           PacAddBalanceTransaction.pending(signer: signer, productId: "1234");
 
-      tx = roundTrip(tx);
+      tx = roundTrip(tx) as PacAddBalanceTransaction;
       expectTrue(tx is PacAddBalanceTransaction);
       expect(tx.productId, "1234");
       expect(tx.state, PacTransactionState.Pending);
@@ -76,7 +75,7 @@ void main() {
 
       tx.retries = 3;
       tx.receipt = "receipt";
-      tx = roundTrip(tx);
+      tx = roundTrip(tx) as PacAddBalanceTransaction;
       expect(tx.retries, 3);
       expect(tx.receipt, "receipt");
     });
@@ -93,7 +92,7 @@ void main() {
       var receipt = 'receipt:' + ('x' * 7000) + 'y';
       tx.addReceipt(receipt, ReceiptType.ios);
 
-      tx = roundTrip(tx);
+      tx = roundTrip(tx) as PacPurchaseTransaction;
 
       expect(tx.addBalance, equals(addBalance));
       expect(tx.submitRaw, equals(submitRaw));
@@ -114,12 +113,12 @@ void main() {
 
     test('raw eth tx round trip', () {
       var txOut = EthereumTransaction.fromJson(jsonDecode(jsonEncode(ethTx)));
-      expectTrue(ethTx.from == txOut.from);
-      expectTrue(ethTx.to == txOut.to);
-      expectTrue(ethTx.gas == txOut.gas);
-      expectTrue(ethTx.gasPrice == txOut.gasPrice);
-      expectTrue(ethTx.value == txOut.value);
-      expectTrue(ethTx.chainId == txOut.chainId);
+      expectTrue(ethTx.params.from == txOut.params.from);
+      expectTrue(ethTx.params.to == txOut.params.to);
+      expectTrue(ethTx.params.gas == txOut.params.gas);
+      expectTrue(ethTx.params.gasPrice == txOut.params.gasPrice);
+      expectTrue(ethTx.params.value == txOut.params.value);
+      expectTrue(ethTx.params.chainId == txOut.params.chainId);
       expectTrue(ethTx.data == txOut.data);
       expect(txOut.toJson().toString(), isNot(contains("nonce")));
     });

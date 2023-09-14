@@ -1,10 +1,8 @@
-// @dart=2.9
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/common/app_text.dart';
 import 'package:orchid/common/app_buttons.dart';
@@ -34,7 +32,7 @@ class _LoggingPageState extends State<LoggingPage> {
   }
 
   OrchidLogAPI get logger {
-    return OrchidAPI().logger();
+    return OrchidLogAPI.defaultLogAPI;
   }
 
   @override
@@ -229,18 +227,17 @@ class _LoggingPageState extends State<LoggingPage> {
             _updateLog(filtersChanged: true);
           },
           children: [
-            _buildFilterButton(s.errors, _filterErrors, null),
+            _buildFilterButton(s.errors, _filterErrors),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildFilterButton(s.lastHour, _filterLastHour, null),
+              child: _buildFilterButton(s.lastHour, _filterLastHour),
             ),
-            _buildFilterButton(s.rpc, _filterRPC, null),
+            _buildFilterButton(s.rpc, _filterRPC),
           ]),
     );
   }
 
-  Container _buildFilterButton(
-      String text, int index, VoidCallback onSelected) {
+  Container _buildFilterButton(String text, int index) {
     return Container(
         decoration: BoxDecoration(
             color:
@@ -332,9 +329,6 @@ class _LoggingPageState extends State<LoggingPage> {
         });
   }
 
-  S get s {
-    return S.of(context);
-  }
 }
 
 // filters
@@ -381,7 +375,6 @@ List<LogLine> _filterLog(_FilterLogArgs args) {
             (!hour || isHour(line)))
         ? line
         : null;
-  });
-  filtered = filtered.where((line) => line != null);
+  }).whereType<LogLine>();
   return filtered.toList();
 }

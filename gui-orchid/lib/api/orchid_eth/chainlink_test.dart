@@ -1,8 +1,7 @@
-// @dart=2.12
 import 'dart:math';
 import 'chainlink.dart';
 import 'chains.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/util/series_binary_search.dart';
 
 class ChainlinkTest {

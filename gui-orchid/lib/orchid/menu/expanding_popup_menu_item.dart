@@ -1,4 +1,4 @@
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 
 class ExpandingPopupMenuItem extends StatelessWidget {
   final bool expanded;

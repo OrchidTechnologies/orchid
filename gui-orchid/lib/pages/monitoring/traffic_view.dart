@@ -1,13 +1,11 @@
-// @dart=2.9
 import 'dart:async';
 import 'dart:math';
-import 'package:orchid/api/monitoring/restart_manager.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/vpn/monitoring/restart_manager.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:orchid/api/monitoring/analysis_db.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/vpn/monitoring/analysis_db.dart';
+import 'package:orchid/vpn/preferences/user_preferences_vpn.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid/orchid_scroll.dart';
 import 'package:collection/collection.dart';
@@ -18,27 +16,27 @@ import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/localization.dart';
 
 import 'clear_traffic_action_button.dart';
 import 'traffic_empty_view.dart';
 import 'traffic_view_detail.dart';
 
 class TrafficView extends StatefulWidget {
-  ClearTrafficActionButtonController clearTrafficController;
+  final ClearTrafficActionButtonController clearTrafficController;
 
   TrafficView({
-    Key key,
-    ClearTrafficActionButtonController clearTrafficController,
-    WrappedSwitchController monitoringEnabledController,
-  }) : super(key: key) {
-    this.clearTrafficController =
-        clearTrafficController ?? ClearTrafficActionButtonController();
-  }
+    Key? key,
+    ClearTrafficActionButtonController? clearTrafficController,
+    WrappedSwitchController? monitoringEnabledController,
+  })  : this.clearTrafficController =
+            clearTrafficController ?? ClearTrafficActionButtonController(),
+        super(key: key);
 
   @override
   _TrafficViewState createState() => _TrafficViewState();
 
-  static Color colorForProtocol(String protocol) {
+  static Color colorForProtocol(String? protocol) {
     final yellow = Color(0xffFFF282);
     final teal = Color(0xff6EFAC8);
     final purpleDark = Color(0xffB8B3DD);
@@ -65,17 +63,17 @@ class _TrafficViewState extends State<TrafficView>
   // Query state
   var _searchTextController = TextEditingController();
   String _query = "";
-  String _lastQuery;
-  List<FlowEntry> _pendingResultList;
-  List<FlowEntry> _resultList;
-  Timer _pollTimer;
+  String? _lastQuery;
+  List<FlowEntry>? _pendingResultList;
+  List<FlowEntry>? _resultList;
+  Timer? _pollTimer;
 
   // Scrolling state
   final int _scrollToTopDurationMs = 700;
   ScrollPhysics _scrollPhysics = OrchidScrollPhysics();
   double _renderedRowHeight = 54;
   bool _updatesPaused = false;
-  DateTime _lastScroll;
+  DateTime? _lastScroll;
   ValueNotifier<bool> _newContent = ValueNotifier(false);
 
   // TODO: We used to be able to use PrimaryScrollController.of(context)
@@ -118,7 +116,7 @@ class _TrafficViewState extends State<TrafficView>
   void initStateAsync() async {
     // monitoringEnabledController.onChange = _monitoringSwitchChanged;
     // monitoringEnabledController.controlledState.value =
-    await UserPreferences().monitoringEnabled.get();
+    UserPreferencesVPN().monitoringEnabled.get();
   }
 
   @override
@@ -126,7 +124,7 @@ class _TrafficViewState extends State<TrafficView>
     return TitledPage(
       title: s.traffic,
       constrainWidth: false,
-      decoration: BoxDecoration(),
+      // decoration: BoxDecoration(),
       actions: [
         ClearTrafficActionButton(controller: widget.clearTrafficController),
       ],
@@ -196,12 +194,12 @@ class _TrafficViewState extends State<TrafficView>
         builder: (context, snapshot) {
           var restarting = snapshot.data ?? false;
           return StreamBuilder<bool>(
-              stream: UserPreferences().monitoringEnabled.stream(),
+              stream: UserPreferencesVPN().monitoringEnabled.stream(),
               builder: (context, snapshot) {
                 if (snapshot.data == null) {
                   return Container();
                 }
-                var currentMonitoringEnabled = snapshot.data;
+                bool currentMonitoringEnabled = snapshot.data!;
                 // Toggle the value
                 var desiredMonitoringEnabled = !currentMonitoringEnabled;
                 var text = restarting
@@ -287,14 +285,15 @@ class _TrafficViewState extends State<TrafficView>
           physics: _scrollPhysics,
           itemCount: _resultList?.length ?? 0,
           itemBuilder: (BuildContext context, int index) {
-            FlowEntry flow = _resultList[index];
+            // should not be access if result list is null
+            FlowEntry flow = _resultList![index];
             return _buildListTile(flow);
           }),
     );
   }
 
   Widget _buildListTile(FlowEntry flow) {
-    var hostname = (flow.hostname == null || flow.hostname.isEmpty)
+    var hostname = (flow.hostname == null || flow.hostname!.isEmpty)
         ? flow.dst_addr
         : flow.hostname;
     var date =
@@ -424,10 +423,10 @@ class _TrafficViewState extends State<TrafficView>
 
     // If the update is identical do the current data ignore it.
     if (_resultList != null) {
-      var ids1 = _pendingResultList.map((row) {
+      var ids1 = _pendingResultList!.map((row) {
         return row.rowId;
       }).toList();
-      var ids2 = _resultList.map((row) {
+      var ids2 = _resultList!.map((row) {
         return row.rowId;
       }).toList();
       if (ListEquality().equals(ids1, ids2)) {
@@ -437,7 +436,7 @@ class _TrafficViewState extends State<TrafficView>
 
     // If no current results (e.g. invalidated by search) or the list has
     // shrunk through some other means just do a plain update.
-    if (_resultList == null || _pendingResultList.length < _resultList.length) {
+    if (_resultList == null || _pendingResultList!.length < _resultList!.length) {
       if (mounted) {
         setState(() {
           _resultList = _pendingResultList;
@@ -460,7 +459,7 @@ class _TrafficViewState extends State<TrafficView>
     // Apply an animated update
     setState(() {
       // Update the data
-      int delta = max(0, _pendingResultList.length - _resultList.length);
+      int delta = max(0, _pendingResultList!.length - _resultList!.length);
       _resultList = _pendingResultList ?? _resultList;
       _pendingResultList = null;
 
@@ -471,7 +470,7 @@ class _TrafficViewState extends State<TrafficView>
       var scrollController = _scrollController;
 
       // Maintain position
-      if (scrollController != null && scrollController.hasClients) {
+      if (scrollController.hasClients) {
         scrollController
             .jumpTo(scrollController.offset + delta * _renderedRowHeight);
 
@@ -505,7 +504,7 @@ class _TrafficViewState extends State<TrafficView>
   /// Return true if there is no data to be displayed and the empty state view should
   /// be shown.  Note that this does not include empty query results.
   bool _showEmptyView() {
-    return _resultList != null && _resultList.isEmpty && _query.length < 1;
+    return _resultList != null && _resultList!.isEmpty && _query.length < 1;
   }
 
   bool _uiInitialized() {
@@ -522,20 +521,15 @@ class _TrafficViewState extends State<TrafficView>
   void dispose() {
     super.dispose();
     ScreenOrientation.reset();
-    if (_pollTimer != null) {
-      _pollTimer.cancel();
-    }
-  }
-
-  S get s {
-    return S.of(context);
+    _pollTimer?.cancel();
   }
 
   // If the monitoring switch change would require a restart then confirm.
   void _confirmMonitoringSwitchChange(bool enabled) async {
     var enablingText =
         s.changingMonitoringStatusRequiresRestartingTheVpnWhichMayBriefly;
-    if (await UserPreferences().routingEnabled.get()) {
+    // cannot be null
+    if (UserPreferencesVPN().routingEnabled.get()!) {
       AppDialogs.showConfirmationDialog(
           context: context,
           title: s.confirmRestart,
@@ -550,7 +544,7 @@ class _TrafficViewState extends State<TrafficView>
 
   void _monitoringSwitchChanged(bool enabled) async {
     log('vpn: traffic monitoring enabled: $enabled');
-    UserPreferences().monitoringEnabled.set(enabled);
+    UserPreferencesVPN().monitoringEnabled.set(enabled);
     // monitoringEnabledController.controlledState.value = enabled;
   }
 }

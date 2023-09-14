@@ -1,5 +1,5 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:flutter/services.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
@@ -49,7 +49,9 @@ class _OrchidAppNoTabsState extends State<OrchidAppNoTabs> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: IconThemeData(color: Colors.white),
-              brightness: Brightness.dark,
+              // brightness: Brightness.dark,
+              systemOverlayStyle:
+                  SystemUiOverlayStyle(statusBarBrightness: Brightness.dark),
               // status bar
               actions: [_buildTrafficButton()],
             )),

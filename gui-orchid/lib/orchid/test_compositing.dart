@@ -1,9 +1,8 @@
-// @dart=2.9
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/util/on_off.dart';
-import 'package:orchid/util/test_app.dart';
+import 'package:orchid/orchid/test_app.dart';
 import 'orchid_logo.dart';
 import 'package:flutter/rendering.dart';
 
@@ -12,7 +11,7 @@ void main() {
 }
 
 class _Test extends StatelessWidget {
-  const _Test({Key key}) : super(key: key);
+  const _Test({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +37,7 @@ class _Test extends StatelessWidget {
 
 class _TestPanel extends StatelessWidget {
   const _TestPanel({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -88,7 +87,7 @@ class _TestPanel extends StatelessWidget {
     );
   }
 
-  Center _buildChild({bool on}) {
+  Center _buildChild({required bool on}) {
     return Center(
         child: Text(
       "Test Panel",
@@ -102,10 +101,10 @@ class _TestBlendMask extends SingleChildRenderObjectWidget {
   final bool enabled;
 
   _TestBlendMask({
-    @required BlendMode blendMode,
+    required BlendMode blendMode,
     this.enabled = true,
-    Key key,
-    Widget child,
+    Key? key,
+    Widget? child,
   })  : _blendMode = blendMode,
         super(key: key, child: child);
 

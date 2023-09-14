@@ -1,7 +1,6 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:flutter/services.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_import.dart';
+import 'package:orchid/vpn/orchid_vpn_config/orchid_vpn_config_import.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/common/qrcode_scan.dart';
 import 'package:orchid/common/app_buttons.dart';
@@ -23,23 +22,23 @@ typedef ImportResult = void Function(String config);
 class ImportExportConfig extends StatefulWidget {
   final ImportExportMode mode;
   final String title;
-  final OrchidConfigValidator validator;
-  final ImportResult onImport;
-  final String config;
+  final OrchidConfigValidator? validator;
+  final ImportResult? onImport;
+  final String? config;
 
   ImportExportConfig(
-      {Key key,
-      @required this.mode,
-      @required this.title,
+      {Key? key,
+      required this.mode,
+      required this.title,
       this.validator,
       this.config,
       this.onImport})
       : super(key: key);
 
   ImportExportConfig.import(
-      {@required String title,
-      OrchidConfigValidator validator,
-      ImportResult onImport})
+      {required String title,
+      required OrchidConfigValidator validator,
+      required ImportResult onImport})
       : this(
             title: title,
             mode: ImportExportMode.Import,
@@ -47,8 +46,8 @@ class ImportExportConfig extends StatefulWidget {
             onImport: onImport);
 
   ImportExportConfig.export({
-    @required String title,
-    @required String config,
+    required String title,
+    required String config,
   }) : this(
           title: title,
           mode: ImportExportMode.Export,
@@ -60,7 +59,7 @@ class ImportExportConfig extends StatefulWidget {
 }
 
 class _ImportExportConfigState extends State<ImportExportConfig> {
-  String _configFileTextLastSaved;
+  String? _configFileTextLastSaved;
   final _configFileTextController = TextEditingController();
   bool _showQRScanner = false;
 
@@ -72,7 +71,7 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
     super.initState();
 
     setState(() {
-      _configFileTextController.text = widget.config;
+      _configFileTextController.text = widget.config ?? '';
     });
 
     // Import mode init
@@ -80,7 +79,7 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
       _configFileTextController.addListener(() {
         var text = _configFileTextController.text;
         var dirty = text != _configFileTextLastSaved;
-        var valid = widget.validator(text);
+        var valid = widget.validator != null ? widget.validator!(text) : true;
         _actionEnabled.add(valid && dirty);
       });
       setState(() {
@@ -143,8 +142,8 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
                             builder: (context, snapshot) {
                               return RoundedRectButton(
                                   text: widget.mode == ImportExportMode.Import
-                                      ? s.import.toUpperCase()
-                                      : s.copy.toUpperCase(),
+                                      ? context.s.import.toUpperCase()
+                                      : context.s.copy.toUpperCase(),
                                   textColor: Colors.black,
                                   onPressed:
                                       _actionEnabled.value ? _doAction : null);
@@ -184,11 +183,13 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
   void _importText() {
     _actionEnabled.add(false);
     var newConfig = _configFileTextController.text;
-    widget.onImport(newConfig);
+    if (widget.onImport != null) {
+      widget.onImport!(newConfig);
+    }
   }
 
   void _copyToClipboard() {
-    Clipboard.setData(ClipboardData(text: widget.config));
+    Clipboard.setData(ClipboardData(text: widget.config ?? ''));
   }
 
   void _doQRCodeAction() {
@@ -211,24 +212,23 @@ class _ImportExportConfigState extends State<ImportExportConfig> {
   }
 
   void _exportQR() {
+    if (widget.config == null) {
+      return;
+    }
     AppDialogs.showAppDialog(
         context: context,
-        title: s.myOrchidConfig + ':',
+        title: context.s.myOrchidConfig + ':',
         body: Container(
           width: 250,
           height: 250,
           child: Center(
             child: QrImage(
-              data: _configFileTextController.text = widget.config,
+              data: _configFileTextController.text = widget.config ?? '',
               backgroundColor: Colors.white,
               version: QrVersions.auto,
               size: 250.0,
             ),
           ),
         ));
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

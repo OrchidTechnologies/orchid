@@ -1,12 +1,12 @@
-// @dart=2.9
 import 'dart:async';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/orchid_types.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/vpn/model/circuit.dart';
+import 'package:orchid/vpn/model/orchid_hop.dart';
+import 'package:orchid/vpn/orchid_api.dart';
+import 'package:orchid/api/orchid_log.dart';
+import 'package:orchid/vpn/preferences/user_preferences_vpn.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
@@ -17,14 +17,13 @@ import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/account/account_detail_store.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
-import 'package:orchid/pages/circuit/model/openvpn_hop.dart';
-import 'package:orchid/pages/circuit/model/wireguard_hop.dart';
+import 'package:orchid/vpn/model/openvpn_hop.dart';
+import 'package:orchid/vpn/model/wireguard_hop.dart';
 import 'circuit_utils.dart';
 import 'hop_editor.dart';
-import 'model/circuit.dart';
-import 'model/circuit_hop.dart';
-import 'model/orchid_hop.dart';
+import 'package:orchid/vpn/model/circuit_hop.dart';
 import 'package:orchid/util/collections.dart';
+import 'package:orchid/util/localization.dart';
 
 /// The multi-hop circuit builder page.
 class CircuitPage extends StatefulWidget {
@@ -33,7 +32,7 @@ class CircuitPage extends StatefulWidget {
   // Note: the add flow.
   static var iOSContactsStyleAddHopBehavior = false;
 
-  CircuitPage({Key key}) : super(key: key);
+  CircuitPage({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -44,11 +43,11 @@ class CircuitPage extends StatefulWidget {
 class CircuitPageState extends State<CircuitPage>
     with TickerProviderStateMixin {
   List<StreamSubscription> _rxSubs = [];
-  List<UniqueHop> _hops;
+  List<UniqueHop> _hops = [];
 
   bool _dialogInProgress = false; // ?
 
-  AccountDetailStore _accountDetailStore;
+  late AccountDetailStore _accountDetailStore;
 
   @override
   void initState() {
@@ -67,7 +66,7 @@ class CircuitPageState extends State<CircuitPage>
   }
 
   void _updateCircuit() async {
-    var circuit = await UserPreferences().circuit.get();
+    var circuit = UserPreferencesVPN().circuit.get()!; // never null
     if (mounted) {
       setState(() {
         var keyBase = DateTime.now().millisecondsSinceEpoch;
@@ -87,7 +86,7 @@ class CircuitPageState extends State<CircuitPage>
   Widget build(BuildContext context) {
     return TitledPage(
       title: s.circuitBuilder,
-      decoration: BoxDecoration(),
+      // decoration: BoxDecoration(),
       child: _buildBody(),
     );
   }
@@ -107,7 +106,7 @@ class CircuitPageState extends State<CircuitPage>
 
   Widget _buildHopList() {
     // Wrap the children for the reorderable list view
-    var children = (_hops ?? []).mapIndexed((uniqueHop, i) {
+    var children = _hops.mapIndexed((uniqueHop, i) {
       return ReorderableDelayedDragStartListener(
         key: Key(uniqueHop.key.toString()),
         index: i,
@@ -236,7 +235,7 @@ class CircuitPageState extends State<CircuitPage>
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              S.of(context).delete,
+              S.of(context)!.delete,
               style: TextStyle(color: Colors.white),
             ),
           )),
@@ -287,13 +286,10 @@ class CircuitPageState extends State<CircuitPage>
           accountDetail: accountDetail,
           minHeight: true,
         );
-        break;
       case HopProtocol.OpenVPN:
       case HopProtocol.WireGuard:
         return _buildOtherHopTile(uniqueHop);
-        break;
     }
-    throw Exception();
   }
 
   // Note: We should integrate this into AccountCard
@@ -359,7 +355,7 @@ class CircuitPageState extends State<CircuitPage>
 
   void _saveCircuit() async {
     var circuit = Circuit(_hops.map((uniqueHop) => uniqueHop.hop).toList());
-    CircuitUtils.saveCircuit(circuit);
+    UserPreferencesVPN().saveCircuit(circuit);
     _showConfigurationChangedDialog();
   }
 
@@ -385,15 +381,18 @@ class CircuitPageState extends State<CircuitPage>
     // TODO: avoid saving if the hop was not edited.
     // Save the hop if it was edited.
     var index = _hops.indexOf(uniqueHop);
+    if (editableHop.value == null) {
+      throw Exception("EditableHop.value should not be null");
+    }
     setState(() {
       _hops.removeAt(index);
-      _hops.insert(index, editableHop.value);
+      _hops.insert(index, editableHop.value!);
     });
     _saveCircuit();
   }
 
   // Callback for swipe to delete
-  Future<bool> _confirmDeleteHop(dismissDirection) async {
+  Future<bool?> _confirmDeleteHop(dismissDirection) async {
     var result = await AppDialogs.showConfirmationDialog(
       context: context,
       title: s.confirmDelete,
@@ -405,7 +404,7 @@ class CircuitPageState extends State<CircuitPage>
   // Callback for swipe to delete
   void _deleteHop(UniqueHop uniqueHop) async {
     var index = _hops.indexOf(uniqueHop);
-    var removedHop = _hops.removeAt(index);
+    _hops.removeAt(index);
     setState(() {});
     _saveCircuit();
   }
@@ -437,7 +436,6 @@ class CircuitPageState extends State<CircuitPage>
       case OrchidVPNRoutingState.OrchidConnected:
         return true;
     }
-    throw Exception();
   }
 
   /// Called upon a change to Orchid connection state
@@ -453,17 +451,13 @@ class CircuitPageState extends State<CircuitPage>
   ///
 
   bool _hasHops() {
-    return _hops != null && _hops.length > 0;
+    return _hops.length > 0;
   }
 
   void _accountDetailChanged() {
     if (mounted) {
       setState(() {}); // Trigger a UI refresh
     }
-  }
-
-  S get s {
-    return S.of(context);
   }
 
   @override

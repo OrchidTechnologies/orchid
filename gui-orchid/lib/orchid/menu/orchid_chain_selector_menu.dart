@@ -1,5 +1,4 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/orchid/menu/orchid_selector_menu.dart';
 
@@ -7,7 +6,7 @@ typedef ChainSelectorCallback = void Function(Chain chain);
 
 class OrchidChainSelectorMenu extends StatelessWidget {
   final ChainSelectorCallback onSelection;
-  final Chain selected;
+  final Chain? selected;
   final bool enabled;
 
   /// If true the button will be an icon button
@@ -19,12 +18,12 @@ class OrchidChainSelectorMenu extends StatelessWidget {
       Chains.map.values.where((e) => e != Chains.GanacheTest).toList();
 
   OrchidChainSelectorMenu({
-    Key key,
+    Key? key,
     this.selected,
-    @required this.onSelection,
+    required this.onSelection,
     this.iconOnly = false,
     this.enabled = true,
-    this.width,
+    this.width = OrchidSelectorMenu.DEFAULT_WIDTH
   }) : super(key: key);
 
   @override
@@ -44,7 +43,7 @@ class OrchidChainSelectorMenu extends StatelessWidget {
       enabled: enabled,
       width: width,
       // support testing
-      highlightSelected: selected?.isKnown,
+      highlightSelected: selected?.isKnown ?? true,
     );
   }
 }

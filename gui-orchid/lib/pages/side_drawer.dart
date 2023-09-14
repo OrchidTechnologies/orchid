@@ -1,8 +1,7 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/vpn/orchid_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_colors.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
@@ -20,7 +19,7 @@ class SideDrawer extends StatefulWidget {
 }
 
 class _SideDrawerState extends State<SideDrawer> {
-  String _version;
+  String? _version;
 
   @override
   void initState() {
@@ -160,25 +159,25 @@ class _SideDrawerState extends State<SideDrawer> {
   }
 
   S get s {
-    return S.of(context);
+    return S.of(context)!;
   }
 }
 
 class SideDrawerTile extends StatelessWidget {
   final String title;
-  final String imageName;
-  final String svgName;
-  final IconData icon;
+  final String? imageName;
+  final String? svgName;
+  final IconData? icon;
   final VoidCallback onPressed;
   final bool showDetail;
   final double hoffset;
 
   SideDrawerTile({
-    @required this.title,
+    required this.title,
     this.imageName,
     this.svgName,
     this.icon,
-    @required this.onPressed,
+    required this.onPressed,
     this.showDetail = false,
     this.hoffset = 0,
   }) : super() {
@@ -188,7 +187,7 @@ class SideDrawerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget leading = svgName != null
-        ? SizedBox(width: 20, height: 20, child: SvgPicture.asset(svgName))
+        ? SizedBox(width: 20, height: 20, child: SvgPicture.asset(svgName!))
         : (imageName != null
             ? Image(
                 height: 20,
@@ -196,7 +195,7 @@ class SideDrawerTile extends StatelessWidget {
                 fit: BoxFit.contain,
                 alignment: Alignment.center,
                 color: Colors.white,
-                image: AssetImage(imageName))
+                image: AssetImage(imageName!))
             : Icon(icon, color: Colors.white, size: 24));
     return Padding(
       padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),

@@ -1,5 +1,4 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_docs.dart';
 import 'package:orchid/common/plain_text_box.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
@@ -38,9 +37,5 @@ class _OpenSourcePageState extends State<OpenSourcePage> {
     return SafeArea(
       child: PlainTextBox(text: _licenseText).top(24).padx(16),
     );
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

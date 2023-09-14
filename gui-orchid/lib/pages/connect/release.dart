@@ -1,12 +1,12 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
-import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/vpn/preferences/release_version.dart';
+import 'package:orchid/vpn/orchid_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:orchid/api/preferences/observable_preference.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/api/purchase/orchid_purchase.dart';
+import 'package:orchid/vpn/purchase/orchid_purchase.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/util/localization.dart';
 
 class Release {
   /// This is a manually incremented release notes version.
@@ -21,16 +21,18 @@ class Release {
     if (version.contains(' ')) {
       version = version.split(' ')[0];
     }
-    return S.of(context).whatsNewInOrchid + ' $version?';
+    return context.s.whatsNewInOrchid + ' $version?';
   }
 
   static Future<Widget> messagesSince(
       BuildContext context, ReleaseVersion lastVersion) async {
     // Concatenate messages starting at the version after last viewed
     List<Widget> children = [];
-    for (var i = lastVersion.version + 1; i <= current.version; i++) {
+    for (var i = (lastVersion.version ?? 0) + 1;
+        i <= (current.version ?? 0);
+        i++) {
       children.add(await message(context, i));
-      if (i < current.version) {
+      if (i < (current.version ?? 0)) {
         children.add(Padding(
           padding: const EdgeInsets.symmetric(vertical: 16.0),
           child: Divider(
@@ -55,10 +57,8 @@ class Release {
     switch (version) {
       case 1:
         return version1(context);
-        break;
       case 2:
         return version2(context);
-        break;
       default:
         return Container();
     }
@@ -73,22 +73,23 @@ class Release {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(s.newCircuitBuilder, style: headingStyle),
+          Text(context.s.newCircuitBuilder, style: headingStyle),
           pady(8),
           Text(
-            s.youCanNowPayForAMultihopOrchidCircuitWith,
+            context.s.youCanNowPayForAMultihopOrchidCircuitWith,
             style: OrchidText.body1,
           ),
           pady(8),
           Text(
-            s.manageYourConnectionFromTheCircuitBuilderInsteadOfThe,
+            context.s.manageYourConnectionFromTheCircuitBuilderInsteadOfThe,
             style: OrchidText.body1,
           ),
           pady(16),
-          Text(s.quickStartFor1(dollarPac.localDisplayPrice), style: headingStyle),
+          Text(context.s.quickStartFor1(dollarPac.localDisplayPrice),
+              style: headingStyle),
           pady(8),
           Text(
-            s.weAddedAMethodToPurchaseAnOrchidAccountAnd,
+            context.s.weAddedAMethodToPurchaseAnOrchidAccountAnd,
             style: OrchidText.body1,
           ),
         ]);
@@ -103,27 +104,27 @@ class Release {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (OrchidPlatform.isApple) ...[
-          Text(s.orchidIsOnXdai, style: headingStyle),
+          Text(context.s.orchidIsOnXdai, style: headingStyle),
           pady(8),
           Text(
-            s.youCanNowPurchaseOrchidCreditsOnXdaiStartUsing,
+            context.s.youCanNowPurchaseOrchidCreditsOnXdaiStartUsing,
             style: OrchidText.body1,
           ),
           pady(16),
-          Text(s.xdaiAccountsForPastPurchases, style: headingStyle),
+          Text(context.s.xdaiAccountsForPastPurchases, style: headingStyle),
           pady(8),
           Text(
-            s.forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave,
+            context.s.forAnyInappPurchaseMadeBeforeTodayXdaiFundsHave,
             style: OrchidText.body1,
           ),
           pady(16),
         ],
-        Text(s.newInterface, style: headingStyle),
+        Text(context.s.newInterface, style: headingStyle),
         pady(8),
         Text(
-          s.accountsAreNowOrganizedUnderTheOrchidAddressTheyAre +
+          context.s.accountsAreNowOrganizedUnderTheOrchidAddressTheyAre +
               " " +
-              s.seeYourActiveAccountBalanceAndBandwidthCostOnThe,
+              context.s.seeYourActiveAccountBalanceAndBandwidthCostOnThe,
           style: OrchidText.body1,
         ),
       ],

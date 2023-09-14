@@ -53,10 +53,10 @@ packages:
     dependency: "direct main"
     description:
       name: badges
-      sha256: "47992a2c8c56aca714470c11e80260c959d3df1b32574b62c1988ea537c12960"
+      sha256: "6e7f3ec561ec08f47f912cfe349d4a1707afdc8dda271e17b046aa6d42c89e77"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.0"
+    version: "3.1.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -196,10 +196,9 @@ packages:
   dartjsengine:
     dependency: "direct main"
     description:
-      name: dartjsengine
-      sha256: "14d9f7df84d5a13f9a60bb99892d2e0618e479cc730d7ea894cd9d351cefb887"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dartjsengine/dartjsengine-1.0.1"
+      relative: true
+    source: path
     version: "1.0.1"
   dotted_border:
     dependency: "direct main"
@@ -254,14 +253,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_cupertino_localizations:
-    dependency: "direct main"
-    description:
-      name: flutter_cupertino_localizations
-      sha256: a4276b91cc3e75738e2e3b1168331bfa68cc87de2eacce637c50f441f9075f3b
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
   flutter_html:
     dependency: "direct main"
     description:
@@ -400,10 +391,9 @@ packages:
   jsparser:
     dependency: transitive
     description:
-      name: jsparser
-      sha256: d1ad9b2e8c1cc3d519bfc96511d3ac17620339a7f02eb28b112fb1c7c590aecb
-      url: "https://pub.dev"
-    source: hosted
+      path: "dartjsengine/jsparser-2.0.1"
+      relative: true
+    source: path
     version: "2.0.1"
   lists:
     dependency: transitive
@@ -634,10 +624,10 @@ packages:
     dependency: "direct main"
     description:
       name: rxdart
-      sha256: c7cd7ceed33a8fdf7333f29058af577ae71be670132a70b013084b30e0d9e3c3
+      sha256: "0c7c0cedd93788d996e33041ffecda924cc54389199cde4e6a34b440f50044cb"
       url: "https://pub.dev"
     source: hosted
-    version: "0.25.0"
+    version: "0.27.7"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -774,10 +764,9 @@ packages:
   symbol_table:
     dependency: transitive
     description:
-      name: symbol_table
-      sha256: "1cdadaf05edf08660b1c9d5b1662e3d6a5a6a47eeeff0ac0661990c62beec640"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dartjsengine/symbol_table-2.0.0"
+      relative: true
+    source: path
     version: "2.0.0"
   synchronized:
     dependency: transitive

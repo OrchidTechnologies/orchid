@@ -1,10 +1,9 @@
-// @dart=2.9
 import 'dart:async';
 import 'dart:core';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/api/orchid_log.dart';
+import 'package:orchid/api/preferences/user_preferences_keys.dart';
 import 'account_store.dart';
 
 /// A thin wrapper around the user's list of identities that supports searching
@@ -20,21 +19,21 @@ import 'account_store.dart';
 class AccountFinder {
   /// This is not a factory API but if there is a long running account finder
   /// it may be stashed here to allow adjustment to the polling interval.
-  static AccountFinder shared;
+  static late AccountFinder shared;
 
-  Function(Set<Account>) _callback;
-  Duration _duration;
-  Timer _pollTimer;
+  Function(Set<Account>)? _callback;
+  Duration? _duration;
+  Timer? _pollTimer;
 
   bool get _pollOnce => _duration == null;
 
   // Additional keys to scan
-  List<EthereumKeyRef> _addIdentities;
+  List<EthereumKeyRef>? _addIdentities;
 
   /// The polling interval may be updated while running
   AccountFinder setPollingInterval(Duration duration) {
     _duration = duration;
-    if (_pollTimer != null && _pollTimer.isActive) {
+    if (_pollTimer != null && _pollTimer!.isActive) {
       _restart();
     }
     return this;
@@ -48,7 +47,7 @@ class AccountFinder {
   AccountFinder _start() {
     if (_duration != null) {
       _pollTimer?.cancel();
-      _pollTimer = Timer.periodic(_duration, _poll);
+      _pollTimer = Timer.periodic(_duration!, _poll);
     }
     _poll(null); // kick one off immediately
     return this;
@@ -70,10 +69,10 @@ class AccountFinder {
   /// If no polling interval is set this will perform one complete scan and return any results.
   AccountFinder find({
     /// Additional identities to scan which may not be stored
-    List<EthereumKeyRef> addIdentities,
+    List<EthereumKeyRef>? addIdentities,
 
     /// Callback for accounts found
-    Function(Set<Account>) callback,
+    Function(Set<Account>)? callback,
   }) {
     _addIdentities = addIdentities;
     _callback = callback;
@@ -83,7 +82,7 @@ class AccountFinder {
 
   void _poll(_) async {
     log("account finder: polling for accounts");
-    var keys = UserPreferences().keys.get();
+    var keys = UserPreferencesKeys().keys.get() ?? [];
     Set<Account> found = {};
     List<EthereumKeyRef> keyRefs =
         keys.map((e) => e.ref()).cast<EthereumKeyRef>().toList();
@@ -102,7 +101,7 @@ class AccountFinder {
     if (found.isNotEmpty || _pollOnce) {
       log("account finder: found accounts: $found");
       if (_callback != null) {
-        _callback(found);
+        _callback!(found);
       }
       cancel();
     }

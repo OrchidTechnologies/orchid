@@ -1,14 +1,13 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/orchid/orchid_identicon.dart';
 
 class OrchidCircularIdenticon extends StatelessWidget {
-  final EthereumAddress address;
+  final EthereumAddress? address;
   final double size;
 
   // Use the supplied image instead of generating the identicon
-  final Widget image;
+  final Widget? image;
 
   // Applies an opacity to the identicon image revealing the dark circular background
   final double fade;
@@ -16,7 +15,7 @@ class OrchidCircularIdenticon extends StatelessWidget {
   final bool showBorder;
 
   const OrchidCircularIdenticon({
-    Key key,
+    Key? key,
 
     /// Address may be null to indicate inactive state
     this.address,

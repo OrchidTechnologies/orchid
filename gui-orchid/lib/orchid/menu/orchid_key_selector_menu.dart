@@ -1,32 +1,31 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/api/preferences/user_preferences_keys.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'dart:async';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'orchid_selector_menu.dart';
 
-typedef KeySelectorCallback = void Function(KeySelectionItem key);
+typedef KeySelectorCallback = void Function(KeySelectionItem? key);
 
 // TODO: recast as stateless by supplying keys with the pref builder
 class OrchidKeySelectorMenu extends StatefulWidget {
   final KeySelectorCallback onSelection;
-  final KeySelectionItem selected;
+  final KeySelectionItem? selected;
   final bool enabled;
 
   // Fixed options
   static final generateKeyOption =
       KeySelectionMenuOption(displayStringGenerator: (context) {
-    return S.of(context).generateNewKey;
+    return S.of(context)!.generateNewKey;
   });
   static final importKeyOption =
       KeySelectionMenuOption(displayStringGenerator: (context) {
-    return S.of(context).importIdentity;
+    return S.of(context)!.importIdentity;
   });
 
   OrchidKeySelectorMenu(
-      {Key key,
-      @required this.onSelection,
+      {Key? key,
+      required this.onSelection,
       this.selected,
       this.enabled = false})
       : super(key: key);
@@ -36,7 +35,7 @@ class OrchidKeySelectorMenu extends StatefulWidget {
 }
 
 class _OrchidKeySelectorMenuState extends State<OrchidKeySelectorMenu> {
-  List<StoredEthereumKey> _keys; // initially null
+  List<StoredEthereumKey>? _keys; // initially null
   List<StreamSubscription> _subs = [];
 
   @override
@@ -47,7 +46,7 @@ class _OrchidKeySelectorMenuState extends State<OrchidKeySelectorMenu> {
 
   void initStateAsync() async {
     // Monitor changes to keys
-    UserPreferences().keys.stream().listen((keys) {
+    UserPreferencesKeys().keys.stream().listen((keys) {
       setState(() {
         this._keys = keys;
 
@@ -78,7 +77,8 @@ class _OrchidKeySelectorMenuState extends State<OrchidKeySelectorMenu> {
       items: _getItems(),
       titleUnselected: context.s.chooseIdentity,
       titleForItem: (item) => item.title(context),
-      iconForItem: (item) => item.icon(),
+      iconForItem: (item) =>
+          item.icon() ?? Icon(Icons.dnd_forwardslash_rounded),
 
       // pass through
       selected: widget.selected,
@@ -92,7 +92,7 @@ class _OrchidKeySelectorMenuState extends State<OrchidKeySelectorMenu> {
     List<KeySelectionItem> items = [];
     if (_keys != null) {
       items.addAll(
-          _keys.map((key) => KeySelectionItem(keyRef: key.ref())).toList());
+          _keys!.map((key) => KeySelectionItem(keyRef: key.ref())).toList());
     }
     // Add the fixed options
     items.addAll([
@@ -101,8 +101,6 @@ class _OrchidKeySelectorMenuState extends State<OrchidKeySelectorMenu> {
 
     return items;
   }
-
-  S get s => S.of(context);
 
   @override
   void dispose() {
@@ -119,32 +117,34 @@ class KeySelectionMenuOption {
     return displayStringGenerator(context);
   }
 
-  KeySelectionMenuOption({this.displayStringGenerator});
+  KeySelectionMenuOption({required this.displayStringGenerator});
 }
 
 /// An item in the key selection drop down list.
 /// Holds either a key or a key selection option.
 class KeySelectionItem {
-  EthereumKeyRef keyRef;
-  KeySelectionMenuOption option;
+  final EthereumKeyRef? keyRef;
+  final KeySelectionMenuOption? option;
 
-  KeySelectionItem({EthereumKeyRef keyRef, KeySelectionMenuOption option}) {
+  KeySelectionItem({EthereumKeyRef? keyRef, KeySelectionMenuOption? option})
+      : this.keyRef = keyRef,
+        this.option = option {
     assert(keyRef == null || option == null);
-    this.keyRef = keyRef;
-    this.option = option;
   }
 
-  EthereumAddress get address => keyRef.get().address;
+  EthereumAddress? get address => keyRef?.address;
 
   String title(BuildContext context) {
     if (keyRef != null) {
-      return address.toString(prefix: true, elide: false);
+      // not null if keyref is not null
+      return address!.toString(prefix: true, elide: false);
     } else {
-      return option.displayName(context);
+      // one must be non-null
+      return option!.displayName(context);
     }
   }
 
-  Widget icon() {
+  Widget? icon() {
     if (keyRef != null) {
       return OrchidCircularIdenticon(address: address, size: 24);
     } else {

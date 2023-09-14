@@ -1,15 +1,14 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 
 class RoundedRect extends StatelessWidget {
-  final Widget child;
-  final double radius;
-  final Color backgroundColor;
-  final Color borderColor;
-  final double borderWidth;
+  final Widget? child;
+  final double? radius;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final double? borderWidth;
 
   const RoundedRect({
-    Key key,
+    Key? key,
     this.child,
     this.radius,
     this.backgroundColor,

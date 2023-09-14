@@ -1,8 +1,7 @@
-// @dart=2.9
 import 'dart:convert';
 import 'package:orchid/api/orchid_eth/orchid_chain_config.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import '../orchid_log_api.dart';
+import '../orchid_log.dart';
 import 'observable_preference.dart';
 
 class ObservableChainConfigPreference
@@ -26,7 +25,7 @@ class ObservableChainConfigPreference
                 return [];
               }
             },
-            putValue: (key, List<ChainConfig> list) async {
+            putValue: (key, List<ChainConfig>? list) async {
               try {
                 final json = jsonEncode(list);
                 return UserPreferences().putStringForKey(key, json);

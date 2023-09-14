@@ -1,4 +1,3 @@
-// @dart=2.12
 import 'dart:math';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/util/cacheable.dart';
@@ -7,7 +6,7 @@ import 'eth_rpc.dart';
 import 'package:orchid/util/hex.dart';
 import 'package:orchid/util/series_binary_search.dart';
 import 'package:orchid/api/orchid_eth/abi_encode.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 
 /// Represents the Chainlink EACAggregatorProxy that we use for historical
 /// price data.

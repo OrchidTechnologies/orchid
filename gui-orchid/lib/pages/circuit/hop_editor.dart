@@ -1,16 +1,15 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
+import 'package:orchid/common/app_transitions.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/common/app_buttons.dart';
-import '../../common/app_transitions.dart';
 import 'add_hop_page.dart';
-import 'model/circuit_hop.dart';
+import 'package:orchid/vpn/model/circuit_hop.dart';
 import 'openvpn_hop_page.dart';
 import 'orchid_hop_page.dart';
 
 enum HopEditorMode { Create, Edit, View }
 
-class EditableHop extends ValueNotifier<UniqueHop> {
+class EditableHop extends ValueNotifier<UniqueHop?> {
   EditableHop(UniqueHop value) : super(value);
 
   EditableHop.empty() : super(null);
@@ -22,7 +21,7 @@ class EditableHop extends ValueNotifier<UniqueHop> {
   /// Create a new editor instance for this editable hop
   HopEditor editor() {
     HopEditor editor;
-    switch (value.hop.protocol) {
+    switch (value?.hop.protocol) {
       case HopProtocol.Orchid:
         editor = OrchidHopPage(editableHop: this, mode: HopEditorMode.View);
         break;
@@ -32,6 +31,8 @@ class EditableHop extends ValueNotifier<UniqueHop> {
       case HopProtocol.WireGuard:
         editor = WireGuardHopPage(editableHop: this, mode: HopEditorMode.Edit);
         break;
+      case null:
+        throw Exception("EditableHop null");
     }
     return editor;
   }
@@ -39,7 +40,7 @@ class EditableHop extends ValueNotifier<UniqueHop> {
 
 class HopEditor<T extends CircuitHop> extends StatefulWidget {
   final EditableHop editableHop;
-  final AddFlowCompletion onAddFlowComplete;
+  final AddFlowCompletion? onAddFlowComplete;
 
   // In create mode the editor offers a "save" button that pops the view and
   // returns the value on the context.  If the user navigates back without
@@ -47,17 +48,17 @@ class HopEditor<T extends CircuitHop> extends StatefulWidget {
   final HopEditorMode mode;
 
   HopEditor(
-      {@required this.editableHop,
-      @required this.mode,
-      this.onAddFlowComplete});
+      {required this.editableHop, required this.mode, this.onAddFlowComplete});
 
   Widget buildSaveButton(
-      BuildContext context, AddFlowCompletion onAddFlowComplete,
+      BuildContext context, AddFlowCompletion? onAddFlowComplete,
       {bool isValid = true}) {
     return SaveActionButton(
         isValid: isValid,
         onPressed: () {
-          onAddFlowComplete(this.editableHop.value.hop);
+          if (onAddFlowComplete != null) {
+            onAddFlowComplete(this.editableHop.value?.hop);
+          }
         });
   }
 
@@ -73,7 +74,6 @@ class HopEditor<T extends CircuitHop> extends StatefulWidget {
     return mode == HopEditorMode.Create;
   }
 
-  @override
   Widget build(BuildContext context) {
     throw Exception("implement in subclass");
   }
@@ -106,7 +106,7 @@ class UniqueHop<T extends CircuitHop> {
   final int key;
   final T hop;
 
-  UniqueHop({@required this.key, @required this.hop});
+  UniqueHop({required this.key, required this.hop});
 }
 
 class EditableHop<T extends CircuitHop> extends ValueNotifier<UniqueHop<T>> {

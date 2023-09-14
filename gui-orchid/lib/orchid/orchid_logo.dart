@@ -1,12 +1,11 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'orchid_asset.dart';
 
 /// A wrapper that controls an AnimationController with logic for the logo.
 class NeonOrchidLogoController {
   final TickerProvider vsync;
-  AnimationController _animController;
-  AnimationController _offsetController;
+  late AnimationController _animController;
+  late AnimationController _offsetController;
 
   // Listenable for use with AnimatedBuilder
   Listenable get listenable {
@@ -21,7 +20,7 @@ class NeonOrchidLogoController {
     return _offsetController.value;
   }
 
-  NeonOrchidLogoController({this.vsync}) {
+  NeonOrchidLogoController({required this.vsync}) {
     this._animController = AnimationController(
         duration: Duration(milliseconds: 1000), vsync: vsync);
     this._offsetController = AnimationController(
@@ -73,7 +72,7 @@ class NeonOrchidLogo extends StatelessWidget {
       const Interval(0.0, 1.0, curve: Curves.easeInOutSine);
 
   const NeonOrchidLogo({
-    Key key,
+    Key? key,
     this.light = 1.0,
     this.offset = 0.0,
     this.showBackground = true,

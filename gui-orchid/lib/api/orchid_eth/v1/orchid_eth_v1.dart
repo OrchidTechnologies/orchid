@@ -1,18 +1,17 @@
-// @dart=2.9
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import '../chains.dart';
 import '../orchid_account.dart';
-import '../../orchid_budget_api.dart';
+import '../orchid_lottery.dart';
 import '../../orchid_crypto.dart';
 import 'orchid_eth_v1_rpc.dart';
 
 /// This API describes the read-only eth calls shared by the dapp and the app
 /// and allows them to be overridden in the web3 context.
 abstract class OrchidEthereumV1 {
-  static OrchidEthereumV1 _shared;
+  static OrchidEthereumV1? _shared;
 
   // This method is used by the dapp to set a web3 provider implementation
-  static setWeb3Provider(OrchidEthereumV1 impl) {
+  static setWeb3Provider(OrchidEthereumV1? impl) {
     _shared = impl;
   }
 
@@ -23,7 +22,7 @@ abstract class OrchidEthereumV1 {
     if (_shared == null) {
       _shared = OrchidEthereumV1JsonRpcImpl.init();
     }
-    return _shared;
+    return _shared!;
   }
 
   // This call is generic and can be used with any contract version.
@@ -34,8 +33,8 @@ abstract class OrchidEthereumV1 {
   // Future<double> getUniswapPrice(String poolAddress, int token0Decimals, int token1Decimals);
 
   Future<List<Account>> discoverAccounts(
-      {Chain chain, StoredEthereumKey signer});
+      {required Chain chain, required StoredEthereumKey signer});
 
   Future<LotteryPot> getLotteryPot(
-      {Chain chain, EthereumAddress funder, EthereumAddress signer});
+      {required Chain chain, required EthereumAddress funder, required EthereumAddress signer});
 }

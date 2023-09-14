@@ -1,14 +1,13 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 
 class OrchidCheckbox extends StatelessWidget {
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool?> onChanged;
 
   const OrchidCheckbox({
-    Key key,
-    @required bool value,
-    @required this.onChanged,
+    Key? key,
+    required bool value,
+    required this.onChanged,
   })  : value = value,
         super(key: key);
 

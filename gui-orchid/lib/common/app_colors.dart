@@ -13,7 +13,7 @@ class AppColors {
   static const drawer_gradient_end = purple_1;
 
   ///
-  /// Exported from Zeplin - Do not edit.
+  /// Exported from Zeplin
   ///
   static const purple_7 = const Color(0xfff6f3fc);
   static const purple_6 = const Color(0xffe8ddfd);

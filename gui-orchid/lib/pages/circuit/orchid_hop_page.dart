@@ -1,16 +1,16 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'dart:async';
 import 'package:badges/badges.dart' as badge;
 import 'package:flutter/services.dart';
-import 'package:orchid/api/orchid_budget_api.dart';
+import 'package:orchid/api/orchid_eth/orchid_lottery.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/common/account_chart.dart';
+import 'package:orchid/vpn/model/orchid_hop.dart';
+import 'package:orchid/vpn/preferences/user_preferences_vpn.dart';
+import 'package:orchid/orchid/account_chart.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/instructions_view.dart';
@@ -22,7 +22,7 @@ import 'package:orchid/orchid/account/market_stats_dialog.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/util/format_currency.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
@@ -30,15 +30,14 @@ import 'curator_page.dart';
 import '../../orchid/menu/orchid_funder_selector_menu.dart';
 import 'hop_editor.dart';
 import 'package:orchid/orchid/menu/orchid_key_selector_menu.dart';
-import 'model/circuit_hop.dart';
-import 'model/orchid_hop.dart';
+import 'package:orchid/vpn/model/circuit_hop.dart';
 
 /// Create / edit / view an Orchid Hop
 // The OrchidHopEditor operates in a "settings"-like fashion and allows
 // editing certain elements of the hop (e.g. curator) even when in "View" mode.
 class OrchidHopPage extends HopEditor<OrchidHop> {
   OrchidHopPage(
-      {@required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
+      {required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
       : super(
             editableHop: editableHop,
             mode: mode,
@@ -49,18 +48,18 @@ class OrchidHopPage extends HopEditor<OrchidHop> {
 }
 
 class _OrchidHopPageState extends State<OrchidHopPage> {
-  Account _selectedAccount;
+  Account? _selectedAccount;
   var _curatorField = TextEditingController();
 
   bool _showBalance = false;
-  LotteryPot _lotteryPot; // initially null
-  MarketConditions _marketConditions;
-  List<OrchidUpdateTransactionV0> _transactions;
-  DateTime _lotteryPotLastUpdate;
-  Timer _balanceTimer;
+  LotteryPot? _lotteryPot; // initially null
+  MarketConditions? _marketConditions;
+  List<OrchidUpdateTransactionV0>? _transactions;
+  DateTime? _lotteryPotLastUpdate;
+  Timer? _balanceTimer;
   bool _balancePollInProgress = false;
   bool _showMarketStatsAlert = false;
-  StreamSubscription<Set<Account>> _accountListener;
+  late StreamSubscription<Set<Account>> _accountListener;
 
   @override
   void initState() {
@@ -74,12 +73,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     // If the hop is empty initialize it to defaults now.
     if (_hop == null) {
       widget.editableHop.update(OrchidHop.from(_hop,
-          curator: UserPreferences().getDefaultCurator() ??
+          curator: UserPreferencesVPN().getDefaultCurator() ??
               OrchidHop.appDefaultCurator));
     }
 
     // init balance and account details polling
-    if (widget.readOnly() && UserPreferences().getQueryBalances()) {
+    if (widget.readOnly() && UserPreferencesVPN().getQueryBalances()) {
       setState(() {
         _showBalance = true;
       });
@@ -89,7 +88,10 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       _pollBalanceAndAccountDetails(); // kick one off immediately
     }
 
-    _accountListener = UserPreferences().cachedDiscoveredAccounts.stream().listen((accounts) {
+    _accountListener = UserPreferencesVPN()
+        .cachedDiscoveredAccounts
+        .stream()
+        .listen((accounts) {
       // guard changes in accounts availability
       if (!accounts.contains(_selectedAccount)) {
         setState(() {
@@ -112,24 +114,24 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   // Migrating to OrchidAccountEntry
-  KeySelectionItem get _initialSelectedKeyItem {
-    return _hop?.keyRef != null ? KeySelectionItem(keyRef: _hop.keyRef) : null;
+  KeySelectionItem? get _initialSelectedKeyItem {
+    return _hop?.keyRef != null ? KeySelectionItem(keyRef: _hop!.keyRef) : null;
   }
 
   // Migrating to OrchidAccountEntry
-  KeySelectionItem get _selectedKeyItem {
+  KeySelectionItem? get _selectedKeyItem {
     return _initialSelectedKeyItem;
   }
 
   // Migrating to OrchidAccountEntry
-  FunderSelectionItem get _initialSelectedFunderItem {
+  FunderSelectionItem? get _initialSelectedFunderItem {
     return _hop?.funder != null
-        ? FunderSelectionItem(funderAccount: _hop.account)
+        ? FunderSelectionItem(funderAccount: _hop!.account)
         : null;
   }
 
   // Migrating to OrchidAccountEntry
-  FunderSelectionItem get _selectedFunderItem {
+  FunderSelectionItem? get _selectedFunderItem {
     return _initialSelectedFunderItem;
   }
 
@@ -150,7 +152,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             ),
           ),
         ),
-        decoration: BoxDecoration(),
+        // decoration: BoxDecoration(),
       ),
     );
   }
@@ -163,7 +165,6 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       case HopEditorMode.View:
         return _buildViewOrEditModeContent();
     }
-    throw Exception();
   }
 
   Widget _buildCreateModeContent() {
@@ -191,16 +192,18 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           pady(16),
           _buildAccountManagerLinkText(),
           StreamBuilder<Set<Account>>(
-              stream: UserPreferences().cachedDiscoveredAccounts.stream(),
+              stream: UserPreferencesVPN().cachedDiscoveredAccounts.stream(),
               builder: (context, snapshot) {
                 final accounts = snapshot.data;
                 if ((accounts ?? {}).isEmpty) {
                   return Container();
                 }
                 return AccountSelectorDialog(
-                  accounts: accounts.toList(),
+                  accounts: accounts!.toList(),
                   singleSelection: true,
-                  selectedAccounts: Set.from([_selectedAccount]),
+                  selectedAccounts: _selectedAccount != null
+                      ? Set.from([_selectedAccount])
+                      : {},
                   selectedAccountsChanged: (Set<Account> selected) {
                     setState(() {
                       _selectedAccount = selected.first;
@@ -246,7 +249,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     );
   }
 
-  Widget _buildSection({String title, Widget child, VoidCallback onDetail}) {
+  Widget _buildSection(
+      {required String title, required Widget child, VoidCallback? onDetail}) {
     return Column(
       children: <Widget>[
         Text(title, style: OrchidText.title),
@@ -342,7 +346,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _buildTransactionListV0() {
     const String bullet = "• ";
-    var txRows = _transactions.map((utx) {
+    // null guarded by page logic
+    var txRows = _transactions!.map((utx) {
       return Row(
         children: [
           Text(bullet, style: TextStyle(fontSize: 20)),
@@ -438,10 +443,11 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       children: [
         Flexible(child: _buildAccountBalance()),
         Expanded(
-          child: AccountChart(
-              lotteryPot: _lotteryPot,
-              efficiency: _marketConditions?.efficiency,
-              transactions: _transactions),
+          child: OrchidAccountChart(
+            lotteryPot: _lotteryPot,
+            efficiency: _marketConditions?.efficiency,
+            transactions: _transactions,
+          ),
         )
       ],
     );
@@ -449,9 +455,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
   Widget _buildAccountBalance() {
     var balanceText =
-        _lotteryPot?.balance?.formatCurrency(locale: context.locale) ?? '...';
+        _lotteryPot?.balance.formatCurrency(locale: context.locale) ?? '...';
     var depositText =
-        _lotteryPot?.effectiveDeposit?.formatCurrency(locale: context.locale) ??
+        _lotteryPot?.effectiveDeposit.formatCurrency(locale: context.locale) ??
             '...';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -495,8 +501,10 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       position: badge.BadgePosition.topEnd(top: 9, end: 55),
       badgeContent:
           Text('!', style: TextStyle(color: Colors.white, fontSize: 12)),
-      padding: EdgeInsets.all(8),
-      toAnimate: false,
+      badgeStyle: badge.BadgeStyle(
+        padding: EdgeInsets.all(8),
+      ),
+      // toAnimate: false,
       child: SizedBox(
         // fill the stack that Badge creates
         width: double.infinity,
@@ -510,9 +518,12 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   Future<void> _showMarketStats() async {
+    if (_account == null) {
+      return;
+    }
     MarketStatsDialog.show(
       context: context,
-      account: _account,
+      account: _account!,
       lotteryPot: _lotteryPot,
       marketConditions: _marketConditions,
     );
@@ -523,7 +534,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         builder: (context) =>
             CuratorEditorPage(editableHop: widget.editableHop));
     await Navigator.push(context, route);
-    _curatorField.text = _hop?.curator;
+    _curatorField.text = _hop?.curator ?? '';
   }
 
   bool _formValid() {
@@ -543,33 +554,39 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     // or import options.  In those cases the key will be filled in upon save.
     widget.editableHop.update(
       OrchidHop.from(
-        widget.editableHop.value?.hop,
-        keyRef: _selectedAccount.signerKeyRef,
-        funder: _selectedAccount.funder,
-        chainId: _selectedAccount.chainId,
-        version: _selectedAccount.version,
+        widget.editableHop.value?.hop as OrchidHop,
+        keyRef: _selectedAccount?.signerKeyRef,
+        funder: _selectedAccount?.funder,
+        chainId: _selectedAccount?.chainId,
+        version: _selectedAccount?.version,
       ),
     );
   }
 
   /// Copy the wallet address to the clipboard
   void _onCopyButton() async {
-    StoredEthereumKey key = _selectedKeyItem.keyRef.get();
-    Clipboard.setData(ClipboardData(text: key.get().address.toString()));
+    StoredEthereumKey? key = _selectedKeyItem?.keyRef?.get();
+    if (key != null) {
+      Clipboard.setData(ClipboardData(text: key.get().address.toString()));
+    }
   }
 
   // Participate in the save operation and then delegate to the on complete handler.
-  void _onSave(CircuitHop result) async {
-    await UserPreferences().ensureSaved(_selectedAccount);
+  void _onSave(CircuitHop? result) async {
+    if (_selectedAccount != null) {
+      await UserPreferencesVPN().ensureSaved(_selectedAccount!);
+    }
     // Pass on the updated hop
-    widget.onAddFlowComplete(widget.editableHop.value.hop);
+    if (widget.onAddFlowComplete != null) {
+      widget.onAddFlowComplete!(widget.editableHop.value?.hop);
+    }
   }
 
-  OrchidHop get _hop {
-    return widget.editableHop.value?.hop;
+  OrchidHop? get _hop {
+    return widget.editableHop.value?.hop as OrchidHop;
   }
 
-  Account get _account {
+  Account? get _account {
     return _hop?.account;
   }
 
@@ -585,7 +602,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     super.dispose();
     ScreenOrientation.reset();
     _balanceTimer?.cancel();
-    _accountListener?.cancel();
+    _accountListener.cancel();
   }
 
   // TODO: Use AccountDetailPoller?
@@ -595,7 +612,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
     }
     _balancePollInProgress = true;
     try {
-      Account account = _hop?.account;
+      Account? account = _hop?.account;
       if (account == null) {
         throw Exception("No account to poll");
       }
@@ -634,7 +651,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
       if (_account?.isV0 ?? false) {
         try {
           transactions = await OrchidEthereumV0().getUpdateTransactions(
-              funder: account.funder, signer: await account.signerAddress);
+              funder: account.funder, signer: account.signerAddress);
         } catch (err) {
           log('Error fetching account update transactions: $err');
         }
@@ -651,7 +668,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
 
       // Allow a stale balance for a period of time.
       if (_lotteryPotLastUpdate != null &&
-          _lotteryPotLastUpdate.difference(DateTime.now()) >
+          _lotteryPotLastUpdate!.difference(DateTime.now()) >
               Duration(hours: 1)) {
         if (mounted) {
           setState(() {
@@ -670,12 +687,8 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         textColor: Colors.black,
         onPressed: () {
           if (_account != null) {
-            AccountManagerPage.showAccount(context, _account);
+            AccountManagerPage.showAccount(context, _account!);
           }
         });
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

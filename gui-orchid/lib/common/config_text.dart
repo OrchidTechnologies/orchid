@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'app_colors.dart';
@@ -10,10 +9,10 @@ class ConfigText extends StatelessWidget {
   final String hintText;
 
   const ConfigText({
-    Key key,
-    @required this.height,
-    @required this.textController,
-    @required this.hintText,
+    Key? key,
+    required this.height,
+    required this.textController,
+    required this.hintText,
   }) : super(key: key);
 
   @override
@@ -52,8 +51,8 @@ class ConfigLabel extends StatelessWidget {
   final String text;
 
   const ConfigLabel({
-    Key key,
-    @required this.text,
+    Key? key,
+    required this.text,
   }) : super(key: key);
 
   @override

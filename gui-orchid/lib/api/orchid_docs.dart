@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'dart:async' show Future;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -65,12 +64,12 @@ class OrchidDocs {
     );
     return html.replaceAllMapped(exp, (match) {
       String platform = OrchidPlatform.operatingSystem.toLowerCase();
-      String targetPlatforms = match.group(1)?.toLowerCase();
+      String? targetPlatforms = match.group(1)?.toLowerCase();
       if (targetPlatforms != null &&
           targetPlatforms.split(RegExp(r' *, *')).contains(platform)) {
         return ''; // exclude, replace with nothing.
       }
-      return match.group(0); // include
+      return match.group(0) ?? ''; // include
     });
   }
 }

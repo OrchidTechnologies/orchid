@@ -1,5 +1,4 @@
-// @dart=2.12
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:browser_detector/browser_detector.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
@@ -9,12 +8,20 @@ class OrchidLabeledNumericField extends StatefulWidget {
   final String label;
   final NumericValueFieldController? controller;
   final ValueChanged<double?>? onChange;
+  final bool integer;
+  final bool enabled;
+  final bool showPaste;
+  final Color? backgroundColor;
 
   OrchidLabeledNumericField({
     Key? key,
     required this.label,
     this.controller,
     this.onChange,
+    this.integer = false,
+    this.enabled = true,
+    this.showPaste = true,
+    this.backgroundColor,
   }) : super(key: key);
 
   @override
@@ -31,17 +38,20 @@ class _OrchidLabeledNumericFieldState extends State<OrchidLabeledNumericField> {
 
   @override
   Widget build(BuildContext context) {
-    final showPaste = !BrowserDetector().browser.isFirefox;
+    final showPaste = widget.showPaste && !BrowserDetector().browser.isFirefox;
     final error = controller.text.isNotEmpty && controller.value == null;
 
     return OrchidLabeledTextField(
+      enabled: widget.enabled,
       error: error,
       label: widget.label,
       controller: controller.textController,
-      hintText: '0.0',
+      hintText: widget.integer ? '0' : '0.0',
       numeric: true,
+      decimal: !widget.integer,
       onChanged: (_) => _onChange(),
       onClear: _onChange,
+      backgroundColor: widget.backgroundColor,
       trailing: showPaste
           ? IconButton(
                   icon: Icon(Icons.paste, color: Colors.white),
@@ -61,10 +71,15 @@ class _OrchidLabeledNumericFieldState extends State<OrchidLabeledNumericField> {
     setState(() {});
     widget.onChange?.call(controller.value);
   }
-
 }
 
 class NumericValueFieldController extends ValueFieldController<double> {
+  NumericValueFieldController();
+
+  NumericValueFieldController.withListener(VoidCallback listener) {
+    this.addListener(listener);
+  }
+
   /// Return the value, or null if empty or invalid
   double? get value {
     final text = textController.text;
@@ -78,7 +93,20 @@ class NumericValueFieldController extends ValueFieldController<double> {
     }
   }
 
+  int? get intValue {
+    final text = textController.text;
+    if (text.isEmpty) {
+      return null;
+    }
+    try {
+      return int.parse(text);
+    } catch (err) {
+      return null;
+    }
+  }
+
   set value(double? value) {
     text = value?.toString() ?? '';
   }
 }
+

@@ -307,6 +307,7 @@ export class OrchidEthereumApiV0Impl implements OrchidEthereumAPI {
     }
 
     // The approval tx resolves immediately after the user submits.
+    
     let approvalHash = await doApproveTx();
 
     // Introduce a short artificial delay before issuing the second tx

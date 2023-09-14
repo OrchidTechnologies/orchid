@@ -1,7 +1,6 @@
-// @dart=2.9
 import 'dart:async';
 import 'package:flutter/widgets.dart';
-import 'package:orchid/api/orchid_crypto.dart';
+import 'package:uuid/uuid.dart';
 
 /// A simple widget that rebuilds at an interval
 class TimedBuilder<T> extends StatefulWidget {
@@ -9,9 +8,9 @@ class TimedBuilder<T> extends StatefulWidget {
   final Widget Function(BuildContext context) builder;
 
   TimedBuilder({
-    Key key,
-    @required this.duration,
-    @required this.builder,
+    Key? key,
+    required this.duration,
+    required this.builder,
   }) : super(key: key) {
     if (this.duration.inMilliseconds <= 0) {
       throw Exception("invalid duration: ${this.duration}");
@@ -19,9 +18,9 @@ class TimedBuilder<T> extends StatefulWidget {
   }
 
   TimedBuilder.interval({
-    int seconds,
-    int millis,
-    Widget Function(BuildContext context) builder,
+    int? seconds,
+    int? millis,
+    required Widget Function(BuildContext context) builder,
   }) : this(
             duration:
                 Duration(milliseconds: (seconds ?? 0) * 1000 + (millis ?? 0)),
@@ -32,15 +31,15 @@ class TimedBuilder<T> extends StatefulWidget {
 }
 
 class _TimedBuilderState<T> extends State<TimedBuilder<T>> {
-  String _name;
-  Timer _timer;
+  late String _name;
+  late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(widget.duration, _update);
     _update(null); // invoke immediately
-    _name = Crypto.uuid();
+    _name = Uuid().v4();
   }
 
   void _update(_) async {

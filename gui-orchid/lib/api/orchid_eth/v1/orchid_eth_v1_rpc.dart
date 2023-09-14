@@ -1,19 +1,16 @@
-// @dart=2.9
 import 'dart:math';
-
-import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_eth/eth_rpc.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/uniswap_v3_contract.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/util/cacheable.dart';
 import 'package:orchid/util/hex.dart';
 
 import '../abi_encode.dart';
 import '../chains.dart';
 import '../orchid_account.dart';
-import '../../orchid_budget_api.dart';
+import '../orchid_lottery.dart';
 import '../../orchid_crypto.dart';
 import '../v0/orchid_contract_v0.dart';
 import 'orchid_contract_v1.dart';
@@ -32,9 +29,9 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
   /// Get gas price cached
   Future<Token> getGasPrice(Chain chain, {bool refresh = false}) async {
     // Allow override via config for testing
-    var jsConfig = OrchidUserConfig().getUserConfigJS();
+    var jsConfig = OrchidUserConfig().getUserConfig();
     // TODO: gas price override should be per-chain
-    double overrideValue = jsConfig.evalDoubleDefault('gasPrice', null);
+    double? overrideValue = jsConfig.evalDoubleDefaultNull('gasPrice');
     if (overrideValue != null) {
       TokenType tokenType = chain.nativeCurrency;
       return tokenType.fromDouble(overrideValue);
@@ -91,7 +88,7 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
   // Note: provide another version that accepts the signer address and produces
   // Note: tracked accounts by address.
   Future<List<Account>> discoverAccounts(
-      {Chain chain, StoredEthereumKey signer}) async {
+      {required Chain chain, required StoredEthereumKey signer}) async {
     List<OrchidCreateEvent> createEvents =
         await _getCreateEvents(chain, signer.address);
     return createEvents.map((event) {
@@ -105,7 +102,7 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
 
   // Note: this method's results are cached by the Account API
   Future<LotteryPot> getLotteryPot(
-      {Chain chain, EthereumAddress funder, EthereumAddress signer}) async {
+      {required Chain chain, required EthereumAddress funder, required EthereumAddress signer}) async {
     logDetail("fetch pot V1 for: $funder, $signer, chain = $chain");
 
     var address = AbiEncode.address;
@@ -158,7 +155,7 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
     // log("getUniswapPrice via rpc");
     // construct the abi encoded eth_call
     var params = [
-      {"to": "${poolAddress}", "data": "0x${UniswapV3Contract.slot0Hash}"},
+      {"to": "$poolAddress", "data": "0x${UniswapV3Contract.slot0Hash}"},
       "latest"
     ];
 
@@ -178,8 +175,8 @@ class OrchidEthereumV1JsonRpcImpl implements OrchidEthereumV1 {
   }
 
   static Future<dynamic> _jsonRPC({
-    @required String url,
-    @required String method,
+    required String url,
+    required String method,
     List<Object> params = const [],
   }) async {
     return EthereumJsonRpc.ethJsonRpcCall(

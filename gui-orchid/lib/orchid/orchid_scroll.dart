@@ -1,21 +1,19 @@
-// @dart=2.9
 
-// TODO: Remove now?
 // Fix excessively damped scrolling.
 // Workaround for issue: https://github.com/flutter/flutter/issues/32448
 import 'package:flutter/cupertino.dart';
 
 class OrchidScrollPhysics extends ScrollPhysics {
 
-  const OrchidScrollPhysics({ ScrollPhysics parent }): super(parent: parent);
+  const OrchidScrollPhysics({ ScrollPhysics? parent }): super(parent: parent);
 
   @override
-  OrchidScrollPhysics applyTo(ScrollPhysics ancestor) {
+  OrchidScrollPhysics applyTo(ScrollPhysics? ancestor) {
     return OrchidScrollPhysics(parent: buildParent(ancestor));
   }
 
   @override
-  Simulation createBallisticSimulation(ScrollMetrics position, double velocity) {
+  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
     final Tolerance tolerance = this.tolerance;
     if (velocity.abs() >= tolerance.velocity || position.outOfRange) {
       return BouncingScrollSimulation(

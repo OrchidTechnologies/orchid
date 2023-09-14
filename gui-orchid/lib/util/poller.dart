@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +8,7 @@ import 'package:flutter/material.dart';
  */
 class Poller {
   final VoidCallback func;
-  Timer _timer;
+  Timer? _timer;
 
   Poller(this.func);
 
@@ -19,7 +18,7 @@ class Poller {
 
   /// Poll at the specified interval starting after one interval.
   /// (This is the default behavior of Timer).
-  Poller every({int seconds, int minutes, int hours}) {
+  Poller every({int? seconds, int? minutes, int? hours}) {
     assert(seconds != null || minutes != null || hours != null);
     _timer?.cancel();
     _timer = Timer.periodic(
@@ -30,7 +29,7 @@ class Poller {
   }
 
   /// Invoke once immediately and then at the specified interval
-  Poller nowAndEvery({int seconds, int minutes, int hours}) {
+  Poller nowAndEvery({int? seconds, int? minutes, int? hours}) {
     _poll(null);
     return every(seconds: seconds, minutes: minutes, hours: hours);
   }
@@ -45,6 +44,6 @@ class Poller {
   }
 
   void cancel() {
-    _timer.cancel();
+    _timer?.cancel();
   }
 }

@@ -1,9 +1,7 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_generate.dart';
-import 'package:orchid/api/configuration/orchid_vpn_config/orchid_vpn_config_import.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/api/preferences/user_preferences_keys.dart';
+import 'package:orchid/vpn/orchid_vpn_config/orchid_vpn_config_generate.dart';
+import 'package:orchid/vpn/orchid_vpn_config/orchid_vpn_config_import.dart';
 import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/page_tile.dart';
@@ -11,7 +9,7 @@ import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/pages/settings/import_export_config.dart';
-
+import 'package:orchid/util/localization.dart';
 import '../../common/app_text.dart';
 
 /// The manage configuration page allows export and import of the hops config
@@ -121,7 +119,9 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
   void _doExport() async {
     var config = '// Circuit\n' +
         (await OrchidVPNConfigGenerate.generateConfig(forExport: true));
-    var keys = UserPreferences().keys.get()
+    var keys = UserPreferencesKeys()
+        .keys
+        .get()!
         .map((storedKey) => storedKey.formatSecretFixed())
         .toList();
     config += '\n\n// All keys\nkeys=' + keys.toString();
@@ -146,9 +146,5 @@ class _ManageConfigPageState extends State<ManageConfigPage> {
   void _importConfig(String config) async {
     await OrchidVPNConfigImport.importConfig(config);
     Navigator.pop(context);
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

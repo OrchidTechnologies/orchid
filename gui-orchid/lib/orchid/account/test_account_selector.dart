@@ -1,8 +1,7 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
-import 'package:orchid/util/test_app.dart';
+import 'package:orchid/orchid/orchid.dart';
+import 'package:orchid/orchid/test_app.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
+import 'package:orchid/api/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/orchid/account/account_selector.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
 export 'package:orchid/common/app_sizes.dart';

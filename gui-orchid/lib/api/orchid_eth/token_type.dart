@@ -1,11 +1,10 @@
-// @dart=2.9
 import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import '../orchid_crypto.dart';
 import 'chains.dart';
-import 'package:orchid/util/units.dart' as units;
+import 'package:orchid/util/format_currency.dart' as units;
 
 // Token type
 // Note: Unfortunately Dart does not have a polyomorphic 'this' type so the
@@ -16,14 +15,14 @@ class TokenType {
   final int chainId;
   final String symbol;
   final int decimals;
-  final ExchangeRateSource exchangeRateSource;
+  final ExchangeRateSource? exchangeRateSource;
   final String iconPath;
 
   /// The symbol name to be used in the Orchid config for the back-end.
-  final String configSymbolOverride;
+  final String? configSymbolOverride;
 
   /// The ERC20 contract address if this is a non-native token on its chain.
-  final EthereumAddress erc20Address;
+  final EthereumAddress? erc20Address;
 
   /// Returns true if this token is the native (gas) token on its chain.
   bool get isNative {
@@ -39,18 +38,18 @@ class TokenType {
   }
 
   const TokenType({
-    @required this.chainId,
-    @required this.symbol,
+    required this.chainId,
+    required this.symbol,
     this.configSymbolOverride,
     this.exchangeRateSource,
     this.decimals = 18,
     this.erc20Address,
-    @required this.iconPath,
+    required this.iconPath,
   });
 
   // Return 1eN where N is the decimal count.
   int get multiplier {
-    return Math.pow(10, this.decimals);
+    return Math.pow(10, this.decimals).toInt();
   }
 
   // From the integer denomination value e.g. WEI for ETH
@@ -104,11 +103,11 @@ class Token {
 
   /// No token symbol
   String toFixedLocalized({
-    @required Locale locale,
+    required Locale locale,
     int precision = 4,
-    int maxPrecision,
-    int minPrecision,
-    bool showPrecisionIndicator,
+    int? maxPrecision,
+    int? minPrecision,
+    bool showPrecisionIndicator = false,
   }) {
     return units.formatCurrency(
       floatValue,
@@ -122,12 +121,12 @@ class Token {
 
   /// Format as value with the symbol suffixed
   String formatCurrency({
-    @required Locale locale,
+    required Locale locale,
     int precision = 4,
     bool showSuffix = true,
-    int maxPrecision,
-    int minPrecision,
-    bool showPrecisionIndicator,
+    int? maxPrecision,
+    int? minPrecision,
+    bool showPrecisionIndicator = false,
   }) {
     return units.formatCurrency(floatValue,
         locale: locale,
@@ -222,7 +221,7 @@ class Token {
 
   void assertType(TokenType type) {
     if (this.type != type) {
-      throw AssertionError('Token ${this} is not ${type}');
+      throw AssertionError('Token $this is not $type');
     }
   }
 
@@ -264,3 +263,4 @@ class Token {
     return 'Token{type: ${type.symbol}, floatValue: $floatValue}';
   }
 }
+

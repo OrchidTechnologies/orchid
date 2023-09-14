@@ -1,8 +1,6 @@
-// @dart=2.9
 import 'package:flutter/cupertino.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'account_detail_poller.dart';
-
+import '../../api/orchid_eth/orchid_account_detail.dart';
 
 /// Hosts a pool of account detail pollers that is populated on-demand as
 /// individual accounts are requested by the get method.
@@ -14,7 +12,7 @@ class AccountDetailStore {
   /// Invoked when any of the pollers updates
   final VoidCallback onAccountDetailChanged;
 
-  AccountDetailStore({this.onAccountDetailChanged});
+  AccountDetailStore({required this.onAccountDetailChanged});
 
   /// Load data updating caches
   Future<void> refresh() async {

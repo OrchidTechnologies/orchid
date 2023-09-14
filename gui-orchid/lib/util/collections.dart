@@ -1,6 +1,3 @@
-// @dart=2.9
-import 'package:flutter/foundation.dart';
-
 // Usage:
 // import 'package:orchid/util/collections.dart';
 
@@ -28,8 +25,8 @@ extension ExtendedIterable<E> on Iterable<E> {
 
 extension IterableToMap<K, V, E> on Iterable<E> {
   Map<K, V> toMap<K, V>({
-    @required K Function(E e) withKey,
-    @required V Function(E e) withValue,
+    required K Function(E e) withKey,
+    required V Function(E e) withValue,
   }) {
     return {for (var e in this) withKey(e): withValue(e)};
   }

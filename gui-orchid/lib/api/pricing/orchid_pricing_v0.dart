@@ -1,9 +1,7 @@
-// @dart=2.9
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
-import 'package:orchid/util/units.dart';
-import 'package:flutter/foundation.dart';
+import 'package:orchid/api/pricing/usd.dart';
 
 /// Token Exchange rates
 @deprecated
@@ -20,7 +18,7 @@ class OrchidPricingAPIV0 {
   /// This method may return null if no pricing data is available and the UI
   /// should handle this as a routine condition by hiding displayed conversions.
   /// This method is cached for a period of time and safe to call repeatedly.
-  Future<PricingV0> getPricing() async {
+  Future<PricingV0?> getPricing() async {
     try {
       return PricingV0(
         ethPriceUSD: await OrchidPricing().usdPrice(Tokens.ETH),
@@ -36,7 +34,7 @@ class OrchidPricingAPIV0 {
 /// Pricing captures exchange rates at a point in time and supports conversion.
 @deprecated
 class PricingV0 {
-  DateTime date;
+  final DateTime date;
 
   // dollars per eth
   double ethPriceUSD;
@@ -45,25 +43,21 @@ class PricingV0 {
   double oxtPriceUSD;
 
   PricingV0({
-    DateTime date,
+    DateTime? date,
     // dollars per eth
-    @required double ethPriceUSD,
+    required this.ethPriceUSD,
     // dollars per oxt
-    @required double oxtPriceUSD,
-  }) {
-    this.date = date ?? DateTime.now();
-    this.ethPriceUSD = ethPriceUSD;
-    this.oxtPriceUSD = oxtPriceUSD;
-  }
+    required this.oxtPriceUSD,
+  }) : this.date = date ?? DateTime.now();
 
-  USD toUSD(OXT oxt) {
+  USD? toUSD(OXT? oxt) {
     if (oxt == null) {
       return null;
     }
     return USD(oxt.floatValue * oxtPriceUSD);
   }
 
-  OXT toOXT(USD usd) {
+  OXT? toOXT(USD? usd) {
     if (usd == null) {
       return null;
     }

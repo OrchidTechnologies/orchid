@@ -1,8 +1,6 @@
-// @dart=2.9
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 
 import '../orchid_platform.dart';
 
@@ -10,7 +8,7 @@ class EthereumJsonRpc {
   /// Make a read-only eth_call to the rpc provider.
   // Note: This method is also used by the PAC seller code.
   static Future<dynamic> ethCall({
-    @required String url,
+    required String url,
     List<Object> params = const [],
   }) async {
     return ethJsonRpcCall(url: url, method: 'eth_call', params: params);
@@ -18,8 +16,8 @@ class EthereumJsonRpc {
 
   /// Ethereum json rpc call
   static Future<dynamic> ethJsonRpcCall({
-    @required String url,
-    @required String method,
+    required String url,
+    required String method,
     List<Object> params = const [],
   }) async {
     // construct the abi encoded eth_call

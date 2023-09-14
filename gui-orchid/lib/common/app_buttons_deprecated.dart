@@ -1,16 +1,15 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 
 class FlatButtonDeprecated extends StatelessWidget {
   final Widget child;
-  final VoidCallback onPressed;
-  final OutlinedBorder shape;
+  final VoidCallback? onPressed;
+  final OutlinedBorder? shape;
   final color; // background color
-  final EdgeInsets padding;
+  final EdgeInsets? padding;
 
   const FlatButtonDeprecated({
-    Key key,
-    this.child,
+    Key? key,
+    required this.child,
     this.onPressed,
     this.shape,
     this.color,
@@ -39,17 +38,17 @@ class FlatButtonDeprecated extends StatelessWidget {
 
 class RaisedButtonDeprecated extends StatelessWidget {
   final Widget child;
-  final VoidCallback onPressed;
-  final OutlinedBorder shape;
+  final VoidCallback? onPressed;
+  final OutlinedBorder? shape;
   final color; // background color
-  final double elevation;
-  final EdgeInsets padding;
-  final MaterialTapTargetSize materialTapTargetSize;
-  final Color disabledColor;
+  final double? elevation;
+  final EdgeInsets? padding;
+  final MaterialTapTargetSize? materialTapTargetSize;
+  final Color? disabledColor;
 
   const RaisedButtonDeprecated({
-    Key key,
-    this.child,
+    Key? key,
+    required this.child,
     this.onPressed,
     this.shape,
     this.color,

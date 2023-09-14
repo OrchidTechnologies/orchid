@@ -3,7 +3,7 @@ import 'package:orchid/util/strings.dart';
 
 class AbiEncode {
   // Pad a 40 character address to 64 characters with no prefix
-  static String address(EthereumAddress address, {prefix: false}) {
+  static String address(EthereumAddress address, {prefix = false}) {
     return (prefix ? '0x' : '') +
         address.toString(prefix: false).toLowerCase().padLeft(64, '0');
   }
@@ -44,7 +44,7 @@ class AbiEncode {
 
 class AbiEncodePacked {
   // Pad a 40 character address to 64 characters with no prefix
-  static String address(EthereumAddress address, {prefix: false}) {
+  static String address(EthereumAddress address, {prefix = false}) {
     return (prefix ? '0x' : '') +
         address.toString(prefix: false).toLowerCase().padLeft(20, '0');
   }

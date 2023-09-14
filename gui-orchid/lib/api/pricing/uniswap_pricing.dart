@@ -1,4 +1,3 @@
-// @dart=2.12
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
@@ -16,7 +15,7 @@ class UniswapETHPriceSource extends ExchangeRateSource {
   });
 
   /// Note: tokenType is unused in this implementation as it is determined by the pool.
-  Future<double?> tokenToUsdRate(TokenType _) async {
+  Future<double> tokenToUsdRate(TokenType _) async {
     // We currently fetch uniswap prices from pools on Ethereum main net.
     final rpc = OrchidEthereumV1JsonRpcImpl.init();
     double token0Price = await rpc.getUniswapPrice(Chains.Ethereum,
@@ -40,7 +39,7 @@ class UniswapPriceSource extends ExchangeRateSource {
   /// Return the price, USD/Token: Tokens * Rate = USD
   /// Note: tokenType is unused in this implementation as it is determined by the pool.
   // Note: results are cached by the caller.
-  Future<double?> tokenToUsdRate(TokenType _) async {
+  Future<double> tokenToUsdRate(TokenType _) async {
     final rpc = OrchidEthereumV1JsonRpcImpl.init();
     // We currently fetch uniswap prices from pools on Ethereum main net.
     double price = await rpc.getUniswapPrice(

@@ -1,16 +1,14 @@
-// @dart=2.9
-import 'package:flutter/foundation.dart';
 import 'package:orchid/util/hex.dart';
 import '../orchid_crypto.dart';
 
-class EthereumTransaction extends EthereumTransactionParams {
+class EthereumTransaction /*extends EthereumTransactionParams*/ {
   final EthereumTransactionParams params;
   final String data;
-  final int nonce;
+  final int? nonce;
 
   EthereumTransaction({
-    @required this.params,
-    @required this.data,
+    required this.params,
+    required this.data,
     this.nonce,
   });
 
@@ -75,12 +73,12 @@ class EthereumTransactionParams {
   final int chainId;
 
   EthereumTransactionParams({
-    @required this.from,
-    @required this.to,
-    @required this.gas,
-    @required this.gasPrice,
-    @required this.value,
-    @required this.chainId,
+    required this.from,
+    required this.to,
+    required this.gas,
+    required this.gasPrice,
+    required this.value,
+    required this.chainId,
   });
 
   Map<String, dynamic> toJson() {

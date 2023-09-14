@@ -1,6 +1,5 @@
-// @dart=2.9
-import 'package:flutter/foundation.dart';
-import 'package:orchid/api/orchid_budget_api.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
+import 'package:orchid/api/orchid_eth/orchid_lottery.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
@@ -8,7 +7,6 @@ import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_contract_v0.dart';
-import 'package:orchid/orchid/account/account_detail_poller.dart';
 
 /// Mock account data for testing and screenshot generation
 class AccountMock {
@@ -171,17 +169,17 @@ class MockAccount extends Account {
   StoredEthereumKey signerKey;
 
   MockAccount({
-    @required this.signerKey,
-    EthereumAddress resolvedSignerAddress,
+    required this.signerKey,
+    EthereumAddress? resolvedSignerAddress,
     int version = 0,
-    Chain chain,
-    EthereumAddress funder,
-    @required this.mockLotteryPot,
+    required Chain chain,
+    required EthereumAddress funder,
+    required this.mockLotteryPot,
   }) : super.base(
-          signerKeyUid: signerKey?.uid,
+          signerKeyUid: signerKey.uid,
           resolvedSignerAddress: resolvedSignerAddress,
           version: version,
-          chainId: chain?.chainId,
+          chainId: chain.chainId,
           funder: funder,
         );
 }
@@ -190,11 +188,11 @@ class MockLotteryPot extends LotteryPot {
   final MockMarketConditions mockMarketConditions;
 
   MockLotteryPot({
-    @required Token deposit,
-    @required Token balance,
+    required Token deposit,
+    required Token balance,
     unlock,
     warned,
-    @required this.mockMarketConditions,
+    required this.mockMarketConditions,
   }) : super(
           deposit: deposit,
           balance: balance,
@@ -217,7 +215,7 @@ class MockAccountDetail extends AccountDetail {
   final bool showMarketStatsAlert;
 
   @override
-  final List<OrchidUpdateTransactionV0> transactions;
+  final List<OrchidUpdateTransactionV0>? transactions;
 
   @override
   EthereumAddress get signerAddress {
@@ -225,10 +223,10 @@ class MockAccountDetail extends AccountDetail {
   }
 
   MockAccountDetail({
-    @required this.account,
-    @required this.lotteryPot,
-    @required this.marketConditions,
-    this.showMarketStatsAlert,
+    required this.account,
+    required this.lotteryPot,
+    required this.marketConditions,
+    this.showMarketStatsAlert = false,
     this.transactions,
   });
 
@@ -237,12 +235,12 @@ class MockAccountDetail extends AccountDetail {
   ) : this(
           account: account,
           lotteryPot: account.mockLotteryPot,
-          marketConditions: account.mockLotteryPot?.mockMarketConditions,
+          marketConditions: account.mockLotteryPot.mockMarketConditions,
         );
 }
 
 class MockMarketConditions extends MarketConditions {
   MockMarketConditions({
-    @required double efficiency,
-  }) : super(null, null, efficiency, false);
+    required double efficiency,
+  }) : super(Tokens.OXT.zero, Tokens.OXT.zero, efficiency, false);
 }

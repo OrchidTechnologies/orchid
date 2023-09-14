@@ -11,28 +11,28 @@ publish_to: none
 version: 0.9.0+1
 
 environment:
-  sdk: ">=2.19.1 <3.0.0"
+  sdk: ">=3.0.6 <4.0.0"
 
 dependencies:
-  badges: 1.2.0
+  badges: 3.1.1
   browser_detector: 2.0.0
   cupertino_icons: 1.0.2
-  dartjsengine: 1.0.1
   dotted_border: 2.0.0+2
   email_validator: 2.0.1
+  fixnum: 1.1.0
+  flutter_js: 0.8.0
   flutter:
     sdk: flutter
-  flutter_cupertino_localizations: 1.0.1
   flutter_html: 3.0.0-alpha.6
   flutter_localizations:
     sdk: flutter
   #flutter_secure_storage: 3.3.5 # XXX: macOS
   flutter_svg: 1.0.3
   font_awesome_flutter: 9.0.0
-  http: 0.13.4
+  http: 1.1.0
   in_app_purchase_storekit: 0.3.5+2
   in_app_purchase_android: 0.2.3+7
-  intl: 0.17.0
+  intl: 0.18.1
   jdenticon_dart: 2.0.0
 
   # Tracking this issue which has been merged but is not yet in a tagged release.
@@ -43,21 +43,21 @@ dependencies:
       ref: 9e4e9a167980f8413c1d8860873e582d0747edd9
 
   percent_indicator: 3.0.1
-  pointycastle: 3.5.0
+  pointycastle: 3.7.3
   provider: 5.0.0
   qr_flutter: 4.0.0
-  rxdart: 0.25.0
+  rxdart: 0.27.7
   shared_preferences: 2.0.12
   styled_text: 7.0.0
   sqflite: 2.0.0+3
   url_launcher: 6.0.3
-  uuid: 3.0.5
-  web3dart: 2.3.3
+  uuid: 3.0.7
+  web3dart: 2.7.1
   window_size:
     path: flutter-desktop-embedding/plugins/window_size
 
 dev_dependencies:
-  dart_code_metrics: 4.21.3
+#  dart_code_metrics: 4.21.3
   flutter_test:
     sdk: flutter
   pedantic: 1.11.0

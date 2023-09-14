@@ -1,26 +1,26 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
+import 'package:orchid/pages/circuit/hop_editor.dart';
 import 'package:orchid/pages/circuit/wireguard_hop_page.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
-import '../../common/app_sizes.dart';
-import 'hop_editor.dart';
-import 'model/circuit_hop.dart';
+import 'package:orchid/vpn/model/circuit_hop.dart';
 import 'openvpn_hop_page.dart';
 import 'orchid_hop_page.dart';
+import 'package:orchid/util/localization.dart';
 
-typedef AddFlowCompletion = void Function(CircuitHop result);
+typedef AddFlowCompletion = void Function(CircuitHop? result);
 
 class AddHopPage extends StatefulWidget {
   final AddFlowCompletion onAddFlowComplete;
 
-  const AddHopPage({Key key, this.onAddFlowComplete}) : super(key: key);
+  const AddHopPage({Key? key, required this.onAddFlowComplete})
+      : super(key: key);
 
   @override
   _AddHopPageState createState() => _AddHopPageState();
@@ -43,7 +43,7 @@ class _AddHopPageState extends State<AddHopPage> {
       backAction: () {
         widget.onAddFlowComplete(null);
       },
-      decoration: BoxDecoration(),
+      // decoration: BoxDecoration(),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28.0),
@@ -108,11 +108,14 @@ class _AddHopPageState extends State<AddHopPage> {
   }
 
   Widget _buildHopChoice(
-      {String text,
-      String imageName,
-      String svgName,
-      VoidCallback onTap,
-      Widget trailing}) {
+      {required String text,
+      String? imageName,
+      String? svgName,
+      VoidCallback? onTap,
+      Widget? trailing}) {
+    if (imageName == null && svgName == null) {
+      throw Exception('Must provide either imageName or svgName');
+    }
     return GestureDetector(
       onTap: onTap,
       child: OrchidPanel(
@@ -124,7 +127,7 @@ class _AddHopPageState extends State<AddHopPage> {
             (svgName != null
                 ? SvgPicture.asset(svgName,
                     width: 24, height: 24, color: Colors.white)
-                : Image.asset(imageName,
+                : Image.asset(imageName!,
                     width: 24, height: 24, color: Colors.white)),
             padx(16),
             Expanded(
@@ -186,15 +189,11 @@ class _AddHopPageState extends State<AddHopPage> {
   void _pushCircuitBuilderRoute(MaterialPageRoute<CircuitHop> route) async {
     // If the editor invokes the addFlowComplete, which should be the case on a save,
     // this entire flow will be popped to the caller and control will not return here.
-    CircuitHop hop = await Navigator.push(context, route);
+    CircuitHop? hop = await Navigator.push(context, route);
     // If hop is null the user backed out of the editor: Fall through and allow another choice.
     if (hop != null) {
       // Handle a return here for completeness.
       Navigator.pop(context, hop);
     }
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

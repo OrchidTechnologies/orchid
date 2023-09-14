@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/api/orchid_urls.dart';
 import 'package:orchid/common/app_colors.dart';
-import 'package:orchid/common/link_text.dart';
 
 @deprecated
 class AppText {
@@ -17,13 +14,13 @@ class AppText {
   );
 
   static Text header(
-      {text: String,
-      textAlign: TextAlign.center,
-      color: Colors.white,
-      fontWeight: FontWeight.w500,
-      fontFamily: "Roboto",
-      fontStyle: FontStyle.normal,
-      fontSize: 24.0}) {
+      {text = String,
+      textAlign = TextAlign.center,
+      color = Colors.white,
+      fontWeight = FontWeight.w500,
+      fontFamily = "Roboto",
+      fontStyle = FontStyle.normal,
+      fontSize = 24.0}) {
     return Text(text,
         textAlign: textAlign,
         style: TextStyle(
@@ -58,15 +55,15 @@ class AppText {
       decoration: TextDecoration.underline);
 
   static Text body(
-      {text: "",
-      textAlign: TextAlign.center,
-      color: Colors.white,
-      letterSpacing: 0.0,
-      lineHeight: 1.32,
-      fontWeight: FontWeight.w400,
-      fontFamily: "Roboto",
-      fontStyle: FontStyle.normal,
-      fontSize: 14.0}) {
+      {text = "",
+      textAlign = TextAlign.center,
+      color = Colors.white,
+      letterSpacing = 0.0,
+      lineHeight = 1.32,
+      fontWeight = FontWeight.w400,
+      fontFamily = "Roboto",
+      fontStyle = FontStyle.normal,
+      fontSize = 14.0}) {
     return Text(text,
         textAlign: textAlign,
         style: TextStyle(
@@ -186,6 +183,4 @@ class AppText {
       letterSpacing: -0.24,
       fontFamily: 'SFProText-Regular',
       height: 20.0 / 15.0);
-
 }
-

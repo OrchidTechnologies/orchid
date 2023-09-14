@@ -1,9 +1,8 @@
-// @dart=2.9
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_param.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/api/orchid_eth/tokens_legacy.dart';
 import 'package:orchid/util/hex.dart';
-import 'package:orchid/util/units.dart';
 
 class OrchidContractV0 {
   // The final lottery V0 contract address on Ethereum main net.
@@ -21,7 +20,7 @@ class OrchidContractV0 {
     //   return _testLotteryContractAddressV0;
     // }
     return OrchidUserConfig()
-        .getUserConfigJS()
+        .getUserConfig()
         .evalStringDefault("lottery0", _lotteryContractAddressV0);
   }
 
@@ -34,12 +33,29 @@ class OrchidContractV0 {
       return _testOXTContractAddress;
     }
     return OrchidUserConfig()
-        .getUserConfigJS()
+        .getUserConfig()
         .evalStringDefault("oxt", _oxtContractAddress);
   }
 
   static EthereumAddress get oxtContractAddress {
     return EthereumAddress.from(oxtContractAddressString);
+  }
+
+  static final _testDirectoryContractAddressV0 = '0xxxx';
+
+  // OXT Directory on main net
+  static final _directoryContractAddressV0 =
+      '0x918101FB64f467414e9a785aF9566ae69C3e22C5';
+
+  static String get directoryContractAddressString {
+    if (OrchidUserParams().test) {
+      return _testDirectoryContractAddressV0;
+    }
+    return _directoryContractAddressV0;
+  }
+
+  static EthereumAddress get directoryContractAddress {
+    return EthereumAddress.from(directoryContractAddressString);
   }
 
   static String updateEventHashV0 =
@@ -57,7 +73,11 @@ class OrchidContractV0 {
 
   static int gasLimitApprove = 200000;
 
-  static List<String> abi = [
+  static int gasLimitDirectoryPush = 300000;
+  static int gasLimitDirectoryPull = 300000;
+  static int gasLimitDirectoryTake = 300000;
+
+  static List<String> lotteryAbi = [
     'event Update(address indexed funder, address indexed signer, uint128 amount, uint128 escrow, uint256 unlock)',
     'event Create(address indexed funder, address indexed signer)',
     'event Bound(address indexed funder, address indexed signer)',
@@ -68,6 +88,22 @@ class OrchidContractV0 {
     'function lock(address signer)',
     'function pull(address signer, address payable target, bool autolock, uint128 amount, uint128 escrow)',
     'function yank(address signer, address payable target, bool autolock)',
+  ];
+
+  static List<String> directoryAbi = [
+    'function heft(address stakee) external view returns (uint256)',
+    'function push(address stakee, uint256 amount, uint128 delay)',
+    'function pull(address stakee, uint256 amount, uint256 index)',
+    'function take(uint256 index, uint256 amount, address payable target)',
+    // 'function transfer(address recipient, uint256 amount) external returns (bool)',
+    // 'function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)',
+    // 'function what() external view returns (IERC20)',
+    // 'function name(address staker, address stakee) public pure returns (bytes32)',
+    // 'function have() public view returns (uint256)',
+    // 'function seek(uint256 point) public view returns (address, uint128)',
+    // 'function pick(uint128 percent) external view returns (address, uint128)',
+    // 'function wait(address stakee, uint128 delay)',
+    // 'function stop(uint256 index, uint256 amount, uint128 delay)',
   ];
 }
 
@@ -117,13 +153,16 @@ class OrchidTransactionV0 {
   OrchidTransactionTypeV0 type;
 
   // Payment amount or null for no payment
-  OXT payment;
+  OXT? payment;
 
   bool get isPayment {
     return payment != null;
   }
 
-  OrchidTransactionV0({this.transactionHash, this.type, this.payment});
+  OrchidTransactionV0(
+      {required this.transactionHash,
+      required this.type,
+      required this.payment});
 
   /*
   {
@@ -165,7 +204,7 @@ class OrchidTransactionV0 {
     OrchidTransactionTypeV0 transactionType =
         inverseMap[methodId] ?? OrchidTransactionTypeV0.unknown;
 
-    OXT amount;
+    OXT? amount;
     if (transactionType == OrchidTransactionTypeV0.grab) {
       buff.takeBytes32(); // bytes32 reveal,
       buff.takeBytes32(); // bytes32 commit,
@@ -192,7 +231,10 @@ class OrchidUpdateEventV0 {
   OXT endBalance;
   OXT endDeposit;
 
-  OrchidUpdateEventV0({this.transactionHash, this.endBalance, this.endDeposit});
+  OrchidUpdateEventV0(
+      {required this.transactionHash,
+      required this.endBalance,
+      required this.endDeposit});
 
   /*
     {
@@ -235,7 +277,10 @@ class OrchidCreateEvent {
   final EthereumAddress funder;
   final EthereumAddress signer;
 
-  OrchidCreateEvent({this.transactionHash, this.funder, this.signer});
+  OrchidCreateEvent(
+      {required this.transactionHash,
+      required this.funder,
+      required this.signer});
 }
 
 class OrchidCreateEventV1 {
@@ -260,7 +305,10 @@ class OrchidCreateEventV0 implements OrchidCreateEvent {
   final EthereumAddress funder;
   final EthereumAddress signer;
 
-  OrchidCreateEventV0({this.transactionHash, this.funder, this.signer});
+  OrchidCreateEventV0(
+      {required this.transactionHash,
+      required this.funder,
+      required this.signer});
 
   static OrchidCreateEventV0 fromJsonRpcResult(dynamic result) {
     // Parse the results

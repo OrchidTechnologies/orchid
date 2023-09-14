@@ -1,10 +1,8 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:orchid/api/orchid_api.dart';
-import 'package:orchid/api/orchid_log_api.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/api/preferences/user_preferences_ui.dart';
+import 'package:orchid/vpn/orchid_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/common/app_buttons.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
@@ -12,7 +10,7 @@ import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/pages/circuit/config_change_dialogs.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:jsparser/jsparser.dart';
+import 'package:orchid/util/localization.dart';
 
 import '../../common/app_colors.dart';
 import '../../common/app_text.dart';
@@ -36,7 +34,7 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
   void initState() {
     super.initState();
 
-    var text = UserPreferences().userConfig.get();
+    var text = UserPreferencesUI().userConfig.get() ?? '';
     setState(() {
       _configFileTextLast = text;
       _configFileTextController.text = text;
@@ -130,10 +128,12 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
   }
 
   void _onPaste() async {
-    ClipboardData data = await Clipboard.getData('text/plain');
-    setState(() {
-      _configFileTextController.text = data.text;
-    });
+    ClipboardData? data = await Clipboard.getData('text/plain');
+    if (data?.text != null) {
+      setState(() {
+        _configFileTextController.text = data!.text!;
+      });
+    }
   }
 
   void _onClear() {
@@ -147,9 +147,9 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
     var newConfig = _configFileTextController.text;
     try {
       // Just parse it to the AST to catch gross syntax errors.
-      if (newConfig.trim().isNotEmpty) {
-        parsejs(newConfig, filename: 'program.js');
-      }
+      // if (newConfig.trim().isNotEmpty) {
+      //   parsejs(newConfig, filename: 'program.js');
+      // }
     } catch (err) {
       print("Error parsing config: $err");
       ConfigChangeDialogs.showConfigurationChangeFailed(context,
@@ -159,7 +159,7 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
 
     // save
     try {
-      await UserPreferences().userConfig.set(newConfig);
+      await UserPreferencesUI().userConfig.set(newConfig);
       setState(() {
         _configFileTextLast = newConfig;
       });
@@ -176,10 +176,6 @@ class _AdvancedConfigurationPageState extends State<AdvancedConfigurationPage> {
     super.dispose();
     _readyToSave.close();
   }
-
-  S get s {
-    return S.of(context);
-  }
 }
 
 class OrchidConfigTextBox extends StatelessWidget {
@@ -187,8 +183,8 @@ class OrchidConfigTextBox extends StatelessWidget {
   final bool readOnly;
 
   const OrchidConfigTextBox({
-    Key key,
-    @required TextEditingController textController,
+    Key? key,
+    required TextEditingController textController,
     this.readOnly = false,
   })  : _textController = textController,
         super(key: key);

@@ -1,14 +1,13 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
 
 class ExportIdentityDialog extends StatefulWidget {
   const ExportIdentityDialog({
-    Key key,
-    @required this.body,
-    @required this.config,
+    Key? key,
+    required this.body,
+    required this.config,
   }) : super(key: key);
 
   final StyledText body;
@@ -37,7 +36,6 @@ class _ExportIdentityDialogState extends State<ExportIdentityDialog> {
   }
 
   Column _buildContent(Orientation orientation) {
-    var s = S.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -79,7 +77,6 @@ class _ExportIdentityDialogState extends State<ExportIdentityDialog> {
   }
 
   Container _buildCopyButton() {
-    var s = S.of(context);
     return Container(
       width: 180,
       height: 30,

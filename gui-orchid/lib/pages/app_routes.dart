@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:orchid/pages/help/open_source_page.dart';
 import 'package:orchid/pages/help/privacy_page.dart';
@@ -58,6 +57,6 @@ class AppRoutes {
   };
 
   static Future<void> pushAccountManager(BuildContext context) async {
-    return await Navigator.pushNamed(context, AppRoutes.account_manager);
+    await Navigator.pushNamed(context, AppRoutes.account_manager);
   }
 }

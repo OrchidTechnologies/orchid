@@ -1,10 +1,10 @@
 import 'dart:math';
 import 'package:orchid/common/app_sizes.dart';
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/common/app_dialogs.dart';
-import 'package:orchid/pages/account_manager/account_view_model.dart';
+import 'package:orchid/orchid/account/account_view_model.dart';
 import 'package:orchid/util/listenable_builder.dart';
 import 'account_card.dart';
 import 'account_detail_store.dart';
@@ -29,7 +29,7 @@ class AccountSelector extends StatefulWidget {
 }
 
 class _AccountSelectorState extends State<AccountSelector> {
-  AccountDetailStore? _accountDetailStore;
+  late AccountDetailStore _accountDetailStore;
 
   @override
   void initState() {
@@ -44,7 +44,7 @@ class _AccountSelectorState extends State<AccountSelector> {
 
   @override
   void dispose() {
-    _accountDetailStore?.dispose();
+    _accountDetailStore.dispose();
     super.dispose();
   }
 
@@ -61,7 +61,7 @@ class _AccountSelectorState extends State<AccountSelector> {
           signerKey: account.signerKey,
           funder: account.funder,
           active: widget.selectedAccounts.contains(account),
-          detail: _accountDetailStore?.get(account));
+          detail: _accountDetailStore.get(account));
     }).toList();
 
     // final footer = () {
@@ -162,7 +162,7 @@ class AccountSelectorDialog extends StatelessWidget {
     return AppDialogs.showConfirmationDialog(
       context: context,
       contentPadding: EdgeInsets.zero,
-      titleWidget: ListenableBuilder(
+      titleWidget: ListenableBuilderUtil(
           listenable: titleChanged,
           builder: (context, snapshot) {
             var num = _selectedAccounts.length;

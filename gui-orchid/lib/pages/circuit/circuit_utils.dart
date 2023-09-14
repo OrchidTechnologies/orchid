@@ -1,28 +1,26 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'dart:async';
 import 'package:flutter/scheduler.dart';
-import 'package:orchid/api/orchid_api.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/vpn/model/circuit.dart';
+import 'package:orchid/vpn/model/orchid_hop.dart';
+import 'package:orchid/vpn/preferences/user_preferences_vpn.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid/account/account_finder.dart';
 import 'add_hop_page.dart';
-import 'model/circuit.dart';
-import 'model/circuit_hop.dart';
-import 'model/orchid_hop.dart';
+import 'package:orchid/vpn/model/circuit_hop.dart';
 
 typedef HopCompletion = void Function(UniqueHop);
 
 class CircuitUtils {
   // Show the add hop flow and save the result if completed successfully.
-  static void addHop(BuildContext context, {HopCompletion onComplete}) async {
+  static void addHop(BuildContext context, {required HopCompletion onComplete}) async {
     // Create a nested navigation context for the flow. Performing a pop() from
     // this outer context at any point will properly remove the entire flow
     // (possibly multiple screens) with one appropriate animation.
     Navigator addFlow = Navigator(
       onGenerateRoute: (RouteSettings settings) {
-        var addFlowCompletion = (CircuitHop result) {
+        var addFlowCompletion = (CircuitHop? result) {
           Navigator.pop(context, result);
         };
         var editor = AddHopPage(onAddFlowComplete: addFlowCompletion);
@@ -51,7 +49,7 @@ class CircuitUtils {
   // Note:   OrchidAPI().circuitConfigurationChanged.add(null);
   // Note: }
   static void _pushNewHopEditorRoute(BuildContext context,
-      MaterialPageRoute route, HopCompletion onComplete) async {
+      MaterialPageRoute route, HopCompletion? onComplete) async {
     var hop = await Navigator.push(context, route);
     if (hop == null) {
       return; // user cancelled
@@ -64,22 +62,10 @@ class CircuitUtils {
     }
   }
 
-  static void addHopToCircuit(CircuitHop hop) async {
-    var circuit = await UserPreferences().circuit.get();
+  static Future<void> addHopToCircuit(CircuitHop hop) async {
+    var circuit = UserPreferencesVPN().circuit.get()!;
     circuit.hops.add(hop);
-    saveCircuit(circuit);
-  }
-
-  /// Save the circuit and update published config and configuration listeners
-  static Future<void> saveCircuit(Circuit circuit) async {
-    try {
-      //log("Saving circuit: ${circuit.hops.map((e) => e.toJson())}");
-      await UserPreferences().circuit.set(circuit);
-    } catch (err, stack) {
-      log("Error saving circuit: $err, $stack");
-    }
-    await OrchidAPI().publishConfiguration();
-    OrchidAPI().circuitConfigurationChanged.add(null);
+    await UserPreferencesVPN().saveCircuit(circuit);
   }
 
   static Future<bool> defaultCircuitFromMostEfficientAccountIfNeeded(
@@ -94,11 +80,11 @@ class CircuitUtils {
   /// If the circuit is empty create a default single hop circuit using the
   /// supplied account.
   /// Returns true if a circuit was created.
-  static Future<bool> defaultCircuitIfNeededFrom(Account account) async {
-    var circuit = UserPreferences().circuit.get();
+  static Future<bool> defaultCircuitIfNeededFrom(Account? account) async {
+    var circuit = UserPreferencesVPN().circuit.get()!;
     if (circuit.hops.isEmpty && account != null) {
       log("circuit: creating default circuit from account: $account");
-      await CircuitUtils.saveCircuit(
+      await UserPreferencesVPN().saveCircuit(
         Circuit([OrchidHop.fromAccount(account)]),
       );
       return true;

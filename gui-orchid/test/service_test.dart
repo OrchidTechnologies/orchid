@@ -3,15 +3,14 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
-import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
-import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_eth_bandwidth_pricing.dart';
 import 'package:orchid/api/pricing/binance_pricing.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
-import 'package:orchid/api/purchase/orchid_pac_seller.dart';
-import 'package:orchid/api/purchase/orchid_pac_server.dart';
-import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
-import 'package:orchid/api/purchase/orchid_purchase.dart';
+import 'package:orchid/vpn/purchase/orchid_pac_seller.dart';
+import 'package:orchid/vpn/purchase/orchid_pac_server.dart';
+import 'package:orchid/vpn/purchase/orchid_pac_transaction.dart';
+import 'package:orchid/vpn/purchase/orchid_purchase.dart';
 
 ///
 /// Server integration tests

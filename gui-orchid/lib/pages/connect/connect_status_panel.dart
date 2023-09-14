@@ -1,29 +1,28 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:orchid/api/orchid_api_mock.dart';
+import 'package:orchid/vpn/orchid_api_mock.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
 import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/localization.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/util/format_currency.dart';
+import 'package:orchid/api/pricing/usd.dart';
 
 import '../app_routes.dart';
 
 class ConnectStatusPanel extends StatelessWidget {
-  final USD bandwidthPrice;
-  final double bandwidthAvailableGB;
-  final int circuitHops;
+  final USD? bandwidthPrice;
+  final double? bandwidthAvailableGB;
+  final int? circuitHops;
   final bool minHeight;
 
   const ConnectStatusPanel({
-    Key key,
-    @required this.bandwidthPrice,
-    @required this.bandwidthAvailableGB,
-    @required this.circuitHops,
+    Key? key,
+    required this.bandwidthPrice,
+    required this.bandwidthAvailableGB,
+    required this.circuitHops,
     this.minHeight = false,
   }) : super(key: key);
 
@@ -45,32 +44,29 @@ class ConnectStatusPanel extends StatelessWidget {
   }
 
   Widget _buildGBPanel(BuildContext context) {
-    var s = S.of(context);
     // await Navigator.pushNamed(context, AppRoutes.identity);
     return _buildPanel(
         icon: SvgPicture.asset(OrchidAssetSvg.gauge_icon_path,
             width: 40, height: 35, color: Colors.white),
         text: bandwidthAvailableGB != null
-            ? toFixedLocalized(bandwidthAvailableGB,
+            ? toFixedLocalized(bandwidthAvailableGB!,
                 locale: context.locale, precision: 1)
             : '...',
-        subtext: s.gb);
+        subtext: context.s.gb);
   }
 
   Widget _buildUSDPanel(BuildContext context) {
-    var s = S.of(context);
     var price = (bandwidthPrice != null && !MockOrchidAPI.hidePrices)
-        ? '\$' + formatCurrency(bandwidthPrice.value, locale: context.locale)
+        ? '\$' + formatCurrency(bandwidthPrice!.value, locale: context.locale)
         : '...';
     return _buildPanel(
         icon: SvgPicture.asset(OrchidAssetSvg.dollars_icon_path,
             width: 40, height: 40, color: Colors.white),
         text: price,
-        subtext: s.usdgb);
+        subtext: context.s.usdgb);
   }
 
   Widget _buildHopsPanel(BuildContext context) {
-    var s = S.of(context);
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(context, AppRoutes.circuit);
@@ -78,13 +74,13 @@ class ConnectStatusPanel extends StatelessWidget {
       child: _buildPanel(
           icon: SvgPicture.asset(OrchidAssetSvg.hops_icon_path,
               width: 40, height: 25, color: Colors.white),
-          text: circuitHops == null ? '' : "$circuitHops" + ' ' + s.hop,
+          text: circuitHops == null ? '' : "$circuitHops" + ' ' + context.s.hop,
           // No pluralization
-          subtext: s.circuit),
+          subtext: context.s.circuit),
     );
   }
 
-  Widget _buildPanel({Widget icon, String text, String subtext}) {
+  Widget _buildPanel({required Widget icon, required String text, required String subtext}) {
     return Container(
       width: 88,
       height: minHeight ? 74 : 40.0 + 12.0 + 74.0,

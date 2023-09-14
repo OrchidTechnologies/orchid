@@ -1,5 +1,4 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'app_buttons_deprecated.dart';
 import 'app_colors.dart';
 import 'app_text.dart';
@@ -7,15 +6,14 @@ import 'app_text.dart';
 class AppDialogs {
   /// Show a styled Orchid app dialog with title, body, OK button, and optional link to settings.
   static Future<void> showAppDialog({
-    @required BuildContext context,
-    String title,
-    String bodyText,
-    Widget body,
+    required BuildContext context,
+    String? title,
+    String? bodyText,
+    Widget? body,
     bool linkSettings = false,
     bool showActions = true,
-    EdgeInsets contentPadding,
+    EdgeInsets? contentPadding,
   }) {
-    S s = S.of(context);
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -34,7 +32,7 @@ class AppDialogs {
           actions: <Widget>[
             if (linkSettings)
               FlatButtonDeprecated(
-                child: Text(s.settingsButtonTitle, style: AppText.dialogButton),
+                child: Text(context.s.settingsButtonTitle, style: AppText.dialogButton),
                 onPressed: () {
                   Navigator.of(context).pop();
                   Navigator.pushNamed(context, '/settings');
@@ -42,7 +40,7 @@ class AppDialogs {
               ),
             if (showActions)
               FlatButtonDeprecated(
-                child: Text(s.ok,
+                child: Text(context.s.ok,
                     style: OrchidText.button
                         .copyWith(color: OrchidColors.purple_bright)),
                 onPressed: () {
@@ -55,26 +53,26 @@ class AppDialogs {
     );
   }
 
-  static Future<bool> showConfirmationDialog({
-    @required BuildContext context,
-    String title,
-    Widget titleWidget,
-    Widget body,
-    String bodyText,
-    String cancelText,
+  static Future<bool?> showConfirmationDialog({
+    required BuildContext context,
+    String? title,
+    Widget? titleWidget,
+    Widget? body,
+    String? bodyText,
+    String? cancelText,
     Color cancelColor = AppColors.purple_3,
     actionText,
     Color actionColor = AppColors.purple_3,
-    VoidCallback cancelAction,
-    VoidCallback commitAction,
-    EdgeInsets contentPadding,
+    VoidCallback? cancelAction,
+    VoidCallback? commitAction,
+    EdgeInsets? contentPadding,
     bool dark = false,
   }) {
     log("XXX: confirmation dialog show..");
     return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
-        S s = S.of(context);
+        S s = S.of(context)!;
         return AlertDialog(
           contentPadding: contentPadding,
           shape: RoundedRectangleBorder(
@@ -137,7 +135,7 @@ class AppDialogs {
               child: Padding(
                 padding: const EdgeInsets.all(6),
                 child: Text(
-                  actionText ?? S.of(context).ok,
+                  actionText ?? S.of(context)!.ok,
                   style: OrchidText.button,
                 ),
               ),
@@ -146,7 +144,7 @@ class AppDialogs {
                   commitAction();
                 }
                 Navigator.of(context).pop(true);
-                return true;
+                // return true;
               },
             ),
           ],

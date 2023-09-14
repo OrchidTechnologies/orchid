@@ -1,18 +1,17 @@
-// @dart=2.9
 import 'dart:async';
 import 'package:flutter/material.dart';
 
 /// Sometimes useful for comparing or debugging visual effects
 class OnOff extends StatefulWidget {
-  final bool on;
+  final bool? on;
   final Duration rate;
   final Widget Function(BuildContext context, bool on) builder;
 
   OnOff({
-    Key key,
+    Key? key,
     this.on,
     this.rate = const Duration(milliseconds: 500),
-    this.builder,
+    required this.builder,
   }) : super(key: key);
 
   @override
@@ -21,7 +20,7 @@ class OnOff extends StatefulWidget {
 
 class _OnOffState extends State<OnOff> {
   bool on = true;
-  Timer timer;
+  late Timer timer;
 
   void initState() {
     super.initState();
@@ -63,10 +62,10 @@ extension DebugExtension on Widget {
 }
 
 class DebugColor extends StatelessWidget {
-  final Widget child;
+  final Widget? child;
   final Color color;
 
-  const DebugColor({Key key, this.child, this.color = Colors.orange})
+  const DebugColor({Key? key, this.child, this.color = Colors.orange})
       : super(key: key);
 
   @override

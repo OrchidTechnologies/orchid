@@ -1,15 +1,15 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/api/preferences/user_preferences_keys.dart';
+import 'package:orchid/vpn/preferences/release_version.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'dart:math';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:orchid/api/preferences/observable_preference.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/vpn/preferences/user_preferences_vpn.dart';
 import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid/orchid_switch.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
-import 'package:orchid/pages/circuit/model/orchid_hop.dart';
+import 'package:orchid/vpn/model/orchid_hop.dart';
 import 'package:orchid/common/page_tile.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
@@ -35,9 +35,9 @@ class _SettingsPageState extends State<SettingsPage> {
     initStateAsync();
     _defaultCurator.addListener(_curatorChanged);
 
-    _queryBalances = UserPreferences().getQueryBalances();
+    _queryBalances = UserPreferencesVPN().getQueryBalances();
     _defaultCurator.text =
-        UserPreferences().getDefaultCurator() ?? OrchidHop.appDefaultCurator;
+        UserPreferencesVPN().getDefaultCurator() ?? OrchidHop.appDefaultCurator;
   }
 
   void initStateAsync() async {
@@ -49,7 +49,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void advancedConfigChanged() async {
     _tester = OrchidUserConfig.isTester;
 
-    var jsConfig = OrchidUserConfig().getUserConfigJS();
+    var jsConfig = OrchidUserConfig().getUserConfig();
     OrchidPlatform.pretendToBeAndroid =
         jsConfig.evalBoolDefault('isAndroid', false);
 
@@ -63,8 +63,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
     final height = 56.0;
     return TitledPage(
-      title: s.settings,
-      decoration: BoxDecoration(),
+      title: context.s.settings,
+      // decoration: BoxDecoration(),
       child: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -73,7 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
               // Default curator
               _divided(PageTile(
                 height: height,
-                title: s.defaultCurator,
+                title: context.s.defaultCurator,
                 trailing: Container(
                     width: min(275, screenWidth * 0.5),
                     child: OrchidTextField(
@@ -85,11 +85,11 @@ class _SettingsPageState extends State<SettingsPage> {
               // Balance query
               _divided(PageTile(
                 height: height,
-                title: s.queryBalances,
+                title: context.s.queryBalances,
                 trailing: OrchidSwitch(
                   value: _queryBalances,
                   onChanged: (bool value) {
-                    UserPreferences().setQueryBalances(value);
+                    UserPreferencesVPN().setQueryBalances(value);
                     setState(() {
                       _queryBalances = value;
                     });
@@ -101,14 +101,14 @@ class _SettingsPageState extends State<SettingsPage> {
               _divided(PageTile.route(
                   // leading: Icon(Icons.cloud_outlined, color: Colors.white, size: 24),
                   leading: OrchidAsset.chain.unknown_chain_no_bg,
-                  title: s.chainSettings,
+                  title: context.s.chainSettings,
                   routeName: '/settings/rpc',
                   context: context)),
 
               // Advanced Configuration
               _divided(PageTile(
                 height: height,
-                title: s.advancedConfiguration,
+                title: context.s.advancedConfiguration,
                 leading: Padding(
                   padding: const EdgeInsets.only(left: 2.0),
                   child: Icon(Icons.settings, color: Colors.white, size: 20),
@@ -123,14 +123,14 @@ class _SettingsPageState extends State<SettingsPage> {
               _divided(PageTile.route(
                   leading:
                       Icon(Icons.import_export, color: Colors.white, size: 24),
-                  title: s.configurationManagement,
+                  title: context.s.configurationManagement,
                   routeName: '/settings/manage_config',
                   context: context)),
 
               // Logging
               _divided(PageTile.route(
                   // height: height,
-                  title: s.logging,
+                  title: context.s.logging,
                   routeName: '/settings/log',
                   context: context)),
 
@@ -140,7 +140,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   trailing: RaisedButtonDeprecated(
                     color: OrchidColors.tappable,
                     child: Text(
-                      s.reset.toUpperCase(),
+                      context.s.reset.toUpperCase(),
                       style: buttonStyle,
                     ),
                     onPressed: _resetFirstLaunch,
@@ -153,7 +153,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   trailing: RaisedButtonDeprecated(
                     color: OrchidColors.tappable,
                     child: Text(
-                      s.clear.toUpperCase(),
+                      context.s.clear.toUpperCase(),
                       style: buttonStyle,
                     ),
                     onPressed: _clearCachedAccounts,
@@ -166,7 +166,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   trailing: RaisedButtonDeprecated(
                     color: OrchidColors.tappable,
                     child: Text(
-                      s.remove.toUpperCase(),
+                      context.s.remove.toUpperCase(),
                       style: buttonStyle,
                     ),
                     onPressed: _confirmClearAllKeysAndAccounts,
@@ -194,47 +194,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   ),
                 )),
-
-              /*
-              if (_tester)
-                _divided(PageTile(
-                  title: "(TEST) Test Active Account Migration",
-                  trailing: RaisedButtonDeprecated(
-                    child: Text(
-                      s.reset.toUpperCase(),
-                      style: buttonStyle,
-                    ),
-                    onPressed: () async {
-                      log("Testing migration by setting an active account");
-                      await UserPreferences().circuit.clear();
-                      AccountFinder().find((accounts) async {
-                        if (accounts.isNotEmpty) {
-                          await UserPreferences()
-                              .activeAccounts
-                              .set([accounts.first]);
-                          AppDialogs.showAppDialog(
-                              context: context,
-                              title: "Migration reset. Quit the app now.");
-                        }
-                      });
-                    },
-                  ),
-                )),
-               */
-
-              /*
-              if (_tester)
-                _divided(PageTile(
-                  title: "(TEST) Reset V1 Account Data",
-                  trailing: RaisedButtonDeprecated(
-                    child: Text(s.reset.toUpperCase(), style: buttonStyle),
-                    onPressed: () {
-                      UserPreferences().activeAccounts.set([]);
-                      UserPreferences().cachedDiscoveredAccounts.set({});
-                    },
-                  ),
-                )),
-               */
             ],
           ),
         ),
@@ -244,7 +203,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _resetEverything() async {
     log("Clearing everything");
-    await UserPreferences().circuit.clear();
+    await UserPreferencesVPN().circuit.clear();
     await _clearAllKeysAndAccounts();
     await _resetFirstLaunch();
     Navigator.pop(context);
@@ -274,19 +233,19 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _clearAllKeysAndAccounts() async {
-    await UserPreferences().cachedDiscoveredAccounts.clear();
-    await UserPreferences().keys.clear();
+    await UserPreferencesVPN().cachedDiscoveredAccounts.clear();
+    await UserPreferencesKeys().keys.clear();
   }
 
   void _clearCachedAccounts() async {
     log("Clearing cached discovered accounts");
-    await UserPreferences().cachedDiscoveredAccounts.clear();
+    await UserPreferencesVPN().cachedDiscoveredAccounts.clear();
     await AppDialogs.showAppDialog(
         context: context, title: "Cached accounts cleared.");
   }
 
   Future<void> _resetFirstLaunch() async {
-    await UserPreferences()
+    await UserPreferencesVPN()
         .releaseVersion
         .set(ReleaseVersion.resetFirstLaunch());
   }
@@ -302,7 +261,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _curatorChanged() {
-    UserPreferences().setDefaultCurator(_defaultCurator.text);
+    UserPreferencesVPN().setDefaultCurator(_defaultCurator.text);
     setState(() {});
   }
 
@@ -311,9 +270,5 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
     ScreenOrientation.reset();
     _defaultCurator.removeListener(_curatorChanged);
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

@@ -3,12 +3,12 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/orchid/orchid_logo.dart';
-import 'package:orchid/pages/circuit/model/circuit.dart';
-import 'package:orchid/pages/circuit/model/openvpn_hop.dart';
-import 'package:orchid/pages/circuit/model/orchid_hop.dart';
-import 'package:orchid/pages/circuit/model/wireguard_hop.dart';
+import 'package:orchid/vpn/model/circuit.dart';
+import 'package:orchid/vpn/model/openvpn_hop.dart';
+import 'package:orchid/vpn/model/orchid_hop.dart';
+import 'package:orchid/vpn/model/wireguard_hop.dart';
 import 'package:orchid/util/on_off.dart';
-import 'package:orchid/util/test_app.dart';
+import 'package:orchid/orchid/test_app.dart';
 import 'manage_accounts_card.dart';
 
 void main() {

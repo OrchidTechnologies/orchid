@@ -1,8 +1,7 @@
-// @dart=2.9
 import 'dart:math';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
-import 'package:orchid/api/orchid_budget_api.dart';
+import 'package:orchid/api/orchid_eth/orchid_lottery.dart';
 import '../chains.dart';
 import '../token_type.dart';
 import 'orchid_contract_v1.dart';
@@ -65,9 +64,9 @@ class MarketConditionsV1 implements MarketConditions {
   /// pot composition and gas required to create the account.
   // TODO: If we use non-native tokens in the future with v1 we will have to update this.
   static Future<PotStats> getPotStats({
-    Chain chain,
-    double efficiency,
-    int tickets,
+    required Chain chain,
+    required double efficiency,
+    required int tickets,
   }) async {
     if (efficiency < 0 || efficiency >= 1.0) {
       throw Exception("invalid efficiency: $efficiency");

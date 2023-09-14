@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 
@@ -6,17 +5,17 @@ import 'package:orchid/orchid/orchid_text.dart';
 /// and a tap gesture callback.
 class PageTile extends StatelessWidget {
   final String title;
-  final String imageName;
-  Widget body;
-  Widget trailing;
-  Widget leading;
-  GestureTapCallback onTap;
-  Color backgroundColor;
-  final Color textColor;
-  double height;
+  final String? imageName;
+  final Widget? body;
+  final Widget? trailing;
+  final Widget? leading;
+  late final GestureTapCallback? onTap;
+  final Color? backgroundColor;
+  final Color? textColor;
+  final double? height;
 
   PageTile({
-    this.title,
+    required this.title,
     this.body,
     this.imageName,
     this.onTap,
@@ -28,15 +27,17 @@ class PageTile extends StatelessWidget {
   });
 
   PageTile.route(
-      {this.title,
+      {required this.title,
       this.imageName,
-        this.leading,
-      @required BuildContext context,
-      @required String routeName,
-      this.textColor}) {
-    this.onTap = () {
-      Navigator.pushNamed(context, routeName);
-    };
+      this.leading,
+      required BuildContext context,
+      required String routeName,
+      this.textColor,
+      this.body,
+      this.trailing,
+      this.backgroundColor,
+      this.height}) {
+    this.onTap = () => Navigator.pushNamed(context, routeName);
   }
 
   @override
@@ -46,13 +47,13 @@ class PageTile extends StatelessWidget {
         height: height ?? 50,
         color: backgroundColor,
         child: ListTile(
-          // contentPadding: EdgeInsets.zero,
+            // contentPadding: EdgeInsets.zero,
             title:
                 Text(title, style: OrchidText.body2.copyWith(color: textColor)),
             subtitle: body,
             leading: leading ??
                 (imageName != null
-                    ? Image(color: Colors.white, image: AssetImage(imageName))
+                    ? Image(color: Colors.white, image: AssetImage(imageName!))
                     : null),
             trailing: trailing != null
                 ? trailing

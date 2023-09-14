@@ -1,20 +1,19 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/config_text.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/instructions_view.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
+import 'package:orchid/vpn/model/wireguard_hop.dart';
 import '../../common/app_sizes.dart';
 import 'hop_editor.dart';
-import 'model/wireguard_hop.dart';
+import 'package:orchid/util/localization.dart';
 
 /// Create / edit / view an WireGuard Hop
 class WireGuardHopPage extends HopEditor<WireGuardHop> {
   WireGuardHopPage(
-      {@required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
+      {required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
       : super(
             editableHop: editableHop,
             mode: mode,
@@ -34,9 +33,11 @@ class _WireGuardHopPageState extends State<WireGuardHopPage> {
     // Disable rotation until we update the screen design
     ScreenOrientation.portrait();
 
-    WireGuardHop hop = widget.editableHop.value?.hop;
+    // CircuitHop? hop = widget.editableHop.value?.hop;
+    // TODO: Intellij isn't showing this type as nullable...?
+    WireGuardHop? hop = widget.editableHop.value?.hop as WireGuardHop;
     setState(() {
-      _config.text = hop?.config;
+      _config.text = hop?.config ?? '';
     }); // Setstate to update the hop for any defaulted values.
     _config.addListener(_updateHop);
   }
@@ -53,7 +54,7 @@ class _WireGuardHopPageState extends State<WireGuardHopPage> {
     return TapClearsFocus(
       child: TitledPage(
         title: s.wireguardHop,
-        decoration: BoxDecoration(),
+        // decoration: BoxDecoration(),
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context, widget.onAddFlowComplete)]
             : [],
@@ -109,9 +110,5 @@ class _WireGuardHopPageState extends State<WireGuardHopPage> {
     super.dispose();
     ScreenOrientation.reset();
     _config.removeListener(_updateHop);
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

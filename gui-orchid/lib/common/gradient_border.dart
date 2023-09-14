@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 
 class GradientBorder extends StatelessWidget {
@@ -7,12 +6,12 @@ class GradientBorder extends StatelessWidget {
   final bool enabled;
 
   GradientBorder({
-    Key key,
-    GradientBorderPainter painter,
-    @required double strokeWidth,
-    @required double radius,
-    @required Gradient gradient,
-    @required this.child,
+    Key? key,
+    GradientBorderPainter? painter,
+    required double strokeWidth,
+    required double radius,
+    required Gradient gradient,
+    required this.child,
     this.enabled = true,
   })  : this.painter = painter ??
             GradientBorderPainter(
@@ -36,9 +35,9 @@ class GradientBorderPainter extends CustomPainter {
   final Gradient gradient;
 
   GradientBorderPainter(
-      {@required double strokeWidth,
-      @required double radius,
-      @required Gradient gradient})
+      {required double strokeWidth,
+      required double radius,
+      required Gradient gradient})
       : this.strokeWidth = strokeWidth,
         this.radius = radius,
         this.gradient = gradient;

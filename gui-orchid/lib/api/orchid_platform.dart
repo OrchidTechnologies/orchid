@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'orchid_log_api.dart';
+import 'orchid_log.dart';
 
 /// Support overriding the platform for testing.
 class OrchidPlatform {

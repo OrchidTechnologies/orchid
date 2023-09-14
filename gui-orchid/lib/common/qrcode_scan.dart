@@ -1,6 +1,5 @@
-// @dart=2.12
 import 'package:orchid/common/app_dialogs.dart';
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class QRCodeScanner extends StatelessWidget {

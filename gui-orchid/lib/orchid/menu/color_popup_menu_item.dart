@@ -1,22 +1,21 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 
 /// Support a background color for individual menu items
 class ColorPopupMenuItem<T> extends PopupMenuItem<T> {
-  final Color color;
+  final Color? color;
   final double height;
   final VoidCallback onTap;
   final EdgeInsets padding;
 
   const ColorPopupMenuItem({
-    Key key,
-    T value,
+    Key? key,
+    T? value,
     bool enabled = true,
-    Widget child,
+    Widget? child,
     this.color,
-    this.height,
-    this.onTap,
-    this.padding,
+    required this.height,
+    required this.onTap,
+    required this.padding,
   }) : super(
     key: key,
     value: value,

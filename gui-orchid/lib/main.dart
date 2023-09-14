@@ -1,18 +1,17 @@
-// @dart=2.9
-import 'orchid.dart';
+import 'package:orchid/vpn/orchid_api.dart';
+import 'package:orchid/vpn/purchase/orchid_purchase.dart';
+import 'orchid/orchid.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/api/purchase/orchid_purchase.dart';
 import 'package:orchid/pages/orchid_app.dart';
 import 'package:window_size/window_size.dart';
-import 'api/configuration/orchid_user_config/orchid_user_config.dart';
-import 'api/monitoring/routing_status.dart';
-import 'api/orchid_api.dart';
+import 'api/orchid_user_config/orchid_user_config.dart';
+import 'vpn/monitoring/routing_status.dart';
 import 'api/orchid_platform.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await UserPreferences.init();
-  OrchidAPI().logger().write("App Startup");
+  log("App Startup");
   FlutterError.onError = (FlutterErrorDetails details) {
     print("FlutterError:  ${details.exception}");
     print("FlutterError:  ${details.stack}");
@@ -20,7 +19,7 @@ void main() async {
   OrchidRoutingStatus().beginPollingStatus();
   OrchidAPI().applicationReady();
   OrchidPlatform.pretendToBeAndroid =
-      OrchidUserConfig().getUserConfigJS().evalBoolDefault('isAndroid', false);
+      OrchidUserConfig().getUserConfig().evalBoolDefault('isAndroid', false);
   if (OrchidPlatform.isApple || OrchidPlatform.isAndroid) {
     OrchidPurchaseAPI().initStoreListener();
   }

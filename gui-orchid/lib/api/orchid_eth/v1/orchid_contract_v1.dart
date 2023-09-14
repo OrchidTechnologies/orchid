@@ -1,4 +1,4 @@
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_config.dart';
 
 class OrchidContractV1 {
   // Lottery contract address (all chains, singleton deployment).
@@ -14,7 +14,7 @@ class OrchidContractV1 {
     //   return _testLotteryContractAddressV1;
     // }
     return OrchidUserConfig()
-        .getUserConfigJS()
+        .getUserConfig()
         .evalStringDefault("lottery", _lotteryContractAddressV1);
   }
 

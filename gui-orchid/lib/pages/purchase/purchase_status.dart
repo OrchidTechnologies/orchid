@@ -1,17 +1,16 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_urls.dart';
-import 'package:orchid/api/purchase/orchid_pac_server.dart';
-import 'package:orchid/api/purchase/orchid_pac_transaction.dart';
+import 'package:orchid/vpn/purchase/orchid_pac_server.dart';
+import 'package:orchid/vpn/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/common/app_buttons_deprecated.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 
 class PurchaseStatus extends StatefulWidget {
-  const PurchaseStatus({Key key}) : super(key: key);
+  const PurchaseStatus({Key? key}) : super(key: key);
 
   @override
   _PurchaseStatusState createState() => _PurchaseStatusState();
@@ -19,7 +18,7 @@ class PurchaseStatus extends StatefulWidget {
 
 class _PurchaseStatusState extends State<PurchaseStatus> {
   // The status message to be shown to the user
-  String _statusMessage;
+  String? _statusMessage;
 
   // If true show the expandable help section
   bool _waitingForUserAction = false;
@@ -215,14 +214,14 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
 
   void _copyDebugInfo() async {
     log("iap: Copy debug info");
-    PacTransaction tx = await PacTransaction.shared.get();
+    PacTransaction? tx = PacTransaction.shared.get();
     Clipboard.setData(ClipboardData(
         text: tx != null ? (await tx.userDebugString()) : '<no tx>'));
   }
 
   void _retryPurchase() async {
     log("iap: User hit retry button.");
-    (await (PacTransaction.shared).get()).ready().save();
+    ((PacTransaction.shared).get())?.ready().save();
     OrchidPACServer().advancePACTransactions();
   }
 
@@ -240,7 +239,7 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
   }
 
   // Respond to updates of the PAC transaction status
-  void _pacTransactionUpdated(PacTransaction tx) async {
+  void _pacTransactionUpdated(PacTransaction? tx) async {
     if (tx == null) {
       _hide();
       return;
@@ -295,10 +294,6 @@ class _PurchaseStatusState extends State<PurchaseStatus> {
       _statusMessage = null;
       _waitingForUserAction = false;
     });
-  }
-
-  S get s {
-    return S.of(context);
   }
 
   @override

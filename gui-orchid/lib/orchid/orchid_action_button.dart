@@ -1,4 +1,4 @@
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/common/gradient_border.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 
@@ -109,13 +109,13 @@ class OrchidActionButton extends StatelessWidget {
 
 class OrchidOutlineButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Color? borderColor;
 
   const OrchidOutlineButton({
     Key? key,
     required this.text,
-    required this.onPressed,
+    this.onPressed,
     this.borderColor,
   }) : super(key: key);
 

@@ -1,21 +1,19 @@
-// @dart=2.9
-import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_market_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_market_v1.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_mock.dart';
 import 'package:orchid/util/cacheable.dart';
-import '../orchid_budget_api.dart';
+import 'orchid_lottery.dart';
 import 'orchid_market.dart';
 
 /// The base model for accounts including chain, signer, funder, and contract version.
 class Account {
   /// If this account was created for a stored key then this is the key uid.
-  final String signerKeyUid;
+  final String? signerKeyUid;
   final EthereumAddress funder;
 
   /// The contract version: 0 for the original OXT contract.
@@ -25,10 +23,10 @@ class Account {
   /// For an account that is created from a stored key the signer address is
   /// resolved lazily by looking up the key and calculating the address from the secret.
   /// For an account that is created from a signer address this holds the address.
-  EthereumAddress resolvedSignerAddress;
+  EthereumAddress? resolvedSignerAddress;
 
   /// For an account created from a full signer key this is the resolved key.
-  StoredEthereumKey resolvedSignerKey;
+  StoredEthereumKey? resolvedSignerKey;
 
   bool get hasKey {
     return signerKeyUid != null;
@@ -39,20 +37,20 @@ class Account {
   }
 
   Account.base({
-    @required this.signerKeyUid,
+    required this.signerKeyUid,
     this.resolvedSignerAddress,
     this.resolvedSignerKey,
     this.version = 0,
-    this.chainId,
-    this.funder,
+    required this.chainId, // required?
+    required this.funder, // required?
   });
 
   /// Create an account with referencing a stored signer key
   Account.fromSignerKeyRef({
-    @required StoredEthereumKeyRef signerKey,
+    required StoredEthereumKeyRef signerKey,
     int version = 0,
-    int chainId,
-    EthereumAddress funder,
+    required int chainId,
+    required EthereumAddress funder,
   }) : this.base(
           signerKeyUid: signerKey.keyUid,
           resolvedSignerAddress: null,
@@ -63,10 +61,10 @@ class Account {
 
   /// Create an account with a full signer key
   Account.fromSignerKey({
-    @required StoredEthereumKey signerKey,
+    required StoredEthereumKey signerKey,
     int version = 0,
-    int chainId,
-    EthereumAddress funder,
+    required int chainId,
+    required EthereumAddress funder,
   }) : this.base(
           signerKeyUid: signerKey.uid,
           resolvedSignerAddress: null,
@@ -78,10 +76,10 @@ class Account {
 
   /// Create an account with an external signer address (no key)
   Account.fromSignerAddress({
-    @required EthereumAddress signerAddress,
+    required EthereumAddress signerAddress,
     int version = 0,
-    int chainId,
-    EthereumAddress funder,
+    required int chainId,
+    required EthereumAddress funder,
   }) : this.base(
           signerKeyUid: null,
           resolvedSignerAddress: signerAddress,
@@ -139,7 +137,7 @@ class Account {
   /// This method loads market conditions for each account and sorts them by efficiency.
   static Future<List<Account>> sortAccountsByEfficiency(
       Set<Account> accounts) async {
-    var accountMarketConditions =
+    List<_AccountMarketConditions> accountMarketConditions =
         (await Future.wait(accounts.map((account) async {
       try {
         return _AccountMarketConditions(
@@ -149,16 +147,17 @@ class Account {
         return null;
       }
     })))
-            .where((e) => e != null) // skip errors
+            .whereType<_AccountMarketConditions>()
             .toList();
 
     // Sort by efficiency descending
     // Note: We have a similar sort in the account manager.
     accountMarketConditions
         .sort((_AccountMarketConditions a, _AccountMarketConditions b) {
-      return -((a.marketConditions?.efficiency ?? 0)
-          .compareTo((b.marketConditions?.efficiency ?? 0)));
+      return -((a.marketConditions.efficiency ?? 0)
+          .compareTo((b.marketConditions.efficiency ?? 0)));
     });
+
     return accountMarketConditions.map((e) => e.account).toList();
   }
 
@@ -172,21 +171,21 @@ class Account {
           'Account does not resolve to a stored key: $resolvedSignerAddress');
     }
 
-    return StoredEthereumKeyRef(this.signerKeyUid);
+    return StoredEthereumKeyRef(this.signerKeyUid!);
   }
 
   StoredEthereumKey get signerKey {
     if (resolvedSignerKey == null) {
       resolvedSignerKey = signerKeyRef.get();
     }
-    return resolvedSignerKey;
+    return resolvedSignerKey!;
   }
 
   EthereumAddress get signerAddress {
     if (resolvedSignerAddress == null) {
-      resolvedSignerAddress = signerKey?.address;
+      resolvedSignerAddress = signerKey.address;
     }
-    return resolvedSignerAddress;
+    return resolvedSignerAddress!;
   }
 
   // Resolve the signer address using the supplied keystore.
@@ -198,21 +197,15 @@ class Account {
   /// End key methods
   ///
 
-  /// Indicates that this account selects an identity but not yet a designated
-  /// account for the identity.
-  bool get isIdentityPlaceholder {
-    return chainId == null && funder == null;
-  }
-
   static String signerKeyUidJsonName = 'identityUid';
 
   Account.fromJson(Map<String, dynamic> json)
       : this.signerKeyUid = json[signerKeyUidJsonName],
         this.version = int.parse(json['version']),
-        this.chainId = parseNullableInt(json['chainId']),
+        this.chainId = int.parse(json['chainId']),
         this.funder = EthereumAddress.fromNullable(json['funder']);
 
-  static int parseNullableInt(String val) {
+  static int? parseNullableInt(String? val) {
     return val == null ? null : int.parse(val);
   }
 

@@ -1,8 +1,7 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/orchid/orchid_text.dart';
-import 'package:orchid/util/test_app.dart';
+import 'package:orchid/orchid/test_app.dart';
 import 'blockies.dart';
 
 void main() {
@@ -10,7 +9,7 @@ void main() {
 }
 
 class _Test extends StatefulWidget {
-  const _Test({Key key}) : super(key: key);
+  const _Test({Key? key}) : super(key: key);
 
   @override
   State<_Test> createState() => _TestState();

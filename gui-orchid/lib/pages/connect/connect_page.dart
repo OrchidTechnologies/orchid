@@ -1,40 +1,38 @@
-// @dart=2.9
-import 'package:orchid/api/orchid_eth/v1/orchid_eth_bandwidth_pricing.dart';
-import 'package:orchid/orchid.dart';
 import 'dart:async';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
-import 'package:orchid/api/monitoring/restart_manager.dart';
-import 'package:orchid/api/orchid_api_mock.dart';
-import 'package:orchid/api/orchid_budget_api.dart';
+import 'package:orchid/vpn/preferences/release_version.dart';
+import 'package:orchid/orchid/orchid.dart';
+import 'package:orchid/api/orchid_eth/v1/orchid_eth_bandwidth_pricing.dart';
+import 'package:orchid/api/preferences/user_preferences_keys.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/vpn/monitoring/restart_manager.dart';
+import 'package:orchid/api/orchid_eth/orchid_lottery.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
-import 'package:orchid/api/orchid_types.dart';
-import 'package:orchid/api/preferences/observable_preference.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
+import 'package:orchid/vpn/preferences/user_preferences_vpn.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/screen_orientation.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
-import 'package:orchid/orchid/account/account_detail_poller.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
 import 'package:orchid/pages/circuit/circuit_utils.dart';
-import 'package:orchid/pages/circuit/model/circuit.dart';
-import 'package:orchid/pages/circuit/model/circuit_hop.dart';
+import 'package:orchid/vpn/model/circuit.dart';
+import 'package:orchid/vpn/model/circuit_hop.dart';
 import 'package:orchid/pages/connect/manage_accounts_card.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_logo.dart';
-import 'package:orchid/pages/circuit/model/orchid_hop.dart';
+import 'package:orchid/vpn/model/orchid_hop.dart';
 import 'package:orchid/common/app_dialogs.dart';
-import 'package:orchid/api/orchid_api.dart';
+import 'package:orchid/vpn/orchid_api.dart';
 import 'package:orchid/pages/connect/release.dart';
 import 'package:orchid/pages/connect/welcome_panel.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/api/pricing/usd.dart';
+import 'connect_page_utils.dart';
 import 'connect_status_panel.dart';
 
 /// The main page containing the connect button.
 class ConnectPage extends StatefulWidget {
-  ConnectPage({Key key}) : super(key: key);
+  ConnectPage({Key? key}) : super(key: key);
 
   @override
   _ConnectPageState createState() => _ConnectPageState();
@@ -51,21 +49,21 @@ class _ConnectPageState extends State<ConnectPage>
   OrchidVPNExtensionState _vpnState = OrchidVPNExtensionState.Invalid;
 
   // Routing and monitoring status
-  bool _routingEnabled;
-  bool _monitoringEnabled;
+  late bool _routingEnabled;
+  late bool _monitoringEnabled;
   bool _restarting = false;
 
-  Timer _updateStatsTimer;
+  late Timer _updateStatsTimer;
 
   // Circuit configuration
-  Circuit _circuit;
+  Circuit? _circuit;
 
   // Key that increments on changes to the circuit
   int _circuitKey = 0;
 
   // Circuit hop count or zero when no circuit or not loaded
   int get _circuitHops {
-    return _circuit?.hops?.length ?? 0;
+    return _circuit?.hops.length ?? 0;
   }
 
   // There is a valid circuit and it has one or more hops
@@ -77,15 +75,15 @@ class _ConnectPageState extends State<ConnectPage>
   int _selectedIndex = 0;
 
   // The selected hop on the account card or null
-  CircuitHop get _selectedHop {
+  CircuitHop? get _selectedHop {
     if (!_circuitHasHops) {
       return null;
     }
-    return _circuit.hops[_selectedIndex];
+    return _circuit!.hops[_selectedIndex];
   }
 
   // The account associated with the selected hop on the account card or null.
-  Account get _selectedAccount {
+  Account? get _selectedAccount {
     if (_selectedHop != null && _selectedHop is OrchidHop) {
       return (_selectedHop as OrchidHop).account;
     } else {
@@ -93,35 +91,35 @@ class _ConnectPageState extends State<ConnectPage>
     }
   }
 
-  AccountDetailPoller _selectedAccountPoller;
+  AccountDetailPoller? _selectedAccountPoller;
 
   // V1 status data
-  USD _bandwidthPrice;
-  double _bandwidthAvailableGB; // GB
+  USD? _bandwidthPrice;
+  double? _bandwidthAvailableGB; // GB
 
-  NeonOrchidLogoController _logoController;
+  late NeonOrchidLogoController _logoController;
 
   // True if there are cached accounts for any identity. Initially null.
-  bool _hasAccounts;
+  bool? _hasAccounts;
 
   // True if the user has one or more identities (keys).  Initially null.
   // bool _hasIdentity;
 
   // The user's keys (null until initialized).
-  List<StoredEthereumKey> _keys;
+  List<StoredEthereumKey>? _keys;
 
   // The most recently generated or imported key or null if there are none.
-  StoredEthereumKey get _latestKey {
+  StoredEthereumKey? get _latestKey {
     return (_keys ?? []).isEmpty
         ? null
-        : _keys.reduce((a, b) => a.time.isAfter(b.time) ? a : b);
+        : _keys!.reduce((a, b) => a.time.isAfter(b.time) ? a : b);
   }
 
   // May be empty but not null once loaded.
   bool get _initialized => _hasAccounts != null && _keys != null;
 
   // Show the welcome pane if the user has not created any accounts.
-  bool get _showWelcomePane => _initialized && !_hasAccounts;
+  bool get _showWelcomePane => _initialized && !(_hasAccounts ?? false);
 
   // User toggle for display of the panel
   bool _showWelcomePaneMinimized = false;
@@ -144,7 +142,7 @@ class _ConnectPageState extends State<ConnectPage>
     // Note: There seems to be a bug in SharedPreferences where accessing it
     // Note: too early during startup causes problems for this setup.
     Future.delayed(Duration(seconds: 0)).then((_) {
-      MockOrchidAPI.checkStartupCommandArgs(context);
+      ConnectPageUtils.checkStartupCommandArgs(context);
     });
   }
 
@@ -166,10 +164,10 @@ class _ConnectPageState extends State<ConnectPage>
     // update bandwidth available estimate
     if (_selectedAccount != null) {
       try {
-        LotteryPot pot = await _selectedAccount.getLotteryPot();
+        LotteryPot pot = await _selectedAccount!.getLotteryPot();
         var tokenToUsd = await OrchidPricing().tokenToUsdRate(pot.balance.type);
         _bandwidthAvailableGB =
-            pot.balance.floatValue * tokenToUsd / _bandwidthPrice.value;
+            pot.balance.floatValue * tokenToUsd / _bandwidthPrice!.value;
       } catch (err) {
         _bandwidthAvailableGB = null;
         log("error calculating bandwidth available: $err");
@@ -197,7 +195,7 @@ class _ConnectPageState extends State<ConnectPage>
     }).dispose(_subs);
 
     // Monitor routing preference
-    UserPreferences().routingEnabled.stream().listen((enabled) {
+    UserPreferencesVPN().routingEnabled.stream().listen((enabled) {
       log("connect: routing enabled changed: $enabled");
       setState(() {
         _routingEnabled = enabled;
@@ -205,7 +203,7 @@ class _ConnectPageState extends State<ConnectPage>
     }).dispose(_subs);
 
     // Monitor traffic monitoring preference
-    UserPreferences().monitoringEnabled.stream().listen((enabled) {
+    UserPreferencesVPN().monitoringEnabled.stream().listen((enabled) {
       setState(() {
         _monitoringEnabled = enabled;
       });
@@ -226,14 +224,14 @@ class _ConnectPageState extends State<ConnectPage>
     }).dispose(_subs);
 
     // Monitor identities
-    UserPreferences().keys.stream().listen((keys) async {
+    UserPreferencesKeys().keys.stream().listen((keys) async {
       setState(() {
         _keys = keys;
       });
     }).dispose(_subs);
 
     // Monitor found accounts
-    UserPreferences()
+    UserPreferencesVPN()
         .cachedDiscoveredAccounts
         .stream()
         .listen((accounts) async {
@@ -264,7 +262,7 @@ class _ConnectPageState extends State<ConnectPage>
             alignment: Alignment.topCenter,
             child: AnimatedBuilder(
                 animation: _logoController.listenable,
-                builder: (BuildContext context, Widget child) {
+                builder: (BuildContext context, Widget? child) {
                   return NeonOrchidLogo(
                     light: _logoController.value,
                     offset: _logoController.offset,
@@ -513,14 +511,11 @@ class _ConnectPageState extends State<ConnectPage>
 
   /// Toggle the current connection state
   void _onConnectButtonPressed() async {
-    UserPreferences().routingEnabled.set(!_routingEnabled);
+    UserPreferencesVPN().routingEnabled.set(!_routingEnabled);
   }
 
   /// Do first launch and per-release activities.
   Future<void> _launchCheckItems() async {
-    // Support migration from very early versions of the app.
-    await _doMigrationActivities();
-
     // Show release notes if needed
     log("first launch: check.");
     var lastVersion = await _getReleaseVersionWithOverride();
@@ -534,26 +529,26 @@ class _ConnectPageState extends State<ConnectPage>
       }
     }
 
-    await UserPreferences().releaseVersion.set(Release.current);
+    await UserPreferencesVPN().releaseVersion.set(Release.current);
   }
 
   // Allow override of the last viewed release notes version for testing.
   // e.g. set to 0 to see all release notes, or high to hide them.
   Future<ReleaseVersion> _getReleaseVersionWithOverride() async {
-    var version = UserPreferences().releaseVersion.get();
+    var version = UserPreferencesVPN().releaseVersion.get()!;
 
     const release_version = 'release_version';
     // From user config
-    var jsConfig = OrchidUserConfig().getUserConfigJS();
-    int overrideVersion = jsConfig.evalIntDefault(release_version, null);
+    var jsConfig = OrchidUserConfig().getUserConfig();
+    int? overrideVersion = jsConfig.evalIntDefaultNull(release_version);
     if (overrideVersion != null) {
       version = ReleaseVersion(overrideVersion);
     }
 
     // From command line
     overrideVersion =
-        const int.fromEnvironment(release_version, defaultValue: null);
-    if (overrideVersion != null) {
+        const int.fromEnvironment(release_version, defaultValue: -1);
+    if (overrideVersion != -1) {
       version = ReleaseVersion(overrideVersion);
     }
 
@@ -568,41 +563,8 @@ class _ConnectPageState extends State<ConnectPage>
     );
   }
 
-  Future<void> _doMigrationActivities() async {
-    await _migrateActiveAccountTo1Hop();
-  }
-
-  // If this is an existing user with no multi-hop circuit and an active
-  // account, migrate it to a 1-hop config.
-  Future<void> _migrateActiveAccountTo1Hop() async {
-    var activeAccount = await activeAccountLegacy;
-    if (activeAccount != null) {
-      log("migration: User has no hops and a legacy active account: migrating.");
-      await CircuitUtils.defaultCircuitIfNeededFrom(activeAccount);
-
-      // Clear the legacy active accounts (one time migration)
-      await UserPreferences().activeAccounts.set([]);
-    }
-  }
-
-  // Note: Used in migration from the old active account model
-  static Future<Account> get activeAccountLegacy async {
-    return _filterActiveAccountLegacyLogic(
-        UserPreferences().activeAccounts.get());
-  }
-
-  // Note: Used in migration from the old active account model
-  // Return the active account from the accounts list or null.
-  static Account _filterActiveAccountLegacyLogic(List<Account> accounts) {
-    return accounts == null ||
-            accounts.isEmpty ||
-            accounts[0].isIdentityPlaceholder
-        ? null
-        : accounts[0];
-  }
-
   Future _circuitConfigurationChanged() async {
-    var prefs = UserPreferences();
+    var prefs = UserPreferencesVPN();
     _circuit = prefs.circuit.get();
     _selectedIndex = 0;
 
@@ -617,12 +579,12 @@ class _ConnectPageState extends State<ConnectPage>
   // The selected account has changed, update or remove the account detail poller.
   // Manage the selected account (the account that is forefront on the manage accoutns
   // card).
-  Future _selectedAccountChanged(Account account) async {
+  Future _selectedAccountChanged(Account? account) async {
     _selectedAccountPoller?.cancel();
     if (account != null) {
       _selectedAccountPoller = AccountDetailPoller(account: account);
       try {
-        await _selectedAccountPoller.pollOnce(); // poll once
+        await _selectedAccountPoller!.pollOnce(); // poll once
       } catch (err) {
         log("Error: $err");
       }
@@ -648,9 +610,5 @@ class _ConnectPageState extends State<ConnectPage>
     // AccountFinder.shared?.dispose();
     _updateStatsTimer.cancel();
     _subs.dispose();
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

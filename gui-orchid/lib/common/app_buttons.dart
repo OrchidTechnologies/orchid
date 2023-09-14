@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -12,20 +11,20 @@ import 'formatting.dart';
 /// A rounded rectangle text button.
 class RoundedRectButton extends StatelessWidget {
   final String text;
-  final TextStyle style;
-  final VoidCallback onPressed;
-  final Color backgroundColor;
-  final Color textColor;
-  final Icon icon;
-  final double elevation;
-  final Widget child;
-  final Widget trailing;
-  final double lineHeight;
+  final TextStyle? style;
+  final VoidCallback? onPressed;
+  final Color? backgroundColor;
+  final Color? textColor;
+  final Icon? icon;
+  final double? elevation;
+  final Widget? child;
+  final Widget? trailing;
+  final double? lineHeight;
 
   const RoundedRectButton({
-    Key key,
-    @required this.onPressed,
-    this.text,
+    Key? key,
+    required this.onPressed,
+    required this.text,
     this.backgroundColor,
     this.textColor,
     this.icon,
@@ -62,7 +61,7 @@ class RoundedRectButton extends StatelessWidget {
                               height: lineHeight ?? null)),
                 ),
                 if (icon != null) padx(8),
-                if (trailing != null) trailing,
+                if (trailing != null) trailing!,
               ],
             ),
       ),
@@ -76,22 +75,25 @@ class RoundedRectButton extends StatelessWidget {
 /// A round image button with a separate text subtitle positioned below it.
 class RoundTitledRaisedImageButton extends StatelessWidget {
   final String title;
-  final String imageName;
-  final Icon icon;
+  final String? imageName;
+  final Icon? icon;
   final VoidCallback onPressed;
   final double padding;
 
   const RoundTitledRaisedImageButton({
-    Key key,
-    @required this.title,
+    Key? key,
+    required this.title,
     this.imageName,
-    @required this.onPressed,
+    required this.onPressed,
     this.icon,
     this.padding = 0,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    if (icon == null && imageName == null) {
+      throw Exception('Either icon or imageName must be provided');
+    }
     return Column(
       children: <Widget>[
         RaisedButtonDeprecated(
@@ -101,7 +103,7 @@ class RoundTitledRaisedImageButton extends StatelessWidget {
           child: Column(
             children: <Widget>[
               icon ??
-                  Image.asset(imageName,
+                  Image.asset(imageName!,
                       color: Colors.black, width: 40, height: 40),
             ],
           ),
@@ -123,7 +125,7 @@ class RoundTitledRaisedImageButton extends StatelessWidget {
 
 /// A flat Text button used as a control for e.g. "NEXT" and "DONE".
 class TextControlButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String text;
   final TextAlign alignment;
   final Color color;
@@ -149,10 +151,10 @@ class TextControlButton extends StatelessWidget {
 
 /// A flat Text button that is styled like a web link.
 class LinkStyleTextButton extends StatelessWidget {
-  final VoidCallback onTapped;
+  final VoidCallback? onTapped;
   final String text;
   final TextAlign alignment;
-  final TextStyle style;
+  final TextStyle? style;
 
   LinkStyleTextButton(
     this.text, {
@@ -176,9 +178,9 @@ class LinkStyleTextButton extends StatelessWidget {
 
 class SaveActionButton extends StatelessWidget {
   const SaveActionButton({
-    Key key,
-    @required this.isValid,
-    @required this.onPressed,
+    Key? key,
+    required this.isValid,
+    required this.onPressed,
   }) : super(key: key);
 
   final bool isValid;
@@ -186,7 +188,7 @@ class SaveActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    S s = S.of(context);
+    S s = S.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: TextButton(
@@ -208,18 +210,18 @@ class TitleIconButton extends StatelessWidget {
   final Widget trailing;
   final Color textColor;
   final Color backgroundColor;
-  final Color borderColor;
+  final Color? borderColor;
   final VoidCallback onPressed;
   final double spacing;
 
   const TitleIconButton({
-    Key key,
-    @required this.text,
-    @required this.trailing,
-    @required this.textColor,
-    @required this.backgroundColor,
+    Key? key,
+    required this.text,
+    required this.trailing,
+    required this.textColor,
+    required this.backgroundColor,
     this.borderColor,
-    @required this.onPressed,
+    required this.onPressed,
     this.spacing = 4,
   }) : super(key: key);
 
@@ -253,12 +255,12 @@ class TitleIconButton extends StatelessWidget {
 }
 
 class CopyTextButton extends StatelessWidget {
-  final Widget child;
-  final String copyText;
+  final Widget? child;
+  final String? copyText;
   final double size;
 
   const CopyTextButton({
-    Key key,
+    Key? key,
     this.copyText,
     this.child,
     this.size = 16,
@@ -277,41 +279,16 @@ class CopyTextButton extends StatelessWidget {
       // surfaceTintColor: Colors.white,
       // ),
       onPressed: () {
-        Clipboard.setData(ClipboardData(text: copyText));
+        Clipboard.setData(ClipboardData(text: copyText ?? ''));
       },
       child: child ??
           Icon(
             Icons.copy,
-            color: copyText != null ? OrchidColors.tappable : OrchidColors.disabled,
+            color: copyText != null
+                ? OrchidColors.tappable
+                : OrchidColors.disabled,
             size: size,
           ),
     );
   }
 }
-/*
-class CopyTextButton extends StatelessWidget {
-  const CopyTextButton({
-    Key key,
-    @required this.copyText,
-  }) : super(key: key);
-
-  final String copyText;
-
-  @override
-  Widget build(BuildContext context) {
-    var s = S.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        RoundedRectButton(
-            backgroundColor: Colors.deepPurple,
-            textColor: Colors.white,
-            text: s.copy,
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: copyText));
-            }),
-      ],
-    );
-  }
-}
-*/

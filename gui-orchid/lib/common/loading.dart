@@ -1,13 +1,12 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class LoadingIndicator extends StatelessWidget {
   final double height;
-  final String text;
+  final String? text;
 
   const LoadingIndicator({
-    Key key,
+    Key? key,
     this.height = 150,
     this.text,
   }) : super(key: key);
@@ -17,7 +16,7 @@ class LoadingIndicator extends StatelessWidget {
     return Container(
       alignment: Alignment.center,
       height: height,
-      child: Text(text ?? S.of(context).loading),
+      child: Text(text ?? S.of(context)!.loading),
     );
   }
 }

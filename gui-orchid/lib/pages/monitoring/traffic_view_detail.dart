@@ -1,7 +1,6 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:intl/intl.dart';
-import 'package:orchid/api/monitoring/analysis_db.dart';
+import 'package:orchid/vpn/monitoring/analysis_db.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/pages/monitoring/traffic_view.dart';
 
@@ -22,7 +21,7 @@ class _TrafficViewDetailState extends State<TrafficViewDetail> {
   @override
   Widget build(BuildContext context) {
     var protocolStyle = OrchidText.body1;
-    var hostname = (flow.hostname == null || flow.hostname.isEmpty)
+    var hostname = (flow.hostname == null || flow.hostname!.isEmpty)
         ? flow.dst_addr
         : flow.hostname;
     var date =
@@ -70,9 +69,5 @@ class _TrafficViewDetailState extends State<TrafficViewDetail> {
             ),
           ),
         ));
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

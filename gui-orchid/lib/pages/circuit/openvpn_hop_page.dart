@@ -1,6 +1,5 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/vpn/model/circuit_hop.dart';
 import 'package:orchid/common/config_text.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/common/instructions_view.dart';
@@ -9,15 +8,16 @@ import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
+import 'package:orchid/vpn/model/openvpn_hop.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
 import 'hop_editor.dart';
-import 'model/openvpn_hop.dart';
+import 'package:orchid/util/localization.dart';
 
 /// Create / edit / view an OpenVPN Hop
 class OpenVPNHopPage extends HopEditor<OpenVPNHop> {
   OpenVPNHopPage(
-      {@required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
+      {required editableHop, mode = HopEditorMode.View, onAddFlowComplete})
       : super(
             editableHop: editableHop,
             mode: mode,
@@ -39,10 +39,12 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     // Disable rotation until we update the screen design
     ScreenOrientation.portrait();
 
-    OpenVPNHop hop = widget.editableHop.value?.hop;
-    _userName.text = hop?.userName;
-    _userPassword.text = hop?.userPassword;
-    _ovpnConfig.text = hop?.ovpnConfig;
+    CircuitHop? circuitHop = widget.editableHop.value?.hop;
+    OpenVPNHop? openVPNHop = circuitHop as OpenVPNHop;
+    // TODO: Definitely can be null here... Why is Intellij flagging this as redundant?
+    _userName.text = openVPNHop?.userName ?? '';
+    _userPassword.text = openVPNHop?.userPassword ?? '';
+    _ovpnConfig.text = openVPNHop?.ovpnConfig ?? '';
     setState(() {}); // Setstate to update the hop for any defaulted values.
 
     _userName.addListener(_updateHop);
@@ -62,7 +64,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     return TapClearsFocus(
       child: TitledPage(
         title: s.openVPNHop,
-        decoration: BoxDecoration(),
+        // decoration: BoxDecoration(),
         actions: widget.mode == HopEditorMode.Create
             ? [widget.buildSaveButton(context, widget.onAddFlowComplete)]
             : [],
@@ -75,7 +77,8 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
                   constraints: BoxConstraints(maxWidth: 700),
                   child: Column(
                     children: <Widget>[
-                      if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max))
+                      if (AppSize(context)
+                          .tallerThan(AppSize.iphone_12_pro_max))
                         pady(64),
                       _buildUserName(),
                       _buildPassword(),
@@ -118,9 +121,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
         Text(s.password + ':',
             style: AppText.textLabelStyle.copyWith(fontSize: 20).white),
         pady(8),
-        OrchidTextField(
-            hintText: s.password,
-            controller: _userPassword)
+        OrchidTextField(hintText: s.password, controller: _userPassword)
       ],
     );
   }
@@ -133,9 +134,7 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
         Text(s.username + ':',
             style: AppText.textLabelStyle.copyWith(fontSize: 20).white),
         pady(8),
-        OrchidTextField(
-            hintText: s.username,
-            controller: _userName)
+        OrchidTextField(hintText: s.username, controller: _userName)
       ],
     );
   }
@@ -158,9 +157,4 @@ class _OpenVPNHopPageState extends State<OpenVPNHopPage> {
     _userPassword.removeListener(_updateHop);
     _ovpnConfig.removeListener(_updateHop);
   }
-
-  S get s {
-    return S.of(context);
-  }
 }
-

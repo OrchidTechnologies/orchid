@@ -1,7 +1,6 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
-import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_user_config/orchid_account_import.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/common/qrcode_scan.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/common/app_dialogs.dart';
@@ -15,15 +14,15 @@ import 'package:orchid/util/localization.dart';
 @deprecated
 class ScanOrPasteOrchidIdentity extends StatefulWidget {
   /// Callback fires on changes with either a valid parsed account or null if the form state is invalid or incomplete.
-  final void Function(ParseOrchidIdentityOrAccountResult parsed) onChange;
-  final double spacing;
+  final void Function(ParseOrchidIdentityOrAccountResult? parsed) onChange;
+  // final double spacing;
   final bool pasteOnly;
 
   const ScanOrPasteOrchidIdentity({
-    Key key,
-    @required this.onChange,
-    @required this.pasteOnly,
-    this.spacing,
+    Key? key,
+    required this.onChange,
+    required this.pasteOnly,
+    // this.spacing,
   }) : super(key: key);
 
   @override
@@ -107,9 +106,9 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
   // https://github.com/flutter/flutter/issues/48581
   void _pasteCode() async {
     try {
-      ClipboardData data = await Clipboard.getData('text/plain');
+      ClipboardData? data = await Clipboard.getData('text/plain');
       setState(() {
-        _pasteField.text = data.text;
+        _pasteField.text = data?.text ?? '';
       });
     } catch (err) {
       print("Can't get clipboard: $err");
@@ -128,14 +127,14 @@ class _ScanOrPasteOrchidIdentityState extends State<ScanOrPasteOrchidIdentity> {
       final parsed = _parse(_pasteField.text);
       widget.onChange(parsed);
       log("pasted code valid = $parsed");
-    } catch (err) {
+    } catch (err, stack) {
       widget.onChange(null);
       if (fromPaste) {
         _pasteCodeError();
       } else if (fromScan) {
         _scanQRCodeError();
       }
-      print("error parsing pasted orchid account: $err");
+      print("error parsing pasted orchid account: $err, \n$stack");
     }
     setState(() {});
   }

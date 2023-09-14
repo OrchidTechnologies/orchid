@@ -1,10 +1,10 @@
-// @dart=2.9
 import 'dart:ui';
+import 'package:flutter/src/widgets/localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
-
-import 'configuration/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/preferences/user_preferences_ui.dart';
 
 /// Supports app localization and language override
 class OrchidLanguage {
@@ -27,8 +27,8 @@ class OrchidLanguage {
 
   // Providing this static snapshot of the locale for use in the
   // api layer that does not have access to the context.
-  // This should be updated on locale changes from the context.
-  static Locale staticLocale;
+  // This (late init non-nullable) should be updated on locale changes from the context.
+  static late Locale staticLocale;
 
   static bool get hasLanguageOverride {
     return languageOverride != null;
@@ -37,37 +37,43 @@ class OrchidLanguage {
   /// Fetch any language override from the environment or user config.
   /// If non-null this is a language code with optional country code, e.g.
   /// en or en_US
-  static String get languageOverride {
-    var envLanguageOverride = (const String.fromEnvironment('language',
-            defaultValue: null)) ??
-        OrchidUserConfig().getUserConfigJS().evalStringDefault('lang', null);
+  static String? get languageOverride {
+    String? envLanguageOverride =
+        const String.fromEnvironment('language', defaultValue: '');
+    if (envLanguageOverride == '')
+      envLanguageOverride =
+          OrchidUserConfig().getUserConfig().evalStringDefaultNull('lang');
+
     if (envLanguageOverride != null && hasLanguage(envLanguageOverride)) {
       return envLanguageOverride;
     }
-    return UserPreferences().initialized
-        ? UserPreferences().languageOverride.get()
+    return UserPreferences.initialized
+        ? UserPreferencesUI().languageOverride.get()
         : null;
   }
 
   /// Get the language code from the language override
-  static String get languageOverrideCode {
-    return languageOverride.split('_')[0];
+  static String? get languageOverrideCode {
+    return languageOverride == null ? null : languageOverride!.split('_')[0];
   }
 
   /// Get the country code from the language override or null if there is none.
-  static String get languageOverrideCountry {
-    return languageOverride.contains('_')
-        ? languageOverride.split('_')[1]
+  static String? get languageOverrideCountry {
+    if (languageOverride == null) {
+      return null;
+    }
+    return languageOverride!.contains('_')
+        ? languageOverride!.split('_')[1]
         : null;
   }
 
   /// Return an overridden locale or null if there is no override.
-  static Locale get languageOverrideLocale {
+  static Locale? get languageOverrideLocale {
     if (OrchidLanguage.languageOverride == null) {
       return null;
     }
     return Locale.fromSubtags(
-        languageCode: languageOverrideCode,
+        languageCode: languageOverrideCode!,
         countryCode: languageOverrideCountry);
   }
 
@@ -75,22 +81,25 @@ class OrchidLanguage {
   /// en or en_US
   static bool hasLanguage(String lang) {
     return S.supportedLocales
-        .map((e) => (e.countryCode != null && e.countryCode.isNotEmpty)
-            ? e.languageCode + '_' + e.countryCode
+        .map((e) => (e.countryCode != null && e.countryCode!.isNotEmpty)
+            ? e.languageCode + '_' + e.countryCode!
             : e.languageCode)
         .contains(lang);
   }
 
-  static final localizationsDelegates = [
+  static final List<LocalizationsDelegate<Object>> localizationsDelegates = [
         S.delegate,
         GlobalWidgetsLocalizations.delegate,
       ] +
-      GlobalMaterialLocalizations.delegates;
+      GlobalMaterialLocalizations.delegates
+          .cast<LocalizationsDelegate<Object>>();
 
   // Note: It is no longer strictly necessary to limit the locales for override.
   static Iterable<Locale> get supportedLocales {
     return OrchidLanguage.languageOverride == null
         ? S.supportedLocales
-        : [languageOverrideLocale];
+        : languageOverrideLocale != null
+            ? [languageOverrideLocale!]
+            : [];
   }
 }

@@ -1,5 +1,4 @@
-// @dart=2.9
-import 'package:orchid/api/orchid_log_api.dart';
+import 'package:orchid/api/orchid_log.dart';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:orchid/util/hex.dart';
@@ -27,14 +26,20 @@ class Crypto {
     final params = ECKeyGeneratorParameters(curve);
     generator.init(ParametersWithRandom(params, DartSecureRandom()));
     final key = generator.generateKeyPair();
-    final BigInt privateKey = (key.privateKey as ECPrivateKey).d;
+    final BigInt? privateKey = (key.privateKey as ECPrivateKey).d;
+    if (privateKey == null) {
+      throw Exception('Failed to produce private key');
+    }
     return fromPrivateKey(privateKey);
   }
 
   static EthereumKeyPair fromPrivateKey(BigInt privateKey) {
     final ECDomainParameters curve = ECCurve_secp256k1();
 
-    final ECPoint publicKeyPoint = curve.G * privateKey; // EC scalar multiply
+    // Forcing this non-nullable: ECPoint multiply operator appears to produce nulls
+    // because it accepts a nullable BigInt.
+    final ECPoint publicKeyPoint =
+        (curve.G * privateKey)!; // EC scalar multiply
 
     // X9.62 encoded uncompressed ECPoint is just the prefix value '4' followed by x, y.
     final encoded = publicKeyPoint.getEncoded(false).buffer;
@@ -101,16 +106,19 @@ class EthereumKeyPair {
     return EthereumAddress.from(addressString);
   }
 
-  const EthereumKeyPair({this.private, this.public, this.addressString});
+  const EthereumKeyPair(
+      {required this.private,
+      required this.public,
+      required this.addressString});
 }
 
 class DartSecureRandom implements SecureRandom {
-  Random random;
+  final Random random;
 
-  DartSecureRandom() {
-    // Dart's cryptographic random number source
-    this.random = Random.secure();
-  }
+  DartSecureRandom()
+      :
+        // Dart's cryptographic random number source
+        this.random = Random.secure();
 
   @override
   String get algorithmName => 'dart';
@@ -155,18 +163,18 @@ class EthereumAddress {
   static EthereumAddress zero =
       EthereumAddress.from('0x0000000000000000000000000000000000000000');
 
-  BigInt value;
+  final BigInt value;
 
-  EthereumAddress(BigInt value) {
-    // Allow the string parser to validate.
-    this.value = parse(value.toRadixString(16).toLowerCase().padLeft(40, '0'));
-  }
+  EthereumAddress(BigInt value)
+      :
+        // Allow the string parser to validate.
+        this.value =
+            parse(value.toRadixString(16).toLowerCase().padLeft(40, '0'));
 
-  EthereumAddress.from(String text) {
-    this.value = parse(text);
-  }
+  EthereumAddress.from(String text) : this.value = parse(text);
 
-  static fromNullable(String text) {
+  static fromNullable(String? text) {
+    if (text == 'null') { return null; }
     return text == null ? null : EthereumAddress.from(text);
   }
 
@@ -174,9 +182,6 @@ class EthereumAddress {
   // If 'elide' is true show only the first and last four characters.
   @override
   String toString({bool prefix = true, bool elide = false}) {
-    if (value == null) {
-      throw Exception("invalid bigint");
-    }
     final raw = value.toRadixString(16).padLeft(40, '0');
     final eip55 = Web3DartUtils.eip55ChecksumEthereumAddress(raw);
     final hex = prefix ? eip55 : Hex.remove0x(eip55);
@@ -202,13 +207,13 @@ class EthereumAddress {
     }
   }
 
-  static BigInt parse(String text) {
+  static BigInt parse(String? text) {
     if (text == null) {
       throw Exception("invalid, null");
     }
     text = Hex.remove0x(text);
     if (text.length != 40) {
-      throw Exception("invalid, length: $text");
+      throw Exception("invalid, length: $text, ${text.length}");
     }
     // eip55 check
     if (!Web3DartUtils.isEip55ValidEthereumAddress(text)) {

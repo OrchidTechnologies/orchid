@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -7,7 +6,7 @@ import 'package:flutter/widgets.dart';
 class BlendMask extends SingleChildRenderObjectWidget {
   final BlendMode _blendMode;
 
-  BlendMask({@required BlendMode blendMode, Key key, Widget child})
+  BlendMask({required BlendMode blendMode, Key? key, Widget? child})
       : _blendMode = blendMode,
         super(key: key, child: child);
 

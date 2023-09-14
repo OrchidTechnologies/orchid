@@ -1,7 +1,6 @@
-// @dart=2.9
-import 'package:orchid/api/configuration/orchid_user_config/orchid_account_import.dart';
+import 'package:orchid/api/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/common/app_buttons.dart';
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -12,25 +11,23 @@ import 'package:orchid/orchid/menu/orchid_chain_selector_menu.dart';
 import 'package:orchid/orchid/menu/orchid_funder_selector_menu.dart';
 import 'package:orchid/orchid/menu/orchid_version_selector_menu.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
-import 'package:orchid/orchid/field/orchid_text_field.dart';
-import 'package:orchid/orchid/account/account_finder.dart';
 import 'package:orchid/orchid/menu/orchid_key_selector_menu.dart';
 
 /// Allow selection or manual entry of all components of an OrchidAccount
 class OrchidAccountEntry extends StatefulWidget {
-  final StoredEthereumKeyRef initialKeySelection;
-  final Account initialFunderSelection;
+  final StoredEthereumKeyRef? initialKeySelection;
+  final Account? initialFunderSelection;
 
   /// Callback fires on changes with either a valid account or null if the form state is invalid or
   /// incomplete. The account has not been persisted.
-  final void Function(Account account) onAccountUpdate;
+  final void Function(Account? account) onAccountUpdate;
 
   /// Callback fires on import of multiple accounts via config pasted into the identity import field.
   final void Function(List<Account> accounts) onAccountsImport;
 
   OrchidAccountEntry({
-    @required this.onAccountUpdate,
-    @required this.onAccountsImport,
+    required this.onAccountUpdate,
+    required this.onAccountsImport,
     this.initialKeySelection,
     this.initialFunderSelection,
   });
@@ -41,15 +38,15 @@ class OrchidAccountEntry extends StatefulWidget {
 
 class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
   // Signer key selection
-  KeySelectionItem _initialSelectedKeyItem;
-  KeySelectionItem _selectedKeyItem;
+  KeySelectionItem? _initialSelectedKeyItem;
+  KeySelectionItem? _selectedKeyItem;
 
   // Funder account selection
   var _pastedFunderField = TextEditingController();
-  Chain _pastedOrOverriddenFunderChainSelection;
-  int _overriddenFunderVersionSelection;
-  FunderSelectionItem _initialSelectedFunderItem;
-  FunderSelectionItem _selectedFunderItem;
+  Chain? _pastedOrOverriddenFunderChainSelection;
+  int? _overriddenFunderVersionSelection;
+  FunderSelectionItem? _initialSelectedFunderItem;
+  FunderSelectionItem? _selectedFunderItem;
 
   bool _updatingAccounts = false;
 
@@ -184,16 +181,16 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
     final keyItem = _selectedKeyItem ?? _initialSelectedKeyItem;
     final text = keyItem?.keyRef == null
         ? null
-        : keyItem.address.toString(prefix: true, elide: false); // or null
+        : keyItem!.address!.toString(prefix: true, elide: false); // or null
     return CopyTextButton(copyText: text);
   }
 
-  void _parsedValueChanged(ParseOrchidIdentityOrAccountResult result) async {
+  void _parsedValueChanged(ParseOrchidIdentityOrAccountResult? result) async {
     log("XXX: import identity = $result");
 
     if (result != null) {
       if (result.hasMultipleAccounts) {
-        widget.onAccountsImport(result.accounts);
+        widget.onAccountsImport(result.accounts!);
       } else {
         final keyRef = TransientEthereumKeyRef(result.signer);
         setState(() {
@@ -288,11 +285,11 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
     fireUpdate();
   }
 
-  void _onKeySelected(KeySelectionItem key) {
+  void _onKeySelected(KeySelectionItem? key) {
     setState(() {
       _selectedKeyItem = key;
       _selectedFunderItem = null;
-      _pastedFunderField.text = null;
+      _pastedFunderField.text = '';
       _pastedOrOverriddenFunderChainSelection = null;
       _overriddenFunderVersionSelection = null;
     });
@@ -304,7 +301,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
     log("XXX: onFunderSelected: $funder");
     setState(() {
       _selectedFunderItem = funder;
-      _pastedFunderField.text = null;
+      _pastedFunderField.text = '';
       _pastedOrOverriddenFunderChainSelection = null;
       _overriddenFunderVersionSelection = null;
     });
@@ -313,8 +310,8 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
   }
 
   void _onPasteFunderAddressButton() async {
-    ClipboardData data = await Clipboard.getData('text/plain');
-    _pastedFunderField.text = data.text;
+    ClipboardData? data = await Clipboard.getData('text/plain');
+    _pastedFunderField.text = data?.text ?? '';
     fireUpdate();
   }
 
@@ -333,7 +330,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
       return false;
     }
     // key value selected
-    if (_selectedKeyItem.keyRef != null) {
+    if (_selectedKeyItem!.keyRef != null) {
       return true;
     }
     return false;
@@ -341,7 +338,7 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
 
   bool get _funderValid {
     return (_selectedFunderItem != null &&
-            _selectedFunderItem.option !=
+            _selectedFunderItem!.option !=
                 OrchidFunderSelectorMenu.pasteAddressOption) ||
         _pastedFunderAndChainValid;
   }
@@ -363,11 +360,12 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
     }
 
     // Signer
-    final signerKeyRef = _selectedKeyItem.keyRef;
+    // null guarded by _formValid
+    final EthereumKeyRef signerKeyRef = _selectedKeyItem!.keyRef!;
 
     // Funder, chain, contract
     EthereumAddress funderAddress;
-    int chainId;
+    int? chainId;
     int version;
     try {
       var funderAccount = _selectedFunderItem?.account;
@@ -377,9 +375,13 @@ class _OrchidAccountEntryState extends State<OrchidAccountEntry> {
       chainId = _pastedOrOverriddenFunderChainSelection?.chainId ??
           funderAccount?.chainId;
 
+      if (chainId == null) {
+        throw Exception("Chain ID not found");
+      }
+
       version = _overriddenFunderVersionSelection ??
           funderAccount?.version ??
-          (_pastedOrOverriddenFunderChainSelection.isEthereum ? 0 : 1);
+          (_pastedOrOverriddenFunderChainSelection!.isEthereum ? 0 : 1);
     } catch (err) {
       // e.g. invalid pasted address
       return widget.onAccountUpdate(null);

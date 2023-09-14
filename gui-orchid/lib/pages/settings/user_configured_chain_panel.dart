@@ -1,15 +1,14 @@
-// @dart=2.12
-import 'package:orchid/api/configuration/orchid_user_config/orchid_user_config.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_config.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/eth_rpc.dart';
-import 'package:orchid/api/preferences/user_preferences.dart';
-import 'package:orchid/orchid.dart';
+import 'package:orchid/api/preferences/user_preferences_ui.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
 import 'package:orchid/orchid/orchid_action_button.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/util/hex.dart';
-import 'package:orchid/util/units.dart';
+import 'package:orchid/api/pricing/usd.dart';
 
 class UserConfiguredChainPanel extends StatefulWidget {
   const UserConfiguredChainPanel({Key? key}) : super(key: key);
@@ -126,7 +125,7 @@ class _UserConfiguredChainPanelState extends State<UserConfiguredChainPanel> {
       var map = Map.of(Chains.knownChains);
       map.addAll(Chains.userConfiguredChains);
       final allowChainShadowing = OrchidUserConfig()
-          .getUserConfigJS()
+          .getUserConfig()
           .evalBoolDefault('allowChainShadowing', false);
       if (map.containsKey(chainId) && !allowChainShadowing) {
         text =
@@ -150,15 +149,15 @@ class _UserConfiguredChainPanelState extends State<UserConfiguredChainPanel> {
 
   void _saveChain() async {
     if (_chainId == null) {
-      throw Exception();
+      throw Exception('chainId');
     }
     final chain = UserConfiguredChain(
       name: _name.text,
-      chainId: _chainId,
+      chainId: _chainId!,
       defaultProviderUrl: _providerUrl.text,
       tokenPriceUSD: USD(double.parse(_tokenPrice.text)),
     );
-    await UserPreferences().userConfiguredChains.add(chain);
+    await UserPreferencesUI().userConfiguredChains.add(chain);
     Navigator.pop(context);
   }
 }

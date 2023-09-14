@@ -1,15 +1,14 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/tap_clears_focus.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
+import 'package:orchid/vpn/model/orchid_hop.dart';
 import 'hop_editor.dart';
-import 'model/orchid_hop.dart';
+import 'package:orchid/util/localization.dart';
 
 class CuratorEditorPage extends HopEditor<OrchidHop> {
-  CuratorEditorPage({@required editableHop})
+  CuratorEditorPage({required editableHop})
       : super(editableHop: editableHop, mode: HopEditorMode.Edit);
 
   @override
@@ -22,8 +21,8 @@ class _CuratorEditorState extends State<CuratorEditorPage> {
   @override
   void initState() {
     super.initState();
-    OrchidHop hop = widget.editableHop.value?.hop;
-    _curatorField.text = hop?.curator;
+    OrchidHop? hop = widget.editableHop.value?.hop as OrchidHop;
+    _curatorField.text = hop.curator ?? '';
     _curatorField.addListener(_updateHop);
   }
 
@@ -62,12 +61,9 @@ class _CuratorEditorState extends State<CuratorEditorPage> {
   }
 
   void _updateHop() {
-    widget.editableHop.update(OrchidHop.from(widget.editableHop.value?.hop,
+    widget.editableHop.update(OrchidHop.from(
+        widget.editableHop.value?.hop as OrchidHop,
         curator: _curatorField.text));
     setState(() {});
-  }
-
-  S get s {
-    return S.of(context);
   }
 }

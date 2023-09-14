@@ -1,14 +1,13 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 
 class OrchidSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
 
   const OrchidSwitch({
-    Key key,
-    this.value,
-    this.onChanged,
+    Key? key,
+    required this.value,
+    required this.onChanged,
   }) : super(key: key);
 
   @override

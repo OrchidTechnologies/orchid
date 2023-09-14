@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'package:flutter/material.dart';
 
 class AppSize {
@@ -9,10 +8,7 @@ class AppSize {
 
   Size size;
 
-  AppSize(BuildContext context) {
-    this.size = MediaQuery.of(context).size;
-    // log("XXX size = $size");
-  }
+  AppSize(BuildContext context) : this.size = MediaQuery.of(context).size;
 
   bool tallerThan(Size targetSize) {
     return size.height > targetSize.height;

@@ -1,5 +1,4 @@
-// @dart=2.9
-import 'package:orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:orchid/api/orchid_docs.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
@@ -14,7 +13,7 @@ class HelpOverviewPage extends StatefulWidget {
 }
 
 class _HelpOverviewPageState extends State<HelpOverviewPage> {
-  String _helpText;
+  String? _helpText;
 
   @override
   void initState() {
@@ -49,7 +48,7 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
       child: SafeArea(
         // The HTML must be a direct child of the scrollview.
         child: SingleChildScrollView(
-          child: html(_helpText),
+          child: html(_helpText!),
         ).padx(16),
       ),
     );
@@ -65,7 +64,7 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
     return Html.fromElement(
       documentElement: doc,
       onLinkTap: (url, context, attributes, element) {
-        launch(url, forceSafariVC: false);
+        launch(url ?? '', forceSafariVC: false);
       },
       style: {
         'body': Style.fromTextStyle(OrchidText.body2),
@@ -93,7 +92,7 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
               .join() +
           '</ul>';
 
-      indexLocationEl.parent.insertBefore(content, indexLocationEl);
+      indexLocationEl.parent?.insertBefore(content, indexLocationEl);
     } catch (err) {
       log("html error generating index: $err");
     }

@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'dart:math';
 import 'dart:ui';
 
@@ -17,10 +16,10 @@ class Location {
   static Location CapeHorn = Location(lat: -55.9833, long: -67.2667);
 
   /// The latitude and longitude in degrees.
-  double lat;
-  double long;
+  final double lat;
+  final double long;
 
-  Location({this.lat, this.long});
+  Location({required this.lat, required this.long});
 
   /// Perform a Mercator projection of the latitude and longitude in degrees to
   /// normalized x,y coordinates (0-1, 0-1).
@@ -43,7 +42,7 @@ class Location {
     // Normalized
     double xmax = 2.2214414691; // pi/sqrt2
     double ymax = 1.7071067812; // (1 + sqrt2 / 2) * tan((pi/2)/ 2)
-    return Offset( (px/xmax+1)/2, (-py/ymax+1)/2);
+    return Offset((px / xmax + 1) / 2, (-py / ymax + 1) / 2);
   }
 
   /// Calculate the mid-point of the great circle path between the
