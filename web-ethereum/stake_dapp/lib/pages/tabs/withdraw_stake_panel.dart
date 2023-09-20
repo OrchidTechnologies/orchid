@@ -108,7 +108,8 @@ class _WithdrawStakePanelState extends State<WithdrawStakePanel>
 
   bool get _withdrawStakeFieldValid {
     var value = _withdrawStakeAmountController.value;
-    return value != null && value <= (widget.currentStake ?? tokenType.zero);
+    // We currently know the withdrawable stake for a given index.
+    return value != null;
   }
 
   bool get _targetFieldValid {
@@ -117,10 +118,10 @@ class _WithdrawStakePanelState extends State<WithdrawStakePanel>
 
   void _withdrawStake() async {
     final amount = _withdrawStakeAmountController.value;
-    final index = _indexController.intValue;
+    final index = _indexController.intValue ?? 0;
     final target = _targetController.value;
 
-    if (amount == null || amount.lteZero() || index == null || target == null) {
+    if (amount == null || amount.lteZero() || target == null) {
       throw Exception('Invalid state for withdraw funds');
     }
 
