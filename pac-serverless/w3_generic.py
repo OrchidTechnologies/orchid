@@ -282,8 +282,8 @@ def send_raw_(w3,txn_,privkey):
         txn.pop('vnonce')
     if ('cost_usd' in txn):
         txn.pop('cost_usd')
-    if ('chainId' in txn):
-        txn.pop('chainId')
+    #if ('chainId' in txn):
+    #    txn.pop('chainId')
     if ('eth_txnhash' in txn):
         txn.pop('eth_txnhash')
 
