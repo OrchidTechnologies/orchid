@@ -193,7 +193,7 @@ class _TrafficViewState extends State<TrafficView>
         stream: OrchidRestartManager().restarting.stream,
         builder: (context, snapshot) {
           var restarting = snapshot.data ?? false;
-          return StreamBuilder<bool>(
+          return StreamBuilder<bool?>(
               stream: UserPreferencesVPN().monitoringEnabled.stream(),
               builder: (context, snapshot) {
                 if (snapshot.data == null) {

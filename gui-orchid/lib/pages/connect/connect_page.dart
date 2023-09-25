@@ -198,14 +198,14 @@ class _ConnectPageState extends State<ConnectPage>
     UserPreferencesVPN().routingEnabled.stream().listen((enabled) {
       log("connect: routing enabled changed: $enabled");
       setState(() {
-        _routingEnabled = enabled;
+        _routingEnabled = enabled ?? false;
       });
     }).dispose(_subs);
 
     // Monitor traffic monitoring preference
     UserPreferencesVPN().monitoringEnabled.stream().listen((enabled) {
       setState(() {
-        _monitoringEnabled = enabled;
+        _monitoringEnabled = enabled ?? false;
       });
     }).dispose(_subs);
 
@@ -237,7 +237,7 @@ class _ConnectPageState extends State<ConnectPage>
         .listen((accounts) async {
       log("XXX: cachedDiscoveredAccounts = $accounts");
       setState(() {
-        _hasAccounts = accounts.isNotEmpty;
+        _hasAccounts = (accounts ?? {}).isNotEmpty;
       });
     }).dispose(_subs);
   }

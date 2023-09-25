@@ -598,7 +598,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
 
   //
   Widget _buildAccountListAnnotatedActive() {
-    return StreamBuilder<Circuit>(
+    return StreamBuilder<Circuit?>(
         stream: UserPreferencesVPN().circuit.stream(),
         builder: (context, snapshot) {
           Circuit? circuit = snapshot.data;

@@ -50,8 +50,11 @@ class _OrchidFunderSelectorMenuState extends State<OrchidFunderSelectorMenu> {
     _signer = widget.signer?.get();
 
     // Load accounts, listening for updates
-    UserPreferencesVPN().cachedDiscoveredAccounts.stream().listen((cached) {
-      _funderAccounts = cached
+    UserPreferencesVPN()
+        .cachedDiscoveredAccounts
+        .stream()
+        .listen((cached) {
+      _funderAccounts = (cached ?? {})
           .where((account) => account.signerKeyUid == _signer?.uid)
           .toList();
 
@@ -99,7 +102,7 @@ class _OrchidFunderSelectorMenuState extends State<OrchidFunderSelectorMenu> {
 
   List<FunderSelectionItem> _getItems() {
     List<FunderSelectionItem> items = [];
-    if (_funderAccounts != null) {
+    if (_funderAccounts.isNotEmpty) {
       items.addAll(_funderAccounts
           .map((account) => FunderSelectionItem(funderAccount: account))
           .toList());

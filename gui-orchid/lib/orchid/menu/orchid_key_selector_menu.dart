@@ -48,6 +48,9 @@ class _OrchidKeySelectorMenuState extends State<OrchidKeySelectorMenu> {
     // Monitor changes to keys
     UserPreferencesKeys().keys.stream().listen((keys) {
       setState(() {
+        if (keys == null) {
+          return;
+        }
         this._keys = keys;
 
         // TODO: Support tentative imported keys

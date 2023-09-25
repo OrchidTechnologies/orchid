@@ -15,7 +15,7 @@ class TrafficEmptyView extends StatelessWidget {
                 padding: EdgeInsets.only(left: 36, right: 36),
                 child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: 450),
-                    child: StreamBuilder<bool>(
+                    child: StreamBuilder<bool?>(
                         stream: UserPreferencesVPN().monitoringEnabled.stream(),
                         builder: (context, snapshot) {
                           if (snapshot.data == null) {

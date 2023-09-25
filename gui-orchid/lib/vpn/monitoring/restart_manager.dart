@@ -42,7 +42,7 @@ class OrchidRestartManager {
       UserPreferencesVPN().monitoringEnabled.stream().distinct(),
       (routing, monitoring) {
         log("restart_manager: enable vpn listener: routing=$routing, monitoring=$monitoring");
-        return routing || monitoring;
+        return (routing ?? false) || (monitoring ?? false);
       },
     ).listen((desiredRunning) async {
       await OrchidAPI().publishConfiguration();

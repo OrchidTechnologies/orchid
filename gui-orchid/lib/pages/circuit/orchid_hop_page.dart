@@ -59,7 +59,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   Timer? _balanceTimer;
   bool _balancePollInProgress = false;
   bool _showMarketStatsAlert = false;
-  late StreamSubscription<Set<Account>> _accountListener;
+  late StreamSubscription<Set<Account>?> _accountListener;
 
   @override
   void initState() {
@@ -92,6 +92,9 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
         .cachedDiscoveredAccounts
         .stream()
         .listen((accounts) {
+      if (accounts == null) {
+        return;
+      }
       // guard changes in accounts availability
       if (!accounts.contains(_selectedAccount)) {
         setState(() {
@@ -191,7 +194,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
           text,
           pady(16),
           _buildAccountManagerLinkText(),
-          StreamBuilder<Set<Account>>(
+          StreamBuilder<Set<Account>?>(
               stream: UserPreferencesVPN().cachedDiscoveredAccounts.stream(),
               builder: (context, snapshot) {
                 final accounts = snapshot.data;

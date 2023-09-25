@@ -82,7 +82,7 @@ class MockOrchidAPI implements OrchidAPI {
 
     // fake monitoring traffic data
     UserPreferencesVPN().monitoringEnabled.stream().listen((monitoring) {
-      if (monitoring) {
+      if (monitoring ?? false) {
         insertMockTrafficData();
       }
     });

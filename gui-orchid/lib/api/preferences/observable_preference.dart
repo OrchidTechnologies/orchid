@@ -10,7 +10,7 @@ class ObservablePreference<T> {
     return _initialized;
   }
 
-  BehaviorSubject<T> _subject = BehaviorSubject();
+  BehaviorSubject<T?> _subject = BehaviorSubject();
 
   T? Function(UserPreferenceKey key) getValue;
   Future Function(UserPreferenceKey key, T? value) putValue;
@@ -22,7 +22,7 @@ class ObservablePreference<T> {
   /// initialized with the first value from the underlying user preference,
   /// however using builder() ensures that the value is passed as the initial data
   /// value to the UI a StreamBuilder.
-  Stream<T> stream() {
+  Stream<T?> stream() {
     _ensureInitialized();
     return _subject.asBroadcastStream();
   }
@@ -66,11 +66,7 @@ class ObservablePreference<T> {
 
   void _broadcast(T? value) {
     _initialized = true;
-    // TODO: We should allow nulls in the streams
-    if (value != null) {
-      _subject.add(value);
-    }
-    // _subject.add(value);
+    _subject.add(value);
   }
 }
 
@@ -114,7 +110,7 @@ class ObservableBoolPreference extends ObservablePreference<bool> {
 class ObservablePreferenceBuilder<T> extends StatelessWidget {
   final Widget Function(T? t) builder;
   final T? initialData;
-  final Stream<T> stream;
+  final Stream<T?> stream;
 
   ObservablePreferenceBuilder({
     Key? key,
@@ -126,7 +122,7 @@ class ObservablePreferenceBuilder<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<T>(
+    return StreamBuilder<T?>(
         initialData: initialData,
         stream: stream,
         builder: (context, snapshot) {
