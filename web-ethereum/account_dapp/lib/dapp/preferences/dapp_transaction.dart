@@ -12,6 +12,8 @@ enum DappTransactionType {
   unlockDeposit,
   moveFunds,
   accountChanges,
+  moveLocation,
+  pokeLocation,
 }
 
 /// Persistent transaction data
@@ -79,8 +81,13 @@ class DappTransaction {
         return s.moveFunds2;
       case DappTransactionType.accountChanges:
         return s.accountChanges;
+      case DappTransactionType.pullFunds:
+        return context.s.withdrawFunds2;
+      case DappTransactionType.moveLocation:
+        return "Move Location";
+      case DappTransactionType.pokeLocation:
+        return "Poke Location";
       case DappTransactionType.unknown:
-      default:
         return "...";
     }
   }

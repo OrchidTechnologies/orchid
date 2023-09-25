@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:orchid/api/orchid_log.dart';
 
 class Hex {
@@ -35,6 +37,28 @@ class Hex {
       log("parseInt: $err");
       throw err;
     }
+  }
+
+  static List<int> decodeBytes(String hexStr) {
+    hexStr = remove0x(hexStr);
+    if (hexStr.isEmpty) {
+      return [];
+    }
+    List<int> bytes = List.filled(hexStr.length ~/ 2, 0);
+    for (var i = 0; i < hexStr.length; i += 2) {
+      bytes[i ~/ 2] = int.parse(hexStr.substring(i, i + 2), radix: 16);
+    }
+
+    return bytes;
+  }
+
+  static String decodeString(String hexStr) {
+    List<int> bytes = decodeBytes(hexStr);
+    if (bytes.isEmpty) {
+      return '';
+    }
+    final ret = utf8.decode(bytes);
+    return ret;
   }
 }
 

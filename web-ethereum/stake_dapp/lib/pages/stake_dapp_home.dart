@@ -13,11 +13,12 @@ import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/dapp/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
+import 'package:orchid/pages/tabs/location_panel.dart';
 import 'package:orchid/pages/tabs/stake_tabs.dart';
 import 'package:orchid/stake_dapp/orchid_web3_stake_v0.dart';
+import 'package:orchid/stake_dapp/orchid_web3_location_v0.dart';
 import 'dapp_home_base.dart';
 import 'dapp_home_header.dart';
-import 'tabs/add_stake_panel.dart';
 
 class StakeDappHome extends StatefulWidget {
   const StakeDappHome({Key? key}) : super(key: key);
@@ -33,12 +34,10 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
 
   EthereumAddress? _stakee;
   final _stakeeField = AddressValueFieldController();
-
-  bool get _hasAccount => _stakee != null && web3Context?.walletAddress != null;
-
   final _scrollController = ScrollController();
 
   Token? _currentStake;
+  Location? _currentLocation;
 
   @override
   void initState() {
@@ -64,30 +63,9 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
     }
   }
 
-  void _stakeeFieldChanged() {
-    // signer field changed?
-    var oldSigner = _stakee;
-    _stakee = _stakeeField.value;
-    if (_stakee != oldSigner) {
-      _selectedStakeeChanged();
-    }
+  bool get isProviderView => Uri.base.path.contains('/provider');
 
-    // Update UI
-    setState(() {});
-  }
-
-  // Start polling the correct account
-  // TODO: Poll this
-  void _selectedStakeeChanged() async {
-    if (_stakee != null && web3Context != null) {
-      _currentStake =
-          await OrchidWeb3StakeV0(web3Context!).orchidGetStake(_stakee!);
-      log("XXX: heft = $_currentStake");
-    } else {
-      _currentStake = null;
-    }
-    setState(() {});
-  }
+  bool get isStakerView => !isProviderView;
 
   @override
   Widget build(BuildContext context) {
@@ -112,14 +90,7 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
 
   // main info column
   Widget _buildMainColumn() {
-    return TokenPriceBuilder(
-        tokenType: Tokens.OXT,
-        builder: (USD? tokenPrice) {
-          return _buildMainColumnWith(tokenPrice);
-        });
-  }
-
-  Widget _buildMainColumnWith(USD? price) {
+    // Wrong chain display
     if (web3Context != null && web3Context!.chain != Chains.Ethereum)
       return _buildWrongChainPanel();
 
@@ -144,73 +115,17 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
                 width: mainColumnWidth,
                 child: Column(
                   children: [
-                    if (contractVersionsAvailable != null &&
-                        contractVersionsAvailable!.isEmpty)
-                      RoundedRect(
-                        backgroundColor: OrchidColors.dark_background,
-                        child: Text(s
-                                .theOrchidContractHasntBeenDeployedOnThisChainYet)
-                            .subtitle
-                            .height(1.7)
-                            .withColor(OrchidColors.status_yellow)
-                            .pad(24),
-                      ).center.bottom(24),
-
+                    // current transactions
                     DappTransactionList(
                       web3Context: web3Context,
                       refreshUserData: _refreshUserData,
                       width: mainColumnWidth,
                     ).top(24),
 
-                    // stakee field
-                    ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: altColumnWidth),
-                        child: OrchidLabeledAddressField(
-                          label: "Stakee Address", // localize
-                          controller: _stakeeField,
-                          contentPadding: EdgeInsets.only(
-                              top: 8, bottom: 18, left: 16, right: 16),
-                        ).top(24).padx(8)),
-
-                    // Current stake
-                    AnimatedVisibility(
-                      show: _stakee != null && _currentStake != null,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: altColumnWidth),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Text("Current Stake").title.white,
-                              ],
-                            ),
-                            TokenValueWidgetRow(
-                              tokenType: Tokens.OXT,
-                              value: _currentStake,
-                              context: context,
-                              child: Text(_currentStake?.formatCurrency(
-                                          locale: context.locale,
-                                          precision: 2) ??
-                                      '')
-                                  .title
-                                  .white,
-                              price: price,
-                            ).top(8),
-                          ],
-                        ).top(24).padx(24),
-                      ),
-                    ),
-
-                    // tabs
-                    ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: altColumnWidth),
-                      child: StakeTabs(
-                        web3Context: web3Context,
-                        stakee: _stakee,
-                        currentStake: _currentStake,
-                        price: price,
-                      ),
-                    ).top(40),
+                    if (isStakerView)
+                      _buildStakerView()
+                    else
+                      _buildProviderView(),
 
                     // _buildFooter().padx(24).bottom(24),
                   ],
@@ -221,6 +136,124 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
         ),
       ),
     );
+  }
+
+  // Staker view
+  Widget _buildStakerView() {
+    return TokenPriceBuilder(
+        tokenType: Tokens.OXT,
+        builder: (USD? tokenPrice) {
+          return _buildStakerViewWith(tokenPrice);
+        });
+  }
+
+  Widget _buildStakerViewWith(USD? price) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: altColumnWidth),
+      child: Column(
+        children: [
+          // stakee field
+          OrchidLabeledAddressField(
+            label: "Stakee Address", // localize
+            controller: _stakeeField,
+            contentPadding:
+                EdgeInsets.only(top: 8, bottom: 18, left: 16, right: 16),
+          ).top(24).padx(8),
+
+          // Current stake
+          AnimatedVisibility(
+            show: _stakee != null && _currentStake != null,
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Text("Current Stake").title.white,
+                  ],
+                ),
+                TokenValueWidgetRow(
+                  tokenType: Tokens.OXT,
+                  value: _currentStake,
+                  context: context,
+                  child: Text(_currentStake?.formatCurrency(
+                              locale: context.locale, precision: 2) ??
+                          '')
+                      .title
+                      .white,
+                  price: price,
+                ).top(8),
+              ],
+            ).top(24).padx(24),
+          ),
+
+          // Tabs
+          StakeTabs(
+            web3Context: web3Context,
+            stakee: _stakee,
+            currentStake: _currentStake,
+            price: price,
+          ).top(40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProviderView() {
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: altColumnWidth),
+      child: LocationPanel(
+        // TODO:
+        // enabled: _enabled,
+        enabled: true,
+        web3context: web3Context,
+        location: _currentLocation,
+      ),
+    );
+  }
+
+  void _stakeeFieldChanged() {
+    // signer field changed?
+    var oldSigner = _stakee;
+    _stakee = _stakeeField.value;
+    if (_stakee != oldSigner) {
+      _selectedStakeeChanged();
+    }
+
+    // Update UI
+    setState(() {});
+  }
+
+  // Start polling the correct account
+  // TODO: Poll this
+  void _selectedStakeeChanged() async {
+    if (isStakerView) {
+      _updateStake();
+    } else {
+      _updateLocation();
+    }
+  }
+
+  void _updateStake() async {
+    if (_stakee != null && web3Context != null) {
+      _currentStake =
+          await OrchidWeb3StakeV0(web3Context!).orchidGetStake(_stakee!);
+      log("XXX: heft = $_currentStake");
+    } else {
+      _currentStake = null;
+    }
+    setState(() {});
+  }
+
+  void _updateLocation() async {
+    // Our own location as the staker.
+    final staker = web3Context?.walletAddress;
+    if (staker != null && web3Context != null) {
+      _currentLocation =
+          await OrchidWeb3LocationV0(web3Context!).orchidLook(staker);
+      log("XXX: location = $_currentLocation");
+    } else {
+      _currentLocation = null;
+    }
+    setState(() {});
   }
 
   // Refresh the wallet and account balances

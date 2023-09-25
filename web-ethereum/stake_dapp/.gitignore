@@ -44,6 +44,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 deploy-pat.sh
+deploy-pat-provider.sh
 
 # packages needed at dev time that are installed by the build script
 web/*.min.js

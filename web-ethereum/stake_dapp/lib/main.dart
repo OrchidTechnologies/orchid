@@ -8,7 +8,7 @@ import 'api/pricing/orchid_pricing.dart';
 /// Main for the Orchid account management dapp.
 void main() async {
   // Turn off the default fragment path strategy for web.
-  setUrlStrategy(PathUrlStrategy());
+  usePathUrlStrategy();
   await UserPreferences.init();
   runApp(OrchidApp());
 

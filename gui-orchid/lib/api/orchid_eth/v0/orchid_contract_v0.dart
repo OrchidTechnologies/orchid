@@ -41,9 +41,10 @@ class OrchidContractV0 {
     return EthereumAddress.from(oxtContractAddressString);
   }
 
-  static final _testDirectoryContractAddressV0 = '0xxxx';
-
+  //
   // OXT Directory on main net
+  //
+  static final _testDirectoryContractAddressV0 = '0x...';
   static final _directoryContractAddressV0 =
       '0x918101FB64f467414e9a785aF9566ae69C3e22C5';
 
@@ -56,6 +57,24 @@ class OrchidContractV0 {
 
   static EthereumAddress get directoryContractAddress {
     return EthereumAddress.from(directoryContractAddressString);
+  }
+
+  //
+  // OXT Location on main net
+  //
+  static final _testLocationContractAddressV0 = '0x...';
+  static final _locationContractAddressV0 =
+      '0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD';
+
+  static String get locationContractAddressString {
+    if (OrchidUserParams().test) {
+      return _testLocationContractAddressV0;
+    }
+    return _locationContractAddressV0;
+  }
+
+  static EthereumAddress get locationContractAddress {
+    return EthereumAddress.from(locationContractAddressString);
   }
 
   static String updateEventHashV0 =
@@ -76,6 +95,9 @@ class OrchidContractV0 {
   static int gasLimitDirectoryPush = 300000;
   static int gasLimitDirectoryPull = 300000;
   static int gasLimitDirectoryTake = 300000;
+
+  static int gasLimitLocationMove= 300000;
+  static int gasLimitLocationPoke= 300000;
 
   static List<String> lotteryAbi = [
     'event Update(address indexed funder, address indexed signer, uint128 amount, uint128 escrow, uint256 unlock)',
@@ -104,6 +126,12 @@ class OrchidContractV0 {
     // 'function pick(uint128 percent) external view returns (address, uint128)',
     // 'function wait(address stakee, uint128 delay)',
     // 'function stop(uint256 index, uint256 amount, uint128 delay)',
+  ];
+
+  static List<String> locationAbi = [
+    'function look(address target) external view returns (uint256, bytes memory, bytes memory, bytes memory)',
+    'function move(bytes calldata url, bytes calldata tls, bytes calldata gpg)',
+    'function poke()',
   ];
 }
 
