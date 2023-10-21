@@ -13,6 +13,7 @@ files, decoding files with erasures, and optimally recovering lost shards.
 
 See `twin_coding.py` for an explanation of the algorithm, example code, and a link to the original paper.
 
+
 ## Installation
 
 ```
@@ -59,8 +60,8 @@ dd if=/dev/urandom of="file_1KB.dat" bs=1K count=1
 cmp -s "file_1KB.dat" "recovered.dat" && echo "Passed" || echo "Failed"
 
 
-# Generate shard recovery files: Using k (3) type 0 node sources (helper nodes), generate recovery
-# files for restoration of node type 1 index 0.
+# Generate shard recovery files for restoration of node type 1 index 0, using 3 (k) type 0
+# node sources (helper nodes),
 for helper_node in 0 1 2
 do
 ./storage.sh generate_recovery_file \
