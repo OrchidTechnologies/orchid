@@ -42,7 +42,7 @@ import galois
 # The original paper:
 # https://www.cs.cmu.edu/~nihars/publications/repairAnyStorageCode_ISIT2011.pdf
 #
-def twin_code(message: np.array, C0: 'Code', C1: 'Code'):
+def twin_code(message: np.ndarray, C0: 'Code', C1: 'Code') -> (np.ndarray, np.ndarray):
     assert C0.k == C1.k
 
     # Reshape the message into k x k matrix

@@ -1,2 +1,11 @@
+__pycache__
+.idea
+venv
+file_1MB.dat
+*.encoded
+*.dat
+recovered
 a.py
 twin_coding_nogf.py
+
+
