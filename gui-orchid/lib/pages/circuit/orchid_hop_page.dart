@@ -203,6 +203,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
                 }
                 return AccountSelectorDialog(
                   accounts: accounts!.toList(),
+                  // accounts: [accounts!.first], // TEST single selection
                   singleSelection: true,
                   selectedAccounts: _selectedAccount != null
                       ? Set.from([_selectedAccount])
@@ -586,7 +587,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
   }
 
   OrchidHop? get _hop {
-    return widget.editableHop.value?.hop as OrchidHop;
+    return widget.editableHop.value?.hop as OrchidHop?;
   }
 
   Account? get _account {

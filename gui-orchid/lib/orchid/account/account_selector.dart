@@ -93,13 +93,14 @@ class _AccountSelectorState extends State<AccountSelector> {
   }
 
   Widget _buildAccountCard(AccountViewModel accountModel, int index) {
-    bool single = widget.accounts.length == 1;
+    // bool single = widget.accounts.length == 1;
     return FittedBox(
       fit: BoxFit.scaleDown,
       child: AccountCard(
         key: Key(accountModel.toString()),
         accountDetail: accountModel.detail,
-        selected: single ? null : accountModel.active,
+        // selected: single ? null : accountModel.active,
+        selected: accountModel.active,
         onSelected: () {
           _toggleSelected(accountModel);
         },

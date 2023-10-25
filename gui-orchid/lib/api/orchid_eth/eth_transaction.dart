@@ -15,7 +15,7 @@ class EthereumTransaction /*extends EthereumTransactionParams*/ {
   Map<String, dynamic> toJson() {
     // Export flat json
     var json = params.toJson();
-    json.addAll({'data': data});
+    json.addAll(<String, dynamic>{'data': data});
     // Exclude nonce if null
     if (nonce != null) {
       json.addAll({

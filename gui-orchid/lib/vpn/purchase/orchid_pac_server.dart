@@ -256,7 +256,7 @@ class OrchidPACServer {
     required EthereumAddress signer,
     PacApiConfig? apiConfig, // optional override
   }) async {
-    var params = {'account_id': signer.toString(prefix: true)};
+    Map<String, dynamic> params = {'account_id': signer.toString(prefix: true)};
     var result = await _postJson(
         method: 'get_account', paramsIn: params, apiConfig: apiConfig);
     return PacAccount.fromJson(result);
@@ -276,7 +276,7 @@ class OrchidPACServer {
     if (receipt == null || receiptType == null) {
       throw Exception('iap: null receipt');
     }
-    var params = {
+    Map<String, dynamic> params = {
       'account_id': signer.toString(prefix: true),
       'product_id': productId,
       'receipt': receipt,
@@ -334,7 +334,7 @@ class OrchidPACServer {
         hex.decode(AbiEncode.uint256(txStringSig.s)) +
         intToBytes(BigInt.from(txStringSig.v));
 
-    var params = {
+    Map<String, dynamic> params = {
       'account_id': signerKey.address.toString(prefix: true),
       'chainId': chainId,
       // txn is encoded as an escaped json string

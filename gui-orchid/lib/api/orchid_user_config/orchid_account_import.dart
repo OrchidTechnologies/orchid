@@ -101,8 +101,8 @@ class OrchidAccountImport {
       if (funder != null) {
         final version = config.evalIntDefault('account.version', 1);
         final chainid = config.evalIntDefault('account.chainid', 1);
-        final account = Account.fromSignerKeyRef(
-          signerKey: signer.ref(),
+        final account = Account.fromSignerKey(
+          signerKey: signer,
           funder: EthereumAddress.from(funder),
           version: version,
           chainId: chainid,
