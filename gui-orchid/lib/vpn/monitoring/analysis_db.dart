@@ -15,7 +15,7 @@ class AnalysisDb {
   static final String unknown = "???"; // Localize
 
   final BehaviorSubject<bool?> update = BehaviorSubject();
-  late Database? _db;
+  Database? _db;
 
   AnalysisDb._init();
 
