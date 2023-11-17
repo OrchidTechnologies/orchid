@@ -1,0 +1,8 @@
+{
+  "config_version": "1.0",
+
+  // Cluster definition
+  "cluster": {
+    "name": "testnet",
+  },
+}

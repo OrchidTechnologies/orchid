@@ -1,8 +1,12 @@
-import math
+import io
 import os
 import time
+from typing import Optional
+
+import math
 import numpy as np
 from tqdm import tqdm
+
 
 # Note: We will parallelize these in a future update.  Lots of opportunity here to read chunks
 # Note: in batches and perform encoding/decoding in parallel.
@@ -93,3 +97,16 @@ class ChunksReader:
         rate = ci * self.chunk_size * num_files / (time.time() - start)
         pbar.set_postfix({"Rate": f"{rate / (1024 * 1024):.4f}MB/s"}, refresh=True)
         pbar.update(1)
+
+
+def open_output_file(output_path: str, overwrite: bool) -> Optional[io.BufferedWriter]:
+    if not overwrite and os.path.exists(output_path):
+        print(f"Output file already exists: {output_path}.")
+        return None
+
+    # Make intervening directories if needeed
+    directory = os.path.dirname(output_path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+
+    return io.BufferedWriter(open(output_path, 'wb'))

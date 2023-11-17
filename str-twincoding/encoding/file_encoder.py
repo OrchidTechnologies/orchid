@@ -1,12 +1,13 @@
 import os
 from contextlib import ExitStack
 import galois
-from chunks import ChunkReader
-from config import EncodedFileConfig, NodeType0, NodeType1
-from twin_coding import rs_generator_matrix, Code, twin_code
+from encoding.chunks import ChunkReader
+from encoding.twin_coding import rs_generator_matrix, Code, twin_code
+from storage.config import EncodedFileConfig, NodeType0, NodeType1
+from storage.repository import Repository
+from storage.util import assert_rs
 from tqdm import tqdm
 import time
-from util import assert_rs
 
 
 # Erasure code a file into two sets of shards, one for each node type in the twin coding scheme.
@@ -24,22 +25,23 @@ class FileEncoder(ChunkReader):
     def __init__(self,
                  node_type0: NodeType0,
                  node_type1: NodeType1,
-                 path: str,
+                 input_file: str,
                  output_path: str = None,
                  overwrite: bool = False):
 
         assert_rs(node_type0)
         assert_rs(node_type1)
         assert node_type0.k == node_type1.k, "The two node types must have the same k."
+        assert node_type0.n > node_type0.k and node_type1.n > node_type1.k, "The node type must have n > k."
 
         self.node_type0 = node_type0
         self.node_type1 = node_type1
         self.k = node_type0.k
-        self.path = path
-        self.output_dir = output_path or path + '.encoded'
+        self.path = input_file
+        self.output_dir = output_path or input_file + '.encoded'
         self.overwrite = overwrite
         chunk_size = self.k ** 2
-        super().__init__(path=path, chunk_size=chunk_size)
+        super().__init__(path=input_file, chunk_size=chunk_size)
 
     # Initialize the output directory that will hold the erasure-encoded chunks.
     def init_output_dir(self) -> bool:
@@ -109,11 +111,21 @@ class FileEncoder(ChunkReader):
 
 
 if __name__ == '__main__':
-    path = 'file_1KB.dat'
+    repo = Repository('./repository')
+
+    # Random test file
+    filename = 'file_1KB.dat'
+    file = repo.tmp_file_path(filename)
+    # if the file doesn't exist create it
+    if not os.path.exists(file):
+        with open(file, "wb") as f:
+            f.write(os.urandom(1024))
+
     encoder = FileEncoder(
         node_type0=NodeType0(k=3, n=5, encoding='reed_solomon'),
         node_type1=NodeType1(k=3, n=5, encoding='reed_solomon'),
-        path=path,
+        input_file=file,
+        output_path=repo.file_path(filename, expected=False),
         overwrite=True
     )
     encoder.encode()

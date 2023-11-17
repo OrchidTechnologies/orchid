@@ -4,3 +4,6 @@ pydantic~=2.4.2
 numpy==1.25.0 # galois requires 1.25.0?
 galois~=0.3.6
 tqdm~=4.66.1
+rich==13.6.0
+aiohttp==3.8.6
+icecream==2.1.3

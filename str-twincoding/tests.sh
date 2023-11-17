@@ -1,1 +1,1 @@
-examples.sh
+examples/examples.sh

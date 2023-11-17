@@ -1,15 +1,18 @@
 import filecmp
 import os
+import re
 import time
 import uuid
 from collections import OrderedDict
 import galois
 import numpy as np
 from tqdm import tqdm
-from chunks import ChunksReader
-from config import NodeType
-from twin_coding import rs_generator_matrix
-from util import assert_rs, open_output_file
+
+from encoding.chunks import ChunksReader, open_output_file
+from encoding.twin_coding import rs_generator_matrix
+from storage.config import NodeType, NodeType1
+from storage.repository import Repository
+from storage.util import assert_rs
 
 
 # Consume recovery files from k nodes of the opposite type to recover a lost node's data.
@@ -39,12 +42,18 @@ class NodeRecoveryClient(ChunksReader):
 
     # Map recovery files in a directory. Exactly k recovery files should be present.
     @staticmethod
-    def map_files(files_dir: str, k: int) -> dict[str, int]:
+    def map_files(files_dir: str,
+                  recover_node_type: int,
+                  recover_node_index: int,
+                  k: int) -> dict[str, int]:
         files = {}
-
+        prefix = f"recover_type{recover_node_type}_node{recover_node_index}"
         for filename in os.listdir(files_dir):
-            if filename.startswith("recover_") and filename.endswith(".dat"):
-                index = int(filename.split("_")[1].split(".")[0])
+            if filename.startswith(prefix) and filename.endswith(".dat"):
+                match = re.search(r"from(\d+)", filename)
+                index = int(match.group(1)) if match else None
+                if index is None:
+                    continue
                 files[os.path.join(files_dir, filename)] = index
 
         assert len(files) == k, "Exactly k recovery files must be present."
@@ -76,16 +85,27 @@ class NodeRecoveryClient(ChunksReader):
 
 
 if __name__ == '__main__':
+    file = 'file_1KB.dat'
+    repo = Repository('./repository')
+
     # Use recovery files generated for type 1 node index 0 to recover the lost data shard.
-    recovery_files_dir = 'recover_type1_node0'
-    recovered = 'recovered_type1_node0.dat'
+    recovery_files_dir = repo.file_path(file)
+    recover_node_type = 1
+    recover_node_index = 0
+    recovered_shard = repo.tmp_file_path(
+        f'recovered_{file}_type{recover_node_type}_node{recover_node_index}.dat')
+
     NodeRecoveryClient(
-        recovery_source_node_type=NodeType(k=3, n=5, encoding='reed_solomon'),
-        file_map=NodeRecoveryClient.map_files(files_dir=recovery_files_dir, k=3),
-        output_path=recovered,
+        recovery_source_node_type=NodeType1(k=3, n=5, encoding='reed_solomon'),
+        file_map=NodeRecoveryClient.map_files(
+            files_dir=recovery_files_dir,
+            recover_node_type=recover_node_type,
+            recover_node_index=recover_node_index,
+            k=3),
+        output_path=recovered_shard,
         overwrite=True
     ).recover_node()
 
-    compare_file = 'file_1KB.dat.encoded/type1_node0.dat'
-    print("Passed" if filecmp.cmp(compare_file, recovered) else "Failed")
+    original_shard = repo.shard_path(file, node_type=1, node_index=0)
+    print("Passed" if filecmp.cmp(original_shard, recovered_shard) else "Failed")
     ...

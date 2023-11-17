@@ -1,6 +1,5 @@
 import filecmp
 import os
-import re
 import time
 import uuid
 from collections import OrderedDict
@@ -8,10 +7,12 @@ import galois
 import numpy as np
 from tqdm import tqdm
 
-from chunks import ChunksReader
-from config import NodeType, load_file_config
-from twin_coding import rs_generator_matrix
-from util import open_output_file, assert_rs
+from storage.config import NodeType, EncodedFileConfig
+from storage.util import assert_rs
+from storage.repository import Repository
+
+from encoding.chunks import ChunksReader, open_output_file
+from encoding.twin_coding import rs_generator_matrix
 
 
 # Decode a set of erasure-coded files supplied as a file map or from a storage-encoded directory.
@@ -53,9 +54,9 @@ class FileDecoder(ChunksReader):
     # at least k files of the same type.
     @staticmethod
     def from_encoded_dir(path: str, output_path: str = None, overwrite: bool = False):
-        file_config = load_file_config(f'{path}/config.json')
+        file_config  = EncodedFileConfig.load(os.path.join(path, 'config.json'))
         assert file_config.type0.k == file_config.type1.k, "Config node types must have the same k."
-        recover_from_files = FileDecoder.map_files(path, k=file_config.type0.k)
+        recover_from_files = FileDecoder.get_threshold_files(path, k=file_config.type0.k)
         if os.path.basename(list(recover_from_files)[0]).startswith("type0_"):
             node_type = file_config.type0
         else:
@@ -72,21 +73,13 @@ class FileDecoder(ChunksReader):
 
     # Map the files in a file store encoded directory. At least k files of the same type must be present
     # to succeed. Returns a map of the first k files of either type found.
-    @staticmethod
-    def map_files(files_dir: str, k: int) -> dict[str, int]:
-        type0_files, type1_files = {}, {}
-        for filename in os.listdir(files_dir):
-            match = re.match(r'type([01])_node(\d+).dat', filename)
-            if not match:
-                continue
-            type_no, index_no = int(match.group(1)), int(match.group(2))
-            files = type0_files if type_no == 0 else type1_files
-            files[os.path.join(files_dir, filename)] = index_no
-
+    @classmethod
+    def get_threshold_files(cls, files_dir: str, k: int) -> dict[str, int]:
+        type0_files, type1_files = Repository.map_files(files_dir)
         if len(type0_files) >= k:
-            return OrderedDict(sorted(type0_files.items(), key=lambda x: x[1])[:k])
+            return OrderedDict(list(type0_files.items())[:k])
         elif len(type1_files) >= k:
-            return OrderedDict(sorted(type1_files.items(), key=lambda x: x[1])[:k])
+            return OrderedDict(list(type1_files.items())[:k])
         else:
             raise ValueError(
                 f"Insufficient files in {files_dir} to recover: {len(type0_files)} type 0 files, "
@@ -131,13 +124,17 @@ class FileDecoder(ChunksReader):
 
 
 if __name__ == '__main__':
-    file = 'file_1KB.dat'
-    encoded = f'{file}.encoded'
-    recovered = 'recovered.dat'
+    repo = Repository('./repository')
+    filename = 'file_1KB.dat'
+    original_file = repo.tmp_file_path(filename)
+    encoded_file = repo.file_path(filename)
+    print(repo.status_str(filename))
+
+    recovered_file = repo.tmp_file_path(f'recovered_{filename}')
     decoder = FileDecoder.from_encoded_dir(
-        path=encoded,
-        output_path=recovered,
+        path=encoded_file,
+        output_path=recovered_file,
         overwrite=True
     )
     decoder.decode()
-    print("Passed" if filecmp.cmp(file, recovered) else "Failed")
+    print("Passed" if filecmp.cmp(original_file, recovered_file) else "Failed")

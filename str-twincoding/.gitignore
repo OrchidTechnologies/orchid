@@ -4,8 +4,11 @@ venv
 file_1MB.dat
 *.encoded
 *.dat
-recovered
 a.py
+a.sh
+a.svg
+recovered
 twin_coding_nogf.py
-
-
+output.html
+repository
+providers.jsonc

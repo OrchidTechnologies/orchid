@@ -1,0 +1,13 @@
+{
+  "config_version": "1.0",
+  "name": "testnet",
+  "servers": [
+      { "url": "http://localhost:8101" },
+      { "url": "http://localhost:8102" },
+      { "url": "http://localhost:8103" },
+      { "url": "http://localhost:8104" },
+      { "url": "http://localhost:8105" },
+      { "url": "http://localhost:8106" },
+      { "url": "http://localhost:8107" },
+  ],
+}

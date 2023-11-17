@@ -2,10 +2,10 @@ import time
 import galois
 from tqdm import tqdm
 
-from chunks import ChunkReader
-from config import NodeType, NodeType1
-from twin_coding import rs_generator_matrix
-from util import open_output_file
+from storage.config import NodeType, NodeType1
+from storage.repository import Repository
+from encoding.chunks import ChunkReader, open_output_file
+from encoding.twin_coding import rs_generator_matrix
 
 
 # Generate a node recovery file for a specified node of the opposite type.
@@ -52,13 +52,32 @@ class NodeRecoverySource(ChunkReader):
 
 
 if __name__ == '__main__':
-    # Use a type 0 node source to generate recovery files for recovering node type 1 index 0.
-    for i in range(3):
+    file = 'file_1KB.dat'
+    repo = Repository('./repository')
+
+    # The recovering node
+    recover_node_encoding = NodeType1(k=3, n=5, encoding='reed_solomon')
+    recover_node_index = 0
+
+    # Use three helper nodes of type 0 to generate recovery files for a node of type 1.
+    helper_node_type = 0
+    for helper_node_index in range(3):
+        # The input path of the helper node's shard
+        helper_shard_path = repo.shard_path(
+            file, node_type=helper_node_type, node_index=helper_node_index)
+        # The output path of the recovery file
+        recovery_file_path = repo.recovery_file_path(
+            file,
+            recover_node_type=recover_node_encoding.type,
+            recover_node_index=recover_node_index,
+            helper_node_index=helper_node_index,
+            expected=False)
+
         NodeRecoverySource(
-            recover_node_type=NodeType1(k=3, n=5, encoding='reed_solomon'),
-            recover_node_index=0,
-            data_path=f'file_1KB.dat.encoded/type0_node{i}.dat',
-            output_path=f'recover_type1_node0/recover_{i}.dat',
+            recover_node_type=recover_node_encoding,
+            recover_node_index=recover_node_index,
+            data_path=helper_shard_path,
+            output_path=recovery_file_path,
             overwrite=True
         ).generate()
     ...
