@@ -10,7 +10,7 @@ This repository contains work in progress on the file encoding CLI and server fr
 
 ![monitor](docs/monitor.png "Monitor")
 
-A key aspect of the Orchid Storage project is the development of an efficient encoding scheme that minimizes
+A key aspect of the Orchid Storage project is the use of an efficient encoding scheme that minimizes
 bandwidth costs incurred during migration of distributed data through providers over time.
 
 **Twin Coding** is a hybrid encoding scheme that works with any two linear coding schemes and combines
@@ -22,7 +22,7 @@ the size of the lost data shard, with no additional transfer overhead.
 
 
 This repository contains an implementation of Twin Coding, as well as a command line API for encoding 
-files, decoding files with erasures, and optimally recovering lost shards. There is also a
+files, decoding files with erasures, and optimally recovering lost shards. 
 
 See [`twin_coding.py`](encoding/twin_coding.py) for an explanation of the algorithm, example code, and a link to the original paper.
 
