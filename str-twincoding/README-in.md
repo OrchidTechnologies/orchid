@@ -11,7 +11,8 @@ and join the discussion on the [Orchid Subreddit](https://www.reddit.com/r/orchi
 This repository contains work in progress on the file encoding CLI and server framework.
 
 
-![monitor](docs/monitor.png "Monitor")
+![monitor](docs/screen.png "Screens")
+
 
 A key aspect of the Orchid Storage project is the use of an efficient encoding scheme that minimizes
 bandwidth costs incurred during migration of distributed data through providers over time.
@@ -30,7 +31,7 @@ files, decoding files with erasures, and optimally recovering lost shards.
 See [`twin_coding.py`](encoding/twin_coding.py) for an explanation of the algorithm, example code, and a link to the original paper.
 
 
-## Installation
+## Development Installation
 
 ```
 # Create a virtual environment
@@ -49,6 +50,20 @@ source venv/bin/activate
 # Install the dependencies
 pip install -r requirements.txt
 ```
+
+### Environment
+
+The `STRHOME` (storage home) environment var is a path that determines the location of the default 
+`repository` folder and `providers.jsonc` data stores.  During development you can source the provided 
+`env.sh` script to automatically set `STRHOME` and `PYTHONPATH` to the project folder and activate the venv 
+in that folder.
+
+```
+export STRHOME=[Project Folder]
+export PATH=$PATH:"$STRHOME"
+export PYTHONPATH="$STRHOME"
+```
+
 
 ## Example Usage
 ```
@@ -70,6 +85,11 @@ INSERT_STORAGE_DOCS
 ## Server Docs
 ```
 INSERT_SERVER_DOCS
+```
+
+## Providers Docs
+```
+INSERT_PROVIDERS_DOCS
 ```
 
 ## Monitor Docs

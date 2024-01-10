@@ -2,6 +2,10 @@
 
 source "$(dirname "$0")/env.sh"
 
+back="/tmp/README.md.$$"
+echo "backing up README.md to $back"
+cp README.md "$back"
+
 # examples
 tmp=/tmp/readme.$$
 sed -n '/# START_EXAMPLES/,/# END_EXAMPLES/p' examples/examples.sh | sed '/# START_EXAMPLES/d; /# END_EXAMPLES/d' > $tmp
@@ -19,6 +23,11 @@ mv out.md README.md
 # server cli
 server.sh --help > $tmp
 sed "/INSERT_SERVER_DOCS/r $tmp" README.md | sed '/INSERT_SERVER_DOCS/d' > out.md
+mv out.md README.md
+
+# providers cli
+providers.sh --help > $tmp
+sed "/INSERT_PROVIDERS_DOCS/r $tmp" README.md | sed '/INSERT_PROVIDERS_DOCS/d' > out.md
 mv out.md README.md
 
 # monitor cli

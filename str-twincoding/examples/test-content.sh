@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+# Generate some random test data files
+
 source "$(dirname "$0")/../env.sh"
 data="$STRHOME/examples/data"
 mkdir -p "$data"

@@ -1,11 +1,13 @@
+import hashlib
 import os
 from contextlib import ExitStack
 import galois
+from icecream import ic
+
 from encoding.chunks import ChunkReader
 from encoding.twin_coding import rs_generator_matrix, Code, twin_code
-from storage.config import EncodedFileConfig, NodeType0, NodeType1
+from storage.storage_model import EncodedFile, NodeType0, NodeType1, assert_rs
 from storage.repository import Repository
-from storage.util import assert_rs
 from tqdm import tqdm
 import time
 
@@ -40,6 +42,7 @@ class FileEncoder(ChunkReader):
         self.path = input_file
         self.output_dir = output_path or input_file + '.encoded'
         self.overwrite = overwrite
+        self._file_hash = None
         chunk_size = self.k ** 2
         super().__init__(path=input_file, chunk_size=chunk_size)
 
@@ -53,11 +56,12 @@ class FileEncoder(ChunkReader):
             os.makedirs(self.output_dir)
 
         with open(os.path.join(self.output_dir, 'config.json'), 'w') as f:
-            file_config = EncodedFileConfig(
+            file_config = EncodedFile(
                 name=os.path.basename(self.path),
+                file_hash=self.file_hash(),
+                file_length=self.file_length,
                 type0=self.node_type0,
                 type1=self.node_type1,
-                file_length=self.file_length
             )
             f.write(file_config.model_dump_json(indent=2, exclude_defaults=True))
         return True
@@ -106,17 +110,28 @@ class FileEncoder(ChunkReader):
                     self.update_pbar(ci=ci, pbar=pbar, start=start)
         ...
 
+    def file_hash(self):
+        if self._file_hash:
+            return self._file_hash
+        hash_sha256 = hashlib.sha256()
+        with open(self.path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_sha256.update(chunk)
+        self._file_hash = hash_sha256.hexdigest()
+        return self._file_hash
+
     def close(self):
         self.mmap.close()
 
 
 if __name__ == '__main__':
-    repo = Repository('./repository')
+    repo = Repository.default()
 
     # Random test file
     filename = 'file_1KB.dat'
     file = repo.tmp_file_path(filename)
-    # if the file doesn't exist create it
+    ic(file)
+    # If the file doesn't exist create it
     if not os.path.exists(file):
         with open(file, "wb") as f:
             f.write(os.urandom(1024))
@@ -125,7 +140,7 @@ if __name__ == '__main__':
         node_type0=NodeType0(k=3, n=5, encoding='reed_solomon'),
         node_type1=NodeType1(k=3, n=5, encoding='reed_solomon'),
         input_file=file,
-        output_path=repo.file_path(filename, expected=False),
+        output_path=repo.file_dir_path(filename, expected=False),
         overwrite=True
     )
     encoder.encode()

@@ -1,6 +1,17 @@
 #!/bin/bash
-
 source "$(dirname "$0")/../env.sh"
+
+##
+## Start a test provider server cluster, e.g.
+## test-cluster.sh start 5001 5002 5003 5004 5005
+##
+## Confirm that the test servers are running
+## test-cluster.sh list
+##
+## Shut down the servers
+## test-cluster.sh stop
+##
+
 
 # STRHOME should have been set by env.sh above
 if [ -z "$STRHOME" ]; then

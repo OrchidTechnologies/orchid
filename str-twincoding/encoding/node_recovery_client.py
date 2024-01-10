@@ -10,9 +10,8 @@ from tqdm import tqdm
 
 from encoding.chunks import ChunksReader, open_output_file
 from encoding.twin_coding import rs_generator_matrix
-from storage.config import NodeType, NodeType1
+from storage.storage_model import NodeType, NodeType1, assert_rs
 from storage.repository import Repository
-from storage.util import assert_rs
 
 
 # Consume recovery files from k nodes of the opposite type to recover a lost node's data.
@@ -86,10 +85,10 @@ class NodeRecoveryClient(ChunksReader):
 
 if __name__ == '__main__':
     file = 'file_1KB.dat'
-    repo = Repository('./repository')
+    repo = Repository.default()
 
     # Use recovery files generated for type 1 node index 0 to recover the lost data shard.
-    recovery_files_dir = repo.file_path(file)
+    recovery_files_dir = repo.file_dir_path(file)
     recover_node_type = 1
     recover_node_index = 0
     recovered_shard = repo.tmp_file_path(

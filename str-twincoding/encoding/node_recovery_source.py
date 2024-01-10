@@ -2,7 +2,7 @@ import time
 import galois
 from tqdm import tqdm
 
-from storage.config import NodeType, NodeType1
+from storage.storage_model import NodeType, NodeType1
 from storage.repository import Repository
 from encoding.chunks import ChunkReader, open_output_file
 from encoding.twin_coding import rs_generator_matrix
@@ -53,7 +53,7 @@ class NodeRecoverySource(ChunkReader):
 
 if __name__ == '__main__':
     file = 'file_1KB.dat'
-    repo = Repository('./repository')
+    repo = Repository.default()
 
     # The recovering node
     recover_node_encoding = NodeType1(k=3, n=5, encoding='reed_solomon')

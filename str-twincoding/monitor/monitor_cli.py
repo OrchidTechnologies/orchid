@@ -1,7 +1,5 @@
-import asyncio
-import json
 import os
-import random
+import asyncio
 from asyncio import Task
 from datetime import datetime
 from typing import Dict, Optional
@@ -15,9 +13,12 @@ from rich.live import Live
 from rich.table import Table
 
 from monitor.file_table import FileStatusView, FileTable
-from monitor.monitor_config import ServerStatus, MonitorConfig
-from server.server_config import Server, ServerFileStatus, ServerFile
+from server.cluster_file import ClusterFileStatus
+from server.server_file import ServerFilesStatus
+from server.providers import Providers
+from server.server_model import Server, ServerStatus
 from server_table import ServerStatusView, ServerTable
+from storage.storage_model import EncodedFile, EncodedFileStatus
 from storage.util import summarize_ranges
 
 
@@ -31,131 +32,104 @@ class Monitor:
                  debug: bool = False
                  ):
 
-        # config or servers
-        assert providers_config or providers
+        # providers
         assert not (providers_config and providers)
+        if providers_config:
+            assert os.path.exists(providers_config)
+        if not providers_config and not providers:
+            providers_config = Providers.default_providers_config
+            print(f"Using default providers file: {providers_config}")
         self.providers_config_last_update: Optional[datetime] = None
         self.providers_config = providers_config
-        self.servers = providers
+        self.provider_servers: Optional[List[Server]] = providers
 
         self.polling_period = polling_period
         self.timeout = timeout
         self.server_status: Dict[Server, ServerStatus] = {}
-        self.file_status: Dict[Server, List[ServerFileStatus]] = {}
+        self.server_files_status_map: Dict[Server, List[EncodedFileStatus]] = {}
         self.simulate_latency = simulate_latency
         self.task_map: Dict[Server, Task] = {}
         self.debug = debug
 
     async def fetch(self, session: ClientSession, server: Server, after_seconds: int = 0):
-        url = f'{server.url}/list'
-        self.log(f"\nFetching {(server.name or '') + server.url}")
-
-        if after_seconds > 0:
-            await asyncio.sleep(after_seconds)
-
-        if self.simulate_latency > 0:
-            await asyncio.sleep(random.random() * self.simulate_latency)
-
         def clear_status():
             self.server_status[server] = ServerStatus.UNKNOWN
-            self.file_status.pop(server, None)
+            self.server_files_status_map.pop(server, None)
 
         try:
-            async with session.post(url, data={'auth_key': server.auth_token}) as response:
-                # server status
-                if response.status != 200:
-                    clear_status()
-                    self.log("error: ", response.status, response.reason)
-                    return
-                self.server_status[server] = ServerStatus.OK
-                self.log("response OK")
+            server_file_status = await (ServerFilesStatus(
+                server=server, timeout=self.timeout, simulate_latency=self.simulate_latency, debug=self.debug)
+                                        .fetch(session, after_seconds=after_seconds))
+            if server_file_status.server_status != ServerStatus.OK:
+                clear_status()
+                self.log("error: ", server_file_status)
+                return
 
-                # file status
-                text = await response.text()
-                # self.log("text: ", text)
-                from_json = json.loads(text)
-                status = [ServerFileStatus(**file) for file in from_json]
-                self.log("status: ", status)
-                self.file_status[server] = status
+            self.server_status[server] = server_file_status.server_status
+            self.server_files_status_map[server] = server_file_status.files_status
         except Exception as e:
             self.log(f"Exception: {e}")
             clear_status()
 
-    # Update the list of servers from the server config if required
-    def update_server_config(self):
+    # Update the list of providers from the provider config if required
+    def update_providers_list(self):
         if not self.providers_config:
-            return self.servers
+            return self.provider_servers
         config_current_mod = datetime.fromtimestamp(os.path.getmtime(self.providers_config))
-        if not self.servers or self.providers_config_last_update is None or config_current_mod > self.providers_config_last_update:
-            config = MonitorConfig.load(self.providers_config)
-            self.servers = config.providers
+        if (not self.provider_servers or self.providers_config_last_update is None or config_current_mod >
+                self.providers_config_last_update):
+            self.provider_servers = Providers.get(self.providers_config).servers
             self.providers_config_last_update = config_current_mod
 
-    # ensure that all servers are being polled
-    def update_task_map(self, session: ClientSession):
-        for server in self.servers:
+    # Update the fetch tasks the providers. Tasks are initiallly started here and
+    # placed into a map by server. Later they are rescheduled after completion by the
+    # reschedul_fetch_tasks method.
+    def update_fetch_tasks(self, session: ClientSession):
+        for server in self.provider_servers:
             # TODO: We don't currently clear tasks for servers that are removed from the config
             if server not in self.task_map:
                 task: Task = asyncio.create_task(self.fetch(session, server))
                 self.task_map[server] = task
 
-    # Reschedule completed tasks
-    def schedule_tasks(self, session: ClientSession, delay: int = 0):
+    # Reschedule completed tasks by recreating them
+    def reschedule_fetch_tasks(self, session: ClientSession, delay: int = 0):
         for server, task in self.task_map.items():
             if task.done():
                 self.task_map[server] = asyncio.create_task(
                     self.fetch(session, server, after_seconds=delay))
 
+    # asyncio task to poll servers
     async def poll_servers_loop(self):
         async with ClientSession(timeout=ClientTimeout(total=self.timeout)) as session:
             if self.polling_period > 0:
                 while True:
-                    self.update_server_config()
-                    self.update_task_map(session)
+                    self.update_providers_list()
+                    self.update_fetch_tasks(session)
                     period = self.polling_period if self.server_status else 0
-                    self.schedule_tasks(session, period)
+                    self.reschedule_fetch_tasks(session, period)
                     await asyncio.sleep(1)
             else:
-                self.update_server_config()
-                self.update_task_map(session)
-                self.schedule_tasks(session)
+                self.update_providers_list()
+                self.update_fetch_tasks(session)
+                self.reschedule_fetch_tasks(session)
                 await asyncio.gather(*self.task_map.values())
 
     # Generate the table of known providers
     def get_provider_table(self) -> Table:
         servers = [
             ServerStatusView(name=server.url, status=self.server_status[server])
-            for server in self.servers if server in self.server_status
+            for server in self.provider_servers if server in self.server_status
         ]
         return ServerTable(servers=servers, hide_cols={'shards', 'last_validated'}).get()
 
     # Generate a table for each file that we found
     def get_file_tables(self) -> Table:
         self.log("server status:", self.server_status)
-        self.log("file status:", self.file_status)
+        self.log("file status:", self.server_files_status_map)
 
-        # Map of distinct files across all servers results
-        distinct_files = {file_status.file: file_status
-                          for server in self.file_status for file_status in self.file_status[server]}
-
-        def find_servers_with_file(file: ServerFile) -> List[Server]:
-            return [server for server in self.file_status if
-                    file in [status.file for status in self.file_status[server]]]
-
-        def find_file_status_in_server_list(file: ServerFile, server: Server) -> Optional[ServerFileStatus]:
-            try:
-                return [status for status in self.file_status[server] if status.file == file][0]
-            except IndexError:
-                return None
-
-        # Invert the server data to a per-file map: {file: {server: file_status}}
-        file_status_map = {file:
-            {
-                server: find_file_status_in_server_list(file, server)
-                for server in find_servers_with_file(file)
-            }
-            for file in distinct_files
-        }
+        file_status_map: dict[EncodedFile, dict[Server, EncodedFileStatus | None]] = (
+            ClusterFileStatus.invert_server_files_status_map(self.server_files_status_map))
+        distinct_files = list(file_status_map.keys())
         self.log("file status map:", file_status_map)
 
         file_tables = [self.create_file_table(file, file_status_map[file]) for file in distinct_files]
@@ -168,20 +142,11 @@ class Monitor:
         return combined_file_table
 
     # Create a file table for a single file
-    def create_file_table(self, file: ServerFile, server_map: Dict[Server, ServerFileStatus]):
-
-        # calculate availability
-        distinct_shards0 = list({shard for server in server_map for shard in server_map[server].shards0})
-        distinct_shards1 = list({shard for server in server_map for shard in server_map[server].shards1})
-        count0 = len(distinct_shards0)
-        availability0 = count0 / file.k0 if count0 >= file.k0 else 0
-        count1 = len(distinct_shards1)
-        availability1 = count1 / file.k1 if count1 >= file.k1 else 0
-        availability = availability0 + availability1
-
+    def create_file_table(self, file: EncodedFile, server_map: Dict[Server, EncodedFileStatus | None]):
+        availability, _, _ = ClusterFileStatus.cluster_availability_for(file, server_map)
         server_views = []
         for server in server_map:
-            status: ServerFileStatus = server_map[server]
+            status: EncodedFileStatus = server_map[server]
             shards0 = f"type0: {summarize_ranges(status.shards0)}"
             shards1 = f"type1: {summarize_ranges(status.shards1)}"
             if status.shards0 and status.shards1:
@@ -210,7 +175,7 @@ class Monitor:
 
         def create_layout():
             _layout = Layout()
-            height = 3 + len(self.servers) * 2  # header + server rows with lines
+            height = 3 + len(self.provider_servers) * 2  # header + server rows with lines
             _layout.split(
                 Layout(name="servers", size=height),
                 Layout(name="files")
@@ -223,14 +188,14 @@ class Monitor:
 
         if self.live:
             layout = create_layout()
-            layout_server_len = len(self.servers)
+            layout_server_len = len(self.provider_servers)
             update()
             with Live(layout, console=console) as live:
                 while True:
-                    if len(self.servers) != layout_server_len:
+                    if len(self.provider_servers) != layout_server_len:
                         layout = create_layout()
                         live.update(layout)
-                        layout_server_len = len(self.servers)
+                        layout_server_len = len(self.provider_servers)
                     update()
                     await asyncio.sleep(1 if self.server_status else 0.1)
         else:
@@ -263,23 +228,18 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Process command line arguments.')
-    parser.add_argument('--providers', type=str, help='Providers file path')
+    parser.add_argument('--providers', type=str, help='Providers config file path')
     parser.add_argument('--debug', action='store_true', help='Show debug')
     parser.add_argument('--update', type=int, help='Update view with polling period seconds')
     args = parser.parse_args()
 
-    providers = args.providers
-    if not args.providers:
-        STRHOME = os.environ.get('STRHOME') or '.'
-        providers = os.path.join(STRHOME, 'providers.jsonc')
-        print(f"Using default providers file: {providers}")
-
+    providers_config = args.providers
     monitor = Monitor(
-        providers_config=providers,
+        providers_config=providers_config,
         polling_period=args.update or 0,
         debug=args.debug or False,
         simulate_latency=0, timeout=3,
-        # servers=[
+        # providers=[
         #     Server(name="1", url='http://localhost:8080'),
         #     Server(name="2", url='http://localhost:8080'),
         #     Server(name="3", url='http://localhost:8080'),

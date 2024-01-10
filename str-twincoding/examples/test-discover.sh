@@ -1,13 +1,20 @@
 #!/bin/bash
-#
-# {
-#    "providers": [
-#        { "name": "5001", "url": "http://localhost:5001" },
-#        { "name": "5002", "url": "http://localhost:5002" },
-#        { "name": "5003", "url": "http://localhost:5003" }
-#    ]
-# }
-#
+##
+## "Discover" a local provider cluster, adding them to our known provider list
+## Discovery will normally be done via the directory service and performed at file push time.
+##
+## test-discover.sh 5001 5002 5003 5004 5005
+##
+## The provider file is a JSONC file with the following format:
+##
+## {
+##    "providers": [
+##        { "name": "5001", "url": "http://localhost:5001" },
+##        { "name": "5002", "url": "http://localhost:5002" },
+##        { "name": "5003", "url": "http://localhost:5003" }
+##    ]
+## }
+##
 source "$(dirname "$0")/../env.sh"
 providers_file="$STRHOME/providers.jsonc"
 

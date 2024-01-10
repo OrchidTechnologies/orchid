@@ -1,14 +1,30 @@
 import argparse
+import os
 from typing import List
-from storage.config import NodeType
+
+# Get the storage project home directory or a path relative to it
+def get_strhome(path: str = None) -> str:
+    STRHOME = os.environ.get('STRHOME') or '.'
+    if path:
+        return os.path.join(STRHOME, path)
+    else:
+        return STRHOME
 
 
-def assert_rs(node_type: NodeType):
-    assert node_type.encoding == 'reed_solomon', "Only reed solomon encoding is currently supported."
-
-
-def assert_node_type(node_type: int):
-    assert node_type in [0, 1], "node_type must be 0 or 1."
+# Calculate a total availability number for a file based on the number of shards available
+# Note that This availability can be greater than 1 indicating that more than the required
+# number of shards are available. In particular, with Twin Coding a fully available file
+# will have an availability of 2 and more generally will have an availability of n0/k0 + n1/k1.
+def file_availability_ratio(
+        k0: int, k1: int,
+        # Count of distinct shards of type 0
+        count0: int,
+        # Count of distinct shards of type 1
+        count1: int,
+):
+    availability0 = count0 / k0 if count0 >= k0 else 0
+    availability1 = count1 / k1 if count1 >= k1 else 0
+    return availability0 + availability1
 
 
 def summarize_ranges(numbers: List[int]) -> str:
@@ -51,3 +67,8 @@ def dump_docs_md(_, subparsers: argparse._SubParsersAction):
         print('```')
         print(subparser.print_help())
         print('```')
+
+
+# main
+if __name__ == '__main__':
+    ...

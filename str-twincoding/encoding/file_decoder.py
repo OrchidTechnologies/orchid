@@ -7,8 +7,7 @@ import galois
 import numpy as np
 from tqdm import tqdm
 
-from storage.config import NodeType, EncodedFileConfig
-from storage.util import assert_rs
+from storage.storage_model import NodeType, EncodedFile, assert_rs
 from storage.repository import Repository
 
 from encoding.chunks import ChunksReader, open_output_file
@@ -54,7 +53,7 @@ class FileDecoder(ChunksReader):
     # at least k files of the same type.
     @staticmethod
     def from_encoded_dir(path: str, output_path: str = None, overwrite: bool = False):
-        file_config  = EncodedFileConfig.load(os.path.join(path, 'config.json'))
+        file_config  = EncodedFile.load(os.path.join(path, 'config.json'))
         assert file_config.type0.k == file_config.type1.k, "Config node types must have the same k."
         recover_from_files = FileDecoder.get_threshold_files(path, k=file_config.type0.k)
         if os.path.basename(list(recover_from_files)[0]).startswith("type0_"):
@@ -124,11 +123,12 @@ class FileDecoder(ChunksReader):
 
 
 if __name__ == '__main__':
-    repo = Repository('./repository')
+    repo = Repository.default()
     filename = 'file_1KB.dat'
     original_file = repo.tmp_file_path(filename)
-    encoded_file = repo.file_path(filename)
-    print(repo.status_str(filename))
+    encoded_file = repo.file_dir_path(filename)
+    file_status = repo.file_status(filename)
+    print(file_status.status_str())
 
     recovered_file = repo.tmp_file_path(f'recovered_{filename}')
     decoder = FileDecoder.from_encoded_dir(

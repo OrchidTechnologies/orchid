@@ -1,13 +1,12 @@
 from datetime import datetime
-from enum import Enum
-from typing import List, Dict, Set
+from typing import List, Set
 
 from pydantic import BaseModel
-from rich.box import SIMPLE, MINIMAL_HEAVY_HEAD, ROUNDED
+from rich.box import ROUNDED
 from rich.console import Console
 from rich.table import Table
 
-from monitor.monitor_config import ServerStatus
+from server.server_model import ServerStatus
 
 
 class ServerStatusView(BaseModel):
@@ -55,7 +54,7 @@ class ServerTable:
         if "last_validated" not in self.hide_cols:
             table.add_column("Last Validated", style="blue")
 
-        # Add rows - you can replace this with actual server status data
+        # Add rows
         for server in self.servers:
             # progress_meter = Status.create_progress_meter(cpu_usage)
             # table.add_row(
@@ -68,7 +67,7 @@ class ServerTable:
             #     f'{server.validated.strftime("%Y-%m-%d %H:%M:%S") if server.validated else "-"}'
             # )
 
-            row_data = [ server.name ]
+            row_data = [server.name]
             if "status" not in self.hide_cols:
                 row_data.append(server.status.name)
             if "stake" not in self.hide_cols:

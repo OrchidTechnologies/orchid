@@ -15,11 +15,11 @@ import galois
 # by performing a computation and transferring a smaller amount of data,
 # reducing the total transfer to exactly the size of the lost shard.
 
-# Specifically, a message of k^2 symbols in length is broken encoded into
+# Specifically, a message of k^2 symbols in length is encoded and split into
 # k-length shards. Utilizing twin coding the recovery of a shard requires
 # downloading only a single (calculated) symbol from any k nodes of the
 # alternate node type.  This is in contrast to the k^2 symbols that would
-# be required with a single coding scheme.
+# be required for recovery with a single coding scheme.
 #
 # The message is reshaped to a k x k matrix and encoded using the supplied
 # generator matrices of the code schemes into two, k x n, matrices. Each
