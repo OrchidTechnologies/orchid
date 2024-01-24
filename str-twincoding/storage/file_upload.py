@@ -22,12 +22,13 @@ class FileUpload:
 
     async def push(
             self,
-            local_file_status: EncodedFileStatus,
+            filename: str,
             providers_list: Optional[List[Server]] = None,
             dryrun: bool = False,
             overwrite: bool = False,
             progress_callback: Callable[[int, int, int, int], None] = None,
     ):
+        local_file_status: EncodedFileStatus = self.repo.file_status(filename)
         print(f"Push file: {local_file_status.file}")
 
         # Confirm that the file is fully available locally
@@ -113,7 +114,6 @@ class FileUpload:
                 await _add_task_for_shard(provider, node_type=1, shard_index=shard)
 
         await asyncio.gather(*tasks)
-        # print("Done.")
         ...
 
     @staticmethod

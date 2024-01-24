@@ -6,7 +6,7 @@ from icecream import ic
 
 from encoding.chunks import ChunkReader
 from encoding.twin_coding import rs_generator_matrix, Code, twin_code
-from storage.storage_model import EncodedFile, NodeType0, NodeType1, assert_rs
+from storage.storage_model import EncodedFile, NodeType0, NodeType1
 from storage.repository import Repository
 from tqdm import tqdm
 import time
@@ -31,8 +31,8 @@ class FileEncoder(ChunkReader):
                  output_path: str = None,
                  overwrite: bool = False):
 
-        assert_rs(node_type0)
-        assert_rs(node_type1)
+        node_type0.assert_reed_solomon()
+        node_type1.assert_reed_solomon()
         assert node_type0.k == node_type1.k, "The two node types must have the same k."
         assert node_type0.n > node_type0.k and node_type1.n > node_type1.k, "The node type must have n > k."
 

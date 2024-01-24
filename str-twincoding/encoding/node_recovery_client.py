@@ -10,11 +10,12 @@ from tqdm import tqdm
 
 from encoding.chunks import ChunksReader, open_output_file
 from encoding.twin_coding import rs_generator_matrix
-from storage.storage_model import NodeType, NodeType1, assert_rs
+from storage.storage_model import NodeType, NodeType1
 from storage.repository import Repository
 
 
-# Consume recovery files from k nodes of the opposite type to recover a lost node's data.
+# Consume recovery files from k nodes to recover a lost shard's data.
+# The recovered shard type will be the opposite of the recovery source node type.
 # See `node_recovery_source.py` for generating the recovery files.
 #
 # Note: We will parallelize this in a future update.
@@ -26,7 +27,7 @@ class NodeRecoveryClient(ChunksReader):
                  output_path: str = None,
                  overwrite: bool = False):
 
-        assert_rs(recovery_source_node_type)
+        recovery_source_node_type.assert_reed_solomon()
         self.recovery_source_node_type = recovery_source_node_type
         self.k = recovery_source_node_type.k
 
@@ -59,6 +60,7 @@ class NodeRecoveryClient(ChunksReader):
         return OrderedDict(sorted(files.items(), key=lambda x: x[1])[:k])
 
     def recover_node(self):
+        print(f"Recovering node to: {self.output_path}")
         GF = galois.GF(2 ** 8)
         G = rs_generator_matrix(GF, self.recovery_source_node_type.k, self.recovery_source_node_type.n)
         with open_output_file(output_path=self.output_path, overwrite=self.overwrite) as out:

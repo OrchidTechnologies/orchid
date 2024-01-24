@@ -1,19 +1,14 @@
 from enum import Enum
 from typing import Optional, List
-from storage.storage_model import ModelBase
+from storage.storage_model import ModelBase, EncodedFile
 
 
 class Server(ModelBase):
-    name: str = None  # for testing
+    name: Optional[str] = None  # for testing
     url: str
     # An auth token for the server-client pair allows listing files.
     # We could also support stateless discovery by hash.
     auth_token: Optional[str] = None
-
-    # pydantic config to make this class hashable
-    class Config:
-        frozen = True
-        ...
 
 
 class ServerStatus(Enum):
@@ -39,6 +34,17 @@ class ServerConfig(ModelBase):
 
 class ProvidersConfig(ModelBase):
     providers: List[Server]
+
+
+# Request that a provider rebuild a shard using the specified providers
+# The target provider must have the file config and resolve the provider list of either urls or names.
+class RepairShardRequest(ModelBase):
+    file: EncodedFile
+    repair_node_type: int
+    repair_node_index: int
+    providers: List[Server]
+    dryrun: bool = False
+    overwrite: bool = False
 
 
 if __name__ == '__main__':

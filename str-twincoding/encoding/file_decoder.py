@@ -7,7 +7,7 @@ import galois
 import numpy as np
 from tqdm import tqdm
 
-from storage.storage_model import NodeType, EncodedFile, assert_rs
+from storage.storage_model import NodeType, EncodedFile
 from storage.repository import Repository
 
 from encoding.chunks import ChunksReader, open_output_file
@@ -34,7 +34,7 @@ class FileDecoder(ChunksReader):
                  org_file_length: int = None  # original file length without encoder padding
                  ):
 
-        assert_rs(node_type)
+        node_type.assert_reed_solomon()
         self.k = node_type.k
         self.transpose = node_type.transpose
         self.node_type = node_type

@@ -1,8 +1,10 @@
 import time
 import galois
+from icecream import ic
 from tqdm import tqdm
 
-from storage.storage_model import NodeType, NodeType1
+from storage.renderable import Renderable
+from storage.storage_model import NodeType
 from storage.repository import Repository
 from encoding.chunks import ChunkReader, open_output_file
 from encoding.twin_coding import rs_generator_matrix
@@ -14,28 +16,77 @@ from encoding.twin_coding import rs_generator_matrix
 #
 # Note: We will parallelize this in a future update.
 #
-# TODO: We don't currently have a way to assert that the source and client nodes are of opposite types.
-#
-class NodeRecoverySource(ChunkReader):
-    def __init__(self,
-                 # Node information for the recover node (client node).
-                 recover_node_type: NodeType,
-                 recover_node_index: int,
-                 # Node information for this node (source node)
-                 data_path: str,
-                 # Output
-                 output_path: str = None,
-                 overwrite: bool = False):
+class NodeRecoverySource(ChunkReader, Renderable):
+
+    # This file level init.
+    # @see `NodeRecoverySource.for_nodes()` which works with at the repository level.
+    def __init__(
+            self,
+            # Node information for the recover node (client node).
+            recover_node_type: NodeType,
+            recover_node_index: int,
+
+            # Node information for the source "helper" node.
+            data_path: str,
+
+            # Output
+            output_path: str = None,
+            overwrite: bool = False
+    ):
         super().__init__(path=data_path, chunk_size=recover_node_type.k)
-        assert recover_node_type.encoding == 'reed_solomon', "Only reed solomon encoding is currently supported."
+        recover_node_type.assert_reed_solomon()
         self.recover_node_type = recover_node_type
-        assert recover_node_index < recover_node_type.k, "Recover node index must be less than k."
+        assert recover_node_index < recover_node_type.n, "Recover node index must be less than n."
         self.recover_node_index = recover_node_index
         self.output_path = output_path or f"recover_{recover_node_index}.dat"
         self.overwrite = overwrite
 
+    # Implement hash
+    def __hash__(self):
+        return hash(self.output_path)
+
+    @classmethod
+    # Init a NodeSourceRecovery instance using the specified repository file conventions.
+    def for_repo(
+            cls,
+            repo: Repository,
+            filename: str,
+
+            # Node information for the recovering node (client node).
+            recover_node_type: NodeType,
+            recover_node_index: int,
+
+            # Node information for the source "helper" node.
+            source_node_type: NodeType,
+            source_node_index: int,
+
+            overwrite: bool = False
+    ):
+        # The source and recover nodes must be of opposing types (0, 1).
+        assert recover_node_type.type != source_node_type.type, "Node types must be different."
+
+        # The input path of the helper node's shard
+        helper_shard_path = repo.shard_path(
+            filename, node_type=source_node_type.type, node_index=source_node_index, expected=True)
+
+        # The output path of the recovery file
+        recovery_file_path = repo.recovery_file_path(
+            filename,
+            recover_node_type=recover_node_type.type,
+            recover_node_index=recover_node_index,
+            helper_node_index=source_node_index,
+            expected=False)
+
+        return cls(
+            recover_node_type=recover_node_type,
+            recover_node_index=recover_node_index,
+            data_path=helper_shard_path,
+            output_path=recovery_file_path,
+            overwrite=overwrite
+        )
+
     # Generate the node recovery file for the client node
-    def generate(self):
+    def render(self):
         GF = galois.GF(2 ** 8)
         # The encoding vector of the failed node is the i'th column of the generator matrix of its type.
         G = rs_generator_matrix(GF, self.recover_node_type.k, self.recover_node_type.n)
@@ -52,32 +103,41 @@ class NodeRecoverySource(ChunkReader):
 
 
 if __name__ == '__main__':
-    file = 'file_1KB.dat'
-    repo = Repository.default()
 
-    # The recovering node
-    recover_node_encoding = NodeType1(k=3, n=5, encoding='reed_solomon')
-    recover_node_index = 0
+    # Test requesting a single recovery file from a provider
+    # ./storage.sh request_recovery_file --provider http://localhost:8080 --overwrite --recover_node_type 0
+    # --recover_node_index 0 --source_node_index 0 file_1KB.dat
 
-    # Use three helper nodes of type 0 to generate recovery files for a node of type 1.
-    helper_node_type = 0
-    for helper_node_index in range(3):
-        # The input path of the helper node's shard
-        helper_shard_path = repo.shard_path(
-            file, node_type=helper_node_type, node_index=helper_node_index)
-        # The output path of the recovery file
-        recovery_file_path = repo.recovery_file_path(
-            file,
-            recover_node_type=recover_node_encoding.type,
-            recover_node_index=recover_node_index,
-            helper_node_index=helper_node_index,
-            expected=False)
+    def main():
+        filename = 'file_1KB.dat'
+        repo = Repository.default()
 
-        NodeRecoverySource(
-            recover_node_type=recover_node_encoding,
-            recover_node_index=recover_node_index,
-            data_path=helper_shard_path,
-            output_path=recovery_file_path,
-            overwrite=True
-        ).generate()
+        # The node and shard to recover
+        recover_node_type = 1
+        recover_node_encoding = NodeType(type=recover_node_type, k=3, n=5, encoding='reed_solomon')
+        recover_node_index = 0
+
+        # Use k (3) helper nodes of the opposite type (0) to generate k (3) recovery files for
+        # the recovering nodes't type (1).
+        helper_node_type = 0 if recover_node_type == 1 else 1
+        for helper_node_index in range(3):
+            helper_node_encoding = NodeType(
+                type=helper_node_type,
+                encoding=recover_node_encoding.encoding,
+                k=recover_node_encoding.k,
+                n=recover_node_encoding.n
+            )
+
+            NodeRecoverySource.for_repo(
+                repo=repo,
+                filename=filename,
+                recover_node_type=recover_node_encoding,
+                recover_node_index=recover_node_index,
+                source_node_type=helper_node_encoding,
+                source_node_index=helper_node_index,
+                overwrite=True
+            ).render()
+
+
+    main()
     ...

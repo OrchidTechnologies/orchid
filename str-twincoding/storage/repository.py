@@ -1,11 +1,9 @@
 import re
 from collections import OrderedDict
-from typing import Any, List
-
-from icecream import ic
-
+from typing import Any, Dict
 from storage.storage_model import EncodedFile, EncodedFileStatus, assert_node_type
 from storage.util import *
+from icecream import ic
 
 
 class Repository:
@@ -24,7 +22,6 @@ class Repository:
     def ensure_init(self):
         if not os.path.exists(self.tmp_dir()):
             os.makedirs(self.tmp_dir(), exist_ok=True)
-
 
     # Get a repository root for incoming files within this repository.
     def incoming(self) -> 'Repository':
@@ -49,6 +46,16 @@ class Repository:
         path = self.file_dir_path(filename, expected)
         return os.path.join(path, 'config.json')
 
+    # Save the file config, creating a new repo file dir.
+    # If the config already exists, an exception is raised.
+    def save_file_config(self, config: EncodedFile):
+        # Save the config, creating a new repo file dir.
+        file_config_path = self.file_config_path(config.name, expected=False)
+        # if it exists
+        if os.path.exists(file_config_path):
+            raise Exception(f"File config already exists: {file_config_path}")
+        config.save_atomic(file_config_path, mkdirs=True)
+
     # Get the path to a shard of the encoded file by file name, node type and index
     def shard_path(self, filename: str, node_type: int, node_index: int, expected: bool = True) -> str:
         assert_node_type(node_type)
@@ -56,6 +63,9 @@ class Repository:
         if expected:
             assert os.path.exists(path), f"Shard not found: {path}"
         return path
+
+    def shard_exists(self, filename: str, node_type: int, node_index: int) -> bool:
+        return os.path.exists(self.shard_path(filename, node_type, node_index, expected=False))
 
     # Get encoded file configuration by name.
     def file(self, filename: str, expected: bool = True) -> EncodedFile | None:
@@ -79,6 +89,28 @@ class Repository:
         if expected:
             assert os.path.exists(path), f"Recovery file not found: {path}"
         return path
+
+    # Enumerate the recovery files shard of the named file, recovery node type,
+    # and recovery node index.
+    # Note that the source node type is necessarily the opposite of the recovery node type.
+    # Returns a list of tuples (source node_index, path)
+    def list_recovery_files(
+            self, file: str, recover_node_type: int, recover_node_index: int
+    ) -> dict[int, str]:
+        assert_node_type(recover_node_type)
+        path = self.file_dir_path(file)
+        files: dict[int, str] = {}
+        for filename in os.listdir(path):
+            match = re.match(
+                r'recover_type(\d+)_node(\d+)_from(\d+).dat', filename)
+            if not match:
+                continue
+            recover_type, recover_index, source_node_index = int(match.group(1)), int(
+                match.group(2)), int(match.group(3))
+            if recover_type == recover_node_type and recover_index == recover_node_index:
+                files[source_node_index] = os.path.join(path, filename)
+
+        return files
 
     # Get the path to a temporary repository file by file name
     def tmp_file_path(self, file: str):
@@ -131,14 +163,24 @@ class Repository:
 
 
 if __name__ == '__main__':
-    repo = Repository.default()
-    files: list[str] = repo.list()
-    print("Files in repository:")
-    for file in files:
-        print('  ', repo.file(file))
+    def main():
+        repo = Repository.default()
+        files: list[str] = repo.list()
+        print("Files in repository:")
+        for file in files:
+            print('  ', repo.file(file))
 
-    ic(repo.file_config_path(files[0]))
-    # print()
-    # file = 'file_1KB.dat'
-    # print(repo.file_path(file))
-    # print(repo.shard_path(file, node_type=0, node_index=0))
+        ic(repo.file_config_path(files[0]))
+        # print()
+        # file = 'file_1KB.dat'
+        # print(repo.file_path(file))
+        # print(repo.shard_path(file, node_type=0, node_index=0))
+
+        print("Recovery files:")
+        recovery_files = repo.list_recovery_files(files[0], recover_node_type=0, recover_node_index=0)
+        for node_index, path in recovery_files:
+            print(node_index, path)
+
+
+    main()
+    ...

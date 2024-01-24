@@ -1,14 +1,19 @@
 import os
 import uuid
-from typing import List, Optional
+from typing import Optional
 
 import commentjson as json
+from icecream import ic
 from pydantic import BaseModel
 
 from storage.util import summarize_ranges, file_availability_ratio
 
 
 class ModelBase(BaseModel):
+
+    # All models are immuitable and hashable
+    class Config:
+        frozen = True
 
     # load from json file
     @classmethod
@@ -34,6 +39,7 @@ class ModelBase(BaseModel):
         self.save(tmp_path, mkdirs)
         os.rename(tmp_path, file_path)
 
+
 #
 #  Encoded File config
 #
@@ -45,24 +51,24 @@ class NodeType(ModelBase):
     n: int
 
     @property
+    def alt_type(self):
+        return 1 if self.type == 0 else 0
+
+    @property
     def transpose(self):
         return self.type == 1
 
+    def assert_reed_solomon(self):
+        assert self.encoding == 'reed_solomon', "Only reed solomon encoding is currently supported."
 
 class NodeType0(NodeType):
     # transpose: bool = False
     type: int = 0
 
-    class Config:
-        frozen = True  # hashable
-
 
 class NodeType1(NodeType):
     # transpose: bool = True
     type: int = 1
-
-    class Config:
-        frozen = True  # hashable
 
 
 class EncodedFile(ModelBase):
@@ -95,9 +101,6 @@ class EncodedFile(ModelBase):
         encoding1 = f'{self.type1.encoding}:{self.type1.k}/{self.type1.n}'
         return encoding0 if encoding0 == encoding1 else f"{encoding0}|{encoding1}"
 
-    class Config:
-        frozen = True  # hashable
-
 
 class EncodedFileStatus(ModelBase):
     file: EncodedFile
@@ -120,13 +123,6 @@ class EncodedFileStatus(ModelBase):
     # to string
     def __str__(self):
         return self.status_str()
-
-    class Config:
-        frozen = True  # hashable
-
-
-def assert_rs(node_type: NodeType):
-    assert node_type.encoding == 'reed_solomon', "Only reed solomon encoding is currently supported."
 
 
 def assert_node_type(node_type: int):
@@ -162,3 +158,7 @@ if __name__ == '__main__':
                         type1=NodeType1(encoding='reed_solomon', k=3, n=5),
                         type1_hashes=('0', '1', '2', '3', '4'))
     assert hash(file1) == hash(file2)
+
+    ic(file2)
+    file3 = file2.model_copy(update={'name': 'fooname'})
+    ic(file3)

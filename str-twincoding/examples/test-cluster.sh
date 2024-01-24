@@ -18,7 +18,8 @@ if [ -z "$STRHOME" ]; then
     echo "STRHOME is not set."
     exit 1
 fi
-app="$STRHOME/server/server_cli.py"
+apppy="server/server_cli.py"
+app="$STRHOME/$apppy"
 data="$STRHOME/examples/data"
 mkdir -p "$data"
 
@@ -54,6 +55,7 @@ list_all() {
     printf "%-10s %-10s %-10s\n" "PID" "PORT" "TIME"
 
     # Find all PIDs for the given process name and extract relevant information
+    echo "$app"
     ps auxw | grep "$app" | grep -v grep | awk '{
         pid = $2; 
         time = $10; 

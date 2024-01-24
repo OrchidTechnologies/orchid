@@ -36,12 +36,12 @@ class Providers:
             return Providers.default()
 
     # Resolve names or urls to Server models.
-    def resolve_provider_names(self, providers: List[str]) -> List[Server]:
-        return [self._resolve_provider_name(name) for name in providers]
+    def resolve_providers(self, providers: List[str]) -> List[Server]:
+        return [self.resolve_provider(name) for name in providers]
 
     # Resolve names or urls to Server models.
     # Names can be specified in the providers.jsconc config file.
-    def _resolve_provider_name(self, provider: str) -> Server:
+    def resolve_provider(self, provider: str) -> Server:
         # Does the provider string look like a url?
         if provider.startswith('http'):
             return Server(url=provider)

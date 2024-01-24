@@ -25,7 +25,18 @@ providers.sh list
 monitor.sh --update 1
 
 # Push the file by name
+# (Observe the availability of the file in the monitor)
 storage.sh push foo_file.dat
+
+# Delete a shard from one of the providers
+# (Observe the availability is reduced as a unique shard is lost)
+storage.sh delete_shard --provider 5001 foo_file.dat --node_type 0 --node_index 0
+
+# Request that the provider rebuild the lost node from specified other nodes in the cluster.
+storage.sh request_repair --to_provider 5001 foo_file.dat --node_type 0 --node_index 0 --from_providers 5002 5003 5004
+...
+
 
 # Shut down the servers
 examples/test-cluster.sh stop
+
