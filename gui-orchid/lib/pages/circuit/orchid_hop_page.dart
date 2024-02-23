@@ -1,9 +1,9 @@
+import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'dart:async';
 import 'package:badges/badges.dart' as badge;
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_eth/orchid_lottery.dart';
-import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_market.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';

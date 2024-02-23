@@ -13,9 +13,6 @@ import 'package:uuid/uuid_util.dart';
 import 'package:web3dart/credentials.dart' as web3;
 import 'package:web3dart/crypto.dart';
 
-import 'orchid_keys.dart';
-export 'orchid_keys.dart';
-
 class Crypto {
   static final ECDomainParameters curve = ECCurve_secp256k1();
 
@@ -52,14 +49,14 @@ class Crypto {
     final ethereumAddress = Uint8List.view(
         hashed.buffer, 32 /*bytes*/ - 20 /*eth address length bytes*/);
 
-    return new EthereumKeyPair(
+    return EthereumKeyPair(
         private: privateKey,
         public: toHex(publicKey),
         addressString: toHex(ethereumAddress));
   }
 
   static String toHex(Uint8List bytes) {
-    var result = new StringBuffer('0x');
+    var result = StringBuffer('0x');
     bytes.forEach((val) {
       var pad = val < 16 ? '0' : '';
       result.write('$pad${val.toRadixString(16)}');
@@ -93,7 +90,6 @@ class Crypto {
   static String formatSecretFixed(BigInt private) {
     return private.toRadixString(16).padLeft(64, '0');
   }
-
 }
 
 class EthereumKeyPair {
@@ -179,7 +175,9 @@ class EthereumAddress {
   EthereumAddress.from(String text) : this.value = parse(text);
 
   static fromNullable(String? text) {
-    if (text == 'null') { return null; }
+    if (text == 'null') {
+      return null;
+    }
     return text == null ? null : EthereumAddress.from(text);
   }
 
@@ -190,10 +188,11 @@ class EthereumAddress {
     final raw = value.toRadixString(16).padLeft(40, '0');
     final eip55 = Web3DartUtils.eip55ChecksumEthereumAddress(raw);
     final hex = prefix ? eip55 : Hex.remove0x(eip55);
-    if (elide)
+    if (elide) {
       return elideAddressString(hex);
-    else
+    } else {
       return hex;
+    }
   }
 
   static String elideAddressString(String hex) {
@@ -265,9 +264,9 @@ class Web3DartUtils {
     return true;
   }
 
-  static MsgSignature web3Sign(Uint8List payload, StoredEthereumKey key) {
-    final credentials = web3.EthPrivateKey.fromHex(key.formatSecretFixed());
-    //print("payload = ${hex.encode(payload)}");
+  static MsgSignature web3Sign(Uint8List payload, BigInt key) {
+    final web3.EthPrivateKey credentials =
+        web3.EthPrivateKey.fromHex(Crypto.formatSecretFixed(key));
     // Use web3 sign(), not web3 credentials.sign() which does a keccak256 on payload.
     return sign(payload, credentials.privateKey);
   }

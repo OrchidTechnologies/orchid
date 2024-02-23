@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/eth_transaction.dart';
+import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/preferences/observable_preference.dart';

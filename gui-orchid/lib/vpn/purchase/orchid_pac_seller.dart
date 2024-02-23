@@ -8,6 +8,7 @@ import 'package:orchid/api/orchid_eth/eth_transaction.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_contract_v1.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
+import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/api/pricing/usd.dart';
@@ -115,7 +116,7 @@ class OrchidPacSeller {
       refill: refill,
     ));
     var sig = Web3DartUtils.web3Sign(
-        keccak256(Uint8List.fromList(packedEditParams)), signerKey);
+        keccak256(Uint8List.fromList(packedEditParams)), signerKey.private);
 
     // The abi encoded seller edit call tx data
     var encodedSellerEditCall = abiEncodeSellerEdit(
@@ -150,7 +151,7 @@ class OrchidPacSeller {
 
     var encoded = utf8.encode(msg);
     Uint8List uint8list = Uint8List.fromList(encoded);
-    return Web3DartUtils.web3Sign(keccak256(uint8list), signerKey);
+    return Web3DartUtils.web3Sign(keccak256(uint8list), signerKey.private);
   }
 
   /*

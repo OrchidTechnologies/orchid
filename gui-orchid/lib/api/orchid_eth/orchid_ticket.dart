@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'package:convert/convert.dart';
-import 'package:orchid/util/hex.dart';
 import 'dart:typed_data';
+import 'package:convert/convert.dart';
+import 'package:orchid/api/orchid_crypto.dart';
+import 'package:orchid/util/hex.dart';
 import 'package:web3dart/crypto.dart';
-import '../orchid_crypto.dart';
-import 'abi_encode.dart';
 import 'package:web3dart/credentials.dart' as web3;
+import 'abi_encode.dart';
 
 // Orchid Lottery ticket serialization and evaluation.
 // This is direct port of the JS version of this class.
@@ -30,7 +30,7 @@ class OrchidTicket {
     required BigInt privateKey, // uint256
     int? millisecondsSinceEpoch,
   }) {
-    this.initTicketData(data, lotaddr, token, amount, ratio, funder, recipient,
+    initTicketData(data, lotaddr, token, amount, ratio, funder, recipient,
         commitment, privateKey,
         millisecondsSinceEpoch: millisecondsSinceEpoch);
   }
@@ -47,10 +47,10 @@ class OrchidTicket {
     for (var i = 0; i < str.length; i += 64) {
       ticket.add(str.substring(i, i + 64));
     }
-    this.packed0 = BigInt.parse(ticket[0], radix: 16);
-    this.packed1 = BigInt.parse(ticket[1], radix: 16);
-    this.sig_r = ticket[2].startsWith("0x") ? ticket[2] : '0x' + ticket[2];
-    this.sig_s = ticket[3].startsWith("0x") ? ticket[3] : '0x' + ticket[3];
+    packed0 = BigInt.parse(ticket[0], radix: 16);
+    packed1 = BigInt.parse(ticket[1], radix: 16);
+    sig_r = ticket[2].startsWith("0x") ? ticket[2] : '0x' + ticket[2];
+    sig_s = ticket[3].startsWith("0x") ? ticket[3] : '0x' + ticket[3];
   }
 
   void initTicketData(
@@ -150,3 +150,4 @@ class OrchidTicket {
     print('r: ${this.sig_r}\ns: ${this.sig_s}');
   }
 }
+

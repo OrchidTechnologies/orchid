@@ -1,6 +1,7 @@
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
+import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/vpn/preferences/user_preferences_vpn.dart';
 import 'package:orchid/vpn/model/circuit_hop.dart';

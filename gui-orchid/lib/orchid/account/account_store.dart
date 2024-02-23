@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
-import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/v0/orchid_eth_v0.dart';
 import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
+import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/vpn/preferences/user_preferences_vpn.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
@@ -32,11 +32,7 @@ class AccountStore extends ChangeNotifier {
   AccountStore({
     required this.identity,
     this.discoverAccounts = true,
-  }) {
-    if (identity == null) {
-      throw Exception("identity may not be null");
-    }
-  }
+  });
 
   /// All accounts known for the identity, unordered.
   Set<Account> get accounts {
