@@ -89,6 +89,11 @@ class Crypto {
   static String uuid() {
     return Uuid(options: {'grng': UuidUtil.cryptoRNG}).v4();
   }
+
+  static String formatSecretFixed(BigInt private) {
+    return private.toRadixString(16).padLeft(64, '0');
+  }
+
 }
 
 class EthereumKeyPair {

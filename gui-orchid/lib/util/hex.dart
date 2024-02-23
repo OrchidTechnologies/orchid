@@ -39,6 +39,7 @@ class Hex {
     }
   }
 
+  // Or use hex.decode() from: 'package:convert/convert.dart';
   static List<int> decodeBytes(String hexStr) {
     hexStr = remove0x(hexStr);
     if (hexStr.isEmpty) {

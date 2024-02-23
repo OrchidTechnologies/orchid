@@ -55,8 +55,9 @@ class StoredEthereumKey {
 
   /// Format the secret as a 64 character hex string, zero padded, without prefix.
   String formatSecretFixed() {
-    return private.toRadixString(16).padLeft(64, '0');
+    return Crypto.formatSecretFixed(private);
   }
+
 
   String toExportString() {
     return 'account={ secret: "${formatSecretFixed()}" }';
