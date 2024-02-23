@@ -4,6 +4,68 @@ import 'package:orchid/api/orchid_eth/orchid_ticket.dart';
 
 void main() {
   group('ticket tests', () {
+    //
+    /*
+    JS output:
+      Ticket data:
+      Packed0: 10725299090569305319344573190133412787358038370907851216529272602624
+      Packed1: 115792089210356248756420345214244490354657239511130867306431705402380410144357
+    Packed data:
+      Amount: 2000000000000000000
+      Nonce: 10444928296939929927
+      Funder: ...
+      Ratio: 9223372036854775808
+      r: 0xd73c001751ebd66407ef8cb61ffc2a77757d2da4e7ea853af744d1123e68fb4a
+      s: 0x03cc65f3e60f1b007609f69f464a1ec2ae10b39805116434f8c647d63c1e7bb6
+   */
+    test('Test construction and winner', () async {
+      print("Test construction and winner");
+      final funder =
+          EthereumAddress.from('0x13953B378987A76c65F7041BE8CE983381d5E332');
+      print("TODO: fill in signer from the internal test.");
+      final signerKey = BigInt.parse('0x1cf...');
+      final recipient =
+          EthereumAddress.from('0x405BC10E04e3f487E9925ad5815E4406D78B769e');
+      final amountf = 1.0;
+      final amount = BigInt.from(2000000000000000000) * BigInt.from(amountf);
+      final data = BigInt.zero;
+      final lotaddr =
+          EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82');
+      final token = EthereumAddress.zero;
+      final ratio = BigInt.parse('9223372036854775808');
+      final commit = BigInt.parse('0x100');
+      final testDateMillis = 1708638722494;
+      final ticket = OrchidTicket(
+        data: data,
+        lotaddr: lotaddr,
+        token: token,
+        amount: amount,
+        ratio: ratio,
+        funder: funder,
+        recipient: recipient,
+        commitment: commit,
+        privateKey: signerKey,
+        millisecondsSinceEpoch: testDateMillis,
+      );
+      // ticket.printTicket();
+      expect(ticket.packed0.toString(),
+          '10725299090569305319344573190133412787358038370907851216529272602624');
+      expect(ticket.packed1.toString(),
+          '115792089210356248756420345214244490354657239511130867306431705402380410144357');
+      expect(ticket.sig_r,
+          '0xd73c001751ebd66407ef8cb61ffc2a77757d2da4e7ea853af744d1123e68fb4a');
+      expect(ticket.sig_s,
+          '0x03cc65f3e60f1b007609f69f464a1ec2ae10b39805116434f8c647d63c1e7bb6');
+
+      print("Test winner");
+      // test winner (values from the JS test)
+      expect(ticket.isWinner('0x00'), true);
+      expect(ticket.isWinner('0x01'), true);
+      expect(ticket.isWinner('0x05'), false);
+      expect(ticket.isWinner('0x07'), false);
+      expect(ticket.isWinner('0x0D'), true);
+    });
+    //
     /*
       JS version output:
       Ticket data:
@@ -37,66 +99,6 @@ void main() {
       final ser2 = ticket.serializeTicket();
       expect(ser2, ser1);
     });
-
-    /*
-    JS output:
-      Ticket data:
-      Packed0: 10725299090569305319344573190133412787358038370907851216529272602624
-      Packed1: 115792089210356248756420345214244490354657239511130867306431705402380410144357
-    Packed data:
-      Amount: 2000000000000000000
-      Nonce: 10444928296939929927
-      Funder: 111798794203442759563723844757346937785445376818
-      Ratio: 9223372036854775808
-      r: 0xd73c001751ebd66407ef8cb61ffc2a77757d2da4e7ea853af744d1123e68fb4a
-      s: 0x03cc65f3e60f1b007609f69f464a1ec2ae10b39805116434f8c647d63c1e7bb6
-   */
-    test('Test construction', () async {
-      print("Test construction");
-      final funder =
-          EthereumAddress.from('0x13953B378987A76c65F7041BE8CE983381d5E332');
-      final signer_key = BigInt.parse(
-          '0x1cf5423866f216ecc2ed50c79447249604d274099e1f8e106dde3a5a6eaea365');
-      final recipient =
-          EthereumAddress.from('0x405BC10E04e3f487E9925ad5815E4406D78B769e');
-      final amountf = 1.0;
-      final amount = BigInt.from(2000000000000000000) * BigInt.from(amountf);
-      final data = BigInt.zero;
-      final lotaddr =
-          EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82');
-      final token = EthereumAddress.zero;
-      final ratio = BigInt.parse('9223372036854775808');
-      final commit = BigInt.parse('0x100');
-      final ticket = OrchidTicket(
-        data: data,
-        lotaddr: lotaddr,
-        token: token,
-        amount: amount,
-        ratio: ratio,
-        funder: funder,
-        recipient: recipient,
-        commitment: commit,
-        privateKey: signer_key,
-        millisecondsSinceEpoch: 1708638722494,
-      );
-      // ticket.printTicket();
-      expect(ticket.packed0.toString(),
-          '10725299090569305319344573190133412787358038370907851216529272602624');
-      expect(ticket.packed1.toString(),
-          '115792089210356248756420345214244490354657239511130867306431705402380410144357');
-      expect(ticket.sig_r,
-          '0xd73c001751ebd66407ef8cb61ffc2a77757d2da4e7ea853af744d1123e68fb4a');
-      expect(ticket.sig_s,
-          '0x03cc65f3e60f1b007609f69f464a1ec2ae10b39805116434f8c647d63c1e7bb6');
-
-      print("Test winner");
-      // test winner (values from the JS test)
-      expect(ticket.isWinner('0x00'), true);
-      expect(ticket.isWinner('0x01'), true);
-      expect(ticket.isWinner('0x05'), false);
-      expect(ticket.isWinner('0x07'), false);
-      expect(ticket.isWinner('0x0D'), true);
-
-    });
+    //
   });
 }
