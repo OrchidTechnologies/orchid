@@ -93,7 +93,7 @@ class OrchidTicket {
         '64'.padLeft(64, '0') +
         AbiEncodePacked.address(token) +
         AbiEncodePacked.address(recipient) +
-        bytesToHex(keccak256(commitment.toBytes32())) +
+        AbiEncodePacked.uint256(commitment) +
         AbiEncodePacked.uint256(packed0) +
         AbiEncodePacked.uint256(packed1) +
         AbiEncodePacked.uint256(data);
