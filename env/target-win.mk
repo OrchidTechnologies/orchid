@@ -112,12 +112,12 @@ qflags += -Wno-nonportable-include-path
 
 cflags += -I$(pwd)/mingw
 
-mingw := git-9.0.0.6454.b4445ee52
+mingw := git-10.0.0.r258.g530c58e17
 
 msys2 := 
-msys2 += crt-$(mingw)-1
+msys2 += crt-$(mingw)-2
 msys2 += dlfcn-1.4.0-1
-msys2 += gcc-11.3.0-2
+msys2 += gcc-12.1.0-2
 msys2 += headers-$(mingw)-1
 msys2 += winpthreads-$(mingw)-1
 
