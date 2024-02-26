@@ -210,14 +210,14 @@ inline std::string Str(const Any &value) { orc_block({
 // XXX: this is dangerous and needs Fit
 template <typename Type_>
 Type_ Num(const Any &value) {
-    switch (value.kind()) {
+    switch (const auto kind = value.kind()) {
         case boost::json::kind::int64:
             return Type_(value.get_int64());
         case boost::json::kind::uint64:
             return Type_(value.get_uint64());
         case boost::json::kind::double_:
             return Type_(value.get_double());
-        default: orc_assert(false);
+        default: orc_assert_(false, value << " is a " << kind);
     }
 }
 
