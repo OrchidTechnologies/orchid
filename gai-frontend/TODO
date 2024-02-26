@@ -1,10 +1,6 @@
 - fix orchid account form
   = validate inputs
-  = check for existing account
   = display balance/deposit info
-- send lottery tickets in response to server invoices
-- add bid ui to chat view
-- make single connection at a time
 - quality of life improvements
   = selectable text
   = chat export
