@@ -76,7 +76,10 @@ struct Response :
 };
 
 inline std::ostream &operator <<(std::ostream &out, const Response &response) {
-    return out << "{ status: " << response.result() << ", body: ```" << response.body() << "``` }";
+    out << "{ status: " << response.result() << ", body: ```" << response.body() << "``` }";
+    for (const auto &header : response)
+        out << "  " << header.name_string() << ":" << header.value() << std::endl;
+    return out;
 }
 
 }
