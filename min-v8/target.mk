@@ -69,6 +69,8 @@ v8src := $(filter-out \
 
 # XXX: this is a mess that I need to clean up
 
+vflags := 
+
 ifeq ($(machine),x86_64)
 vflags += -DV8_TARGET_ARCH_X64
 v8src += $(foreach sub,$(v8sub),$(wildcard $(pwd)/v8/src/$(sub)/x64/*.cc))
@@ -153,6 +155,11 @@ vflags += -I$(output)/$(pwd/v8)
 
 source += $(v8src)
 
+cflags += $(vflags)
+# XXX: they almost certainly already fixed this
+# (this fixes the build in CI with local clang)
+vflags += -include cstdint
+
 
 # XXX: this now needs to be per target (due to -m$(bits))
 
@@ -229,7 +236,6 @@ source += $(filter %.cc,$(tqsrc))
 header += $(filter %.h %.inc,$(tqsrc))
 
 
-cflags += $(vflags)
 cflags += -I$(pwd/v8)/src
 cflags += -I$(pwd/v8)/include
 cflags += -I$(pwd)/extra
@@ -246,7 +252,13 @@ cflags += -DU_SHOW_INTERNAL_API
 #chacks/$(pwd/v8)/src/./profiler/heap-snapshot-generator.cc += s/V8_CC_MSVC/1/
 cflags += -mno-ms-bitfields
 
+# this might have to become global if that bitfield is exported
+cflags/$(pwd/v8)/ += -Wno-enum-constexpr-conversion
+
 # https://bugs.chromium.org/p/chromium/issues/detail?id=1016945
 cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment
+
+# XXX: they might have already changed many of these cases
+cflags/$(pwd/v8)/ += -Wno-unused-but-set-variable
 
 archive += $(pwd/v8)/

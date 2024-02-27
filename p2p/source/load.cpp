@@ -25,11 +25,12 @@
 #include <winsock2.h>
 #endif
 
+#include <fstream>
+
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <boost/filesystem/string_file.hpp>
-
+#include "fit.hpp"
 #include "syscall.hpp"
 
 namespace orc {
@@ -42,28 +43,38 @@ void Create(const std::string &path) {
 #endif
 }
 
-void Delete(const std::string &file) {
-    orc_syscall(unlink(file.c_str()));
+void Delete(const std::string &path) {
+    orc_syscall(unlink(path.c_str()));
 }
 
 bool Exists(const std::string &path) {
     return orc_syscall(access(path.c_str(), F_OK), ENOENT) == 0;
 }
 
-uint64_t Modified(const std::string &file) {
+uint64_t Modified(const std::string &path) {
     struct stat info{};
-    orc_syscall(stat(file.c_str(), &info));
+    orc_syscall(stat(path.c_str(), &info));
     return info.st_mtime;
 }
 
-std::string Load(const std::string &file) { orc_block({
+std::string Load(const std::string &path) { orc_block({
+    std::ifstream file;
+    file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    file.open(path, std::ios::binary);
+    const auto begin(file.tellg());
+    file.seekg(0, std::ios::end);
     std::string data;
-    boost::filesystem::load_string_file(file, data);
+    data.resize(Fit(Pos(file.tellg() - begin)));
+    file.seekg(0, std::ios::beg);
+    file.read(data.data(), data.size());
     return data;
-}, "loading from " << file); }
+}, "loading from " << path); }
 
-void Save(const std::string &file, const std::string &data) { orc_block({
-    boost::filesystem::save_string_file(file, data);
-}, "saving to " << file); }
+void Save(const std::string &path, const std::string &data) { orc_block({
+    std::ofstream file;
+    file.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+    file.open(path, std::ios::binary);
+    file.write(data.data(), data.size());
+}, "saving to " << path); }
 
 }

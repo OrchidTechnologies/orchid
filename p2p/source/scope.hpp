@@ -92,7 +92,7 @@ class scope {
 #endif
 
 #define _scope__(code, line) \
-    scope _scope ## line([&]code)
+    const scope _scope ## line([&]code)
 #define _scope_(code, line) \
     _scope__(code, line)
 #define _scope(code) \

@@ -196,11 +196,12 @@ Signature::Signature(const Brick<65> &data) {
 }
 
 
-static const secp256k1_context *Curve() {
+namespace {
+const secp256k1_context *Curve() {
     // NOLINTNEXTLINE(misc-redundant-expression)
-    static std::unique_ptr<secp256k1_context, decltype(&secp256k1_context_destroy)> context_{secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY), &secp256k1_context_destroy};
+    static const std::unique_ptr<secp256k1_context, decltype(&secp256k1_context_destroy)> context_{secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY), &secp256k1_context_destroy};
     return context_.get();
-}
+} }
 
 bool operator ==(const Key &lhs, const Key &rhs) {
     const auto context(Curve());

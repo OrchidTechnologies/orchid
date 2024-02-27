@@ -46,7 +46,7 @@ class Cache {
     }
 
     Type_ &operator ()(const Args_ &args) {
-        std::unique_lock<std::mutex> lock(mutex_);
+        const std::unique_lock<std::mutex> lock(mutex_);
         const auto &cache(cache_.find(args));
         if (cache != cache_.end())
             return cache->second;

@@ -60,7 +60,7 @@ void Trace(const char *type, bool send, bool deep, const Buffer &data) { try {
                 (tcp.flags & (1 << 0)) == 0 ? '.' : 'F',
             '\0'};
 
-            std::unique_lock<std::mutex> lock(mutex_);
+            const std::unique_lock<std::mutex> lock(mutex_);
 
             // clang-tidy somehow treats ORC_TRACE as an integer?!?
             // NOLINTNEXTLINE(readability-implicit-bool-conversion)

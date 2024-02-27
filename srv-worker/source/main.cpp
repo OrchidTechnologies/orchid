@@ -35,7 +35,7 @@ void Test(const v8::FunctionCallbackInfo<v8::Value> &args) {
     //const auto context(isolate->GetCurrentContext());
     //orc_assert(args.Length() == 1);
     v8::String::Utf8Value arg0(isolate, args[0]);
-    std::string value(*arg0, arg0.length());
+    const std::string value(*arg0, arg0.length());
     std::cerr << value << std::endl;
     (void) value;
 }
@@ -50,7 +50,7 @@ int main(int argc, char *argv[], char **envp) {
         // XXX: this is not security critical for our daemon, but might have effects on user code
         // there isn't a good source of entropy right now in the worker process; I should add one
         // NOLINTNEXTLINE(cert-msc32-c,cert-msc51-cpp)
-        static std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned char> engine;
+        static const std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned char> engine;
         std::generate(data, data + size, engine);
         return true;
     });
@@ -73,12 +73,12 @@ int main(int argc, char *argv[], char **envp) {
     }()));
     _scope({ isolate->Dispose(); });
 
-    v8::Locker locker(isolate);
-    v8::Isolate::Scope isolated(isolate);
-    v8::HandleScope scope(isolate);
+    const v8::Locker locker(isolate);
+    const v8::Isolate::Scope isolated(isolate);
+    const v8::HandleScope scope(isolate);
 
     const auto context(v8::Context::New(isolate));
-    v8::Context::Scope contextualized(context);
+    const v8::Context::Scope contextualized(context);
 
     const auto global(context->Global());
     (void) global->Set(context, v8::String::NewFromUtf8Literal(isolate, "test"), v8::Function::New(context, &Test).ToLocalChecked());

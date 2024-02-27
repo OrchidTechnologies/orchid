@@ -82,7 +82,7 @@ Log::~Log() { try {
     if (log.find('\e') != std::string::npos)
         log += "\e[0m";
 
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
 
 #if 0
 #elif defined(__APPLE__)
@@ -104,7 +104,7 @@ Log::~Log() { try {
 } }
 
 std::string Cause() {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     return cause_;
 }
 

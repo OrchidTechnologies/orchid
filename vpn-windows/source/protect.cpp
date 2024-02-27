@@ -35,7 +35,7 @@ DWORD getTunIndex() {
     auto pAddresses = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(addresses.get());
 
     for (;;) {
-        DWORD r = GetAdaptersAddresses(AF_INET,
+        const DWORD r = GetAdaptersAddresses(AF_INET,
                                        GAA_FLAG_SKIP_ANYCAST|GAA_FLAG_SKIP_MULTICAST|
                                        GAA_FLAG_SKIP_DNS_SERVER|GAA_FLAG_SKIP_FRIENDLY_NAME,
                                        nullptr, pAddresses, &dwSize);
@@ -78,7 +78,7 @@ std::pair<DWORD, DWORD> default_gateway_outside_tun(u_long dest)
     auto pIpForwardTable = reinterpret_cast<PMIB_IPFORWARDTABLE>(ipForwardTable.get());
 
     for (;;) {
-        DWORD r = GetIpForwardTable(pIpForwardTable, &dwSize, 0);
+        const DWORD r = GetIpForwardTable(pIpForwardTable, &dwSize, 0);
         if (r == ERROR_INSUFFICIENT_BUFFER) {
             ipForwardTable = std::make_unique<uint8_t[]>(dwSize);
             pIpForwardTable = reinterpret_cast<PMIB_IPFORWARDTABLE>(ipForwardTable.get());
@@ -95,7 +95,7 @@ std::pair<DWORD, DWORD> default_gateway_outside_tun(u_long dest)
         break;
     }
 
-    DWORD tunIndex = getTunIndex();
+    const DWORD tunIndex = getTunIndex();
     DWORD prefix = 0;
     DWORD index = -1;
     DWORD metric = ULONG_MAX;
@@ -112,7 +112,7 @@ std::pair<DWORD, DWORD> default_gateway_outside_tun(u_long dest)
         if (!SUBNET_EQ(row->dwForwardDest, row->dwForwardMask, dest)) {
             continue;
         }
-        DWORD forwardPrefix = dest & row->dwForwardMask;
+        const DWORD forwardPrefix = dest & row->dwForwardMask;
         if (forwardPrefix > prefix || (forwardPrefix == prefix && row->dwForwardMetric1 < metric)) {
             prefix = forwardPrefix;
             index = row->dwForwardIfIndex;
@@ -130,7 +130,7 @@ std::unique_ptr<sockaddr_storage> get_addr_by_index(DWORD index)
     auto pAddresses = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(addresses.get());
 
     for (;;) {
-        DWORD r = GetAdaptersAddresses(AF_INET,
+        const DWORD r = GetAdaptersAddresses(AF_INET,
                                        GAA_FLAG_SKIP_ANYCAST|GAA_FLAG_SKIP_MULTICAST|
                                        GAA_FLAG_SKIP_DNS_SERVER|GAA_FLAG_SKIP_FRIENDLY_NAME,
                                        nullptr, pAddresses, &dwSize);
@@ -175,7 +175,7 @@ int Protect(SOCKET socket, int (*attach)(SOCKET, const sockaddr *, socklen_t), c
     auto pAddresses = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(addresses.get());
 
     for (;;) {
-        DWORD r = GetAdaptersAddresses(AF_INET,
+        const DWORD r = GetAdaptersAddresses(AF_INET,
                                        GAA_FLAG_SKIP_ANYCAST|GAA_FLAG_SKIP_MULTICAST|
                                        GAA_FLAG_SKIP_DNS_SERVER|GAA_FLAG_SKIP_FRIENDLY_NAME,
                                        nullptr, pAddresses, &dwSize);

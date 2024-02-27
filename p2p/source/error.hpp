@@ -47,6 +47,7 @@ class Error final :
 
     template <typename Type_>
     Error operator <<(const Type_ &value) && {
+        // NOLINTNEXTLINE(misc-const-correctness)
         std::ostringstream data;
         data << value;
         what_ += data.str();
@@ -89,10 +90,13 @@ class Error final :
         orc_log(orc_Log(), "handled error: " << error.what() << std::endl); \
     code } catch (...) { code }
 
+// XXX: clang-tidy fails to consider statement expressions
+// NOLINTBEGIN(bugprone-assignment-in-if-condition)
 #define orc_ignore(code) \
     ({ bool _failed(false); try code \
         orc_catch({ _failed = true; }) \
     _failed; })
+// NOLINTEND(bugprone-assignment-in-if-condition)
 
 #define orc_except(code) \
     try code catch (...) { \

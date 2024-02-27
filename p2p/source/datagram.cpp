@@ -52,8 +52,8 @@ bool Datagram(const Buffer &data, const std::function<bool (const Socket &, cons
     const auto udp(window.Take<openvpn::UDPHeader>());
     orc_assert(window.size() == boost::endian::big_to_native(udp.len) - sizeof(udp));
 
-    Socket source(boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
-    Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
+    const Socket source(boost::endian::big_to_native(ip4.saddr), boost::endian::big_to_native(udp.source));
+    const Socket destination(boost::endian::big_to_native(ip4.daddr), boost::endian::big_to_native(udp.dest));
 
     return code(source, destination, std::move(window));
 }, "parsing packet: " << data); }

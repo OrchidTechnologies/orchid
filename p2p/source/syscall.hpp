@@ -33,11 +33,13 @@
 #endif
 
 // XXX: this is *ridiculous*, but lambdas break structured binding :/
+// XXX: clang-tidy fails to consider statement expressions
+// NOLINTBEGIN(bugprone-assignment-in-if-condition)
 #define orc_syscall(expr, ...) ({ decltype(expr) _value; for (;;) { \
     _value = (expr); \
     if ((long) _value != -1) \
         break; \
-    int error(orc_errno); \
+    const int error(orc_errno); \
     _value = 0; \
     for (auto success : std::initializer_list<long>{__VA_ARGS__}) \
         if (error == success) \
@@ -48,6 +50,7 @@
         continue; \
     orc_throw(error << "=\"" << strerror(error) << "\" calling " << #expr); \
 } _value; })
+// NOLINTEND(bugprone-assignment-in-if-condition)
 
 #define orc_packed \
     __attribute__((__packed__))

@@ -30,13 +30,15 @@
 
 namespace orc {
 
-static std::optional<Address> MaybeAddress(const Json::Value &address) {
+namespace {
+std::optional<Address> MaybeAddress(const Json::Value &address) {
     if (address.isNull())
         return std::nullopt;
     return address.asString();
-}
+} }
 
-static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &path) {
+namespace {
+Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &path) {
     size_t offset(0);
     orc_assert(!proofs.isNull());
     for (auto e(proofs.size()), i(decltype(e)(0)); i != e; ++i) {
@@ -73,7 +75,7 @@ static Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &pa
 
     orc_assert(hash == EmptyVector);
     return nullptr;
-}
+} }
 
 Receipt::Receipt(Json::Value &&value) :
     height_(To<uint64_t>(value["blockNumber"].asString())),
@@ -171,7 +173,7 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
                     std::vector<Bytes32> keys;
                     for (const auto &key : entry["storageKeys"])
                         keys.emplace_back(Bless(key.asString()));
-                    access.emplace_back(decltype(access_)::value_type(entry["address"].asString(), std::move(keys)));
+                    access.emplace_back(entry["address"].asString(), std::move(keys));
                 }
             return access;
         }(),
@@ -339,14 +341,15 @@ uint256_t Chain::Get(Json::Value::ArrayIndex index, const Json::Value &storages,
     return value;
 }
 
-static Brick<32> Name(const std::string &name) {
+namespace {
+Brick<32> Name(const std::string &name) {
     if (name.empty())
         return Zero<32>();
     const auto period(name.find('.'));
     if (period == std::string::npos)
         return HashK(Tie(Zero<32>(), HashK(name)));
     return HashK(Tie(Name(name.substr(period + 1)), HashK(name.substr(0, period))));
-}
+} }
 
 task<S<Chain>> Chain::New(Endpoint endpoint, Flags flags, uint256_t chain) {
     co_return Break<Chain>(std::move(endpoint), std::move(flags), std::move(chain));

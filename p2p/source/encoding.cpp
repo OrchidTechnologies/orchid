@@ -36,7 +36,7 @@ std::string utf(const std::u16string &value) {
     if (value.empty())
         return data;
     data.resize(value.size() * 5);
-    int writ(WideCharToMultiByte(CP_UTF8, 0, w16(value.data()), Fit(value.size()), &data[0], Fit(data.size() * sizeof(data[0])), nullptr, nullptr))
+    const int writ(WideCharToMultiByte(CP_UTF8, 0, w16(value.data()), Fit(value.size()), &data[0], Fit(data.size() * sizeof(data[0])), nullptr, nullptr))
 ;
     orc_assert(writ != 0);
     data.resize(writ / sizeof(data[0]));
@@ -48,7 +48,7 @@ std::u16string utf(const std::string &value) {
     if (value.empty())
         return data;
     data.resize(value.size());
-    int writ(MultiByteToWideChar(CP_UTF8, 0, value.data(), Fit(value.size() * sizeof(value[0])), w16(&data[0]), Fit(data.size())));
+    const int writ(MultiByteToWideChar(CP_UTF8, 0, value.data(), Fit(value.size() * sizeof(value[0])), w16(&data[0]), Fit(data.size())));
     orc_assert(writ != 0);
     data.resize(writ);
     return data;

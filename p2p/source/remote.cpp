@@ -171,14 +171,14 @@ class RemoteCommon {
     virtual void Land(const Buffer &data, const Socket &socket) = 0;
 
     RemoteCommon(const ip4_addr_t &host) {
-        Core core;
+        const Core core;
         pcb_ = udp_new();
         orc_assert(pcb_ != nullptr);
         orc_lwipcall(udp_bind, (pcb_, &host, 0));
     }
 
     ~RemoteCommon() {
-        Core core;
+        const Core core;
         udp_remove(pcb_);
     }
 
@@ -195,7 +195,7 @@ class RemoteCommon {
     }
 
     void Shut() noexcept {
-        Core core;
+        const Core core;
         udp_disconnect(pcb_);
     }
 };
@@ -217,7 +217,7 @@ class RemoteAssociation :
     }
 
     void Open(const ip4_addr_t &host, uint16_t port) {
-        Core core;
+        const Core core;
         RemoteCommon::Open(core);
         orc_lwipcall(udp_connect, (pcb_, &host, port));
     }
@@ -229,7 +229,7 @@ class RemoteAssociation :
     }
 
     task<void> Send(const Buffer &data) override {
-        Core core;
+        const Core core;
         orc_lwipcall(udp_send, (pcb_, Buffers(data)));
         co_return;
     }
@@ -256,7 +256,7 @@ class RemoteOpening :
     }
 
     void Open() {
-        Core core;
+        const Core core;
         RemoteCommon::Open(core);
     }
 
@@ -268,7 +268,7 @@ class RemoteOpening :
 
     task<void> Send(const Buffer &data, const Socket &socket) override {
         ip4_addr_t address(socket.Host());
-        Core core;
+        const Core core;
         orc_lwipcall(udp_sendto, (pcb_, Buffers(data), &address, socket.Port()));
         co_return;
     }
@@ -302,13 +302,13 @@ class RemoteConnection final :
         if (error != nullptr)
             locked_()->error_ = error;
         else
-            locked_()->data_.emplace(Beam());
+            locked_()->data_.emplace();
         read_.set();
     }
 
   public:
     RemoteConnection(const ip4_addr_t &host) {
-        Core core;
+        const Core core;
         pcb_ = tcp_new();
         orc_assert(pcb_ != nullptr);
         tcp_arg(pcb_, this);
@@ -317,7 +317,7 @@ class RemoteConnection final :
     }
 
     ~RemoteConnection() override {
-        Core core;
+        const Core core;
         if (pcb_ != nullptr)
             tcp_abort(pcb_);
     }
@@ -426,7 +426,7 @@ class RemoteConnection final :
     // XXX: provide support for tcp_close and unify with Connection's semantics in Stream via Adapter
 
     void Shut() noexcept override {
-        Core core;
+        const Core core;
         orc_insist(pcb_ != nullptr);
         orc_except({ orc_lwipcall(tcp_shutdown, (pcb_, false, true)); });
     }
@@ -442,7 +442,7 @@ class RemoteConnection final :
             co_await Schedule();
 
           start:
-            Core core;
+            const Core core;
             orc_assert(pcb_ != nullptr);
 
             const auto need(tcp_sndbuf(pcb_));
@@ -514,14 +514,16 @@ Remote::Remote(const class Host &host) :
     }
 
     ip4_addr_t gateway; IP4_ADDR(&gateway, 10,7,0,1);
-    ip4_addr_t address(host_);
+    const ip4_addr_t address(host_);
     ip4_addr_t netmask; IP4_ADDR(&netmask, 255,255,255,0);
 
     orc_lwipcall(netifapi_netif_add, (&interface_, &address, &netmask, &gateway, this, &Initialize, &ip_input));
 }
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static uint8_t quad_(3);
+namespace {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+    uint8_t quad_(3);
+}
 
 Remote::Remote() :
     Remote({10,7,0,++quad_})

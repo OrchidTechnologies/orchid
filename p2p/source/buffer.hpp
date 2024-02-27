@@ -817,13 +817,15 @@ class Flat final :
     Flat(const Buffer &buffer) :
         data_(nullptr)
     {
-        if ((copy_ = !buffer.each([&](const uint8_t *data, size_t size) {
+        copy_ = !buffer.each([&](const uint8_t *data, size_t size) {
             if (data_ != nullptr)
                 return false;
             size_ = size;
             data_ = data;
             return true;
-        }))) {
+        });
+
+        if (copy_) {
             size_ = buffer.size();
             // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
             const auto data(new uint8_t[size_]);
