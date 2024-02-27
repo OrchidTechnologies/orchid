@@ -25,7 +25,7 @@
 namespace orc {
 
 const Threads &Threads::Get() {
-    static Threads threads;
+    static const Threads threads;
     return threads;
 }
 

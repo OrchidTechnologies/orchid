@@ -70,9 +70,6 @@ more = --sysroot=$(llvm)/sysroot
 more += -fno-addrsig
 include $(pwd)/kit-android.mk
 
-cxx += -stdlib=libc++
-lflags += -static-libstdc++
-
 define _
 temp := $(subst -,$(space),$(host/$(1)))
 arch := $$(word 1,$$(temp))
@@ -85,6 +82,10 @@ endef
 $(each)
 
 endif
+
+include $(pwd)/target-cxx.mk
+
+lflags += -nostdlib++ -lc++abi
 
 lflags += -lm -llog
 

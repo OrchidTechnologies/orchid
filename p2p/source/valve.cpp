@@ -46,18 +46,18 @@ struct Tracker {
 class Track {
   private:
     Tracker &tracker_;
-    std::unique_lock<std::mutex> lock_;
+    const std::unique_lock<std::mutex> lock_;
 
   public:
     Track() :
         tracker_([]() -> Tracker & {
             static Tracker tracker;
 
-            static std::thread thread([]() {
+            static const std::thread thread([]() {
                 for (;;) {
                     sleep(5);
 
-                    std::unique_lock<std::mutex> lock(tracker.mutex_);
+                    const std::unique_lock<std::mutex> lock(tracker.mutex_);
                     Log() << "^^^^^^^^^^^^^^^^" << std::endl;
                     for (const auto valve : tracker.valves_)
                         Log() << std::setw(5) << valve->unique_ << ": " << boost::core::demangle(typeid(*valve).name()) << std::endl;

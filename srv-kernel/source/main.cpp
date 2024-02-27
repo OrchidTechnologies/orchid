@@ -20,6 +20,7 @@
 /* }}} */
 
 
+#include <cstdarg>
 #include <cstdlib>
 
 #include <elf.h>
@@ -54,7 +55,8 @@ size_t strlen(const char *data) {
 }
 
 // snprintf {{{
-static char *itoa_(uintmax_t value, char *data, unsigned int base, bool upper) {
+namespace {
+char *itoa_(uintmax_t value, char *data, unsigned int base, bool upper) {
     if (value == 0)
         *--data = '0';
     else while (value != 0) {
@@ -64,7 +66,7 @@ static char *itoa_(uintmax_t value, char *data, unsigned int base, bool upper) {
     }
 
     return data;
-}
+} }
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-vararg)
 size_t vsnprintf(char *str, size_t max, const char *format, va_list args) {

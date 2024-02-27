@@ -67,6 +67,7 @@ checks += fuchsia-virtual-inheritance
 checks += google-build-*
 
 checks += misc-*
+checks += -misc-misplaced-const
 checks += -misc-no-recursion
 # this check doesn't allow for any protected members :/
 checks += -misc-non-private-member-variables-in-classes

@@ -28,13 +28,13 @@
 namespace orc {
 
 void Create(const std::string &path);
-void Delete(const std::string &file);
+void Delete(const std::string &path);
 
 bool Exists(const std::string &path);
-uint64_t Modified(const std::string &file);
+uint64_t Modified(const std::string &path);
 
-std::string Load(const std::string &file);
-void Save(const std::string &file, const std::string &data);
+std::string Load(const std::string &path);
+void Save(const std::string &path, const std::string &data);
 
 }
 

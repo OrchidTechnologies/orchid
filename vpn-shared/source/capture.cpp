@@ -679,7 +679,8 @@ BufferSunk &Capture::Start() {
     return backup;
 }
 
-static JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueConst *argv) { try {
+namespace {
+JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueConst *argv) { try {
     orc_assert(argc == 1);
     size_t size;
     const auto data(JS_ToCStringLen(context, &size, argv[0]));
@@ -691,9 +692,10 @@ static JSValue Print(JSContext *context, JSValueConst self, int argc, JSValueCon
 } catch (const std::exception &error) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     return JS_ThrowInternalError(context, "%s", error.what());
-} }
+} } }
 
-static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network, const S<Ethereum> &ethereum, const S<Base> &base, const Host &local, unsigned hop, const boost::filesystem::path &group, const Locator &locator, const S<Updated<Prices>> &oracle, const Token &oxt) { orc_block({
+namespace {
+task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network, const S<Ethereum> &ethereum, const S<Base> &base, const Host &local, unsigned hop, const boost::filesystem::path &group, const Locator &locator, const S<Updated<Prices>> &oracle, const Token &oxt) { orc_block({
     const std::string hops("hops[" + std::to_string(hop) + "]");
     const auto protocol(heap.eval<std::string>(hops + ".protocol"));
     if (false) {
@@ -729,7 +731,7 @@ static task<void> Single(BufferSunk &sunk, Heap &heap, const S<Network> &network
     } else if (protocol == "wireguard") {
         co_await Guard(sunk, base, local.operator uint32_t(), heap.eval<std::string>(hops + ".config"));
     } else orc_assert_(false, "unknown hop protocol: " << protocol);
-}, "building hop #" << hop); }
+}, "building hop #" << hop); } }
 
 void Capture::Start(const std::string &path) {
     Heap heap; {

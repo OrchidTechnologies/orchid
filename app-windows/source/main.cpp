@@ -43,8 +43,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE hPrevInstance,
     project.set_dart_entrypoint_arguments(GetCommandLineArguments());
 
     FlutterWindow window(project);
-    Win32Window::Point origin(10, 10);
-    Win32Window::Size size(360, 640);
+    const Win32Window::Point origin(10, 10);
+    const Win32Window::Size size(360, 640);
     if (!window.Create(L"orchid", origin, size))
         return EXIT_FAILURE;
     window.SetQuitOnClose(true);

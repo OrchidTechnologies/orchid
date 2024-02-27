@@ -39,7 +39,7 @@ bool Similar(const Address &address, const Nibbles &nibbles) {
 template <size_t Size_, typename Code_, typename Each_>
 task<void> Scan(const Brick<32> &root, Code_ &&code, Each_ &&each) {
     std::set<Nibbles> todo;
-    todo.emplace(Nibbles());
+    todo.emplace();
 
     std::set<Nibbles> done;
 

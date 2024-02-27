@@ -19,7 +19,12 @@ qflags += -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
 cflags/$(pwd)/libcxx/ += -D_LIBCPP_BUILDING_LIBRARY=
 cflags/$(pwd)/libcxxabi/ += -D_LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS=
 
+ifeq ($(target),and)
+cflags/$(pwd)/libcxx/ += -D_LIBCPPABI_VERSION=15000
+cflags/$(pwd)/libcxx/ += -DLIBCXX_BUILDING_LIBCXXABI
+else
 cflags/$(pwd)/libcxx/ += -D__GLIBCXX__
+endif
 
 cflags/$(pwd)/libcxx/src/exception.cpp += -Wno-\#warnings
 cflags/$(pwd)/libcxxabi/src/cxa_thread_atexit.cpp += -Wno-pointer-bool-conversion

@@ -19,9 +19,11 @@
 namespace orc {
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
-static JavaVM *jvm;
-static asio::io_context *executor_;
-S<BufferSink<Capture>> capture_;
+namespace {
+    JavaVM *jvm;
+    asio::io_context *executor_;
+    S<BufferSink<Capture>> capture_;
+}
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 extern "C" JNIEXPORT void JNICALL
@@ -34,7 +36,7 @@ Java_net_orchid_Orchid_OrchidVpnService_runTunnel(JNIEnv* env, jobject thiz, jin
     auto local(Host_);
 
     const char* cDir = env->GetStringUTFChars(dir, nullptr);
-    std::string files_dir = std::string(cDir);
+    const std::string files_dir(cDir);
     env->ReleaseStringUTFChars(dir, cDir);
 
     std::string config = files_dir + std::string("/orchid.cfg");
@@ -79,10 +81,10 @@ bool vpn_protect(int s)
         IMPORT(net/orchid/Orchid, OrchidVpnService);
         CATCH(return false);
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-        jmethodID mVpnProtect = env->GetStaticMethodID(cOrchidVpnService, "vpnProtect", "(I)Z");
+        const jmethodID mVpnProtect = env->GetStaticMethodID(cOrchidVpnService, "vpnProtect", "(I)Z");
         CATCH(return false);
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-        jboolean success = env->CallStaticBooleanMethod(cOrchidVpnService, mVpnProtect, s);
+        const jboolean success = env->CallStaticBooleanMethod(cOrchidVpnService, mVpnProtect, s);
         CATCH(return false);
         //Log() << "vpn_protect fd:" << s << " success:" << (bool)success << std::endl;
         return (bool)success;

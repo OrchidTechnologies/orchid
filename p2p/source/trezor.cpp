@@ -33,11 +33,12 @@ namespace orc {
 namespace tzr = hw::trezor::messages;
 #define ORC_TREZOR(space, type) Call<tzr::MessageType_##type, tzr::space::type>
 
-static task<std::string> Trezor(const S<Base> &base, const std::string &path, const std::string &data = {}) {
+namespace {
+task<std::string> Trezor(const S<Base> &base, const std::string &path, const std::string &data = {}) {
     co_return (co_await base->Fetch("POST", {{"http", "localhost", "21325"}, path}, {
         {"origin", "https://connect.trezor.io"},
     }, data)).ok();
-}
+} }
 
 TrezorSession::TrezorSession(S<Base> base, std::string session) :
     Valve(typeid(*this).name()),
@@ -131,11 +132,12 @@ task<Response_> TrezorSession::Call(uint16_t type, const Request_ &request) cons
     }
 }
 
+namespace {
 template <typename Request_>
-static void Trezor(Request_ &request, const std::vector<uint32_t> &indices) {
+void Trezor(Request_ &request, const std::vector<uint32_t> &indices) {
     for (const auto &index : indices)
         request.add_address_n(index);
-}
+} }
 
 TrezorExecutor::TrezorExecutor(S<TrezorSession> session, std::vector<uint32_t> indices, Address address) :
     session_(std::move(session)),

@@ -175,8 +175,8 @@ void Tunnel(BufferSunk &sunk, const std::string &device, const std::function<voi
             Log() << "WARNING: The TAP-Windows driver rejected a TAP_WIN_IOCTL_SET_MEDIA_STATUS DeviceIoControl call." << std::endl;
         }
 
-        in_addr_t local = htonl(Host_.operator uint32_t());
-        in_addr_t remote_netmask = inet_addr("255.255.255.0");
+        const in_addr_t local = htonl(Host_.operator uint32_t());
+        const in_addr_t remote_netmask = inet_addr("255.255.255.0");
         in_addr_t ep[] {local, local & remote_netmask, remote_netmask};
 
         if (DeviceIoControl(h, TAP_WIN_IOCTL_CONFIG_TUN,

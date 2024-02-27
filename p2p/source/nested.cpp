@@ -95,7 +95,7 @@ std::ostream &operator <<(std::ostream &out, const Nested &value) {
         out << Subset(value.str());
     } else {
         out << '"';
-        for (uint8_t c : value.str())
+        for (const uint8_t c : value.str())
             if (c >= 0x20 && c < 0x80)
                 out << c;
             else {

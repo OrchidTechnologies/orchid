@@ -57,7 +57,7 @@ class Encipher {
     Beam operator ()() const;
 
     static Beam All(const EVP_CIPHER *algorithm, const Region &key, const Region &iv, const Buffer &data) {
-        Encipher cipher(algorithm, key, iv);
+        const Encipher cipher(algorithm, key, iv);
         const auto lhs(cipher(data));
         const auto rhs(cipher());
         return Beam(Tie(lhs, rhs));
@@ -74,7 +74,7 @@ class Decipher {
     Beam operator ()() const;
 
     static Beam All(const EVP_CIPHER *algorithm, const Region &key, const Region &iv, const Buffer &data) {
-        Decipher cipher(algorithm, key, iv);
+        const Decipher cipher(algorithm, key, iv);
         const auto lhs(cipher(data));
         const auto rhs(cipher());
         return Beam(Tie(lhs, rhs));

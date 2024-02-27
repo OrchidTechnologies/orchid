@@ -43,7 +43,7 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
         const auto offer(request.body());
         // XXX: look up fingerprint
         static int fingerprint_(0);
-        std::string fingerprint(std::to_string(fingerprint_++));
+        const std::string fingerprint(std::to_string(fingerprint_++));
         const auto server(Find(fingerprint));
         auto answer(co_await server->Respond(base_, offer, ice_));
 

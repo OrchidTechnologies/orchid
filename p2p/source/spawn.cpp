@@ -36,7 +36,7 @@ Pool::Pool() :
 
         for (;ready_.reset(), true; ready_.wait()) for (;;) {
             Work *work;
-            { std::unique_lock<std::mutex> lock(mutex_);
+            { const std::unique_lock<std::mutex> lock(mutex_);
                 if (end_ == nullptr)
                     return;
                 if (begin_ == nullptr)
@@ -53,14 +53,14 @@ Pool::Pool() :
 }
 
 Pool::~Pool() {
-    { std::unique_lock<std::mutex> lock(mutex_);
+    { const std::unique_lock<std::mutex> lock(mutex_);
         end_ = nullptr; }
     ready_.set();
     thread_.join();
 }
 
 void Pool::Push(Work *work) noexcept {
-    { std::unique_lock<std::mutex> lock(mutex_);
+    { const std::unique_lock<std::mutex> lock(mutex_);
         if (end_ == nullptr)
             return;
         *end_ = work; end_ = &work->next_; }

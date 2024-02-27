@@ -167,7 +167,7 @@ int Main(int argc, const char *const argv[]) {
         ("wireguard", po::value<std::string>(), "WireGuard .conf configuration file")
     ; options.add(group); }
 
-    po::positional_options_description positional;
+    const po::positional_options_description positional;
 
     po::store(po::command_line_parser(argc, argv).options(po::options_description()
         .add(group)
@@ -233,7 +233,7 @@ int Main(int argc, const char *const argv[]) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
     //U<rtc::OpenSSLIdentity> identity(static_cast<rtc::OpenSSLIdentity *>(rtc::OpenSSLIdentity::FromPEMStrings(store.Key(), store.Certificates()));
 
-    rtc::scoped_refptr<rtc::RTCCertificate> certificate(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(store.Key(), store.Certificates())));
+    const rtc::scoped_refptr<rtc::RTCCertificate> certificate(rtc::RTCCertificate::FromPEM(rtc::RTCCertificatePEM(store.Key(), store.Certificates())));
     U<rtc::SSLFingerprint> fingerprint(rtc::SSLFingerprint::CreateFromCertificate(*certificate));
 
 
@@ -248,7 +248,7 @@ int Main(int argc, const char *const argv[]) {
     //return TestWorker(asio::ip::make_address(args["bind"].as<std::string>()), port, store.Key(), store.Certificates(), params);
 
     const Strung url("https://" + host + ":" + std::to_string(port) + "/");
-    Bytes gpg;
+    const Bytes gpg;
 
     Builder tls;
     static const std::regex re("-");
@@ -292,7 +292,7 @@ int Main(int argc, const char *const argv[]) {
             for (const auto &market : markets)
                 if (*market.chain_ == 1) {
                     const Address contract(args["lottery0"].as<std::string>());
-                    static Selector<Address> what_("what");
+                    static const Selector<Address> what_("what");
 
                     auto lottery0(Break<Lottery0>(Token{market,
                         co_await what_.Call(*market.chain_, "latest", contract, 90000),

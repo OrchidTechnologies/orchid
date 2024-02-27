@@ -74,7 +74,7 @@ class Lottery0 :
 
     template <typename... Args_>
     void Send(const S<Executor> &executor, Args_ &&...args) {
-        static Selector<void,
+        static const Selector<void,
             Bytes32 /*reveal*/, Bytes32 /*commit*/,
             uint256_t /*issued*/, Bytes32 /*nonce*/,
             uint8_t /*v*/, Bytes32 /*r*/, Bytes32 /*s*/,

@@ -67,7 +67,7 @@ class LocalOpening :
                     continue;
                 }
 
-                Subset subset(data, writ);
+                const Subset subset(data, writ);
                 if (Verbose)
                     Log() << "\e[33mRECV " << writ << " " << subset << "\e[0m" << std::endl;
                 drain_.Land(subset, endpoint);

@@ -77,7 +77,7 @@ class Transport :
 
   protected:
     void Land(const Buffer &data) override {
-        static size_t payload(65536);
+        static const size_t payload(65536);
         const auto size(data.size());
         orc_assert_(size <= payload, "orc_assert(Land: " << size << " {data.size()} <= " << payload << ") " << data);
         //Log() << "\e[33mRECV " << data.size() << " " << data << "\e[0m" << std::endl;
@@ -165,6 +165,7 @@ class Transport :
     }
 
     bool transport_send_const(const openvpn::Buffer &data) noexcept override {
+        // XXX: NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
         nest_.Hatch([&]() noexcept { return [this, buffer = Beam(data.c_data(), data.size())]() -> task<void> {
             //Log() << "\e[35mSEND " << buffer.size() << " " << buffer << "\e[0m" << std::endl;
             co_await Inner().Send(buffer);
@@ -177,7 +178,7 @@ class Transport :
 
     bool transport_send(openvpn::BufferAllocated &buffer) noexcept override {
         nest_.Hatch([&]() noexcept { return [this, buffer = std::move(buffer)]() -> task<void> {
-            Subset data(buffer.c_data(), buffer.size());
+            const Subset data(buffer.c_data(), buffer.size());
             //Log() << "\e[35mSEND " << data.size() << " " << data << "\e[0m" << std::endl;
             co_await Inner().Send(data);
         }; }, __FUNCTION__);
@@ -228,7 +229,7 @@ class Factory :
     }
 
     openvpn::TransportClient::Ptr new_transport_client_obj(openvpn_io::io_context &context, openvpn::TransportClientParent *parent) noexcept override {
-        openvpn::RCPtr transport(new BufferSink<Transport>(base_, config_, context, parent));
+        const openvpn::RCPtr transport(new BufferSink<Transport>(base_, config_, context, parent));
         transport->Open(*transport);
         return transport;
     }
@@ -294,7 +295,7 @@ class Middle :
         bool tun_send(openvpn::BufferAllocated &buffer) noexcept override {
             if (orc_ignore({ middle_.Forge(buffer); }))
                 return false;
-            Subset data(buffer.c_data(), buffer.size());
+            const Subset data(buffer.c_data(), buffer.size());
             middle_.Land(data);
             return true;
         }

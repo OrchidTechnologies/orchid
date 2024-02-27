@@ -39,7 +39,7 @@ std::string Stringify(bssl::UniquePtr<BIO> bio) {
     char *data;
     // BIO_get_mem_data is an inline macro with a char * cast
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
-    size_t size(BIO_get_mem_data(bio.get(), &data));
+    const size_t size(BIO_get_mem_data(bio.get(), &data));
     return {data, size};
 }
 
@@ -51,7 +51,7 @@ Store::Store(std::string key, std::string certificates) :
 
 Store::Store(const std::string &store) {
     bssl::UniquePtr<PKCS12> p12([&]() {
-        bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(store.data(), Fit(store.size())));
+        const bssl::UniquePtr<BIO> bio(BIO_new_mem_buf(store.data(), Fit(store.size())));
         orc_assert(bio);
 
         return d2i_PKCS12_bio(bio.get(), nullptr);

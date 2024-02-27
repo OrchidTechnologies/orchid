@@ -67,7 +67,7 @@ class Lottery1 :
     std::pair<Float, uint256_t> Credit(const uint256_t &now, const uint256_t &start, const uint128_t &range, const uint128_t &amount, const uint128_t &ratio, const uint64_t &gas) const;
 
     void Send(const S<Executor> &executor, const Address &recipient, const Payment1 &payment) {
-        static Selector<void,
+        static const Selector<void,
             Address /*token*/,
             Address /*recipient*/,
             std::vector<Payment1> /*payments*/,

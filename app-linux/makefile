@@ -32,6 +32,8 @@ source += $(wildcard $(pwd)/source/*.cpp)
 cflags/$(pwd)/source/main.cpp += -Wno-unused-function
 checks/$(pwd)/source/main.cpp += -clang-diagnostic-unused-function
 checks/$(pwd)/source/main.cpp += -cppcoreguidelines-pro-type-cstyle-cast
+checks/$(pwd)/source/main.cpp += -misc-const-correctness
+checks/$(pwd)/source/main.cpp += -misc-use-anonymous-namespace
 
 $(call include,shared/target-lnx.mk)
 

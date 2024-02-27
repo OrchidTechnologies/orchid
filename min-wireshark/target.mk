@@ -139,6 +139,9 @@ cflags/$(pwd/wireshark)/ += -Wno-pointer-sign
 # XXX: fwrite used without check; submit patch
 cflags/$(pwd/wireshark)/ += -Wno-unused-result
 
+# XXX: this is only used if you have libgnutls and I don't know what I think about that :/
+cflags/$(pwd/wireshark)/epan/dissectors/packet-tls-utils.c += -Wno-unused-but-set-variable
+
 cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/epan
 cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/epan/dfilter
 cflags/$(pwd/wireshark)/ += -I$(pwd/wireshark)/epan/dissectors
