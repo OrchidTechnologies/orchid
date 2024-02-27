@@ -26,6 +26,8 @@ prices = {
     'started': 0.0001
 }
 
+lottery_address = '0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'
+
 internal_messages = ['charge']
 disconnect_threshold = -25
 
@@ -132,7 +134,7 @@ async def session(websocket, bills=None, job=None, recipient='0x0', key=''):
 async def main(model, url, bind_addr, bind_port, recipient_key):
     recipient_addr = web3.Account.from_key(recipient_key).address
     bills = billing.Billing(prices)
-    job = jobs.jobs('', '')
+    job = jobs.jobs(model, url)
     print("\n*****")
     print(f"* Server starting up at {bind_addr} {bind_port}")
     print(f"* Connecting to back end at {url}")
