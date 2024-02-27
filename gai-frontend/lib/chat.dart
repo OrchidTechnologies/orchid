@@ -4,12 +4,14 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'dart:convert';
 import 'package:flutter/src/material/colors.dart';
-import 'dart:html';
+//import 'dart:html';
+import 'dart:io' if (dart.library.html) 'dart:html';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
+//import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/gui-orchid/lib/orchid/orchid_gradients.dart';
 //import 'package:orchid/gui-orchid/lib/orchid/orchid_text.dart';
 import 'package:orchid/gui-orchid/lib/orchid/orchid_asset.dart';
-//import 'package:orchid/gui-orchid/lib/orchid/orchid_text.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_ticket.dart';
 import 'package:orchid/gui-orchid/lib/orchid/field/orchid_labeled_numeric_field.dart';
@@ -43,7 +45,6 @@ TextStyle normal_14_grey = TextStyle(
     fontSize: 14,
     height: 1.0);
 
-
 TextStyle normal_16_025_grey = TextStyle(
       fontFamily: "Baloo2",
       fontWeight: FontWeight.normal,
@@ -75,7 +76,6 @@ class ChatMessage {
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key});
-  
 
   @override
   State<ChatView> createState() => _ChatViewState();
@@ -98,21 +98,24 @@ class _ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
-    var uri = Uri.dataFromString(window.location.href);
-    Map<String, String> params = uri.queryParameters;
-    var funder = params['funder'];
-    var signer = params['signer'];
-    var provider = params['provider'];
-    if (provider != null) {
-      _providers = {'foo': provider ?? ''};
-    } else {
-      _providers = {'foo': '' };
-    }
-    if (params['funder'] != null) {
-      _funder = EthereumAddress.from(funder ?? '');
-    }
-    if (params['signer'] != null) {
-      _signerKey = BigInt.parse(signer ?? '');
+
+    if (kIsWeb) {
+      var uri = Uri.dataFromString(window.location.href);
+      Map<String, String> params = uri.queryParameters;
+      var funder = params['funder'];
+      var signer = params['signer'];
+      var provider = params['provider'];
+      if (provider != null) {
+        _providers = {'foo': provider ?? ''};
+      } else {
+        _providers = {'foo': '' };
+      }
+      if (params['funder'] != null) {
+        _funder = EthereumAddress.from(funder ?? '');
+      }
+      if (params['signer'] != null) {
+        _signerKey = BigInt.parse(signer ?? '');
+      }
     }
   }
 
@@ -148,52 +151,48 @@ class _ChatViewState extends State<ChatView> {
   void providerDisconnected() {
     _connected = false;
     _providerChannel = null;
-    setState(() {});
+    addMessage(ChatMessageSource.system, 'Provider disconnected');
   }
 
   void systemError(message) {
-    messages.add(ChatMessage(ChatMessageSource.system, 'systemError: $message'));
+    addMessage(ChatMessageSource.system, 'systemError: $message');
     print(message);
-    setState(() {});
   }
 
   void sendProviderMessage(message) {
-    messages.add(ChatMessage(ChatMessageSource.internal, 'Client: $message'));
-    
-    if (message == 'connect') {
-//      _providerIndex = (providerIndex + 1) % _providers.length;
-      setState(() {
-        messages.add(ChatMessage(ChatMessageSource.system, 
-                                 'Connected to provider')); // using model: ${_providers.keys.elementAt(providerIndex)}'));
-      });
-      scrollMessagesDown();
-    } else {
-      print('Sending message to provider $message');
-      _providerChannel.sink.add(message);
-      setState(() {});
-    }
+    addMessage(ChatMessageSource.internal, 'Client: $message');
+    print('Sending message to provider $message');
+    _providerChannel.sink.add(message);
+  }
+
+  void addMessage(ChatMessageSource source, String msg, [metadata]) {
+     if (metadata == null) {
+       messages.add(ChatMessage(source, msg));
+     } else {
+       messages.add(ChatMessage(source, msg, metadata: metadata));
+     }
+     if (source != ChatMessageSource.internal || _debugMode == true) {
+       setState(() {});
+       scrollMessagesDown();
+     }
   }
 
   void receiveProviderMessage(message) {
-    print(message);
- 
     final data = jsonDecode(message) as Map<String, dynamic>;
 
-    messages.add(ChatMessage(ChatMessageSource.internal, 'Provider: $message'));
+    print(message);
+    addMessage(ChatMessageSource.internal, 'Provider: $message');
 
-    
     switch (data['type']) {
       case 'job_complete':
-        messages.add(ChatMessage(ChatMessageSource.provider, data['output'], metadata: data));
+        addMessage(ChatMessageSource.provider, data['output'], data);
       case 'system':
-        messages.add(ChatMessage(ChatMessageSource.system, data['message']));
+        addMessage(ChatMessageSource.system, data['message']);
       case 'invoice':
         payInvoice(data);
       case 'bid_low':
-        messages.add(ChatMessage(ChatMessageSource.system, "Bid below provider's reserve price."));
+        addMessage(ChatMessageSource.system, "Bid below provider's reserve price.");
     }
-    setState(() {});
-    scrollMessagesDown();
   }
   
   void payInvoice(Map<String, dynamic> invoice) {
@@ -255,7 +254,7 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Widget buildAccountDialog(BuildContext context, Animation<double> anim1,  Animation<double> anim2) {
-    var scontroller = TextEditingController(text: _signerKey);
+    var scontroller = TextEditingController(text: _signerKey.toString());
     var fcontroller = AddressValueFieldController();
     if (_funder != null) {
       fcontroller.value = _funder;
@@ -396,12 +395,9 @@ class _ChatViewState extends State<ChatView> {
 
   void sendPrompt(String msg, TextEditingController controller) {
     sendProviderMessage('{"type": "job", "bid": $_bid, "prompt": "$msg"}');
-    setState(() {
-      messages.add(ChatMessage(ChatMessageSource.client, msg));
-      controller.clear();
-    });
-    scrollMessagesDown();
+    controller.clear();
     FocusManager.instance.primaryFocus?.unfocus();
+    addMessage(ChatMessageSource.client, msg);
   }
 
   final ScrollController messageListController = ScrollController(); 
