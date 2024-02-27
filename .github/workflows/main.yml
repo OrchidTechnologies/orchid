@@ -4,7 +4,18 @@ jobs:
 
 
 
+  cache-submodule:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - run: env/setup.sh
+    - uses: ./.github/actions/submodule
+
+
+
   build-flt-orc:
+    needs: [cache-submodule]
     runs-on: macos-latest
 
     steps:
@@ -22,6 +33,7 @@ jobs:
 
 
   build-ios-app:
+    needs: [cache-submodule]
     runs-on: macos-latest
 
     steps:
@@ -33,6 +45,7 @@ jobs:
 
 
   build-and-app:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     steps:
@@ -53,6 +66,7 @@ jobs:
 
 
   build-and-dkr:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     steps:
@@ -67,6 +81,7 @@ jobs:
 
 
   build-mac-app:
+    needs: [cache-submodule]
     runs-on: macos-latest
 
     steps:
@@ -78,6 +93,7 @@ jobs:
 
 
   build-mac-snd:
+    needs: [cache-submodule]
     runs-on: macos-latest
 
     steps:
@@ -94,6 +110,7 @@ jobs:
 
 
   build-mac-cli:
+    needs: [cache-submodule]
     runs-on: macos-latest
 
     steps:
@@ -110,6 +127,7 @@ jobs:
 
 
   build-mac-srv:
+    needs: [cache-submodule]
     runs-on: macos-latest
 
     if: ${{ false }} # XXX: Hypervisor.framework
@@ -132,6 +150,7 @@ jobs:
 
 
   build-win-app:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     steps:
@@ -151,6 +170,7 @@ jobs:
 
 
   build-win-snd:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     steps:
@@ -169,6 +189,7 @@ jobs:
 
 
   build-win-cli:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     steps:
@@ -187,6 +208,7 @@ jobs:
 
 
   build-win-srv:
+    needs: [cache-submodule]
     runs-on: macos-latest
 
     if: ${{ false }} # XXX: use Hyper-V
@@ -210,6 +232,7 @@ jobs:
 
 
   build-lnx-app:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     steps:
@@ -227,6 +250,7 @@ jobs:
 
 
   build-lnx-tst:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     steps:
@@ -238,6 +262,7 @@ jobs:
 
 
   build-lnx-cli:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     strategy:
@@ -259,6 +284,7 @@ jobs:
 
 
   build-lnx-srv:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     strategy:
@@ -286,6 +312,7 @@ jobs:
 
 
   build-lnx-dkr:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     steps:
@@ -299,6 +326,7 @@ jobs:
 
 
   build-lnx-bld:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     steps:
@@ -316,6 +344,7 @@ jobs:
 
 
   build-lnx-mac:
+    needs: [cache-submodule]
     runs-on: macos-latest
 
     steps:
@@ -335,6 +364,7 @@ jobs:
 
 
   build-lnx-bad:
+    needs: [cache-submodule]
     runs-on: ubuntu-latest
 
     steps:
