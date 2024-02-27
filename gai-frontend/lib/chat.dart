@@ -75,6 +75,16 @@ class _ChatViewState extends State<ChatView> {
   // Init from user parameters (for web)
   void _initFromParams() {
     Map<String, String> params = Uri.base.queryParameters;
+    try {
+      _funder = EthereumAddress.from(params['funder'] ?? '');
+    } catch (e) {
+      _funder = null;
+    }
+    try {
+      _signerKey = BigInt.parse(params['signer'] ?? '');
+    } catch (e) {
+      _signerKey = null;
+    }
     String? provider = params['provider'];
     if (provider != null) {
       _providers = [provider];
@@ -103,16 +113,6 @@ class _ChatViewState extends State<ChatView> {
       contract:
           EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'),
     );
-    try {
-      _funder = EthereumAddress.from(params['funder'] ?? '');
-    } catch (e) {
-      _funder = null;
-    }
-    try {
-      _signerKey = BigInt.parse(params['signer'] ?? '');
-    } catch (e) {
-      _signerKey = null;
-    }
   }
 
   void initStateAsync() async {
