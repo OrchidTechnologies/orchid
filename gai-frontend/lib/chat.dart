@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/status.dart' as status;
 import 'dart:convert';
 import 'package:flutter/src/material/colors.dart';
 //import 'dart:html';
 import 'dart:io' if (dart.library.html) 'dart:html';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-//import 'package:orchid/orchid/orchid.dart';
+import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/gui-orchid/lib/orchid/orchid_gradients.dart';
-//import 'package:orchid/gui-orchid/lib/orchid/orchid_text.dart';
-import 'package:orchid/gui-orchid/lib/orchid/orchid_asset.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_ticket.dart';
 import 'package:orchid/gui-orchid/lib/orchid/field/orchid_labeled_numeric_field.dart';
@@ -21,6 +17,7 @@ import 'package:orchid/gui-orchid/lib/orchid/field/orchid_labeled_text_field.dar
 import 'settings.dart';
 import 'app_colors.dart';
 
+import 'provider.dart';
 
 TextStyle medium_20_050 = TextStyle(
     fontFamily: "Baloo2",
@@ -57,6 +54,7 @@ enum OrchataMenuItem { debug }
 
 enum ChatMessageSource { client, provider, system, internal }
 
+
 class ChatMessage {
   ChatMessageSource source;
   String msg;
@@ -83,17 +81,13 @@ class ChatView extends StatefulWidget {
 
 class _ChatViewState extends State<ChatView> {
   List<ChatMessage> messages = [];
-  List<WebSocketChannel> channels = [];
-  int _providerIndex = 0;
-  Map<String, String> _providers = {};
-  OrchidAssetImage _orchidAsset = OrchidAssetImage();
+  List<String> _providers = [];
   var _debugMode = false;
   var _connected = false;
   var _bid = 0.00007;
   var _funder = null;
   var _signerKey = null;
-  var _faceValue = BigInt.from(50000000000000000);
-  var _providerChannel;
+  var _providerConnection;
 
   @override
   void initState() {
@@ -106,9 +100,7 @@ class _ChatViewState extends State<ChatView> {
       var signer = params['signer'];
       var provider = params['provider'];
       if (provider != null) {
-        _providers = {'foo': provider ?? ''};
-      } else {
-        _providers = {'foo': '' };
+        _providers = [provider];
       }
       if (params['funder'] != null) {
         _funder = EthereumAddress.from(funder ?? '');
@@ -117,52 +109,30 @@ class _ChatViewState extends State<ChatView> {
         _signerKey = BigInt.parse(signer ?? '');
       }
     }
-  }
 
-  String lookupProvider() {
-    _providerIndex = (_providerIndex + 1) % _providers.length;
-    return _providers.values.elementAt(_providerIndex);
-  }
-
-  void connectProvider() async {
-    if (_providerChannel != null) {
-      await _providerChannel.sink.close;
-      messages.add(ChatMessage(ChatMessageSource.system, 'Disconnected from provider'));
-    }
-    var url = lookupProvider();
-    var channel = WebSocketChannel.connect(Uri.parse(url));
-    try {
-      channel.ready;
-    } catch (e) {
-      systemError('Failed on provider connection: $e');
-      return;
-    }
-    _providerChannel = channel;
-    _providerChannel.stream.listen(
-      receiveProviderMessage,
-      onDone: providerDisconnected,
-      onError: (error) { systemError('ws error: $error'); },
+    _providerConnection = ProviderConnection(
+      providers: _providers,
+      onMessage: (msg) { addMessage(ChatMessageSource.internal, msg); },
+      onConnect: providerConnected,
+      onChat: (msg, metadata) { addMessage(ChatMessageSource.provider, msg, metadata); },
+      onDisconnect: providerDisconnected,
+      onError: (msg) { addMessage(ChatMessageSource.system, 'Provider error: $msg'); },
+      onSystemMessage: (msg) { addMessage(ChatMessageSource.system, msg); },
+      onInternalMessage: (msg) { addMessage(ChatMessageSource.internal, msg); },
+      funder: _funder,
+      signerKey: _signerKey,
+      contract: EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'), 
     );
-    _connected = true;
-    messages.add(ChatMessage(ChatMessageSource.system, 'Connected to provider'));
-    setState(() {});
   }
-  
+
+  void providerConnected() {
+    _connected = true; 
+    addMessage(ChatMessageSource.system, 'Connected to provider.'); 
+  }
+
   void providerDisconnected() {
     _connected = false;
-    _providerChannel = null;
     addMessage(ChatMessageSource.system, 'Provider disconnected');
-  }
-
-  void systemError(message) {
-    addMessage(ChatMessageSource.system, 'systemError: $message');
-    print(message);
-  }
-
-  void sendProviderMessage(message) {
-    addMessage(ChatMessageSource.internal, 'Client: $message');
-    print('Sending message to provider $message');
-    _providerChannel.sink.add(message);
   }
 
   void addMessage(ChatMessageSource source, String msg, [metadata]) {
@@ -175,48 +145,6 @@ class _ChatViewState extends State<ChatView> {
        setState(() {});
        scrollMessagesDown();
      }
-  }
-
-  void receiveProviderMessage(message) {
-    final data = jsonDecode(message) as Map<String, dynamic>;
-
-    print(message);
-    addMessage(ChatMessageSource.internal, 'Provider: $message');
-
-    switch (data['type']) {
-      case 'job_complete':
-        addMessage(ChatMessageSource.provider, data['output'], data);
-      case 'system':
-        addMessage(ChatMessageSource.system, data['message']);
-      case 'invoice':
-        payInvoice(data);
-      case 'bid_low':
-        addMessage(ChatMessageSource.system, "Bid below provider's reserve price.");
-    }
-  }
-  
-  void payInvoice(Map<String, dynamic> invoice) {
-    final data = BigInt.zero;
-    final due = invoice['amount'];
-    final lotaddr = EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82');
-    final token = EthereumAddress.zero;
-    final ratio = BigInt.parse('9223372036854775808');
-    final commit = BigInt.parse(invoice['commit'] ?? '0x0');
-    final recipient = invoice['recipient'] ?? '0x0';
-    final ticket = OrchidTicket(
-      data: data,
-      lotaddr: lotaddr,
-      token: token,
-      amount: _faceValue,
-      ratio: ratio,
-      funder: _funder,
-      recipient: EthereumAddress.from(recipient),
-      commitment: commit,
-      privateKey: BigInt.parse(_signerKey),
-      millisecondsSinceEpoch: 1708638722494,
-    );
-    ticket.printTicket();
-    sendProviderMessage('{"type": "payment", "tickets": ["${ticket.serializeTicket()}"]}');
   }
 
   void setBid(double? value) {
@@ -394,10 +322,13 @@ class _ChatViewState extends State<ChatView> {
   }
 
   void sendPrompt(String msg, TextEditingController controller) {
-    sendProviderMessage('{"type": "job", "bid": $_bid, "prompt": "$msg"}');
+    var message = '{"type": "job", "bid": $_bid, "prompt": "$msg"}';
+    _providerConnection.sendProviderMessage(message);
     controller.clear();
     FocusManager.instance.primaryFocus?.unfocus();
     addMessage(ChatMessageSource.client, msg);
+    addMessage(ChatMessageSource.internal, 'Client: $message');
+    print('Sending message to provider $message');
   }
 
   final ScrollController messageListController = ScrollController(); 
@@ -450,10 +381,10 @@ class _ChatViewState extends State<ChatView> {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        _orchidAsset.logo_small_purple,
+                        Image.asset(OrchidAssetImage.logo_small_purple_path),
                         Expanded(child: Container()),
                         FilledButton(
-                          onPressed: connectProvider,
+                          onPressed: () { _providerConnection.connectProvider(); },
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.white,
                           ),
