@@ -27,6 +27,7 @@
 namespace orc {
 
 uint64_t Monotonic() {
+    // XXX: this isn't actually monotonic; how did that happen?!
     using std::chrono::system_clock;
     const system_clock::time_point point(system_clock::now());
     const system_clock::duration duration(point.time_since_epoch());
