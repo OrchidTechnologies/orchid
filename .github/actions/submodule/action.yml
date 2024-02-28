@@ -4,7 +4,7 @@ runs:
     - name: git submodule status
       id: git-submodule-status
       shell: bash
-      run: echo "::set-output name=hash::$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)"
+      run: echo "hash=$(git submodule status | sed -e 's/^.\([^ ]*\) \([^ ]*\).*/\2 \1/' | LANG=C sort | openssl sha1 -binary | xxd -p -c20)" >> $GITHUB_OUTPUT
     - uses: actions/cache@v4
       with:
         path: .git/modules
