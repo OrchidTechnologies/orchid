@@ -32,6 +32,8 @@ dependencies:
   shared_preferences_foundation: ^2.3.5
   flutter_js: ^0.7.2
   browser_detector: ^2.0.0
+  badges: 3.1.1
+  jdenticon_dart: 2.0.0
 
 dev_dependencies:
   flutter_test:

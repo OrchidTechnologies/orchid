@@ -1,9 +1,10 @@
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_keys.dart';
-import 'package:orchid/app_colors.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/gai_settings_button.dart';
+import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
@@ -12,27 +13,10 @@ import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_titled_panel.dart';
+import 'chat_bubble.dart';
+import 'chat_button.dart';
+import 'chat_message.dart';
 import 'provider.dart';
-
-enum OrchataMenuItem { debug }
-
-enum ChatMessageSource { client, provider, system, internal }
-
-class ChatMessage {
-  ChatMessageSource source;
-  String msg;
-  final Map<String, dynamic>? _metadata;
-
-  ChatMessage(this.source, this.msg, {metadata}) : _metadata = metadata;
-
-  String get message {
-    return msg;
-  }
-
-  Map<String, dynamic> get metadata {
-    return _metadata ?? {};
-  }
-}
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key});
@@ -42,11 +26,11 @@ class ChatView extends StatefulWidget {
 }
 
 class _ChatViewState extends State<ChatView> {
-  List<ChatMessage> messages = [];
+  List<ChatMessage> _messages = [];
   List<String> _providers = [];
   bool _debugMode = false;
-  var _connected = false;
-  var _bid = 0.00007;
+  bool _connected = false;
+  double _bid = 0.00007;
   ProviderConnection? _providerConnection;
 
   // The active account components
@@ -55,6 +39,18 @@ class _ChatViewState extends State<ChatView> {
 
   final _signerFieldController = TextEditingController();
   final _funderFieldController = AddressValueFieldController();
+  final ScrollController messageListController = ScrollController();
+  final promptTextController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      _initFromParams();
+    } catch (e, stack) {
+      log('Error initializing from params: $e, $stack');
+    }
+  }
 
   Account? get _account {
     if (_funder == null || _signerKey == null) {
@@ -68,15 +64,23 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    try {
-      _initFromParams();
-    } catch (e, stack) {
-      log('Error initializing from params: $e, $stack');
+  // This should be wrapped up in a provider.  See WIP in vpn app.
+  AccountDetailPoller? _accountDetail;
+  final _accountDetailNotifier = ChangeNotifier();
+
+  // This should be wrapped up in a provider.  See WIP in vpn app.
+  void _accountChanged() async {
+    log("selectedAccountChanged");
+    _accountDetail?.cancel();
+    _accountDetail = null;
+    setState(() {});
+    _accountDetailNotifier.notifyListeners();
+    if (_account != null) {
+      _accountDetail = AccountDetailPoller(account: _account!);
+      await _accountDetail?.pollOnce();
+      setState(() {});
+      _accountDetailNotifier.notifyListeners();
     }
-    initStateAsync();
   }
 
   // Init from user parameters (for web)
@@ -94,6 +98,8 @@ class _ChatViewState extends State<ChatView> {
     } catch (e) {
       _signerKey = null;
     }
+    _accountChanged();
+    // _selectedAccountChanged();
     String? provider = params['provider'];
     if (provider != null) {
       _providers = [provider];
@@ -124,15 +130,6 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  void initStateAsync() async {
-    // Demo using account
-    final account = _account;
-    if (account != null) {
-      final pot = await account.getLotteryPot();
-      log('Lottery pot: $pot');
-    }
-  }
-
   void providerConnected() {
     _connected = true;
     addMessage(ChatMessageSource.system, 'Connected to provider.');
@@ -145,9 +142,9 @@ class _ChatViewState extends State<ChatView> {
 
   void addMessage(ChatMessageSource source, String msg, [metadata]) {
     if (metadata == null) {
-      messages.add(ChatMessage(source, msg));
+      _messages.add(ChatMessage(source, msg));
     } else {
-      messages.add(ChatMessage(source, msg, metadata: metadata));
+      _messages.add(ChatMessage(source, msg, metadata: metadata));
     }
     if (source != ChatMessageSource.internal || _debugMode == true) {
       setState(() {});
@@ -156,8 +153,7 @@ class _ChatViewState extends State<ChatView> {
   }
 
   void setBid(double? value) {
-    var _value = value ?? _bid;
-    _bid = _value;
+    _bid = value ?? _bid;
     setState(() {});
   }
 
@@ -191,12 +187,13 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
+  // TODO: Break out widget
   Widget _buildAccountDialog(BuildContext context) {
     if (_funder != null) {
       _funderFieldController.value = _funder;
     }
-
     return SizedBox(
+      key: ValueKey(_account?.hashCode ?? 'key'),
       // Width here is effectively a max width and prevents dialog resizing
       width: 500,
       child: IntrinsicHeight(
@@ -209,26 +206,40 @@ class _ChatViewState extends State<ChatView> {
           },
           body: Column(
             children: [
+              // Funder field
               OrchidLabeledAddressField(
                 label: 'Funder Address',
                 onChange: (EthereumAddress? s) {
-                  _funder = s;
+                  setState(() {
+                    _funder = s;
+                  });
+                  _accountChanged();
                 },
                 controller: _funderFieldController,
               ),
+              // Signer field
               OrchidLabeledTextField(
                 label: 'Signer Key',
                 controller: _signerFieldController,
                 hintText: '0x...',
                 onChanged: (String s) {
-                  try {
-                    _signerKey = BigInt.parse(s);
-                  } catch (e) {
-                    // print('Error parsing BigInt: $e');
-                    _signerKey = null;
-                  }
+                  setState(() {
+                    try {
+                      _signerKey = BigInt.parse(s);
+                    } catch (e) {
+                      // print('Error parsing BigInt: $e');
+                      _signerKey = null;
+                    }
+                  });
+                  _accountChanged();
                 },
               ).top(16),
+              // Account card
+              ListenableBuilder(
+                  listenable: _accountDetailNotifier,
+                  builder: (context, child) {
+                    return AccountCard(accountDetail: _accountDetail).top(20);
+                  }),
             ],
           ).pad(24),
         ),
@@ -247,104 +258,12 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  bool accountSet() {
-    if (_funder == null || _signerKey == null) {
-      return false;
-    }
-    return true;
+  // item builder
+  Widget _buildChatBubble(BuildContext context, int index) {
+    return ChatBubble(message: _messages[index], debugMode: _debugMode);
   }
 
-  List<Color> msgBubbleColor(ChatMessageSource src) {
-    if (src == ChatMessageSource.client) {
-      return <Color>[
-        const Color(0xff52319c),
-        const Color(0xff3b146a),
-      ];
-    } else {
-      return <Color>[
-        AppColors.teal_2,
-        AppColors.neutral_1,
-      ];
-    }
-  }
-
-  Widget buildChatBubble(context, index) {
-    ChatMessageSource src = messages[index].source;
-
-    if (src == ChatMessageSource.system || src == ChatMessageSource.internal) {
-      if (!_debugMode && src == ChatMessageSource.internal) {
-        return Container();
-      }
-
-      return Center(
-        child: Column(
-          children: <Widget>[
-            Text(
-              messages[index].message,
-              style: src == ChatMessageSource.system
-                  ? OrchidText.normal_14
-                  : OrchidText.normal_14.grey,
-            ),
-            const SizedBox(height: 2),
-          ],
-        ),
-      );
-    }
-    return Align(
-      alignment: src == ChatMessageSource.provider
-          ? Alignment.centerLeft
-          : Alignment.centerRight,
-      child: SizedBox(
-        width: 0.6 * 800, //MediaQuery.of(context).size.width * 0.6,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: <Widget>[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(src == ChatMessageSource.provider ? 'Chat' : 'You',
-                  style: OrchidText.normal_14),
-            ),
-            const SizedBox(height: 2),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Stack(
-                children: <Widget>[
-                  Positioned.fill(
-                    child: Container(
-                      width: 0.6 * 800,
-                      // MediaQuery.of(context).size.width * 0.6,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: msgBubbleColor(messages[index].source),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 0.6 * 800,
-                    // MediaQuery.of(context).size.width * 0.6,
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(messages[index].message,
-                        style: OrchidText.medium_20_050),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 2),
-            if (src == ChatMessageSource.provider) ...[
-              Text(
-                style: OrchidText.normal_14,
-                'model: ${messages[index].metadata["model"]}   usage: ${messages[index].metadata["usage"]}',
-              )
-            ],
-            const SizedBox(height: 6),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void sendPrompt(String msg, TextEditingController controller) {
+  void _sendPrompt(String msg, TextEditingController controller) {
     var message = '{"type": "job", "bid": $_bid, "prompt": "$msg"}';
     _providerConnection?.sendProviderMessage(message);
     controller.clear();
@@ -353,8 +272,6 @@ class _ChatViewState extends State<ChatView> {
     addMessage(ChatMessageSource.internal, 'Client: $message');
     print('Sending message to provider $message');
   }
-
-  final ScrollController messageListController = ScrollController();
 
   void scrollMessagesDown() {
     messageListController.animateTo(
@@ -374,16 +291,15 @@ class _ChatViewState extends State<ChatView> {
   }
 
   void clearChat() {
-    messages = [];
+    _messages = [];
     setState(() {});
   }
 
   @override
   void dispose() {
+    _accountDetail?.cancel();
     super.dispose();
   }
-
-  var promptTextController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -410,11 +326,12 @@ class _ChatViewState extends State<ChatView> {
                           child: SizedBox(width: 500, child: _buildHeaderRow()))
                     else
                       _buildHeaderRow(),
+                    // Messages area
                     Flexible(
                       child: ListView.builder(
                         controller: messageListController,
-                        itemCount: messages.length,
-                        itemBuilder: buildChatBubble,
+                        itemCount: _messages.length,
+                        itemBuilder: _buildChatBubble,
                       ),
                     ),
                     // Prompt row
@@ -464,8 +381,8 @@ class _ChatViewState extends State<ChatView> {
         ),
         IconButton.filled(
           onPressed: () {
-            accountSet()
-                ? sendPrompt(promptTextController.text, promptTextController)
+            _account != null
+                ? _sendPrompt(promptTextController.text, promptTextController)
                 : _popAccountDialog();
           },
           icon: const Icon(Icons.send_rounded),
@@ -480,15 +397,15 @@ class _ChatViewState extends State<ChatView> {
         SizedBox(height: 40, child: OrchidAsset.image.logo),
         const Spacer(),
         // Connect button
-        GAIButton(
+        ChatButton(
             text: _connected ? 'Reroll' : 'Connect',
             onPressed: () {
               _providerConnection?.connectProvider();
             }).left(8),
         // Clear button
-        GAIButton(text: 'Clear Chat', onPressed: clearChat).left(8),
+        ChatButton(text: 'Clear Chat', onPressed: clearChat).left(8),
         // Account button
-        GAIButton(text: 'Account', onPressed: _popAccountDialog).left(8),
+        ChatButton(text: 'Account', onPressed: _popAccountDialog).left(8),
         // Settings button
         GAISettingsButton(
           debugMode: _debugMode,
@@ -503,34 +420,9 @@ class _ChatViewState extends State<ChatView> {
   }
 }
 
-class GAIButton extends StatelessWidget {
-  const GAIButton({
-    super.key,
-    required this.text,
-    required this.onPressed,
-  });
-
-  final String text;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: FilledButton(
-        style: TextButton.styleFrom(
-          backgroundColor: OrchidColors.new_purple,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
-        onPressed: onPressed,
-        child: Text(text).button.white,
-      ),
-    );
-  }
-}
-
 // Rename this in a subclass as prelude to refactoring later.
 class TransientEthereumKey extends StoredEthereumKey {
   TransientEthereumKey({required super.imported, required super.private});
 }
+
+enum OrchataMenuItem { debug }
