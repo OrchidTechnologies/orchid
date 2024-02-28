@@ -1,0 +1,67 @@
+name: orchid
+description: "Pay as you go decentralized generative AI"
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+version: 1.0.0+1
+
+environment:
+#  sdk: '>=3.2.6 <4.0.0'
+  sdk: ">=3.0.6 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+
+  web_socket_channel: ^2.4.0
+  stream_channel: ^2.1.0
+
+  # price widget deps below
+  flutter_localizations:
+    sdk: flutter
+#  flutter_lints: ^1.0.0
+  flutter_svg: 1.0.3
+  flutter_web3: 2.1.6
+  intl: 0.18.1
+  pointycastle: 3.5.0
+  rxdart: 0.27.7
+  shared_preferences: ^2.2.2
+  styled_text: 4.0.0
+  uuid: 3.0.5
+  url_launcher: 6.1.3
+  web3dart: 2.3.3
+  shared_preferences_foundation: ^2.3.5
+  flutter_js: ^0.7.2
+  browser_detector: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/svg/
+    - assets/svg/chains/
+    - assets/svg/tokens/
+
+  fonts:
+    - family: Baloo2
+      fonts:
+        - asset: ../gui-orchid/assets/fonts/Baloo2-Regular.ttf
+          weight: 400
+        - asset: ../gui-orchid/assets/fonts/Baloo2-Medium.ttf
+          weight: 500
+        - asset: ../gui-orchid/assets/fonts/Baloo2-SemiBold.ttf
+          weight: 600
+        - asset: ../gui-orchid/assets/fonts/Baloo2-Bold.ttf
+          weight: 700
+        - asset: ../gui-orchid/assets/fonts/Baloo2-ExtraBold.ttf
+          weight: 800
+
+flutter_intl:
+  enabled: false

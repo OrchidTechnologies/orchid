@@ -1,0 +1,6 @@
+- fix orchid account form
+  = validate inputs
+  = display balance/deposit info
+- quality of life improvements
+  = selectable text
+  = chat export
