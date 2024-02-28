@@ -28,6 +28,7 @@ class OrchidTextField extends StatelessWidget {
   final EdgeInsets? suffixIconPadding;
   final TextAlignVertical? textAlignVertical;
   final double? cursorHeight;
+  final bool autoFocus;
 
   OrchidTextField({
     required this.controller,
@@ -47,6 +48,7 @@ class OrchidTextField extends StatelessWidget {
     this.textAlignVertical,
     this.suffixIconPadding,
     this.cursorHeight,
+    this.autoFocus = false,
   });
 
   @override
@@ -89,6 +91,7 @@ class OrchidTextField extends StatelessWidget {
             obscureText: obscureText,
             controller: controller,
             autocorrect: false,
+            autofocus: autoFocus,
             textAlign: TextAlign.left,
             textAlignVertical: textAlignVertical ?? TextAlignVertical.bottom,
             cursorHeight: cursorHeight,

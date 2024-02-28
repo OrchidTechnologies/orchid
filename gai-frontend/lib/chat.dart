@@ -1,13 +1,17 @@
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/app_colors.dart';
+import 'package:orchid/common/app_dialogs.dart';
+import 'package:orchid/common/app_sizes.dart';
+import 'package:orchid/gai_settings_button.dart';
+import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
+import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
+import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
+import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/orchid/orchid.dart';
-import 'package:orchid/gui-orchid/lib/orchid/orchid.dart';
-import 'package:orchid/gui-orchid/lib/orchid/orchid_gradients.dart';
 import 'package:orchid/api/orchid_crypto.dart';
-import 'package:orchid/gui-orchid/lib/orchid/field/orchid_labeled_numeric_field.dart';
-import 'package:orchid/gui-orchid/lib/orchid/field/orchid_labeled_address_field.dart';
-import 'package:orchid/gui-orchid/lib/orchid/field/orchid_labeled_text_field.dart';
+import 'package:orchid/orchid/orchid_gradients.dart';
+import 'package:orchid/orchid/orchid_titled_panel.dart';
 import 'provider.dart';
 
 enum OrchataMenuItem { debug }
@@ -40,7 +44,7 @@ class ChatView extends StatefulWidget {
 class _ChatViewState extends State<ChatView> {
   List<ChatMessage> messages = [];
   List<String> _providers = [];
-  var _debugMode = false;
+  bool _debugMode = false;
   var _connected = false;
   var _bid = 0.00007;
   ProviderConnection? _providerConnection;
@@ -48,6 +52,9 @@ class _ChatViewState extends State<ChatView> {
   // The active account components
   EthereumAddress? _funder;
   BigInt? _signerKey;
+
+  final _signerFieldController = TextEditingController();
+  final _funderFieldController = AddressValueFieldController();
 
   Account? get _account {
     if (_funder == null || _signerKey == null) {
@@ -77,11 +84,13 @@ class _ChatViewState extends State<ChatView> {
     Map<String, String> params = Uri.base.queryParameters;
     try {
       _funder = EthereumAddress.from(params['funder'] ?? '');
+      _funderFieldController.text = _funder.toString();
     } catch (e) {
       _funder = null;
     }
     try {
       _signerKey = BigInt.parse(params['signer'] ?? '');
+      _signerFieldController.text = _signerKey.toString();
     } catch (e) {
       _signerKey = null;
     }
@@ -152,7 +161,7 @@ class _ChatViewState extends State<ChatView> {
     setState(() {});
   }
 
-  Widget buildPromptDialog(
+  Widget _buildPromptDialog(
       BuildContext context, Animation<double> anim1, Animation<double> anim2) {
     var controller = NumericValueFieldController();
     controller.value = _bid;
@@ -182,66 +191,59 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Widget buildAccountDialog(
-      BuildContext context, Animation<double> anim1, Animation<double> anim2) {
-    var scontroller = TextEditingController(text: _signerKey.toString());
-    var fcontroller = AddressValueFieldController();
+  Widget _buildAccountDialog(BuildContext context) {
     if (_funder != null) {
-      fcontroller.value = _funder;
+      _funderFieldController.value = _funder;
     }
-    return Dialog(
-      child: Container(
-        padding: const EdgeInsets.all(10.0),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: <Color>[Color(0xFF303030), Color(0xFF757575)],
-          ),
-        ),
-        height: 225,
-        child: Column(
-          children: <Widget>[
-            Text('Set your Orchid account', style: OrchidText.medium_20_050),
-            const SizedBox(height: 3),
-            OrchidLabeledAddressField(
-              label: 'Funder Address',
-              onChange: (EthereumAddress? s) {
-                _funder = s;
-              },
-              controller: fcontroller,
-            ),
-            const SizedBox(height: 5),
-            OrchidLabeledTextField(
-              label: 'Signer Key',
-              controller: scontroller,
-              onChanged: (String s) {
-                try {
-                  _signerKey = BigInt.parse(s);
-                } catch (e) {
-                  // print('Error parsing BigInt: $e');
-                  _signerKey = null;
-                }
-              },
-            ),
-          ],
+
+    return SizedBox(
+      // Width here is effectively a max width and prevents dialog resizing
+      width: 500,
+      child: IntrinsicHeight(
+        child: OrchidTitledPanel(
+          highlight: false,
+          opaque: true,
+          titleText: "Set your Orchid account",
+          onDismiss: () {
+            Navigator.pop(context);
+          },
+          body: Column(
+            children: [
+              OrchidLabeledAddressField(
+                label: 'Funder Address',
+                onChange: (EthereumAddress? s) {
+                  _funder = s;
+                },
+                controller: _funderFieldController,
+              ),
+              OrchidLabeledTextField(
+                label: 'Signer Key',
+                controller: _signerFieldController,
+                hintText: '0x...',
+                onChanged: (String s) {
+                  try {
+                    _signerKey = BigInt.parse(s);
+                  } catch (e) {
+                    // print('Error parsing BigInt: $e');
+                    _signerKey = null;
+                  }
+                },
+              ).top(16),
+            ],
+          ).pad(24),
         ),
       ),
     );
   }
 
-  void popAccountDialog() {
-    showGeneralDialog<String>(
+  void _popAccountDialog() {
+    AppDialogs.showAppDialog(
       context: context,
-      transitionDuration: Duration(milliseconds: 300),
-      pageBuilder: buildAccountDialog,
-      barrierDismissible: true,
-      barrierLabel: 'Orchid Account Settings',
-      transitionBuilder: (context, anim1, anim2, child) {
-        return SlideTransition(
-          position:
-              Tween(begin: Offset(0, -1), end: Offset(0, -0.3)).animate(anim1),
-          child: child,
-        );
-      },
+      showActions: false,
+      contentPadding: EdgeInsets.zero,
+      // This stateful builder allows this dialog to rebuild in response to setstate
+      // on the _accountToImport in the parent.
+      body: _buildAccountDialog(context),
     );
   }
 
@@ -268,7 +270,6 @@ class _ChatViewState extends State<ChatView> {
 
   Widget buildChatBubble(context, index) {
     ChatMessageSource src = messages[index].source;
-    String metadataString;
 
     if (src == ChatMessageSource.system || src == ChatMessageSource.internal) {
       if (!_debugMode && src == ChatMessageSource.internal) {
@@ -293,7 +294,7 @@ class _ChatViewState extends State<ChatView> {
       alignment: src == ChatMessageSource.provider
           ? Alignment.centerLeft
           : Alignment.centerRight,
-      child: Container(
+      child: SizedBox(
         width: 0.6 * 800, //MediaQuery.of(context).size.width * 0.6,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -382,9 +383,11 @@ class _ChatViewState extends State<ChatView> {
     super.dispose();
   }
 
+  var promptTextController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
-    var promptTextController = TextEditingController();
+    var small = AppSize(context).narrowerThanWidth(500);
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -401,63 +404,12 @@ class _ChatViewState extends State<ChatView> {
                 padding: const EdgeInsets.all(10.0),
                 child: Column(
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        OrchidAsset.image.logo_small_purple,
-                        Expanded(child: Container()),
-                        FilledButton(
-                          onPressed: () {
-                            _providerConnection?.connectProvider();
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text(_connected ? 'Reroll' : 'Connect'),
-                        ),
-                        const SizedBox(width: 5),
-                        FilledButton(
-                          onPressed: clearChat,
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text('Clear Chat'),
-                        ),
-                        const SizedBox(width: 5),
-                        FilledButton(
-                          onPressed: popAccountDialog,
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text('Account'),
-                        ),
-                        const SizedBox(width: 5),
-                        PopupMenuButton<OrchataMenuItem>(
-                          initialValue: null,
-                          onSelected: (OrchataMenuItem item) {
-                            setState(() {
-                              _debugMode = !_debugMode;
-                            });
-                          },
-                          itemBuilder: buildMenu,
-                          icon: const Icon(Icons.menu),
-/*
-                          child: IconButton.filled(
-                            color: Colors.white,
-                            icon: const Icon(Icons.menu),
-                            onPressed: (OrchataMenuItem item) {
-                              setState(() {
-                                _debugMode = !_debugMode;
-                              });
-                            },
-                          ),
-*/
-                          color: Colors.deepPurple,
-//                          iconColor: Colors.white,
-                          position: PopupMenuPosition.under,
-                        )
-                      ],
-                    ),
-                    SizedBox(height: 8),
+                    // header row
+                    if (small)
+                      FittedBox(
+                          child: SizedBox(width: 500, child: _buildHeaderRow()))
+                    else
+                      _buildHeaderRow(),
                     Flexible(
                       child: ListView.builder(
                         controller: messageListController,
@@ -465,66 +417,114 @@ class _ChatViewState extends State<ChatView> {
                         itemBuilder: buildChatBubble,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Row(
-                        children: <Widget>[
-                          IconButton.filled(
-                            onPressed: () {
-                              showGeneralDialog<String>(
-                                context: context,
-                                transitionDuration: Duration(milliseconds: 300),
-                                pageBuilder: buildPromptDialog,
-                                barrierDismissible: true,
-                                barrierLabel: 'Prompt Settings',
-                                transitionBuilder:
-                                    (context, anim1, anim2, child) {
-                                  return SlideTransition(
-                                    position: Tween(
-                                            begin: Offset(0, 0.8),
-                                            end: Offset(0, 0.3))
-                                        .animate(anim1),
-                                    child: child,
-                                  );
-                                },
-                              );
-                            },
-                            icon: const Icon(Icons.more_horiz),
-                          ),
-                          SizedBox(width: 5),
-                          Flexible(
-                            child: TextFormField(
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(),
-                                hintText: 'Enter a prompt',
-                                hintStyle: OrchidText.normal_16_025.grey,
-                              ),
-                              style: OrchidText.medium_20_050,
-                              autofocus: true,
-                              controller: promptTextController,
-                            ),
-                          ),
-                          SizedBox(width: 5),
-                          IconButton.filled(
-                            onPressed: () {
-                              accountSet()
-                                  ? sendPrompt(promptTextController.text,
-                                      promptTextController)
-                                  : popAccountDialog();
-                            },
-                            icon: const Icon(Icons.send_rounded),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Prompt row
+                    _buildPromptRow(context).top(8),
                     Text('Your bid is $_bid XDAI per token.',
                         style: OrchidText.normal_14),
                   ],
                 ),
-              ),
+              ).top(4),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPromptRow(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        IconButton.filled(
+          onPressed: () {
+            showGeneralDialog<String>(
+              context: context,
+              transitionDuration: Duration(milliseconds: 300),
+              pageBuilder: _buildPromptDialog,
+              barrierDismissible: true,
+              barrierLabel: 'Prompt Settings',
+              transitionBuilder: (context, anim1, anim2, child) {
+                return SlideTransition(
+                  position: Tween(begin: Offset(0, 0.8), end: Offset(0, 0.3))
+                      .animate(anim1),
+                  child: child,
+                );
+              },
+            );
+          },
+          icon: const Icon(Icons.more_horiz),
+        ),
+        Flexible(
+          child: OrchidTextField(
+            controller: promptTextController,
+            hintText: 'Enter a prompt',
+            contentPadding: EdgeInsets.only(bottom: 26, left: 16),
+            style: OrchidText.body1,
+            autoFocus: true,
+          ).left(16),
+        ),
+        IconButton.filled(
+          onPressed: () {
+            accountSet()
+                ? sendPrompt(promptTextController.text, promptTextController)
+                : _popAccountDialog();
+          },
+          icon: const Icon(Icons.send_rounded),
+        ).left(16),
+      ],
+    ).padx(8);
+  }
+
+  Widget _buildHeaderRow() {
+    return Row(
+      children: <Widget>[
+        SizedBox(height: 40, child: OrchidAsset.image.logo),
+        const Spacer(),
+        // Connect button
+        GAIButton(
+            text: _connected ? 'Reroll' : 'Connect',
+            onPressed: () {
+              _providerConnection?.connectProvider();
+            }).left(8),
+        // Clear button
+        GAIButton(text: 'Clear Chat', onPressed: clearChat).left(8),
+        // Account button
+        GAIButton(text: 'Account', onPressed: _popAccountDialog).left(8),
+        // Settings button
+        GAISettingsButton(
+          debugMode: _debugMode,
+          onDebugModeChanged: () {
+            setState(() {
+              _debugMode = !_debugMode;
+            });
+          },
+        ).left(8),
+      ],
+    );
+  }
+}
+
+class GAIButton extends StatelessWidget {
+  const GAIButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+  });
+
+  final String text;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: FilledButton(
+        style: TextButton.styleFrom(
+          backgroundColor: OrchidColors.new_purple,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        onPressed: onPressed,
+        child: Text(text).button.white,
       ),
     );
   }
