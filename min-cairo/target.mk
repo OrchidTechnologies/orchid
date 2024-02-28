@@ -10,7 +10,7 @@
 
 
 w_cairo := 
-w_cairo += $(shell gsed $(pwd)/cairo/configure.ac -e '/^CAIRO_ENABLE_\(FUNCTIONS\|\(FONT\|SURFACE\)_BACKEND\)$(paren)/{s///;s/_/-/g;s/,.*//;/^\(png\)$$/!{s/^/--disable-/;p}};d')
+w_cairo += $(shell sed $(pwd)/cairo/configure.ac -e '/^CAIRO_ENABLE_\(FUNCTIONS\|\(FONT\|SURFACE\)_BACKEND\)$(paren)/{s///;s/_/-/g;s/,.*//;/^\(png\)$$/!{s/^/--disable-/;p}};d')
 
 p_cairo := 
 l_cairo := 
