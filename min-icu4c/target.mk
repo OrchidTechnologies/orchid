@@ -32,8 +32,9 @@ endif
 
 define icu4c
 $(output)/%/$(pwd)/icu4c/lib/$(1).a: $(output)/%/$(pwd)/icu4c/Makefile
-	mkdir -p $$(dir $$@)
-	$$(MAKE) -C $$(dir $$<)/$(2) $(uflags)
+	@mkdir -p $$(dir $$@)
+	@# XXX: -s in the hope of avoiding EGAIN during stdout flood on macOS Linux cross
+	$$(MAKE) -C $$(dir $$<)/$(2) -s $(uflags)
 linked += $(pwd)/icu4c/lib/$(1).a
 endef
 
