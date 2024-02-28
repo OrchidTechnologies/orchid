@@ -3,7 +3,7 @@ import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/app_sizes.dart';
-import 'package:orchid/gai_settings_button.dart';
+import 'package:orchid/chat/chat_settings_button.dart';
 import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
@@ -16,7 +16,7 @@ import 'package:orchid/orchid/orchid_titled_panel.dart';
 import 'chat_bubble.dart';
 import 'chat_button.dart';
 import 'chat_message.dart';
-import 'provider.dart';
+import '../provider.dart';
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key});
@@ -407,7 +407,7 @@ class _ChatViewState extends State<ChatView> {
         // Account button
         ChatButton(text: 'Account', onPressed: _popAccountDialog).left(8),
         // Settings button
-        GAISettingsButton(
+        ChatSettingsButton(
           debugMode: _debugMode,
           onDebugModeChanged: () {
             setState(() {

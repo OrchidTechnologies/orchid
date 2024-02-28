@@ -5,23 +5,23 @@ import 'package:orchid/orchid/menu/expanding_popup_menu_item.dart';
 import 'package:orchid/orchid/menu/orchid_popup_menu_item_utils.dart';
 import 'package:orchid/orchid/menu/submenu_popup_menu_item.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import '../../orchid/menu/orchid_popup_menu_button.dart';
+import '../../../orchid/menu/orchid_popup_menu_button.dart';
 
-class GAISettingsButton extends StatefulWidget {
+class ChatSettingsButton extends StatefulWidget {
   final bool debugMode;
   final VoidCallback onDebugModeChanged;
 
-  const GAISettingsButton({
+  const ChatSettingsButton({
     Key? key,
     required this.debugMode,
     required this.onDebugModeChanged,
   }) : super(key: key);
 
   @override
-  State<GAISettingsButton> createState() => _GAISettingsButtonState();
+  State<ChatSettingsButton> createState() => _ChatSettingsButtonState();
 }
 
-class _GAISettingsButtonState extends State<GAISettingsButton> {
+class _ChatSettingsButtonState extends State<ChatSettingsButton> {
   final _width = 273.0;
   final _height = 50.0;
   final _textStyle = OrchidText.medium_16_025.copyWith(height: 2.0);
