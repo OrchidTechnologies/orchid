@@ -308,13 +308,8 @@ int Main(int argc, const char *const argv[]) {
         co_return *co_await Parallel(Coinbase(*base, "ETH-USD"), Coinbase(*base, "OXT-USD"));
     }, "Coinbase"))));
 
-    prices.try_emplace("Binance", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
-        co_return *co_await Parallel(Binance(*base, "ETHUSDT"), Binance(*base, "OXTUSDT"));
-    }, "Binance"))));
-
     prices.try_emplace("Kraken", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
-        const auto [eth, oxt] = *co_await Parallel(Kraken(*base, "XETHZUSD"), Kraken(*base, "OXTETH", 1));
-        co_return std::make_tuple(eth, eth * oxt);
+        co_return *co_await Parallel(Kraken(*base, "XETHZUSD"), Kraken(*base, "OXTUSD"));
     }, "Kraken"))));
 
     prices.try_emplace("Huobi", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
@@ -362,6 +357,8 @@ int Main(int argc, const char *const argv[]) {
         *co_await Parallel([&]() -> task<void> { try {
             (co_await orc_optic)->Name("Stakes");
             state->stakes_ = co_await network->Scan();
+        } catch (const std::exception &error) {
+            std::cerr << error.what() << std::endl;
         } catch (...) {
         } }(), [&]() -> task<void> {
             (co_await orc_optic)->Name("Tests");
