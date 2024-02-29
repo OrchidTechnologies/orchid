@@ -4,11 +4,11 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_ticket.dart';
+import 'package:orchid/api/orchid_eth/orchid_account.dart';
+import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 
 
 class ProviderConnection {
-  List<String> providers = [];
-  int _providerIndex = 0;
   var _providerChannel;
   Function onMessage;
   Function onChat;
@@ -18,25 +18,15 @@ class ProviderConnection {
   Function onSystemMessage;
   Function onInternalMessage;
   EthereumAddress contract;
-  BigInt signerKey;
-  EthereumAddress funder;
+  String url;
+  AccountDetail accountDetail;
   var _faceValue = BigInt.from(50000000000000000);
 
-  
-  ProviderConnection({required this.providers, required  this.onMessage, required this.onConnect,
+  ProviderConnection({required  this.onMessage, required this.onConnect,
                       required this.onChat, required this.onDisconnect, required this.onError,
-                      required this.onSystemMessage, required this.onInternalMessage, funder, signerKey,
-                      required this.contract, })
-                      : this.funder = funder ?? '',
-                        this.signerKey = signerKey ?? '';
-
-  void connectProvider() async {
-    if (_providerChannel != null) {
-      await _providerChannel.sink.close;
-      onDisconnect();
-      _providerChannel = null;
-    }
-    var url = lookupProvider();
+                      required this.onSystemMessage, required this.onInternalMessage,
+                      required this.contract, required this.url, required this.accountDetail, 
+                    }) {
     var channel;
     try {
       channel = WebSocketChannel.connect(Uri.parse(url));
@@ -54,33 +44,27 @@ class ProviderConnection {
     onConnect();
   }
 
-  String lookupProvider() {
-    if (providers.length > 0) {
-      _providerIndex = (_providerIndex + 1) % providers.length;
-      return providers[_providerIndex];
-    }
-    return '';
-  }
-
   void payInvoice(Map<String, dynamic> invoice) {
     var payment;
+    assert(invoice.containsKey('recipient'));
+    assert(accountDetail.funder != null);
     final data = BigInt.zero;
     final due = invoice['amount'];
     final lotaddr = contract;
     final token = EthereumAddress.zero;
     final ratio = BigInt.parse('9223372036854775808');
     final commit = BigInt.parse(invoice['commit'] ?? '0x0');
-    final recipient = invoice['recipient'] ?? '0x0';
+    final recipient = invoice['recipient'];
     final ticket = OrchidTicket(
       data: data,
       lotaddr: lotaddr,
       token: token,
       amount: _faceValue,
       ratio: ratio,
-      funder: funder,
+      funder: accountDetail.account.funder, // ?? EthereumAddress.zero,
       recipient: EthereumAddress.from(recipient),
       commitment: commit,
-      privateKey: signerKey,
+      privateKey: accountDetail.account.signerKey.private,
       millisecondsSinceEpoch: 1708638722494,
     );
     ticket.printTicket();
@@ -108,5 +92,11 @@ class ProviderConnection {
   void sendProviderMessage(message) {
     print('Sending message to provider $message');
     _providerChannel.sink.add(message);
+  }
+
+  @override
+  void dispose() {
+    _providerChannel.sink.close;
+    onDisconnect();
   }
 }

@@ -28,6 +28,7 @@ class ChatView extends StatefulWidget {
 class _ChatViewState extends State<ChatView> {
   List<ChatMessage> _messages = [];
   List<String> _providers = [];
+  int _providerIndex = 0;
   bool _debugMode = false;
   bool _connected = false;
   double _bid = 0.00007;
@@ -107,8 +108,32 @@ class _ChatViewState extends State<ChatView> {
     if (provider != null) {
       _providers = [provider];
     }
+  }
+
+  void providerConnected() {
+    _connected = true;
+    addMessage(ChatMessageSource.system, 'Connected to provider.');
+  }
+
+  void providerDisconnected() {
+    _connected = false;
+    addMessage(ChatMessageSource.system, 'Provider disconnected');
+  }
+
+  void connectProvider() {
+    var account = _accountDetail;
+    if (account == null) {
+       return;
+    }
+    if (_providers.length == 0) {
+      return;
+    }
+    if (_connected) {
+      _providerConnection?.dispose();
+      _providerIndex = (_providerIndex + 1) % _providers.length;
+      _connected = false;
+    }
     _providerConnection = ProviderConnection(
-      providers: _providers,
       onMessage: (msg) {
         addMessage(ChatMessageSource.internal, msg);
       },
@@ -126,21 +151,11 @@ class _ChatViewState extends State<ChatView> {
       onInternalMessage: (msg) {
         addMessage(ChatMessageSource.internal, msg);
       },
-      funder: _funder,
-      signerKey: _signerKey,
+      accountDetail: account,
       contract:
           EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'),
+      url: _providers[_providerIndex],
     );
-  }
-
-  void providerConnected() {
-    _connected = true;
-    addMessage(ChatMessageSource.system, 'Connected to provider.');
-  }
-
-  void providerDisconnected() {
-    _connected = false;
-    addMessage(ChatMessageSource.system, 'Provider disconnected');
   }
 
   void addMessage(ChatMessageSource source, String msg, [metadata]) {
@@ -408,9 +423,8 @@ class _ChatViewState extends State<ChatView> {
         // Connect button
         ChatButton(
             text: _connected ? 'Reroll' : 'Connect',
-            onPressed: () {
-              _providerConnection?.connectProvider();
-            }).left(8),
+            onPressed: connectProvider,
+            ).left(8),
         // Clear button
         ChatButton(text: 'Clear Chat', onPressed: clearChat).left(8),
         // Account button
