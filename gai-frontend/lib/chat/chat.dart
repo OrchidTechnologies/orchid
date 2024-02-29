@@ -41,10 +41,13 @@ class _ChatViewState extends State<ChatView> {
   final _funderFieldController = AddressValueFieldController();
   final ScrollController messageListController = ScrollController();
   final promptTextController = TextEditingController();
+  final _bidController = NumericValueFieldController();
+  bool _showPromptDetails = false;
 
   @override
   void initState() {
     super.initState();
+    _bidController.value = _bid;
     try {
       _initFromParams();
     } catch (e, stack) {
@@ -152,39 +155,10 @@ class _ChatViewState extends State<ChatView> {
     }
   }
 
-  void setBid(double? value) {
-    _bid = value ?? _bid;
-    setState(() {});
-  }
-
-  Widget _buildPromptDialog(
-      BuildContext context, Animation<double> anim1, Animation<double> anim2) {
-    var controller = NumericValueFieldController();
-    controller.value = _bid;
-
-    return Dialog(
-      child: Container(
-        padding: const EdgeInsets.all(10.0),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: <Color>[Color(0xFF303030), Color(0xFF757575)],
-          ),
-        ),
-        height: 130,
-        child: Column(
-          children: <Widget>[
-            Text('Your bid is the price per token in/out you will pay.',
-                style: OrchidText.medium_20_050),
-            const SizedBox(height: 3),
-            OrchidLabeledNumericField(
-              label: 'Bid',
-              onChange: setBid,
-              controller: controller,
-            )
-          ],
-        ),
-      ),
-    );
+  void _setBid(double? value) {
+    setState(() {
+      _bid = value ?? _bid;
+    });
   }
 
   // TODO: Break out widget
@@ -252,8 +226,6 @@ class _ChatViewState extends State<ChatView> {
       context: context,
       showActions: false,
       contentPadding: EdgeInsets.zero,
-      // This stateful builder allows this dialog to rebuild in response to setstate
-      // on the _accountToImport in the parent.
       body: _buildAccountDialog(context),
     );
   }
@@ -335,12 +307,19 @@ class _ChatViewState extends State<ChatView> {
                       ),
                     ),
                     // Prompt row
-                    _buildPromptRow(context).top(8),
-                    Text('Your bid is $_bid XDAI per token.',
-                        style: OrchidText.normal_14),
+                    AnimatedSize(
+                      alignment: Alignment.topCenter,
+                      duration: millis(150),
+                      child:
+                          _buildPromptRow(promptTextController, _submit).top(8),
+                    ),
+                    if (!_showPromptDetails)
+                      Text('Your bid is $_bid XDAI per token.',
+                              style: OrchidText.normal_14)
+                          .top(12),
                   ],
                 ),
-              ).top(4),
+              ).top(8).bottom(8),
             ),
           ],
         ),
@@ -348,47 +327,77 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Widget _buildPromptRow(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        IconButton.filled(
-          onPressed: () {
-            showGeneralDialog<String>(
-              context: context,
-              transitionDuration: Duration(milliseconds: 300),
-              pageBuilder: _buildPromptDialog,
-              barrierDismissible: true,
-              barrierLabel: 'Prompt Settings',
-              transitionBuilder: (context, anim1, anim2, child) {
-                return SlideTransition(
-                  position: Tween(begin: Offset(0, 0.8), end: Offset(0, 0.3))
-                      .animate(anim1),
-                  child: child,
-                );
+  Widget _buildPromptRow(
+    TextEditingController promptTextController,
+    VoidCallback onSubmit,
+  ) {
+    return Column(
+      children: [
+        Row(
+          children: <Widget>[
+            IconButton.filled(
+              style: IconButton.styleFrom(
+                  backgroundColor: OrchidColors.new_purple),
+              onPressed: () {
+                setState(() {
+                  _showPromptDetails = !_showPromptDetails;
+                });
               },
-            );
-          },
-          icon: const Icon(Icons.more_horiz),
-        ),
-        Flexible(
-          child: OrchidTextField(
-            controller: promptTextController,
-            hintText: 'Enter a prompt',
-            contentPadding: EdgeInsets.only(bottom: 26, left: 16),
-            style: OrchidText.body1,
-            autoFocus: true,
-          ).left(16),
-        ),
-        IconButton.filled(
-          onPressed: () {
-            _account != null
-                ? _sendPrompt(promptTextController.text, promptTextController)
-                : _popAccountDialog();
-          },
-          icon: const Icon(Icons.send_rounded),
-        ).left(16),
+              icon: _showPromptDetails
+                  ? const Icon(Icons.expand_more, color: Colors.white)
+                  : const Icon(Icons.chevron_right, color: Colors.white),
+            ),
+            Flexible(
+              child: OrchidTextField(
+                controller: promptTextController,
+                hintText: 'Enter a prompt',
+                contentPadding: EdgeInsets.only(bottom: 26, left: 16),
+                style: OrchidText.body1,
+                autoFocus: true,
+                onSubmitted: (String s) {
+                  onSubmit();
+                },
+              ).left(16),
+            ),
+            IconButton.filled(
+              style: IconButton.styleFrom(
+                  backgroundColor: OrchidColors.new_purple),
+              onPressed: onSubmit,
+              icon: const Icon(Icons.send_rounded, color: Colors.white),
+            ).left(16),
+          ],
+        ).padx(8),
+        if (_showPromptDetails) _buildBidForm(_setBid, _bidController),
       ],
-    ).padx(8);
+    );
+  }
+
+  // prelude to widget
+  static Widget _buildBidForm(
+      ValueChanged<double?> setBid,
+      NumericValueFieldController bidController,
+      ) {
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      child: Column(
+        children: <Widget>[
+          Text('Your bid is the price per token in/out you will pay.',
+                  style: OrchidText.medium_20_050)
+              .top(8),
+          OrchidLabeledNumericField(
+            label: 'Bid',
+            onChange: setBid,
+            controller: bidController,
+          ).top(12)
+        ],
+      ),
+    );
+  }
+
+  void _submit() {
+    _account != null
+        ? _sendPrompt(promptTextController.text, promptTextController)
+        : _popAccountDialog();
   }
 
   Widget _buildHeaderRow() {

@@ -29,6 +29,7 @@ class OrchidTextField extends StatelessWidget {
   final TextAlignVertical? textAlignVertical;
   final double? cursorHeight;
   final bool autoFocus;
+  final ValueChanged<String>? onSubmitted;
 
   OrchidTextField({
     required this.controller,
@@ -49,6 +50,7 @@ class OrchidTextField extends StatelessWidget {
     this.suffixIconPadding,
     this.cursorHeight,
     this.autoFocus = false,
+    this.onSubmitted,
   });
 
   @override
@@ -86,6 +88,7 @@ class OrchidTextField extends StatelessWidget {
       children: <Widget>[
         Expanded(
           child: TextField(
+            onSubmitted: onSubmitted,
             enabled: enabled,
             style: textStyle,
             obscureText: obscureText,
