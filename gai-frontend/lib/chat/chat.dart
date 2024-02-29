@@ -8,7 +8,6 @@ import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
-import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
@@ -17,6 +16,7 @@ import 'chat_bubble.dart';
 import 'chat_button.dart';
 import 'chat_message.dart';
 import '../provider.dart';
+import 'chat_prompt.dart';
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key});
@@ -41,7 +41,7 @@ class _ChatViewState extends State<ChatView> {
   final _signerFieldController = TextEditingController();
   final _funderFieldController = AddressValueFieldController();
   final ScrollController messageListController = ScrollController();
-  final promptTextController = TextEditingController();
+  final _promptTextController = TextEditingController();
   final _bidController = NumericValueFieldController();
   bool _showPromptDetails = false;
 
@@ -77,14 +77,12 @@ class _ChatViewState extends State<ChatView> {
     log("selectedAccountChanged");
     _accountDetail?.cancel();
     _accountDetail = null;
-    setState(() {});
-    _accountDetailNotifier.notifyListeners();
     if (_account != null) {
       _accountDetail = AccountDetailPoller(account: _account!);
-      await _accountDetail?.pollOnce();
-      setState(() {});
-      _accountDetailNotifier.notifyListeners();
+      _accountDetail?.pollOnce();
     }
+    _accountDetailNotifier.notifyListeners();
+    setState(() {});
   }
 
   // Init from user parameters (for web)
@@ -120,10 +118,10 @@ class _ChatViewState extends State<ChatView> {
     addMessage(ChatMessageSource.system, 'Provider disconnected');
   }
 
-  void connectProvider() {
+  void _connectProvider() {
     var account = _accountDetail;
     if (account == null) {
-       return;
+      return;
     }
     if (_providers.length == 0) {
       return;
@@ -133,13 +131,14 @@ class _ChatViewState extends State<ChatView> {
       _providerIndex = (_providerIndex + 1) % _providers.length;
       _connected = false;
     }
+    log('Connecting to provider: ${_providers[_providerIndex]}');
     _providerConnection = ProviderConnection(
       onMessage: (msg) {
         addMessage(ChatMessageSource.internal, msg);
       },
       onConnect: providerConnected,
       onChat: (msg, metadata) {
-        addMessage(ChatMessageSource.provider, msg, metadata);
+        addMessage(ChatMessageSource.provider, msg, metadata: metadata);
       },
       onDisconnect: providerDisconnected,
       onError: (msg) {
@@ -156,18 +155,18 @@ class _ChatViewState extends State<ChatView> {
           EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'),
       url: _providers[_providerIndex],
     );
+    log('connected...');
   }
 
-  void addMessage(ChatMessageSource source, String msg, [metadata]) {
-    if (metadata == null) {
-      _messages.add(ChatMessage(source, msg));
-    } else {
+  void addMessage(ChatMessageSource source, String msg,
+      {Map<String, dynamic>? metadata}) {
+    log('Adding message: ${msg.truncate(64)}');
+    setState(() {
       _messages.add(ChatMessage(source, msg, metadata: metadata));
-    }
-    if (source != ChatMessageSource.internal || _debugMode == true) {
-      setState(() {});
-      scrollMessagesDown();
-    }
+    });
+    // if (source != ChatMessageSource.internal || _debugMode == true) {
+    scrollMessagesDown();
+    // }
   }
 
   void _setBid(double? value) {
@@ -216,7 +215,6 @@ class _ChatViewState extends State<ChatView> {
                     try {
                       _signerKey = BigInt.parse(s);
                     } catch (e) {
-                      // print('Error parsing BigInt: $e');
                       _signerKey = null;
                     }
                   });
@@ -250,22 +248,35 @@ class _ChatViewState extends State<ChatView> {
     return ChatBubble(message: _messages[index], debugMode: _debugMode);
   }
 
-  void _sendPrompt(String msg, TextEditingController controller) {
+  void _send() {
+    _account != null ? _sendPrompt() : _popAccountDialog();
+  }
+
+  void _sendPrompt() {
+    var msg = _promptTextController.text;
+    if (msg.trim().isEmpty) {
+      return;
+    }
     var message = '{"type": "job", "bid": $_bid, "prompt": "$msg"}';
     _providerConnection?.sendProviderMessage(message);
-    controller.clear();
+    _promptTextController.clear();
     FocusManager.instance.primaryFocus?.unfocus();
     addMessage(ChatMessageSource.client, msg);
     addMessage(ChatMessageSource.internal, 'Client: $message');
-    print('Sending message to provider $message');
+    log('Sending message to provider $message');
   }
 
+
+
   void scrollMessagesDown() {
-    messageListController.animateTo(
-      messageListController.position.maxScrollExtent,
-      duration: Duration(seconds: 1),
-      curve: Curves.fastOutSlowIn,
-    );
+    // Dispatching it to the next frame seems to mitigate overlapping scrolls.
+    Future.delayed(millis(50), () {
+      messageListController.animateTo(
+        messageListController.position.maxScrollExtent,
+        duration: millis(300),
+        curve: Curves.fastOutSlowIn,
+      );
+    });
   }
 
   List<PopupMenuEntry<OrchataMenuItem>> buildMenu(BuildContext context) {
@@ -277,7 +288,7 @@ class _ChatViewState extends State<ChatView> {
     ];
   }
 
-  void clearChat() {
+  void _clearChat() {
     _messages = [];
     setState(() {});
   }
@@ -319,14 +330,18 @@ class _ChatViewState extends State<ChatView> {
                         controller: messageListController,
                         itemCount: _messages.length,
                         itemBuilder: _buildChatBubble,
-                      ),
+                      ).top(16),
                     ),
                     // Prompt row
                     AnimatedSize(
                       alignment: Alignment.topCenter,
                       duration: millis(150),
-                      child:
-                          _buildPromptRow(promptTextController, _submit).top(8),
+                      child: ChatPromptPanel(
+                              promptTextController: _promptTextController,
+                              onSubmit: _send,
+                              setBid: _setBid,
+                              bidController: _bidController)
+                          .top(8),
                     ),
                     if (!_showPromptDetails)
                       Text('Your bid is $_bid XDAI per token.',
@@ -342,79 +357,6 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Widget _buildPromptRow(
-    TextEditingController promptTextController,
-    VoidCallback onSubmit,
-  ) {
-    return Column(
-      children: [
-        Row(
-          children: <Widget>[
-            IconButton.filled(
-              style: IconButton.styleFrom(
-                  backgroundColor: OrchidColors.new_purple),
-              onPressed: () {
-                setState(() {
-                  _showPromptDetails = !_showPromptDetails;
-                });
-              },
-              icon: _showPromptDetails
-                  ? const Icon(Icons.expand_more, color: Colors.white)
-                  : const Icon(Icons.chevron_right, color: Colors.white),
-            ),
-            Flexible(
-              child: OrchidTextField(
-                controller: promptTextController,
-                hintText: 'Enter a prompt',
-                contentPadding: EdgeInsets.only(bottom: 26, left: 16),
-                style: OrchidText.body1,
-                autoFocus: true,
-                onSubmitted: (String s) {
-                  onSubmit();
-                },
-              ).left(16),
-            ),
-            IconButton.filled(
-              style: IconButton.styleFrom(
-                  backgroundColor: OrchidColors.new_purple),
-              onPressed: onSubmit,
-              icon: const Icon(Icons.send_rounded, color: Colors.white),
-            ).left(16),
-          ],
-        ).padx(8),
-        if (_showPromptDetails) _buildBidForm(_setBid, _bidController),
-      ],
-    );
-  }
-
-  // prelude to widget
-  static Widget _buildBidForm(
-      ValueChanged<double?> setBid,
-      NumericValueFieldController bidController,
-      ) {
-    return Container(
-      padding: const EdgeInsets.all(10.0),
-      child: Column(
-        children: <Widget>[
-          Text('Your bid is the price per token in/out you will pay.',
-                  style: OrchidText.medium_20_050)
-              .top(8),
-          OrchidLabeledNumericField(
-            label: 'Bid',
-            onChange: setBid,
-            controller: bidController,
-          ).top(12)
-        ],
-      ),
-    );
-  }
-
-  void _submit() {
-    _account != null
-        ? _sendPrompt(promptTextController.text, promptTextController)
-        : _popAccountDialog();
-  }
-
   Widget _buildHeaderRow() {
     return Row(
       children: <Widget>[
@@ -422,11 +364,11 @@ class _ChatViewState extends State<ChatView> {
         const Spacer(),
         // Connect button
         ChatButton(
-            text: _connected ? 'Reroll' : 'Connect',
-            onPressed: connectProvider,
-            ).left(8),
+          text: _connected ? 'Reroll' : 'Connect',
+          onPressed: _connectProvider,
+        ).left(8),
         // Clear button
-        ChatButton(text: 'Clear Chat', onPressed: clearChat).left(8),
+        ChatButton(text: 'Clear Chat', onPressed: _clearChat).left(8),
         // Account button
         ChatButton(text: 'Account', onPressed: _popAccountDialog).left(8),
         // Settings button
