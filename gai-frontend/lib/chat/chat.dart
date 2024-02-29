@@ -1,9 +1,11 @@
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/chat/chat_settings_button.dart';
+import 'package:orchid/gui-orchid/lib/orchid/menu/orchid_chain_selector_menu.dart';
 import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
@@ -44,6 +46,7 @@ class _ChatViewState extends State<ChatView> {
   final _promptTextController = TextEditingController();
   final _bidController = NumericValueFieldController();
   bool _showPromptDetails = false;
+  Chain _selectedChain = Chains.Gnosis;
 
   @override
   void initState() {
@@ -64,7 +67,7 @@ class _ChatViewState extends State<ChatView> {
       version: 1,
       signerKey: TransientEthereumKey(imported: true, private: _signerKey!),
       funder: _funder!,
-      chainId: 100,
+      chainId: _selectedChain.chainId,
     );
   }
 
@@ -74,7 +77,7 @@ class _ChatViewState extends State<ChatView> {
 
   // This should be wrapped up in a provider.  See WIP in vpn app.
   void _accountChanged() async {
-    log("selectedAccountChanged");
+    log("accountChanged: $_account");
     _accountDetail?.cancel();
     _accountDetail = null;
     if (_account != null) {
@@ -101,7 +104,6 @@ class _ChatViewState extends State<ChatView> {
       _signerKey = null;
     }
     _accountChanged();
-    // _selectedAccountChanged();
     String? provider = params['provider'];
     if (provider != null) {
       _providers = [provider];
@@ -266,8 +268,6 @@ class _ChatViewState extends State<ChatView> {
     log('Sending message to provider $message');
   }
 
-
-
   void scrollMessagesDown() {
     // Dispatching it to the next frame seems to mitigate overlapping scrolls.
     Future.delayed(millis(50), () {
@@ -301,7 +301,9 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   Widget build(BuildContext context) {
-    var small = AppSize(context).narrowerThanWidth(500);
+    const minWidth = 550.0;
+    var showIcons = AppSize(context).narrowerThanWidth(700);
+    var showMinWidth = AppSize(context).narrowerThanWidth(minWidth);
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -319,11 +321,14 @@ class _ChatViewState extends State<ChatView> {
                 child: Column(
                   children: <Widget>[
                     // header row
-                    if (small)
+                    if (showMinWidth)
                       FittedBox(
-                          child: SizedBox(width: 500, child: _buildHeaderRow()))
+                          fit: BoxFit.scaleDown,
+                          child: SizedBox(
+                              width: minWidth,
+                              child: _buildHeaderRow(showIcons: showIcons)))
                     else
-                      _buildHeaderRow(),
+                      _buildHeaderRow(showIcons: showIcons),
                     // Messages area
                     Flexible(
                       child: ListView.builder(
@@ -357,11 +362,28 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Widget _buildHeaderRow() {
+  Widget _buildHeaderRow({required bool showIcons}) {
     return Row(
       children: <Widget>[
         SizedBox(height: 40, child: OrchidAsset.image.logo),
         const Spacer(),
+        // Chain selector
+        SizedBox(
+          height: 40,
+          width: showIcons ? 40 : 190,
+          child: OrchidChainSelectorMenu(
+            iconOnly: showIcons,
+            selected: _selectedChain,
+            onSelection: (chain) {
+              setState(() {
+                _selectedChain = chain;
+              });
+              _accountChanged();
+            },
+            enabled: true,
+          ),
+        ).left(8),
+
         // Connect button
         ChatButton(
           text: _connected ? 'Reroll' : 'Connect',
