@@ -206,7 +206,7 @@ class _ChatViewState extends State<ChatView> {
                           height: 40,
                           width: 190,
                           child: OrchidChainSelectorMenu(
-                            backgroundColor: OrchidColors.new_purple,
+                            backgroundColor: Colors.white.withOpacity(0.1),
                             selected: _selectedChain,
                             onSelection: (chain) {
                               setState(() {
