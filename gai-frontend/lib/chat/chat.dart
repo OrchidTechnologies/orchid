@@ -187,51 +187,72 @@ class _ChatViewState extends State<ChatView> {
       // Width here is effectively a max width and prevents dialog resizing
       width: 500,
       child: IntrinsicHeight(
-        child: OrchidTitledPanel(
-          highlight: false,
-          opaque: true,
-          titleText: "Set your Orchid account",
-          onDismiss: () {
-            Navigator.pop(context);
-          },
-          body: Column(
-            children: [
-              // Funder field
-              OrchidLabeledAddressField(
-                label: 'Funder Address',
-                onChange: (EthereumAddress? s) {
-                  setState(() {
-                    _funder = s;
-                  });
-                  _accountChanged();
+        child: ListenableBuilder(
+            listenable: _accountDetailNotifier,
+            builder: (context, child) {
+              return OrchidTitledPanel(
+                highlight: false,
+                opaque: true,
+                titleText: "Set your Orchid account",
+                onDismiss: () {
+                  Navigator.pop(context);
                 },
-                controller: _funderFieldController,
-              ),
-              // Signer field
-              OrchidLabeledTextField(
-                label: 'Signer Key',
-                controller: _signerFieldController,
-                hintText: '0x...',
-                onChanged: (String s) {
-                  setState(() {
-                    try {
-                      _signerKey = BigInt.parse(s);
-                    } catch (e) {
-                      _signerKey = null;
-                    }
-                  });
-                  _accountChanged();
-                },
-              ).top(16),
-              // Account card
-              ListenableBuilder(
-                  listenable: _accountDetailNotifier,
-                  builder: (context, child) {
-                    return AccountCard(accountDetail: _accountDetail).top(20);
-                  }),
-            ],
-          ).pad(24),
-        ),
+                body: Column(
+                  children: [
+                    // Chain selector
+                    Row(
+                      children: [
+                        SizedBox(
+                          height: 40,
+                          width: 190,
+                          child: OrchidChainSelectorMenu(
+                            backgroundColor: OrchidColors.new_purple,
+                            selected: _selectedChain,
+                            onSelection: (chain) {
+                              setState(() {
+                                _selectedChain = chain;
+                              });
+                              _accountChanged();
+                            },
+                            enabled: true,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Funder field
+                    OrchidLabeledAddressField(
+                      label: 'Funder Address',
+                      onChange: (EthereumAddress? s) {
+                        setState(() {
+                          _funder = s;
+                        });
+                        _accountChanged();
+                      },
+                      controller: _funderFieldController,
+                    ).top(16),
+                    // Signer field
+                    OrchidLabeledTextField(
+                      label: 'Signer Key',
+                      controller: _signerFieldController,
+                      hintText: '0x...',
+                      onChanged: (String s) {
+                        setState(() {
+                          try {
+                            _signerKey = BigInt.parse(s);
+                          } catch (e) {
+                            _signerKey = null;
+                          }
+                        });
+                        _accountChanged();
+                      },
+                    ).top(16),
+                    // Account card
+                    AccountCard(accountDetail: _accountDetail).top(20),
+                  ],
+                ).pad(24),
+              );
+            }),
       ),
     );
   }
@@ -301,7 +322,7 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   Widget build(BuildContext context) {
-    const minWidth = 550.0;
+    const minWidth = 500.0;
     var showIcons = AppSize(context).narrowerThanWidth(700);
     var showMinWidth = AppSize(context).narrowerThanWidth(minWidth);
     return Scaffold(
@@ -367,23 +388,6 @@ class _ChatViewState extends State<ChatView> {
       children: <Widget>[
         SizedBox(height: 40, child: OrchidAsset.image.logo),
         const Spacer(),
-        // Chain selector
-        SizedBox(
-          height: 40,
-          width: showIcons ? 40 : 190,
-          child: OrchidChainSelectorMenu(
-            iconOnly: showIcons,
-            selected: _selectedChain,
-            onSelection: (chain) {
-              setState(() {
-                _selectedChain = chain;
-              });
-              _accountChanged();
-            },
-            enabled: true,
-          ),
-        ).left(8),
-
         // Connect button
         ChatButton(
           text: _connected ? 'Reroll' : 'Connect',

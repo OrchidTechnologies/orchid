@@ -17,14 +17,17 @@ class OrchidChainSelectorMenu extends StatelessWidget {
   final List<Chain> chains =
       Chains.map.values.where((e) => e != Chains.GanacheTest).toList();
 
-  OrchidChainSelectorMenu({
-    Key? key,
-    this.selected,
-    required this.onSelection,
-    this.iconOnly = false,
-    this.enabled = true,
-    this.width = OrchidSelectorMenu.DEFAULT_WIDTH
-  }) : super(key: key);
+  final Color? backgroundColor;
+
+  OrchidChainSelectorMenu(
+      {Key? key,
+      this.selected,
+      required this.onSelection,
+      this.iconOnly = false,
+      this.enabled = true,
+      this.width = OrchidSelectorMenu.DEFAULT_WIDTH,
+      this.backgroundColor})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +47,7 @@ class OrchidChainSelectorMenu extends StatelessWidget {
       width: width,
       // support testing
       highlightSelected: selected?.isKnown ?? true,
+      backgroundColor: backgroundColor,
     );
   }
 }

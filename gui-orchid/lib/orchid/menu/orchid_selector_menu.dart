@@ -26,10 +26,11 @@ class OrchidSelectorMenu<T> extends StatefulWidget {
 
   // highlight the selected item in the menu
   final bool highlightSelected;
+  final Color? backgroundColor;
 
   static const double DEFAULT_WIDTH = 273.0;
 
-  OrchidSelectorMenu({
+  const OrchidSelectorMenu({
     Key? key,
     this.selected,
     this.onSelection,
@@ -42,6 +43,7 @@ class OrchidSelectorMenu<T> extends StatefulWidget {
     this.iconForItem,
     required this.titleForItem,
     this.highlightSelected = true,
+    this.backgroundColor,
   }) : super(key: key);
 
   @override
@@ -58,6 +60,7 @@ class _OrchidSelectorMenuState<T> extends State<OrchidSelectorMenu<T>> {
   Widget build(BuildContext context) {
     return OrchidPopupMenuButton<T>(
       // disabledAppearance: !widget.enabled,
+      backgroundColor: widget.backgroundColor,
       width: _width,
       height: 40,
       selected: _menuOpen,
@@ -84,12 +87,13 @@ class _OrchidSelectorMenuState<T> extends State<OrchidSelectorMenu<T>> {
   }
 
   Widget _buildTitleUnselected(BuildContext context) {
-    if (widget.titleIconOnly)
+    if (widget.titleIconOnly) {
       return FittedBox(
         fit: BoxFit.scaleDown,
         child:
             SizedBox.square(dimension: 25, child: widget.titleIconUnselected),
       );
+    }
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
