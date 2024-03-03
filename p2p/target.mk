@@ -143,6 +143,8 @@ cflags/$(pwd/secp256k1)/ += -I$(pwd/secp256k1)
 cflags/$(pwd/secp256k1)/ += -I$(pwd/secp256k1)/src
 cflags/$(pwd/secp256k1)/ += -Wno-unused-function
 
+cflags += -DSECP256K1_STATIC
+
 cflags += -DENABLE_MODULE_RECOVERY
 cflags += -DENABLE_MODULE_ECDH
 cflags += -DECMULT_WINDOW_SIZE=15
