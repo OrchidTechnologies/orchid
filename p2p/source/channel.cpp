@@ -27,7 +27,6 @@
 
 #include "channel.hpp"
 #include "peer.hpp"
-#include "pirate.hpp"
 #include "tube.hpp"
 
 namespace orc {
@@ -161,23 +160,6 @@ struct P {
     }
 };
 
-struct SctpDataChannel$SendDataMessage { typedef bool (webrtc::SctpDataChannel::*type)(const webrtc::DataBuffer &, bool); };
-template struct Pirate<SctpDataChannel$SendDataMessage, &webrtc::SctpDataChannel::SendDataMessage>;
-
-struct SctpDataChannel$controller_ { typedef webrtc::SctpDataChannelControllerInterface *const (webrtc::SctpDataChannel::*type); };
-template struct Pirate<SctpDataChannel$controller_, &webrtc::SctpDataChannel::controller_>;
-
-struct DataChannelController$DataChannelSendData { typedef bool (webrtc::DataChannelController::*type)(int, const webrtc::SendDataParams &, const rtc::CopyOnWriteBuffer &, cricket::SendDataResult *); };
-template struct Pirate<DataChannelController$DataChannelSendData, &webrtc::DataChannelController::DataChannelSendData>;
-
-struct DataChannelController$network_thread { typedef rtc::Thread *(webrtc::DataChannelController::*type)() const; };
-template struct Pirate<DataChannelController$network_thread, &webrtc::DataChannelController::network_thread>;
-
-#if 0
-struct SctpDataChannelTransport$sctp_transport_ { typedef cricket::SctpTransportInternal *const (webrtc::SctpDataChannelTransport::*type); };
-template struct Pirate<SctpDataChannelTransport$sctp_transport_, &webrtc::SctpDataChannelTransport::sctp_transport_>;
-#endif
-
 task<void> Channel::Send(const Buffer &data) {
     Trace("WebRTC", true, false, data);
 
@@ -185,71 +167,11 @@ task<void> Channel::Send(const Buffer &data) {
     rtc::CopyOnWriteBuffer buffer(size);
     data.copy(buffer.MutableData(), size);
 
-#if 1
-    static const webrtc::SendDataParams params([]() {
-        webrtc::SendDataParams params;
-        params.type = webrtc::DataMessageType::kBinary;
-        params.ordered = false;
-        params.max_rtx_count = 0;
-        return params;
-    }());
-#endif
-
-#if 0
-    co_await Post([&]() {
-        orc_assert(channel_ != nullptr);
-#if 0
-        if (channel_->buffered_amount() == 0)
-            channel_->Send({buffer, true});
-#else
-        const auto sctp(reinterpret_cast<webrtc::SctpDataChannel *const *>(channel_.get() + 1)[1]);
-#if 0
-        sctp->Send({buffer, true});
-#else
-        if (sctp->state() != webrtc::DataChannelInterface::kOpen)
-            return;
-#if 0
-        if (!(sctp->*Loot<SctpDataChannel$SendDataMessage>::pointer)({buffer, true}, false))
-            return;
-#else
-        const auto provider(sctp->*Loot<SctpDataChannel$controller_>::pointer);
-        cricket::SendDataResult result;
-#if 0
-        provider->SendData(sctp->id(), params, buffer, &result);
-#else
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
-        const auto controller(static_cast<webrtc::DataChannelController *>(provider));
-        (controller->*Loot<DataChannelController$DataChannelSendData>::pointer)(sctp->id(), params, buffer, &result);
-#endif
-#endif
-#endif
-#endif
-    });
-#else
-    // XXX: is this safe?
     orc_assert(channel_ != nullptr);
+    if (channel_->buffered_amount() == 0)
+        channel_->Send({buffer, true});
 
-    const auto sctp(reinterpret_cast<webrtc::SctpDataChannel *const *>(channel_.get() + 1)[1]);
-    const auto provider(sctp->*Loot<SctpDataChannel$controller_>::pointer);
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
-    const auto controller(static_cast<webrtc::DataChannelController *>(provider));
-
-    co_await Post([&]() {
-        const auto interface(controller->data_channel_transport());
-        if (!interface->IsReadyToSend()) {
-            orc_trace();
-            return;
-        }
-#if 1 // XXX
-        interface->SendData(sctp->id(), params, buffer);
-#else
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
-        const auto transport(static_cast<webrtc::SctpDataChannelTransport *>(interface));
-        cricket::SendDataResult result;
-        (transport->*Loot<SctpDataChannelTransport$sctp_transport_>::pointer)->SendData(sctp->id(), params, buffer, &result);
-#endif
-    }, *(controller->*Loot<DataChannelController$network_thread>::pointer)());
-#endif
+    co_return;
 }
 
 task<std::string> Description(const S<Base> &base, std::vector<std::string> ice) {

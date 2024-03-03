@@ -19,12 +19,18 @@ cflags += -I$(pwd)/webrtc
 webrtc := 
 
 
+# XXX: wrapping_async_dns_resolver.cc should have been deleted in 24510d43dccc88a47e2cd139b2190e25d4c7b700
 webrtc += $(filter-out \
     %/create_peerconnection_factory.cc \
+    %/enable_media.cc \
+    %/enable_media_with_defaults.cc \
     %/field_trials_registry.cc \
+    %/frame_transformer_factory.cc \
+    %/wrapping_async_dns_resolver.cc \
 ,$(wildcard $(pwd)/webrtc/api/*.cc))
 
 webrtc += $(wildcard $(pwd)/webrtc/api/crypto/*.cc)
+webrtc += $(wildcard $(pwd)/webrtc/api/task_queue/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/transport/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/transport/media/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/api/transport/rtp/*.cc)
@@ -32,17 +38,18 @@ webrtc += $(wildcard $(pwd)/webrtc/api/units/*.cc)
 
 webrtc += $(pwd)/webrtc/api/field_trials_registry.cc
 
+webrtc += $(pwd)/webrtc/api/audio_codecs/audio_codec_pair_id.cc
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
+
 webrtc += $(pwd)/webrtc/api/call/transport.cc
+webrtc += $(pwd)/webrtc/api/environment/environment_factory.cc
 webrtc += $(pwd)/webrtc/api/numerics/samples_stats_counter.cc
 
 webrtc += $(pwd)/webrtc/api/rtc_event_log/rtc_event.cc
 webrtc += $(pwd)/webrtc/api/rtc_event_log/rtc_event_log.cc
 
-webrtc += $(pwd)/webrtc/api/task_queue/pending_task_safety_flag.cc
-webrtc += $(pwd)/webrtc/api/task_queue/task_queue_base.cc
-
 webrtc += $(pwd)/webrtc/api/video/color_space.cc
+webrtc += $(pwd)/webrtc/api/video/encoded_frame.cc
 webrtc += $(pwd)/webrtc/api/video/encoded_image.cc
 webrtc += $(pwd)/webrtc/api/video/hdr_metadata.cc
 webrtc += $(pwd)/webrtc/api/video/video_bitrate_allocation.cc
@@ -55,6 +62,7 @@ webrtc += $(pwd)/webrtc/api/video_codecs/av1_profile.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/h264_profile_level_id.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/scalability_mode.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/sdp_video_format.cc
+webrtc += $(pwd)/webrtc/api/video_codecs/simulcast_stream.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/video_codec.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/vp9_profile.cc
 
@@ -98,12 +106,14 @@ webrtc += $(wildcard $(pwd)/webrtc/modules/congestion_controller/rtp/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/modules/pacing/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/modules/remote_bitrate_estimator/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/include/*.cc)
-webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/source/*.cc)
+
+webrtc += $(filter-out \
+    %_h265.cc \
+,$(wildcard $(pwd)/webrtc/modules/rtp_rtcp/source/*.cc))
+
 webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/source/deprecated/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/modules/rtp_rtcp/source/rtcp_packet/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/modules/utility/source/*.cc)
-
-webrtc += $(pwd)/webrtc/modules/utility/maybe_worker_thread.cc
 
 webrtc += $(pwd)/webrtc/modules/video_coding/chain_diff_calculator.cc
 webrtc += $(pwd)/webrtc/modules/video_coding/encoded_frame.cc
@@ -190,11 +200,11 @@ webrtc := $(filter-out $(pwd)/webrtc/rtc_base/system/%,$(webrtc))
 source += $(pwd)/webrtc/rtc_base/system/file_wrapper.cc
 
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/boringssl_%.cc,$(webrtc))
-webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_gcd.cc,$(webrtc))
-webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_libevent.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/%_gcd.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/%_libevent.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/%_libevent_experiment.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/mac_%.cc,$(webrtc))
-webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_stdlib.cc,$(webrtc))
-webrtc := $(filter-out $(pwd)/webrtc/rtc_base/%_win.cc,$(webrtc))
+webrtc := $(filter-out $(pwd)/webrtc/%_win.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/win/%.cc,$(webrtc))
 webrtc := $(filter-out $(pwd)/webrtc/rtc_base/win32%.cc,$(webrtc))
 

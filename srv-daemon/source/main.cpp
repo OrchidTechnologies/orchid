@@ -100,7 +100,7 @@ task<bool> Symmetric(const S<Base> &base) {
             const auto ice(ices->at(i));
             orc_assert(ice != nullptr);
             const auto &candidate(ice->candidate());
-            if (candidate.type() != "stun")
+            if (!candidate.is_stun())
                 continue;
             if (!reflexive.emplace(candidate.related_address(), candidate.address()).second)
                 co_return true;

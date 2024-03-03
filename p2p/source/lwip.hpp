@@ -11,13 +11,35 @@
 #ifndef RTC_BASE_LOGICAL_SOCKET_SERVER_H_
 #define RTC_BASE_LOGICAL_SOCKET_SERVER_H_
 
+#include "api/async_dns_resolver.h"
+#include "api/units/time_delta.h"
+#include "rtc_base/socket.h"
+#include "rtc_base/socket_address.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
+
+#if 1
+#if 0
+// On Linux, use epoll.
+
+#define WEBRTC_USE_EPOLL 1
+#elif 0
+// Fuchsia implements select and poll but not epoll, and testing shows that poll
+// is faster than select.
+#include <poll.h>
+
+#define WEBRTC_USE_POLL 1
+#else
+// On other POSIX systems, use select by default.
+#endif  // WEBRTC_LINUX, WEBRTC_FUCHSIA
+#endif  // WEBRTC_POSIX
+
 #include <array>
+#include <cstdint>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "rtc_base/async_resolver.h"
-#include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/socket_server.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -51,7 +73,7 @@ class Dispatcher {
   virtual void OnEvent(uint32_t ff, int err) = 0;
 #if 0
   virtual WSAEVENT GetWSAEvent() = 0;
-  virtual SOCKET_ GetSocket() = 0;
+  virtual SOCKET GetSocket() = 0;
   virtual bool CheckSignalClose() = 0;
 #elif 1
   virtual int GetDescriptor() = 0;
@@ -86,15 +108,16 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   static constexpr int kForeverMs = -1;
 
   static int ToCmsWait(webrtc::TimeDelta max_wait_duration);
+
 #if 1
   bool WaitSelect(int cmsWait, bool process_io);
-#endif  // WEBRTC_POSIX
+
 #if 0
   void AddEpoll(Dispatcher* dispatcher, uint64_t key);
   void RemoveEpoll(Dispatcher* dispatcher);
   void UpdateEpoll(Dispatcher* dispatcher, uint64_t key);
   bool WaitEpoll(int cmsWait);
-  bool WaitPoll(int cmsWait, Dispatcher* dispatcher);
+  bool WaitPollOneDispatcher(int cmsWait, Dispatcher* dispatcher);
 
   // This array is accessed in isolation by a thread calling into Wait().
   // It's useless to use a SequenceChecker to guard it because a socket
@@ -102,7 +125,16 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   // to have to reset the sequence checker on Wait calls.
   std::array<epoll_event, kNumEpollEvents> epoll_events_;
   const int epoll_fd_ = INVALID_SOCKET;
-#endif  // WEBRTC_USE_EPOLL
+
+#elif 0
+  void AddPoll(Dispatcher* dispatcher, uint64_t key);
+  void RemovePoll(Dispatcher* dispatcher);
+  void UpdatePoll(Dispatcher* dispatcher, uint64_t key);
+  bool WaitPoll(int cmsWait, bool process_io);
+
+#endif  // WEBRTC_USE_EPOLL, WEBRTC_USE_POLL
+#endif  // WEBRTC_POSIX
+
   // uint64_t keys are used to uniquely identify a dispatcher in order to avoid
   // the ABA problem during the epoll loop (a dispatcher being destroyed and
   // replaced by one with the same address).
@@ -113,9 +145,9 @@ class RTC_EXPORT LwipSocketServer : public SocketServer {
   std::unordered_map<Dispatcher*, uint64_t> key_by_dispatcher_
       RTC_GUARDED_BY(crit_);
   // A list of dispatcher keys that we're interested in for the current
-  // lwip_select() or WSAWaitForMultipleEvents() loop. Again, used to avoid the ABA
-  // problem (a socket being destroyed and a new one created with the same
-  // handle, erroneously receiving the events from the destroyed socket).
+  // lwip_select(), poll(), or WSAWaitForMultipleEvents() loop. Again, used to avoid
+  // the ABA problem (a socket being destroyed and a new one created with the
+  // same handle, erroneously receiving the events from the destroyed socket).
   //
   // Kept as a member variable just for efficiency.
   std::vector<uint64_t> current_dispatcher_keys_;
@@ -158,10 +190,12 @@ class LwipSocket : public Socket, public sigslot::has_slots<> {
              const SocketAddress& addr) override;
 
   int Recv(void* buffer, size_t length, int64_t* timestamp) override;
+  // TODO(webrtc:15368): Deprecate and remove.
   int RecvFrom(void* buffer,
                size_t length,
                SocketAddress* out_addr,
                int64_t* timestamp) override;
+  int RecvFrom(ReceiveBuffer& buffer) override;
 
   int Listen(int backlog) override;
   Socket* Accept(SocketAddress* out_addr) override;
@@ -169,6 +203,8 @@ class LwipSocket : public Socket, public sigslot::has_slots<> {
   int Close() override;
 
   SocketServer* socketserver() { return ss_; }
+
+  SOCKET GetSocketFD() const { return s_; }
 
  protected:
   int DoConnect(const SocketAddress& connect_addr);
@@ -192,7 +228,7 @@ class LwipSocket : public Socket, public sigslot::has_slots<> {
                        SocketAddress* out_addr,
                        int64_t* timestamp);
 
-  void OnResolveResult(AsyncResolverInterface* resolver);
+  void OnResolveResult(const webrtc::AsyncDnsResolverResult& resolver);
 
   void UpdateLastError();
   void MaybeRemapSendError();
@@ -211,7 +247,7 @@ class LwipSocket : public Socket, public sigslot::has_slots<> {
   mutable webrtc::Mutex mutex_;
   int error_ RTC_GUARDED_BY(mutex_);
   ConnState state_;
-  AsyncResolver* resolver_;
+  std::unique_ptr<webrtc::AsyncDnsResolverInterface> resolver_;
 
 #if !defined(NDEBUG)
   std::string dbg_addr_;
@@ -235,7 +271,7 @@ class SocketDispatcher : public Dispatcher, public LwipSocket {
 
 #if 0
   WSAEVENT GetWSAEvent() override;
-  SOCKET_ GetSocket() override;
+  SOCKET GetSocket() override;
   bool CheckSignalClose() override;
 #elif 1
   int GetDescriptor() override;

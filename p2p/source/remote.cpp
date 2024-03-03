@@ -34,6 +34,7 @@
 #include <lwip/udp.h>
 
 #include <p2p/base/basic_packet_socket_factory.h>
+#include <rtc_base/thread.h>
 
 #include "dns.hpp"
 #include "event.hpp"
