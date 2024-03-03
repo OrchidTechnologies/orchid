@@ -32,9 +32,9 @@ static const Float Ten5("100000");
 task<S<Updated<Prices>>> Oracle(unsigned milliseconds, S<Ethereum> ethereum) {
     co_return co_await Opened(Updating(milliseconds, [ethereum = std::move(ethereum)]() -> task<Prices> {
         const auto [gb1, oxt, xau] = *co_await Parallel(
-            Chainlink(*ethereum, "0x8bD3feF1abb94E6587fCC2C5Cb0931099D0893A0", 0.06, Ten5),
-            Chainlink(*ethereum, ChainlinkOXTUSD, 0.30, Ten8 * Ten18),
-            Chainlink(*ethereum, "0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6", 1800, Ten8 * Ten18)
+            Chainlink(*ethereum, "0x8bD3feF1abb94E6587fCC2C5Cb0931099D0893A0", 0.06*Ten5, Ten5),
+            Chainlink(*ethereum, ChainlinkOXTUSD, 0.15*Ten8, Ten8 * Ten18),
+            Chainlink(*ethereum, "0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6", 1800*Ten8, Ten8 * Ten18)
         );
 
         // XXX: our Chainlink aggregation can have its answer forged by either Chainlink swapping the oracle set
