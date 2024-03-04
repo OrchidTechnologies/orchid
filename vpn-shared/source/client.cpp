@@ -181,7 +181,7 @@ uint64_t Client::Benefit() {
 
 Float Client::Spent() {
     const auto locked(locked_());
-    orc_assert(locked->pending_.empty());
+    orc_assert_(locked->pending_.empty(), locked->pending_.size() << " pending ticket(s)");
     return locked->spent_;
 }
 
