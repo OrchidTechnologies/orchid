@@ -61,7 +61,6 @@ Channel::Channel(BufferDrain &drain, const S<Peer> &peer, rtc::scoped_refptr<web
     channel_(std::move(channel))
 {
     channel_->RegisterObserver(this);
-    peer_->channels_.insert(this);
 }
 
 Channel::Channel(BufferDrain &drain, const S<Peer> &peer, int id, const std::string &label, const std::string &protocol) :
@@ -91,23 +90,18 @@ task<Socket> Channel::Wire(BufferSunk &sunk, S<Base> base, Configuration configu
 }
 
 void Channel::OnStateChange() noexcept {
+    const auto state(channel_->state());
+    if (Verbose)
+        Log() << "OnStateChange(" << webrtc::DataChannelInterface::DataStateString(state) << ")" << std::endl;
     switch (channel_->state()) {
         case webrtc::DataChannelInterface::kConnecting:
-            if (Verbose)
-                Log() << "OnStateChange(kConnecting)" << std::endl;
             break;
         case webrtc::DataChannelInterface::kOpen:
-            if (Verbose)
-                Log() << "OnStateChange(kOpen)" << std::endl;
             opened_();
             break;
         case webrtc::DataChannelInterface::kClosing:
-            if (Verbose)
-                Log() << "OnStateChange(kClosing)" << std::endl;
             break;
         case webrtc::DataChannelInterface::kClosed:
-            if (Verbose)
-                Log() << "OnStateChange(kClosed)" << std::endl;
             Stop();
             break;
     }
@@ -136,21 +130,19 @@ task<void> Channel::Open() noexcept {
 task<void> Channel::Shut() noexcept {
     co_await Post([&]() {
         channel_->Close();
+        channel_->UnregisterObserver();
 
-        // XXX: this should be checking if Peer has a data_transport
-        if (channel_->id() == -1)
+        const auto state(channel_->state());
+        if (Verbose)
+            Log() << "closed channel in state " << webrtc::DataChannelInterface::DataStateString(state) << std::endl;
+        if (state != webrtc::DataChannelInterface::kClosed)
             Stop();
+
+        channel_ = nullptr;
+        peer_ = nullptr;
     });
 
     co_await Pump::Shut();
-
-    co_await Post([&]() {
-        channel_->UnregisterObserver();
-        channel_ = nullptr;
-
-        peer_->channels_.erase(this);
-        peer_ = nullptr;
-    });
 }
 
 template <typename Type_, Type_ Pointer_>

@@ -99,102 +99,17 @@ void Peer::OnRenegotiationNeeded() noexcept {
 }
 
 void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept {
-    switch (state) {
-        case webrtc::PeerConnectionInterface::kIceConnectionNew:
-            if (Verbose)
-                Log() << "OnIceConnectionChange(kIceConnectionNew)" << std::endl;
-            break;
-        case webrtc::PeerConnectionInterface::kIceConnectionChecking:
-            if (Verbose)
-                Log() << "OnIceConnectionChange(kIceConnectionChecking)" << std::endl;
-            break;
-        case webrtc::PeerConnectionInterface::kIceConnectionConnected:
-            if (Verbose)
-                Log() << "OnIceConnectionChange(kIceConnectionConnected)" << std::endl;
-            break;
-        case webrtc::PeerConnectionInterface::kIceConnectionCompleted:
-            if (Verbose)
-                Log() << "OnIceConnectionChange(kIceConnectionCompleted)" << std::endl;
-            break;
-        case webrtc::PeerConnectionInterface::kIceConnectionDisconnected:
-            if (Verbose)
-                Log() << "OnIceConnectionChange(kIceConnectionDisconnected)" << std::endl;
-            break;
-
-        case webrtc::PeerConnectionInterface::kIceConnectionFailed:
-            if (Verbose)
-                Log() << "OnIceConnectionChange(kIceConnectionFailed)" << std::endl;
-            // this should be handled in OnStandardizedIceConnectionChange
-        break;
-
-        case webrtc::PeerConnectionInterface::kIceConnectionClosed:
-            if (Verbose)
-                Log() << "OnIceConnectionChange(kIceConnectionClosed)" << std::endl;
-            closed_();
-        break;
-
-        case webrtc::PeerConnectionInterface::kIceConnectionMax:
-        default:
-            orc_insist(false);
-        break;
-    }
+    if (Verbose)
+        Log() << "OnIceConnectionChange(" << webrtc::PeerConnectionInterface::AsString(state) << ")" << std::endl;
+    if (state == webrtc::PeerConnectionInterface::kIceConnectionClosed)
+        closed_();
 }
 
 void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept {
-    switch (state) {
-        case webrtc::PeerConnectionInterface::kIceConnectionNew:
-            if (Verbose)
-                Log() << "OnStandardizedIceConnectionChange(kIceConnectionNew)" << std::endl;
-            break;
-        case webrtc::PeerConnectionInterface::kIceConnectionChecking:
-            if (Verbose)
-                Log() << "OnStandardizedIceConnectionChange(kIceConnectionChecking)" << std::endl;
-            break;
-        case webrtc::PeerConnectionInterface::kIceConnectionConnected:
-            if (Verbose)
-                Log() << "OnStandardizedIceConnectionChange(kIceConnectionConnected)" << std::endl;
-            break;
-        case webrtc::PeerConnectionInterface::kIceConnectionCompleted:
-            if (Verbose)
-                Log() << "OnStandardizedIceConnectionChange(kIceConnectionCompleted)" << std::endl;
-            break;
-        case webrtc::PeerConnectionInterface::kIceConnectionDisconnected:
-            if (Verbose)
-                Log() << "OnStandardizedIceConnectionChange(kIceConnectionDisconnected)" << std::endl;
-            break;
-
-        case webrtc::PeerConnectionInterface::kIceConnectionFailed:
-            if (Verbose)
-                Log() << "OnStandardizedIceConnectionChange(kIceConnectionFailed)" << std::endl;
-
-            // you can't close a PeerConnection if it is blocked in a signal
-            Spawn([self = shared_from_this()]() mutable noexcept -> task<void> {
-                co_await Post([self = std::move(self)]() mutable {
-                    for (auto current(self->channels_.begin()); current != self->channels_.end(); ) {
-                        auto next(current);
-                        ++next;
-                        (*current)->Stop("kIceConnectionClosed");
-                        current = next;
-                    }
-
-                    self->Stop();
-                    self = nullptr;
-                });
-            }, __FUNCTION__);
-        break;
-
-        case webrtc::PeerConnectionInterface::kIceConnectionClosed:
-            if (Verbose)
-                Log() << "OnStandardizedIceConnectionChange(kIceConnectionClosed)" << std::endl;
-            // this is (annoyingly) only signaled via OnIceConnectionChange
-            orc_insist(false);
-        break;
-
-        case webrtc::PeerConnectionInterface::kIceConnectionMax:
-        default:
-            orc_insist(false);
-        break;
-    }
+    if (Verbose)
+        Log() << "OnStandardizedIceConnectionChange(" << webrtc::PeerConnectionInterface::AsString(state) << ")" << std::endl;
+    // this is (annoyingly) only signaled via OnIceConnectionChange
+    orc_insist(state != webrtc::PeerConnectionInterface::kIceConnectionClosed);
 }
 
 void Peer::OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState state) noexcept {

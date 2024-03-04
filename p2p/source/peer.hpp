@@ -81,9 +81,6 @@ class Peer :
     const S<Base> base_;
     const rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_;
 
-    // XXX: do I need to lock this?
-    std::set<Channel *> channels_;
-
     Event gathered_;
     std::vector<std::string> gathering_;
     std::vector<std::string> candidates_;
