@@ -161,7 +161,8 @@ task<void> Channel::Send(const Buffer &data) {
 
     orc_assert(channel_ != nullptr);
     if (channel_->buffered_amount() == 0)
-        channel_->Send({buffer, true});
+        // XXX: consider blocking this fiber on this error result?
+        channel_->SendAsync({buffer, true}, [](webrtc::RTCError){});
 
     co_return;
 }
