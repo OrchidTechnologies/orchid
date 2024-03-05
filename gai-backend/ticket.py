@@ -109,7 +109,7 @@ class Ticket:
             return False
         return True
 
-    def face_value(self):
+    def value(self):
         return self.amount * self.ratio / uint64
 
     def print_ticket(self):
@@ -117,4 +117,8 @@ class Ticket:
         nonce = (self.packed0 >> 128) & uint64
         funder = addrtype & (self.packed1 >> 1)
         ratio = uint64 & (self.packed1 >> 161)
+        print('Print_ticket():')
+        print(f'Face Value: {amount}')
+        print(f'Funder: {funder}')
+        print(f'Ratio: {ratio}')
 

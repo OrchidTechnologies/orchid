@@ -7,11 +7,13 @@ import requests
 import websockets
 
 class jobs:
-    def __init__(self, model, url):
+    def __init__(self, model, url, llmkey, llmparams):
         self.queue = asyncio.PriorityQueue()
         self.sessions = {}
         self.model = model
         self.url = url
+        self.llmkey = llmkey
+        self.llmparams = llmparams
 
     def get_queues(self, id):
         squeue = asyncio.Queue(maxsize=10)
@@ -31,10 +33,15 @@ class jobs:
             id, bid, job = job_params
             await self.sessions[id]['send'].put(json.dumps({'type': 'started'}))
             result = ""
-            data = {'model': self.model, "temperature": 0.7, "top_p": 1, 
-                    "max_tokens": 4000, "stream": False, "safe_prompt": False, "random_seed": None, 
-                    'messages': [{'role': 'user', 'content': job['prompt']}]}
-            r = requests.post(self.url, data=json.dumps(data))
+            data = {'model': self.model, 'messages': [{'role': 'user', 'content': job['prompt']}]}
+            print(f'data: {data}')
+            print(f'llmparams: {self.llmparams}')
+            data = {**data, **self.llmparams}
+            headers =  {"Content-Type":"application/json"}
+            print(f'llmkey: {self.llmkey}')
+            if not self.llmkey is None:
+              headers["Authorization"] = f"Bearer {self.llmkey}"            
+            r = requests.post(self.url, data=json.dumps(data), headers=headers)
             result = r.json()
             print(result)
             if result['object'] != 'chat.completion':
