@@ -29,23 +29,20 @@ class jobs:
     async def process_jobs(self):
         while True:
             priority, job_params = await self.queue.get()
-            print(f"process_jobs: got job: {job_params}")
             id, bid, job = job_params
             await self.sessions[id]['send'].put(json.dumps({'type': 'started'}))
             result = ""
             data = {'model': self.model, 'messages': [{'role': 'user', 'content': job['prompt']}]}
-            print(f'data: {data}')
-            print(f'llmparams: {self.llmparams}')
             data = {**data, **self.llmparams}
-            headers =  {"Content-Type":"application/json"}
-            print(f'llmkey: {self.llmkey}')
+            headers =  {"Content-Type": "application/json"}
             if not self.llmkey is None:
               headers["Authorization"] = f"Bearer {self.llmkey}"            
             r = requests.post(self.url, data=json.dumps(data), headers=headers)
             result = r.json()
-            print(result)
             if result['object'] != 'chat.completion':
-              print('*** Error from llm')
+              print('*** process_jobs: Error from llm')
+              print(f"from job: {job_params}")
+              print(result)
               continue
             response = result['choices'][0]['message']['content']
             model = result['model']
