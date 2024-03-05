@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'package:orchid/api/orchid_crypto.dart';
@@ -9,6 +10,9 @@ import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 
 
 class ProviderConnection {
+  final maxuint256 = BigInt.two.pow(256) - BigInt.one;
+  final maxuint64 = BigInt.two.pow(64) - BigInt.one;
+  final wei = BigInt.from(10).pow(18);
   var _providerChannel;
   Function onMessage;
   Function onChat;
@@ -20,7 +24,6 @@ class ProviderConnection {
   EthereumAddress contract;
   String url;
   AccountDetail accountDetail;
-  var _faceValue = BigInt.from(50000000000000000);
 
   ProviderConnection({required  this.onMessage, required this.onConnect,
                       required this.onChat, required this.onDisconnect, required this.onError,
@@ -44,30 +47,40 @@ class ProviderConnection {
     onConnect();
   }
 
+  bool validInvoice(invoice) {
+    return invoice.containsKey('amount') && invoice.containsKey('commit') &&
+           invoice.containsKey('recipient');
+  }
+
   void payInvoice(Map<String, dynamic> invoice) {
     var payment;
-    assert(invoice.containsKey('recipient'));
+    if (!validInvoice(invoice)) {
+      onError('Invalid invoice ${invoice}');
+      return;
+    }
     assert(accountDetail.funder != null);
+    final balance = accountDetail.lotteryPot?.balance.intValue ?? BigInt.zero;
+    final deposit = accountDetail.lotteryPot?.deposit.intValue ?? BigInt.zero;
+    final faceval = bigIntMin(balance, (wei * deposit) ~/ (wei * BigInt.two));
     final data = BigInt.zero;
-    final due = invoice['amount'];
+    final due = BigInt.parse(invoice['amount']);
     final lotaddr = contract;
     final token = EthereumAddress.zero;
-    final ratio = BigInt.parse('9223372036854775808');
+    final ratio = maxuint64 & (maxuint64 * due ~/ faceval);
     final commit = BigInt.parse(invoice['commit'] ?? '0x0');
     final recipient = invoice['recipient'];
     final ticket = OrchidTicket(
       data: data,
       lotaddr: lotaddr,
       token: token,
-      amount: _faceValue,
+      amount: faceval,
       ratio: ratio,
-      funder: accountDetail.account.funder, // ?? EthereumAddress.zero,
+      funder: accountDetail.account.funder,
       recipient: EthereumAddress.from(recipient),
       commitment: commit,
       privateKey: accountDetail.account.signerKey.private,
       millisecondsSinceEpoch: 1708638722494,
     );
-    ticket.printTicket();
     payment = '{"type": "payment", "tickets": ["${ticket.serializeTicket()}"]}';
     onInternalMessage('Client: $payment');
     sendProviderMessage(payment);
@@ -98,5 +111,12 @@ class ProviderConnection {
   void dispose() {
     _providerChannel.sink.close;
     onDisconnect();
+  }
+
+  BigInt bigIntMin(BigInt a, BigInt b) {
+    if (a > b) {
+      return b;
+    }
+    return a;
   }
 }
