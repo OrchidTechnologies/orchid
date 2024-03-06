@@ -27,6 +27,7 @@
 
 #include "channel.hpp"
 #include "peer.hpp"
+#include "pirate.hpp"
 #include "tube.hpp"
 
 namespace orc {
@@ -152,6 +153,9 @@ struct P {
     }
 };
 
+struct SctpDataChannel$network_thread_ { typedef rtc::Thread *const (webrtc::SctpDataChannel::*type); };
+template struct Pirate<SctpDataChannel$network_thread_, &webrtc::SctpDataChannel::network_thread_>;
+
 task<void> Channel::Send(const Buffer &data) {
     Trace("WebRTC", true, false, data);
 
@@ -159,12 +163,21 @@ task<void> Channel::Send(const Buffer &data) {
     rtc::CopyOnWriteBuffer buffer(size);
     data.copy(buffer.MutableData(), size);
 
-    orc_assert(channel_ != nullptr);
-    if (channel_->buffered_amount() == 0)
-        // XXX: consider blocking this fiber on this error result?
-        channel_->SendAsync({buffer, true}, [](webrtc::RTCError){});
+    const auto channel(channel_);
+    orc_assert(channel != nullptr);
+    const auto sctp(static_cast<webrtc::SctpDataChannel *>(reinterpret_cast<void **>(channel.get())[3]));
 
-    co_return;
+    Transfer<webrtc::RTCError> writ;
+
+    co_await Post([&]() {
+        if (sctp->buffered_amount() != 0)
+            writ = webrtc::RTCError();
+        else
+            sctp->SendAsync({buffer, true}, [&](webrtc::RTCError error) {
+                writ = std::move(error); });
+    }, *(sctp->*Loot<SctpDataChannel$network_thread_>::pointer));
+
+    orc_assert((co_await *writ).ok());
 }
 
 task<std::string> Description(const S<Base> &base, std::vector<std::string> ice) {
