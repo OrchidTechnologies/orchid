@@ -4,11 +4,12 @@ import re
 import time
 import uuid
 from collections import OrderedDict
-import galois
 import numpy as np
+from numpy._typing import NDArray
 from tqdm import tqdm
 
 from encoding.chunks import ChunksReader, open_output_file
+from encoding.fields import FIELD_ELEMENT_SIZE_BYTES, get_field, symbols_to_bytes
 from encoding.twin_coding import rs_generator_matrix
 from storage.storage_model import NodeType, NodeType1
 from storage.repository import Repository
@@ -37,8 +38,10 @@ class NodeRecoveryClient(ChunksReader):
         self.output_path = output_path or f"decoded_{uuid.uuid4()}.dat"
         self.overwrite = overwrite
 
-        # chunk size is 1 symbol (byte) from each file
-        super().__init__(file_map=file_map, chunk_size=1)
+        # Chunk size is one symbol from each file
+        super().__init__(file_map=file_map,
+                         num_elements=1,
+                         element_size=FIELD_ELEMENT_SIZE_BYTES)
 
     # Map recovery files in a directory. Exactly k recovery files should be present.
     @staticmethod
@@ -61,13 +64,13 @@ class NodeRecoveryClient(ChunksReader):
 
     def recover_node(self):
         print(f"Recovering node to: {self.output_path}")
-        GF = galois.GF(2 ** 8)
+        GF = get_field()
         G = rs_generator_matrix(GF, self.recovery_source_node_type.k, self.recovery_source_node_type.n)
         with open_output_file(output_path=self.output_path, overwrite=self.overwrite) as out:
             start = time.time()
             with tqdm(total=self.num_chunks, desc='Recovery', unit='chunk') as pbar:
                 for ci in range(self.num_chunks):
-                    chunks: [np.ndarray] = self.get_chunks(ci)
+                    chunks: [NDArray[int]] = self.get_chunks_ints(ci)
                     # turn chunks into a single column vector
                     col = GF(np.concatenate(chunks))
 
@@ -75,10 +78,10 @@ class NodeRecoveryClient(ChunksReader):
                     # recovery source node type's encoding matrix.
                     g = G[:, self.files_indices]
                     ginv = np.linalg.inv(g)
-                    recovered = (col @ ginv).tobytes()
+                    recovered = col @ ginv
 
-                    # Write the data to the output file
-                    out.write(recovered)
+                    # Write the data (recovered symbols) to the output file at encoded field size.
+                    out.write(symbols_to_bytes(recovered, FIELD_ELEMENT_SIZE_BYTES))
 
                     # Progress bar
                     self.update_pbar(ci=ci, num_files=self.k, pbar=pbar, start=start)
@@ -86,27 +89,31 @@ class NodeRecoveryClient(ChunksReader):
 
 
 if __name__ == '__main__':
-    file = 'file_1KB.dat'
-    repo = Repository.default()
+    def main():
+        file = 'file_1MB.dat'
+        repo = Repository.default()
 
-    # Use recovery files generated for type 1 node index 0 to recover the lost data shard.
-    recovery_files_dir = repo.file_dir_path(file)
-    recover_node_type = 1
-    recover_node_index = 0
-    recovered_shard = repo.tmp_file_path(
-        f'recovered_{file}_type{recover_node_type}_node{recover_node_index}.dat')
+        # Use recovery files generated for type 1 node index 0 to recover the lost data shard.
+        recovery_files_dir = repo.file_dir_path(file)
+        recover_node_type = 1
+        recover_node_index = 0
+        recovered_shard = repo.tmp_file_path(
+            f'recovered_{file}_type{recover_node_type}_node{recover_node_index}.dat')
 
-    NodeRecoveryClient(
-        recovery_source_node_type=NodeType1(k=3, n=5, encoding='reed_solomon'),
-        file_map=NodeRecoveryClient.map_files(
-            files_dir=recovery_files_dir,
-            recover_node_type=recover_node_type,
-            recover_node_index=recover_node_index,
-            k=3),
-        output_path=recovered_shard,
-        overwrite=True
-    ).recover_node()
+        NodeRecoveryClient(
+            recovery_source_node_type=NodeType1(k=3, n=5, encoding='reed_solomon'),
+            file_map=NodeRecoveryClient.map_files(
+                files_dir=recovery_files_dir,
+                recover_node_type=recover_node_type,
+                recover_node_index=recover_node_index,
+                k=3),
+            output_path=recovered_shard,
+            overwrite=True
+        ).recover_node()
 
-    original_shard = repo.shard_path(file, node_type=1, node_index=0)
-    print("Passed" if filecmp.cmp(original_shard, recovered_shard) else "Failed")
-    ...
+        original_shard = repo.shard_path(file, node_type=1, node_index=0)
+        print("Passed" if filecmp.cmp(original_shard, recovered_shard) else "Failed")
+        ...
+
+
+    main()

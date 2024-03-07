@@ -1,8 +1,7 @@
 import time
-import galois
-from icecream import ic
 from tqdm import tqdm
 
+from encoding.fields import FIELD_ELEMENT_SIZE_BYTES, get_field, symbol_to_bytes
 from storage.renderable import Renderable
 from storage.storage_model import NodeType
 from storage.repository import Repository
@@ -33,7 +32,11 @@ class NodeRecoverySource(ChunkReader, Renderable):
             output_path: str = None,
             overwrite: bool = False
     ):
-        super().__init__(path=data_path, chunk_size=recover_node_type.k)
+        super().__init__(path=data_path,
+                         num_elements=recover_node_type.k,
+                         # The encoded shard source file contains elements of the full field size.
+                         element_size=FIELD_ELEMENT_SIZE_BYTES)
+
         recover_node_type.assert_reed_solomon()
         self.recover_node_type = recover_node_type
         assert recover_node_index < recover_node_type.n, "Recover node index must be less than n."
@@ -87,7 +90,7 @@ class NodeRecoverySource(ChunkReader, Renderable):
 
     # Generate the node recovery file for the client node
     def render(self):
-        GF = galois.GF(2 ** 8)
+        GF = get_field()
         # The encoding vector of the failed node is the i'th column of the generator matrix of its type.
         G = rs_generator_matrix(GF, self.recover_node_type.k, self.recover_node_type.n)
         encoding_vector = G[:, self.recover_node_index]
@@ -95,9 +98,9 @@ class NodeRecoverySource(ChunkReader, Renderable):
             start = time.time()
             with tqdm(total=self.num_chunks, desc='Gen Recovery', unit='chunk') as pbar:
                 for ci in range(self.num_chunks):
-                    chunk = GF(self.get_chunk(ci))
+                    chunk = GF(self.get_chunk_ints(ci))
                     symbol = encoding_vector @ chunk
-                    out.write(symbol)
+                    out.write(symbol_to_bytes(symbol, FIELD_ELEMENT_SIZE_BYTES))
                     self.update_pbar(ci=ci, pbar=pbar, start=start)
         ...
 
@@ -109,7 +112,7 @@ if __name__ == '__main__':
     # --recover_node_index 0 --source_node_index 0 file_1KB.dat
 
     def main():
-        filename = 'file_1KB.dat'
+        filename = 'file_1MB.dat'
         repo = Repository.default()
 
         # The node and shard to recover

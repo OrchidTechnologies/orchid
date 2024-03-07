@@ -3,10 +3,15 @@ import os
 import time
 import uuid
 from collections import OrderedDict
-import galois
+from typing import Any
+
 import numpy as np
+from galois import FieldArray
+from numpy import ndarray
+from numpy._typing import NDArray
 from tqdm import tqdm
 
+from encoding.fields import get_field, FIELD_SAFE_SCALAR_SIZE_BYTES, FIELD_ELEMENT_SIZE_BYTES, symbols_to_bytes
 from storage.storage_model import NodeType, EncodedFile
 from storage.repository import Repository
 
@@ -44,16 +49,20 @@ class FileDecoder(ChunksReader):
 
         self.output_path = output_path or f"decoded_{uuid.uuid4()}.dat"
         self.overwrite = overwrite
+        assert org_file_length is not None
         self.org_file_length = org_file_length
 
-        chunk_size = self.k  # individual columns of size k
-        super().__init__(file_map=file_map, chunk_size=chunk_size)
+        num_elements = self.k
+        super().__init__(file_map=file_map,
+                         num_elements=num_elements,
+                         element_size=FIELD_ELEMENT_SIZE_BYTES)
+        # print(f"num_elements = 'k' = {num_elements}, element size = {self.element_size}")
 
     # Init a file decoder from an encoded file dir.  The dir must contain a config.json file and
     # at least k files of the same type.
     @staticmethod
     def from_encoded_dir(path: str, output_path: str = None, overwrite: bool = False):
-        file_config  = EncodedFile.load(os.path.join(path, 'config.json'))
+        file_config = EncodedFile.load(os.path.join(path, 'config.json'))
         assert file_config.type0.k == file_config.type1.k, "Config node types must have the same k."
         recover_from_files = FileDecoder.get_threshold_files(path, k=file_config.type0.k)
         if os.path.basename(list(recover_from_files)[0]).startswith("type0_"):
@@ -86,9 +95,9 @@ class FileDecoder(ChunksReader):
 
     # Decode the file to the output path.
     def decode(self):
-        with open_output_file(output_path=self.output_path, overwrite=self.overwrite) as out:
+        with (open_output_file(output_path=self.output_path, overwrite=self.overwrite) as out):
             k, n = self.node_type.k, self.node_type.n
-            GF = galois.GF(2 ** 8)
+            GF = get_field()
             G = rs_generator_matrix(GF, k=k, n=n)
             g = G[:, self.files_indices]
             ginv = np.linalg.inv(g)
@@ -97,26 +106,32 @@ class FileDecoder(ChunksReader):
             start = time.time()
             with tqdm(total=self.num_chunks, desc='Decoding', unit='chunk') as pbar:
                 for ci in range(self.num_chunks):
-                    chunks = self.get_chunks(ci)
+                    # list of ndarrays, each containing num_elements big ints.
+                    file_chunks_ints = self.get_chunks_ints(ci)
 
-                    # Decode each chunk as a stack of column vectors forming a k x k matrix
-                    matrix = np.hstack([chunk.reshape(-1, 1) for chunk in chunks])
+                    # Reshape each chunk as a stack of column vectors forming a k x k matrix
+                    matrix = np.hstack([chunk.reshape(-1, 1) for chunk in file_chunks_ints])
+
+                    # Decode the original data
                     decoded = GF(matrix) @ ginv
+
                     if self.transpose:
                         decoded = decoded.T
-                    bytes = decoded.reshape(-1).tobytes()
 
-                    # Trim the last chunk if it is padded
-                    size = (ci + 1) * self.chunk_size * k
-                    if size > self.org_file_length:
-                        bytes = bytes[:self.org_file_length - size]
-
-                    # Write the data to the output file
-                    out.write(bytes)
+                    # Flatten the matrix back to an array of symbols
+                    symbols: NDArray[FieldArray] = decoded.reshape(-1)
+                    # Write the data to the output file with each symbol converted to bytes at the original size.
+                    out.write(symbols_to_bytes(symbols, FIELD_SAFE_SCALAR_SIZE_BYTES))
 
                     # Progress bar
                     self.update_pbar(ci=ci, num_files=k, pbar=pbar, start=start)
+                ...
+            ...
         ...
+
+        # Trim the output file to the original file length to account for padding at ingestion time.
+        with open(self.output_path, 'rb+') as f:
+            f.truncate(self.org_file_length)
 
     def close(self):
         [mm.close() for mm in self.mmaps]
@@ -124,7 +139,7 @@ class FileDecoder(ChunksReader):
 
 if __name__ == '__main__':
     repo = Repository.default()
-    filename = 'file_1KB.dat'
+    filename = 'file_1MB.dat'
     original_file = repo.tmp_file_path(filename)
     encoded_file = repo.file_dir_path(filename)
     file_status = repo.file_status(filename)
