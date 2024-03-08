@@ -1,0 +1,21 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.gitignore
+__pycache__
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+*~
+

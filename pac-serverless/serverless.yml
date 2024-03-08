@@ -4,7 +4,8 @@ org: orchid
 
 custom:
   pythonRequirements:
-    dockerizePip: non-linux
+    #dockerizePip: non-linux
+    dockerizePip: true
     zip: false
     slim: false
   myEnvironment:
