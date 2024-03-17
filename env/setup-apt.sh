@@ -9,7 +9,8 @@ apt-get -y install \
     curl git-core rsync wget \
     fakeroot libtalloc-dev \
     cpio rpm unzip zstd \
-    clang clang-tidy lld \
+    clang clang-tidy lld llvm \
+    binutils-{aarch64,x86-64}-linux-gnu \
     libc++-dev libc++abi-dev \
     g++-multilib gcc-multilib \
     python3-pip python3-setuptools \

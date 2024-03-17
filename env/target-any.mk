@@ -15,10 +15,7 @@ path = $(1)
 .PHONY:
 all:
 
-uname-m := $(shell uname -m)
-uname-s := $(shell uname -s)
-uname-o := $(shell uname -o 2>/dev/null)
--include $(pwd)/uname-$(uname-s).mk
+include $(pwd)/uname.mk
 
 version := $(shell $(pwd)/version.sh)
 monotonic := $(word 1,$(version))
@@ -48,8 +45,13 @@ archive :=
 
 qflags += -gfull -Os
 cflags += -DNDEBUG
-cflags += -D_FORTIFY_SOURCE=2
 qflags += -fno-omit-frame-pointer
+
+cflags += -D_FORTIFY_SOURCE=2
+# XXX: -fstack-protector-{strong,all}
+# XXX: -param=ssp-buffer-size=4
+# XXX: -fsanitize={shado,safe}-stack
+# XXX: -fstack-clash-protection
 
 cflags += -D__STDC_CONSTANT_MACROS
 cflags += -D__STDC_FORMAT_MACROS
@@ -69,6 +71,7 @@ cflags += -Wno-misleading-indentation
 cflags += -Wno-missing-selector-name
 cflags += -Wno-overloaded-shift-op-parentheses
 cflags += -Wno-potentially-evaluated-expression
+# XXX: cflags += -Wno-shift-op-parentheses
 cflags += -Wno-tautological-constant-out-of-range-compare
 cflags += -Wno-tautological-overlap-compare
 
@@ -102,6 +105,8 @@ include $(pwd)/target-$(target).mk
 ifeq ($(machine),)
 machine := $(default)
 endif
+
+-include $(pwd)/cpu-$(machine).mk
 
 cflags += -I@/usr/include
 

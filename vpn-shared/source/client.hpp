@@ -39,9 +39,6 @@
 #include "signed.hpp"
 #include "ticket.hpp"
 
-// XXX: move this somewhere and maybe find a library
-namespace gsl { template <typename Type_> using owner = Type_; }
-
 namespace orc {
 
 struct Currency;

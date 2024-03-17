@@ -10,8 +10,30 @@
 
 
 include $(pwd)/target-lld.mk
-#lflags += -Wl,-error-limit=0
+
 lflags += -Wl,--build-id=none
-lflags += -Wl,-z,relro
+lflags += -Wl,-z,noexecstack
+
 lflags += -Wl,--no-undefined
+lflags += -Wl,-z,defs
+lflags += -Wl,--no-copy-dt-needed-entries
+
+ifeq ($(target),and)
+# XXX: this is wrong in the general case
+# I need a separate build for this... :(
 qflags += -fpic
+lflags += -fpic
+else
+qflags += -fpie
+lflags += -fpie
+endif
+
+qflags += -fno-plt
+lflags += -fno-plt
+
+lflags += -Wl,-z,relro
+lflags += -Wl,-z,now
+
+# https://maskray.me/blog/2021-01-09-copy-relocations-canonical-plt-entries-and-protected
+qflags += -fno-semantic-interposition
+qflags += -fdirect-access-external-data

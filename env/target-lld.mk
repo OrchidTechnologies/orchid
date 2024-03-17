@@ -13,5 +13,6 @@ include $(pwd)/target-gnu.mk
 
 wflags += -fuse-ld=lld
 lflags += -Wl,--icf=all
+lflags += -Wl,--error-limit=0
 
 export LLD_VERSION := Linker: LLD

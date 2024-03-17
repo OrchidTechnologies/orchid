@@ -15,6 +15,8 @@ cxx := clang++$(suffix) $(more)
 define _
 ar/$(1) := ar
 ranlib/$(1) := ranlib
+objdump/$(1) := llvm-objdump$(suffix)
+objcopy/$(1) := llvm-objcopy$(suffix)
 endef
 $(each)
 

@@ -64,14 +64,9 @@ endif
 kernel/$(output)/$(machine)/kernel: force
 	$(MAKE) -C kernel target=lnx machine=$(machine)
 
-$(output)/embed: env/embed.c
-	clang -o $@ $<
-
-$(output)/$(machine)/extra/kernel.xxd: kernel/$(output)/$(machine)/kernel $(output)/embed
-	@mkdir -p $(dir $@)
-	$(output)/embed kernel $< >$@
-
-$(call depend,$(pwd)/source/kernel.cpp.o,$(output)/$(machine)/extra/kernel.xxd)
+$(output)/%/kernel.o: kernel/$(output)/%/kernel
+	cd $(dir $<) && $(objcopy/$*) -O $(format/$*) -I binary $(notdir $<) $(CURDIR)/$@ --set-section-alignment '.data=4096' --set-section-flags '.data=alloc,load,readonly,data'
+linked += kernel.o
 
 include env/output.mk
 

@@ -34,7 +34,7 @@ debug: $(binary)
 
 .PHONY: test
 test: $(binary)
-	strace -ff $< 2>&1 | grep -Ev '(] |^)(<|(qmap|mprotect|munmap)\()'
+	strace -ff -e 'trace=!write' $< 2>&1 #| sed -e '0,/^execve(/d;/^orc_trace(/d;/^+++ /d;s/\(mmap([^,]*\),[^,]*/\1/;s/mmap(0x\([0-9a-f]*\),\(.*\)= 0x\1/mmap(0X,\2= 0X/;s/\(mmap(NULL,.*\)= 0x[0-9a-f]*/\1= 0X/;s///;s/^\(madvise\|mprotect\)(0x[0-9a-z]*, [0-9]*, /\1(/;s/^munmap(0x[0-9a-f]*, [0-9]*) */munmap() /' | sort | uniq -c | sort -nr
 
 source += $(wildcard $(pwd)/source/*.cpp)
 source += $(pwd)/libc.cpp
@@ -43,11 +43,9 @@ cflags += -I$(pwd)/source
 
 lflags += -nodefaultlibs
 lflags += -static-pie
+cflags += -ftls-model=local-exec
 lflags += -lm
 lflags := $(filter-out -pthread,$(lflags))
-qflags += -femulated-tls
-cflags += -fno-plt
-lflags += -fno-plt
 
 lflags += -lstdc++
 lflags += -lgcc
@@ -641,7 +639,6 @@ jemalloc := lib/libjemalloc_pic.a
 $(output)/%/$(pwd)/jemalloc/$(jemalloc): $(output)/%/$(pwd)/jemalloc/Makefile
 	$(MAKE) -C $(dir $<) $(jemalloc)
 linked += $(pwd)/jemalloc/$(jemalloc)
-
 
 ifeq ($(machine),x86_64)
 lib := $(output)/sysroot/usr/lib/$(host/$(machine))

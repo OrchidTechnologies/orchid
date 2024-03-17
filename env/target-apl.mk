@@ -23,6 +23,7 @@ lflags += -Wl,-no_dead_strip_inits_and_terms
 # libtool
 qflags += -DPIC
 qflags += -fPIC
+lflags += -fPIC
 
 signature := /_CodeSignature/CodeResources
 

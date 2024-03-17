@@ -67,6 +67,7 @@ else
 
 more = --sysroot=$(llvm)/sysroot
 # https://github.com/android-ndk/ndk/issues/884
+# XXX: wait, but don't I want this? look again!
 more += -fno-addrsig
 include $(pwd)/kit-android.mk
 

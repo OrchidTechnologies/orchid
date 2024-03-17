@@ -9,13 +9,10 @@
 # }}}
 
 
-ifeq ($(target),)
-target := mac
-endif
+uname-m := $(shell uname -m)
+uname-s := $(shell uname -s)
+uname-o := $(shell uname -o 2>/dev/null)
 
-prebuilt := darwin-x86_64
+objcopy = $(host/$*)-objcopy
 
-export PATH := /usr/local/opt/gettext/bin:$(PATH)
-
-export PATH := $(PATH):/usr/local/opt/binutils/bin
-objcopy = objcopy
+-include $(pwd)/uname-$(uname-s).mk
