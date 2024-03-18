@@ -24,11 +24,12 @@ if [[ $(uname -s) = Linux ]]; then
 
     debootstrap=${mount}/debootstrap
     # XXX: proot -0 runs the command but fails on exit; fakeroot works correctly
-    DEBOOTSTRAP_DIR=${debootstrap} fakeroot "${debootstrap}"/debootstrap \
-        --foreign --variant=minbase --arch amd64 "${distro}" .
+    DEBOOTSTRAP_DIR=${debootstrap} fakeroot "${debootstrap}"/debootstrap --foreign \
+        --variant=minbase --arch amd64 --components=main,universe "${distro}" .
 
     "${proot}" -0 -r . -w / -b /proc -b /sys /debootstrap/debootstrap --second-stage
-    echo "deb http://archive.ubuntu.com/ubuntu/ ${distro}-updates main" >>etc/apt/sources.list
+    # XXX: https://groups.google.com/g/linux.debian.bugs.dist/c/-p06sQmwamA
+    echo "deb http://archive.ubuntu.com/ubuntu/ ${distro}-updates main universe" >>etc/apt/sources.list
     HOME= "${proot}" -S . -w / -b "${mount}:/mnt" /mnt/setup-sys.sh "$@"
 else
     # https://stackoverflow.com/questions/29934204/mount-data-volume-to-docker-with-readwrite-permission

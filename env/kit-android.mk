@@ -67,6 +67,8 @@ cxx := $(llvm)/bin/clang++ $(more)
 define _
 ar/$(1) := $(llvm)/bin/llvm-ar
 ranlib/$(1) := $(llvm)/bin/llvm-ranlib
+objdump/$(1) := $(llvm)/bin/llvm-objdump
+objcopy/$(1) := $(llvm)/bin/llvm-objcopy
 endef
 $(each)
 

@@ -9,13 +9,7 @@
 # }}}
 
 
-ifeq ($(target),)
-target := mac
+ifneq ($(target),win)
+# XXX: this breaks libgcrypt due to cet.h being ELF-specific
+qflags += -fcf-protection=full
 endif
-
-prebuilt := darwin-x86_64
-
-export PATH := /usr/local/opt/gettext/bin:$(PATH)
-
-export PATH := $(PATH):/usr/local/opt/binutils/bin
-objcopy = objcopy

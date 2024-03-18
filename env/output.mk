@@ -194,3 +194,10 @@ object := $(filter-out $(1)%.o,$(object))
 linked += $(1)_.a
 endef
 $(foreach archive,$(archive),$(eval $(call _,$(archive))))
+
+define _
+object := $$(patsubst $(1).o,$(1)-.o,$$(object))
+$$(output)/%/$(1)-.o: $$(output)/%/$(1).o
+	$$(objcopy) $(2) $$< $$@
+endef
+$(foreach oflags,$(filter oflags/%,$(.VARIABLES)),$(eval $(call _,$(patsubst oflags/%,%,$(oflags)),$($(oflags)))))
