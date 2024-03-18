@@ -1,9 +1,13 @@
 import hashlib
 import os
 from contextlib import ExitStack
-import galois
-from icecream import ic
 
+from galois import FieldArray
+from icecream import ic
+import numpy as np
+from numpy._typing import NDArray
+
+from encoding.fields import get_field, FIELD_SAFE_SCALAR_SIZE_BYTES, FIELD_ELEMENT_SIZE_BYTES, symbols_to_bytes
 from encoding.chunks import ChunkReader
 from encoding.twin_coding import rs_generator_matrix, Code, twin_code
 from storage.storage_model import EncodedFile, NodeType0, NodeType1
@@ -37,14 +41,21 @@ class FileEncoder(ChunkReader):
         assert node_type0.n > node_type0.k and node_type1.n > node_type1.k, "The node type must have n > k."
 
         self.node_type0 = node_type0
+        print(f"node_type0 = {node_type0}")
         self.node_type1 = node_type1
+        print(f"node_type1 = {node_type1}")
         self.k = node_type0.k
+        print(f"k = {self.k}")
         self.path = input_file
         self.output_dir = output_path or input_file + '.encoded'
         self.overwrite = overwrite
         self._file_hash = None
-        chunk_size = self.k ** 2
-        super().__init__(path=input_file, chunk_size=chunk_size)
+        num_elements = self.k ** 2
+        super().__init__(path=input_file,
+                         num_elements=num_elements,
+                         element_size=FIELD_SAFE_SCALAR_SIZE_BYTES)
+        print(f"element size = {self.element_size}, num_elements = 'k^2' = {num_elements}")
+        print(f"FileEncoder: chunk size = {self.chunk_size}, num_chunks = {self.num_chunks}")
 
     # Initialize the output directory that will hold the erasure-encoded chunks.
     def init_output_dir(self) -> bool:
@@ -73,7 +84,7 @@ class FileEncoder(ChunkReader):
             return
 
         # The symbol space
-        GF = galois.GF(2 ** 8)
+        GF = get_field()
 
         # The two coding schemes.
         k, n0, n1 = self.k, self.node_type0.n, self.node_type1.n
@@ -97,15 +108,18 @@ class FileEncoder(ChunkReader):
             start = time.time()
             with tqdm(total=self.num_chunks, desc='Encoding', unit='chunk') as pbar:
                 for ci in range(self.num_chunks):
-                    # Twin code the chunk
-                    chunk = self.get_chunk(ci)
-                    cols0, cols1 = twin_code(GF(chunk), C0, C1)
+                    # Get the next chunk, converting each element to a big integer
+                    chunk_ints: NDArray[int] = self.get_chunk_ints(ci)
+
+                    # Twin code the chunk (returns two lists of ndarray of symbols)
+                    cols0, cols1 = twin_code(GF(chunk_ints), C0, C1)
 
                     # Write the data to the respective files
+                    # print(f"Writing chunk {ci} to files.")
                     for fi in range(n0):
-                        files0[fi].write(cols0[fi].tobytes())
+                        files0[fi].write(symbols_to_bytes(cols0[fi], FIELD_ELEMENT_SIZE_BYTES))
                     for fi in range(n1):
-                        files1[fi].write(cols1[fi].tobytes())
+                        files1[fi].write(symbols_to_bytes(cols1[fi], FIELD_ELEMENT_SIZE_BYTES))
 
                     self.update_pbar(ci=ci, pbar=pbar, start=start)
         ...
@@ -128,13 +142,13 @@ if __name__ == '__main__':
     repo = Repository.default()
 
     # Random test file
-    filename = 'file_1KB.dat'
+    filename = 'file_1MB.dat'
     file = repo.tmp_file_path(filename)
     ic(file)
     # If the file doesn't exist create it
     if not os.path.exists(file):
         with open(file, "wb") as f:
-            f.write(os.urandom(1024))
+            f.write(os.urandom(1 * 1024 * 1024))
 
     encoder = FileEncoder(
         node_type0=NodeType0(k=3, n=5, encoding='reed_solomon'),

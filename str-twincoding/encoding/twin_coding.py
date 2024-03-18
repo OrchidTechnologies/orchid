@@ -1,5 +1,9 @@
 import numpy as np
 import galois
+from galois import FieldArray
+from numpy._typing import NDArray
+
+from encoding.fields import get_field
 
 
 #
@@ -35,14 +39,14 @@ import galois
 # share k but may have different encoded lengths n.
 #
 # Return:
-# This method returns the two lists of n column vectors to be stored at the
+# This method returns the two array of column vectors to be stored at the
 # respective node types. The two node sets will be different sizes if the codes
 # have different n values.
 #
 # The original paper:
 # https://www.cs.cmu.edu/~nihars/publications/repairAnyStorageCode_ISIT2011.pdf
 #
-def twin_code(message: np.ndarray, C0: 'Code', C1: 'Code') -> (np.ndarray, np.ndarray):
+def twin_code(message: np.ndarray, C0: 'Code', C1: 'Code') -> (NDArray[FieldArray], NDArray[FieldArray]):
     assert C0.k == C1.k
 
     # Reshape the message into k x k matrix
@@ -81,7 +85,8 @@ def twin_code(message: np.ndarray, C0: 'Code', C1: 'Code') -> (np.ndarray, np.nd
 # https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction
 #
 def rs_generator_matrix(GF: galois.GF, k: int, n: int):
-    eval_points = GF.elements[1:n + 1]  # n consecutive elements [1, 2, 3, 4, 5]
+    # produce n consecutive elements of GF
+    eval_points = [GF(i) for i in range(1, n + 1)]
     matrix = GF(np.zeros(shape=(k, n), dtype=int))
     for row in range(k):
         for col in range(n):
@@ -103,19 +108,22 @@ class Code:
 #
 if __name__ == "__main__":
     # The symbol space
-    GF = galois.GF(2 ** 8)
+    GF = get_field()
 
     # The two coding schemes.
     k = 3  # The schemes share k but may have different encoded lengths n
     C0 = Code(k=k, n=5, GF=GF, G=rs_generator_matrix(GF, k=k, n=5))
+    print("initialized C0")
     C1 = Code(k=k, n=7, GF=GF, G=rs_generator_matrix(GF, k=k, n=7))
+    print("initialized C1")
 
-    message = GF([1, 2, 3, 5, 8, 13, 21, 34, 55])  # k^2 = 9 symbols in GF(2^8)
+    message = GF([1, 2, 3, 5, 8, 13, 21, 34, 55])  # k^2 = 9 symbols in GF(n)
     print("message:", message)
 
     # Twin code the message
     nodes0, nodes1 = twin_code(message, C0, C1)
     print(f"{len(nodes0)} type 0 nodes\n{len(nodes1)} type 1 nodes")
+    print(f"nodes0[0] = {nodes0[0]}, len(nodes0[0]) = {len(nodes0[0])}")
 
     #
     # Simulate regular data collection: Gather data from any k nodes and
