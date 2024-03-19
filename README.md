@@ -1,21 +1,73 @@
 # Orchid
 
-Orchid is a decentralized marketplace "for bandwidth"; providers run a server (in the srv-daemon folder) that talks to a decentralized directory that runs on Ethereum (in the dir-ethereum folder). On top of this marketplace, we happen to provide a VPN application (the app- and vpn- folders) as well as a lower-level client daemon (currently in cli-shared); but, as our software is (and has always been ;P) entirely open-source (under a "free software" license: the AGPLv3)--and, because we strive to use "off the shelf" transport protocols whenever possible (such as WebRTC and, maybe-weirdly, layered UDP)--you can remix our stack into anything you want! Users pay for service using "(streaming) probablistic nanopayments"--a "layer 2" Ethereum scaling solution we think of as somewhere between "one-to-many payment channels" and "probablistic roll-ups", based on some older (yet seminal) work into which we poured effort into economic incentive design and practical integration--that is "somewhat separate", in case you'd want to use it for something else (you can find the code for this in lot-ethereum).
+Orchid is a platform that enables an onion routing network incentivized by OXT and a multi-hop VPN client. The Orchid community believes in Open Source software and that Orchid can enable a brighter, freer and empowered future.
+
+The heart of the platform is a decentralized marketplace "for bandwidth" consisting of providers, a directory of providers, and client applications.
+
+## How does it work?
+
+**Providers** provide the relay service by running their own servers *(`/srv-daemon`)*. The relays then advertise themselves to the decentralized directory running on Ethereum.
+
+The **directory** runs on Etherereum *(`/dir-ethereum`)* and provides all necessary information of available relays for the client to use to connect to.
+
+The client VPN **application** *(`/app-`, `/vpn-`, `/cli-shared`)* is used to connect to the directory, fetch an available relay, and to establish the VPN connection with.
+
+**Payments** are made for accessing the network via *(streaming) probablistic nanopayments*, an L2 Ethereum scaling solution best described as being between *one-to-many payment channels* and *probablistic roll-ups*. 
+
+>[!NOTE]
+> The payment solution was a culmination of thorough economic incentive research, design and practical integration. If it interests you for your integration into your own project, you can find the modularized integration in *(`/lot-ethereum`)*.
+
 
 ## Compiling Orchid
 
-Many users would like to compile Orchid. Thankfully, Orchid is extremely easy to build... so easy, in fact, that a lot of people seem confused by a lack of complex instructions :(. Every single library dependency of Orchid is included as a git submodule (so don't forget to run "git submodule update --init --recursive") and is compiled by the Orchid build system, so there is no need for a lengthy DEPS list: there are no "external" steps (as you often see with many other C/C++ projects).
+Orchid is simple to compile as every library dependency of Orchid is included as a git submodule, and is compiled by the Orchid build system so there there is no need for a lengthy DEPS lists. This means there are **no external steps** you often see with other C/C++ projects!
 
-Of course, you do need to have the requisite build tooling installed... in addition to the standard set of C/C++ development tools (autotools, bison/flex, make, etc.) we specifically require clang (for which I'm truly sorry: maybe one day we'll support gcc) and ldd (neither binutils ld nor gold are sufficient). Some of the build scripts for our dependencies use Python (I think only 3.x), one insists on being built using meson/ninja, and we use a couple libraries that are written in Rust.
+>[!IMPORTANT]
+> Don't forget to run `git submodule update --init --recursive`
 
-(At this point I will note, as this has come up multiple times: it is neither practical nor appropriate for Orchid's documentation to detail how to install any of these toolchains. The instructions are different for every operating system, are different for every single distribution of Linux, and are often even different for specific versions of a distribution. FWIW, developers already have most of this software installed; and, if you don't, these projects have their own documentation.)
 
-That said, the "usual algorithm" of "try to build it, and if you get an error saying you are missing X, just install X" should work, so I'd just dive in (like, honestly, I'm shocked you are reading this); that said, if you are "feeling lucky", you can run env/setup-mac.sh (if using macOS) or env/setup-lnx.sh (if using Ubuntu), which are scripts that install everything on either macOS or (specifically and only) Ubuntu (and thereby can serve as "documentation" if you refuse to just dive in).
+### Requirements
 
-Given that you have a box capable of compiling other projects (as we aren't using anything "weird", really... meson is probably the rarest dependency we have, and it will be extremely obvious) you can then just go into any subfolder you want (such as app-{android,ios}, or cli-shared/srv-daemon and run "make". Seriously: it's that easy... if it breaks for some reason other than "you ran out of memory / disk space" or "command X not found" (which you can trivially solve), please file an issue.
+* Make sure you have the requisite build tooling installed in addition to the standard set of C/C++ development tools (`autotools`, `bison`/`flex`, `make`, etc.).
+* We specifically require `clang` *(sorry, no gcc for now!)* and `ldd` *(neither `binutils ld` nor `gold` were sufficient!)*.
+* Some of the build scripts for our dependencies require `Python` *(3.x)*
+* One build script requires using `meson`/`ninja`
+* A couple libraries are written in `Rust`
 
-## Or, Using Docker
+>[!NOTE]
+> *Directions for installing and configuring any of the above toolchains is out of scope of these instructions as they are different for every operating system, Linux distribution, and often have specific versions for specific distributions. If you're a developer and don't already have these installed, you'll need to refer to the documentation for those tools.*
 
-Alternatively, if your goal is merely to "build a copy of" Orchid--as a user who neither is prepared to install a compiler nor wants to trust any of Orchid, Apple/Google, or GitHub to give you "safe" binaries (but feel comfortable with the source code you were provided... how you might hope to do that part is definitely left up as an exercise to the reader ;P)--you can avoid installing anything (except Docker) by installing Docker and then running env/docker.sh instead of "make". You do still need to have checked out the full source code (including the submodules!).
+If you experience any issues while building, it's usually fixed by simply installing whatever is noted as missing.
 
-(Of course, this now requires you to trust Docker itself--to be clear: if you look at env/docker.sh, you can see that it is starting with a bare official Ubuntu image and then installing Rust/clang/NDK/etc. from the official first-party sources, so this path doesn't introduce weird trust on any "random" third-party and certainly doesn't involve binaries from us in any way--which may or may not help with your particular trust scenario; but, frankly, this is kind of a "last resort" to allow non-developers to "build from source", so hopefully it is useful to consider.)
+Optionally, there are build scripts available for limited scenarios that may work for you *(`env/setup-mac.sh` for Mac, `env/setup-lnx.sh` for Ubuntu)*.
+
+## Building yourself
+
+Go into any subfolder *(e.g. `app-{android,ios}`, `cli-shared/srv-daemon`)* and run `make`.
+
+If you experience any issues (e.g. memory / disk space, command not found, etc) feel free to file a new issue.
+
+## Using Docker
+
+Run `env/docker.sh` instead of `make`. You do still need to have checked out the full source code (including the submodules!).
+
+## Join the community
+
+If you have technical issues related to build problems of this repo, please file an issue on Github.
+
+If you have any questions or want to meet others in the Orchid community however, visit us on:
+
+* [Discord](https://discord.com/invite/GDbxmjxX9F)
+* [Telegram](https://www.t.me/OrchidOfficial)
+* [X/Twitter](https://x.com/OrchidProtocol)
+* [Reddit](https://www.reddit.com/r/orchid/)
+* [Facebook](https://www.facebook.com/OrchidProtocol)
+* [Youtube](https://www.youtube.com/channel/UCIH_BKBlNemsCzDhPYZBlHw)
+* [Linkedin](https://www.linkedin.com/company/orchid-labs/)
+* [Github](https://github.com/OrchidTechnologies)
+
+
+---
+
+**Orchid software is [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html) licensed open source that builds off of many off-the-shelf transport protocols (WebRTC, layered UDP, etc) and can be modified for your own needs.**
+
