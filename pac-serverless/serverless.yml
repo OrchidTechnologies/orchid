@@ -1,6 +1,7 @@
 service: pac
 app: pac
 org: orchid
+enableLocalInstallationFallback: true
 
 custom:
   pythonRequirements:
