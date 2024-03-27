@@ -107,10 +107,19 @@ mflags += has_function_stpcpy=false
 cflags += -Wno-pragma-pack
 cflags += -Wno-unknown-pragmas
 
+# XXX: fix -I$(CURDIR) in qflags globally
+
 qflags += -I$(CURDIR)/$(pwd)/win32
 qflags += -Wno-nonportable-include-path
 
-cflags += -I$(pwd)/mingw
+qflags += -I$(CURDIR)/$(pwd)/mingw
+
+#qflags += -isystem $(CURDIR)/$(pwd)/mingw-w64/mingw-w64-libraries/winpthreads/include
+
+# XXX: https://github.com/dlfcn-win32/dlfcn-win32.git
+
+# XXX: I need gcc as I don't have windows compiler-rt in NDK
+#qflags += --rtlib=compiler-rt
 
 mingw := git-10.0.0.r258.g530c58e17
 

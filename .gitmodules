@@ -223,3 +223,6 @@
 [submodule "debootstrap"]
 	path = env/debootstrap
 	url = https://salsa.debian.org/installer-team/debootstrap.git
+[submodule "mingw-w64"]
+	path = env/mingw-w64
+	url = https://git.code.sf.net/p/mingw-w64/mingw-w64
