@@ -139,14 +139,13 @@ $(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/
 
 rust := PATH=$${PATH}:~/.cargo/bin
 
-# XXX: stuck on rustc 1.69.0 due to https://github.com/rust-lang/rust/issues/112368
-rustc := 1.69.0
+rustc := 1.77.0
 
 $(output)/rustup-install-%:
 	$(rust) rustup install $*
 	@touch $@
 	
-$(output)/rustup-target-%: $(output)/rustup-install-$(rustc)
+$(output)/rustup-target-$(rustc)-%: $(output)/rustup-install-$(rustc)
 	$(rust) rustup target add $* --toolchain $(rustc)
 	@touch $@
 
@@ -154,7 +153,7 @@ ifneq ($(uname-o),Cygwin)
 export RUSTC_WRAPPER=$(CURDIR)/env/rustc-wrapper
 endif
 
-$(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/rustup-target-$$(triple/$$(arch)) $(sysroot) $$(call head,$$(folder)) $(output)/$$(arch)/usr/bin/pkg-config
+$(output)/%/librust.a: $$(specific) $$(folder)/Cargo.toml $(output)/rustup-target-$(rustc)-$$(triple/$$(arch)) $(sysroot) $$(call head,$$(folder)) $(output)/$$(arch)/usr/bin/pkg-config
 	$(specific)
 	@mkdir -p $(dir $@)
 	

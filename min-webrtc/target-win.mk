@@ -23,6 +23,7 @@ lflags += -luserenv
 lflags += -lole32
 # XXX: technically for rust
 lflags += -lbcrypt
+lflags += -lntdll
 
 lflags += -lcrypt32
 lflags += -ldbghelp
