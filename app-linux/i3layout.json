@@ -1,0 +1,6 @@
+{
+  "border": "pixel", "current_border_width": 2,
+  "type": "con", "floating": "auto_off",
+  "percent": 0.393,
+  "name": "Orchid", "swallows": [{"class": "^Orchid$"}]
+}

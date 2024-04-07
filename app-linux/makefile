@@ -27,11 +27,17 @@ signed :=
 .PHONY: all
 all: $(output)/$(name).tgz
 
+.PHONY: app
+app: $(signed)
+
 source += $(wildcard $(pwd)/source/*.cpp)
 
 cflags/$(pwd)/source/main.cpp += -Wno-unused-function
+checks/$(pwd)/source/main.cpp += -bugprone-assignment-in-if-condition
 checks/$(pwd)/source/main.cpp += -clang-diagnostic-unused-function
 checks/$(pwd)/source/main.cpp += -cppcoreguidelines-pro-type-cstyle-cast
+checks/$(pwd)/source/main.cpp += -cppcoreguidelines-pro-type-member-init
+checks/$(pwd)/source/main.cpp += -cppcoreguidelines-pro-type-vararg
 checks/$(pwd)/source/main.cpp += -misc-const-correctness
 checks/$(pwd)/source/main.cpp += -misc-use-anonymous-namespace
 
@@ -56,9 +62,15 @@ lflags += $(output)/sysroot/usr/lib/$(host/x86_64)/libgtk-3.so
 lflags += $(output)/sysroot/usr/lib/$(host/x86_64)/libgio-2.0.so
 lflags += $(output)/sysroot/usr/lib/$(host/x86_64)/libgobject-2.0.so
 
+shareds := $(pwd/gui)/linux/flutter/ephemeral/.plugin_symlinks/*/linux/shared
+$(output)/package/lib/%: $$(wildcard $(shareds)/%)
+	@mkdir -p $(dir $@)
+	cp -af $< $@
+signed += $(patsubst %,$(output)/package/lib/%,$(notdir $(wildcard $(shareds)/*.so)))
+
 $(output)/package/$(name)$(exe): $(patsubst %,$(output)/$(machine)/%,$(object) $(linked))
 	@echo [LD] $@
-	@set -o pipefail; $(cxx) $(more/$(machine)) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) -Wl,-rpath,. 2>&1 | nl
+	@set -o pipefail; $(cxx) $(more/$(machine)) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) -Wl,-rpath,'$$ORIGIN' 2>&1 | nl
 	@openssl sha256 -r $@
 	@ls -la $@
 signed += $(output)/package/$(name)$(exe)
@@ -69,4 +81,6 @@ $(output)/$(name).tgz: $(signed)
 
 .PHONY: test
 test: $(signed)
+	xdotool windowkill "$$(i3-msg -t get_tree | jq 'recurse(.nodes[]?)|select(.name=="Orchid")|.window')"
+	i3-msg "append_layout ${PWD}/i3layout.json"
 	$(output)/package/$(name)$(exe)
