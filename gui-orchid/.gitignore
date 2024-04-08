@@ -18,4 +18,4 @@
 build
 test/receipt_local.txt
 *.log
-untransleted.txt
+untranslated.txt
