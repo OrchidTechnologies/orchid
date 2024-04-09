@@ -117,7 +117,7 @@ mingw := git-10.0.0.r258.g530c58e17
 msys2 := 
 msys2 += crt-$(mingw)-2
 msys2 += dlfcn-1.4.0-1
-msys2 += gcc-12.1.0-2
+msys2 += gcc-13.2.0-5
 msys2 += headers-$(mingw)-1
 msys2 += winpthreads-$(mingw)-1
 
