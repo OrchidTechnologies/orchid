@@ -39,7 +39,7 @@ include $(pwd)/target-gnu.mk
 define _
 more/$(1) := -target $(1)-pc-windows-gnu
 more/$(1) += --sysroot $(CURDIR)/$(output)/$(1)/mingw$(bits/$(1))
-temp := $(shell which $(1)-w64-mingw32-ld)
+temp := $$(shell which $(1)-w64-mingw32-ld)
 ifeq ($$(temp),)
 $$(error $(1)-w64-mingw32-ld must be on your path)
 endif
