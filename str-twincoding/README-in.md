@@ -5,7 +5,7 @@ _*Orchid Storage is a **work in progress***_
 
 Orchid is an open source project.  Help us in the effort to build a truly decentralized, incentive-aligned
 storage system.  
-Check out the [Storchid Litepaper](https://orchid.com/storchid-litepaper-latest.pdf)
+Check out the [Orchid Storage Litepaper](https://www.orchid.com/storage-litepaper-latest.pdf)
 and join the discussion on the [Orchid Subreddit](https://www.reddit.com/r/orchid).
 
 This repository contains work in progress on the file encoding CLI and server framework.
