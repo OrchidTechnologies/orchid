@@ -7,6 +7,7 @@ else
     sudo=(sudo -EH)
 fi
 
-"${sudo[@]}" env/setup-apt.sh
+. /etc/os-release
+"${sudo[@]}" "env/lnx-${ID}.sh"
 
 env/setup-all.sh

@@ -37,6 +37,8 @@ create: $(pwd/flutter)/packages/flutter/pubspec.lock
 
 builds := 
 builds += apk
+# XXX: I need to filter based on uname :/
+#builds += linux
 builds += macos
 builds += ios
 

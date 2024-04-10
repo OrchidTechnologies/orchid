@@ -39,7 +39,7 @@ include $(pwd)/target-gnu.mk
 define _
 more/$(1) := -target $(1)-pc-windows-gnu
 more/$(1) += --sysroot $(CURDIR)/$(output)/$(1)/mingw$(bits/$(1))
-temp := $(shell which $(1)-w64-mingw32-ld)
+temp := $$(shell which $(1)-w64-mingw32-ld)
 ifeq ($$(temp),)
 $$(error $(1)-w64-mingw32-ld must be on your path)
 endif
@@ -126,7 +126,7 @@ mingw := git-10.0.0.r258.g530c58e17
 msys2 := 
 msys2 += crt-$(mingw)-2
 msys2 += dlfcn-1.4.0-1
-msys2 += gcc-12.1.0-2
+msys2 += gcc-13.2.0-5
 msys2 += headers-$(mingw)-1
 msys2 += winpthreads-$(mingw)-1
 

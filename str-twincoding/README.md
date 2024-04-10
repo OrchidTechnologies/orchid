@@ -5,7 +5,7 @@ _*Orchid Storage is a **work in progress***_
 
 Orchid is an open source project.  Help us in the effort to build a truly decentralized, incentive-aligned
 storage system.  
-Check out the [Storchid Litepaper](https://orchid.com/storchid-litepaper-latest.pdf)
+Check out the [Orchid Storage Litepaper](https://www.orchid.com/storage-litepaper-latest.pdf)
 and join the discussion on the [Orchid Subreddit](https://www.reddit.com/r/orchid).
 
 This repository contains work in progress on the file encoding CLI and server framework.
@@ -94,10 +94,21 @@ providers.sh list
 monitor.sh --update 1
 
 # Push the file by name
+# (Observe the availability of the file in the monitor)
 storage.sh push foo_file.dat
+
+# Delete a shard from one of the providers
+# (Observe the availability is reduced as a unique shard is lost)
+storage.sh delete_shard --provider 5001 foo_file.dat --node_type 0 --node_index 0
+
+# Request that the provider rebuild the lost node from specified other nodes in the cluster.
+storage.sh request_repair --to_provider 5001 foo_file.dat --node_type 0 --node_index 0 --from_providers 5002 5003 5004
+...
+
 
 # Shut down the servers
 examples/test-cluster.sh stop
+
 ```
 
 ## Encoding CLI Examples
@@ -328,6 +339,79 @@ options:
                         Target availability for the file.
   --dryrun, -n          Show the plan without executing it.
   --overwrite           Overwrite files on the server.
+None
+```
+###`request_recovery_file`
+```
+usage: storage request_recovery_file [-h] [--repo REPO] --provider PROVIDER
+                                     [--overwrite] --recover_node_type
+                                     RECOVER_NODE_TYPE --recover_node_index
+                                     RECOVER_NODE_INDEX --source_node_index
+                                     SOURCE_NODE_INDEX
+                                     file
+
+positional arguments:
+  file                  Name of the file in the local and remote repositories.
+
+options:
+  -h, --help            show this help message and exit
+  --repo REPO           Path to the repository.
+  --provider PROVIDER   Provider from which to request the recovery file.
+  --overwrite           Overwrite any local file.
+  --recover_node_type RECOVER_NODE_TYPE
+                        The node type for the shard being recovered.
+  --recover_node_index RECOVER_NODE_INDEX
+                        The node index for the shard being recovered.
+  --source_node_index SOURCE_NODE_INDEX
+                        The source node index desired to be used to generate
+                        the recovery file.
+None
+```
+###`request_repair`
+```
+usage: storage request_repair [-h] [--repo REPO] --to_provider TO_PROVIDER
+                              --node_type NODE_TYPE --node_index NODE_INDEX
+                              [--from_providers [FROM_PROVIDERS ...]]
+                              [--dryrun] [--overwrite]
+                              file
+
+positional arguments:
+  file                  Name of the file in the repository.
+
+options:
+  -h, --help            show this help message and exit
+  --repo REPO           Path to the repository.
+  --to_provider TO_PROVIDER
+                        Provider to receive the repair request.
+  --node_type NODE_TYPE
+                        The node type for the shard being recovered.
+  --node_index NODE_INDEX
+                        The node index for the shard being recovered.
+  --from_providers [FROM_PROVIDERS ...]
+                        Optional list of provider names or urls for the
+                        repair.
+  --dryrun, -n          Show the plan without executing it.
+  --overwrite           Overwrite files on the server.
+None
+```
+###`request_delete_shard`
+```
+usage: storage request_delete_shard [-h] [--repo REPO] --provider PROVIDER
+                                    --node_type NODE_TYPE --node_index
+                                    NODE_INDEX
+                                    file
+
+positional arguments:
+  file                  Name of the file in the local and remote repositories.
+
+options:
+  -h, --help            show this help message and exit
+  --repo REPO           Path to the repository.
+  --provider PROVIDER   Provider to receive the deletion request.
+  --node_type NODE_TYPE
+                        The node type of the shard to be deleted.
+  --node_index NODE_INDEX
+                        The node index of the shard to be deleted.
 None
 ```
 
