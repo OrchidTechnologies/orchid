@@ -79,7 +79,7 @@ namespace po = boost::program_options;
 int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params);
 
 task<bool> Symmetric(const S<Base> &base) {
-    const auto offer(co_await Description(base, {"stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"}));
+    const auto offer(co_await Description(base, {"stun:stun.l.google.com:19302", "stun:stun.cloudflare.com:3478"}));
     std::cout << std::endl;
     std::cout << Filter(false, offer) << std::endl;
 
