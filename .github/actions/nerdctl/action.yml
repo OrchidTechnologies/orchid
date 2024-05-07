@@ -3,6 +3,8 @@ runs:
   steps:
     - run: brew install lima
       shell: bash
+    # XXX: this requires nested virtualization, so no arm?
+    # https://github.com/actions/runner-images/issues/9460
     - run: limactl start default
       shell: bash
     - run: echo "ENV_DOCKER=nerdctl.lima" >>"${GITHUB_ENV}"

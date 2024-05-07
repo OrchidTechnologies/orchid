@@ -128,7 +128,7 @@ jobs:
 
   build-mac-srv:
     needs: [cache-submodule]
-    runs-on: macos-latest
+    runs-on: macos-13
 
     if: ${{ false }} # XXX: Hypervisor.framework
     steps:
@@ -209,7 +209,7 @@ jobs:
 
   build-win-srv:
     needs: [cache-submodule]
-    runs-on: macos-latest
+    runs-on: macos-13
 
     if: ${{ false }} # XXX: use Hyper-V
     steps:
@@ -345,7 +345,7 @@ jobs:
 
   build-lnx-mac:
     needs: [cache-submodule]
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
     - uses: actions/checkout@v4
