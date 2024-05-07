@@ -21,7 +21,10 @@ head[env/libcxxabi]=origin/release_90
 head[app-shared/flutter]=3.13.9
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
-# pcre2 is stuck due to https://github.com/PCRE2Project/pcre2/issues/205
+# cairo and pixman decided to drop autotools, which is really annoying :/
+# intx is stuck due to use of concepts (so need a newer version of libc++)
+# libgcrypt is stuck on aarch64 Android due to https://dev.gnupg.org/T7111
+# libgpg-error is stuck due to libgcrypt as it breaks the older detection
 
 # url is stuck due to https://forums.developer.apple.com/thread/120977 :/
 # (I tried to use a local copy of libcxx on Apple, but crashed on iOS 14)

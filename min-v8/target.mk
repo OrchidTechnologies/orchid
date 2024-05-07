@@ -238,6 +238,7 @@ header += $(filter %.h %.inc,$(tqsrc))
 
 cflags += -I$(pwd/v8)/src
 cflags += -I$(pwd/v8)/include
+cflags += -I$(pwd)/_
 cflags += -I$(pwd)/extra
 
 # XXX: this is un-breaking something the -iquote for sed hacks is breaking in cppgc

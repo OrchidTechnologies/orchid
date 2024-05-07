@@ -19,16 +19,7 @@ cflags += -DUSE_OPENSSL
 cflags += -DOPENVPN_FORCE_TUN_NULL
 cflags += -DUSE_TUN_BUILDER
 
-ifeq (,)
-ifeq ($(target),ios)
-source += $(pwd)/ovpncli.mm
-else
-source += $(pwd)/openvpn3/client/ovpncli.cpp
-endif
-else
 source += $(wildcard $(pwd)/openvpn3/client/*.cpp)
-cflags/$(pwd)/openvpn3/ += -ObjC++
-endif
 
 cflags += -I$(pwd)/openvpn3
 cflags += -I$(pwd)/openvpn3/client
@@ -36,10 +27,9 @@ cflags += -I$(pwd)/openvpn3/client
 cflags += -DOPENVPN_EXTERNAL_TRANSPORT_FACTORY
 cflags += -DOPENVPN_EXTERNAL_TUN_FACTORY
 
+# XXX: this is unfortunate
+cflags/$(pwd)/ovpncli.mm += -Wno-deprecated-enum-enum-conversion
 cflags/$(pwd)/openvpn3/ += -Wno-deprecated-enum-enum-conversion
-
-# XXX: https://github.com/OpenVPN/openvpn3/issues/204
-cflags/$(pwd)/openvpn3/client/ovpncli.cpp += -Wno-bitwise-instead-of-logical
 
 ifeq ($(target),win)
 cflags/$(pwd)/openvpn3/ += -Wno-missing-braces

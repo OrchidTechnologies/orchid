@@ -239,7 +239,13 @@ ifneq ($(filter ios mac,$(target)),)
 # XXX: rndlinux.c  ret = getentropy (buffer, nbytes);  (syscall() backup)
 # error: implicit declaration of function 'getentropy' is invalid in C99
 w_libgcrypt += ac_cv_func_getentropy=no
+# the README file seems to indicate they don't know how to implement this
+w_libgcrypt += ac_cv_sys_symbol_underscore=yes
 endif
+
+# these symbols conflict with OpenSSL :/
+p_libgcrypt += -Daria_encrypt=gcrypt_aria_encrypt
+p_libgcrypt += -Dgf_mul=gcrypt_gf_mul
 
 w_libgcrypt += --with-libgpg-error-prefix=@/usr
 $(call depend,$(pwd)/libgcrypt/Makefile,@/usr/include/gpg-error.h)

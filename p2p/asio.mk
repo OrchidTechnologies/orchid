@@ -69,6 +69,7 @@ boost += random
 boost += range
 boost += rational
 boost += regex
+boost += scope
 boost += serialization
 boost += signals2
 boost += smart_ptr
@@ -95,6 +96,7 @@ cflags += -DBOOST_ASIO_DISABLE_CONNECTEX
 #cflags += -DBOOST_ASIO_NO_DEPRECATED
 
 # XXX: this is because I am still using an old version of libc++
+cflags += -DBOOST_ASIO_DISABLE_STD_COROUTINE
 cflags += -DBOOST_FILESYSTEM_NO_CXX20_ATOMIC_REF
 cflags += -DBOOST_NO_CXX20_HDR_CONCEPTS
 

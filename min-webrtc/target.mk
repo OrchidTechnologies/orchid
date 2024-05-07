@@ -38,6 +38,8 @@ webrtc += $(wildcard $(pwd)/webrtc/api/units/*.cc)
 
 webrtc += $(pwd)/webrtc/api/field_trials_registry.cc
 
+webrtc += $(pwd)/webrtc/api/audio/audio_processing_statistics.cc
+
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_codec_pair_id.cc
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
 
@@ -99,7 +101,6 @@ webrtc += $(filter-out \
 webrtc += $(wildcard $(pwd)/webrtc/media/sctp/*.cc)
 
 webrtc += $(pwd)/webrtc/modules/audio_coding/audio_network_adaptor/audio_network_adaptor_config.cc
-webrtc += $(pwd)/webrtc/modules/audio_processing/include/audio_processing_statistics.cc
 
 webrtc += $(wildcard $(pwd)/webrtc/modules/congestion_controller/goog_cc/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/modules/congestion_controller/rtp/*.cc)
@@ -137,6 +138,7 @@ webrtc += $(filter-out \
     %/ifaddrs_converter.cc \
     %/nat_server.cc \
     %/nat_socket_factory.cc \
+    %/trace_categories.cc \
 ,$(wildcard $(pwd)/webrtc/rtc_base/*.cc))
 
 # XXX: I'd prefer to remove all %/experiments/*

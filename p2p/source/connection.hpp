@@ -44,8 +44,6 @@
 #define TCP_KEEPIDLE TCP_KEEPALIVE
 #define TCP_KEEPCNT 16
 #define TCP_KEEPINTVL 17
-#elif defined(__linux__)
-#define TCP_USER_TIMEOUT 18
 #endif
 
 namespace orc {

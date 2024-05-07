@@ -6,7 +6,6 @@
 #include <sys/filio.h>
 typedef int msg_iovlen_t;
 #else
-#define TCP_KEEPALIVE 0
 typedef size_t msg_iovlen_t;
 #endif
 
@@ -57,6 +56,7 @@ struct msghdr {
 #ifdef __linux__
 #include <asm/ioctls.h>
 #include <asm/socket.h>
+#define TCP_KEEPALIVE 0xFF
 #ifndef __ANDROID__
 #include <bits/xopen_lim.h>
 #endif

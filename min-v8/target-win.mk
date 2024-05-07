@@ -20,8 +20,8 @@ cflags/$(pwd/v8)/src/base/platform/platform-win32.cc += -U__MINGW32__ -DPAGE_TAR
 cflags/$(pwd/v8)/src/base/platform/time.cc += -include $(pwd/v8)/../time.hpp
 
 # XXX: https://bugs.chromium.org/p/v8/issues/detail?id=12099
-cflags/$(pwd/v8)/src/base/platform/ += -include vista.hpp
-cflags/$(pwd/v8)/src/diagnostics/unwinding-info-win64.cc += -include vista.hpp
+cflags/$(pwd/v8)/src/base/platform/ += -include $(pwd/v8)/../vista.hpp
+cflags/$(pwd/v8)/src/diagnostics/unwinding-info-win64.cc += -include $(pwd/v8)/../vista.hpp
 #cflags/$(pwd/v8)/src/diagnostics/unwinding-info-win64.cc += -U_WIN32_WINNT -D_WIN32_WINNT=0x0602
 
 cflags/$(pwd)/v8/ += -Wno-format

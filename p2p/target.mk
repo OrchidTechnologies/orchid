@@ -46,6 +46,10 @@ $(call depend,$(pwd)/source/version.cpp.o,@/extra/revision.hpp)
 cflags += -I$(pwd)/expected/include
 cflags += -I$(pwd)/url/include
 cflags += -I$(pwd)/url/src
+
+# XXX: this might be fixed in a later version
+cflags/$(pwd)/url/ += -include iterator
+
 source += $(filter-out \
     %/filesystem.cpp \
 ,$(wildcard \
@@ -73,6 +77,11 @@ endif
 cflags += -I$(pwd)/lwip/src/include
 
 cflags += -DLWIP_ERRNO_STDINCLUDE
+cflags += -DLWIP_TCP
+
+ifeq ($(target),lnx)
+cflags += -DTCP_USER_TIMEOUT=18
+endif
 
 
 # Android sockaddr_storage is more indirect
@@ -169,9 +178,9 @@ cflags += -I$(pwd)/challenge-bypass-ristretto-ffi/src
 source += $(pwd)/challenge-bypass-ristretto-ffi/src/wrapper.cpp
 
 
-linked += $(pwd)/boringtun/librust.a
+linked += $(pwd)/boringtun/boringtun/librust.a
 cflags += -I$(pwd)/boringtun/boringtun/src
-features/$(pwd)/boringtun += ffi-bindings
+features/$(pwd)/boringtun/boringtun += ffi-bindings
 
 
 source += $(pwd)/SPCDNS/src/codec.c

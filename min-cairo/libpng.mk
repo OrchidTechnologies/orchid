@@ -11,6 +11,7 @@
 
 # XXX: this relied on pre-_.a behavior of archive
 
+a_libpng += --maintainer
 p_libpng := -I$(CURDIR)/$(pwd)/zlb/libz
 l_libpng := -L@/$(pwd)/zlb
 

@@ -93,7 +93,7 @@ bool Server::Bill(const Buffer &data, bool force) {
         return true;
 
     const auto amount(cashier_->Bill(data.size()));
-    const auto floor(cashier_->Bill(1024UZ*128));
+    const auto floor(cashier_->Bill(1024ULL*128)); // XXX: c++2b UZ
 
     S<Server> self;
 

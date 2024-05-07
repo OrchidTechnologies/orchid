@@ -226,3 +226,6 @@
 [submodule "mingw-w64"]
 	path = env/mingw-w64
 	url = https://git.code.sf.net/p/mingw-w64/mingw-w64
+[submodule "base"]
+	path = min-v8/base
+	url = https://chromium.googlesource.com/chromium/src/base

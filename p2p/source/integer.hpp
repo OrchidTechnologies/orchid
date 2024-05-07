@@ -43,7 +43,8 @@ using boost::multiprecision::uint256_t;
 
 static const uint128_t Max128((uint256_t(1) << 128) - 1);
 
-inline bool operator ==(const std::from_chars_result &lhs, const std::from_chars_result &rhs) {
+// XXX: remove this once I upgrade libc++
+inline bool Compare(const std::from_chars_result &lhs, const std::from_chars_result &rhs) {
     return lhs.ptr == rhs.ptr && lhs.ec == rhs.ec;
 }
 
@@ -61,7 +62,7 @@ std::enable_if_t<std::is_integral_v<Type_>, Type_> To(const std::string_view &va
         return 16;
     }());
     Type_ number;
-    orc_assert_((std::from_chars(start, end, number, detected) == std::from_chars_result{end, std::errc()}), value << " is not a number");
+    orc_assert_(Compare(std::from_chars(start, end, number, detected), std::from_chars_result{end, std::errc()}), value << " is not a number");
     return number;
 }
 
