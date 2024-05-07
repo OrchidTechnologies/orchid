@@ -5,6 +5,8 @@ from typing import Optional
 
 import math
 import numpy as np
+from cryptography.hazmat.primitives.ciphers import AEADEncryptionContext, AEADCipherContext
+from icecream import ic
 from numpy._typing import NDArray
 from tqdm import tqdm
 
@@ -12,19 +14,25 @@ from tqdm import tqdm
 # Note: We will parallelize these in a future update.  Lots of opportunity here to read chunks
 # Note: in batches and perform encoding/decoding in parallel.
 
+#
 # Base for classes that read chunks from a single input file.
+# File chunks are read using mmap in fixed size chunks with padding if necessary.
+# The chunks are reshaped to have the correct number of elements and can optionally be read
+# as big integers.
+#
+# An optional AES encryption context can be provided to encrypt or decrypt the chunks as they are read.
+#
 class ChunkReader:
-    def __init__(self, path: str, num_elements: int, element_size: int):
+    def __init__(self, path: str, num_elements: int, element_size: int,
+                 cipher: Optional[AEADCipherContext] = None):
         self.path = path
-
         self.num_elements = num_elements
         self.element_size = element_size
         self.chunk_size = num_elements * element_size
-
         self.file_length = os.path.getsize(path)
-
         self.num_chunks = math.ceil(self.file_length / self.chunk_size)
         self.mmap = None
+        self.cipher = cipher
 
     # Returns an ndarray of shape (num_elements, elements_size) bytes that shares memory with the mmap.
     # The final chunk will be padded with zeros if required to fill the chunk size.
@@ -48,6 +56,11 @@ class ChunkReader:
         if end_idx - start_idx < self.chunk_size:
             padding_length = self.chunk_size - (end_idx - start_idx)
             chunk = np.concatenate((chunk, np.zeros(padding_length, dtype='uint8')))
+
+        # Apply the cipher if provided.
+        if self.cipher:
+            chunk = self.cipher.update(chunk)
+            chunk = np.frombuffer(chunk, dtype=np.uint8) # back to numpy
 
         # Reshape the chunk to have the correct number of elements.
         chunk = chunk.reshape((self.num_elements, self.element_size))

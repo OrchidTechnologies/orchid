@@ -10,7 +10,6 @@ from storage.util import summarize_ranges, file_availability_ratio
 
 
 class ModelBase(BaseModel):
-
     # All models are immuitable and hashable
     class Config:
         frozen = True
@@ -61,6 +60,7 @@ class NodeType(ModelBase):
     def assert_reed_solomon(self):
         assert self.encoding == 'reed_solomon', "Only reed solomon encoding is currently supported."
 
+
 class NodeType0(NodeType):
     # transpose: bool = False
     type: int = 0
@@ -71,10 +71,28 @@ class NodeType1(NodeType):
     type: int = 1
 
 
+class FileEncryption(ModelBase):
+    type: str
+    encrypted_symmetric_key: str
+    initialization_vector: str
+
+    @property
+    def key(self) -> bytes:
+        return bytes.fromhex(self.encrypted_symmetric_key)
+
+    @property
+    def iv(self) -> bytes:
+        return bytes.fromhex(self.initialization_vector)
+
+
+# The file 'config' metadata for an encoded file. This is always stored alongside the encoded file
+# in the local repository and accompanies individual shards when they are distributed.
 class EncodedFile(ModelBase):
     name: str
     file_hash: str
     file_length: int
+    file_encryption: Optional[FileEncryption] = None
+
     type0: NodeType0
     type0_hashes: Optional[tuple[str, ...]] = None
     type1: NodeType1

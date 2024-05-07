@@ -14,7 +14,7 @@ server_api = Blueprint('api', __name__, url_prefix='/')
 # Default page.
 @server_api.route('/')
 def root():
-    return 'Storchid Server'
+    return 'Orchid Storage Server'
 
 
 # Health check endpoint.

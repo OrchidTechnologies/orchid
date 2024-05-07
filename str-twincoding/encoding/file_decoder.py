@@ -3,16 +3,16 @@ import os
 import time
 import uuid
 from collections import OrderedDict
-from typing import Any
+from typing import Optional
 
 import numpy as np
 from galois import FieldArray
-from numpy import ndarray
 from numpy._typing import NDArray
 from tqdm import tqdm
 
+from encoding.encrypt import get_decryptor
 from encoding.fields import get_field, FIELD_SAFE_SCALAR_SIZE_BYTES, FIELD_ELEMENT_SIZE_BYTES, symbols_to_bytes
-from storage.storage_model import NodeType, EncodedFile
+from storage.storage_model import NodeType, EncodedFile, FileEncryption
 from storage.repository import Repository
 
 from encoding.chunks import ChunksReader, open_output_file
@@ -27,6 +27,8 @@ from encoding.twin_coding import rs_generator_matrix
 #
 # Use `from_encoded_dir` for initializing a FileDecoder from an encoded dir with a config.json file.
 #
+# An optional, OpenSSH compatible key can be provided to decrypt the file as it is read and decoded.
+#
 # Note: We will parallelize this in a future update.  Lots of opportunity here to read chunks
 # Note: in batches and perform decoding in parallel.
 #
@@ -36,7 +38,9 @@ class FileDecoder(ChunksReader):
                  file_map: dict[str, int] = None,
                  output_path: str = None,
                  overwrite: bool = False,
-                 org_file_length: int = None  # original file length without encoder padding
+                 org_file_length: int = None,  # original file length without encoder padding
+                 encryption_key_path: Optional[str] = None,
+                 file_encryption: Optional[FileEncryption] = None,
                  ):
 
         node_type.assert_reed_solomon()
@@ -51,8 +55,14 @@ class FileDecoder(ChunksReader):
         self.overwrite = overwrite
         assert org_file_length is not None
         self.org_file_length = org_file_length
-
         num_elements = self.k
+
+        # Optional decryption
+        if encryption_key_path and not file_encryption:
+            raise ValueError("An encryption key was provided but no file encryption metadata.")
+        self.decryptor = get_decryptor(encryption_key_path, file_encryption.key, file_encryption.iv) \
+            if encryption_key_path else None
+
         super().__init__(file_map=file_map,
                          num_elements=num_elements,
                          element_size=FIELD_ELEMENT_SIZE_BYTES)
@@ -61,7 +71,11 @@ class FileDecoder(ChunksReader):
     # Init a file decoder from an encoded file dir.  The dir must contain a config.json file and
     # at least k files of the same type.
     @staticmethod
-    def from_encoded_dir(path: str, output_path: str = None, overwrite: bool = False):
+    def from_encoded_dir(
+            path: str, output_path: str = None, overwrite: bool = False,
+            encryption_key_path: str = None
+    ):
+
         file_config = EncodedFile.load(os.path.join(path, 'config.json'))
         assert file_config.type0.k == file_config.type1.k, "Config node types must have the same k."
         recover_from_files = FileDecoder.get_threshold_files(path, k=file_config.type0.k)
@@ -76,7 +90,10 @@ class FileDecoder(ChunksReader):
             file_map=recover_from_files,
             output_path=output_path,
             overwrite=overwrite,
-            org_file_length=file_config.file_length
+            org_file_length=file_config.file_length,
+            # Optional decryption
+            encryption_key_path=encryption_key_path,
+            file_encryption=file_config.file_encryption
         )
 
     # Map the files in a file store encoded directory. At least k files of the same type must be present
@@ -120,8 +137,16 @@ class FileDecoder(ChunksReader):
 
                     # Flatten the matrix back to an array of symbols
                     symbols: NDArray[FieldArray] = decoded.reshape(-1)
-                    # Write the data to the output file with each symbol converted to bytes at the original size.
-                    out.write(symbols_to_bytes(symbols, FIELD_SAFE_SCALAR_SIZE_BYTES))
+
+                    # Convert each symbol to bytes at the original size.
+                    chunk = symbols_to_bytes(symbols, FIELD_SAFE_SCALAR_SIZE_BYTES)
+
+                    # Optional decryption
+                    if self.decryptor:
+                        chunk = self.decryptor.update(chunk)
+
+                    # Write to the output file
+                    out.write(chunk)
 
                     # Progress bar
                     self.update_pbar(ci=ci, num_files=k, pbar=pbar, start=start)
@@ -142,14 +167,19 @@ if __name__ == '__main__':
     filename = 'file_1MB.dat'
     original_file = repo.tmp_file_path(filename)
     encoded_file = repo.file_dir_path(filename)
+    recovered_file = repo.tmp_file_path(f'recovered_{filename}')
+
     file_status = repo.file_status(filename)
     print(file_status.status_str())
 
-    recovered_file = repo.tmp_file_path(f'recovered_{filename}')
+    # optional encryption key
+    key_path = repo.tmp_file_path('test_key')
+
     decoder = FileDecoder.from_encoded_dir(
         path=encoded_file,
         output_path=recovered_file,
-        overwrite=True
+        overwrite=True,
+        encryption_key_path=key_path
     )
     decoder.decode()
     print("Passed" if filecmp.cmp(original_file, recovered_file) else "Failed")

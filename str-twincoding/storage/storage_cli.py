@@ -64,23 +64,25 @@ def encode_file(args):
         node_type1=NodeType1(k=args.k1, n=args.n1, encoding=args.encoding1),
         input_file=args.path,
         output_path=args.output_path,
-        overwrite=args.overwrite
+        overwrite=args.overwrite,
+        encryption_key_path=args.key_path
     ).encode()
 
 
-# Import command: Similar to encode_file but defaults to repository paths
+# Import command: Similar to encode_file but uses default repository paths
 def import_file(args):
     # Default the file path
-    filename = os.path.basename(args.path)
     repo = Repository(path=args.repo) if args.repo else Repository.default()
-
+    filename = os.path.basename(args.path)
     output_path = repo.file_dir_path(filename=filename, expected=False)
+
     FileEncoder(
         node_type0=NodeType0(k=args.k0, n=args.n0, encoding=args.encoding0),
         node_type1=NodeType1(k=args.k1, n=args.n1, encoding=args.encoding1),
         input_file=args.path,
         output_path=output_path,
-        overwrite=args.overwrite
+        overwrite=args.overwrite,
+        encryption_key_path=args.key_path
     ).encode()
 
 
@@ -133,7 +135,8 @@ def decode_file(args):
     FileDecoder.from_encoded_dir(
         path=args.encoded,
         output_path=args.recovered,
-        overwrite=args.overwrite
+        overwrite=args.overwrite,
+        encryption_key_path=args.key_path
     ).decode()
 
 
@@ -319,6 +322,7 @@ if __name__ == "__main__":
     parser_encode.add_argument('--encoding0', default='reed_solomon', help="Encoding for node type 0.")
     parser_encode.add_argument('--encoding1', default='reed_solomon', help="Encoding for node type 1.")
     parser_encode.add_argument('--overwrite', action='store_true', help="Overwrite existing files.")
+    parser_encode.add_argument('--key_path', required=False, help="Path to an OpenSSH compatible RSA encryption key.")
     parser_encode.set_defaults(func=encode_file)
 
     # ================================================================================
@@ -328,6 +332,7 @@ if __name__ == "__main__":
     parser_decode.add_argument('--encoded', required=True, help="Path to the encoded file.")
     parser_decode.add_argument('--recovered', required=True, help="Path to the recovered file.")
     parser_decode.add_argument('--overwrite', action='store_true', help="Overwrite existing files.")
+    parser_decode.add_argument('--key_path', required=False, help="Path to an OpenSSH compatible RSA encryption key.")
     parser_decode.set_defaults(func=decode_file)
 
     # ================================================================================
@@ -361,7 +366,7 @@ if __name__ == "__main__":
     # ================================================================================
     # Import: Like Encode but using the default repo paths and encoding
     # ================================================================================
-    parser_import = subparsers.add_parser('import', help="Import file using default repo and encoding.")
+    parser_import = subparsers.add_parser('import', help="Import file using the default repository dir and encoding.")
     parser_import.add_argument('--repo', required=False, help="Path to the repository.")
     parser_import.add_argument('--k0', type=int, default="3", help="k value for node type 0.")
     parser_import.add_argument('--n0', type=int, default="5", help="n value for node type 0.")
@@ -370,7 +375,9 @@ if __name__ == "__main__":
     parser_import.add_argument('--encoding0', default='reed_solomon', help="Encoding for node type 0.")
     parser_import.add_argument('--encoding1', default='reed_solomon', help="Encoding for node type 1.")
     parser_import.add_argument('--overwrite', action='store_true', help="Overwrite existing files.")
+    parser_import.add_argument('--key_path', required=False, help="Path to an OpenSSH compatible RSA encryption key.")
     parser_import.add_argument('path', help="Path to the file to import.")  # Positional argument
+
     parser_import.set_defaults(func=import_file)
 
     # ================================================================================

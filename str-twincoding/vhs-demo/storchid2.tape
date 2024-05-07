@@ -36,7 +36,7 @@ Show
 
 Sleep 2s
 Set TypingSpeed 0.05
-Type "# Let's use Storchid!"
+Type "# Let's use Orchid Storage!"
 Enter 2
 Sleep 3
 Type "# Generate a test file"

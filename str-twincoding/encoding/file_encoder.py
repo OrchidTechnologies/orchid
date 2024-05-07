@@ -2,15 +2,15 @@ import hashlib
 import os
 from contextlib import ExitStack
 
-from galois import FieldArray
+import paramiko
 from icecream import ic
-import numpy as np
 from numpy._typing import NDArray
 
+from encoding.encrypt import get_encryptor
 from encoding.fields import get_field, FIELD_SAFE_SCALAR_SIZE_BYTES, FIELD_ELEMENT_SIZE_BYTES, symbols_to_bytes
 from encoding.chunks import ChunkReader
 from encoding.twin_coding import rs_generator_matrix, Code, twin_code
-from storage.storage_model import EncodedFile, NodeType0, NodeType1
+from storage.storage_model import EncodedFile, NodeType0, NodeType1, FileEncryption
 from storage.repository import Repository
 from tqdm import tqdm
 import time
@@ -24,6 +24,8 @@ import time
 # erasure-encodes the file twice, once with each of the supplied generators, where the data blocks
 # of the second type are transposed before encoding.
 #
+# An optional, OpenSSH compatible key can be provided to encrypt the file as it is read and encoded.
+#
 # Note: We will parallelize this in a future update.  Lots of opportunity here to read chunks
 # Note: in batches and perform encoding in parallel.
 #
@@ -33,7 +35,9 @@ class FileEncoder(ChunkReader):
                  node_type1: NodeType1,
                  input_file: str,
                  output_path: str = None,
-                 overwrite: bool = False):
+                 overwrite: bool = False,
+                 encryption_key_path: str = None,
+                 ):
 
         node_type0.assert_reed_solomon()
         node_type1.assert_reed_solomon()
@@ -51,9 +55,15 @@ class FileEncoder(ChunkReader):
         self.overwrite = overwrite
         self._file_hash = None
         num_elements = self.k ** 2
+
+        # Optional encryption
+        self.encryptor, self.encrypted_symmetric_key, self.nonce = get_encryptor(
+            encryption_key_path) if encryption_key_path else (None, None, None)
+
         super().__init__(path=input_file,
                          num_elements=num_elements,
-                         element_size=FIELD_SAFE_SCALAR_SIZE_BYTES)
+                         element_size=FIELD_SAFE_SCALAR_SIZE_BYTES,
+                         cipher=self.encryptor)
         print(f"element size = {self.element_size}, num_elements = 'k^2' = {num_elements}")
         print(f"FileEncoder: chunk size = {self.chunk_size}, num_chunks = {self.num_chunks}")
 
@@ -73,9 +83,18 @@ class FileEncoder(ChunkReader):
                 file_length=self.file_length,
                 type0=self.node_type0,
                 type1=self.node_type1,
+                file_encryption=FileEncryption(
+                    type='AES-CTR',
+                    encrypted_symmetric_key=self.encrypted_symmetric_key.hex(),
+                    initialization_vector=self.nonce.hex()
+                ) if self.encryptor else None
             )
             f.write(file_config.model_dump_json(indent=2, exclude_defaults=True))
         return True
+
+    def init_encryption(self, key_path: str):
+        self.encryptor, self.encrypted_symmetric_key, self.nonce = get_encryptor(key_path)
+        ...
 
     # Encode the file to the output dir
     def encode(self):
@@ -145,16 +164,24 @@ if __name__ == '__main__':
     filename = 'file_1MB.dat'
     file = repo.tmp_file_path(filename)
     ic(file)
+
     # If the file doesn't exist create it
     if not os.path.exists(file):
         with open(file, "wb") as f:
             f.write(os.urandom(1 * 1024 * 1024))
+
+    # Generate a test RSA key if neeeded
+    key_path = repo.tmp_file_path('test_key')
+    if not os.path.exists(key_path):
+        key = paramiko.RSAKey.generate(bits=2048)
+        key.write_private_key_file(key_path)
 
     encoder = FileEncoder(
         node_type0=NodeType0(k=3, n=5, encoding='reed_solomon'),
         node_type1=NodeType1(k=3, n=5, encoding='reed_solomon'),
         input_file=file,
         output_path=repo.file_dir_path(filename, expected=False),
-        overwrite=True
+        overwrite=True,
+        encryption_key_path=key_path
     )
     encoder.encode()

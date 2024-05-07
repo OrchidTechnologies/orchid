@@ -1,8 +1,14 @@
+
 # Generate a test file
 dd if=/dev/urandom of="foo_file.dat" bs=1K count=1 status=none
 
 # Import a file into the default local repository with default encoding
-storage.sh import foo_file.dat
+storage.sh import "foo_file.dat"
+
+# Optionally, generate a test encryption key
+# ssh-keygen -t rsa -f test_key -N ""
+# ... and encrypt the file as it is imported into the default local repository with default encoding
+# storage.sh import --key_path "test_key" "foo_file.dat"
 
 # List the repository
 storage.sh repo list
