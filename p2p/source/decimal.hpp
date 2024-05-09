@@ -30,7 +30,11 @@
 
 namespace orc {
 
+#if 0
+using Decimal = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<50>, boost::multiprecision::et_off>;
+#else
 typedef boost::multiprecision::cpp_dec_float_50 Decimal;
+#endif
 
 }
 
