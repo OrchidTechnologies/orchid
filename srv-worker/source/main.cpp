@@ -22,6 +22,8 @@
 
 #include <random>
 
+#include <sys/random.h>
+
 #include <libplatform/libplatform.h>
 #include <v8.h>
 
@@ -29,6 +31,7 @@
 #include "src/snapshot/snapshot.h"
 
 #include "scope.hpp"
+#include "syscall.hpp"
 
 void Test(const v8::FunctionCallbackInfo<v8::Value> &args) {
     const auto isolate(args.GetIsolate());
@@ -47,11 +50,7 @@ int main(int argc, char *argv[], char **envp) {
     v8::V8::InitializeExternalStartupData(argv[0]);
 
     v8::V8::SetEntropySource([](unsigned char *data, size_t size) {
-        // XXX: this is not security critical for our daemon, but might have effects on user code
-        // there isn't a good source of entropy right now in the worker process; I should add one
-        // NOLINTNEXTLINE(cert-msc32-c,cert-msc51-cpp)
-        static const std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned char> engine;
-        std::generate(data, data + size, engine);
+        orc_assert(orc_syscall(getrandom(data, size, 0)) == size);
         return true;
     });
 

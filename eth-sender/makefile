@@ -35,7 +35,7 @@ cflags += -I$(pwd)/source
 # XXX: this literally crashes clang-tidy and I haven't filed the bug
 checks/$(pwd)/source/main.cpp += -bugprone-unchecked-optional-access
 
-$(call include,p2p/target.mk)
+$(call include,lib/target.mk)
 include env/output.mk
 
 $(output)/%/cj$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))

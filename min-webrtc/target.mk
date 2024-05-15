@@ -153,28 +153,6 @@ webrtc += $(wildcard $(pwd)/webrtc/stats/*.cc)
 webrtc += $(wildcard $(pwd)/webrtc/system_wrappers/source/*.cc)
 
 
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/base/internal/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/crc/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/crc/internal/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/debugging/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/debugging/internal/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/numeric/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/numeric/internal/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/profiling/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/profiling/internal/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/types/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/types/internal/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/strings/internal/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/synchronization/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/synchronization/internal/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/time/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/time/internal/*.cc)
-webrtc += $(wildcard $(pwd)/abseil-cpp/absl/time/internal/cctz/src/*.cc)
-cflags += -I$(pwd)/abseil-cpp
-
-
 pwd/libsrtp := $(pwd)/libsrtp
 webrtc += $(wildcard $(pwd/libsrtp)/srtp/*.c)
 cflags += -I$(pwd/libsrtp)/include
@@ -284,5 +262,3 @@ cflags/$(pwd/webrtc)/rtc_base/checks.cc += -Wno-unused-result
 
 
 include $(pwd)/target-$(target).mk
-
-$(call include,ssl/target.mk)

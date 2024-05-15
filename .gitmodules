@@ -2,16 +2,16 @@
 	path = app-shared/flutter
 	url = https://github.com/flutter/flutter.git
 [submodule "boost"]
-	path = p2p/boost
+	path = lib-shared/boost
 	url = https://github.com/boostorg/boost.git
 [submodule "cppcoro"]
-	path = p2p/cppcoro
+	path = lib-shared/cppcoro
 	url = https://github.com/lewissbaker/cppcoro.git
 [submodule "jsoncpp"]
-	path = p2p/jsoncpp
+	path = lib-shared/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
 [submodule "abseil-cpp"]
-	path = min-webrtc/abseil-cpp
+	path = lib-shared/abseil-cpp
 	url = https://github.com/abseil/abseil-cpp.git
 [submodule "libsrtp"]
 	path = min-webrtc/libsrtp
@@ -20,10 +20,10 @@
 	path = min-webrtc/webrtc
 	url = https://webrtc.googlesource.com/src
 [submodule "openvpn3"]
-	path = p2p/openvpn3
+	path = lib-protocol/openvpn3
 	url = https://github.com/OpenVPN/openvpn3.git
 [submodule "lz4"]
-	path = p2p/lz4
+	path = lib-protocol/lz4
 	url = https://github.com/lz4/lz4.git
 [submodule "openzeppelin-solidity"]
 	path = openzeppelin-solidity
@@ -35,25 +35,25 @@
 	path = vpn-shared/libevent
 	url = https://github.com/libevent/libevent.git
 [submodule "lwip"]
-	path = p2p/lwip
+	path = lib-protocol/lwip
 	url = https://git.savannah.nongnu.org/git/lwip.git
 [submodule "boringtun"]
-	path = p2p/boringtun
+	path = lib-protocol/boringtun
 	url = https://github.com/cloudflare/boringtun.git
 [submodule "tor"]
 	path = vpn-shared/tor
 	url = https://git.torproject.org/tor.git
 [submodule "libutp"]
-	path = p2p/libutp
+	path = lib-protocol/libutp
 	url = https://github.com/bittorrent/libutp.git
 [submodule "flutter-desktop-embedding"]
 	path = app-shared/flutter-desktop-embedding
 	url = https://github.com/google/flutter-desktop-embedding
 [submodule "url"]
-	path = p2p/url
+	path = lib-shared/url
 	url = https://github.com/cpp-netlib/url
 [submodule "secp256k1"]
-	path = p2p/secp256k1
+	path = lib-shared/secp256k1
 	url = https://github.com/bitcoin-core/secp256k1.git
 [submodule "openssl"]
 	path = min-openssl/openssl
@@ -65,16 +65,16 @@
 	path = min-zlib/libz
 	url = https://chromium.googlesource.com/chromium/src/third_party/zlib.git
 [submodule "eEVM"]
-	path = p2p/eEVM
+	path = lib-shared/eEVM
 	url = https://github.com/microsoft/eEVM.git
 [submodule "tap-windows6"]
-	path = p2p/tap-windows6
+	path = lib-protocol/tap-windows6
 	url = https://github.com/OpenVPN/tap-windows6
 [submodule "sqlite"]
-	path = p2p/sqlite
+	path = lib-shared/sqlite
 	url = https://github.com/mackyle/sqlite.git
 [submodule "SPCDNS"]
-	path = p2p/SPCDNS
+	path = lib-protocol/SPCDNS
 	url = https://github.com/spc476/SPCDNS
 [submodule "wireshark"]
 	path = min-wireshark/wireshark
@@ -94,12 +94,6 @@
 [submodule "gnulib"]
 	path = min-glib/gnulib
 	url = https://git.savannah.gnu.org/git/gnulib.git
-[submodule "libcxxabi"]
-	path = env/libcxxabi
-	url = https://github.com/llvm-mirror/libcxxabi.git
-[submodule "libcxx"]
-	path = env/libcxx
-	url = https://github.com/llvm-mirror/libcxx.git
 [submodule "pkg-config"]
 	path = env/pkg-config
 	url = https://gitlab.freedesktop.org/pkg-config/pkg-config.git
@@ -107,23 +101,20 @@
 	path = vpn-shared/quickjs
 	url = https://github.com/bellard/quickjs.git
 [submodule "intx"]
-	path = p2p/intx
+	path = lib-shared/intx
 	url = https://github.com/chfast/intx.git
 [submodule "expected"]
-	path = p2p/expected
+	path = lib-shared/expected
 	url = https://github.com/TartanLlama/expected.git
 [submodule "curl"]
-	path = p2p/curl
+	path = lib-protocol/curl
 	url = https://github.com/curl/curl.git
 [submodule "challenge-bypass-ristretto-ffi"]
-	path = p2p/challenge-bypass-ristretto-ffi
+	path = lib-protocol/challenge-bypass-ristretto-ffi
 	url = https://github.com/brave-intl/challenge-bypass-ristretto-ffi.git
 [submodule "icu"]
 	path = min-icu4c/icu
 	url = https://github.com/unicode-org/icu.git
-[submodule "googletest"]
-	path = min-zlib/googletest
-	url = https://chromium.googlesource.com/external/github.com/google/googletest.git
 [submodule "v8"]
 	path = min-v8/v8
 	url = https://chromium.googlesource.com/v8/v8
@@ -131,7 +122,7 @@
 	path = min-v8/trace_event
 	url = https://chromium.googlesource.com/chromium/src/base/trace_event/common.git
 [submodule "protobuf"]
-	path = p2p/protobuf
+	path = lib-protocol/protobuf
 	url = https://chromium.googlesource.com/external/github.com/google/protobuf
 [submodule "jinja2"]
 	path = min-v8/jinja2
@@ -140,19 +131,19 @@
 	path = min-v8/markupsafe
 	url = https://chromium.googlesource.com/chromium/src/third_party/markupsafe.git
 [submodule "fmt"]
-	path = p2p/fmt
+	path = lib-shared/fmt
 	url = https://github.com/fmtlib/fmt.git
 [submodule "leveldb"]
 	path = tst-explore/leveldb
 	url = https://github.com/google/leveldb.git
 [submodule "c-ares"]
-	path = p2p/c-ares
+	path = lib-protocol/c-ares
 	url = https://github.com/c-ares/c-ares.git
 [submodule "SHA3IUF"]
-	path = p2p/SHA3IUF
+	path = lib-shared/SHA3IUF
 	url = https://github.com/brainhub/SHA3IUF.git
 [submodule "cpp-jwt"]
-	path = p2p/cpp-jwt
+	path = lib-protocol/cpp-jwt
 	url = https://github.com/arun11299/cpp-jwt.git
 [submodule "cairo"]
 	path = min-cairo/cairo
@@ -164,7 +155,7 @@
 	path = min-cairo/pixman
 	url = https://gitlab.freedesktop.org/pixman/pixman.git
 [submodule "chains"]
-	path = p2p/chains
+	path = lib-protocol/chains
 	url = https://github.com/ethereum-lists/chains.git
 [submodule "engine"]
 	path = app-shared/engine
@@ -173,16 +164,16 @@
 	path = min-krypton/vpn-libraries
 	url = https://github.com/google/vpn-libraries.git
 [submodule "compile-time-regular-expressions"]
-	path = p2p/ctre
+	path = lib-shared/ctre
 	url = https://github.com/hanickadot/compile-time-regular-expressions.git
 [submodule "trezor-common"]
-	path = p2p/trezor-common
+	path = lib-protocol/trezor-common
 	url = https://github.com/trezor/trezor-common.git
 [submodule "bech32"]
-	path = p2p/bech32
+	path = lib-shared/bech32
 	url = https://github.com/sipa/bech32.git
 [submodule "pugixml"]
-	path = p2p/pugixml
+	path = lib-protocol/pugixml
 	url = https://github.com/zeux/pugixml.git
 [submodule "mediasoup"]
 	path = eng-mediasoup/mediasoup
@@ -197,7 +188,7 @@
 	path = min-webrtc/crc32c
 	url = https://github.com/google/crc32c.git
 [submodule "snappy"]
-	path = p2p/snappy
+	path = lib-protocol/snappy
 	url = https://github.com/google/snappy.git
 [submodule "pcre2"]
 	path = min-pcre2/pcre2
@@ -226,6 +217,12 @@
 [submodule "mingw-w64"]
 	path = env/mingw-w64
 	url = https://git.code.sf.net/p/mingw-w64/mingw-w64
-[submodule "base"]
-	path = min-v8/base
-	url = https://chromium.googlesource.com/chromium/src/base
+[submodule "FP16"]
+	path = min-v8/FP16
+	url = https://github.com/Maratyszcza/FP16.git
+[submodule "boringssl"]
+	path = min-boringssl/boringssl
+	url = https://boringssl.googlesource.com/boringssl
+[submodule "llvm-project"]
+	path = env/llvm-project
+	url = https://github.com/llvm/llvm-project.git

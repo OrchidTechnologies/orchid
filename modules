@@ -10,25 +10,23 @@ function tag() {
     echo "${head[$1]}"
 }
 
-tag p2p/boost 'boost-[0-9.]*'
+tag lib-shared/boost 'boost-[0-9.]*'
 tag min-openssl/openssl 'OpenSSL_[0-9_]*[a-z]'
-tag p2p/sqlite 'version-[0-9.]*'
-
-# to upgrade to a later version of libc++ would require LLVM as submodule
-head[env/libcxx]=origin/release_90
-head[env/libcxxabi]=origin/release_90
+tag lib-shared/sqlite 'version-[0-9.]*'
 
 head[app-shared/flutter]=3.13.9
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
+head[min-v8/v8]=$(sed -e '/url = "https:\/\/github.com\/v8\/v8\//!d;s/^.*\///;s/\.tar\.gz",$//' srv-worker/workerd/WORKSPACE)
+head[srv-worker/capnproto]=$(sed -e '/url.*"https:\/\/github.com\/capnproto\/capnproto\//!d;s/^.*\///;s/".*//' srv-worker/workerd/WORKSPACE)
+
 # cairo and pixman decided to drop autotools, which is really annoying :/
-# intx is stuck due to use of concepts (so need a newer version of libc++)
 # libgcrypt is stuck on aarch64 Android due to https://dev.gnupg.org/T7111
 # libgpg-error is stuck due to libgcrypt as it breaks the older detection
 
 # url is stuck due to https://forums.developer.apple.com/thread/120977 :/
 # (I tried to use a local copy of libcxx on Apple, but crashed on iOS 14)
-head[p2p/url]=7c822cb9873b1422e09be5131f30e9d83d487096
+head[lib-shared/url]=7c822cb9873b1422e09be5131f30e9d83d487096
 
 git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
     cd "${sub}"

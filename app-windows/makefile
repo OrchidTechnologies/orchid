@@ -31,6 +31,9 @@ source += $(wildcard $(pwd)/source/*.rc)
 
 $(call include,shared/target-win.mk)
 
+# XXX: due to flutter window_size plugin
+cflags += -Wno-deprecated-declarations
+
 include env/output.mk
 
 $(output)/package/$(name)$(exe): $(patsubst %,$(output)/$(machine)/%,$(object) $(linked))

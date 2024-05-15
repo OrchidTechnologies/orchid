@@ -35,8 +35,8 @@ test: $(output)/$(machine)/orchid$(exe)
 debug: $(output)/$(machine)/orchid$(exe)
 	sudo lldb -o 'run $(args)' $<
 
-source += $(wildcard vpn/p2p/lz4/lib/*.c)
-cflags += -Ivpn/p2p/lz4/lib
+source += $(wildcard vpn/lib/lz4/lib/*.c)
+cflags += -Ivpn/lib/lz4/lib
 
 cflags += -DUSE_ASIO
 cflags += -DUSE_ASIO_THREADLOCAL
@@ -44,20 +44,20 @@ cflags += -DHAVE_LZ4
 cflags += -DUSE_OPENSSL
 cflags += -D'OPENVPN_PACKET_LOG="packet.log"'
 
-cflags += -Ivpn/p2p/openvpn3
-cflags += -Ivpn/p2p/openvpn3/client
+cflags += -Ivpn/lib/openvpn3
+cflags += -Ivpn/lib/openvpn3/client
 
 ifeq ($(target),ios)
-cflags/vpn/p2p/openvpn3 += -ObjC++
+cflags/vpn/lib/openvpn3 += -ObjC++
 endif
 
-cflags += -Ivpn/p2p/source
+cflags += -Ivpn/lib/source
 
-$(call include,vpn/p2p/asio.mk)
-$(call include,vpn/p2p/rtc/openssl.mk)
+$(call include,vpn/lib/asio.mk)
+$(call include,vpn/lib/webrtc/openssl.mk)
 
-source += vpn/p2p/openvpn3/test/ovpncli/cli.cpp
-source += vpn/p2p/source/log.cpp
+source += vpn/lib/openvpn3/test/ovpncli/cli.cpp
+source += vpn/lib/source/log.cpp
 
 ifeq ($(target),mac)
 lflags += -framework CoreServices

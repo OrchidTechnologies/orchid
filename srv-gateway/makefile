@@ -44,7 +44,7 @@ record: $(output)/$(machine)/orchid$(exe)
 report: $(output)/$(machine)/orchid$(exe)
 	perf report --sort=cpu
 
-$(call include,p2p/target.mk)
+$(call include,lib/target.mk)
 
 source += $(wildcard source/*.cpp)
 

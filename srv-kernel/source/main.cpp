@@ -29,11 +29,15 @@
 
 #include <sys/mman.h>
 #include <sys/resource.h>
+#include <sys/utsname.h>
 
 #include <elf.h>
+#include <sched.h>
+#include <unistd.h>
 
 #include <cerrno>
 #include <cstdarg>
+#include <ctime>
 
 #include "paging.hpp"
 
@@ -46,6 +50,8 @@ namespace orc {
     __asm__ volatile ("dc cvac, %0" : : "r" (code) : "memory")
 #elif defined(__x86_64__) || defined(__i386__)
 #define Clear(code)
+#else
+#error
 #endif
 
 #if defined(__x86_64__)
@@ -95,7 +101,7 @@ __attribute__((__noreturn__))
 extern "C" void abort() {
     // NOLINTNEXTLINE(google-build-using-namespace)
     using namespace orc;
-    *control_ = 1;
+    *control_ = 2;
 }
 #pragma clang diagnostic pop
 
@@ -117,6 +123,17 @@ extern "C" size_t strlen(const char *data) {
     for (size_t size(0);; ++size)
         if (data[size] == '\0')
             return size;
+}
+
+// this code was stolen directly from the GNU man page
+// if it isn't correct, I'm going to be so upset... ;P
+extern "C" char *strncpy(char *dest, const char *src, size_t n) {
+   size_t i;
+   for (i = 0; i < n && src[i] != '\0'; i++)
+       dest[i] = src[i];
+   for ( ; i < n; i++)
+       dest[i] = '\0';
+   return dest;
 }
 // NOLINTEND(readability-inconsistent-declaration-parameter-name)
 // }}}
@@ -232,7 +249,7 @@ extern "C" size_t printf(const char *format, ...) {
     auto value(vsnprintf(state_.buffer_, kilopage_, format, args));
     va_end(args);
     Clear(state_.buffer_);
-    *control_ = 2;
+    *control_ = 3;
     return value;
 }
 // NOLINTEND(cppcoreguidelines-pro-type-vararg,cert-dcl50-cpp)
@@ -301,12 +318,12 @@ extern "C" long enosys(uintptr_t nr, uintptr_t lr, uintptr_t fp) {
 // }}}
 // page fault {{{
 #if defined(__aarch64__)
-extern "C" uintptr_t efault(uintptr_t sr, uintptr_t lr, uintptr_t fp, uintptr_t x0) {
+extern "C" uintptr_t efault(uintptr_t sr, uintptr_t lr, uintptr_t fp, uintptr_t xN) {
     // https://developer.arm.com/documentation/ddi0595/2021-12/AArch64-Registers/ESR-EL1--Exception-Syndrome-Register--EL1-?lang=en#fieldset_0-24_0_10
-    printf("efault(0x%lx, 0x%lx, 0x%lx, 0x%lx)\n", sr, lr, fp, x0);
+    printf("efault(0x%lx, 0x%lx, 0x%lx, 0x%lx)\n", sr, lr, fp, xN);
     backtrace(lr, reinterpret_cast<const uintptr_t *>(fp));
     abort();
-    return x0;
+    return xN;
 }
 #endif
 // }}}
@@ -358,7 +375,10 @@ template <bool Full_, typename Code_>
 #error
 #endif
 
-    return Scan_<Full_>(table, base >> pagebits_, code);
+    //*control_ = 0;
+    const auto done(Scan_<Full_>(table, base >> pagebits_, code));
+    //*control_ = 1;
+    return done;
 }
 
 template <bool Full_, typename Code_>
@@ -489,24 +509,65 @@ uintptr_t $brk(uintptr_t brk) {
 }
 // }}}
 
+bool isU(const void *data) {
+    // XXX: verify null-terminated
+    // (safe as we don't use this)
+    return true;
+}
+
+bool isU(const void *data, size_t size) {
+    return reinterpret_cast<intptr_t>(data) > 0 &&
+        reinterpret_cast<const uint8_t *>(data) + size >= data;
+}
+
+constexpr auto stacklim_(8192ul*1024ul);
+
 long $prlimit64(pid_t pid, int resource, const struct rlimit *new_limit, struct rlimit *old_limit) {
     orc_assert(pid == 0);
     orc_assert(resource == RLIMIT_STACK);
     orc_assert(new_limit == nullptr);
+    orc_assert(isU(old_limit, sizeof(*old_limit)));
 
-    old_limit->rlim_cur = 8192ul*1024ul;
+    old_limit->rlim_cur = stacklim_;
     old_limit->rlim_max = RLIM64_INFINITY;
     return 0;
+}
+
+int $uname(struct utsname *data) {
+    orc_assert(isU(data, sizeof(*data)));
+
+    strncpy(data->sysname, "Linux", sizeof(data->sysname));
+    strncpy(data->nodename, "V8", sizeof(data->nodename));
+    strncpy(data->release, "4.4.0", sizeof(data->release));
+    strncpy(data->version, "", sizeof(data->version));
+    strncpy(data->machine, "x86_64", sizeof(data->machine));
+    strncpy(data->domainname, "example.com", sizeof(data->domainname));
+    return 0;
+}
+
+constexpr pid_t pid_(1);
+pid_t $getpid() { return pid_; }
+pid_t $gettid() { return pid_; }
+
+uid_t $getuid() { return 501; }
+uid_t $geteuid() { return 501; }
+
+gid_t $getgid() { return 501; }
+gid_t $getegid() { return 501; }
+
+/*int*/ size_t $sched_getaffinity(pid_t pid, size_t size, cpu_set_t *mask) {
+    //printf("sched_getaffinity(%d, %zu)\n", pid, size);
+    orc_assert(pid == 0 || pid == pid_);
+    orc_assert(size == sizeof(*mask));
+    orc_assert(isU(mask, sizeof(*mask)));
+    CPU_ZERO(mask);
+    CPU_SET(0, mask);
+    return size;
 }
 
 long $exit_group(int status) {
     printf("exit_group(0x%x)\n", status);
     abort();
-}
-
-bool isU(const void *data, size_t size) {
-    return reinterpret_cast<intptr_t>(data) >= 0 &&
-        reinterpret_cast<const uint8_t *>(data) + size >= data;
 }
 
 #ifdef __x86_64__
@@ -523,8 +584,49 @@ long $arch_prctl(int code, unsigned long address) {
 }
 #endif
 
+/*int*/ long $clock_gettime(clockid_t clk_id, struct timespec *tp) {
+    orc_assert(clk_id == CLOCK_MONOTONIC || clk_id == CLOCK_MONOTONIC_COARSE);
+    orc_assert(isU(tp, sizeof(*tp)));
+
+    // XXX: implement time!!!
+    tp->tv_sec = 1000;
+    tp->tv_nsec = 0;
+    return 0;
+}
+
+#if 0
+#elif defined(__aarch64__)
+ssize_t $readlinkat(int fd, const char *path, char *data, size_t size) {
+    orc_assert(isU(path));
+    orc_assert(isU(data, size));
+    //printf("readlinkat(%d, \"%s\")\n", fd, path);
+    return -ENOENT;
+}
+#elif defined(__x86_64__)
+ssize_t $readlink(const char *path, char *data, size_t size) {
+    orc_assert(isU(path));
+    orc_assert(isU(data, size));
+    //printf("readlink(\"%s\")\n", path);
+    return -ENOENT;
+}
+#else
+#error
+#endif
+
+/*int*/ long $openat(int fd, const char *path, int flags, mode_t mode) {
+    orc_assert(isU(path));
+    //printf("openat(%d, \"%s\", %d, %o)\n", fd, path, flags, mode);
+    return -ENOENT;
+}
+
+size_t $read(int fd, void *data, size_t size) {
+    orc_assert(isU(data, size));
+    printf("read(%d, %p, %zu)\n", fd, data, size);
+    abort();
+}
+
 size_t $write(int fd, const void *data, size_t size) {
-    printf("write(%d, %p, %zu)\n", fd, data, size);
+    //printf("write(%d, %p, %zu)\n", fd, data, size);
     orc_assert(fd == 1 || fd == 2);
     orc_assert(isU(data, size));
     orc_assert(size <= kilopage_ - 1);
@@ -532,7 +634,18 @@ size_t $write(int fd, const void *data, size_t size) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     state_.buffer_[size] = '\0';
     Clear(state_.buffer_);
-    *control_ = 2;
+    *control_ = 3;
+    return size;
+}
+
+size_t $getrandom(void *data, size_t size, unsigned int flags) {
+    orc_assert(isU(data, size));
+    orc_assert(flags == 0);
+    for (size_t i(0); i != size; ++i)
+        // XXX: https://xkcd.com/221/
+        // chosen by fair dice roll.
+        // guaranteed to be random.
+        reinterpret_cast<char *>(data)[i] = 4;
     return size;
 }
 
@@ -625,16 +738,17 @@ void service() {
         push %%r10; push %%r11
 
         cmp %1, %%rax
-        jge abort
+        jge .Lenosys
 
         mov %0, %%rcx
-        mov (%%rcx, %%rax, 8), %%rax
+        mov (%%rcx, %%rax, 8), %%r11
 
-        cmp $0, %%rax
-        je abort
+        cmp $0, %%r11
+        je .Lenosys
 
         mov %%r10, %%rcx
-        call *%%rax
+        call *%%r11
+      .Lreturn:
 
         pop %%r11; pop %%r10
         pop %%r9; pop %%r8
@@ -645,6 +759,13 @@ void service() {
         // XXX: protect interrupts!!
         pop %%rsp
         sysretq
+
+      .Lenosys:
+        mov %%rax, %%rdi
+        //mrs elr_el1, %%rsi
+        //mov x29, %%rdx
+        call enosys
+        jmp .Lreturn
     )" : : "i" (state_.syscalls_), "i" (sizeof(state_.syscalls_) / sizeof(*state_.syscalls_)), "i" (state_.tables_)
 #else
 #error
@@ -654,27 +775,59 @@ void service() {
 // }}}
 // executable loader {{{
 extern "C" void main() {
+    //*control_ = 1;
+
     state_.tables_[0][0] = 0x0;
     state_.tables_[0][1] = 0x0;
     Clear(state_.tables_[0]);
 
     state_.more_ = reinterpret_cast<Page *>(&state_ + 1);
+
     // XXX: randomize this address
     state_.stop_ = 0x555555b2d000;
+    // XXX: guarantee value in range
+    state_.stop_ &= ~MASK(pagebits_);
 
-    state_.syscalls_[__NR_mmap] = reinterpret_cast<const void *>(&$mmap);
-    state_.syscalls_[__NR_madvise] = reinterpret_cast<const void *>(&$madvise);
-    state_.syscalls_[__NR_munmap] = reinterpret_cast<const void *>(&$munmap);
-    state_.syscalls_[__NR_mprotect] = reinterpret_cast<const void *>(&$mprotect);
-    state_.syscalls_[__NR_brk] = reinterpret_cast<const void *>(&$brk);
+    #define syscall(name) \
+        state_.syscalls_[__NR_##name] = reinterpret_cast<const void *>(&$##name)
 
-    state_.syscalls_[__NR_prlimit64] = reinterpret_cast<const void *>(&$prlimit64);
-    state_.syscalls_[__NR_exit_group] = reinterpret_cast<const void *>(&$exit_group);
+    syscall(mmap);
+    syscall(madvise);
+    syscall(munmap);
+    syscall(mprotect);
+    syscall(brk);
+
+    syscall(prlimit64);
+    syscall(uname);
+
+    syscall(getpid); syscall(gettid);
+    syscall(getuid); syscall(geteuid);
+    syscall(getgid); syscall(getegid);
+
+    syscall(sched_getaffinity);
+
+    syscall(exit_group);
+
 #if defined(__x86_64__)
-    state_.syscalls_[__NR_arch_prctl] = reinterpret_cast<const void *>(&$arch_prctl);
+    syscall(arch_prctl);
 #endif
 
-    state_.syscalls_[__NR_write] = reinterpret_cast<const void *>(&$write);
+    syscall(clock_gettime);
+
+#if 0
+#elif defined(__aarch64__)
+    syscall(readlinkat);
+#elif defined(__x86_64__)
+    syscall(readlink);
+#else
+#endif
+
+    syscall(openat);
+
+    syscall(read);
+    syscall(write);
+
+    syscall(getrandom);
 
     const auto null(orc_syscall($mmap(0, megapage_, 0, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0)));
     orc_assert(null == 0);
@@ -719,8 +872,10 @@ extern "C" void main() {
                     entry = rest | PofK(copy) | 0x1;
                 });
 
+                //*control_ = 0;
                 memset(reinterpret_cast<void *>(start), 0, offset);
                 memset(reinterpret_cast<void *>(start + offset + command.p_filesz), 0, size - offset - command.p_filesz);
+                //*control_ = 1;
             }
 
             Scan<true>(start + size, total - size, [&](uintptr_t page, uintptr_t &entry) {
@@ -729,27 +884,27 @@ extern "C" void main() {
             });
         }
 
-    struct rlimit limit{};
-    $prlimit64(0, RLIMIT_STACK, nullptr, &limit);
-    const size_t size(limit.rlim_cur);
-
-    auto stack(reinterpret_cast<uintptr_t *>(reinterpret_cast<uint8_t *>(orc_syscall($mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0))) + size));
+    auto stack(reinterpret_cast<uintptr_t *>(reinterpret_cast<uint8_t *>(orc_syscall($mmap(0, stacklim_, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0))) + stacklim_));
 
     // NOLINTBEGIN(clang-analyzer-core.NullDereference)
 
     // https://articles.manugarg.com/aboutelfauxiliaryvectors
     // https://lwn.net/Articles/519085/
 
+    // marker
+
     // random
-    // XXX: https://xkcd.com/221/
-    // chosen by fair dice roll.
-    // guaranteed to be random.
-    *--stack = 0x4444444444444444;
-    *--stack = 0x4444444444444444;
-    const auto random(stack);
+    const auto random(stack -= 2);
+    orc_syscall($getrandom(random, sizeof(*stack) * 2, 0));
+
+    // padding
 
     // auxv
     *--stack = AT_NULL;
+
+    *--stack = kilopage_;
+    *--stack = AT_PAGESZ;
+
     *--stack = reinterpret_cast<uintptr_t>(random);
     *--stack = AT_RANDOM;
 
@@ -795,10 +950,16 @@ extern "C" void main() {
         .balign 0x800
       vectors:
         .space 0x200
-        .space 0x200
+
         b %3
         .balign 0x80
-        .space 0x380
+        .space 0x180
+
+        b %3
+        .balign 0x80
+        .space 0x180
+
+        .space 0x200
     )" : : "r" (stack), "r" (entry), "i" (atexit), "i" (service), "r" (state_.tables_) : "x0"
 #elif defined(__x86_64__)
     // sysdeps/x86_64/start.S

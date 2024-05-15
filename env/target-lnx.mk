@@ -79,11 +79,7 @@ endef
 $(each)
 
 ifeq ($(distro),)
-ifneq ($(centos/$(machine)),)
-distro := centos6 $(machine) $(centos/$(machine))
-else
 distro := ubuntu bionic 7
-endif
 endif
 
 sysroot += $(output)/sysroot

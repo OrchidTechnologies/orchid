@@ -91,3 +91,5 @@ lflags += -nostdlib++ -lc++abi
 lflags += -lm -llog
 
 wflags += -L$(CURDIR)/env/android
+
+source += env/android.cpp

@@ -33,7 +33,7 @@ test: $(output)/$(machine)/orchid$(exe)
 debug: $(output)/$(machine)/orchid$(exe)
 	lldb -o 'run $(args)' $<
 
-$(call include,p2p/target.mk)
+$(call include,lib/target.mk)
 
 source += $(wildcard source/*.cpp)
 

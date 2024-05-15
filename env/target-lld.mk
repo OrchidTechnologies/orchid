@@ -12,7 +12,12 @@
 include $(pwd)/target-gnu.mk
 
 wflags += -fuse-ld=lld
-lflags += -Wl,--icf=all
 lflags += -Wl,--error-limit=0
+
+ifeq ($(filter nostrip,$(debug)),)
+lflags += -Wl,--icf=all
+else
+lflags += -Wl,--icf=none
+endif
 
 export LLD_VERSION := Linker: LLD

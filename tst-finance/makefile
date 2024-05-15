@@ -33,15 +33,15 @@ test: $(output)/$(machine)/orchid$(exe)
 debug: $(output)/$(machine)/orchid$(exe)
 	lldb -o 'run $(args)' $<
 
-$(call include,p2p/target.mk)
+$(call include,lib/target.mk)
 $(call include,zlb/target.mk)
 
 source += $(wildcard source/*.cpp)
 
-cflags += -I$(pwd)/p2p/boost/libs/iostreams/include
+cflags += -I$(pwd)/lib/boost/libs/iostreams/include
 
-source += $(pwd)/p2p/boost/libs/iostreams/src/gzip.cpp
-source += $(pwd)/p2p/boost/libs/iostreams/src/zlib.cpp
+source += $(pwd)/lib/boost/libs/iostreams/src/gzip.cpp
+source += $(pwd)/lib/boost/libs/iostreams/src/zlib.cpp
 
 include env/output.mk
 

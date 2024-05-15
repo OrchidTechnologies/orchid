@@ -34,7 +34,7 @@ test: $(output)/$(machine)/ticket$(exe)
 debug: $(output)/$(machine)/ticket$(exe)
 	lldb -o 'run $(args)' $<
 
-$(call include,p2p/target.mk)
+$(call include,lib/target.mk)
 
 source += $(wildcard source/*.cpp)
 

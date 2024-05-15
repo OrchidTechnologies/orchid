@@ -42,4 +42,4 @@ endif
 $(call include,libevent.mk)
 
 $(call include,wsk/target.mk)
-$(call include,p2p/target.mk)
+$(call include,lib/target.mk)

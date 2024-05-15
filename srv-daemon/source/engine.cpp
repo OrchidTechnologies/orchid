@@ -60,7 +60,7 @@ int Engine() {
 
 
     const Fd zygote(memfd_create("zygote", MFD_CLOEXEC));
-    const size_t arena(512*megabyte);
+    const size_t arena(768*megabyte);
     orc_syscall(ftruncate(zygote, arena));
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr)
@@ -306,6 +306,7 @@ int Engine() {
         switch (run->exit_reason) {
             case KVM_EXIT_INTR:
                 std::cout << "INTR" << std::endl;
+                dump();
                 break;
 
             case KVM_EXIT_MMIO: {
@@ -313,16 +314,17 @@ int Engine() {
                 orc_assert(run->mmio.is_write);
                 orc_assert(run->mmio.len == sizeof(uintptr_t));
                 switch (const auto command = *reinterpret_cast<const uintptr_t *>(run->mmio.data)) {
-                    case 0: {
+                    case 0: case 1: {
                         struct kvm_guest_debug debug{};
-                        debug.control = KVM_GUESTDBG_ENABLE | KVM_GUESTDBG_SINGLESTEP;
+                        debug.control = command == 0 ? 0 : KVM_GUESTDBG_ENABLE | KVM_GUESTDBG_SINGLESTEP;
+                        debug.control = 0;
                         orc_syscall(ioctl(cpu, KVM_SET_GUEST_DEBUG, &debug));
                     } break;
-                    case 1: {
+                    case 2: {
                         std::cout << "abort()" << std::endl;
                         return 0;
                     } break;
-                    case 2: {
+                    case 3: {
                         std::cout << buffer << std::flush;
                     } break;
                     default:

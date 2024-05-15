@@ -16,16 +16,19 @@ $(call include,zlb/target.mk)
 $(call include,zlb/google.mk)
 
 
-v8sub := codegen compiler/backend debug deoptimizer diagnostics execution
+v8sub := codegen compiler/backend debug deoptimizer diagnostics execution maglev regexp
 
 v8all := $(patsubst ./%,$(pwd/v8)/src/%,$(shell cd $(pwd/v8)/src && find . \
     $(foreach sub,$(v8sub),-path "./$(sub)" -prune -o) \
+    -path "./builtins/riscv" -prune -o \
     -path "./d8" -prune -o \
     -path "./heap/base/asm" -prune -o \
     -path "./heap/cppgc/asm" -prune -o \
     -path "./inspector" -prune -o \
     -path "./torque" -prune -o \
     -path "./third_party" -prune -o \
+    -path "./tracing" -prune -o \
+    -path "./wasm/fuzzing" -prune -o \
     \
     ! -path "./builtins/generate-bytecodes-builtins-list.cc" \
     ! -path "./regexp/gen-regexp-special-case.cc" \
@@ -51,6 +54,11 @@ v8all := $(patsubst ./%,$(pwd/v8)/src/%,$(shell cd $(pwd/v8)/src && find . \
 v8all += $(pwd/v8)/src/torque/class-debug-reader-generator.cc
 
 v8all += $(foreach sub,$(v8sub),$(wildcard $(pwd)/v8/src/$(sub)/*.cc))
+v8all += $(wildcard $(pwd)/v8/src/regexp/experimental/*.cc)
+v8all += $(pwd)/v8/src/tracing/trace-event.cc
+v8all += $(pwd)/v8/src/tracing/traced-value.cc
+v8all += $(pwd)/v8/src/tracing/tracing-category-observer.cc
+
 v8all := $(filter-out %/deoptimizer-cfi-builtins.cc,$(v8all))
 v8all := $(filter-out %/deoptimizer-cfi-empty.cc,$(v8all))
 v8all := $(filter-out %/system-jit-win.cc,$(v8all))
@@ -105,6 +113,7 @@ include $(pwd)/target-$(target).mk
 # XXX: vflags += -D_LIBCPP_ENABLE_NODISCARD
 vflags += -D__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES=0
 
+vflags += -DGOOGLE3
 vflags += -DOFFICIAL_BUILD
 vflags += -DNVALGRIND
 
@@ -115,11 +124,15 @@ vflags += -DENABLE_HANDLE_ZAPPING
 vflags += -DENABLE_MINOR_MC
 vflags += -DVERIFY_HEAP
 
-vflags += -DV8_31BIT_SMIS_ON_64BIT_ARCH
+# XXX: this seems to be broken now?
+# look at 51bad4ef1d2b8cebca9ea1dbe3cc30e80dabf2cd
+#vflags += -DV8_31BIT_SMIS_ON_64BIT_ARCH
+
 vflags += -DV8_ADVANCED_BIGINT_ALGORITHMS
 vflags += -DV8_ATOMIC_MARKING_STATE
 vflags += -DV8_ATOMIC_OBJECT_FIELD_WRITES
 vflags += -DV8_DEPRECATION_WARNINGS
+vflags += -DV8_ENABLE_CONTINUATION_PRESERVED_EMBEDDER_DATA
 vflags += -DV8_ENABLE_LAZY_SOURCE_POSITIONS
 vflags += -DV8_ENABLE_REGEXP_INTERPRETER_THREADED_DISPATCH
 vflags += -DV8_ENABLE_WEBASSEMBLY
@@ -136,10 +149,15 @@ ifeq ($(bits/$(machine)),64)
 #vflags += -DV8_SHORT_BUILTIN_CALLS
 endif
 
-ifeq ($(machine),x86_64)
+vflags += -DV8_ENABLE_SPARKPLUG
 vflags += -DV8_ENABLE_MAGLEV
+vflags += -DV8_ENABLE_TURBOFAN
+
+ifeq ($(machine),x86_64)
+vflags += -DV8_ENABLE_WASM_SIMD256_REVEC
 else
-v8src := $(filter-out $(pwd/v8)/src/maglev/%,$(v8src))
+v8src := $(filter-out $(pwd/v8)/src/compiler/revectorizer.cc,$(v8src))
+v8src := $(filter-out $(pwd/v8)/src/compiler/turboshaft/wasm-revec-%,$(v8src))
 endif
 
 cflags += -DICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_STATIC
@@ -152,6 +170,7 @@ endif
 
 vflags += -I$(pwd/v8)
 vflags += -I$(output)/$(pwd/v8)
+vflags += -I$(pwd)/extra
 
 source += $(v8src)
 
@@ -165,7 +184,7 @@ vflags += -include cstdint
 
 $(output)/$(pwd/v8)/gen-regexp-special-case: $(pwd)/v8/src/regexp/gen-regexp-special-case.cc $(pwd)/fatal.cc $(output)/icu4c/lib/libicuuc.a $(output)/icu4c/lib/libicudata.a
 	@mkdir -p $(dir $@)
-	clang++ -std=c++14 -pthread -o $@ $^ $(vflags) $(icu4c) -ldl -m$(bits/$(machine))
+	clang++ -std=c++17 -pthread -o $@ $^ $(vflags) $(icu4c) -ldl -m$(bits/$(machine))
 
 $(output)/$(pwd/v8)/special-case.cc: $(output)/$(pwd/v8)/gen-regexp-special-case
 	@mkdir -p $(dir $@)
@@ -178,7 +197,7 @@ source += $(output)/$(pwd/v8)/special-case.cc
 
 $(output)/$(pwd/v8)/generate-bytecodes-builtins-list: $(pwd)/v8/src/builtins/generate-bytecodes-builtins-list.cc $(pwd)/v8/src/interpreter/bytecodes.cc $(pwd)/v8/src/interpreter/bytecode-operands.cc $(pwd)/fatal.cc
 	@mkdir -p $(dir $@)
-	clang++ -std=c++14 -pthread -o $@ $^ $(vflags) -m$(bits/$(machine))
+	clang++ -std=c++17 -pthread -o $@ $^ $(vflags) -m$(bits/$(machine))
 
 $(output)/$(pwd/v8)/builtins-generated/bytecodes-builtins-list.h: $(output)/$(pwd/v8)/generate-bytecodes-builtins-list
 	@mkdir -p $(dir $@)
@@ -194,15 +213,15 @@ torque := $(patsubst ./%,%,$(sort $(shell cd $(pwd)/v8 && find . -name '*.tq')))
 
 # XXX: this now needs to be per target (due to -m$(bits))
 
-$(output)/$(pwd/v8)/torque: $(wildcard $(pwd)/v8/src/torque/*.cc) $(pwd)/v8/src/base/functional.cc $(pwd)/fatal.cc
+$(output)/$(pwd/v8)/torque: $(wildcard $(pwd)/v8/src/torque/*.cc) $(pwd)/fatal.cc
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
-	clang++ -std=c++14 -pthread -o $@ $^ $(vflags) -m$(bits/$(machine))
+	clang++ -std=c++17 -pthread -o $@ $^ $(vflags) -m$(bits/$(machine))
 
 tqsrc := $(patsubst %.tq,%-tq-csa.cc,$(torque))
-#tqsrc += class-debug-readers.cc
+tqsrc += class-debug-readers.cc
 tqsrc += class-verifiers.cc
-#tqsrc += debug-macros.cc
+tqsrc += debug-macros.cc
 tqsrc += exported-macros-assembler.cc
 tqsrc += $(patsubst %.cc,%.h,$(tqsrc))
 tqsrc += $(patsubst %.tq,%-tq.cc,$(torque))
@@ -238,7 +257,6 @@ header += $(filter %.h %.inc,$(tqsrc))
 
 cflags += -I$(pwd/v8)/src
 cflags += -I$(pwd/v8)/include
-cflags += -I$(pwd)/_
 cflags += -I$(pwd)/extra
 
 # XXX: this is un-breaking something the -iquote for sed hacks is breaking in cppgc
@@ -261,5 +279,7 @@ cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment
 
 # XXX: they might have already changed many of these cases
 cflags/$(pwd/v8)/ += -Wno-unused-but-set-variable
+
+cflags += -Wno-invalid-offsetof
 
 archive += $(pwd/v8)/

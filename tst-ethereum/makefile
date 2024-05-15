@@ -32,7 +32,7 @@ test: $(output)/$(machine)/orchid$(exe)
 source += $(wildcard source/*.cpp)
 cflags += -Isource
 
-$(call include,p2p/target.mk)
+$(call include,lib/target.mk)
 include env/output.mk
 
 $(output)/%/orchid$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))

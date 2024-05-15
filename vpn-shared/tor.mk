@@ -33,7 +33,8 @@ deps += $(pwd)/libevent/.libs/libevent_core.a
 w_tor += tor_cv_library_zlib_dir="(system)"
 
 p_tor += -I@/openssl/include
-p_tor += -I$(CURDIR)/$(pwd)/p2p/rtc/openssl/include
+# XXX: I don't think openssl is in this folder anymore
+p_tor += -I$(CURDIR)/$(pwd)/lib/webrtc/openssl/include
 deps += openssl/include/openssl/opensslconf.h
 l_tor += -L@/openssl
 deps += openssl/libssl.a

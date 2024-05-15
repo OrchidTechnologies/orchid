@@ -53,7 +53,7 @@ source += $(wildcard $(pwd)/source/*.cpp)
 cflags += -I$(pwd)/extra
 cflags += -I$(pwd)/source
 
-$(call include,p2p/target.mk)
+$(call include,lib/target.mk)
 
 cflags += -Iall/vpn-shared/source
 ifeq ($(target),lnx)
