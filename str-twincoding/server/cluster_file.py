@@ -189,17 +189,17 @@ class ClusterFileStatus:
 # main
 if __name__ == '__main__':
 
-    async def main2():
-        # filename: str = 'file_1KB.dat'
-        filename: str = 'foo_file.dat'
+    async def main():
+        repo = Repository.default()
+        filename = repo.list()[0]
         file: EncodedFile = Repository.default().file(filename)
 
-        servers = [Server(url='http://localhost:8080')]
+        servers = [Server(url='http://localhost:5001')]
         cluster_status: ClusterFileStatus = await ClusterFileStatus(servers, file, debug=True).fetch()
         for server, files_list in cluster_status.server_files_status_map.items():
             ic(server, files_list)
         ic(cluster_status.cluster_availability())
 
 
-    asyncio.run(main2())
+    asyncio.run(main())
     ...

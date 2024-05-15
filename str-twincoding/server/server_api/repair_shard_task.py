@@ -11,8 +11,8 @@ from storage.repository import Repository
 from storage.storage_model import NodeType, EncodedFile
 
 
-# Download the required number of recovery files from providers in the cluster and
-# reconstruct the specified shard.
+# Download the required number of Twin Coded recovery symbols (recover files) from providers in the cluster
+# and reconstruct the specified shard.
 class RepairShardTask(Renderable):
 
     def __init__(
@@ -74,6 +74,7 @@ class RepairShardTask(Renderable):
         if self.repair_node_index in repair_type_shards_available:
             print(f"Complete shard exists in cluster: {self.filename} {self.repair_node_type} {self.repair_node_index}")
             print(f"Fetch shard directly instead of repairing.")
+            # TODO
             return
 
         # We need to repair.  Are there enough new shards of the correct type available?

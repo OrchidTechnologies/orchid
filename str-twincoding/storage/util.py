@@ -2,6 +2,7 @@ import argparse
 import os
 from typing import List
 
+
 # Get the storage project home directory or a path relative to it
 def get_strhome(path: str = None) -> str:
     STRHOME = os.environ.get('STRHOME') or '.'
@@ -21,7 +22,7 @@ def file_availability_ratio(
         count0: int,
         # Count of distinct shards of type 1
         count1: int,
-):
+) -> float:
     availability0 = count0 / k0 if count0 >= k0 else 0
     availability1 = count1 / k1 if count1 >= k1 else 0
     return availability0 + availability1
@@ -67,6 +68,21 @@ def dump_docs_md(_, subparsers: argparse._SubParsersAction):
         print('```')
         print(subparser.print_help())
         print('```')
+
+
+# Return the path to a temp file of random data of the specified size.
+# If the file exists it will not be overwritten.
+def get_or_create_random_test_file(filename: str, size: int) -> str:
+    from storage.repository import Repository
+    repo = Repository.default()
+    path = repo.tmp_file_path(filename)
+
+    # If the file doesn't exist create it
+    if not os.path.exists(path):
+        with open(path, "wb") as f:
+            f.write(os.urandom(size))
+
+    return path
 
 
 # main

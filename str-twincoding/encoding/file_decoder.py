@@ -100,7 +100,7 @@ class FileDecoder(ChunksReader):
     # to succeed. Returns a map of the first k files of either type found.
     @classmethod
     def get_threshold_files(cls, files_dir: str, k: int) -> dict[str, int]:
-        type0_files, type1_files = Repository.map_files(files_dir)
+        type0_files, type1_files = Repository.map_shards_from(files_dir)
         if len(type0_files) >= k:
             return OrderedDict(list(type0_files.items())[:k])
         elif len(type1_files) >= k:

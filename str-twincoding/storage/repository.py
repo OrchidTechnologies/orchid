@@ -1,7 +1,10 @@
 import re
 from collections import OrderedDict
 from typing import Any, Dict
-from storage.storage_model import EncodedFile, EncodedFileStatus, assert_node_type
+
+from werkzeug.utils import secure_filename
+
+from storage.storage_model import EncodedFile, EncodedFileStatus, assert_node_type, BlobCommitments
 from storage.util import *
 from icecream import ic
 
@@ -41,10 +44,23 @@ class Repository:
             assert os.path.exists(path), f"Encoded file not found: {path}"
         return path
 
-    # Get the path to an encoded file config by name.
+    # Get the path to an encoded file config json by name.
     def file_config_path(self, filename: str, expected: bool = True) -> str:
         path = self.file_dir_path(filename, expected)
-        return os.path.join(path, 'config.json')
+        return Repository.file_config_path_from(path)
+
+    @staticmethod
+    def file_config_path_from(file_dir_path: str) -> str:
+        return os.path.join(file_dir_path, 'config.json')
+
+    # Get the path to an encoded file commitments json by name.
+    def file_commitments_path(self, filename: str, expected: bool = True) -> str:
+        path = self.file_dir_path(filename, expected)
+        return Repository.file_commitments_path_from(path)
+
+    @staticmethod
+    def file_commitments_path_from(file_dir_path: str) -> str:
+        return os.path.join(file_dir_path, 'commitments.json')
 
     # Save the file config, creating a new repo file dir.
     # If the config already exists, an exception is raised.
@@ -58,17 +74,49 @@ class Repository:
 
     # Get the path to a shard of the encoded file by file name, node type and index
     def shard_path(self, filename: str, node_type: int, node_index: int, expected: bool = True) -> str:
+        file_dir_path = self.file_dir_path(filename)
+        return self.shard_path_for(file_dir_path, node_type, node_index, expected)
+
+    # Get the path to a shard of the encoded file by file dir path, node type and index
+    @staticmethod
+    def shard_path_for(file_dir_path: str, node_type: int, node_index: int, expected: bool = True) -> str:
         assert_node_type(node_type)
-        path = f'{self.file_dir_path(filename)}/type{node_type}_node{node_index}.dat'
+        path = os.path.join(file_dir_path, f'type{node_type}_node{node_index}.dat')
         if expected:
             assert os.path.exists(path), f"Shard not found: {path}"
         return path
+
+    # Get the path to the commits for the encoded file shard by file name, node type and index
+    def shard_commits_path(self, filename: str, node_type: int, node_index: int, expected: bool = True) -> str:
+        file_dir_path = self.file_dir_path(filename)
+        return self.shard_commits_path_for(file_dir_path, node_type, node_index, expected)
+
+    def shard_commits(self, filename: str, node_type: int, node_index: int) -> BlobCommitments:
+        path = self.shard_commits_path(filename, node_type, node_index)
+        return BlobCommitments.load(path)
+
+    # Get the path to the commits for the encoded file shard by file dir path, node type and index
+    @staticmethod
+    def shard_commits_path_for(file_dir_path: str, node_type: int, node_index: int, expected: bool = True) -> str:
+        assert_node_type(node_type)
+        path = os.path.join(file_dir_path, f'type{node_type}_node{node_index}_commits.json')
+        if expected:
+            assert os.path.exists(path), f"Shard commits not found: {path}"
+        return path
+
+    # Convert a shard file path to a shard commits file path.
+    @staticmethod
+    def shard_commits_path_from_shard_path(shard_path: str) -> str:
+        # type{node_type}_node{node_index}.dat => type{node_type}_node{node_index}_commits.json
+        return re.sub(r'\.dat$', '_commits.json', shard_path)
 
     def shard_exists(self, filename: str, node_type: int, node_index: int) -> bool:
         return os.path.exists(self.shard_path(filename, node_type, node_index, expected=False))
 
     # Get encoded file configuration by name.
+    # Note that filename is sanitized to be suitable for untrusted use.
     def file(self, filename: str, expected: bool = True) -> EncodedFile | None:
+        filename = secure_filename(filename)
         path = self.file_config_path(filename, expected=expected)
         try:
             return EncodedFile.load(path)
@@ -121,9 +169,9 @@ class Repository:
 
     # Map the available shards of an encoded repository file.
     # This returns two ordered dicts, one for type 0 files and one for type 1 files,
-    # containing filename -> node index
-    def map_shards(self, file: str) -> (dict[str, int], dict[str, int]):
-        return self.map_files(self.file_dir_path(file))
+    # containing shar file path -> node index
+    def map_shards(self, filename: str) -> (dict[str, int], dict[str, int]):
+        return self.map_shards_from(self.file_dir_path(filename))
 
     def file_exists(self, filename):
         return os.path.exists(self.file_dir_path(filename, expected=False))
@@ -147,8 +195,7 @@ class Repository:
 
     @staticmethod
     # Return maps of type 0 and type 1 files, file path -> node index
-    def map_files(files_dir: str) -> (dict[str, int], dict[str, int]):
-        type0_files: dict[Any, Any]
+    def map_shards_from(files_dir: str) -> (dict[str, int], dict[str, int]):
         type0_files, type1_files = {}, {}
         for filename in os.listdir(files_dir):
             match = re.match(r'type([01])_node(\d+).dat', filename)

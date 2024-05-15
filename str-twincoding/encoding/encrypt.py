@@ -13,6 +13,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes, AE
 from paramiko.rsakey import RSAKey
 
 from storage.repository import Repository
+from storage.util import get_or_create_random_test_file
 
 chunk_size = 64 * 1024  # 64 KB chunks
 symmetric_key_size = 32
@@ -126,19 +127,13 @@ def start_decryption_stream(key_path: str, in_stream: BinaryIO):
 
 
 if __name__ == '__main__':
-
     def test():
-        # Random test file paths
         repo = Repository.default()
+        # Random test file
         filename = 'file_1MB.dat'
-        file_path = repo.tmp_file_path(filename)
+        file_path = get_or_create_random_test_file(filename, 1 * 1024 * 1024)
         encrypted_file_path = repo.tmp_file_path("encrypted.dat")
         decrypted_file_path = repo.tmp_file_path("decrypted.dat")
-
-        # If the file doesn't exist create it
-        if not os.path.exists(file_path):
-            with open(file_path, "wb") as f:
-                f.write(os.urandom(1 * 1024 * 1024))
 
         key_path = "test_key"
         encrypt(key_path, file_path, encrypted_file_path)

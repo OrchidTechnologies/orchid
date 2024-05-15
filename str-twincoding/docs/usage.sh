@@ -34,6 +34,10 @@ monitor.sh --update 1
 # (Observe the availability of the file in the monitor)
 storage.sh push foo_file.dat
 
+# Verify the file data availability by issuing KZG challenges to the servers.
+# (Observe the verified time update in the monitor)
+storage.sh verify file_1MB.dat
+
 # Delete a shard from one of the providers
 # (Observe the availability is reduced as a unique shard is lost)
 storage.sh delete_shard --provider 5001 foo_file.dat --node_type 0 --node_index 0

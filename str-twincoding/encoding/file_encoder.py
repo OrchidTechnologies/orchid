@@ -6,6 +6,7 @@ import paramiko
 from icecream import ic
 from numpy._typing import NDArray
 
+from commitments.kzg_commitment import FileCommitments
 from encoding.encrypt import get_encryptor
 from encoding.fields import get_field, FIELD_SAFE_SCALAR_SIZE_BYTES, FIELD_ELEMENT_SIZE_BYTES, symbols_to_bytes
 from encoding.chunks import ChunkReader
@@ -14,6 +15,8 @@ from storage.storage_model import EncodedFile, NodeType0, NodeType1, FileEncrypt
 from storage.repository import Repository
 from tqdm import tqdm
 import time
+
+from storage.util import get_or_create_random_test_file
 
 
 # Erasure code a file into two sets of shards, one for each node type in the twin coding scheme.
@@ -34,7 +37,7 @@ class FileEncoder(ChunkReader):
                  node_type0: NodeType0,
                  node_type1: NodeType1,
                  input_file: str,
-                 output_path: str = None,
+                 output_path: str = None,  # output dir path
                  overwrite: bool = False,
                  encryption_key_path: str = None,
                  ):
@@ -51,7 +54,8 @@ class FileEncoder(ChunkReader):
         self.k = node_type0.k
         print(f"k = {self.k}")
         self.path = input_file
-        self.output_dir = output_path or input_file + '.encoded'
+        self.filename: str = os.path.basename(self.path)
+        self.encoded_output_dir = output_path or input_file + '.encoded'
         self.overwrite = overwrite
         self._file_hash = None
         num_elements = self.k ** 2
@@ -69,35 +73,49 @@ class FileEncoder(ChunkReader):
 
     # Initialize the output directory that will hold the erasure-encoded chunks.
     def init_output_dir(self) -> bool:
-        if os.path.exists(self.output_dir):
+        if os.path.exists(self.encoded_output_dir):
             if not self.overwrite:
-                print(f"Output directory already exists: {self.output_dir}.")
+                print(f"Output directory already exists: {self.encoded_output_dir}.")
                 return False
         else:
-            os.makedirs(self.output_dir)
+            os.makedirs(self.encoded_output_dir)
 
-        with open(os.path.join(self.output_dir, 'config.json'), 'w') as f:
-            file_config = EncodedFile(
-                name=os.path.basename(self.path),
-                file_hash=self.file_hash(),
-                file_length=self.file_length,
-                type0=self.node_type0,
-                type1=self.node_type1,
-                file_encryption=FileEncryption(
-                    type='AES-CTR',
-                    encrypted_symmetric_key=self.encrypted_symmetric_key.hex(),
-                    initialization_vector=self.nonce.hex()
-                ) if self.encryptor else None
-            )
-            f.write(file_config.model_dump_json(indent=2, exclude_defaults=True))
+        self.write_config()
         return True
 
-    def init_encryption(self, key_path: str):
-        self.encryptor, self.encrypted_symmetric_key, self.nonce = get_encryptor(key_path)
+    def write_config(self):
+        file_config = EncodedFile(
+            name=os.path.basename(self.path),
+            file_hash=self.file_hash(),
+            file_length=self.file_length,
+            type0=self.node_type0,
+            type1=self.node_type1,
+            file_encryption=FileEncryption(
+                type='AES-CTR',
+                encrypted_symmetric_key=self.encrypted_symmetric_key.hex(),
+                initialization_vector=self.nonce.hex()
+            ) if self.encryptor else None
+        )
+        config_path = Repository.file_config_path_from(self.encoded_output_dir)
+        file_config.save(config_path)
+
+    def write_commitments(self):
+        t0_files: dict[str, int]
+        t1_files: dict[str, int]
+        t0_files, t1_files = Repository.map_shards_from(self.encoded_output_dir)
+        all_shards = list(t0_files.keys()) + list(t1_files.keys())
+        for shard_file in tqdm(all_shards, desc="Generating commitments"):
+            # Output commitments to the same directory as the shards
+            commitments_file_path = Repository.shard_commits_path_from_shard_path(shard_file)
+            FileCommitments(file_path=shard_file).save(commitments_file_path)
         ...
 
     # Encode the file to the output dir
     def encode(self):
+        self.encode_shards()
+        self.write_commitments()
+
+    def encode_shards(self):
         if not self.init_output_dir():
             print(f"Skipping encoding.")
             return
@@ -111,8 +129,8 @@ class FileEncoder(ChunkReader):
         C1 = Code(k=k, n=n1, GF=GF, G=rs_generator_matrix(GF, k=k, n=n1))
 
         # Check for existing files
-        filenames0 = [f"{self.output_dir}/type0_node{i}.dat" for i in range(n0)]
-        filenames1 = [f"{self.output_dir}/type1_node{i}.dat" for i in range(n1)]
+        filenames0 = [f"{self.encoded_output_dir}/type0_node{i}.dat" for i in range(n0)]
+        filenames1 = [f"{self.encoded_output_dir}/type1_node{i}.dat" for i in range(n1)]
         if not self.overwrite:
             existing = [f for f in (filenames0 + filenames1) if os.path.exists(f)]
             if existing:
@@ -162,13 +180,7 @@ if __name__ == '__main__':
 
     # Random test file
     filename = 'file_1MB.dat'
-    file = repo.tmp_file_path(filename)
-    ic(file)
-
-    # If the file doesn't exist create it
-    if not os.path.exists(file):
-        with open(file, "wb") as f:
-            f.write(os.urandom(1 * 1024 * 1024))
+    path = get_or_create_random_test_file(filename, 1 * 1024 * 1024)
 
     # Generate a test RSA key if neeeded
     key_path = repo.tmp_file_path('test_key')
@@ -179,7 +191,7 @@ if __name__ == '__main__':
     encoder = FileEncoder(
         node_type0=NodeType0(k=3, n=5, encoding='reed_solomon'),
         node_type1=NodeType1(k=3, n=5, encoding='reed_solomon'),
-        input_file=file,
+        input_file=path,
         output_path=repo.file_dir_path(filename, expected=False),
         overwrite=True,
         encryption_key_path=key_path

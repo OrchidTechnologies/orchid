@@ -7,6 +7,7 @@ from server.server_api.server_api_list import server_api_list
 from server.server_api.server_api_repair import server_api_repair
 from server.server_api.server_api_upload import server_api_upload
 from server.server_api.server_api_delete import server_api_delete
+from server.server_api.server_api_verify import server_api_verify
 
 
 class ServerApp:
@@ -43,6 +44,7 @@ class ServerApp:
         flask.register_blueprint(server_api_repair)
         flask.register_blueprint(server_api_upload)
         flask.register_blueprint(server_api_delete)
+        flask.register_blueprint(server_api_verify)
 
         flask.run(host=self.interface, port=self.port, debug=self.debug)
 

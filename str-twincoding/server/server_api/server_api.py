@@ -1,7 +1,4 @@
-import json
-
 from flask import jsonify, request, Request, Blueprint
-from icecream import ic
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
@@ -30,14 +27,13 @@ def is_authorized(request):
     return request.headers.get('Authorization') == app().auth_key or (not app().auth_key)
 
 
-# TODO: This should just be a json string in the request, doesn't have to be a file.
 # Get a EncodedFile config from the request, sanitizing the filename before any path
 # logic is exposed to it.
 def file_config_from(request: Request) -> EncodedFile | None:
     try:
         config_stor: FileStorage = request.files['config']
         config_str = config_stor.read().decode('utf-8')
-        uploaded_config: EncodedFile = EncodedFile.load_json(config_str)
+        uploaded_config: EncodedFile = EncodedFile.from_json(config_str)
         return uploaded_config.model_copy(
             update={'name': secure_filename(uploaded_config.name)}
         )
@@ -58,21 +54,14 @@ def int_from(name: str, request: Request) -> int | None:
     return int(request.form[name]) if name in request.form else None
 
 
+def string_from(name: str, request: Request) -> str | None:
+    return request.form[name] if name in request.form else None
+
+
+# bytes from hex encoded string
+def bytes_from(name: str, request: Request) -> bytes | None:
+    return bytes.fromhex(request.form[name]) if name in request.form else None
+
+
 if __name__ == '__main__':
-
-    def main():
-        from storage.storage_model import EncodedFileStatus, EncodedFile
-
-        # file = app().repository.list()[0]
-        # type0_files, type1_files = app().repository.map_shards(file)
-        # config = app().repository.file(file)
-        to_json = json.dumps([app().repository.file_status(file).model_dump() for file in app().repository.list()])
-        ic(to_json)
-        from_json = json.loads(to_json)
-        for file in from_json:
-            fs = EncodedFileStatus(**file)
-            print(fs.file.name)
-
-
-    main()
     ...

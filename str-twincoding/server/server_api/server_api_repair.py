@@ -86,7 +86,7 @@ def recovery_source():
 @server_api_repair.route('/repair', methods=['POST'])
 def repair():
     repair_request_str: str = request.form['request']
-    repair_request = RepairShardRequest.load_json(repair_request_str)
+    repair_request = RepairShardRequest.from_json(repair_request_str)
 
     # Does the request file config match one that we already have?
     repo: Repository = app().repository

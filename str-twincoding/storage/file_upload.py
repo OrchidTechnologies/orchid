@@ -160,7 +160,7 @@ class FileUpload:
             shard_index: int,
             url: str,
             auth: str = None,
-            # id/index, progress, total
+            # id/index, progress, total, node_type
             progress_callback: Callable[[int, int, int, int], None] = None,
             timeout: int = 60 * 60 * 24 * 7,
             task_index: int = 0,  # for logging and progress reporting
@@ -223,13 +223,15 @@ if __name__ == '__main__':
         file0 = repo.list()[0]
         shard_path = repo.shard_path(file0, node_type=0, node_index=0)
         config_path = repo.file_config_path(file0)
-        url = 'http://localhost:8090/upload'
+        # url = 'http://localhost:8090/upload'
+        url = 'http://localhost:5001/upload'
 
-        def callback(file, progress, total):
+        def callback(file, progress, total, type):
             ic(file, progress, total)
 
         response = await FileUpload.upload_file(
-            config_path, shard_path, node_type=0, shard_index=0, url=url, progress_callback=callback)
+            config_file_path=config_path, shard_file_path=shard_path,
+            node_type=0, shard_index=0, url=url, progress_callback=callback)
         ic(response)
         ...
 
