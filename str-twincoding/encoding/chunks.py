@@ -82,7 +82,7 @@ class ChunkReader:
 class ChunksReader:
     def __init__(self, file_map: dict[str, int], num_elements: int, element_size: int):
         self.files: [str] = list(file_map.keys())
-        self.files_indices: [int] = list(file_map.values())
+        self.files_indices: list[int] = list(file_map.values())
 
         self.num_elements = num_elements
         self.element_size = element_size
@@ -95,7 +95,7 @@ class ChunksReader:
     # Validate that the files are of the same length and are a multiple of chunk_size.
     # Return the number of chunks.
     @staticmethod
-    def validate_files(files: list[str], file_indices: [int], chunk_size: int) -> int:
+    def validate_files(files: list[str], file_indices: list[int], chunk_size: int) -> int:
 
         print("chunk size:", chunk_size)
 

@@ -47,8 +47,33 @@ class RepairShardRequest(ModelBase):
     overwrite: bool = False
 
 
+class VerifyShardRequest(ModelBase):
+    file: EncodedFile
+    node_type: int
+    node_index: int
+    challenge: str
+    challenge_count: int
+
+
+class Proof(ModelBase):
+    proof: str
+    y_eval: str
+
+    def proof_bytes(self) -> bytes:
+        return bytes.fromhex(self.proof)
+
+    def y_eval_bytes(self) -> bytes:
+        return bytes.fromhex(self.y_eval)
+
+
+class VerifyShardResponse(ModelBase):
+    proofs: List[Proof]
+
+
 if __name__ == '__main__':
     ...
     # config = Cluster.load('cluster.jsonc')
     # print(config)
     # print(f"config version: {config.config_version}")
+
+    Proof(proof="123", y_eval="456")

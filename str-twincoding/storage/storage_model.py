@@ -22,8 +22,11 @@ class ModelBase(BaseModel):
 
     # load from json string
     @classmethod
-    def load_json(cls, json_str):
+    def from_json(cls, json_str):
         return cls(**json.loads(json_str))
+
+    def to_json(self):
+        return self.model_dump_json()
 
     # Save to json file
     def save(self, file_path, mkdirs: bool = False):
@@ -94,9 +97,10 @@ class EncodedFile(ModelBase):
     file_encryption: Optional[FileEncryption] = None
 
     type0: NodeType0
-    type0_hashes: Optional[tuple[str, ...]] = None
+    # type0_hashes: Optional[tuple[str, ...]] = None
     type1: NodeType1
-    type1_hashes: Optional[tuple[str, ...]] = None
+
+    # type1_hashes: Optional[tuple[str, ...]] = None
 
     @property
     def k0(self):
@@ -126,7 +130,11 @@ class EncodedFileStatus(ModelBase):
     shards0: list[int]
     shards1: list[int]
 
-    def local_availability(self):
+    # Get shards info for the specified type
+    def shards(self, node_type: int):
+        return self.shards0 if node_type == 0 else self.shards1
+
+    def local_availability(self) -> float:
         return file_availability_ratio(
             self.file.k0, self.file.k1, len(self.shards0), len(self.shards1))
 
@@ -135,12 +143,29 @@ class EncodedFileStatus(ModelBase):
         return (f"File: {self.file.name}, "
                 f"Encoding: {self.file.encoding_str()}, "
                 f"Availability: {self.local_availability()}, "
-                f"Type 0 shards: {summarize_ranges(self.shards0)}, "
-                f"Type 1 shards: {summarize_ranges(self.shards1)}")
+                f"Type0_shards: [{summarize_ranges(self.shards0)}], "
+                f"Type1_shards: [{summarize_ranges(self.shards1)}]")
 
     # to string
     def __str__(self):
         return self.status_str()
+
+
+class BlobCommitments(ModelBase):
+    file_name: str
+    commitments: list[str]
+
+    def commitments_bytes(self) -> list[bytes]:
+        return [bytes.fromhex(commitment) for commitment in self.commitments]
+
+    @property
+    def count(self):
+        return len(self.commitments)
+
+    def for_indices(self, indices: list[int])-> list[bytes]:
+        return [bytes.fromhex(self.commitments[i]) for i in indices]
+
+    ...
 
 
 def assert_node_type(node_type: int):

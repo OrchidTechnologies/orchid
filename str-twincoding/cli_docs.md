@@ -238,6 +238,21 @@ options:
                         The node index of the shard to be deleted.
 None
 ```
+###`verify`
+```
+usage: storage verify [-h] [--repo REPO] [--providers [PROVIDERS ...]] file
+
+positional arguments:
+  file                  Name of the file in the local repository.
+
+options:
+  -h, --help            show this help message and exit
+  --repo REPO           Path to the repository.
+  --providers [PROVIDERS ...]
+                        Optional list of provider names or urls for the
+                        verify.
+None
+```
 
 ## Server Docs
 ```

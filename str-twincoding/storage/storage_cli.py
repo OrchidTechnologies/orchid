@@ -5,12 +5,14 @@ from typing import List
 
 from icecream import ic
 
+from commitments.kzg_commitment import FileCommitments
 from server.providers import Providers
 from storage.file_download import FileDownload
 from storage.file_list_table import FileListTable
 from storage.file_request import FileRequest
 from storage.file_upload import FileUpload
-from storage.storage_model import NodeType, NodeType0, NodeType1, EncodedFileStatus
+from storage.file_verify import FileVerify
+from storage.storage_model import NodeType, NodeType0, NodeType1, EncodedFileStatus, BlobCommitments
 from storage.repository import Repository
 from encoding.file_decoder import FileDecoder
 from encoding.file_encoder import FileEncoder
@@ -72,15 +74,17 @@ def encode_file(args):
 # Import command: Similar to encode_file but uses default repository paths
 def import_file(args):
     # Default the file path
+    input_file_path = args.path
     repo = Repository(path=args.repo) if args.repo else Repository.default()
     filename = os.path.basename(args.path)
-    output_path = repo.file_dir_path(filename=filename, expected=False)
+    output_dir_path = repo.file_dir_path(filename=filename, expected=False)
 
+    # Optionally encrypt and then encode the file as shards to the output folder path.
     FileEncoder(
         node_type0=NodeType0(k=args.k0, n=args.n0, encoding=args.encoding0),
         node_type1=NodeType1(k=args.k1, n=args.n1, encoding=args.encoding1),
-        input_file=args.path,
-        output_path=output_path,
+        input_file=input_file_path,
+        output_path=output_dir_path,
         overwrite=args.overwrite,
         encryption_key_path=args.key_path
     ).encode()
@@ -112,6 +116,23 @@ def push_file(args):
 
 
 _progress_bars_map = {}
+
+
+def verify_file(args):
+    # context
+    repo = Repository(path=args.repo) if args.repo else Repository.default()
+    providers = Providers.default()
+
+    # provider args
+    filename = args.file
+    providers_args: List[str] = args.providers  # optional explicit list of providers
+    providers_list = providers.resolve_providers(providers_args) if providers_args else None
+
+    if not repo.file_exists(filename):
+        print(f"File not found in repository: {filename}")
+        return
+
+    asyncio.run(FileVerify(repo, providers).verify(filename=filename, providers_list=providers_list))
 
 
 # index is the position of the progress bar in a multi-bar display
@@ -310,7 +331,7 @@ if __name__ == "__main__":
     parser_tmp_file_path.set_defaults(func=repo_tmp_file_path)
 
     # ================================================================================
-    # Encode - sub-commands
+    # Encode - sub-command
     # ================================================================================
     parser_encode = subparsers.add_parser('encode', help="Encode a file.")
     parser_encode.add_argument('--path', required=True, help="Path to the file to encode.")
@@ -326,7 +347,7 @@ if __name__ == "__main__":
     parser_encode.set_defaults(func=encode_file)
 
     # ================================================================================
-    # Decode - sub-commands
+    # Decode - sub-command
     # ================================================================================
     parser_decode = subparsers.add_parser('decode', help="Decode an encoded file.")
     parser_decode.add_argument('--encoded', required=True, help="Path to the encoded file.")
@@ -336,7 +357,7 @@ if __name__ == "__main__":
     parser_decode.set_defaults(func=decode_file)
 
     # ================================================================================
-    # Recovery Generation - sub-commands
+    # Recovery Generation - sub-command
     # ================================================================================
     parser_gen_rec = subparsers.add_parser('generate_recovery_file', help="Generate recovery files.")
     parser_gen_rec.add_argument('--recover_node_type', type=int, required=True, help="Type of the recovering node.")
@@ -388,7 +409,7 @@ if __name__ == "__main__":
     parser_import.set_defaults(func=repo_list)
 
     # ================================================================================
-    # Push: Send a file in the repository to one or more providers
+    # Push: Upload a file in the repository to one or more providers
     # ================================================================================
     parser_push = subparsers.add_parser('push', help="Send a file in the repository to one or more providers.")
     parser_push.add_argument('--repo', required=False, help="Path to the repository.")
@@ -430,7 +451,8 @@ if __name__ == "__main__":
     # a file with the aid of other providers.
     # ================================================================================
     parser_repair = subparsers.add_parser('request_repair',
-                                          help="Prompt a provider to repair shards using specified other providers.")
+                                          help="Prompt a provider (which may be a server run on the local repo) to "
+                                               "repair shards using specified other providers.")
     parser_repair.add_argument('--repo', required=False, help="Path to the repository.")
     parser_repair.add_argument('--to_provider', required=True, help="Provider to receive the repair request.")
     parser_repair.add_argument('file', help="Name of the file in the repository.")
@@ -457,6 +479,20 @@ if __name__ == "__main__":
     parser_delete_shard.add_argument('--node_index', type=int, required=True,
                                      help="The node index of the shard to be deleted.")
     parser_delete_shard.set_defaults(func=request_delete_shard)
+
+    # ================================================================================
+    # Verify: a file on one or more providers.
+    # For each shard of the file hosted, a KZG commitment will be issued and verified.
+    # storage.sh verify file_1MB.dat --providers 5001
+    # ================================================================================
+    parser_verify = subparsers.add_parser('verify',
+                                          help="Locate each available shard of the file on the providers and verify "
+                                               "data availability by issuing KZG challenges.")
+    parser_verify.add_argument('--repo', required=False, help="Path to the repository.")
+    parser_verify.add_argument('--providers', required=False, nargs='*',
+                               help="Optional list of provider names or urls for the verify.")
+    parser_verify.add_argument('file', help="Name of the file in the local repository.")
+    parser_verify.set_defaults(func=verify_file)
 
     # Dump all help for docs
     parser_docs = subparsers.add_parser('docs')

@@ -11,3 +11,4 @@ Werkzeug==3.0.0
 uuid==1.30
 paramiko==3.4.0
 cryptography==42.0.6
+ckzg==1.0.2

@@ -49,14 +49,13 @@ stop_server() {
 }
 
 list_all() {
-    echo "All instances of $app"
+    #echo "All instances of $app"
 
     # Print header
     printf "%-10s %-10s %-10s\n" "PID" "PORT" "TIME"
 
     # Find all PIDs for the given process name and extract relevant information
-    echo "$app"
-    ps auxw | grep "$app" | grep -v grep | awk '{
+    list_procs | awk '{
         pid = $2; 
         time = $10; 
         command = $11; 
@@ -70,6 +69,10 @@ list_all() {
 
         printf "%-10s %-10s %-10s\n", pid, port, time
     }'
+}
+
+list_procs() {
+    ps auxwww | grep "$app" | grep -v grep 
 }
 
 stop_all() {
@@ -96,7 +99,7 @@ stop_all() {
 # Check command line arguments
 if [ $# -eq 0 ]
 then
-    echo "No arguments provided. Usage: ./script.sh start|stop|kill [ports...]"
+    echo "No arguments provided. Usage: ./script.sh start | stop | list | kill [ports...]"
     exit 1
 fi
 
@@ -119,6 +122,9 @@ case $1 in
         ;;
     list)
         list_all
+        ;;
+    procs)
+        list_procs
         ;;
     stop-all)
         stop_all

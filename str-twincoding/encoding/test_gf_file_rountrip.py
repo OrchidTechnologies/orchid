@@ -10,6 +10,8 @@ from storage.repository import Repository
 from tqdm import tqdm
 import time
 
+from storage.util import get_or_create_random_test_file
+
 
 # Test the round trip of a file through the Galois Field symbol encoding and decoding.
 class GFFileRoundtripTest(ChunkReader):
@@ -56,15 +58,10 @@ class GFFileRoundtripTest(ChunkReader):
 def test_gf_file_roundtrip():
     repo = Repository.default()
 
-    # Random test file
+    # Random test file and output path
     filename = 'file_1MB.dat'
-    file = repo.tmp_file_path(filename)
+    file = get_or_create_random_test_file(filename, 1 * 1024 * 1024)
     outpath = repo.tmp_file_path('gf_test.dat')
-    ic(file, outpath)
-    # If the file doesn't exist create it
-    if not os.path.exists(file):
-        with open(file, "wb") as f:
-            f.write(os.urandom(1 * 1024 * 1024))
 
     encoder = GFFileRoundtripTest(
         input_file=file,
