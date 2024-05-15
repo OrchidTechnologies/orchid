@@ -16,7 +16,7 @@ This repository contains work in progress on the file encoding CLI and server fr
 
 ## Overview
 
-Orchid Storage is a (truly) decentralized storage system capable of maintaining files and issuing payments based on data availbility even when the client is offline.  This is accomplished through incentive aligned providers, non-interactive verification protocols, and efficient rebuilding and migration capabilities.
+Orchid Storage is a (truly) decentralized storage system capable of maintaining files and issuing payments based on data availbility even when the client is offline.  This is accomplished through incentive-aligned providers, non-interactive verification protocols, and efficient rebuilding and migration capabilities.
 
 In this demo implementation files are imported to a local repository directory structure where they are optionally encrypted using an RSA key with AES and then encoded to a specified number of shards.  Shards are linear coded in a "k of n" scheme such that only a specified subset of shards must be recovered to reconstruct the file.  The use of Twin Coding (see below) allows individual shards to be reconstructed with minimal bandwidth by cooperating providers.
 
@@ -30,7 +30,9 @@ Shards are distributed to one or more providers as desired. Individual providers
 
 Periodic challenges are issued to providers, either interactively or via a source of on-chain randomness, requiring proof of specific data components.  Providers collect payments by proving data availability.  These payments can be optimized to require zero on-chain transactions when the client is available online but can still function via a non-interactive contract mechanism in the absence of the client.
 
-![Proofs](docs/proofs.svg "Proofs")
+<div style="text-align: center;">
+  <img src="docs/proofs.svg" alt="Proofs" title="Proofs" width="320" />
+</div>
 
 
 ## Twin Coding
