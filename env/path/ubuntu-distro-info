@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# distro-info package is Arch AUR and is not in Homebrew
+# it also is *wrong* as it claims bionic isn't supported
+# XXX: this breaks debootstrap as it isn't old-releases!
+
+# XXX: use dictionary to look up version and fold others
+case "$*" in
+    ("--supported") echo bionic; echo focal; echo jammy;;
+    ("--series "*) echo "$2";;
+
+    ("-r --series bionic") echo 18.04 LTS;;
+    ("-r --series focal") echo 20.04 LTS;;
+    ("-r --series jammy") echo 22.04 LTS;;
+
+    (*) echo "$0 $*" 1>&2; exec false;;
+esac
+
+exec true

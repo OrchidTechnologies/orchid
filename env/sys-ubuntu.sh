@@ -24,10 +24,11 @@ if [[ $(uname -s) = Linux ]]; then
 
     debootstrap=${mount}/debootstrap
     # XXX: proot -0 runs the command but fails on exit; fakeroot works correctly
-    DEBOOTSTRAP_DIR=${debootstrap} fakeroot "${debootstrap}"/debootstrap --foreign \
-        --variant=minbase --arch amd64 --components=main,universe "${distro}" .
+    DEBOOTSTRAP_DIR=${debootstrap} fakeroot "${debootstrap}"/debootstrap --foreign --variant=minbase --arch amd64 --components=main,universe "${distro}" .
 
-    "${proot}" -0 -r . -w / -b /proc -b /sys /debootstrap/debootstrap --second-stage
+    cp -af "${mount}/path/ubuntu-distro-info" usr/bin
+    "${proot}" -0 -r . -w / -b /sys /debootstrap/debootstrap --second-stage
+
     # XXX: https://groups.google.com/g/linux.debian.bugs.dist/c/-p06sQmwamA
     echo "deb http://archive.ubuntu.com/ubuntu/ ${distro}-updates main universe" >>etc/apt/sources.list
     HOME= "${proot}" -S . -w / -b "${mount}:/mnt" /mnt/setup-sys.sh "$@"
