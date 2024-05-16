@@ -190,7 +190,7 @@ class Transport :
         return false; }
     bool transport_has_send_queue() noexcept override {
         return false; }
-    unsigned int transport_send_queue_size() noexcept override {
+    size_t transport_send_queue_size() noexcept override {
         return 0; }
 
     // no one calls this. it has something to do with UWP
@@ -381,8 +381,12 @@ class Middle :
         Log() << "OpenVPN[" << event.name << "]: " << event.info << std::endl;
     }
 
+    void acc_event(const openvpn::ClientAPI::AppCustomControlMessageEvent &event) noexcept override {
+        Log() << "OpenVPN[" << event.protocol << "]: " << event.payload << std::endl;
+    }
 
-    bool socket_protect(int socket, std::string remote, bool ipv6) noexcept override {
+
+    bool socket_protect(openvpn_io::detail::socket_type socket, std::string remote, bool ipv6) noexcept override {
         // we do this by hooking the internal implementation of bind/connect
         return true;
     }

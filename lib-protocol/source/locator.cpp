@@ -40,7 +40,7 @@ Locator::Locator(const std::string &locator) :
     Locator([&]() {
         // XXX: this should obviously take std::string_view
         auto result(skyr::make_url(locator));
-        orc_assert_(result, result.error().message());
+        orc_assert_(result, make_error_code(result.error()).message());
         auto &value(result.value());
         auto scheme(value.protocol());
         orc_assert(!scheme.empty() && scheme[scheme.size() - 1] == ':');

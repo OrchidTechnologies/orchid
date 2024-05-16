@@ -11,7 +11,7 @@ pacman -Sy \
     binutils aarch64-linux-gnu-binutils \
     mingw-w64-binutils \
     libc++ libc++abi \
-    python-pip python-setuptools \
+    python-{packaging,pip,setuptools} \
     jdk17-openjdk \
     bison flex gperf \
     gettext groff texinfo \

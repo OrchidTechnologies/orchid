@@ -21,12 +21,8 @@ head[min-v8/v8]=$(sed -e '/url = "https:\/\/github.com\/v8\/v8\//!d;s/^.*\///;s/
 head[srv-worker/capnproto]=$(sed -e '/url.*"https:\/\/github.com\/capnproto\/capnproto\//!d;s/^.*\///;s/".*//' srv-worker/workerd/WORKSPACE)
 
 # cairo and pixman decided to drop autotools, which is really annoying :/
-# libgcrypt is stuck on aarch64 Android due to https://dev.gnupg.org/T7111
-# libgpg-error is stuck due to libgcrypt as it breaks the older detection
-
-# url is stuck due to https://forums.developer.apple.com/thread/120977 :/
-# (I tried to use a local copy of libcxx on Apple, but crashed on iOS 14)
-head[lib-shared/url]=7c822cb9873b1422e09be5131f30e9d83d487096
+# llvm-project (libcxx/libcxxabi) is stuck due to me being bored of this
+# openvpn3 is stuck due to external transport factory breaking OPENVPN_LOG
 
 git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
     cd "${sub}"

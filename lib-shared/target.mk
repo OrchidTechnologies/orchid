@@ -43,22 +43,6 @@ source += $(pwd)/cppcoro/lib/win32.cpp
 endif
 
 
-cflags += -I$(pwd)/expected/include
-cflags += -I$(pwd)/url/include
-cflags += -I$(pwd)/url/src
-
-# XXX: this might be fixed in a later version
-cflags/$(pwd)/url/ += -include iterator
-
-source += $(filter-out \
-    %/filesystem.cpp \
-,$(wildcard \
-    $(pwd)/url/src/unicode/*.cpp \
-    $(pwd)/url/src/url/*.cpp \
-    $(pwd)/url/src/url/percent_encoding/*.cpp \
-))
-
-
 #source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp
 source += $(wildcard $(pwd)/boost/libs/filesystem/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/json/src/*.cpp)
@@ -122,3 +106,4 @@ include $(pwd)/asio.mk
 $(call include,abseil.mk)
 $(call include,secp256k1.mk)
 $(call include,sqlite.mk)
+$(call include,url.mk)

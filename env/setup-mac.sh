@@ -7,6 +7,7 @@ brew install \
     rpm2cpio zstd \
     binutils \
     mingw-w64 \
+    python-packaging \
     groff \
     autoconf autoconf-archive automake \
     libtool meson \
