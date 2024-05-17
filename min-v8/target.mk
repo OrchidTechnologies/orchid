@@ -267,10 +267,6 @@ cflags += -DU_SHOW_INTERNAL_API
 
 # XXX: -fno-exceptions -fno-rtti
 
-# XXX: consider making this a global decision
-#chacks/$(pwd/v8)/src/./profiler/heap-snapshot-generator.cc += s/V8_CC_MSVC/1/
-cflags += -mno-ms-bitfields
-
 # this might have to become global if that bitfield is exported
 cflags/$(pwd/v8)/ += -Wno-enum-constexpr-conversion
 

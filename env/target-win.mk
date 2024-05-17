@@ -90,12 +90,7 @@ lflags += -Wl,-Xlink=-force:multiple
 cflags += -DWIN32_LEAN_AND_MEAN=
 cflags += -D_CRT_RAND_S=
 
-# XXX: this breaks std::to_string(uint64_t)
-# https://github.com/llvm/llvm-project/issues/52709
-#cflags += -fms-extensions
-
-#cflags += -fms-compatibility
-#cflags += -D__GNUC__
+cflags += -mno-ms-bitfields
 
 #  warning: 'I64' length modifier is not supported by ISO C
 qflags += -Wno-format-non-iso

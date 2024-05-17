@@ -43,22 +43,16 @@ source += $(pwd)/cppcoro/lib/win32.cpp
 endif
 
 
-#source += $(pwd)/boost/libs/regex/src/regex_traits_defaults.cpp
 source += $(wildcard $(pwd)/boost/libs/filesystem/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/json/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/program_options/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/random/src/*.cpp)
 source += $(wildcard $(pwd)/boost/libs/regex/src/*.cpp)
 
-# XXX: https://github.com/boostorg/beast/issues/2282
-checks/$(pwd)/source/base64.cpp += -clang-analyzer-core.UndefinedBinaryOperatorResult
-
 cflags/$(pwd)/boost/libs/filesystem/src/unique_path.cpp += -Wno-unused-function
 
 ifeq ($(target),win)
 cflags/$(pwd)/boost/libs/filesystem/src/operations.cpp += -Wno-unused-const-variable
-# XXX https://github.com/boostorg/filesystem/issues/206
-cflags/$(pwd)/boost/libs/filesystem/src/path.cpp += -Wno-inconsistent-missing-override
 cflags/$(pwd)/boost/libs/filesystem/src/windows_file_codecvt.cpp += -Wno-inconsistent-missing-override
 endif
 

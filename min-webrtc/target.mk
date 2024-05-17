@@ -254,6 +254,7 @@ chacks/$(pwd/webrtc)/pc/rtc_stats_collector.cc += s/rtc::make_ref_counted<RTCSta
 # XXX: https://bugs.chromium.org/p/webrtc/issues/detail?id=12967
 chacks/$(pwd/webrtc)/p2p/base/dtls_transport.cc += /Should not happen\./,/;/d;
 
+# XXX: just chacks/ this fwrite to somehow access orc::Log
 # XXX: a bug needs to be filed for this :/
 # vpn/p2p/rtc/webrtc/rtc_base/checks.cc:49:3: error: ignoring return value of function declared with 'warn_unused_result' attribute [-Werror,-Wunused-result]
 #   fwrite(output.data(), output.size(), 1, stderr);

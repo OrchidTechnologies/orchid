@@ -45,7 +45,7 @@ include $(pwd)/kit-default.mk
 else
 
 define _
-more/$(1) += -target $(host/$(1))18.5.0
+more/$(1) += -target $(host/$(1))19
 endef
 $(each)
 

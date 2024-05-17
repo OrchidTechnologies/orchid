@@ -15,6 +15,3 @@ include $(pwd)/target-psx.mk
 
 v8src += $(filter %-linux.cc,$(v8all))
 v8src += $(pwd)/v8/src/base/platform/platform-linux.cc
-
-# XXX: https://bugs.chromium.org/p/v8/issues/detail?id=12682
-chacks/$(pwd/v8)/src/base/platform/platform-posix.cc += /OS::CreateSharedMemoryHandleForTesting/,/^}/d;
