@@ -390,7 +390,7 @@ class _ChatViewState extends State<ChatView> {
         const Spacer(),
         // Connect button
         ChatButton(
-          text: _connected ? 'Reroll' : 'Connect',
+          text: 'Reroll',
           onPressed: _connectProvider,
         ).left(8),
         // Clear button
