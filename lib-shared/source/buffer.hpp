@@ -95,7 +95,13 @@ class Buffer {
   public:
     virtual ~Buffer() = default;
 
-    virtual bool each(const std::function<bool (const uint8_t *, size_t)> &code) const = 0;
+
+    [[nodiscard]] virtual bool each(const std::function<bool (const uint8_t *, size_t)> &code) const = 0;
+
+    void every(const std::function<void (const uint8_t *, size_t)> &code) const {
+        orc_assert(each([&](const uint8_t *data, size_t size) { code(data, size); return true; }));
+    }
+
 
     virtual size_t size() const;
     virtual bool have(size_t value) const;
@@ -103,11 +109,18 @@ class Buffer {
 
     virtual bool zero() const;
 
-    void copy(uint8_t *data, size_t size) const;
+
+    [[nodiscard]] size_t read(uint8_t *data, size_t size) const;
+
+    void copy(uint8_t *data, size_t size) const {
+        orc_assert(read(data, size) == size);
+    }
 
     void copy(char *data, size_t size) const {
-        copy(reinterpret_cast<uint8_t *>(data), size);
-    }
+        return copy(reinterpret_cast<uint8_t *>(data), size); }
+    [[nodiscard]] size_t read(char *data, size_t size) const {
+        return read(reinterpret_cast<uint8_t *>(data), size); }
+
 
     std::vector<uint8_t> vec() const;
     std::string str() const;
@@ -265,11 +278,10 @@ class Span :
 
     void load(size_t offset, const Buffer &data) {
         orc_assert(offset <= this->size_);
-        data.each([&](const uint8_t *data, size_t size) {
+        data.every([&](const uint8_t *data, size_t size) {
             orc_assert(this->size_ - offset >= size);
             Copy(this->data_ + offset, data, size);
             offset += size;
-            return true;
         });
     }
 };
@@ -1098,9 +1110,8 @@ class Window final :
     Window(const Buffer &buffer) :
         count_([&]() {
             size_t count(0);
-            buffer.each([&](const uint8_t *data, size_t size) {
+            buffer.every([&](const uint8_t *data, size_t size) {
                 ++count;
-                return true;
             });
             return count;
         }()),
@@ -1109,9 +1120,8 @@ class Window final :
         begin_(segments_.get())
     {
         auto i(segments_.get());
-        buffer.each([&](const uint8_t *data, size_t size) {
+        buffer.every([&](const uint8_t *data, size_t size) {
             *(i++) = Segment(data, size);
-            return true;
         });
     }
 
@@ -1284,9 +1294,8 @@ class Builder :
     }
 
     void operator +=(const Buffer &buffer) {
-        buffer.each([&](const uint8_t *data, size_t size) {
+        buffer.every([&](const uint8_t *data, size_t size) {
             append(data, size);
-            return true;
         });
     }
 };

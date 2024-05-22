@@ -119,11 +119,10 @@ class Buffers :
         buffer_(pbuf_alloc(PBUF_RAW, Fit(data.size()), PBUF_RAM))
     {
         u16_t offset(0);
-        data.each([&](const uint8_t *data, size_t size) {
+        data.every([&](const uint8_t *data, size_t size) {
             orc_lwipcall(pbuf_take_at, (buffer_, data, Fit(size), offset));
             copied_ += size;
             offset += size;
-            return true;
         });
     }
 

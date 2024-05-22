@@ -62,9 +62,8 @@ StateK &StateK::operator +=(const Span<const uint8_t> &data) {
 }
 
 StateK &StateK::operator +=(const Buffer &data) {
-    data.each([&](const uint8_t *data, size_t size) {
+    data.every([&](const uint8_t *data, size_t size) {
         operator +=({data, size});
-        return true;
     });
 
     return *this;
@@ -93,9 +92,8 @@ Brick<64> Hash4(const Buffer &data) {
     SHA512_CTX context;
     SHA512_Init(&context);
 
-    data.each([&](const uint8_t *data, size_t size) {
+    data.every([&](const uint8_t *data, size_t size) {
         SHA512_Update(&context, data, size);
-        return true;
     });
 
     Brick<SHA512_DIGEST_LENGTH> hash;
@@ -107,9 +105,8 @@ Brick<48> Hash3(const Buffer &data) {
     SHA512_CTX context;
     SHA384_Init(&context);
 
-    data.each([&](const uint8_t *data, size_t size) {
+    data.every([&](const uint8_t *data, size_t size) {
         SHA384_Update(&context, data, size);
-        return true;
     });
 
     Brick<SHA384_DIGEST_LENGTH> hash;
@@ -121,9 +118,8 @@ Brick<32> Hash2(const Buffer &data) {
     SHA256_CTX context;
     SHA256_Init(&context);
 
-    data.each([&](const uint8_t *data, size_t size) {
+    data.every([&](const uint8_t *data, size_t size) {
         SHA256_Update(&context, data, size);
-        return true;
     });
 
     Brick<SHA256_DIGEST_LENGTH> hash;
@@ -135,9 +131,8 @@ Brick<20> Hash1(const Buffer &data) {
     SHA_CTX context;
     SHA1_Init(&context);
 
-    data.each([&](const uint8_t *data, size_t size) {
+    data.every([&](const uint8_t *data, size_t size) {
         SHA1_Update(&context, data, size);
-        return true;
     });
 
     Brick<SHA_DIGEST_LENGTH> hash;
@@ -149,9 +144,8 @@ Brick<20> HashR(const Buffer &data) {
     RIPEMD160_CTX context;
     RIPEMD160_Init(&context);
 
-    data.each([&](const uint8_t *data, size_t size) {
+    data.every([&](const uint8_t *data, size_t size) {
         RIPEMD160_Update(&context, data, size);
-        return true;
     });
 
     Brick<RIPEMD160_DIGEST_LENGTH> hash;
@@ -163,9 +157,8 @@ Brick<16> Hash5(const Buffer &data) {
     MD5_CTX context;
     MD5_Init(&context);
 
-    data.each([&](const uint8_t *data, size_t size) {
+    data.every([&](const uint8_t *data, size_t size) {
         MD5_Update(&context, data, size);
-        return true;
     });
 
     Brick<MD5_DIGEST_LENGTH> hash;

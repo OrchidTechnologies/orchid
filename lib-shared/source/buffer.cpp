@@ -33,9 +33,8 @@ std::atomic<uint64_t> copied_(0);
 
 size_t Buffer::size() const {
     size_t value(0);
-    each([&](const uint8_t *data, size_t size) {
+    every([&](const uint8_t *data, size_t size) {
         value += size;
-        return true;
     });
     return value;
 }
@@ -83,25 +82,23 @@ std::string Buffer::hex(bool prefix) const {
     if (prefix)
         value << "0x";
     value << std::hex << std::setfill('0');
-    each([&](const uint8_t *data, size_t size) {
+    every([&](const uint8_t *data, size_t size) {
         for (size_t i(0), e(size); i != e; ++i)
             value << std::setw(2) << unsigned(data[i]);
-        return true;
     });
     return value.str();
 }
 
-void Buffer::copy(uint8_t *data, size_t size) const {
+size_t Buffer::read(uint8_t *data, size_t size) const {
     auto here(data);
 
-    each([&](const uint8_t *next, size_t writ) {
+    every([&](const uint8_t *next, size_t writ) {
         orc_assert(data + size - here >= writ);
         Copy(here, next, writ);
         here += writ;
-        return true;
     });
 
-    orc_assert(here == data + size);
+    return here - data;
 }
 
 Snipped Buffer::snip(size_t length) const {
@@ -117,31 +114,32 @@ std::ostream &operator <<(std::ostream &out, const Buffer &buffer) {
 
     out << '{';
     bool comma(false);
-    buffer.each([&](const uint8_t *data, size_t size) {
+    buffer.every([&](const uint8_t *data, size_t size) {
         if (comma)
             out << ',';
         else
             comma = true;
         for (size_t i(0); i != size; ++i)
             out << std::setw(2) << int(data[i]);
-        return true;
     });
     out << '}';
     return out;
 }
 
-// XXX: I don't think the return value of this is correct, but I'm not using it today
+// XXX: this function isn't right but it works well enough for now
 bool Snipped::each(const std::function<bool (const uint8_t *, size_t)> &code) const {
     size_t rest(size_);
-    return data_.each([&](const uint8_t *data, size_t size) {
+    (void) data_.each([&](const uint8_t *data, size_t size) {
         if (rest > size) {
             rest -= size;
             return code(data, size);
         } else {
-            code(data, rest);
+            if (code(data, rest))
+                rest = 0;
             return false;
         }
     });
+    return rest == 0;
 }
 
 std::ostream &operator <<(std::ostream &out, const View &view) {
@@ -210,12 +208,11 @@ Mutable &Mutable::operator =(const Buffer &buffer) {
     auto here(data());
     size_t rest(size());
 
-    buffer.each([&](const uint8_t *data, size_t size) {
+    buffer.every([&](const uint8_t *data, size_t size) {
         orc_assert(rest >= size);
         Copy(here, data, size);
         here += size;
         rest -= size;
-        return true;
     });
 
     orc_assert(rest == 0);

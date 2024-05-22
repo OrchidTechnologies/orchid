@@ -46,11 +46,10 @@ Beam Encipher::operator ()(const Buffer &data) const {
     Beam output(data.size() + ctx_);
     size_t offset(0);
 
-    data.each([&](const uint8_t *data, size_t size) {
+    data.every([&](const uint8_t *data, size_t size) {
         int writ;
         orc_assert(EVP_EncryptUpdate(ctx_, output.data() + offset, &writ, data, Fit(size)) != 0);
         offset += writ;
-        return true;
     });
 
     output.size(offset);
@@ -75,11 +74,10 @@ Beam Decipher::operator ()(const Buffer &data) const {
     Beam output(data.size() + ctx_);
     size_t offset(0);
 
-    data.each([&](const uint8_t *data, size_t size) {
+    data.every([&](const uint8_t *data, size_t size) {
         int writ;
         orc_assert(EVP_DecryptUpdate(ctx_, output.data() + offset, &writ, data, Fit(size)) != 0);
         offset += writ;
-        return true;
     });
 
     output.size(offset);
