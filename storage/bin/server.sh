@@ -1,5 +1,5 @@
 #!/bin/bash
-source "$(dirname "$0")/env.sh"
+source "$(dirname "$0")/../env.sh"
 
 # if "--repository" is not specified, use the default repository
 if [[ "$*" != *"--repository"* ]]; then

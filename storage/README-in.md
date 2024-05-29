@@ -11,7 +11,7 @@ and join the discussion on the [Orchid Subreddit](https://www.reddit.com/r/orchi
 This repository contains work in progress on the file encoding CLI and server framework.
 
 
-![monitor](docs/screen.png "Screens")
+![monitor](docs/images/screen.png "Screens")
 
 
 ## Overview
@@ -22,16 +22,16 @@ In this demo implementation files are imported to a local repository directory s
 
 KZG Polynomial Commitments are generated for each shard. These commitments can later be used by either an interactive verifier or an on-chain contract without access to the original data to verify data availability. 
 
-![Local Repository](docs/repo.svg "Local Repository")
+![Local Repository](docs/images/repo.svg "Local Repository")
 
 Shards are distributed to one or more providers as desired. Individual providers may host full complements of shards or they may be split for maximum distribution.
 
-![Providers](docs/providers.svg "Providers")
+![Providers](docs/images/providers.svg "Providers")
 
 Periodic challenges are issued to providers, either interactively or via a source of on-chain randomness, requiring proof of specific data components.  Providers collect payments by proving data availability.  These payments can be optimized to require zero on-chain transactions when the client is available online but can still function via a non-interactive contract mechanism in the absence of the client.
 
 <div style="text-align: center;">
-  <img src="docs/proofs.svg" alt="Proofs" title="Proofs" width="320" />
+  <img src="docs/images/proofs.svg" alt="Proofs" title="Proofs" width="320" />
 </div>
 
 
@@ -94,6 +94,6 @@ INSERT_USAGE
 ```
 
 ## CLI Documentation
-See [The CLI Documentation](cli_docs.md) for detailed CLI usage.
+See [The CLI Documentation](docs/cli_docs.md) for detailed CLI usage.
 
 
