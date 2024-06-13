@@ -21,9 +21,23 @@ class JSConfig extends UserConfig {
   @override
   String? get(String expression) {
     var result = jsEngine.evaluate(expression).toString();
+    // Map undefined variable references to null
     if (result == 'undefined' ||
-        // UG... this api returns string error messages.
-        result.startsWith("ERROR: Can't find variable:")) {
+        //
+        // This api returns string error messages from the underlying JS engines.
+        //
+        // On Apple platforms we get the following:
+        result.startsWith("ERROR: Can't find variable:") ||
+        //
+        // On Android we get the following:
+        result.startsWith("ReferenceError:")
+        //
+        // Note: we could force the use of the JavaScriptCore engine on Android
+        // by setting a parameter on getJavaScriptRuntime() but we would need to add the
+        // Android dependency implementation to the build:
+        // "com.github.fast-development.android-js-runtimes:fastdev-jsruntimes-jsc:0.3.4"
+        // See the readme for: https://github.com/abner/flutter_js
+    ) {
       return null;
     }
     return result;
