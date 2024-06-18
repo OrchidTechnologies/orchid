@@ -22,7 +22,7 @@ class JSConfig extends UserConfig {
   String? get(String expression) {
     var result = jsEngine.evaluate(expression).toString();
     // Map undefined variable references to null
-    if (result == 'undefined' ||
+    if (result == 'undefined' || result == 'null' ||
         //
         // This api returns string error messages from the underlying JS engines.
         //
