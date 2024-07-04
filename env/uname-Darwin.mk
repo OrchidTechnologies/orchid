@@ -15,7 +15,7 @@ endif
 
 prebuilt := darwin-x86_64
 
-export PATH := /usr/local/opt/gettext/bin:$(PATH)
-
+# XXX: consider detecting where homebrew is installed
 export PATH := $(PATH):/usr/local/opt/binutils/bin
+export PATH := $(PATH):/opt/homebrew/opt/binutils/bin
 objcopy = objcopy
