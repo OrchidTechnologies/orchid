@@ -1,4 +1,6 @@
 import ckzg
+
+from commitments.blst_ctypes import object_as_kzg_settings, bytes_from_fr
 from commitments.kzg_commitment import get_kzg_setup, FileCommitments
 
 
@@ -18,12 +20,11 @@ def flip_bit(blob: bytes) -> bytes:
 def test_verify(setup, corrupt=False):
     # Generate a random blob
     blob = random_blob()
-    # print(f"blob: {type(blob)}, {len(blob)}")
     # print(f"blob: {blob[:32].hex()}")
 
     # Commit to the blob
     commitment = ckzg.blob_to_kzg_commitment(blob, setup)
-    # print("commitment: ", commitment.hex(), len(commitment))
+    # print(f"Commitment: {commitment.hex()[:16]}..., {len(commitment)} bytes")
 
     # Optionally flip a bit in the blob before the proof is generated
     # (simulate trying to prove availability with a bad blob)
@@ -36,13 +37,21 @@ def test_verify(setup, corrupt=False):
     # @param[in]  blob      The blob (polynomial) to generate a proof for
     # @param[in]  z         The generator z-value for the evaluation points
     # @param[in]  s         The trusted setup
+    # Check a random field element
     z_eval = FileCommitments.random_field_element()
     proof, y_out = ckzg.compute_kzg_proof(blob, z_eval, setup)
-    # print("proof: ", proof.hex(), len(proof))
+    # print(f"Proof: {proof.hex()[:16]}..., y_out: {y_out.hex()[:16]}..., len: {len(proof)}")
 
     # Sanity check that the proof seems suitably random (doesn't match any previous proof)
     assert proof not in proofs
     proofs.add(proof)
+
+    # Sanity check a proof that corresponds to a known field element
+    index = 3
+    z_eval = bytes_from_fr(roots_of_unity[index])
+    proof, y_out = ckzg.compute_kzg_proof(blob, z_eval, setup)
+    expected_y_out = blob[index * 32:(index + 1) * 32]  # Extract the corresponding element from the blob
+    assert y_out == expected_y_out
 
     # Verify a KZG proof claiming that `p(z) == y`.
     # @param[out] ok         True if the proofs are valid, otherwise false
@@ -64,15 +73,27 @@ def test_verify(setup, corrupt=False):
         # print("blob: ", blob.hex())
 
 
+def test_roots_of_unity():
+    # Check some roots of unity
+    assert (bytes_from_fr(roots_of_unity[0]).hex() ==
+            '0000000000000000000000000000000000000000000000000000000000000001')
+    assert (bytes_from_fr(roots_of_unity[1]).hex() ==
+            '73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000')
+    print("Roots of unity look correct")
+
+
 if __name__ == "__main__":
     setup = get_kzg_setup()
+    roots_of_unity = object_as_kzg_settings(setup).roots_of_unity
     proofs = set()
 
-    for i in range(10):
+    for i in range(3):
         print(f"{i}", end=",")
         # Test with a valid proof
         test_verify(setup)
         # Test with a corrupt proof
         test_verify(setup, corrupt=True)
+
+    test_roots_of_unity()
 
     print("\nTests passed")

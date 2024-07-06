@@ -16,6 +16,7 @@ print("Result:", result_bytes.hex())
 
 assert (result_bytes.hex() ==
         '90e8df266fc322a336be51e682a95ebbd6288f1acca3a2d19a661f158db6ed10dd65449fe8973d797ae80d2c655ecd59')
+print("Point addition successful")
 
 ##
 ## Test scalar addition
@@ -31,3 +32,5 @@ result_bytes = add_scalars(scalar_bytes1, scalar_bytes2)
 print("Resulting Scalar:", result_bytes.hex())
 
 assert result_bytes.hex() == '0101010101010101010101010101010101010101010101010101010101010101'
+print("Scalar addition successful")
+

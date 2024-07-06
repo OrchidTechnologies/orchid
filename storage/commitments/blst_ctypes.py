@@ -1,13 +1,14 @@
 import os
 import site
 import ctypes.util
+import sys
 
 #
-# Use the blst library via ctypes
-# Note: This is a little ugly but I think it's cleanest to use the same lib that ckzg uses.
+# Use the blst libraries via ctypes
+# Note: This is a little ugly, but I think it's cleanest to use the same lib that ckzg uses.
 #
 
-# TODO: The architecture dependent library name
+# TODO: The architecture-dependent library name
 libname = 'ckzg.cpython-311-darwin.so'
 
 # Get all site-packages directories (includes both global and virtualenv)
@@ -48,6 +49,17 @@ class BlstScalar(ctypes.Structure):
     _fields_ = [("b", ctypes.c_byte * 32)]  # 256 bits or 32 bytes
 
 
+class BlstFr(ctypes.Structure):
+    _fields_ = [("l", ctypes.c_uint64 * 4)]  # Adjust size as needed
+
+
+class KZGSettings(ctypes.Structure):
+    _fields_ = [
+        ("max_width", ctypes.c_uint64),
+        ("roots_of_unity", ctypes.POINTER(BlstFr)),
+    ]
+
+
 # Define the function signature
 lib.blst_p1_uncompress.argtypes = [ctypes.POINTER(BlstP1Affine), ctypes.c_char_p]
 lib.blst_p1_uncompress.restype = ctypes.c_int  # or BLST_ERROR
@@ -66,6 +78,9 @@ lib.blst_p1_on_curve.restype = ctypes.c_bool
 
 lib.blst_sk_add_n_check.argtypes = [ctypes.POINTER(BlstScalar), ctypes.POINTER(BlstScalar), ctypes.POINTER(BlstScalar)]
 lib.blst_sk_add_n_check.restype = ctypes.c_bool
+
+lib.blst_scalar_from_fr.argtypes = [ctypes.POINTER(BlstScalar), ctypes.POINTER(BlstFr)]
+lib.blst_scalar_from_fr.restype = None
 
 
 def add_points(p1_bytes: bytes, p2_bytes: bytes) -> bytes:
@@ -110,7 +125,29 @@ def add_scalars(scalar_bytes1: bytes, scalar_bytes2: bytes) -> bytes:
     if not success:
         raise ValueError("Scalar addition failed or result is invalid")
 
-    # result_bytes = bytearray(result_scalar.b)
     result_bytes = bytes(result_scalar.b)
     # print("Resulting Scalar:", result_bytes.hex())
     return result_bytes
+
+
+def scalar_from_fr(fr: BlstFr) -> BlstScalar:
+    scalar = BlstScalar()
+    lib.blst_scalar_from_fr(ctypes.byref(scalar), ctypes.byref(fr))
+    return scalar
+
+
+def bytes_from_fr(fr: BlstFr) -> bytes:
+    ret = bytes(scalar_from_fr(fr).b)
+    return ret[::-1] if sys.byteorder == 'little' else ret
+
+
+def object_as_kzg_settings(py_capsule) -> KZGSettings:
+    # Function to extract the pointer from PyCapsule
+    PyCapsule_GetPointer = ctypes.pythonapi.PyCapsule_GetPointer
+    PyCapsule_GetPointer.argtypes = [ctypes.py_object, ctypes.c_char_p]
+    PyCapsule_GetPointer.restype = ctypes.c_void_p
+    kzg_settings_ptr = PyCapsule_GetPointer(py_capsule, b"KZGSettings")
+    if not kzg_settings_ptr:
+        raise ValueError("Failed to get KZGSettings pointer from PyCapsule")
+    kzg_settings = ctypes.cast(kzg_settings_ptr, ctypes.POINTER(KZGSettings)).contents
+    return kzg_settings
