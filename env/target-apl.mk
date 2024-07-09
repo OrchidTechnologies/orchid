@@ -18,7 +18,6 @@ meson := darwin
 
 lflags += -Wl,-ObjC
 lflags += -Wl,-dead_strip
-lflags += -Wl,-no_dead_strip_inits_and_terms
 
 # libtool
 qflags += -DPIC
@@ -59,12 +58,11 @@ more += -fno-strict-return
 include $(pwd)/kit-android.mk
 cxx += -stdlib=libc++
 
-# the r22 NDK prefers its own copy of ld
-wflags += -fuse-ld=/usr/bin/ld
+include $(pwd)/target-lld.mk
 
 endif
 
-objc := clang $(more)
+objc := $(cc)
 
 define _
 strip/$(1) := strip

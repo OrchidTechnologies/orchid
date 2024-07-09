@@ -9,7 +9,12 @@
 # }}}
 
 
+# XXX: ring needs to update to a newer version of cc-rs
+# https://github.com/briansmith/ring/issues/2126
+# XXX: this also runs into some issue with --gc-sections
+ifneq ($(meson),darwin)
 include $(pwd)/target-gnu.mk
+endif
 
 wflags += -fuse-ld=lld
 lflags += -Wl,--error-limit=0

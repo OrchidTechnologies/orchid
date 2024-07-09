@@ -24,28 +24,29 @@
     <string>@REVISION@</string>
 
     <key>BuildMachineOSBuild</key>
-    <string>18E226</string>
+    <string>23D56</string>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
 
-    <key>DTCompiler</key>
-    <string>com.apple.compilers.llvm.clang.1_0</string>
     <key>DTPlatformName</key>
     <string>iphoneos</string>
+
+    <key>DTCompiler</key>
+    <string>com.apple.compilers.llvm.clang.1_0</string>
     <key>DTPlatformVersion</key>
-    <string>15.2</string>
+    <string>17.0</string>
     <key>DTPlatformBuild</key>
-    <string>19C51</string>
+    <string>21A326</string>
     <key>DTSDKBuild</key>
-    <string>19C51</string>
+    <string>21A326</string>
     <key>DTSDKName</key>
-    <string>iphoneos15.2</string>
+    <string>iphoneos17.0</string>
     <key>DTXcode</key>
-    <string>1320</string>
+    <string>1501</string>
     <key>DTXcodeBuild</key>
-    <string>13C100</string>
+    <string>15A507</string>
     <key>DTAppStoreToolsBuild</key>
-    <string>13E500</string>
+    <string>15E204</string>
 
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.utilities</string>
@@ -67,7 +68,7 @@
     <integer>11</integer>
 
     <key>MinimumOSVersion</key>
-    <string>11.0</string>
+    <string>12.0</string>
 
     <key>CFBundleSupportedPlatforms</key>
     <array>
