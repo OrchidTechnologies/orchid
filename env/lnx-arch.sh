@@ -15,6 +15,6 @@ pacman -Sy \
     jdk17-openjdk \
     bison flex gperf \
     gettext groff texinfo \
-    autoconf autoconf-archive automake \
-    libtool meson ninja pkgconf \
+    autoconf{,-archive} automake libtool \
+    make meson ninja pkgconf \
     qemu-system-{x86,aarch64} \
