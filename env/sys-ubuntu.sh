@@ -47,7 +47,7 @@ else
     ${ENV_DOCKER:=docker} run --platform linux/amd64 -i --rm \
         -v "${mount}:/mnt" -v "${tarball}:/tmp/export.tgz" \
         ubuntu:"${distro}" /mnt/export.sh /mnt/setup-sys.sh "$@"
-    fakeroot tar --exclude dev -vxzmf "${tarball}"
+    tar --exclude dev -vxzmf "${tarball}"
 fi
 
 popd
