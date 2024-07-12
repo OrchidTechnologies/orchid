@@ -26,8 +26,6 @@ lflags += -fPIC
 
 signature := /_CodeSignature/CodeResources
 
-toolchain := $(shell xcode-select -p)/Toolchains/XcodeDefault.xctoolchain
-
 isysroot :=  $(shell xcrun --sdk $(sdk) --show-sdk-path)
 more += -isysroot $(isysroot)
 ifneq ($(sdk),macosx)
@@ -56,11 +54,13 @@ lflags += $(resource)/lib/darwin/libclang_rt.$(runtime).a
 #more += -B$(dir $(clang))
 more += -fno-strict-return
 include $(pwd)/kit-android.mk
-cxx += -stdlib=libc++
 
 include $(pwd)/target-lld.mk
 
 endif
+
+include $(pwd)/target-cxx.mk
+lflags += -lc++abi
 
 objc := $(cc)
 
