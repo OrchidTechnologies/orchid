@@ -137,10 +137,10 @@ async def session(websocket, bills=None, job=None, recipient='0x0', key=''):
             break
         
 
-async def main(model, url, bind_addr, bind_port, recipient_key, llmkey, llmparams):
+async def main(model, url, bind_addr, bind_port, recipient_key, llmkey, llmparams, api):
     recipient_addr = web3.Account.from_key(recipient_key).address
     bills = billing.Billing(prices)
-    job = jobs.jobs(model, url, llmkey, llmparams)
+    job = jobs.jobs(model, url, llmkey, llmparams, api)
     print("\n*****")
     print(f"* Server starting up at {bind_addr} {bind_port}")
     print(f"* Connecting to back end at {url}")
@@ -158,8 +158,9 @@ if __name__ == "__main__":
     recipient_key = os.environ['ORCHID_GENAI_RECIPIENT_KEY']
     url = os.environ['ORCHID_GENAI_LLM_URL']
     model = os.environ['ORCHID_GENAI_LLM_MODEL']
+    api = 'openai' if 'ORCHID_GENAI_API_TYPE' not in os.environ else os.environ['ORCHID_GENAI_API_TYPE']
     llmkey = None if 'ORCHID_GENAI_LLM_AUTH_KEY' not in os.environ else os.environ['ORCHID_GENAI_LLM_AUTH_KEY']
     llmparams = {}
     if 'ORCHID_GENAI_LLM_PARAMS' in os.environ:
        llmparams = json.loads(os.environ['ORCHID_GENAI_LLM_PARAMS'])
-    asyncio.run(main(model, url, bind_addr, bind_port, recipient_key, llmkey, llmparams))    
+    asyncio.run(main(model, url, bind_addr, bind_port, recipient_key, llmkey, llmparams, api))    

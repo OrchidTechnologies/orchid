@@ -1,0 +1,28 @@
+graph TD
+
+subgraph R001["Provider 0"]
+    %% RS1[Type 0 Shard 0]
+    %% RS1a[Type 0 Shard 1]
+end
+
+subgraph R02["Provider 1"]
+    %% RS2[Type 0 Shard 2]
+end
+
+subgraph R12["Provider 2"]
+    %% RS3[Type 1 Shard 0]
+    %% RS4[Type 1 Shard 1]
+    %% RS5[Type 1 Shard 2]
+end
+
+
+Prover["Verification"]
+R001 -- KZG Proofs --> Prover
+%% Prover -- Payments --> R001
+
+R02 -- KZG Proofs --> Prover
+%% Prover -- Payments --> R02
+
+R12 -- KZG Proofs --> Prover
+%% Prover -- Payments --> R12
+

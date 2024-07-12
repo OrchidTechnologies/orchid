@@ -18,8 +18,8 @@ apt-get -y install \
     openjdk-11-jre-headless \
     bison flex gperf \
     gettext groff texinfo \
-    autoconf autoconf-archive automake \
-    libtool meson ninja-build pkg-config \
+    autoconf{,-archive} automake libtool \
+    make meson ninja-build pkg-config \
     qemu-system-{x86,arm} \
 
 if dpkg --compare-versions $(meson --version) '<<' "1.2.0"; then

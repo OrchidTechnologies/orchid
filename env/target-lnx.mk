@@ -115,6 +115,7 @@ $(each)
 endif
 
 include $(pwd)/target-cxx.mk
+lflags += -lstdc++
 
 # XXX: v8 requires armv6k for the "yield" instruction
 more/armhf += -march=armv6k -D__ARM_MAX_ARCH__=8

@@ -1,0 +1,52 @@
+graph TD
+
+subgraph All["Local Repository"]
+
+    B["(Optional) RSA / AES Encryption"]
+    C[Twin Coding]
+
+    subgraph Type0["Node Type 0"]
+        D1[Shard 0]
+        D2[Shard 1]
+        D3[Shard 2]
+        Invisible1["..."]
+        Invisible2["..."]
+    end
+
+    subgraph Type1["Node Type 1"]
+        E1[Shard 0]
+        E2[Shard 1]
+        E3[Shard 2]
+        Invisible3["..."]
+        Invisible4["..."]
+
+    end
+
+    B --> C
+    C --> D1
+    C --> D2
+    C --> D3
+    C --> E1
+    C --> E2
+    C --> E3
+
+        F1[KZG Commitments 0]
+        F2[KZG Commitments 1]
+        F3[KZG Commitments 2]
+        F4[KZG Commitments 3]
+        F5[KZG Commitments 4]
+        F6[KZG Commitments 5]
+
+D1 --> F1
+D2 --> F2
+D3 --> F3
+E1 --> F4
+E2 --> F5
+E3 --> F6
+
+
+end
+
+A[File Import]
+A --> B
+

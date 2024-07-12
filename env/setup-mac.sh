@@ -2,6 +2,7 @@
 set -e
 which brew &>/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+# XXX: duplicate linux setup as much as possible
 brew install \
     fakeroot \
     rpm2cpio zstd \
@@ -9,9 +10,9 @@ brew install \
     mingw-w64 \
     python-packaging \
     groff \
-    autoconf autoconf-archive automake \
-    libtool meson \
-    capnp rustup-init \
+    autoconf{,-archive} automake libtool \
+    make meson ninja pkg-config \
+    rustup-init \
 
 rustup-init -y --no-modify-path --no-update-default-toolchain
 env/setup-all.sh

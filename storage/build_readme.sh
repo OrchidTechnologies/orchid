@@ -4,10 +4,13 @@ source "$(dirname "$0")/env.sh"
 
 if [ -f "README.md" ];
 then
+    # Back up the generated README.md in case it was edited by mistake.
     back="/tmp/README.md.$$"
     echo "backing up README.md to $back"
     cp README.md "$back"
 fi
+
+echo "Building README.md"
 
 # examples
 tmp=/tmp/readme.$$
@@ -20,3 +23,4 @@ mv out.md README.md
 
 rm $tmp
 
+echo "Don't forget to rebuild the CLI docs on changes."

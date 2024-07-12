@@ -18,7 +18,9 @@ pushd "${sysroot}"
 # or maybe reimplement using multistrap? https://wiki.debian.org/Multistrap
 
 if [[ $(uname -s) = Linux ]]; then
-    # older versions of proot can't handle newer versions of glibc
+    # older versions of proot can't handle newer versions of glibc (so build one)
+    # XXX: https://github.com/proot-me/proot/pull/383
+    CFLAGS='-Wno-implicit-function-declaration' \
     flock "${mount}/proot.lock" "${MAKE:=make}" -C "${mount}/proot/src" PYTHON=false
     proot=${mount}/proot/src/proot
 
@@ -47,7 +49,7 @@ else
     ${ENV_DOCKER:=docker} run --platform linux/amd64 -i --rm \
         -v "${mount}:/mnt" -v "${tarball}:/tmp/export.tgz" \
         ubuntu:"${distro}" /mnt/export.sh /mnt/setup-sys.sh "$@"
-    fakeroot tar --exclude dev -vxzmf "${tarball}"
+    tar --exclude dev -vxzmf "${tarball}"
 fi
 
 popd

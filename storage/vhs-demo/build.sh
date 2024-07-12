@@ -7,5 +7,5 @@ then
 fi
 
 export PS1="> "
-time vhs < storchid1.tape
-time vhs < storchid2.tape
+time vhs < orchid_storage1.tape
+time vhs < orchid_storage2.tape

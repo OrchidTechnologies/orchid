@@ -18,7 +18,6 @@ meson := darwin
 
 lflags += -Wl,-ObjC
 lflags += -Wl,-dead_strip
-lflags += -Wl,-no_dead_strip_inits_and_terms
 
 # libtool
 qflags += -DPIC
@@ -26,8 +25,6 @@ qflags += -fPIC
 lflags += -fPIC
 
 signature := /_CodeSignature/CodeResources
-
-toolchain := $(shell xcode-select -p)/Toolchains/XcodeDefault.xctoolchain
 
 isysroot :=  $(shell xcrun --sdk $(sdk) --show-sdk-path)
 more += -isysroot $(isysroot)
@@ -57,14 +54,15 @@ lflags += $(resource)/lib/darwin/libclang_rt.$(runtime).a
 #more += -B$(dir $(clang))
 more += -fno-strict-return
 include $(pwd)/kit-android.mk
-cxx += -stdlib=libc++
 
-# the r22 NDK prefers its own copy of ld
-wflags += -fuse-ld=/usr/bin/ld
+include $(pwd)/target-lld.mk
 
 endif
 
-objc := clang $(more)
+include $(pwd)/target-cxx.mk
+lflags += -lc++abi
+
+objc := $(cc)
 
 define _
 strip/$(1) := strip

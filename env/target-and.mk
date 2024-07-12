@@ -85,8 +85,7 @@ $(each)
 endif
 
 include $(pwd)/target-cxx.mk
-
-lflags += -nostdlib++ -lc++abi
+lflags += -lc++abi
 
 lflags += -lm -llog
 

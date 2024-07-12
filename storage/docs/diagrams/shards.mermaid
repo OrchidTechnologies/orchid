@@ -1,0 +1,43 @@
+
+graph TD
+
+subgraph R001["Provider 0"]
+    RS1[Type 0 Shard 0]
+    RS1a[Type 0 Shard 1]
+end
+
+subgraph R02["Provider 1"]
+    RS2[Type 0 Shard 2]
+end
+
+subgraph R12["Provider 2"]
+    RS3[Type 1 Shard 2]
+end
+
+D1-->R001
+D2-->R001
+E3-->R12
+D3-->R02
+
+subgraph All["Local Repository"]
+
+
+    subgraph Type0["Node Type 0"]
+        D1[Shard 0]
+        D2[Shard 1]
+        D3[Shard 2]
+        Invisible1["..."]
+        Invisible2["..."]
+    end
+
+    subgraph Type1["Node Type 1"]
+        E1[Shard 0]
+        E2[Shard 1]
+        E3[Shard 2]
+        Invisible3["..."]
+        Invisible4["..."]
+
+    end
+
+end
+

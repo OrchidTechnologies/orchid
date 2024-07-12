@@ -67,11 +67,7 @@ include $(pwd)/kit-android.mk
 endif
 
 include $(pwd)/target-cxx.mk
-
-source += $(pwd)/libcxx/src/support/win32/locale_win32.cpp
-source += $(pwd)/libcxx/src/support/win32/support.cpp
-cflags += -D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS
-lflags += -nostdlib++ -lsupc++
+lflags += -lsupc++
 
 define _
 strip/$(1) := $(1)-w64-mingw32-strip
