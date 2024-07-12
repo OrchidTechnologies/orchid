@@ -99,9 +99,14 @@ $(output)/%.rc.o: $$(specific) $$(folder).rc $$(code)
 	@echo [RC] $(target)/$(arch) $<
 	$(job)@$(prefix) $(windres/$(arch)) -o $@ $< $(filter -I%,$(flags) $(xflags))
 
+# XXX: pkg-config has an old embedded version of glib which no longer compiles
+# https://gitlab.freedesktop.org/pkg-config/pkg-config/-/issues/81
+# https://github.com/bazelbuild/rules_foreign_cc/issues/1065
+# thttps://github.com/bazelbuild/rules_foreign_cc/issues/1200
+# https://lists.freedesktop.org/archives/pkg-config/2024-May/001122.html
 $(output)/%/pkg-config/Makefile: env/pkg-config/configure
 	@mkdir -p $(dir $@)
-	cd $(dir $@) && $(CURDIR)/$< --enable-static --prefix=$(CURDIR)/$(output)/$*/usr --with-internal-glib
+	cd $(dir $@) && CFLAGS="-Wno-int-conversion" $(CURDIR)/$< --enable-static --prefix=$(CURDIR)/$(output)/$*/usr --with-internal-glib
 
 $(output)/%/usr/bin/pkg-config: $(output)/%/pkg-config/Makefile
 	$(MAKE) -C $(dir $<) install
