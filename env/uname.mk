@@ -13,6 +13,6 @@ uname-m := $(shell uname -m)
 uname-s := $(shell uname -s)
 uname-o := $(shell uname -o 2>/dev/null)
 
-objcopy = $(shell which $(host/$*)-objcopy objcopy 2>&1 | head -n1)
+objcopy = $(shell which $(host/$*)-objcopy objcopy 2>/dev/null | head -n1)
 
 -include $(pwd)/uname-$(uname-s).mk
