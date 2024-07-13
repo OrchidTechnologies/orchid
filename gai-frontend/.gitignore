@@ -46,3 +46,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 deploy-pat.sh
+
+set_providers.sh
+

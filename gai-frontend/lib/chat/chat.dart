@@ -14,11 +14,17 @@ import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_titled_panel.dart';
+
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'chat_bubble.dart';
 import 'chat_button.dart';
 import 'chat_message.dart';
 import '../provider.dart';
 import 'chat_prompt.dart';
+import 'chat_model_button.dart';
+import '../config/providers_config.dart';
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key});
@@ -29,7 +35,9 @@ class ChatView extends StatefulWidget {
 
 class _ChatViewState extends State<ChatView> {
   List<ChatMessage> _messages = [];
-  List<String> _providers = [];
+//  List<String> _providers = [];
+//  Map<String, Map<String, String>> _providers = {'gpt4': {'url': 'https://nanogenera.danopato.com/ws/', 'name': 'ChatGPT-4'}};
+  late final Map<String, Map<String, String>> _providers;
   int _providerIndex = 0;
   bool _debugMode = false;
   bool _connected = false;
@@ -51,12 +59,20 @@ class _ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
+    _providers = ProvidersConfig.getProviders();
     _bidController.value = _bid;
     try {
       _initFromParams();
     } catch (e, stack) {
       log('Error initializing from params: $e, $stack');
     }
+  }
+
+  bool _emptyState() {
+    if (_account != null || _connected) {
+      return false;
+    }
+    return true;
   }
 
   Account? get _account {
@@ -106,13 +122,17 @@ class _ChatViewState extends State<ChatView> {
     _accountChanged();
     String? provider = params['provider'];
     if (provider != null) {
-      _providers = [provider];
+      _providers = {'user-provider': {'url': provider, 'name': 'User Provider'}};
     }
   }
 
-  void providerConnected() {
+  void providerConnected([name = '']) {
+    String nameTag = '';
     _connected = true;
-    addMessage(ChatMessageSource.system, 'Connected to provider.');
+    if (!name.isEmpty) {
+      nameTag = ' ${name}';
+    }
+    addMessage(ChatMessageSource.system, 'Connected to provider${nameTag}.');
   }
 
   void providerDisconnected() {
@@ -120,12 +140,16 @@ class _ChatViewState extends State<ChatView> {
     addMessage(ChatMessageSource.system, 'Provider disconnected');
   }
 
-  void _connectProvider() {
+  void _connectProvider([provider = '']) {
     var account = _accountDetail;
+    String url;
+    String name;
+    String providerId = '';
     if (account == null) {
       return;
     }
     if (_providers.length == 0) {
+      log('_connectProvider() -- _providers.length == 0');
       return;
     }
     if (_connected) {
@@ -133,14 +157,23 @@ class _ChatViewState extends State<ChatView> {
       _providerIndex = (_providerIndex + 1) % _providers.length;
       _connected = false;
     }
-    log('Connecting to provider: ${_providers[_providerIndex]}');
+    if (provider.isEmpty) {
+      _providerIndex += 1;
+      providerId = _providers.keys.elementAt(_providerIndex);
+    } else {
+      providerId = provider;
+    }
+    url = _providers[providerId]?['url'] ?? '';
+    name = _providers[providerId]?['name'] ?? '';
+
+    log('Connecting to provider: ${name}');
     _providerConnection = ProviderConnection(
       onMessage: (msg) {
         addMessage(ChatMessageSource.internal, msg);
       },
-      onConnect: providerConnected,
+      onConnect: () { providerConnected(name); },
       onChat: (msg, metadata) {
-        addMessage(ChatMessageSource.provider, msg, metadata: metadata);
+        addMessage(ChatMessageSource.provider, msg, metadata: metadata, sourceName: name);
       },
       onDisconnect: providerDisconnected,
       onError: (msg) {
@@ -155,16 +188,20 @@ class _ChatViewState extends State<ChatView> {
       accountDetail: account,
       contract:
           EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'),
-      url: _providers[_providerIndex],
+      url: url,
     );
     log('connected...');
   }
 
   void addMessage(ChatMessageSource source, String msg,
-      {Map<String, dynamic>? metadata}) {
+      {Map<String, dynamic>? metadata, String sourceName = ''}) {
     log('Adding message: ${msg.truncate(64)}');
     setState(() {
-      _messages.add(ChatMessage(source, msg, metadata: metadata));
+      if (sourceName.isEmpty) {
+        _messages.add(ChatMessage(source, msg, metadata: metadata));
+      } else {
+        _messages.add(ChatMessage(source, msg, metadata: metadata, sourceName: sourceName));
+      }
     });
     // if (source != ChatMessageSource.internal || _debugMode == true) {
     scrollMessagesDown();
@@ -249,6 +286,11 @@ class _ChatViewState extends State<ChatView> {
                     ).top(16),
                     // Account card
                     AccountCard(accountDetail: _accountDetail).top(20),
+                    ChatButton(
+                      onPressed: () => _launchURL('https://account.orchid.com'),
+                      text: 'Manage Account',
+                      width: 200,
+                    ).top(20),
                   ],
                 ).pad(24),
               );
@@ -347,17 +389,11 @@ class _ChatViewState extends State<ChatView> {
                           fit: BoxFit.scaleDown,
                           child: SizedBox(
                               width: minWidth,
-                              child: _buildHeaderRow(showIcons: showIcons)))
+                              child: _buildHeaderRow(showIcons: showIcons, providers: _providers)))
                     else
-                      _buildHeaderRow(showIcons: showIcons),
+                      _buildHeaderRow(showIcons: showIcons, providers: _providers),
                     // Messages area
-                    Flexible(
-                      child: ListView.builder(
-                        controller: messageListController,
-                        itemCount: _messages.length,
-                        itemBuilder: _buildChatBubble,
-                      ).top(16),
-                    ),
+                    _buildChatPane(),
                     // Prompt row
                     AnimatedSize(
                       alignment: Alignment.topCenter,
@@ -383,16 +419,89 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Widget _buildHeaderRow({required bool showIcons}) {
+  Widget _buildChatPane() {
+    return Flexible(
+      child: Stack(
+        children: <Widget>[
+          ListView.builder(
+            controller: messageListController,
+            itemCount: _messages.length,
+            itemBuilder: _buildChatBubble,
+          ).top(16),
+          if (_emptyState())
+            Positioned(
+              top: 35, // Adjust this value to align with the Account button
+              right: 0,
+              child: CustomPaint(
+                painter: CalloutPainter(),
+                child: Container(
+                  width: 390,
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'This is a demonstration of the application of Orchid Nanopayments within a consolidated Multi-LLM chat service.',
+                        style: OrchidText.normal_14.copyWith(color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'To get started, enter or create a funded Orchid account.',
+                        style: OrchidText.normal_14.copyWith(color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                      ChatButton(
+                        text: 'Enter Account', 
+                        onPressed: _popAccountDialog, 
+                        width: 200,
+                      ).top(24),
+                      SizedBox(height: 16),
+                      OutlinedButton(
+                        onPressed: () => _launchURL('https://account.orchid.com'),
+                        child: Text('Create Account').button,
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Theme.of(context).primaryColor),
+                          minimumSize: Size(200, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      InkWell(
+                        onTap: () => _launchURL('https://docs.orchid.com/en/latest/accounts/'),
+                        child: Text(
+                          'Learn more about creating an Orchid account',
+                          style: TextStyle(color: Colors.blue[300], decoration: TextDecoration.underline),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderRow({required bool showIcons, required Map<String, Map<String, String>> providers}) {
     return Row(
       children: <Widget>[
         SizedBox(height: 40, child: OrchidAsset.image.logo),
         const Spacer(),
         // Connect button
+        ChatModelButton(
+          updateModel: (id) { log(id); _connectProvider(id); },
+          providers: providers,
+        ).left(8),
+/*
         ChatButton(
           text: 'Reroll',
           onPressed: _connectProvider,
         ).left(8),
+*/
         // Clear button
         ChatButton(text: 'Clear Chat', onPressed: _clearChat).left(8),
         // Account button
@@ -408,6 +517,47 @@ class _ChatViewState extends State<ChatView> {
         ).left(8),
       ],
     );
+  }
+}
+
+class CalloutPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final radius = 10.0; // Corner radius
+    final calloutWidth = 25.0;
+    final calloutHeight = 20.0;
+    final calloutStart = size.width - 115.0; // Adjust this to position the callout
+
+    final path = Path()
+      ..moveTo(radius, 0)
+      ..lineTo(calloutStart, 0)
+      ..lineTo(calloutStart + (calloutWidth / 2), -calloutHeight)
+      ..lineTo(calloutStart + calloutWidth, 0)
+      ..lineTo(size.width - radius, 0)
+      ..quadraticBezierTo(size.width, 0, size.width, radius)
+      ..lineTo(size.width, size.height - radius)
+      ..quadraticBezierTo(size.width, size.height, size.width - radius, size.height)
+      ..lineTo(radius, size.height)
+      ..quadraticBezierTo(0, size.height, 0, size.height - radius)
+      ..lineTo(0, radius)
+      ..quadraticBezierTo(0, 0, radius, 0);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+Future<void> _launchURL(String urlString) async {
+  final Uri url = Uri.parse(urlString);
+  if (!await launchUrl(url)) {
+    throw 'Could not launch $url';
   }
 }
 
