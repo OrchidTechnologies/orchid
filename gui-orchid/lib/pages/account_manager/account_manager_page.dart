@@ -380,11 +380,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   void _deleteIdentity(StoredEthereumKey identity) async {
     await UserPreferencesKeys().removeKey(identity.ref());
     // Remove accounts for this key.
-    var matchingAccounts = UserPreferencesVPN().cachedDiscoveredAccounts.get();
+    Set<Account>? matchingAccounts = UserPreferencesVPN().cachedDiscoveredAccounts.get();
 
-    // var matching = matchingAccounts
-    //     .where((account) => account.signerKeyRef == identity.ref());
-    // log("XXX: delete identity removed ${matching.length} matching accounts");
+    var matching = (matchingAccounts ?? {})
+        .where((account) => account.signerKeyRef == identity.ref());
+    log("XXX: delete identity removing ${matching.length} matching accounts");
 
     matchingAccounts
         ?.removeWhere((account) => account.signerKeyRef == identity.ref());

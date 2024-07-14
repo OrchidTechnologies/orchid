@@ -54,15 +54,25 @@ class _AccountSelectorState extends State<AccountSelector> {
   }
 
   Widget _buildAccountList() {
-    List<AccountViewModel> accounts = widget.accounts.map((Account account) {
-      log("XXX: build view model for account: $account");
-      return AccountViewModel(
-          chain: Chains.chainFor(account.chainId),
-          signerKey: account.signerKey,
-          funder: account.funder,
-          active: widget.selectedAccounts.contains(account),
-          detail: _accountDetailStore.get(account));
-    }).toList();
+    List<AccountViewModel> accounts = widget.accounts
+        .map((Account account) {
+          // There should not be errors stored in accounts that would cause a problem here, however
+          // we've had at least one bug involving an orphaned account with no signer key.  This will
+          // at least prevent those types of bugs from blocking the user.
+          try {
+            return AccountViewModel(
+                chain: Chains.chainFor(account.chainId),
+                signerKey: account.signerKey,
+                funder: account.funder,
+                active: widget.selectedAccounts.contains(account),
+                detail: _accountDetailStore.get(account));
+          } catch (err) {
+            log("_buildAccountList: error building account view model: $err");
+            return null;
+          }
+        })
+        .whereType<AccountViewModel>() // remove nulls
+        .toList();
 
     // final footer = () {
     //   return OrchidActionButton(
