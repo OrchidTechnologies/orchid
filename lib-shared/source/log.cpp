@@ -68,6 +68,7 @@ Log::Log(Fiber *fiber) noexcept { try {
     *this << "[@:" << std::dec << Monotonic() << "] ";
     *this << "[T:" << std::hex << pthread_self() << "] ";
     Log_(*this, fiber);
+    *this << std::dec;
 } catch (...) {
 } }
 
