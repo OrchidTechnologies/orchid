@@ -6,10 +6,7 @@ from commitments.kzg_commitment import get_kzg_setup, FileCommitments
 
 # Generate a random blob: 4096 field elements.
 def random_blob() -> bytes:
-    blob = b''
-    for i in range(4096):
-        blob += FileCommitments.random_field_element()
-    return blob
+    return b''.join(FileCommitments.random_field_element() for _ in range(4096))
 
 
 # Simulate corruption: Flip one bit in the blob
@@ -79,6 +76,8 @@ def test_roots_of_unity():
             '0000000000000000000000000000000000000000000000000000000000000001')
     assert (bytes_from_fr(roots_of_unity[1]).hex() ==
             '73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000')
+    assert (bytes_from_fr(roots_of_unity[3]).hex() ==
+            '73eda753299d7d47a5e80b39939ed33467baa40089fb5bfefffeffff00000001')
     print("Roots of unity look correct")
 
 

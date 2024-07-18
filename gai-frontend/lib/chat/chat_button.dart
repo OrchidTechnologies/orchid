@@ -5,15 +5,19 @@ class ChatButton extends StatelessWidget {
     super.key,
     required this.text,
     required this.onPressed,
+    this.width,
+    this.height = 40,
   });
 
   final String text;
   final VoidCallback onPressed;
+  final double? width, height;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 40,
+      height: height,
+      width: width,
       child: FilledButton(
         style: TextButton.styleFrom(
           backgroundColor: OrchidColors.new_purple,

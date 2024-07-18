@@ -48,6 +48,7 @@ class ChatBubble extends StatelessWidget {
         ),
       );
     }
+
     return Align(
       alignment: src == ChatMessageSource.provider
           ? Alignment.centerLeft
@@ -59,8 +60,9 @@ class ChatBubble extends StatelessWidget {
           children: <Widget>[
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(src == ChatMessageSource.provider ? 'Chat' : 'You',
-                  style: OrchidText.normal_14),
+              child: _chatSourceText(message),
+//              child: Text(src == ChatMessageSource.provider ? 'Chat' : 'You',
+//                  style: OrchidText.normal_14),
             ),
             const SizedBox(height: 2),
             ClipRRect(
@@ -99,6 +101,19 @@ class ChatBubble extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _chatSourceText(ChatMessage msg) {
+    final String srcText;
+    if (msg.sourceName.isEmpty) {
+      srcText = msg.source == ChatMessageSource.provider ? 'Chat' : 'You';
+    } else {
+      srcText = msg.sourceName;
+    }
+    return Text(
+      srcText,
+      style: OrchidText.normal_14,
     );
   }
 }

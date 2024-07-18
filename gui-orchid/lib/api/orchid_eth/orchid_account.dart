@@ -46,7 +46,7 @@ class Account {
     required this.funder, // required?
   });
 
-  /// Create an account with referencing a stored signer key
+  /// Create an account referencing a stored signer key
   Account.fromSignerKeyRef({
     required StoredEthereumKeyRef signerKey,
     int version = 0,
