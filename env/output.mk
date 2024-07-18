@@ -102,7 +102,7 @@ $(output)/%.rc.o: $$(specific) $$(folder).rc $$(code)
 # XXX: pkg-config has an old embedded version of glib which no longer compiles
 # https://gitlab.freedesktop.org/pkg-config/pkg-config/-/issues/81
 # https://github.com/bazelbuild/rules_foreign_cc/issues/1065
-# thttps://github.com/bazelbuild/rules_foreign_cc/issues/1200
+# https://github.com/bazelbuild/rules_foreign_cc/issues/1200
 # https://lists.freedesktop.org/archives/pkg-config/2024-May/001122.html
 $(output)/%/pkg-config/Makefile: env/pkg-config/configure
 	@mkdir -p $(dir $@)
