@@ -10,7 +10,7 @@ RUN pip install -U \
     setuptools \
     wheel
 
-WORKDIR /project
+WORKDIR /gai-backend
 
 COPY requirements.txt ./
 COPY run.sh /
@@ -21,16 +21,19 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-RUN useradd -m -r gai && chown gai /project
+RUN useradd -m -r gai && chown gai /gai-backend
 
 USER gai
 
 ENV ORCHID_GENAI_ADDR=127.0.0.1
-ENV ORCHID_GENAI_PORT=8001
+ENV ORCHID_GENAI_PORT=8000
+ENV ORCHID_GENAI_LLM_MODEL="open-mixtral-8x22b"
 ENV ORCHID_GENAI_RECIPIENT_KEY=""
-ENV ORCHID_GENAI_LLM_PARAMS="{\"temperature\": 0.7, \"top_p\": 1, \"max_tokens\": 3000, \"stream\": false, \"safe_prompt\": false, \"random_seed\": null}"
-ENV ORCHID_GENAI_LLM_MODEL="Mistral-7B-Instruct-v0.2/"
-ENV ORCHID_GENAI_LLM_URL="http://localhost:8000/v1/chat/completions/"
+ENV ORCHID_GENAI_LLM_AUTH_KEY=""
+ENV ORCHID_GENAI_LLM_URL="https://api.mistral.ai/v1/chat/completions"
+ENV ORCHID_GENAI_LLM_PARAMS="{}"
 
 ENTRYPOINT ["/tini", "--", "/run.sh"]
-EXPOSE 8001 8001
+EXPOSE 8000 8000
+
+HEALTHCHECK CMD bash -c "exec 6<> /dev/tcp/localhost/8000" 
