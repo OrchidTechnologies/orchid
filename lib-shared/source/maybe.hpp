@@ -69,6 +69,12 @@ class Maybe :
 
     Maybe() = default;
 
+    explicit operator std::exception_ptr() const {
+        if (const auto error = std::get_if<0>(this))
+            return *error;
+        return {};
+    }
+
     void operator()(const std::exception_ptr &error) noexcept {
         this->~Maybe();
         new (this) Maybe<Value_>(std::in_place_index_t<0>(), error);
@@ -110,6 +116,10 @@ class Maybe<void> {
     Maybe(const std::exception_ptr &error) noexcept :
         error_(error)
     {
+    }
+
+    explicit operator std::exception_ptr() const {
+        return error_;
     }
 
     void operator()(const std::exception_ptr &error) noexcept {
