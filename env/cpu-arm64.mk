@@ -9,5 +9,6 @@
 # }}}
 
 
+# XXX: this broke ARM iOS/macOS exception handling in coroutines
 # XXX: consider using =pac-ret+leaf
-qflags += -mbranch-protection=standard
+#qflags += -mbranch-protection=standard
