@@ -23,6 +23,13 @@ triple/x86_64 := x86_64-apple-darwin
 meson/x86_64 := x86_64
 bits/x86_64 := 64
 
+archs += arm64
+openssl/arm64 := darwin64-arm64-cc
+host/arm64 := arm64-apple-darwin
+triple/arm64 := aarch64-apple-darwin
+meson/arm64 := aarch64
+bits/arm64 := 64
+
 ifeq ($(machine),)
 machine := x86_64
 endif
