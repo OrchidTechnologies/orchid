@@ -29,6 +29,8 @@ export ANDROID_HOME := $(wildcard $(shell cygpath '$(USERPROFILE)')/AppData/Loca
 endif
 endif
 
+ndk := $(ANDROID_NDK_ROOT)
+
 ifneq ($(ANDROID_HOME),)
 ifeq ($(ndk),)
 ndk := $(shell ls $(ANDROID_HOME)/ndk 2>/dev/null | sort -nr | head -n1)
