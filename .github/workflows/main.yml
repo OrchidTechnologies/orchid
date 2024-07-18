@@ -149,9 +149,13 @@ jobs:
 
 
 
+  # XXX: ubuntu-latest defaults to r25c NDK
+  # bumping to ubuntu-24.04 was easiest fix
+
+
   build-win-app:
     needs: [cache-submodule]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4
@@ -171,7 +175,7 @@ jobs:
 
   build-win-snd:
     needs: [cache-submodule]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4
@@ -190,7 +194,7 @@ jobs:
 
   build-win-cli:
     needs: [cache-submodule]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4
@@ -205,6 +209,7 @@ jobs:
       with:
         name: orchidcd-win
         path: cli-shared/out-win/x86_64/orchidcd.exe
+
 
 
   build-win-srv:
