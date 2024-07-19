@@ -35,32 +35,25 @@
 
 #include "baton.hpp"
 #include "boring.hpp"
-#include "chainlink.hpp"
-#include "chart.hpp"
 #include "client0.hpp"
 #include "client1.hpp"
 #include "crypto.hpp"
 #include "currency.hpp"
-#include "dns.hpp"
 #include "float.hpp"
 #include "fiat.hpp"
-#include "huobi.hpp"
 #include "jsonrpc.hpp"
 #include "load.hpp"
 #include "local.hpp"
 #include "markup.hpp"
 #include "network.hpp"
 #include "notation.hpp"
-#include "oracle.hpp"
 #include "pile.hpp"
-#include "pricing.hpp"
 #include "remote.hpp"
 #include "site.hpp"
 #include "sleep.hpp"
 #include "store.hpp"
 #include "time.hpp"
 #include "transport.hpp"
-#include "uniswap.hpp"
 #include "updater.hpp"
 #include "version.hpp"
 
@@ -280,7 +273,6 @@ int Main(int argc, const char *const argv[]) {
     }
 
     Initialize();
-    //webrtc::field_trial::InitFieldTrialsFromString("WebRTC-DataChannel-Dcsctp/Enabled/");
 
     const unsigned milliseconds(60*1000);
     const S<Base> base(Break<Local>());
@@ -300,37 +292,6 @@ int Main(int argc, const char *const argv[]) {
 
     const auto oracle(Wait(Oracle(milliseconds, ethereum)));
     const auto oxt(Wait(Token::OXT(milliseconds, ethereum)));
-
-    // prices {{{
-    std::map<std::string, S<Updated<std::pair<Float, Float>>>> prices;
-
-    prices.try_emplace("Coinbase", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
-        co_return *co_await Parallel(Coinbase(*base, "ETH-USD"), Coinbase(*base, "OXT-USD"));
-    }, "Coinbase"))));
-
-    prices.try_emplace("Kraken", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
-        co_return *co_await Parallel(Kraken(*base, "XETHZUSD"), Kraken(*base, "OXTUSD"));
-    }, "Kraken"))));
-
-    prices.try_emplace("Huobi", Wait(Opened(Updating(milliseconds, [base]() -> task<std::pair<Float, Float>> {
-        co_return *co_await Parallel(Huobi(*base, "ethusdt"), Huobi(*base, "oxtusdt"));
-    }, "Huobi"))));
-
-    prices.try_emplace("Uniswap2", Wait(Opened(Updating(milliseconds, [ethereum]() -> task<std::pair<Float, Float>> {
-        const auto [eth, oxt] = *co_await Parallel(Uniswap2(*ethereum, Uniswap2USDCETH, Ten6), Uniswap2(*ethereum, Uniswap2OXTETH, 1));
-        co_return std::make_tuple(eth, eth / oxt);
-    }, "Uniswap2"))));
-
-    prices.try_emplace("Uniswap3", Wait(Opened(Updating(milliseconds, [ethereum]() -> task<std::pair<Float, Float>> {
-        const auto [wei, oxt] = *co_await Parallel(Uniswap3(*ethereum, Uniswap3USDCETH, Ten6), Uniswap3(*ethereum, Uniswap3OXTETH, 1));
-        const auto eth(1 / wei / Ten18);
-        co_return std::make_tuple(eth, eth * oxt);
-    }, "Uniswap3"))));
-
-    prices.try_emplace("Chainlink", Wait(Opened(Updating(milliseconds, [ethereum]() -> task<std::pair<Float, Float>> {
-        co_return *co_await Parallel(Chainlink(*ethereum, ChainlinkETHUSD, 0, Ten8 * Ten18), Chainlink(*ethereum, ChainlinkOXTUSD, 0, Ten8 * Ten18));
-    }, "Chainlink"))));
-    // }}}
 
 
     const auto account(Wait(Opened(Updating(milliseconds, [ethereum, funder, signer = Address(Derive(secret))]() -> task<std::pair<uint128_t, uint128_t>> {
@@ -415,53 +376,8 @@ int Main(int argc, const char *const argv[]) {
             std::setprecision(1) << (Float(balance) / Ten18) << "/" << (Float(escrow) / Ten18) << "\n";
         body << "\n";
 
-        for (const auto &[name, price] : prices) {
-            const auto [eth, oxt] = (*price)();
-            body << name << std::string(9 - name.size(), ' ') << ": $" << std::fixed << std::setprecision(3) << (eth * Ten18) << " $" << std::setprecision(5) << (oxt * Ten18);
-            body << "\n";
-        }
-        body << "\n";
-
         for (const auto &[name, provider] : state->providers_)
             Print(body, name, provider);
-        body << "\n";
-
-        const auto price((*oxt.market_.bid_)());
-        const auto overhead(Float(price) * oxt.market_.currency_.dollars_());
-
-        body << "Cost: ";
-        body << "v0= $" << std::fixed << std::setprecision(2) << (overhead * 83328) << " || ";
-        body << "v1= $" << std::fixed << std::setprecision(2) << (overhead * 66327) << " || ";
-        body << "v2= $" << std::fixed << std::setprecision(2) << (overhead * 300000) << " (ish)";
-        body << "\n";
-
-        body << "      ";
-        body << "rf= $" << std::fixed << std::setprecision(2) << (overhead * 57654) << " || ";
-        body << "1k= $" << std::fixed << std::setprecision(2) << (overhead * 1000) << " || ";
-        body << "$1= " << std::fixed << uint64_t(1 / overhead);
-        body << "\n";
-
-        body << "\n";
-
-        body << price << std::endl;
-        body << "\n";
-
-        body << "\n";
-
-        const auto gas(84000);
-        const auto coefficient((overhead * gas) / (oxt.currency_.dollars_() * Ten18));
-
-        const auto bound((coefficient / ((1-0.80) / 2)).convert_to<float>());
-        const auto zero((coefficient / ((1-0.00) / 2)).convert_to<float>());
-
-        Chart(body, 49, 21, [&](float x) -> float {
-            return x * (bound - zero) + zero;
-        }, [&](float escrow) -> float {
-            return (1 - coefficient / (escrow / 2)).convert_to<float>();
-        }, [&](std::ostream &out, float x) {
-            out << std::fixed << std::setprecision(0) << std::setw(3) << x * 100 << '%';
-        });
-
         body << "\n";
 
         for (const auto &[stakee, stake] : state->stakes_) {
