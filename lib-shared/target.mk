@@ -26,10 +26,6 @@ cflags += -I$(pwd)/extra
 $(call depend,$(pwd)/source/version.cpp.o,@/extra/revision.hpp)
 
 
-cflags += -fcoroutines-ts
-cflags += -Wno-deprecated-coroutine
-cflags += -Wno-deprecated-experimental-coroutine
-
 
 cflags += -I$(pwd)/cppcoro/include
 

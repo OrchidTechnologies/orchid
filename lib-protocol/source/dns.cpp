@@ -35,6 +35,8 @@
 
 namespace orc {
 
+// XXX: cppcoro shared_task m_next field uninitialized (false positive)
+// NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
 task<std::vector<asio::ip::tcp::endpoint>> Base::Resolve(const std::string &host, const std::string &port) { orc_block({
     if (host == "localhost")
         co_return co_await Resolve("127.0.0.1", port);

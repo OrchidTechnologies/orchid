@@ -1,0 +1,11 @@
+// cppcoro is unmaintained and is still using experimental coroutines TS
+// XXX: either drop cppcoro or switch to the fork maintained by andreasbuhr
+#include <coroutine>
+#pragma clang diagnostic ignored "-Wdeprecated-experimental-coroutine"
+namespace std {
+namespace experimental {
+using std::coroutine_handle;
+using std::coroutine_traits;
+using std::suspend_always;
+using std::suspend_never;
+} }

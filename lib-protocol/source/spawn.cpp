@@ -67,7 +67,7 @@ void Pool::Push(Work *work) noexcept {
     ready_.set();
 }
 
-void Pool::Scheduled::await_suspend(std::experimental::coroutine_handle<> code) noexcept {
+void Pool::Scheduled::await_suspend(std::coroutine_handle<> code) noexcept {
     code_ = code;
     pool_->Push(this);
 }

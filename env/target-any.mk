@@ -60,6 +60,7 @@ cflags += -Wall
 cflags += -Werror
 cflags += -Wno-unknown-warning-option
 
+cflags += -Wno-deprecated-coroutine
 cflags += -Wno-deprecated-volatile
 cflags += -Wno-range-loop-analysis
 

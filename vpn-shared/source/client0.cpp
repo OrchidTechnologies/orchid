@@ -20,6 +20,8 @@
 /* }}} */
 
 
+#include <new>
+
 #include "client0.hpp"
 #include "chain.hpp"
 #include "protocol.hpp"
@@ -41,6 +43,8 @@ task<void> Client0::Submit(const Float &amount) {
         return std::make_tuple(locked->commit_, locked->recipient_, locked->ring_);
     }();
 
+    // XXX: cppcoro shared_task m_next field uninitialized (false positive)
+    // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
     const auto receipt(co_await ring);
     const auto nonce(Random<32>());
     const auto issued(Timestamp());

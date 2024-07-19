@@ -95,8 +95,7 @@ cflags += -I$(pwd)/boost/libs/asio/include/boost
 cflags += -DBOOST_ASIO_DISABLE_CONNECTEX
 #cflags += -DBOOST_ASIO_NO_DEPRECATED
 
-# XXX: this is because I am still using an old version of libc++
-cflags += -DBOOST_ASIO_DISABLE_STD_COROUTINE
+# XXX: this was because I am still using an old version of libc++. maybe obsolete?
 cflags += -DBOOST_FILESYSTEM_NO_CXX20_ATOMIC_REF
 cflags += -DBOOST_NO_CXX20_HDR_CONCEPTS
 

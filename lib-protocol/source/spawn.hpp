@@ -36,7 +36,7 @@ class Pool;
 
 struct Work {
     Work *next_ = nullptr;
-    std::experimental::coroutine_handle<> code_;
+    std::coroutine_handle<> code_;
 };
 
 class Pool {
@@ -64,7 +64,7 @@ class Pool {
       public:
         Scheduled(Pool *pool) : pool_(pool) {}
         bool await_ready() noexcept { return false; }
-        void await_suspend(std::experimental::coroutine_handle<> code) noexcept;
+        void await_suspend(std::coroutine_handle<> code) noexcept;
         void await_resume() noexcept {}
     };
 
@@ -96,9 +96,9 @@ class Detached {
         }
 
         auto initial_suspend() noexcept {
-            return std::experimental::suspend_never(); }
+            return std::suspend_never(); }
         auto final_suspend() noexcept {
-            return std::experimental::suspend_never(); }
+            return std::suspend_never(); }
 
         [[noreturn]] void unhandled_exception() noexcept {
             std::terminate();
