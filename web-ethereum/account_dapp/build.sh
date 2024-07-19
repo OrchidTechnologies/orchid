@@ -17,6 +17,7 @@ sh flutter_web3.sh
 #_profile="--profile --dart-define=Dart2jsOptimization=O0"
 #$FLUTTER build web --web-renderer canvaskit --dart-define mock=true
 commit=$(git rev-parse --short HEAD)
+#$FLUTTER build web ${_profile:-} --web-renderer html --dart-define build_commit=$commit
 $FLUTTER build web ${_profile:-} --web-renderer canvaskit --dart-define build_commit=$commit
 
 # Move js to hash named file
