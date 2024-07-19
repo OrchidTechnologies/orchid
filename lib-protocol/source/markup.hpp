@@ -52,6 +52,8 @@ class Markup :
                     "text-decoration: none;"
                 "}"
                 "body {"
+                    "background-color: black;"
+                    "color: #bebebe;"
                     "font-family: monospace;"
                     "white-space: pre-wrap;"
                 "}"
