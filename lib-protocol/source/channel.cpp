@@ -131,19 +131,20 @@ task<void> Channel::Open() noexcept {
 task<void> Channel::Shut() noexcept {
     co_await Post([&]() {
         channel_->Close();
-        channel_->UnregisterObserver();
-
         const auto state(channel_->state());
         if (Verbose)
             Log() << "closed channel in state " << webrtc::DataChannelInterface::DataStateString(state) << std::endl;
         if (state != webrtc::DataChannelInterface::kClosed)
             Stop();
-
-        channel_ = nullptr;
-        peer_ = nullptr;
     });
 
     co_await Pump::Shut();
+
+    co_await Post([&]() {
+        channel_->UnregisterObserver();
+        channel_ = nullptr;
+        peer_ = nullptr;
+    });
 }
 
 template <typename Type_, Type_ Pointer_>
