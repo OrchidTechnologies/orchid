@@ -28,7 +28,6 @@
 #include <sstream>
 #include <string>
 
-#include "category.hpp"
 #include "log.hpp"
 
 namespace orc {
@@ -68,13 +67,6 @@ class Error final :
     if (orc::Verbose) \
         orc_log(orc_Log() << "throw ", text << std::endl); \
     throw orc_log(orc::Error(), text); \
-} while (false)
-
-#define orc_adapt(error) do { \
-    const auto code(error.code()); \
-    if (code.category() == orchid_category()) \
-        std::rethrow_exception(Category::Convert(code.value())); \
-    orc_throw(code.message() << " (" << code << ")"); \
 } while (false)
 
 #define orc_assert_(code, text) do { \

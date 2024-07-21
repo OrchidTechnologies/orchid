@@ -37,8 +37,6 @@ class Category :
     }
 
     std::string message(int index) const override;
-
-    static std::exception_ptr Convert(int index) noexcept;
     static boost::system::error_code Convert(const std::exception_ptr &error) noexcept;
 };
 
@@ -52,5 +50,9 @@ struct Categories {
 constexpr const boost::system::error_category &orchid_category() noexcept {
     return orc::Categories<void>::category_;
 }
+
+#define orc_adapt(error) do { \
+    orc_throw(error.what()); \
+} while (false)
 
 #endif//ORCHID_CATEGORY_HPP

@@ -27,6 +27,7 @@
 #include <asio/ip/udp.hpp>
 
 #include "baton.hpp"
+#include "category.hpp"
 #include "link.hpp"
 #include "reader.hpp"
 #include "task.hpp"

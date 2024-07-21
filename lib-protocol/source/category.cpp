@@ -38,17 +38,13 @@ namespace {
 
 std::string Category::message(int index) const {
     try {
-        std::rethrow_exception(Convert(index));
+        const std::unique_lock<std::mutex> lock(mutex_);
+        if (auto error = errors_.extract(index))
+            std::rethrow_exception(error.mapped());
+        orc_insist(false);
     } catch (const std::exception &error) {
         return error.what();
     }
-}
-
-std::exception_ptr Category::Convert(int index) noexcept {
-    const std::unique_lock<std::mutex> lock(mutex_);
-    if (const auto error = errors_.extract(index))
-        return error.mapped();
-    orc_insist(false);
 }
 
 boost::system::error_code Category::Convert(const std::exception_ptr &error) noexcept {

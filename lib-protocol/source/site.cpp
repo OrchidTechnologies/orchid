@@ -29,6 +29,7 @@
 #include <boost/beast/websocket.hpp>
 
 #include "baton.hpp"
+#include "category.hpp"
 #include "site.hpp"
 #include "spawn.hpp"
 #include "task.hpp"

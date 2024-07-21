@@ -29,6 +29,7 @@
 #include <lwipopts.h>
 
 #include "baton.hpp"
+#include "category.hpp"
 #include "dns.hpp"
 #include "link.hpp"
 #include "reader.hpp"
@@ -81,12 +82,10 @@ class Association :
         co_return writ;
     }
 
-    task<void> Open(const Socket &endpoint) { orc_ahead orc_block({ try {
+    task<void> Open(const Socket &endpoint) { orc_ahead orc_block({
         co_await association_.async_connect(endpoint, Adapt());
         association_.non_blocking(true);
-    } catch (const asio::system_error &error) {
-        orc_adapt(error);
-    } }, "connecting to " << endpoint); }
+    }, "connecting to " << endpoint); }
 
     void Shut() noexcept override {
         association_.close();

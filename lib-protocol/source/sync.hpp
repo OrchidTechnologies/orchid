@@ -24,6 +24,7 @@
 #define ORCHID_SYNC_HPP
 
 #include "baton.hpp"
+#include "category.hpp"
 #include "link.hpp"
 #include "reader.hpp"
 

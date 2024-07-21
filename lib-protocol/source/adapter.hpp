@@ -25,6 +25,7 @@
 
 #include <boost/beast/core/buffers_range.hpp>
 
+#include "category.hpp"
 #include "reader.hpp"
 
 namespace orc {
@@ -60,8 +61,8 @@ class Adapter {
     U<Stream> stream_;
 
     template <typename Handler_>
-    void Convert(Handler_ &&handler, const std::exception_ptr &error) {
-        boost::asio::post(get_executor(), [handler = std::forward<Handler_>(handler), error = Category::Convert(error)]() mutable {
+    void Convert(Handler_ &&handler) {
+        boost::asio::post(get_executor(), [handler = std::forward<Handler_>(handler), error = Category::Convert(std::current_exception())]() mutable {
             std::move(handler)(error, 0);
         });
     }
@@ -98,7 +99,7 @@ class Adapter {
                     return std::move(handler)(eof ? asio::error::eof : boost::system::error_code(), writ);
                 });
             } catch (...) {
-                Convert(std::move(handler), std::current_exception());
+                Convert(std::move(handler));
             }
         }, __FUNCTION__);
     }
@@ -118,7 +119,7 @@ class Adapter {
                     return std::move(handler)(boost::system::error_code(), writ);
                 });
             } catch (...) {
-                Convert(std::move(handler), std::current_exception());
+                Convert(std::move(handler));
             }
         }, __FUNCTION__);
     }
