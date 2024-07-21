@@ -79,15 +79,12 @@ Channel::Channel(BufferDrain &drain, const S<Peer> &peer, int id, const std::str
 {
 }
 
-task<Socket> Channel::Wire(BufferSunk &sunk, S<Base> base, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
+task<void> Channel::Wire(BufferSunk &sunk, S<Base> base, Configuration configuration, const std::function<task<std::string> (std::string)> &respond) {
     const auto client(co_await Post([&]() { return Make<Actor>(std::move(base), std::move(configuration)); }));
     auto &channel(*co_await Post([&]() { return &sunk.Wire<Channel>(client); }));
     const auto answer(co_await respond(Strip(co_await client->Offer())));
     co_await client->Negotiate(answer);
     co_await channel.Open();
-    const auto candidate(co_await client->Candidate());
-    const auto &socket(candidate.address());
-    co_return Socket(socket.ipaddr().ipv4_address(), socket.port());
 }
 
 void Channel::OnStateChange() noexcept {

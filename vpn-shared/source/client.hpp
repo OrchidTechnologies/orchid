@@ -73,7 +73,6 @@ class Client :
     }; Locked<Locked_> locked_;
 
     Nest nest_;
-    Socket socket_;
 
     void Transfer(size_t size, bool send);
 
