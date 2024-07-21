@@ -57,7 +57,7 @@ inline constexpr orc::Fiber *const orc_fiber = nullptr;
     orc::Log(orc_fiber)
 
 #define orc_log(log, text) \
-    log << "[" << __FILE__ << ":" << std::dec << __LINE__ << "] " << text
+    log << text << " [at " << __FILE__ << ":" << std::dec << __LINE__ << " in '" << __PRETTY_FUNCTION__ << "']"
 
 #define orc_trace() do { \
     orc_log(orc_Log() << "\e[31m", "orc_trace(): " << __FUNCTION__ << std::endl); \
