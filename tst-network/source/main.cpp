@@ -34,7 +34,6 @@
 #include <system_wrappers/include/field_trial.h>
 
 #include "baton.hpp"
-#include "boring.hpp"
 #include "client0.hpp"
 #include "client1.hpp"
 #include "crypto.hpp"
@@ -53,7 +52,6 @@
 #include "sleep.hpp"
 #include "store.hpp"
 #include "time.hpp"
-#include "transport.hpp"
 #include "updater.hpp"
 #include "version.hpp"
 
@@ -106,28 +104,6 @@ task<std::string> Version(Base &base, const Locator &url) { try {
     orc_assert(std::regex_match(version, re));
     co_return version;
 } orc_catch({ co_return ""; }) }
-
-task<Report> TestOpenVPN(const S<Base> &base, std::string ovpn) {
-    (co_await orc_optic)->Name("OpenVPN");
-    co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
-        co_await Connect(remote, base, remote.Host().operator uint32_t(), std::move(ovpn), "", "");
-        remote.Open();
-        const auto [speed, size] = co_await Measure(remote);
-        const auto host(co_await Find(remote));
-        co_return Report{{}, std::nullopt, speed, host, {}, ""};
-    });
-}
-
-task<Report> TestWireGuard(const S<Base> &base, std::string config) {
-    (co_await orc_optic)->Name("WireGuard");
-    co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
-        co_await Guard(remote, base, remote.Host().operator uint32_t(), std::move(config));
-        remote.Open();
-        const auto host(co_await Find(remote));
-        const auto [speed, size] = co_await Measure(remote);
-        co_return Report{{}, std::nullopt, speed, host, {}, ""};
-    });
-}
 
 task<Report> TestOrchid(const S<Base> &base, std::string name, const S<Network> &network, const char *address, std::function<task<Client &> (BufferSink<Remote> &)> code) {
     (co_await orc_optic)->Name(address);
@@ -222,9 +198,6 @@ auto &At(Type_ &&type, const Value_ &value) {
 int Main(int argc, const char *const argv[]) {
     std::vector<std::string> chains;
 
-    std::vector<std::string> openvpns;
-    std::vector<std::string> wireguards;
-
     po::variables_map args;
 
     po::options_description group("general command line");
@@ -251,12 +224,6 @@ int Main(int argc, const char *const argv[]) {
         ("chain", po::value<std::vector<std::string>>(&chains), "like 1,ETH,https://cloudflare-eth.com/")
     ; options.add(group); }
 
-    { po::options_description group("protocol testing");
-    group.add_options()
-        ("openvpn", po::value(&openvpns))
-        ("wireguard", po::value(&wireguards))
-    ; options.add(group); }
-
     po::store(po::parse_command_line(argc, argv, po::options_description()
         .add(group)
         .add(options)
@@ -271,8 +238,6 @@ int Main(int argc, const char *const argv[]) {
         << std::endl;
         return 0;
     }
-
-    Initialize();
 
     const unsigned milliseconds(60*1000);
     const S<Base> base(Break<Local>());
@@ -326,16 +291,6 @@ int Main(int argc, const char *const argv[]) {
 
             std::vector<std::string> names;
             std::vector<task<Report>> tests;
-
-            for (const auto &openvpn : openvpns) {
-                names.emplace_back("OpenVPN");
-                tests.emplace_back(TestOpenVPN(base, Load(openvpn)));
-            }
-
-            for (const auto &wireguard : wireguards) {
-                names.emplace_back("WireGuard");
-                tests.emplace_back(TestWireGuard(base, Load(wireguard)));
-            }
 
             for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
                 {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
