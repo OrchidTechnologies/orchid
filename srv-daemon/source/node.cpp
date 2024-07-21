@@ -57,7 +57,7 @@ void Node::Run(const asio::ip::address &bind, uint16_t port, const std::string &
             Log() << std::endl;
         }
 
-        co_return Respond(request, http::status::ok, {
+        co_return Respond(request, http::status::accepted, {
             {"content-type", "application/sdp"},
         }, std::move(answer));
     });
