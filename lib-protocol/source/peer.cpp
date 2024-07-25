@@ -100,14 +100,14 @@ void Peer::OnRenegotiationNeeded() noexcept {
 
 void Peer::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept {
     if (Verbose)
-        Log() << "OnIceConnectionChange(" << webrtc::PeerConnectionInterface::AsString(state) << ")" << std::endl;
+        Log() << this << "->OnIceConnectionChange(" << webrtc::PeerConnectionInterface::AsString(state) << ")" << std::endl;
     if (state == webrtc::PeerConnectionInterface::kIceConnectionClosed)
         closed_();
 }
 
 void Peer::OnStandardizedIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState state) noexcept {
     if (Verbose)
-        Log() << "OnStandardizedIceConnectionChange(" << webrtc::PeerConnectionInterface::AsString(state) << ")" << std::endl;
+        Log() << this << "->OnStandardizedIceConnectionChange(" << webrtc::PeerConnectionInterface::AsString(state) << ")" << std::endl;
     // this is (annoyingly) only signaled via OnIceConnectionChange
     orc_insist(state != webrtc::PeerConnectionInterface::kIceConnectionClosed);
 }

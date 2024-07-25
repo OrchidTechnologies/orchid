@@ -90,7 +90,7 @@ task<void> Channel::Wire(BufferSunk &sunk, S<Base> base, Configuration configura
 void Channel::OnStateChange() noexcept {
     const auto state(channel_->state());
     if (Verbose)
-        Log() << "OnStateChange(" << webrtc::DataChannelInterface::DataStateString(state) << ")" << std::endl;
+        Log() << this << "->OnStateChange(" << webrtc::DataChannelInterface::DataStateString(state) << ")" << std::endl;
     switch (channel_->state()) {
         case webrtc::DataChannelInterface::kConnecting:
             break;
