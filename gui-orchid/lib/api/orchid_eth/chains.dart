@@ -198,7 +198,7 @@ class Chains {
     blocktime: 0.5,
   );
 
-// RSK (BTC)
+  // RSK (BTC)
   static const int RSK_CHAINID = 30;
   static Chain RSK = Chain(
     chainId: RSK_CHAINID,
@@ -223,6 +223,18 @@ class Chains {
     blocktime: 5,
   );
 
+  // Coinbase Base (BASE_ETH)
+  static const int BASE_CHAINID = 8453;
+  static Chain Base = Chain(
+    chainId: BASE_CHAINID,
+    name: 'Base',
+    nativeCurrency: Tokens.BASE_ETH,
+    defaultProviderUrl: 'https://mainnet.base.org',
+    iconPath: OrchidAssetSvgChain.unknown_chain_path,
+    explorerUrl: 'https://basescan.org',
+    blocktime: 0,
+  );
+
   static Map<int, Chain> _map = [
     Aurora,
     Avalanche,
@@ -234,6 +246,7 @@ class Chains {
     Gnosis,
     Optimism,
     Polygon,
+    Base,
     // ArbitrumOne,
     // RSK,
     // Telos,

@@ -10,7 +10,6 @@ import 'token_type.dart';
 export 'tokens_legacy.dart';
 
 class Tokens {
-
   static const ETHPriceSource = const UniswapETHPriceSource(
     // USDC / ETH 0.3%
     dollarTokenVsETHPoolAddress: USDCVsETHPoolAddress,
@@ -146,6 +145,14 @@ class Tokens {
     iconPath: OrchidAssetSvgToken.celo_token_path,
   );
 
+  static const TokenType BASE_ETH = TokenType(
+    symbol: 'ETH',
+    // BASE ETH is ETH on L2
+    exchangeRateSource: ETHPriceSource,
+    chainId: Chains.BASE_CHAINID,
+    iconPath: OrchidAssetSvgToken.ethereum_eth_token_path,
+  );
+
   static const USDCVsETHPoolAddress =
       '0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8';
   static const USDC_DECIMALS = 6;
@@ -171,9 +178,9 @@ class Tokens {
     AURORA_ETH,
     FTM,
     CELO,
+    BASE_ETH,
     // ARBITRUM_ETH,
     // RBTC,
     // TLOS,
   ];
 }
-
