@@ -55,6 +55,8 @@ struct Transaction {
     const uint256_t amount_;
     const Beam data_;
     const std::vector<std::pair<Address, std::vector<Bytes32>>> access_;
+    const uint256_t blob_;
+    const std::vector<Bytes32> blobs_;
 
     Bytes32 hash(const uint256_t &chain, const uint256_t &v, const uint256_t &r, const uint256_t &s) const;
     Address from(const uint256_t &chain, const uint256_t &v, const uint256_t &r, const uint256_t &s) const;
