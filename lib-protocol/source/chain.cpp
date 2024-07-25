@@ -103,6 +103,8 @@ Bytes32 Transaction::hash(const uint256_t &chain, const uint256_t &v, const uint
             return HashK(Tie(uint8_t(2), Implode({chain, nonce_, tip_, bid_, gas_, target_, amount_, data_, access_, v, r, s})));
         case 3:
             return HashK(Tie(uint8_t(3), Implode({chain, nonce_, tip_, bid_, gas_, target_, amount_, data_, access_, blob_, blobs_, v, r, s})));
+        case 126:
+            return HashK(Tie(uint8_t(3), Implode({chain, nonce_, tip_, bid_, gas_, target_, amount_, data_, access_, blob_, blobs_, v, r, s})));
         default:
             orc_assert_(false, "unknown type: " << unsigned(type_));
     }
@@ -123,6 +125,8 @@ Address Transaction::from(const uint256_t &chain, const uint256_t &v, const uint
             return Recover(HashK(Tie(uint8_t(2), Implode({chain, nonce_, tip_, bid_, gas_, target_, amount_, data_, access_}))), {Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v)});
         case 3:
             return Recover(HashK(Tie(uint8_t(3), Implode({chain, nonce_, tip_, bid_, gas_, target_, amount_, data_, access_, blob_, blobs_}))), {Number<uint256_t>(r), Number<uint256_t>(s), uint8_t(v)});
+        case 126:
+            return "0xdeaddeaddeaddeaddeaddeaddeaddeaddead0001";
         default:
             orc_assert_(false, "unknown type: " << unsigned(type_));
     }
@@ -231,6 +235,15 @@ Record::Record(const uint256_t &chain, const Json::Value &value) :
 
                 default: orc_assert(false);
             }
+        // Optimism type 126
+        } else if ([&]() {
+            const auto &source(value["sourceHash"]);
+            return !source.isNull();
+        }()) {
+            orc_assert(type_ == 126);
+            orc_assert(v == 0);
+            orc_assert(r == 0);
+            orc_assert(s == 0);
         // XXX: https://github.com/celo-org/celo-proposals/blob/master/CIPs/cip-0035.md
         } else if ([&]() {
             const auto &celo(value["ethCompatible"]);
