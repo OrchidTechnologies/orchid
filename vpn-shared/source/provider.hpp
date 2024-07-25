@@ -23,6 +23,8 @@
 #ifndef ORCHID_PROVIDER_HPP
 #define ORCHID_PROVIDER_HPP
 
+#include <rtc_base/ssl_fingerprint.h>
+
 #include "chain.hpp"
 #include "jsonrpc.hpp"
 #include "locator.hpp"
