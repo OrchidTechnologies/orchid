@@ -56,7 +56,7 @@ class Error final :
 
 #define orc_insist_(code, text) do { \
     if ((code)) break; \
-    orc_log(orc_Log(), text << std::endl); \
+    orc_log(orc_Log() << text) << std::endl; \
     std::terminate(); \
 } while (false)
 
@@ -65,8 +65,8 @@ class Error final :
 
 #define orc_throw(text) do { \
     if (orc::Verbose) \
-        orc_log(orc_Log() << "throw ", text << std::endl); \
-    throw orc_log(orc::Error(), text); \
+        orc_log(orc_Log() << "throw " << text) << std::endl; \
+    throw orc_log(orc::Error() << text); \
 } while (false)
 
 #define orc_assert_(code, text) do { \
@@ -79,7 +79,7 @@ class Error final :
 
 #define orc_catch(code) \
     catch (const std::exception &error) { \
-        orc_log(orc_Log(), "handled error: " << error.what() << std::endl); \
+        orc_log(orc_Log() << "handled error: " << error.what()) << std::endl; \
     code } catch (...) { code }
 
 // XXX: clang-tidy fails to consider statement expressions
@@ -92,35 +92,35 @@ class Error final :
 
 #define orc_except(code) \
     try code catch (...) { \
-        orc_log(orc_Log(), "orc_except(" #code ")" << std::endl); \
+        orc_log(orc_Log() << "orc_except(" #code ")") << std::endl; \
         std::terminate(); \
     }
 
 #define orc_stack(code, text) \
     catch (const std::exception &error) { code \
-        throw orc_log(orc::Error() << error.what() << ' ', text); \
+        throw orc_log(orc::Error() << error.what() << ' ' << text); \
     }
 
 #define orc_block(code, text) do { \
     if (orc::Verbose) \
-        orc_log(orc_Log(), "++ " << text << std::endl); \
+        orc_log(orc_Log() << "++ " << text) << std::endl; \
     try code orc_stack({ \
         if (orc::Verbose) \
-            orc_log(orc_Log(), "-- " << text << std::endl); \
+            orc_log(orc_Log() << "-- " << text) << std::endl; \
     }, text) \
     if (orc::Verbose) \
-        orc_log(orc_Log(), "-- " << text << std::endl); \
+        orc_log(orc_Log() << "-- " << text) << std::endl; \
 } while (false)
 
 #define orc_value(ret, code, text) [&]() -> decltype(code) { \
     if (orc::Verbose) \
-        orc_log(orc_Log(), "++ " << text << std::endl); \
+        orc_log(orc_Log() << "++ " << text) << std::endl; \
     try { ret (code); } orc_stack({ \
         if (orc::Verbose) \
-            orc_log(orc_Log(), "-- " << text << std::endl); \
+            orc_log(orc_Log() << "-- " << text) << std::endl; \
     }, text) \
     if (orc::Verbose) \
-        orc_log(orc_Log(), "-- " << text << std::endl); \
+        orc_log(orc_Log() << "-- " << text) << std::endl; \
 }()
 
 #endif//ORCHID_ERROR_HPP
