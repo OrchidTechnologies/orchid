@@ -128,11 +128,6 @@ task<void> Channel::Open() noexcept {
 task<void> Channel::Shut() noexcept {
     co_await Post([&]() {
         channel_->Close();
-        const auto state(channel_->state());
-        if (Verbose)
-            Log() << "closed channel in state " << webrtc::DataChannelInterface::DataStateString(state) << std::endl;
-        if (state != webrtc::DataChannelInterface::kClosed)
-            Stop();
     });
 
     co_await Pump::Shut();
