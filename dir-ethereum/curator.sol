@@ -1,5 +1,5 @@
 /* Orchid - WebRTC P2P VPN Market (on Ethereum)
- * Copyright (C) 2017-2020  The Orchid Authors
+ * Copyright (C) 2017-2019  The Orchid Authors
 */
 
 /* GNU Affero General Public License, Version 3 {{{ */
@@ -22,37 +22,22 @@
 
 pragma solidity 0.5.13;
 
-contract Resolver {
-    function setName(bytes32 node, string memory name) public;
-}
-
 contract ReverseRegistrar {
-    function setName(string memory name) public returns (bytes32 node);
     function claim(address owner) public returns (bytes32 node);
-    function claimWithResolver(address owner, address resolver) public returns (bytes32 node);
-    function node(address addr) public pure returns (bytes32);
 }
 
 contract OrchidCurator {
-    function good(address, bytes calldata) external view returns (bool);
+    function good(address, bytes calldata) external view returns (uint128);
 }
 
 contract OrchidList is OrchidCurator {
+    ReverseRegistrar constant private ens_ = ReverseRegistrar(0x9062C0A6Dbd6108336BcBe4593a3D1cE05512069);
+
     address private owner_;
 
-    struct Entry {
-        address prev_;
-        address next_;
-        bytes data_;
-    }
-
-    mapping (address => Entry) private entries_;
-
     constructor() public {
+        ens_.claim(msg.sender);
         owner_ = msg.sender;
-        Entry storage root = entries_[address(this)];
-        root.prev_ = address(this);
-        root.next_ = address(this);
     }
 
     function hand(address owner) external {
@@ -60,72 +45,38 @@ contract OrchidList is OrchidCurator {
         owner_ = owner;
     }
 
-    function call(address target, bytes calldata data) payable external returns (bool, bytes memory) {
-        require(msg.sender == owner_);
-        return target.call.value(msg.value)(data);
+    struct Entry {
+        uint128 adjust_;
+        bool valid_;
     }
 
-    function list(address provider, bytes calldata data) external {
-        require(msg.sender == owner_);
-
-        require(provider != address(this));
-        Entry storage here = entries_[provider];
-
-        require(data.length != 0);
-        bool done = here.data_.length != 0;
-        here.data_ = data;
-        if (done) return;
-
-        Entry storage prev = entries_[address(this)];
-        Entry storage next = entries_[prev.next_];
-
-        here.prev_ = address(this);
-        here.next_ = prev.next_;
-
-        prev.next_ = provider;
-        next.prev_ = provider;
-    }
+    mapping (address => Entry) private entries_;
 
     function kill(address provider) external {
         require(msg.sender == owner_);
-
-        Entry storage here = entries_[provider];
-        if (here.data_.length == 0)
-            return;
-
-        Entry storage prev = entries_[here.prev_];
-        Entry storage next = entries_[here.next_];
-
-        prev.next_ = here.next_;
-        next.prev_ = here.prev_;
-
         delete entries_[provider];
     }
 
-    function look(address provider) external view returns (address, address, bytes memory) {
+    function tend(address provider, uint128 adjust) public {
+        require(msg.sender == owner_);
         Entry storage entry = entries_[provider];
-        return (entry.prev_, entry.next_, entry.data_);
+        entry.adjust_ = adjust;
+        entry.valid_ = true;
     }
 
-    function good(address provider, bytes calldata) external view returns (bool) {
-        require(entries_[provider].data_.length != 0);
-        return true;
+    function list(address provider) external {
+        return tend(provider, uint128(-1));
     }
-}
 
-contract OrchidSelect is OrchidCurator {
-    function good(address provider, bytes calldata argument) external view returns (bool) {
-        require(argument.length == 20);
-        address allowed;
-        bytes memory copy = argument;
-        assembly { allowed := mload(add(copy, 20)) }
-        require(provider == allowed);
-        return true;
+    function good(address provider, bytes calldata) external view returns (uint128) {
+        Entry storage entry = entries_[provider];
+        require(entry.valid_);
+        return entry.adjust_;
     }
 }
 
 contract OrchidUntrusted is OrchidCurator {
-    function good(address, bytes calldata) external view returns (bool) {
-        return true;
+    function good(address, bytes calldata) external view returns (uint128) {
+        return uint128(-1);
     }
 }

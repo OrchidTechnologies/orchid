@@ -1,5 +1,8 @@
 #!/bin/bash
 set -e
 for sol in *.sol; do
-    env/solc.sh 0.5.13 build "${sol}" --optimize
+    args=()
+    if [[ ${sol} == curator.sol ]]; then
+        args+=(--optimize); fi
+    env/solc.sh 0.5.13 build "${sol}" "${args[@]}"
 done
