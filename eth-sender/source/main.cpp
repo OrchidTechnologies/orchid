@@ -617,80 +617,6 @@ task<int> Main(int argc, const char *const argv[]) { try {
         const auto [number] = Options<uint256_t>(args);
         std::cout << "0x" << std::hex << number << std::endl;
 
-    } else if (command == "orchid:allow1") {
-        const auto [seller, token, allowance, sender] = Options<Address, Address, uint256_t, Address>(args);
-        static Selector<void, Address, uint256_t, std::vector<Address>> allow("allow");
-        std::cout << (co_await executor_->Send(*chain_, {}, seller, 0, allow(token, allowance, {sender}))).hex() << std::endl;
-
-    } else if (command == "orchid:allowed") {
-        const auto [seller, token, sender] = Options<Address, Address, Address>(args);
-        static Selector<uint256_t, Address, Address> allowed("allowed");
-        std::cout << co_await allowed.Call(*chain_, "latest", seller, 90000, token, sender) << std::endl;
-
-    } else if (command == "orchid:enroll1") {
-        const auto [seller, cancel, recipient] = Options<Address, bool, Address>(args);
-        static Selector<void, bool, std::vector<Address>> enroll("enroll");
-        std::cout << (co_await executor_->Send(*chain_, {}, seller, 0, enroll(cancel, {recipient}))).hex() << std::endl;
-
-    } else if (command == "orchid:hand") {
-        const auto [seller, owner, manager] = Options<Address, Address, Address>(args);
-        static Selector<void, Address, Address> hand("hand");
-        std::cout << (co_await executor_->Send(*chain_, {}, seller, 0, hand(owner, manager))).hex() << std::endl;
-
-    } else if (command == "orchid:giftv") {
-        orc_assert(nonce_);
-        const auto [seller] = Options<Address>(args);
-
-        typedef std::tuple<Address, uint256_t, uint256_t> Gift;
-        std::vector<Gift> gifts;
-        uint256_t total(0);
-
-        const auto csv(Load(std::to_string(uint64_t(*nonce_)) + ".csv"));
-        for (auto line : Split(csv, {'\n'})) {
-            if (line.empty() || line[0] == '#')
-                continue;
-            if (line[line.size() - 1] == '\r') {
-                line -= 1;
-                if (line.empty())
-                    continue;
-            }
-
-            const auto comma0(Find(line, {','}));
-            orc_assert(comma0);
-            auto [recipient, rest] = Split(line, *comma0);
-
-            const auto comma1(Find(rest, {','}));
-            orc_assert(comma1);
-            auto [amount$, escrow$] = Split(rest, *comma1);
-
-            const uint256_t amount{std::string(amount$)};
-            const uint256_t escrow{std::string(escrow$)};
-
-            const auto combined(amount + escrow);
-            orc_assert(combined >= escrow);
-
-            const auto &gift(gifts.emplace_back(std::string(recipient), combined, escrow));
-            std::cout << "gift " << seller << " " << std::get<0>(gift) << " " << std::get<1>(gift) << " " << std::get<2>(gift) << std::endl;
-            total += std::get<1>(gift);
-        }
-
-        std::cout << "total = " << total << std::endl;
-
-        static Selector<void, std::vector<Gift>> giftv("giftv");
-        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, seller, total, giftv(gifts))).hex() << std::endl;
-
-    } else if (command == "orchid:move") {
-        const auto [url, tls, gpg] = Options<Bytes, Bytes, Bytes>(args);
-        static Selector<void, Bytes, Bytes, Bytes> move("move");
-        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD", 0, move(url, tls, gpg))).hex() << std::endl;
-
-    } else if (command == "orchid:read") {
-        const auto [seller, token, signer] = Options<Address, Address, Address>(args);
-        orc_assert(token == Address(0));
-        static Selector<uint256_t, Address> read("read");
-        const auto packed(co_await read.Call(*chain_, "latest", seller, 90000, signer));
-        std::cout << std::dec << (packed >> 64) << " " << uint64_t(packed) << std::endl;
-
     } else if (command == "p2pkh") {
         // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
         const auto [key] = Options<Key>(args);
@@ -775,6 +701,80 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "segwit") {
         const auto [prefix, version, key] = Options<std::string, std::optional<uint8_t>, Key>(args);
         std::cout << ToSegwit(prefix, version, HashR(Hash2(ToCompressed(key)))) << std::endl;
+
+    } else if (command == "seller:allow1") {
+        const auto [seller, token, allowance, sender] = Options<Address, Address, uint256_t, Address>(args);
+        static Selector<void, Address, uint256_t, std::vector<Address>> allow("allow");
+        std::cout << (co_await executor_->Send(*chain_, {}, seller, 0, allow(token, allowance, {sender}))).hex() << std::endl;
+
+    } else if (command == "seller:allowed") {
+        const auto [seller, token, sender] = Options<Address, Address, Address>(args);
+        static Selector<uint256_t, Address, Address> allowed("allowed");
+        std::cout << co_await allowed.Call(*chain_, "latest", seller, 90000, token, sender) << std::endl;
+
+    } else if (command == "seller:enroll1") {
+        const auto [seller, cancel, recipient] = Options<Address, bool, Address>(args);
+        static Selector<void, bool, std::vector<Address>> enroll("enroll");
+        std::cout << (co_await executor_->Send(*chain_, {}, seller, 0, enroll(cancel, {recipient}))).hex() << std::endl;
+
+    } else if (command == "seller:giftv") {
+        orc_assert(nonce_);
+        const auto [seller] = Options<Address>(args);
+
+        typedef std::tuple<Address, uint256_t, uint256_t> Gift;
+        std::vector<Gift> gifts;
+        uint256_t total(0);
+
+        const auto csv(Load(std::to_string(uint64_t(*nonce_)) + ".csv"));
+        for (auto line : Split(csv, {'\n'})) {
+            if (line.empty() || line[0] == '#')
+                continue;
+            if (line[line.size() - 1] == '\r') {
+                line -= 1;
+                if (line.empty())
+                    continue;
+            }
+
+            const auto comma0(Find(line, {','}));
+            orc_assert(comma0);
+            auto [recipient, rest] = Split(line, *comma0);
+
+            const auto comma1(Find(rest, {','}));
+            orc_assert(comma1);
+            auto [amount$, escrow$] = Split(rest, *comma1);
+
+            const uint256_t amount{std::string(amount$)};
+            const uint256_t escrow{std::string(escrow$)};
+
+            const auto combined(amount + escrow);
+            orc_assert(combined >= escrow);
+
+            const auto &gift(gifts.emplace_back(std::string(recipient), combined, escrow));
+            std::cout << "gift " << seller << " " << std::get<0>(gift) << " " << std::get<1>(gift) << " " << std::get<2>(gift) << std::endl;
+            total += std::get<1>(gift);
+        }
+
+        std::cout << "total = " << total << std::endl;
+
+        static Selector<void, std::vector<Gift>> giftv("giftv");
+        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, seller, total, giftv(gifts))).hex() << std::endl;
+
+    } else if (command == "seller:hand") {
+        const auto [seller, owner, manager] = Options<Address, Address, Address>(args);
+        static Selector<void, Address, Address> hand("hand");
+        std::cout << (co_await executor_->Send(*chain_, {}, seller, 0, hand(owner, manager))).hex() << std::endl;
+
+    } else if (command == "seller:move") {
+        const auto [url, tls, gpg] = Options<Bytes, Bytes, Bytes>(args);
+        static Selector<void, Bytes, Bytes, Bytes> move("move");
+        std::cout << (co_await executor_->Send(*chain_, {.nonce = nonce_}, "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD", 0, move(url, tls, gpg))).hex() << std::endl;
+
+    } else if (command == "seller:read") {
+        const auto [seller, token, signer] = Options<Address, Address, Address>(args);
+        orc_assert(token == Address(0));
+        static Selector<uint256_t, Address> read("read");
+        const auto packed(co_await read.Call(*chain_, "latest", seller, 90000, signer));
+        std::cout << std::dec << (packed >> 64) << " " << uint64_t(packed) << std::endl;
 
     } else if (command == "send") {
         const auto [recipient, amount, data] = Options<Address, uint256_t, Bytes>(args);
