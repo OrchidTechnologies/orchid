@@ -36,6 +36,7 @@ args += --chain 100,DAI,https://rpc.gnosischain.com/
 args += --chain 137,MATIC,https://polygon-rpc.com/
 #args += --chain 200,DAI,https://arbitrum.xdaichain.com/
 args += --chain 250,FTM,https://rpc.ftm.tools/
+args += --chain 8453,ETH,https://mainnet.base.org/
 #args += --chain 42161,ETH,https://arb1.arbitrum.io/rpc
 # https://github.com/celo-org/celo-blockchain/issues/1734
 # https://github.com/celo-org/celo-blockchain/issues/1737
