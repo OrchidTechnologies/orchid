@@ -27,6 +27,7 @@
 #include <boost/program_options/variables_map.hpp>
 
 #include "base58.hpp"
+#include "contract.hpp"
 #include "currency.hpp"
 #include "decimal.hpp"
 #include "executor.hpp"
@@ -210,10 +211,16 @@ static Address _(std::string_view arg) {
     else if (arg == "factory@500") {
         return "0x83aa38958768B9615B138339Cbd8601Fc2963D4d"; }
 
+    else if (arg == "directory") {
+        return Directory_; }
+    else if (arg == "locator") {
+        return Locator_; }
+
     else if (arg == "lottery0") {
-        return "0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1"; }
+        orc_assert_(*chain_ == 1, "lottery0 is not on chain " << chain_);
+        return Lottery0_; }
     else if (arg == "lottery1") {
-        return "0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82"; }
+        return Lottery1_; }
 
     else if (arg == "eip1820") {
         return "0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24"; }
@@ -616,6 +623,24 @@ task<int> Main(int argc, const char *const argv[]) { try {
     } else if (command == "number") {
         const auto [number] = Options<uint256_t>(args);
         std::cout << "0x" << std::hex << number << std::endl;
+
+    } else if (command == "orchid:locate") {
+        const auto [stakee] = Options<Address>(args);
+        static Selector<std::tuple<uint256_t, Bytes, Bytes, Bytes>, Address> look("look");
+        const auto [set, url, tls, gpg] = co_await look.Call(*chain_, "latest", Locator_, 90000, stakee);
+        std::cout << url.str() << std::endl;
+
+    } else if (command == "orchid:pulled") {
+        const auto [staker, index] = Options<Address, uint256_t>(args);
+        const auto pending(HashK(Tie(index, HashK(Tie(uint256_t(staker.num()), uint256_t(0x4u))))).num<uint256_t>());
+        const auto [contract, expire, stakee, amount] = co_await chain_->Get(co_await block(), Directory_, nullptr, pending + 0, pending + 1, pending + 2);
+        std::cout << expire << " " << Address(stakee) << " " << amount << std::endl;
+
+    } else if (command == "orchid:staked") {
+        const auto [staker, stakee] = Options<Address, Address>(args);
+        const auto stake(HashK(Tie(HashK(Tie(staker, stakee)), uint256_t(0x2u))).num<uint256_t>());
+        const auto [contract, amount, delay] = co_await chain_->Get(co_await block(), Directory_, nullptr, stake + 2, stake + 3);
+        std::cout << amount << " " << delay << std::endl;
 
     } else if (command == "p2pkh") {
         // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses

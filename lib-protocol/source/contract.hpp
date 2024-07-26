@@ -27,8 +27,13 @@
 
 namespace orc {
 
-static constexpr Address Lottery0_("0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1");
-static constexpr Address Lottery1_("0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82");
+// XXX: this should be constexpr (c++2b maybe?)
+
+static const Address Directory_("0x918101FB64f467414e9a785aF9566ae69C3e22C5");
+static const Address Locator_("0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD");
+
+static const Address Lottery0_("0xb02396f06CC894834b7934ecF8c8E5Ab5C1d12F1");
+static const Address Lottery1_("0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82");
 
 }
 
