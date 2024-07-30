@@ -73,7 +73,7 @@ task<void> Scan(const Brick<32> &root, Code_ &&code, Each_ &&each) {
 
                     const auto there(here + leg.hex(false).substr(2 - (type & 0x1)));
                     if ((type & 0x2) == 0) {
-                        check = hash.substr(there.size()) != there ? EmptyVector : Brick<32>(proof[1].buf());
+                        check = hash.substr(0, there.size()) != there ? EmptyVector : Brick<32>(proof[1].buf());
                         offset = there.size();
                         if (!done.contains(there))
                             todo.emplace(there);
