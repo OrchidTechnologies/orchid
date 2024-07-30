@@ -42,7 +42,7 @@ class Valve {
 
   protected:
     void Stop() noexcept {
-        orc_insist(!shut_);
+        orc_insist_(!shut_, "double stop: " << type_);
         shut_();
     }
 

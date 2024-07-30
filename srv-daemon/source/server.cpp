@@ -174,7 +174,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
     const auto until(start + range);
     const auto now(Timestamp());
-    orc_assert(until > now);
+    orc_assert_(until > now, "expired ticket (by " << (now - until) << " seconds)");
 
     const auto &lottery(croupier_->Find0(contract, chain, recipient));
     const uint64_t gas(receipt.size() == 0 ? 84000 /*83267*/ : 103000);
@@ -275,8 +275,9 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
 
     orc_assert_(recipient == croupier_->Recipient(), recipient << " != " << croupier_->Recipient() << " in " << data);
 
+    const auto until(issued + expire);
     const auto now(Timestamp());
-    orc_assert(issued + expire > now);
+    orc_assert_(until > now, "expired ticket (by " << (now - until) << " seconds)");
 
     const auto &lottery(croupier_->Find1(contract, chain));
     const uint64_t gas(60000);

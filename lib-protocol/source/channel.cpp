@@ -170,7 +170,8 @@ task<void> Channel::Send(const Buffer &data) {
                 writ = std::move(error); });
     }, *(sctp->*Loot<SctpDataChannel$network_thread_>::pointer));
 
-    orc_assert((co_await *writ).ok());
+    const auto error(co_await *writ);
+    orc_assert_(error.ok(), error.message());
 }
 
 task<std::string> Description(const S<Base> &base, std::vector<std::string> ice) {

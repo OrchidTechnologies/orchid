@@ -60,7 +60,7 @@ class Croupier {
 
     const S<Lottery1> &Find1(const Address &contract, const uint256_t &chain) {
         const auto lottery(lotteries1_.find(chain));
-        orc_assert(lottery != lotteries1_.end());
+        orc_assert_(lottery != lotteries1_.end(), "unsupported lottery chain " << chain);
         orc_assert(lottery->second->Contract() == contract);
         return lottery->second;
     }

@@ -73,7 +73,7 @@ auto Layer(Base &base, const Locator &locator, const std::function<bool (const s
 
             co_return co_await std::move(code)(std::make_unique<Type_<boost::beast::ssl_stream<Adapter>>>(std::move(stream)));
         } else orc_assert(false);
-    }, "connected to " << endpoint); } catch (...) {
+    }, "using endpoint " << endpoint); } catch (...) {
         // XXX: maybe I should merge the exceptions? that would be cool
         if (error == nullptr)
             error = std::current_exception();
