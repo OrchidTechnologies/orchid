@@ -166,7 +166,7 @@ task<Signature> TrezorExecutor::operator ()(const Chain &chain, const Buffer &da
     orc_insist(false);
 }
 
-task<Bytes32> TrezorExecutor::Send(const Chain &chain, const uint256_t &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data, bool eip155) const {
+task<Bytes32> TrezorExecutor::Send_(const Chain &chain, const uint256_t &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data, bool eip155) const {
     tzr::ethereum::EthereumSignTx request;
     Trezor(request, indices_);
     request.set_nonce(Stripped(nonce));
