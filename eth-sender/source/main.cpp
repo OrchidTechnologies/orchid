@@ -49,17 +49,13 @@ namespace orc {
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 S<Base> base_;
 
-// XXX: sometimes used for flags_.bid_
-Flags flags_;
-
 // XXX: still used by Option_<Address>::_
 S<Chain> chain_;
 S<Executor> executor_;
 
-std::string currency_;
-std::optional<uint256_t> nonce_;
-std::optional<uint64_t> gas_;
+Execution execution_;
 std::optional<uint64_t> height_;
+std::string currency_;
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 class Args :
@@ -501,7 +497,7 @@ task<void> Command(const std::string &command, Args &args, const S<Chain> &chain
 
     } else if (command == "deploy:eip1820") {
         Options<>(args);
-        const auto bid(flags_.bid_ ? *flags_.bid_ : uint256_t(100 * Ten9));
+        const auto bid(execution_.bid ? *execution_.bid : uint256_t(100 * Ten9));
         static const uint256_t rs("0x1820182018201820182018201820182018201820182018201820182018201820");
         Record record(0, bid, 800000, std::nullopt, 0, Bless("608060405234801561001057600080fd5b506109c5806100206000396000f3fe608060405234801561001057600080fd5b50600436106100a5576000357c010000000000000000000000000000000000000000000000000000000090048063a41e7d5111610078578063a41e7d51146101d4578063aabbb8ca1461020a578063b705676514610236578063f712f3e814610280576100a5565b806329965a1d146100aa5780633d584063146100e25780635df8122f1461012457806365ba36c114610152575b600080fd5b6100e0600480360360608110156100c057600080fd5b50600160a060020a038135811691602081013591604090910135166102b6565b005b610108600480360360208110156100f857600080fd5b5035600160a060020a0316610570565b60408051600160a060020a039092168252519081900360200190f35b6100e06004803603604081101561013a57600080fd5b50600160a060020a03813581169160200135166105bc565b6101c26004803603602081101561016857600080fd5b81019060208101813564010000000081111561018357600080fd5b82018360208201111561019557600080fd5b803590602001918460018302840111640100000000831117156101b757600080fd5b5090925090506106b3565b60408051918252519081900360200190f35b6100e0600480360360408110156101ea57600080fd5b508035600160a060020a03169060200135600160e060020a0319166106ee565b6101086004803603604081101561022057600080fd5b50600160a060020a038135169060200135610778565b61026c6004803603604081101561024c57600080fd5b508035600160a060020a03169060200135600160e060020a0319166107ef565b604080519115158252519081900360200190f35b61026c6004803603604081101561029657600080fd5b508035600160a060020a03169060200135600160e060020a0319166108aa565b6000600160a060020a038416156102cd57836102cf565b335b9050336102db82610570565b600160a060020a031614610339576040805160e560020a62461bcd02815260206004820152600f60248201527f4e6f7420746865206d616e616765720000000000000000000000000000000000604482015290519081900360640190fd5b6103428361092a565b15610397576040805160e560020a62461bcd02815260206004820152601a60248201527f4d757374206e6f7420626520616e204552433136352068617368000000000000604482015290519081900360640190fd5b600160a060020a038216158015906103b85750600160a060020a0382163314155b156104ff5760405160200180807f455243313832305f4143434550545f4d4147494300000000000000000000000081525060140190506040516020818303038152906040528051906020012082600160a060020a031663249cb3fa85846040518363ffffffff167c01000000000000000000000000000000000000000000000000000000000281526004018083815260200182600160a060020a0316600160a060020a031681526020019250505060206040518083038186803b15801561047e57600080fd5b505afa158015610492573d6000803e3d6000fd5b505050506040513d60208110156104a857600080fd5b5051146104ff576040805160e560020a62461bcd02815260206004820181905260248201527f446f6573206e6f7420696d706c656d656e742074686520696e74657266616365604482015290519081900360640190fd5b600160a060020a03818116600081815260208181526040808320888452909152808220805473ffffffffffffffffffffffffffffffffffffffff19169487169485179055518692917f93baa6efbd2244243bfee6ce4cfdd1d04fc4c0e9a786abd3a41313bd352db15391a450505050565b600160a060020a03818116600090815260016020526040812054909116151561059a5750806105b7565b50600160a060020a03808216600090815260016020526040902054165b919050565b336105c683610570565b600160a060020a031614610624576040805160e560020a62461bcd02815260206004820152600f60248201527f4e6f7420746865206d616e616765720000000000000000000000000000000000604482015290519081900360640190fd5b81600160a060020a031681600160a060020a0316146106435780610646565b60005b600160a060020a03838116600081815260016020526040808220805473ffffffffffffffffffffffffffffffffffffffff19169585169590951790945592519184169290917f605c2dbf762e5f7d60a546d42e7205dcb1b011ebc62a61736a57c9089d3a43509190a35050565b600082826040516020018083838082843780830192505050925050506040516020818303038152906040528051906020012090505b92915050565b6106f882826107ef565b610703576000610705565b815b600160a060020a03928316600081815260208181526040808320600160e060020a031996909616808452958252808320805473ffffffffffffffffffffffffffffffffffffffff19169590971694909417909555908152600284528181209281529190925220805460ff19166001179055565b600080600160a060020a038416156107905783610792565b335b905061079d8361092a565b156107c357826107ad82826108aa565b6107b85760006107ba565b815b925050506106e8565b600160a060020a0390811660009081526020818152604080832086845290915290205416905092915050565b6000808061081d857f01ffc9a70000000000000000000000000000000000000000000000000000000061094c565b909250905081158061082d575080155b1561083d576000925050506106e8565b61084f85600160e060020a031961094c565b909250905081158061086057508015155b15610870576000925050506106e8565b61087a858561094c565b909250905060018214801561088f5750806001145b1561089f576001925050506106e8565b506000949350505050565b600160a060020a0382166000908152600260209081526040808320600160e060020a03198516845290915281205460ff1615156108f2576108eb83836107ef565b90506106e8565b50600160a060020a03808316600081815260208181526040808320600160e060020a0319871684529091529020549091161492915050565b7bffffffffffffffffffffffffffffffffffffffffffffffffffffffff161590565b6040517f01ffc9a7000000000000000000000000000000000000000000000000000000008082526004820183905260009182919060208160248189617530fa90519096909550935050505056fea165627a7a72305820377f4a2d4301ede9949f163f319021a6e9c687c292a5e2b2c4734c126b524e6c0029"), *chain, 27u, rs, rs);
         const auto [account] = co_await chain->Get(co_await GetBlock(chain), record.from_, nullptr);
@@ -514,7 +510,7 @@ task<void> Command(const std::string &command, Args &args, const S<Chain> &chain
 
     } else if (command == "deploy:eip2470") {
         Options<>(args);
-        const auto bid(flags_.bid_ ? *flags_.bid_ : uint256_t(100 * Ten9));
+        const auto bid(execution_.bid ? *execution_.bid : uint256_t(100 * Ten9));
         Record record(0, bid, 247000, std::nullopt, 0, Bless("608060405234801561001057600080fd5b50610134806100206000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c80634af63f0214602d575b600080fd5b60cf60048036036040811015604157600080fd5b810190602081018135640100000000811115605b57600080fd5b820183602082011115606c57600080fd5b80359060200191846001830284011164010000000083111715608d57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929550509135925060eb915050565b604080516001600160a01b039092168252519081900360200190f35b6000818351602085016000f5939250505056fea26469706673582212206b44f8a82cb6b156bfcc3dc6aadd6df4eefd204bc928a4397fd15dacf6d5320564736f6c63430006020033"), *chain, 27u, 0x247000u, 0x2470u);
         const auto [account] = co_await chain->Get(co_await GetBlock(chain), record.from_, nullptr);
         if (account.nonce_ != 0)
@@ -527,7 +523,7 @@ task<void> Command(const std::string &command, Args &args, const S<Chain> &chain
     // https://github.com/Zoltu/deterministic-deployment-proxy
     } else if (command == "deploy:factory") {
         Options<>(args);
-        const auto bid(flags_.bid_ ? *flags_.bid_ : uint256_t(100 * Ten9));
+        const auto bid(execution_.bid ? *execution_.bid : uint256_t(100 * Ten9));
         static const uint256_t rs("0x2222222222222222222222222222222222222222222222222222222222222222");
         Record record(0, bid, 100000, std::nullopt, 0, Bless("601f80600e600039806000f350fe60003681823780368234f58015156014578182fd5b80825250506014600cf3"), *chain, 27u, rs, rs);
         const auto [account] = co_await chain->Get(co_await GetBlock(chain), record.from_, nullptr);
@@ -738,43 +734,44 @@ task<void> CommandExecutor(Args &args, const S<Chain> &chain, const S<Executor> 
         static Selector<uint256_t> relayFee("relayFee");
         static Selector<bool, Address, Address, uint256_t, uint64_t> transferOut("transferOut");
         // XXX: gas is manually specified as eth_estimateGas failed to give this enough gas?! *sigh* :/
+        if (!execution_.gas) execution_.gas = 90000;
         std::cout << (co_await executor->Send(*chain, {.gas = 90000}, hub, amount + co_await relayFee.Call(*chain, "latest", hub, 90000), transferOut(token, recipient.second.num<uint160_t>(), amount, Timestamp() + 1000))).hex() << std::endl;
 
     } else if (command == "dai:buygem") {
         auto [psm, buyer, amount] = Options<Address, Address, uint256_t>(args);
         static Selector<void, Address, uint256_t> buyGem("buyGem");
-        std::cout << (co_await executor->Send(*chain, {.gas = gas_}, psm, 0, buyGem(buyer, amount))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, psm, 0, buyGem(buyer, amount))).hex() << std::endl;
 
     } else if (command == "dai:sellgem") {
         auto [psm, seller, amount] = Options<Address, Address, uint256_t>(args);
         static Selector<void, Address, uint256_t> sellGem("sellGem");
-        std::cout << (co_await executor->Send(*chain, {.gas = gas_}, psm, 0, sellGem(seller, amount))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, psm, 0, sellGem(seller, amount))).hex() << std::endl;
 
     } else if (command == "deploy") {
         auto [factory, amount, code, data] = Options<std::optional<Address>, uint256_t, Bytes, Bytes>(args);
-        std::cout << (co_await executor->Send(*chain, {.gas = gas_}, factory, amount, Tie(code, data))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, factory, amount, Tie(code, data))).hex() << std::endl;
 
     } else if (command == "erc20:approve") {
         const auto [token, target, amount] = Options<Address, Address, uint256_t>(args);
         static Selector<bool, Address, uint256_t> approve("approve");
-        std::cout << (co_await executor->Send(*chain, {.nonce = nonce_}, token, 0, approve(target, amount))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, token, 0, approve(target, amount))).hex() << std::endl;
 
     } else if (command == "erc20:transfer") {
         const auto [token, target, amount, data] = Options<Address, Address, uint256_t, Bytes>(args);
         static Selector<bool, Address, uint256_t> transfer("transfer");
         static Selector<void, Address, uint256_t, Bytes> transferAndCall("transferAndCall");
-        std::cout << (co_await executor->Send(*chain, {}, token, 0, data.size() == 0 ?
+        std::cout << (co_await executor->Send(*chain, execution_, token, 0, data.size() == 0 ?
             transfer(target, amount) : transferAndCall(target, amount, data))).hex() << std::endl;
 
     } else if (command == "erc20:transferv") {
-        orc_assert(nonce_);
+        orc_assert(execution_.nonce);
         const auto [token, multiple] = Options<Address, uint256_t>(args);
 
         typedef std::tuple<Address, uint256_t> Send;
         std::vector<Send> sends;
         uint256_t total(0);
 
-        const auto csv(Load(std::to_string(uint64_t(*nonce_)) + ".csv"));
+        const auto csv(Load(std::to_string(uint64_t(*execution_.nonce)) + ".csv"));
         for (auto line : Split(csv, {'\n'})) {
             if (line.empty() || line[0] == '#')
                 continue;
@@ -795,47 +792,47 @@ task<void> CommandExecutor(Args &args, const S<Chain> &chain, const S<Executor> 
         std::cout << "total = " << total << std::endl;
 
         static Selector<void, Address, std::vector<Send>> transferv("transferv");
-        std::cout << (co_await executor->Send(*chain, {.nonce = nonce_}, TransferV, 0, transferv(token, sends))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, TransferV, 0, transferv(token, sends))).hex() << std::endl;
 
     } else if (command == "lottery0:push") {
         const auto [lottery, signer, balance, escrow] = Options<Address, Address, uint128_t, uint128_t>(args);
         static Selector<void, Address, uint128_t, uint128_t> push("push");
-        std::cout << (co_await executor->Send(*chain, {.gas = 175000}, lottery, 0, push(signer, balance + escrow, escrow))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, lottery, 0, push(signer, balance + escrow, escrow))).hex() << std::endl;
 
     } else if (command == "lottery1:edit") {
         const auto [lottery, amount, signer, adjust, lock, retrieve] = Options<Address, uint256_t, Address, checked_int256_t, checked_int256_t, uint256_t>(args);
         static Selector<void, Address, checked_int256_t, checked_int256_t, uint256_t> edit("edit");
-        std::cout << (co_await executor->Send(*chain, {}, lottery, amount, edit(signer, adjust, lock, retrieve))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, lottery, amount, edit(signer, adjust, lock, retrieve))).hex() << std::endl;
 
     } else if (command == "lottery1:mark") {
         const auto [lottery, token, signer, marked] = Options<Address, Address, Address, uint64_t>(args);
         static Selector<void, Address, Address, uint64_t> mark("mark");
-        std::cout << (co_await executor->Send(*chain, {}, lottery, 0, mark(token, signer, marked))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, lottery, 0, mark(token, signer, marked))).hex() << std::endl;
 
     } else if (command == "multisig:confirm") {
         const auto [address, index] = Options<Address, uint256_t>(args);
         static Selector<void, uint256_t> confirmTransaction("confirmTransaction");
-        std::cout << (co_await executor->Send(*chain, {.gas = gas_}, address, 0, confirmTransaction(index))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, address, 0, confirmTransaction(index))).hex() << std::endl;
 
     } else if (command == "multisig:execute") {
         const auto [address, index] = Options<Address, uint256_t>(args);
         static Selector<void, uint256_t> executeTransaction("executeTransaction");
-        std::cout << (co_await executor->Send(*chain, {.gas = gas_}, address, 0, executeTransaction(index))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, address, 0, executeTransaction(index))).hex() << std::endl;
 
     } else if (command == "multisig:revoke") {
         const auto [address, index] = Options<Address, uint256_t>(args);
         static Selector<void, uint256_t> revokeConfirmation("revokeConfirmation");
-        std::cout << (co_await executor->Send(*chain, {.gas = gas_}, address, 0, revokeConfirmation(index))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, address, 0, revokeConfirmation(index))).hex() << std::endl;
 
     } else if (command == "orchid:pull") {
         const auto [stakee, amount, index] = Options<Address, uint256_t, uint256_t>(args);
         static Selector<void, Address, uint256_t, uint256_t> pull("pull");
-        std::cout << (co_await executor->Send(*chain, {}, Directory_, 0, pull(stakee, amount, index))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, Directory_, 0, pull(stakee, amount, index))).hex() << std::endl;
 
     } else if (command == "orchid:take") {
         const auto [index, amount, target] = Options<uint256_t, uint256_t, Address>(args);
         static Selector<void, uint256_t, uint256_t, Address> take("take");
-        std::cout << (co_await executor->Send(*chain, {}, Directory_, 0, take(index, amount, target))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, Directory_, 0, take(index, amount, target))).hex() << std::endl;
 
     } else if (command == "run") {
         const auto [code, target, amount, data] = Options<Bytes, std::optional<Address>, uint256_t, Bytes>(args);
@@ -843,8 +840,8 @@ task<void> CommandExecutor(Args &args, const S<Chain> &chain, const S<Executor> 
         std::cout << Str(co_await chain->Call("eth_call", {Multi{
             {"from", executor->operator Address()},
             {"to", contract},
-            {"gas", gas_},
-            {"gasPrice", flags_.bid_},
+            {"gas", execution_.gas},
+            {"gasPrice", execution_.bid},
             {"value", amount},
             {"data", data},
         }, *height_, Multi{
@@ -855,22 +852,22 @@ task<void> CommandExecutor(Args &args, const S<Chain> &chain, const S<Executor> 
     } else if (command == "seller:allow1") {
         const auto [seller, token, allowance, sender] = Options<Address, Address, uint256_t, Address>(args);
         static Selector<void, Address, uint256_t, std::vector<Address>> allow("allow");
-        std::cout << (co_await executor->Send(*chain, {}, seller, 0, allow(token, allowance, {sender}))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, seller, 0, allow(token, allowance, {sender}))).hex() << std::endl;
 
     } else if (command == "seller:enroll1") {
         const auto [seller, cancel, target] = Options<Address, bool, Address>(args);
         static Selector<void, bool, std::vector<Address>> enroll("enroll");
-        std::cout << (co_await executor->Send(*chain, {}, seller, 0, enroll(cancel, {target}))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, seller, 0, enroll(cancel, {target}))).hex() << std::endl;
 
     } else if (command == "seller:giftv") {
-        orc_assert(nonce_);
+        orc_assert(execution_.nonce);
         const auto [seller] = Options<Address>(args);
 
         typedef std::tuple<Address, uint256_t, uint256_t> Gift;
         std::vector<Gift> gifts;
         uint256_t total(0);
 
-        const auto csv(Load(std::to_string(uint64_t(*nonce_)) + ".csv"));
+        const auto csv(Load(std::to_string(uint64_t(*execution_.nonce)) + ".csv"));
         for (auto line : Split(csv, {'\n'})) {
             if (line.empty() || line[0] == '#')
                 continue;
@@ -902,34 +899,38 @@ task<void> CommandExecutor(Args &args, const S<Chain> &chain, const S<Executor> 
         std::cout << "total = " << total << std::endl;
 
         static Selector<void, std::vector<Gift>> giftv("giftv");
-        std::cout << (co_await executor->Send(*chain, {.nonce = nonce_}, seller, total, giftv(gifts))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, seller, total, giftv(gifts))).hex() << std::endl;
 
     } else if (command == "seller:hand") {
         const auto [seller, owner, manager] = Options<Address, Address, Address>(args);
         static Selector<void, Address, Address> hand("hand");
-        std::cout << (co_await executor->Send(*chain, {}, seller, 0, hand(owner, manager))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, seller, 0, hand(owner, manager))).hex() << std::endl;
 
     } else if (command == "seller:move") {
         const auto [url, tls, gpg] = Options<Bytes, Bytes, Bytes>(args);
         static Selector<void, Bytes, Bytes, Bytes> move("move");
-        std::cout << (co_await executor->Send(*chain, {.nonce = nonce_}, "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD", 0, move(url, tls, gpg))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, "0xEF7bc12e0F6B02fE2cb86Aa659FdC3EBB727E0eD", 0, move(url, tls, gpg))).hex() << std::endl;
 
     } else if (command == "send") {
         const auto [target, amount, data] = Options<std::optional<Address>, uint256_t, Bytes>(args);
-        std::cout << (co_await executor->Send(*chain, {.nonce = nonce_, .gas = gas_}, target, amount, data)).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, target, amount, data)).hex() << std::endl;
 
-    // XXX: these should be generalized and these addresses both calculated and moved into Option_<Address>
-    } else if (command == "singleton-100") {
+    } else if (command == "singleton") {
         auto [code, salt] = Options<Bytes, Bytes32>(args);
         static Selector<Address, Bytes, Bytes32> deploy("deploy");
         static Address factory("0xce0042B868300000d44A59004Da54A005ffdcf9f");
-        std::cout << (co_await executor->Send(*chain, {.gas = 3000000}, factory, 0, deploy(code, salt))).hex() << std::endl;
+        // XXX: gas is manually specified because EIP2470 is broken (link to forum post about this)
+        if (!execution_.gas) execution_.gas = 3000000;
+        std::cout << (co_await executor->Send(*chain, execution_, factory, 0, deploy(code, salt))).hex() << std::endl;
 
+    // XXX: this should be generalized into prior one and the addresses both calculated and moved into Option_<Address>
+    // XXX: actually, I should verify I ever even deployed or used this contract, as I am not sure why this one exists?
     } else if (command == "singleton-500") {
         auto [code, salt] = Options<Bytes, Bytes32>(args);
         static Selector<Address, Bytes, Bytes32> deploy("deploy");
         static Address factory("0xe14b5ae0d1e8a4e9039d40e5bf203fd21e2f6241");
-        std::cout << (co_await executor->Send(*chain, {.gas = 3000000}, factory, 0, deploy(code, salt))).hex() << std::endl;
+        if (!execution_.gas) execution_.gas = 3000000;
+        std::cout << (co_await executor->Send(*chain, execution_, factory, 0, deploy(code, salt))).hex() << std::endl;
 
     } else if (command == "this") {
         Options<>(args);
@@ -938,20 +939,17 @@ task<void> CommandExecutor(Args &args, const S<Chain> &chain, const S<Executor> 
     } else if (command == "unwrap") {
         const auto [token, amount] = Options<Address, uint256_t>(args);
         static Selector<void, uint256_t> withdraw("withdraw");
-        std::cout << (co_await executor->Send(*chain, {.nonce = nonce_, .gas = gas_}, token, amount, withdraw(amount))).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, token, amount, withdraw(amount))).hex() << std::endl;
 
     } else if (command == "wrap") {
         const auto [token, amount] = Options<Address, uint256_t>(args);
         static Selector<void> deposit("deposit");
-        std::cout << (co_await executor->Send(*chain, {.nonce = nonce_, .gas = gas_}, token, 0, deposit())).hex() << std::endl;
+        std::cout << (co_await executor->Send(*chain, execution_, token, 0, deposit())).hex() << std::endl;
 
     } else co_return co_await Command(command, args, chain);
 }
 
-task<void> CommandChain(Args &args, const S<Chain> &chain) {
-    if (!height_) height_ = co_await chain->Height();
-
-    const auto command(args());
+task<void> CommandChain(const std::string &command, Args &args, const S<Chain> &chain) {
     if (false) {
 
 #if 0
@@ -1010,11 +1008,37 @@ task<void> CommandChain(Args &args, const S<Chain> &chain) {
 
 task<void> CommandEvm(Args &args) {
     const auto rpc(args());
-    chain_ = co_await Chain::New(Endpoint{rpc, base_}, flags_);
-    co_return co_await CommandChain(args, chain_);
+    chain_ = co_await Chain::New(Endpoint{rpc, base_});
+
+    #define ORC_PARAM(name, prefix, suffix) \
+        else if (arg == "--" #name) { \
+            static bool seen; \
+            orc_assert(!seen); \
+            seen = true; \
+            prefix name##suffix = Option<decltype(prefix name##suffix)>(args()); \
+        }
+
+    // XXX: this should get moved into CommandEvm
+    const auto command([&]() { for (;;) {
+        auto arg(args());
+        orc_assert(!arg.empty());
+        if (arg[0] != '-')
+            return arg;
+        if (false);
+        ORC_PARAM(nonce,execution_.,)
+        ORC_PARAM(bid,execution_.,)
+        ORC_PARAM(gas,execution_.,)
+        ORC_PARAM(height,,_)
+        ORC_PARAM(currency,,_)
+    } }());
+
+    if (!height_) height_ = co_await chain_->Height();
+
+    co_return co_await CommandChain(command, args, chain_);
 }
 
-task<void> CommandMain(const std::string &command, Args &args) {
+task<void> CommandMain(Args &args) {
+    const auto command(args());
     if (false) {
 
     } else if (command == "evm") {
@@ -1025,32 +1049,9 @@ task<void> CommandMain(const std::string &command, Args &args) {
 
 task<int> Main(int argc, const char *const argv[]) { try {
     Args args(argc - 1, argv + 1);
-
-    #define ORC_PARAM(name, prefix, suffix) \
-        else if (arg == "--" #name) { \
-            static bool seen; \
-            orc_assert(!seen); \
-            seen = true; \
-            prefix name##suffix = Option<decltype(prefix name##suffix)>(args()); \
-        }
-
-    const auto command([&]() { for (;;) {
-        auto arg(args());
-        orc_assert(!arg.empty());
-        if (arg[0] != '-')
-            return arg;
-        if (false);
-        ORC_PARAM(bid,flags_.,_)
-        ORC_PARAM(height,,_)
-        ORC_PARAM(currency,,_)
-        ORC_PARAM(gas,,_)
-        ORC_PARAM(nonce,,_)
-        ORC_PARAM(verbose,flags_.,_)
-    } }());
-
+    // XXX: consider supporting proxy/vpn/tor/orchid servers?
     base_ = Break<Local>();
-
-    co_await CommandMain(command, args);
+    co_await CommandMain(args);
     co_return 0;
 } catch (const std::exception &error) {
     std::cerr << error.what() << std::endl;

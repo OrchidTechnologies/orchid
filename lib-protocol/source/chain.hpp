@@ -107,11 +107,6 @@ struct Account final {
     Account(const Json::Value &value, const Block &block);
 };
 
-struct Flags {
-    bool verbose_ = false;
-    std::optional<uint256_t> bid_;
-};
-
 struct Entry {
     uint64_t block_;
     Bytes data_;
@@ -130,7 +125,6 @@ class Chain :
         typedef uint256_t type;
     };
 
-    const Flags flags_;
     const uint256_t chain_;
 
     bool Insecure() const {
@@ -163,10 +157,9 @@ class Chain :
     }
 
   public:
-    Chain(Endpoint endpoint, Flags flags, uint256_t chain) :
+    Chain(Endpoint endpoint, uint256_t chain) :
         Valve(typeid(*this).name()),
         Endpoint(std::move(endpoint)),
-        flags_(std::move(flags)),
         chain_(std::move(chain))
     {
     }
@@ -174,8 +167,8 @@ class Chain :
     Chain(const Chain &rhs) = delete;
     Chain(Chain &&rhs) = delete;
 
-    static task<S<Chain>> New(Endpoint endpoint, Flags flags, uint256_t chain);
-    static task<S<Chain>> New(Endpoint endpoint, Flags flags);
+    static task<S<Chain>> New(Endpoint endpoint, uint256_t chain);
+    static task<S<Chain>> New(Endpoint endpoint);
 
     task<void> Shut() noexcept override {
         co_await Valve::Shut();

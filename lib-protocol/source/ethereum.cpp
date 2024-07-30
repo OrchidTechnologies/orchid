@@ -25,7 +25,7 @@
 namespace orc {
 
 task<S<Ethereum>> Ethereum::New(const S<Base> &base, const Locator &locator) {
-    co_return Make<Ethereum>(co_await Chain::New({locator, base}, {}, 1));
+    co_return Make<Ethereum>(co_await Chain::New({locator, base}, 1));
 }
 
 task<S<Ethereum>> Ethereum::New(const S<Base> &base, const std::vector<std::string> &chains) {

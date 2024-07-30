@@ -380,20 +380,20 @@ Brick<32> Name(const std::string &name) {
     return HashK(Tie(Name(name.substr(period + 1)), HashK(name.substr(0, period))));
 } }
 
-task<S<Chain>> Chain::New(Endpoint endpoint, Flags flags, uint256_t chain) {
-    co_return Break<Chain>(std::move(endpoint), std::move(flags), std::move(chain));
+task<S<Chain>> Chain::New(Endpoint endpoint, uint256_t chain) {
+    co_return Break<Chain>(std::move(endpoint), std::move(chain));
 }
 
-task<S<Chain>> Chain::New(Endpoint endpoint, Flags flags) {
+task<S<Chain>> Chain::New(Endpoint endpoint) {
     auto chain(
         endpoint.operator const Locator &().origin_.host_ == "cloudflare-eth.com" ? 1 :
         endpoint.operator const Locator &().origin_.host_ == "rpc.mainnet.near.org" ? 1313161554 :
     uint256_t((co_await endpoint("eth_chainId", {})).asString()));
-    co_return co_await New(std::move(endpoint), std::move(flags), std::move(chain));
+    co_return co_await New(std::move(endpoint), std::move(chain));
 }
 
 task<uint256_t> Chain::Bid() const {
-    co_return flags_.bid_ ? *flags_.bid_ : uint256_t((co_await operator()("eth_gasPrice", {})).asString());
+    co_return uint256_t((co_await operator()("eth_gasPrice", {})).asString());
 }
 
 task<uint64_t> Chain::Height() const {
