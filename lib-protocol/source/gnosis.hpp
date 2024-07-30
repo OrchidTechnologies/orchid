@@ -20,51 +20,30 @@
 /* }}} */
 
 
-#ifndef ORCHID_TREZOR_HPP
-#define ORCHID_TREZOR_HPP
+#ifndef ORCHID_GNOSIS_HPP
+#define ORCHID_GNOSIS_HPP
 
 #include "executor.hpp"
 
 namespace orc {
 
-class TrezorSession :
-    public Valve
+class GnosisExecutor :
+    public Executor
 {
   private:
-    const S<Base> base_;
-    const std::string session_;
-
-  public:
-    TrezorSession(S<Base> base, std::string session);
-    static task<S<TrezorSession>> New(S<Base> base);
-
-    task<void> Open();
-    task<void> Shut() noexcept override;
-
-    template <uint16_t Type_, typename Response_, typename Request_>
-    task<Response_> Call(uint16_t type, const Request_ &request) const;
-};
-
-class TrezorExecutor :
-    public BasicExecutor
-{
-  private:
-    const S<TrezorSession> session_;
-    const std::vector<uint32_t> indices_;
     const Address address_;
+    const S<Executor> executor_;
 
   public:
-    TrezorExecutor(S<TrezorSession> session, std::vector<uint32_t> indices, Address address);
-
-    static task<S<TrezorExecutor>> New(S<TrezorSession> session, std::vector<uint32_t> indices);
+    GnosisExecutor(Address address, S<Executor> executor);
 
     operator Address() const override;
     task<Signature> operator ()(const Chain &chain, const Buffer &data) const override;
 
   protected:
-    task<Bytes32> Send_(const Chain &chain, const uint256_t &nonce, const uint256_t &bid, const uint64_t &gas, const std::optional<Address> &target, const uint256_t &value, const Buffer &data, bool eip155) const override;
+    task<Bytes32> Send(const Chain &chain, Execution execution, const std::optional<Address> &target, const uint256_t &value, const Buffer &data) const override;
 };
 
 }
 
-#endif//ORCHID_TREZOR_HPP
+#endif//ORCHID_GNOSIS_HPP
