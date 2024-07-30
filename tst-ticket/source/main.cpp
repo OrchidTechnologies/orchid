@@ -52,7 +52,7 @@ task<void> Decode0(const Brick<32> &hash) {
     const Address contract("0xb02396f06cc894834b7934ecf8c8e5ab5c1d12f1");
 
     const S<Base> base(Break<Local>());
-    const auto chain(co_await Chain::New(Endpoint({{"https", "cloudflare-eth.com", "443"}, "/"}, base), {}));
+    const auto chain(co_await Chain::New(Endpoint({{"https", "cloudflare-eth.com", "443"}, "/"}, base)));
 
     const auto input(co_await Search(chain, contract, hash));
 
@@ -124,7 +124,7 @@ task<void> Decode1(const Brick<32> &hash) {
     const Address contract("0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82");
 
     const S<Base> base(Break<Local>());
-    const auto chain(co_await Chain::New(Endpoint({{"https", "rpc.xdaichain.com", "443"}, "/"}, base), {}));
+    const auto chain(co_await Chain::New(Endpoint({{"https", "rpc.xdaichain.com", "443"}, "/"}, base)));
 
     const auto input(co_await Search(chain, contract, hash));
 

@@ -119,7 +119,7 @@ int Main(int argc, const char *const argv[]) {
 
     const S<Base> base(Break<Local>());
     const std::string rpc(args["rpc"].as<std::string>());
-    const auto chain(Wait(Chain::New({rpc, base}, {})));
+    const auto chain(Wait(Chain::New({rpc, base})));
 
     const auto gauge(Make<Gauge>(60*1000, base));
 
