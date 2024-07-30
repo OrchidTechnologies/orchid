@@ -57,14 +57,20 @@ task<void> Scan(const Brick<32> &root, Code_ &&code, Each_ &&each) {
         auto check(root);
 
         const auto proofs(co_await code(preimage));
-        for (size_t i(0); i != proofs.size(); ++i) {
+        for (size_t e(proofs.size()), i(0); i != e; ++i) {
+            const auto data(Bless(Str(proofs[i])));
+
+            // XXX: xDAI returns a... "terminating" 0x?!
+            if (data.done()) {
+                orc_assert(i == e - 1);
+                break;
+            }
+
             const auto here(hash.substr(0, offset));
             done.emplace(here);
             todo.erase(here);
 
-            const auto data(Bless(Str(proofs[i])));
             orc_assert(HashK(data) == check);
-
             const auto proof(Explode(data));
             switch (proof.size()) {
                 case 2: {
