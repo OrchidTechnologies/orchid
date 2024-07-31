@@ -229,3 +229,6 @@
 [submodule "range-v3"]
 	path = lib-shared/range-v3
 	url = https://github.com/ericniebler/range-v3.git
+[submodule "eternal"]
+	path = lib-shared/eternal
+	url = https://github.com/mapbox/eternal.git
