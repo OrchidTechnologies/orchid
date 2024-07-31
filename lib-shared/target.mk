@@ -57,6 +57,9 @@ endif
 cflags += -I$(pwd)/ctre/single-header
 
 
+cflags += -I$(pwd)/eternal/include
+
+
 source += $(wildcard $(pwd)/jsoncpp/src/lib_json/*.cpp)
 cflags += -I$(pwd)/jsoncpp/include
 

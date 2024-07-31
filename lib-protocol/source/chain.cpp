@@ -385,10 +385,7 @@ task<S<Chain>> Chain::New(Endpoint endpoint, uint256_t chain) {
 }
 
 task<S<Chain>> Chain::New(Endpoint endpoint) {
-    auto chain(
-        endpoint.operator const Locator &().origin_.host_ == "cloudflare-eth.com" ? 1 :
-        endpoint.operator const Locator &().origin_.host_ == "rpc.mainnet.near.org" ? 1313161554 :
-    uint256_t((co_await endpoint("eth_chainId", {})).asString()));
+    uint256_t chain((co_await endpoint("eth_chainId", {})).asString());
     co_return co_await New(std::move(endpoint), std::move(chain));
 }
 

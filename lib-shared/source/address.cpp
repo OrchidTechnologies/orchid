@@ -20,20 +20,19 @@
 /* }}} */
 
 
+#include <ctre.hpp>
+
 #include <eEVM/util.h>
 
 #include "address.hpp"
-#include "ctre.hpp"
 #include "error.hpp"
 
 namespace orc {
 
-// NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ctre::literals;
-
 Address::Address(const std::string_view &address) :
     uint160_t(address)
 {
+    using ctre::literals::operator""_ctre;
     orc_assert_("0x[0-9a-fA-F]{40}"_ctre.match(address), "invalid address " << address);
     //orc_assert(eevm::is_checksum_address(address));
 }

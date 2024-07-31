@@ -326,6 +326,8 @@ auto Split(const View &value, const View &delimeter) {
 
 std::string Join(const std::string &delimeter, const std::vector<std::string> &args);
 
+std::string Chomp(std::string &&value);
+
 template <typename Value_>
 auto Keys(const std::map<std::string, Value_> &args) {
     std::vector<std::string> keys;

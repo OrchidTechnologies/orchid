@@ -204,6 +204,13 @@ std::string Join(const std::string &delimeter, const std::vector<std::string> &a
     return data.str();
 }
 
+std::string Chomp(std::string &&value) {
+    const auto size(value.size());
+    if (size != 0 && value[size - 1] == '\n')
+        value.resize(size - 1);
+    return std::move(value);
+}
+
 Mutable &Mutable::operator =(const Buffer &buffer) {
     auto here(data());
     size_t rest(size());

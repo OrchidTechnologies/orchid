@@ -26,6 +26,10 @@
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
+#include <ctre.hpp>
+
+#include <mapbox/eternal.hpp>
+
 #include "base58.hpp"
 #include "contract.hpp"
 #include "currency.hpp"
@@ -972,8 +976,8 @@ task<void> CommandChain(const std::string &command, Args &args, const S<Chain> &
         co_return co_await CommandExecutor(args, chain_, executor_);
 
     } else if (command == "secret") {
-        const auto secret(Option<Bytes>(args()));
-        executor_ = Make<SecretExecutor>(secret);
+        const auto path(Option<std::string>(args()));
+        executor_ = Make<SecretExecutor>(Bless(Chomp(Load(path))));
         co_return co_await CommandExecutor(args, chain_, executor_);
 
     } else if (command == "trezor") {
@@ -1007,8 +1011,50 @@ task<void> CommandChain(const std::string &command, Args &args, const S<Chain> &
 }
 
 task<void> CommandEvm(Args &args) {
-    const auto rpc(args());
-    chain_ = co_await Chain::New(Endpoint{rpc, base_});
+    using ctre::literals::operator""_ctre;
+
+    constexpr const auto chains(mapbox::eternal::map<mapbox::eternal::string, std::tuple<uint64_t, mapbox::eternal::string, mapbox::eternal::string>>({
+        {"arbitrum", {42161, "ETH", "https://arb1.arbitrum.io/rpc"}},
+        {"aurora", {1313161554, "NEAR", "https://mainnet.aurora.dev/"}},
+        {"avalanche", {43114, "AVAX", "https://api.avax.network/ext/bc/C/rpc"}},
+        {"base", {8453, "ETH", "https://mainnet.base.org/"}},
+        {"binance", {56, "BNB", "https://bsc-dataseed.binance.org/"}},
+        {"boba", {288, "ETH", "https://mainnet.boba.network/"}},
+        {"celo", {42220, "CELO", "https://forno.celo.org/"}},
+        {"etc", {61, "ETC", "https://etc.rivet.link/"}},
+        {"ethereum", {1, "ETH", "https://cloudflare-eth.com/"}},
+        {"ftm", {250, "FTM", "https://rpc.ftm.tools/"}},
+        {"fuse", {122, "FUSE", "https://rpc.fuse.io/"}},
+        {"gnosis", {100, "DAI", "https://rpc.gnosischain.com/"}},
+        {"heco", {128, "HECO", "https://http-mainnet.hecochain.com/"}},
+        {"klaytn", {8217, "KLAY", "https://public-en-cypress.klaytn.net/"}},
+        {"metis", {1088, "ETH", "https://andromeda.metis.io/?owner=1088"}},
+        {"moonriver", {1285, "MOVR", "https://rpc.moonriver.moonbeam.network/"}},
+        {"neon", {245022934, "NEON", "https://neon-proxy-mainnet.solana.p2p.org/"}},
+        {"okex", {66, "OKT", "https://exchainrpc.okex.org/"}},
+        {"optimism", {10, "ETH", "https://mainnet.optimism.io/"}},
+        {"polygon", {137, "MATIC", "https://polygon-rpc.com/"}},
+        {"ronin", {2020, "RON", "https://api.roninchain.com/rpc"}},
+        {"rsk", {30, "BTC", "https://public-node.rsk.co/"}},
+        {"telos", {40, "TLOS", "https://mainnet.telos.net/evm"}},
+    }));
+
+    if (const auto command(args()); false) {
+    } else if (command == "chains") {
+        for (const auto &chain : chains)
+            std::cout << chain.first.c_str() << " " << std::get<0>(chain.second) << " " << std::get<1>(chain.second).c_str() << " " << std::get<2>(chain.second).c_str() << std::endl;
+        co_return;
+    } else if (command == "chain") {
+        const auto arg(args());
+        const auto chain(chains.find(arg.c_str()));
+        orc_assert_(chain != chains.end(), "unknown chain " << arg);
+        currency_ = std::get<1>(chain->second).c_str();
+        chain_ = co_await Chain::New(Endpoint{std::get<2>(chain->second).c_str(), base_}, std::get<0>(chain->second));
+    } else if (command == "rpc") {
+        const auto arg(args());
+        orc_assert_("https?://.*"_ctre.match(arg), "invalid RPC URL: " << arg);
+        chain_ = co_await Chain::New(Endpoint{arg, base_});
+    } else orc_assert_(false, "unknown command " << command);
 
     #define ORC_PARAM(name, prefix, suffix) \
         else if (arg == "--" #name) { \
@@ -1018,7 +1064,6 @@ task<void> CommandEvm(Args &args) {
             prefix name##suffix = Option<decltype(prefix name##suffix)>(args()); \
         }
 
-    // XXX: this should get moved into CommandEvm
     const auto command([&]() { for (;;) {
         auto arg(args());
         orc_assert(!arg.empty());
