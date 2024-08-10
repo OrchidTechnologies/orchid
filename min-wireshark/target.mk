@@ -190,7 +190,7 @@ $(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: $(pwd)/%.y
 
 $(output)/$(pwd/wireshark)/tools/lemon/lemon: $(pwd/wireshark)/tools/lemon/lemon.c
 	@mkdir -p $(dir $@)
-	gcc -o $@ $<
+	clang -o $@ $<
 
 $(output)/$(pwd)/%.c $(output)/$(pwd)/%.h: $(pwd)/%.lemon $(output)/$(pwd/wireshark)/tools/lemon/lemon
 	@mkdir -p $(dir $@)

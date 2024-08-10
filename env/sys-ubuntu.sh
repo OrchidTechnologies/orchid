@@ -21,7 +21,7 @@ if [[ $(uname -s) = Linux ]]; then
     # older versions of proot can't handle newer versions of glibc (so build one)
     # XXX: https://github.com/proot-me/proot/pull/383
     CFLAGS='-Wno-implicit-function-declaration' \
-    flock "${mount}/proot.lock" "${MAKE:=make}" -C "${mount}/proot/src" PYTHON=false
+    flock "${mount}/proot.lock" "${MAKE:=make}" -C "${mount}/proot/src" PYTHON=false CC=clang
     proot=${mount}/proot/src/proot
 
     debootstrap=${mount}/debootstrap
