@@ -17,17 +17,12 @@ ifconfig tun0 $ip4 pointtopoint $ip4
 ip route delete table local $ip4 dev $dev
 ip route delete table local $ip4 dev tun0
 
-sysctl -w net.ipv4.conf.$dev.src_valid_mark=1
-sysctl -w net.ipv4.conf.tun0.src_valid_mark=1
-
-iptables -t mangle -A PREROUTING -i $dev -j MARK --set-mark 7
-iptables -t mangle -A PREROUTING -i tun0 -j MARK --set-mark 7
-
 ip route add table 7 $gw4 dev $dev
 ip route add table 7 default via $gw4 dev $dev
 ip route add table 7 $ip4 dev tun0
 
-ip rule add fwmark 7 table 7
+ip rule add iif $dev table 7
+ip rule add iif tun0 table 7
 
-ip route get $ip4 from $gw4 mark 7 iif $dev
-ip route get $gw4 from $ip4 mark 7 iif tun0
+ip route get $ip4 from $gw4 iif $dev
+ip route get $gw4 from $ip4 iif tun0
