@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 #https://terrywang.net/2016/02/02/new-iptables-gotchas.html
 #https://davidhamann.de/2017/04/19/sharing-vpn-on-macos/
