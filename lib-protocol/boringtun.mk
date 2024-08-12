@@ -18,6 +18,6 @@
 # }}}
 
 
-linked += $(pwd)/boringtun/boringtun/librust.a
-cflags += -I$(pwd)/boringtun/boringtun/src
-features/$(pwd)/boringtun/boringtun += ffi-bindings
+linked += $(pwd)/boringtun/altuntun/librust.a
+cflags += -I$(pwd)/boringtun/altuntun/src
+features/$(pwd)/boringtun/altuntun += ffi-bindings
