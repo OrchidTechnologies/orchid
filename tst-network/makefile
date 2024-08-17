@@ -48,6 +48,7 @@ report: $(output)/$(machine)/orchid$(exe)
 	perf report --sort=cpu
 
 $(call include,vpn/target.mk)
+$(call include,jinja2cpp/target.mk)
 
 source += $(wildcard $(pwd)/source/*.cpp)
 

@@ -21,6 +21,8 @@ head[min-v8/v8]=$(sed -e '/url = "https:\/\/github.com\/v8\/v8\//!d;s/^.*\///;s/
 head[srv-worker/capnproto]=$(sed -e '/url.*"https:\/\/github.com\/capnproto\/capnproto\//!d;s/^.*\///;s/".*//' srv-worker/workerd/WORKSPACE)
 
 # cairo and pixman decided to drop autotools, which is really annoying :/
+# fmt is stuck due to Jina2Cpp needing a patch to support fmt after 11.x
+# XXX: https://github.com/jinja2cpp/Jinja2Cpp/issues/257
 # llvm-project (libcxx/libcxxabi) is stuck due to me being bored of this
 # openvpn3 is stuck due to external transport factory breaking OPENVPN_LOG
 

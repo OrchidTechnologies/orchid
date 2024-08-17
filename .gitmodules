@@ -232,3 +232,21 @@
 [submodule "eternal"]
 	path = lib-shared/eternal
 	url = https://github.com/mapbox/eternal.git
+[submodule "Jinja2Cpp"]
+	path = min-jinja2cpp/Jinja2Cpp
+	url = https://github.com/jinja2cpp/Jinja2Cpp.git
+[submodule "optional-lite"]
+	path = min-jinja2cpp/optional-lite
+	url = https://github.com/martinmoene/optional-lite.git
+[submodule "variant-lite"]
+	path = min-jinja2cpp/variant-lite
+	url = https://github.com/martinmoene/variant-lite.git
+[submodule "string-view-lite"]
+	path = min-jinja2cpp/string-view-lite
+	url = https://github.com/martinmoene/string-view-lite.git
+[submodule "expected-lite"]
+	path = min-jinja2cpp/expected-lite
+	url = https://github.com/martinmoene/expected-lite.git
+[submodule "rapidjson"]
+	path = min-jinja2cpp/rapidjson
+	url = https://github.com/Tencent/rapidjson.git

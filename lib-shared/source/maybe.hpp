@@ -36,6 +36,8 @@ struct Hold {
         return std::forward<Type_>(value); }
     inline static Value_ &&Indirect(Value &value) {
         return std::move(value); }
+    inline static const Value_ &Indirect(const Value &value) {
+        return value; }
 };
 
 template <typename Value_>
@@ -96,6 +98,16 @@ class Maybe :
         }
     }
 
+    // XXX: the code duplication here offends me
+
+    const Value_ &operator *() const & {
+        if (const auto error = std::get_if<0>(this))
+            std::rethrow_exception(*error);
+        else if (auto value = std::get_if<1>(this))
+            return Hold<Value_>::Indirect(*value);
+        else orc_assert(false);
+    }
+
     Value_ operator *() && {
         if (const auto error = std::get_if<0>(this))
             std::rethrow_exception(*error);
@@ -140,7 +152,7 @@ class Maybe<void> {
         }
     }
 
-    void operator *() && {
+    void operator *() const {
         if (error_ != nullptr)
             std::rethrow_exception(error_);
     }

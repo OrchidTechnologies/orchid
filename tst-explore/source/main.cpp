@@ -38,7 +38,6 @@
 #include "jsonrpc.hpp"
 #include "load.hpp"
 #include "local.hpp"
-#include "markup.hpp"
 #include "notation.hpp"
 #include "parallel.hpp"
 #include "pile.hpp"

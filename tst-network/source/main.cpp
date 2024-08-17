@@ -33,6 +33,11 @@
 #include <rtc_base/logging.h>
 #include <system_wrappers/include/field_trial.h>
 
+#include <jinja2cpp/binding/boost_json.h>
+#include <jinja2cpp/reflected_value.h>
+#include <jinja2cpp/template.h>
+#include <jinja2cpp/template_env.h>
+
 #include "baton.hpp"
 #include "client0.hpp"
 #include "client1.hpp"
@@ -40,14 +45,15 @@
 #include "currency.hpp"
 #include "float.hpp"
 #include "fiat.hpp"
+#include "format.hpp"
 #include "jsonrpc.hpp"
 #include "load.hpp"
 #include "local.hpp"
-#include "markup.hpp"
 #include "network.hpp"
 #include "notation.hpp"
 #include "pile.hpp"
 #include "remote.hpp"
+#include "sequence.hpp"
 #include "site.hpp"
 #include "sleep.hpp"
 #include "store.hpp"
@@ -67,8 +73,8 @@ struct Global {
 }; Locked<Global> global_;
 
 struct Report {
-    Address stakee_;
-    std::optional<Float> cost_;
+    Locator locator_;
+    Float cost_;
     Float speed_;
     Host host_;
     Address recipient_;
@@ -105,10 +111,9 @@ task<std::string> Version(Base &base, const Locator &url) { try {
     co_return version;
 } orc_catch({ co_return ""; }) }
 
-task<Report> TestOrchid(const S<Base> &base, std::string name, const S<Network> &network, const char *address, std::function<task<Client &> (BufferSink<Remote> &)> code) {
-    (co_await orc_optic)->Name(address);
-
-    std::cout << address << " " << name << std::endl;
+task<Report> TestOrchid(const S<Base> &base, const S<Network> &network, const Address &address, std::function<task<Client &> (BufferSink<Remote> &)> code) {
+    const auto name(address.str());
+    (co_await orc_optic)->Name(name.c_str());
 
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         const auto provider(co_await network->Select("untrusted.orch1d.eth", address));
@@ -126,7 +131,6 @@ task<Report> TestOrchid(const S<Base> &base, std::string name, const S<Network> 
         const auto balance(client.Balance());
 
         const auto benefit(client.Benefit());
-        Log() << "BENEFIT " << std::dec << benefit << " " << name;
         const auto minimum([&]() {
             const auto global(global_());
             if (global->benefit_ == 0 || global->benefit_ > benefit)
@@ -137,15 +141,28 @@ task<Report> TestOrchid(const S<Base> &base, std::string name, const S<Network> 
         const auto recipient(client.Recipient());
         const auto version(co_await Version(*base, provider.locator_));
         const auto cost((spent - balance) / minimum * (1024 * 1024 * 1024));
-        co_return Report{provider.address_, cost, speed, host, recipient, version};
+        co_return Report{provider.locator_, cost, speed, host, recipient, version};
     });
+}
+
+struct Stakee {
+    uint256_t staked_;
+    Address address_;
+    Maybe<std::string> locator_;
+    Maybe<Report> report_;
+};
+
+bool operator <(const Stakee &lhs, const Stakee &rhs) {
+    return lhs.staked_ > rhs.staked_;
 }
 
 struct State {
     uint256_t timestamp_;
     Float speed_;
-    std::map<std::string, Maybe<Report>> providers_;
+
+    uint256_t staked_;
     std::map<Address, Stake> stakes_;
+    std::vector<Stakee> stakees_;
 
     State(uint256_t timestamp) :
         timestamp_(std::move(timestamp))
@@ -155,38 +172,6 @@ struct State {
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::shared_ptr<State> state_;
-
-void Print(std::ostream &body, const std::string &name, const Maybe<Report> &maybe) {
-    body << " " << name << ": " << std::string(11 - name.size(), ' ');
-
-    if (const auto error = std::get_if<0>(&maybe)) try {
-        if (*error != nullptr)
-            std::rethrow_exception(*error);
-    } catch (const std::exception &error) {
-        std::string what(error.what());
-        boost::replace_all(what, "\r", "");
-        boost::replace_all(what, "\n", " || ");
-        body << Escape(std::move(what));
-    } else if (const auto report = std::get_if<1>(&maybe)) {
-        body << std::fixed << std::setprecision(4);
-        body << "$";
-        if (report->cost_)
-            body << *report->cost_;
-        else
-            body << "-.----";
-        body << " " << std::setw(8) << report->speed_ << "Mbps   " << report->host_;
-        if (report->recipient_ != Address(0)) {
-            std::ostringstream recipient;
-            recipient << report->recipient_;
-            body << "\n" << std::string(13, ' ') << recipient.str().substr(2);
-        }
-        if (!report->version_.empty())
-            body << "\n" << std::string(13, ' ') << "<a href='https://github.com/OrchidTechnologies/orchid/commit/" << report->version_ << "'>" << report->version_ << "</a>";
-    } else orc_insist(false);
-
-    body << "\n";
-    body << "------------+---------+------------+-----------------\n";
-}
 
 template <typename Type_, typename Value_>
 auto &At(Type_ &&type, const Value_ &value) {
@@ -280,38 +265,24 @@ int Main(int argc, const char *const argv[]) {
             state->speed_ = 0;
         }
 
-        *co_await Parallel([&]() -> task<void> { try {
-            (co_await orc_optic)->Name("Stakes");
-            state->stakes_ = co_await network->Scan();
-        } catch (const std::exception &error) {
-            std::cerr << error.what() << std::endl;
-        } catch (...) {
-        } }(), [&]() -> task<void> {
-            (co_await orc_optic)->Name("Tests");
+        state->stakes_ = co_await network->Scan();
 
-            std::vector<std::string> names;
-            std::vector<task<Report>> tests;
+        std::vector<task<Report>> tests;
 
-            for (const auto &[provider, name] : (std::pair<const char *, const char *>[]) {
-                {"0x605c12040426ddCc46B4FEAD4b18a30bEd201bD0", "Bloq"},
-                {"0xe675657B3fBbe12748C7A130373B55c898E0Ea34", "BolehVPN"},
-                //{"0xc654a58330b8659399067c309Be93659FbaCbEA6", "Orchid"},
-                {"0x69A4Ed2024bc7056fBA8E18cEfc2c40932B923E3", "PIA"},
-                {"0x2b1ce95573ec1b927a90cb488db113b40eeb064a", "SaurikIT"},
-                {"0x396bea12391ac32c9b12fdb6cffeca055db1d46d", "Tenta"},
-                {"0x40e7cA02BA1672dDB1F90881A89145AC3AC5b569", "VPNSecure"},
-            }) {
-                names.emplace_back(name);
-                tests.emplace_back(TestOrchid(base, name, network, provider, [&](BufferSink<Remote> &remote) -> task<Client &> {
-                    co_return co_await Client0::Wire(remote, oracle, oxt, lottery0, secret, funder);
-                    //co_return co_await Client1::Wire(remote, oracle, At(markets, 43114), lottery1, secret, funder);
-                }));
-            }
+        for (const auto &[provider, stake] : state->stakes_) {
+            state->staked_ += stake.amount_;
+            tests.emplace_back(TestOrchid(base, network, provider, [&](BufferSink<Remote> &remote) -> task<Client &> {
+                co_return co_await Client0::Wire(remote, oracle, oxt, lottery0, secret, funder);
+                //co_return co_await Client1::Wire(remote, oracle, At(markets, 43114), lottery1, secret, funder);
+            }));
+        }
 
-            auto reports(co_await Parallel(std::move(tests)));
-            for (unsigned i(0); i != names.size(); ++i)
-                state->providers_[names[i]] = std::move(reports[i]);
-        }());
+        auto reports(co_await Parallel(std::move(tests)));
+        // XXX: something about the const correctness here is wrong
+        for (const auto &[stake, report] : Zip(state->stakes_, reports))
+            state->stakees_.emplace_back(stake.second.amount_, stake.first, stake.second.url_, std::move(report));
+
+        std::sort(state->stakees_.begin(), state->stakees_.end());
 
         std::atomic_store(&state_, state);
         co_await Sleep(1000);
@@ -319,45 +290,51 @@ int Main(int argc, const char *const argv[]) {
 
     Site site;
 
+    jinja2::TemplateEnv env;
+
+    // XXX: in "production", use MemoryFileSystem
+    jinja2::RealFileSystem fs;
+    env.AddFilesystemHandler("", fs);
+
     site(http::verb::get, "/", [&](Request request) -> task<Response> {
         const auto state(std::atomic_load(&state_));
         orc_assert(state);
 
-        Markup markup("Orchid Status");
-        std::ostringstream body;
-
         const auto [balance, escrow] = (*account)();
-        body << "T+" << std::dec << (Timestamp() - state->timestamp_) << "s " << std::fixed << std::setprecision(4) << state->speed_ << "Mbps " <<
-            std::setprecision(1) << (Float(balance) / Ten18) << "/" << (Float(escrow) / Ten18) << "\n";
-        body << "\n";
+        orc_assert(balance != 0);
 
-        for (const auto &[name, provider] : state->providers_)
-            Print(body, name, provider);
-        body << "\n";
+        auto tpl(env.LoadTemplate("source/index.j2").value());
 
-        for (const auto &[stakee, stake] : state->stakes_) {
-            body << Address(stakee) << " " << std::dec << std::fixed << std::setprecision(3) << std::setw(10) << (Float(stake.amount_) / Ten18) << "\n";
+        Array providers;
+        for (const auto &stakee : state->stakees_) {
+            Object params;
+            params["stakee"] = stakee.address_.str();
+            params["staked"] = double(stakee.staked_);
 
-            body << "  ";
+            try {
+                params["locator"] = *stakee.locator_;
 
-            if (const auto error = std::get_if<0>(&stake.url_)) try {
-                std::rethrow_exception(*error);
+                const auto &report(*stakee.report_);
+                params["cost"] = double(report.cost_);
+                params["speed"] = double(report.speed_);
+                params["host"] = std::string(report.host_);
+                params["recipient"] = report.recipient_.str();
+                params["version"] = report.version_;
             } catch (const std::exception &error) {
-                std::string what(error.what());
-                boost::replace_all(what, "\r", "");
-                boost::replace_all(what, "\n", " || ");
-                body << Escape(std::move(what));
-            } else if (const auto url = std::get_if<1>(&stake.url_)) {
-                body << Escape(*url);
-            } else orc_insist(false);
+                params["error"] = error.what();
+            }
 
-            body << "\n";
+            providers.emplace_back(std::move(params));
         }
 
-        markup << body.str();
+        auto body(tpl.RenderAsString({
+            {"staked", double(state->staked_)},
+            {"providers", jinja2::Reflect(Any(providers))},
+        }).value());
+
         co_return Respond(request, http::status::ok, {
             {"content-type", "text/html"},
-        }, markup());
+        }, std::move(body));
     });
 
     const auto median([&]() {
@@ -365,11 +342,11 @@ int Main(int argc, const char *const argv[]) {
         orc_assert(state);
 
         Pile<Float, uint256_t> costs;
-        for (const auto &[name, provider] : state->providers_)
-            if (const auto report = std::get_if<1>(&provider))
-                if (report->cost_ && *report->cost_ != 0)
-                    if (const auto stake(state->stakes_.find(report->stakee_)); stake != state->stakes_.end())
-                        costs(*report->cost_, stake->second.amount_);
+        for (const auto &stakee : state->stakees_)
+            if (const auto report = std::get_if<1>(&stakee.report_))
+                if (report->cost_ != 0)
+                    if (const auto stake(state->stakes_.find(stakee.address_)); stake != state->stakes_.end())
+                        costs(report->cost_, stake->second.amount_);
         return costs.med();
     });
 

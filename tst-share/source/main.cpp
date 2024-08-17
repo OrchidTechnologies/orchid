@@ -35,7 +35,6 @@
 #include "format.hpp"
 #include "load.hpp"
 #include "local.hpp"
-#include "markup.hpp"
 #include "notation.hpp"
 #include "remote.hpp"
 #include "scope.hpp"
