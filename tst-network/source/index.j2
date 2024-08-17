@@ -1,0 +1,45 @@
+<!DOCTYE html>
+{% set scanner = "https://etherscan.io/address/" %}
+<html><head>
+<title>Orchid Status</title>
+
+<style type='text/css'>
+
+{% include "source/reset.css" %}
+
+body {
+    background-color: black;
+    color: #bebebe;
+    font-family: monospace;
+}
+
+.provider {
+    padding: 10px;
+    border-bottom: 1px solid white;
+}
+
+.error {
+    color: red;
+}
+
+</style>
+
+</head><body><ol>{% for provider in providers %}<li class="provider">
+    <div class="staked">{{"{:.2f}"|format((provider.staked/staked)*100)}}% {{"{:g}"|format(provider.staked/1e18)}}</div>
+    <div class="stakee"><a href="{{scanner}}{{provider.stakee}}">{{provider.stakee}}</a></div>
+
+    {% if provider.locator %}
+        <div class="locator"><a href="{{provider.locator|escape}}">{{provider.locator|escape}}</a></div>
+    {% endif %}
+
+    {% if provider.error %}
+        <div class="error">{{provider.error|escape}}</div>
+    {% else %}
+        <div class="cost">${{"{:.4g}"|format(provider.cost)}} /GB</div>
+        <div class="speed">{{"{:.3g}"|format(provider.speed)}}&nbsp;Mbps</div>
+        <div class="host">{{provider.host}}</div>
+        <div class="recipient"><a href="{{scanner}}{{provider.recipient}}">{{provider.recipient}}</a></div>
+        <div class="version"><a href="https://github.com/OrchidTechnologies/orchid/commit/{{provider.version}}">{{provider.version}}</a></div>
+    {% endif %}
+</li>{% endfor %}</ol>
+</body></html>
