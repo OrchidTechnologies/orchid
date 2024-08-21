@@ -24,11 +24,12 @@
 #include <iostream>
 #include <regex>
 
+#include <unistd.h>
+
 #ifdef __linux__
 #include <ifaddrs.h>
+#include <sys/resource.h>
 #endif
-
-#include <unistd.h>
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -111,6 +112,13 @@ task<bool> Symmetric(const S<Base> &base) {
 }
 
 int Main(int argc, const char *const argv[]) {
+#ifdef __linux__
+    rlimit limit{};
+    orc_syscall(getrlimit(RLIMIT_NOFILE, &limit));
+    limit.rlim_cur = limit.rlim_max;
+    orc_syscall(setrlimit(RLIMIT_NOFILE, &limit));
+#endif
+
     std::vector<std::string> chains;
 
     po::variables_map args;

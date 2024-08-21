@@ -250,6 +250,8 @@ cflags += -DSCTP_USE_OPENSSL_SHA1
 chacks/$(pwd/webrtc)/media/sctp/dcsctp_transport.cc += s/ options;/ options{.cwnd_mtus_initial = 10000, .cwnd_mtus_min = 10000};/g;
 # do not allocate statistics collector
 chacks/$(pwd/webrtc)/pc/rtc_stats_collector.cc += s/rtc::make_ref_counted<RTCStatsCollector>([^;]*/nullptr/g;
+# completely prevent the use of FD_SET
+chacks/$(pwd/webrtc)/rtc_base/physical_socket_server.cc += /::WaitSelect/s/$$/ return false;/;
 
 # XXX: https://bugs.chromium.org/p/webrtc/issues/detail?id=12967
 chacks/$(pwd/webrtc)/p2p/base/dtls_transport.cc += /Should not happen\./,/;/d;
