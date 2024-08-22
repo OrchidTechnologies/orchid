@@ -4,7 +4,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:orchid/api/pricing/orchid_pricing.dart';
 import '../orchid_crypto.dart';
 import 'chains.dart';
-import 'package:orchid/util/format_currency.dart' as units;
+import 'package:orchid/util/format_decimal.dart' as units;
+import 'package:decimal/decimal.dart';
 
 // Token type
 // Note: Unfortunately Dart does not have a polyomorphic 'this' type so the
@@ -47,7 +48,8 @@ class TokenType {
     required this.iconPath,
   });
 
-  // Return 1eN where N is the decimal count.
+  // Return 1eN where N is the 'decimals' value.
+  // (Note that Dart int can handle up to 2^53-1 on JS and 2^64-1 elsewhere.)
   int get multiplier {
     return Math.pow(10, this.decimals).toInt();
   }
@@ -70,6 +72,11 @@ class TokenType {
     // Note: No explicit rounding needed here because BigInt converts for us
     // Note: and round() on the double would overflow Dart's native int.
     return fromInt(BigInt.from(val * this.multiplier));
+  }
+
+  // From a number representing the nominal token denomination, e.g. 1.0 OXT
+  Token fromDecimal(Decimal val) {
+    return fromInt((val * Decimal.fromInt(this.multiplier)).toBigInt());
   }
 
   @override
@@ -97,8 +104,12 @@ class Token {
   Token(this.type,
       this.intValue); // The float value in nominal units (e.g. ETH, OXT)
 
-  double get floatValue {
+  double get doubleValue {
     return intValue.toDouble() / type.multiplier;
+  }
+
+  Decimal get decimalValue {
+    return Decimal.fromBigInt(intValue).shift(-type.decimals);
   }
 
   /// No token symbol
@@ -109,8 +120,8 @@ class Token {
     int? minPrecision,
     bool showPrecisionIndicator = false,
   }) {
-    return units.formatCurrency(
-      floatValue,
+    return units.formatDecimal(
+      decimalValue,
       locale: locale,
       minPrecision: minPrecision,
       maxPrecision: maxPrecision,
@@ -128,7 +139,8 @@ class Token {
     int? minPrecision,
     bool showPrecisionIndicator = false,
   }) {
-    return units.formatCurrency(floatValue,
+    print("XXX: format decimal value: $decimalValue");
+    return units.formatDecimal(decimalValue,
         locale: locale,
         precision: precision,
         minPrecision: minPrecision,
@@ -260,7 +272,7 @@ class Token {
 
   @override
   String toString() {
-    return 'Token{type: ${type.symbol}, floatValue: $floatValue}';
+    return 'Token{type: ${type.symbol}, doubleValue: $doubleValue}';
   }
 }
 

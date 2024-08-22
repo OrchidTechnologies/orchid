@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
 import 'package:orchid/orchid/field/value_field_controller.dart';
 
+/// A styled numeric decimal or integer text field.
 class OrchidLabeledNumericField extends StatefulWidget {
   final String label;
   final NumericValueFieldController? controller;

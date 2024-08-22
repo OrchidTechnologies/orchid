@@ -32,16 +32,16 @@ class MarketConditionsV1 implements MarketConditions {
     // Infer the chain from the balance token type.
     Chain chain = balance.type.chain;
     var costToRedeem = await getCostToRedeemTicket(chain, refresh: refresh);
-    var limitedByBalance = balance.floatValue <= (escrow / 2.0).floatValue;
+    var limitedByBalance = balance.doubleValue <= (escrow / 2.0).doubleValue;
     var maxFaceValue = LotteryPot.maxTicketFaceValueFor(balance, escrow);
 
     // value received as a fraction of ticket face value
-    double efficiency = maxFaceValue.floatValue == 0
+    double efficiency = maxFaceValue.doubleValue == 0
         ? 0
         : max(
                 0,
-                (maxFaceValue - costToRedeem).floatValue /
-                    maxFaceValue.floatValue)
+                (maxFaceValue - costToRedeem).doubleValue /
+                    maxFaceValue.doubleValue)
             .toDouble();
 
     //log("market conditions for: $balance, $escrow, costToRedeem = $costToRedeem, maxFaceValue=$maxFaceValue");

@@ -22,7 +22,7 @@ import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
-import 'package:orchid/util/format_currency.dart';
+import 'package:orchid/util/format_decimal.dart';
 import 'package:orchid/api/pricing/usd.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
@@ -187,7 +187,7 @@ class _PurchasePageState extends State<PurchasePage> {
     final titleStyle = OrchidText.medium_24_050;
     var payPerUse = s.payPerUseVpnService;
     var price = (_bandwidthPrice != null && !MockOrchidAPI.hidePrices)
-        ? "\$" + formatCurrency(_bandwidthPrice!.value, locale: context.locale)
+        ? "\$" + formatDouble(_bandwidthPrice!.value, locale: context.locale)
         : "...";
     var currentAvgVPNPrice = s.averagePriceIsUSDPerGb(price);
     var notASub = s.notASubscriptionCreditsDontExpire;
@@ -549,12 +549,12 @@ class _PurchasePageState extends State<PurchasePage> {
                             textAlign: TextAlign.right,
                           ),
                           Text(
-                            '+ ' + formatCurrency(fee, locale: context.locale),
+                            '+ ' + formatDouble(fee, locale: context.locale),
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),
                           Text(
-                            '- ' + formatCurrency(promo, locale: context.locale),
+                            '- ' + formatDouble(promo, locale: context.locale),
                             style: valueStyle,
                             textAlign: TextAlign.right,
                           ),

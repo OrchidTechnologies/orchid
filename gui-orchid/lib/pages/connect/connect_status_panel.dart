@@ -7,7 +7,7 @@ import 'package:orchid/orchid/orchid_colors.dart';
 import 'package:orchid/orchid/orchid_panel.dart';
 import 'package:orchid/orchid/orchid_text.dart';
 import 'package:orchid/util/localization.dart';
-import 'package:orchid/util/format_currency.dart';
+import 'package:orchid/util/format_decimal.dart';
 import 'package:orchid/api/pricing/usd.dart';
 
 import '../app_routes.dart';
@@ -57,7 +57,7 @@ class ConnectStatusPanel extends StatelessWidget {
 
   Widget _buildUSDPanel(BuildContext context) {
     var price = (bandwidthPrice != null && !MockOrchidAPI.hidePrices)
-        ? '\$' + formatCurrency(bandwidthPrice!.value, locale: context.locale)
+        ? '\$' + formatDouble(bandwidthPrice!.value, locale: context.locale)
         : '...';
     return _buildPanel(
         icon: SvgPicture.asset(OrchidAssetSvg.dollars_icon_path,

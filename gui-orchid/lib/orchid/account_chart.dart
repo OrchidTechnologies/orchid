@@ -142,16 +142,16 @@ class AccountBalanceChartTicketModel {
   int get availableTicketsCurrentMax {
     return pot.maxTicketFaceValue.lteZero()
         ? 0
-        : (pot.balance.floatValue / pot.maxTicketFaceValue.floatValue).floor();
+        : (pot.balance.doubleValue / pot.maxTicketFaceValue.doubleValue).floor();
   }
 
   // The number of tickets that could be written using the max possible face value
   // at the time of the last high-water mark
   int get availableTicketsHighWatermarkMax {
-    return pot.maxTicketFaceValue.floatValue == 0
+    return pot.maxTicketFaceValue.doubleValue == 0
         ? 0
-        : (_lastBalanceHighWatermark.floatValue /
-                pot.maxTicketFaceValue.floatValue)
+        : (_lastBalanceHighWatermark.doubleValue /
+                pot.maxTicketFaceValue.doubleValue)
             .floor();
   }
 

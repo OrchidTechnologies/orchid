@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
 import 'package:orchid/util/localization.dart';
-import '../../util/format_currency.dart';
+import '../../util/format_decimal.dart';
 
 class USD extends ScalarValue<double> {
   static const zero = USD(0.0);
@@ -50,7 +50,7 @@ class USD extends ScalarValue<double> {
     USD? price,
     bool showSuffix = true,
   }) {
-    return ((price ?? USD.zero) * (tokenAmount ?? Tokens.TOK.zero).floatValue)
+    return ((price ?? USD.zero) * (tokenAmount ?? Tokens.TOK.zero).doubleValue)
         .formatCurrency(
         locale: context.locale,
         precision: 2,
@@ -59,7 +59,7 @@ class USD extends ScalarValue<double> {
   }
 }
 
-final _formatCurrency = formatCurrency;
+final _formatCurrency = formatDouble;
 
 class ScalarValue<T extends num> {
   final T value;

@@ -20,10 +20,10 @@ dependencies:
   dotted_border: 2.0.0+2
   email_validator: 2.0.1
   fixnum: 1.1.0
-  flutter_js: 0.8.0
+  flutter_js: 0.8.1
   flutter:
     sdk: flutter
-  flutter_html: 3.0.0-alpha.6
+  flutter_html: 3.0.0-beta.2
   flutter_localizations:
     sdk: flutter
   #flutter_secure_storage: 3.3.5 # XXX: macOS
@@ -32,23 +32,25 @@ dependencies:
   http: 1.1.0
   in_app_purchase_storekit: 0.3.5+2
   in_app_purchase_android: 0.2.3+7
-  intl: 0.18.1
+  intl: 0.19.0
   jdenticon_dart: 2.0.0
+  decimal: 3.0.2
 
   # Tracking this issue which has been merged but is not yet in a tagged release.
   # https://github.com/juliansteenbakker/mobile_scanner/issues/241
-  mobile_scanner:
-    git:
-      url: https://github.com/juliansteenbakker/mobile_scanner.git
-      ref: 9e4e9a167980f8413c1d8860873e582d0747edd9
+  #  mobile_scanner:
+  #    git:
+  #      url: https://github.com/juliansteenbakker/mobile_scanner.git
+  #      ref: 9e4e9a167980f8413c1d8860873e582d0747edd9
+  mobile_scanner: 5.2.1
 
   percent_indicator: 3.0.1
   pointycastle: 3.7.3
   provider: 5.0.0
   qr_flutter: 4.0.0
   rxdart: 0.27.7
-  shared_preferences: 2.0.12
-  styled_text: 7.0.0
+  shared_preferences: 2.3.2
+  styled_text: 8.1.0
   sqflite: 2.0.0+3
   url_launcher: 6.0.3
   uuid: 3.0.7

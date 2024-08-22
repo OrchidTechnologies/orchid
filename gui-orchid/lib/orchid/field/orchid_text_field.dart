@@ -2,6 +2,8 @@ import 'package:orchid/orchid/orchid.dart';
 import 'package:flutter/services.dart';
 
 /// A styled text field with an optional custom trailing component.
+/// The text field can be optionally configured as numeric (integer or decimal) with text output.
+/// @see OrchidLabledNumericField for a typed numeric field.
 class OrchidTextField extends StatelessWidget {
   final String? hintText;
   final Widget? trailing;

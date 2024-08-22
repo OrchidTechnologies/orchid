@@ -22,7 +22,7 @@ import 'package:orchid/orchid/account/market_stats_dialog.dart';
 import 'package:orchid/orchid/orchid_titled_page_base.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/pages/account_manager/account_manager_page.dart';
-import 'package:orchid/util/format_currency.dart';
+import 'package:orchid/util/format_decimal.dart';
 import 'package:styled_text/styled_text.dart';
 import '../../common/app_sizes.dart';
 import '../../common/app_text.dart';
@@ -363,7 +363,7 @@ class _OrchidHopPageState extends State<OrchidHopPage> {
             width: 150,
             child: Text(s.balance +
                 ': ' +
-                formatCurrency(utx.update.endBalance.floatValue,
+                formatDouble(utx.update.endBalance.doubleValue,
                     locale: context.locale, suffix: 'OXT')),
           ),
           padx(8),

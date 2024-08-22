@@ -18,7 +18,7 @@ dependencies:
     sdk: flutter
   flutter_svg: 1.0.3
   font_awesome_flutter: 9.0.0
-  intl: 0.18.1
+  intl: 0.19.0
   jdenticon_dart: 2.0.0
   percent_indicator: 3.0.1
   pointycastle: 3.5.0
@@ -29,6 +29,7 @@ dependencies:
   url_launcher: 6.1.3
   uuid: 3.0.5
   web3dart: 2.3.3  # Utils used in orchid_crypto
+  decimal: 3.0.2
 
   #flutter_web3: 2.1.9 # Dapp ether.js and WalletConnect wrapper
   flutter_web3:

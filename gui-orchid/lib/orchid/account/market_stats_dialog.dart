@@ -6,7 +6,7 @@ import 'package:orchid/api/pricing/orchid_pricing_v0.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/link_text.dart';
 import 'package:orchid/orchid/orchid.dart';
-import 'package:orchid/util/format_currency.dart';
+import 'package:orchid/util/format_decimal.dart';
 
 class MarketStatsDialog {
   static Future<void> show({
@@ -29,9 +29,9 @@ class MarketStatsDialog {
       if (pricing == null) {
         return;
       }
-      var ethPriceText = formatCurrency(1.0 / pricing.ethPriceUSD,
+      var ethPriceText = formatDouble(1.0 / pricing.ethPriceUSD,
           locale: context.locale, suffix: 'USD');
-      var oxtPriceText = formatCurrency(1.0 / pricing.oxtPriceUSD,
+      var oxtPriceText = formatDouble(1.0 / pricing.oxtPriceUSD,
           locale: context.locale, suffix: 'USD');
       tokenPrices = [
         Text(s.ethPrice + " " + ethPriceText).body2,
@@ -41,7 +41,7 @@ class MarketStatsDialog {
       var tokenType = account.chain.nativeCurrency;
       var tokenPrice = await OrchidPricing().tokenToUsdRate(tokenType);
       var priceText =
-          formatCurrency(tokenPrice, locale: context.locale, suffix: 'USD');
+          formatDouble(tokenPrice, locale: context.locale, suffix: 'USD');
       tokenPrices = [
         Text(tokenType.symbol + ' ' + s.price + ': ' + priceText).body2,
       ];
@@ -49,7 +49,7 @@ class MarketStatsDialog {
 
     // Show gas prices as "GWEI" regardless of token type.
     var gasPriceGwei = gasPrice.multiplyDouble(1e9);
-    var gasPriceText = formatCurrency(gasPriceGwei.floatValue,
+    var gasPriceText = formatDouble(gasPriceGwei.doubleValue,
         locale: context.locale, suffix: 'GWEI');
 
     String maxFaceValueText =
@@ -57,8 +57,8 @@ class MarketStatsDialog {
     String costToRedeemText =
         marketConditions.costToRedeem.formatCurrency(locale: context.locale);
 
-    bool ticketUnderwater = marketConditions.costToRedeem.floatValue >=
-        marketConditions.maxFaceValue.floatValue;
+    bool ticketUnderwater = marketConditions.costToRedeem.doubleValue >=
+        marketConditions.maxFaceValue.doubleValue;
 
     String limitedByText = marketConditions.limitedByBalance
         ? s.yourMaxTicketValueIsCurrentlyLimitedByYourBalance +

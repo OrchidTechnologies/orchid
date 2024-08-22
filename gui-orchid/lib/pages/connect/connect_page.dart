@@ -167,7 +167,7 @@ class _ConnectPageState extends State<ConnectPage>
         LotteryPot pot = await _selectedAccount!.getLotteryPot();
         var tokenToUsd = await OrchidPricing().tokenToUsdRate(pot.balance.type);
         _bandwidthAvailableGB =
-            pot.balance.floatValue * tokenToUsd / _bandwidthPrice!.value;
+            pot.balance.doubleValue * tokenToUsd / _bandwidthPrice!.value;
       } catch (err) {
         _bandwidthAvailableGB = null;
         log("error calculating bandwidth available: $err");

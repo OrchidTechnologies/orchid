@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -132,11 +133,11 @@ class TypedTokenValueFieldController extends ValueFieldController<Token> {
       return type!.zero;
     }
     try {
-      var value = double.parse(
+      var value = Decimal.parse(
         // Allow comma as decimal separator for localization
         text.replaceAll(',', '.'),
       );
-      return type!.fromDouble(value);
+      return type!.fromDecimal(value);
     } catch (err) {
       return null;
     }
@@ -144,6 +145,6 @@ class TypedTokenValueFieldController extends ValueFieldController<Token> {
 
   @override
   set value(Token? value) {
-    textController.text = value == null ? '' : value.floatValue.toString();
+    textController.text = value == null ? '' : value.doubleValue.toString();
   }
 }

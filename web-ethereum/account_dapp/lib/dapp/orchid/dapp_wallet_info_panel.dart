@@ -102,7 +102,7 @@ class DappWalletInfoPanel extends StatelessWidget {
     final priceStyle = OrchidText.medium_14.newPurpleBright;
     final tokenType = balance.type;
     return TapToCopyText(
-      balance.floatValue.toString(),
+      balance.decimalValue.toString(),
       style: OrchidText.title.copyWith(height: 1.8),
       padding: EdgeInsets.zero,
       displayWidget: Column(
@@ -134,7 +134,7 @@ class DappWalletInfoPanel extends StatelessWidget {
           TokenPriceBuilder(
               tokenType: tokenType,
               builder: (USD? tokenPrice) {
-                final usdText = ((tokenPrice ?? USD.zero) * balance.floatValue)
+                final usdText = ((tokenPrice ?? USD.zero) * balance.doubleValue)
                     .formatCurrency(locale: context.locale);
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

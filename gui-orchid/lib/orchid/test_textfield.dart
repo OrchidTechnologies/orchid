@@ -2,8 +2,11 @@ import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/orchid/test_app.dart';
 
+// Note: This redundant import of material is required in the main dart file.
+import 'package:flutter/material.dart';
+
 void main() {
-  runApp(TestApp(scale: 5.0, content: _Test()));
+  runApp(TestApp(scale: 2.0, content: _Test()));
 }
 
 class _Test extends StatefulWidget {

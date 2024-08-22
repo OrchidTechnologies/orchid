@@ -179,7 +179,7 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                               child: PurchaseStatus(),
                             ),
                             pady(8),
-                            Divider(height: 1),
+                            // Divider(height: 1),
                             Expanded(
                                 child: accountsEmpty
                                     ? _buildNoAccountsEmptyState()

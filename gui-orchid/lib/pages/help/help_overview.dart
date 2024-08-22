@@ -63,7 +63,7 @@ class _HelpOverviewPageState extends State<HelpOverviewPage> {
 
     return Html.fromElement(
       documentElement: doc,
-      onLinkTap: (url, context, attributes, element) {
+      onLinkTap: (url, attributes, element) {
         launch(url ?? '', forceSafariVC: false);
       },
       style: {
