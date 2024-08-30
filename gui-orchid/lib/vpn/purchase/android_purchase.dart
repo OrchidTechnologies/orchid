@@ -7,7 +7,6 @@ import 'orchid_purchase.dart';
 import 'package:in_app_purchase_android/billing_client_wrappers.dart';
 
 class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
-
   late BillingClient _billingClient;
 
   AndroidOrchidPurchaseAPI() : super.internal();
@@ -28,17 +27,21 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
     return OrchidPurchaseAPI.apiConfigWithOverrides(prodAPIConfig);
   }
 
-
   @override
   Future<void> initStoreListenerImpl() async {
     try {
-      _billingClient = BillingClient(_onPurchaseResult);
+      // UserSelectedAlternativeBillingListener alternativeBillingListener = (billingResult) {
+      //   log('iap: alternative billing listener: $billingResult');
+      // };
+      UserSelectedAlternativeBillingListener? alternativeBillingListener = null;
+      _billingClient =
+          BillingClient(_onPurchaseResult, alternativeBillingListener);
       // _billingClient.enablePendingPurchases();
       var billingResult = await _billingClient.startConnection(
           onBillingServiceDisconnected: () {
         log('iap: billing client disconnected');
       });
-      
+
       if (billingResult.responseCode == BillingResponse.ok) {
         log('iap: billing client setup done');
       } else {
@@ -52,7 +55,7 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
   @override
   Future<void> purchaseImpl(PAC pac) async {
     var billingResultWrapper =
-        await _billingClient.launchBillingFlow(sku: pac.productId);
+        await _billingClient.launchBillingFlow(product: pac.productId);
     log('iap: billing result response = ${billingResultWrapper.responseCode}');
   }
 
@@ -67,7 +70,8 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
     if (purchasesResult.responseCode != BillingResponse.ok) {
       log('iap: Error: purchase result response code: ${purchasesResult.responseCode}');
       (PacTransaction.shared.get())
-          ?.error('iap failed 1: responseCode = ${purchasesResult.responseCode}')
+          ?.error(
+              'iap failed 1: responseCode = ${purchasesResult.responseCode}')
           .save();
       return;
     }
@@ -120,27 +124,40 @@ class AndroidOrchidPurchaseAPI extends OrchidPurchaseAPI {
     var skuList = OrchidPurchaseAPI.pacProductIds;
     log('iap: product ids requested: $skuList');
 
-    var skuDetailsResponse = await _billingClient.querySkuDetails(
-        skuType: SkuType.inapp, skusList: skuList);
-    log('iap: sku query billing result: ${skuDetailsResponse.billingResult}');
-    log('iap: sku details list: ${skuDetailsResponse.skuDetailsList}');
+    List<ProductWrapper> productList = skuList.map((sku) {
+      return ProductWrapper(productId: sku, productType: ProductType.inapp);
+    }).toList();
+    var productDetailsResponse =
+        await _billingClient.queryProductDetails(productList: productList);
+    log('iap: sku query billing result: ${productDetailsResponse.billingResult}');
+    log('iap: sku details list: ${productDetailsResponse.productDetailsList}');
 
-    var toPAC = (SkuDetailsWrapper prod) {
-      double localizedPrice = prod.originalPriceAmountMicros / 1e6;
-      String currencyCode = prod.priceCurrencyCode;
-      String currencySymbol = prod.price[0];
-      log('iap: originalPriceAmountMicros=${prod.originalPriceAmountMicros}, currencyCode=${prod.priceCurrencyCode}, currencySymbol=${prod.price[0]}');
-      var productId = prod.sku;
-      return PAC(
+    PAC? Function(ProductDetailsWrapper prod) toPAC =
+        (ProductDetailsWrapper prod) {
+      final otp = prod.oneTimePurchaseOfferDetails;
+      if (otp == null) {
+        log('iap: no oneTimePurchaseOfferDetails for product: ${prod.productId}');
+        return null;
+      }
+      // double localizedPrice = prod.originalPriceAmountMicros / 1e6;
+      double localizedPrice = otp.priceAmountMicros / 1e6;
+      // String currencyCode = prod.priceCurrencyCode;
+      String currencyCode = otp.priceCurrencyCode;
+      var productId = prod.productId;
+      var pac = PAC(
         productId: productId,
         localPrice: localizedPrice,
         localCurrencyCode: currencyCode,
-        localCurrencySymbol: currencySymbol,
         usdPriceExact: OrchidPurchaseAPI.usdPriceForProduct(productId),
       );
+      log('iap: priceAmountMicros=${otp.priceAmountMicros}, currencyCode=${otp.priceCurrencyCode}, localCurrencySymbol=${pac.localCurrencySymbol}');
+      return pac;
     };
 
-    var pacs = skuDetailsResponse.skuDetailsList.map(toPAC).toList();
+    var pacs = productDetailsResponse.productDetailsList
+        .map(toPAC)
+        .whereType() // remove nulls
+        .toList();
     Map<String, PAC> products = {for (var pac in pacs) pac.productId: pac};
     //productsCached = products;
     log('iap: returning products: $products');

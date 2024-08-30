@@ -85,6 +85,7 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Widget buildPage(BuildContext context) {
+    // log("iap: purchase page storeDown: $_storeDown, showStoreMessage: $_showStoreMessage, storeStatus: $_storeStatus");
     return SafeArea(
       child: Stack(
         children: <Widget>[
@@ -119,9 +120,10 @@ class _PurchasePageState extends State<PurchasePage> {
   }
 
   Widget _buildStoreMessage() {
+    // log("iap: buildStoreMessage");
     Size size = MediaQuery.of(context).size;
     var text = _storeStatus?.message != null
-        ? _storeStatus!.message
+        ? _storeStatus!.message!
         : s.theOrchidStoreIsTemporarilyUnavailablePleaseCheckBackIn;
     return Center(
         child: Container(

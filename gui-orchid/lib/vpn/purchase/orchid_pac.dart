@@ -6,7 +6,7 @@ class PAC {
   final String productId;
   final double localPrice;
   final String localCurrencyCode; // e.g. 'USD'
-  final String localCurrencySymbol; // e.g. '$'
+  late String localCurrencySymbol; // e.g. '$'
   final USD usdPriceExact;
 
   /// Format the local price as a currency value with symbol.
@@ -24,9 +24,12 @@ class PAC {
     required this.productId,
     required this.localPrice,
     required this.localCurrencyCode,
-    required this.localCurrencySymbol,
     required this.usdPriceExact,
-  });
+    String? localCurrencySymbol,
+  }) {
+    this.localCurrencySymbol = localCurrencySymbol ??
+        NumberFormat.simpleCurrency(name: localCurrencyCode).currencySymbol;
+  }
 
   @override
   String toString() {
