@@ -15,6 +15,8 @@ checks += bugprone-*
 checks/bugprone-argument-comment.StrictMode := true
 checks += -bugprone-branch-clone
 checks += -bugprone-easily-swappable-parameters
+# XXX: I should enable this check and do a comprehensive audit
+checks += -bugprone-empty-catch
 # XXX: this is higher priority but I'm not ready for this yet
 checks += -bugprone-exception-escape
 checks/bugprone-exception-escape.IgnoredExceptions := "broken_promise"
@@ -34,9 +36,12 @@ checks += -cert-env33-c
 checks += -cert-err58-cpp
 
 checks += clang-analyzer-*
+# XXX: this flags something in boost multiprecision (of course)
+checks += -clang-analyzer-core.BitwiseShift
 
 checks += cppcoreguidelines-*
 checks += -cppcoreguidelines-avoid-c-arrays
+checks += -cppcoreguidelines-avoid-capturing-lambda-coroutines
 # this check is the exact opposite of a good guideline :/
 checks += -cppcoreguidelines-avoid-const-or-ref-data-members
 checks += -cppcoreguidelines-avoid-do-while
@@ -49,6 +54,10 @@ checks += -cppcoreguidelines-avoid-reference-coroutine-parameters
 checks += -cppcoreguidelines-init-variables
 # XXX: I didn't pay any attention to whether this check was interesting or not
 checks += -cppcoreguidelines-macro-usage
+# this was accidentally helpful, actually, but isn't an acceptable decision :/
+checks += -cppcoreguidelines-misleading-capture-default-by-value
+# this check doesn't handle unused parameters; am I doing this wrong?!
+checks += -cppcoreguidelines-missing-std-forward
 checks += -cppcoreguidelines-non-private-member-variables-in-classes
 # XXX: the code which most hates this apparently does allow for memory leaks :(
 checks += -cppcoreguidelines-prefer-member-initializer
@@ -57,8 +66,13 @@ checks += -cppcoreguidelines-pro-bounds-array-to-pointer-decay
 checks += -cppcoreguidelines-pro-bounds-pointer-arithmetic
 checks += -cppcoreguidelines-pro-type-reinterpret-cast
 checks += -cppcoreguidelines-pro-type-union-access
+# XXX: this check is interesting, but I'm unsure about move/forward confusion
+checks += -cppcoreguidelines-rvalue-reference-param-not-moved
+checks/cppcoreguidelines-rvalue-reference-param-not-moved.IgnoreUnnamedParams := true
 # this check makes utility classes super frustrating :/
 checks += -cppcoreguidelines-special-member-functions
+# this check makes separates definitions of related variables
+checks += -cppcoreguidelines-use-default-member-init
 
 # XXX: I'm using a lot of statically constructed objects
 #checks += fuchsia-statically-constructed-objects
@@ -67,6 +81,9 @@ checks += fuchsia-virtual-inheritance
 checks += google-build-*
 
 checks += misc-*
+# I love the idea of this check, but boost does this a lot
+checks += -misc-header-include-cycle
+checks += -misc-include-cleaner
 checks += -misc-misplaced-const
 checks += -misc-no-recursion
 # this check doesn't allow for any protected members :/
@@ -76,6 +93,8 @@ checks += -misc-unused-parameters
 
 checks += modernize-*
 checks += -modernize-avoid-c-arrays
+# XXX: I don't want this, but it also crashes on boost::multiprecision::abs
+checks += -modernize-use-constraints
 checks += -modernize-use-default-member-init
 checks += -modernize-use-nodiscard
 checks += -modernize-use-trailing-return-type
@@ -84,6 +103,8 @@ checks += -modernize-use-using
 
 checks += performance-*
 checks/performance-move-const-arg.CheckTriviallyCopyableMove := 0
+# XXX: I am pretty sure I just disagree with this optimization
+checks += -performance-avoid-endl
 
 checks += readability-const-return-type
 checks += readability-container-size-empty
@@ -97,11 +118,6 @@ checks += readability-redundant-string-cstr
 checks += readability-redundant-string-init
 checks += readability-static-definition-in-anonymous-namespace
 checks += readability-uniqueptr-delete-release
-
-ifeq ($(target),and)
-# XXX: boost multiprecision on android
-#checks += -clang-analyzer-core.UndefinedBinaryOperatorResult
-endif
 
 ifeq ($(target),win)
 # XXX: boost::asio::detail::do_throw_error should be [[noreturn]]

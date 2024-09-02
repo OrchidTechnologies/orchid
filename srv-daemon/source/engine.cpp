@@ -149,6 +149,8 @@ int Engine() {
             case 0x80000001:
                 orc_assert((entry.edx & (1 << 29)) != 0);
                 break;
+            default:
+                break;
         }
     }
 #else

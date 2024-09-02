@@ -74,7 +74,7 @@ class Lottery1 :
             std::vector<Bytes32> /*refunds*/
         > claim("claim");
 
-        Spawn([=]() mutable noexcept -> task<void> {
+        Spawn([this, executor, recipient, payment]() mutable noexcept -> task<void> {
             for (;;) {
                 orc_ignore({
                     co_await executor->Send(*market_.chain_, {}, contract_, 0, claim({}, recipient, {payment}, {}));

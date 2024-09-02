@@ -32,7 +32,7 @@ struct _MyApplication {
     char **dart_entrypoint_arguments;
 };
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables,performance-no-int-to-ptr)
+// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,cppcoreguidelines-avoid-non-const-global-variables,performance-no-int-to-ptr)
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
 static void my_application_activate(GApplication *application) {

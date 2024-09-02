@@ -36,7 +36,7 @@
 namespace orc {
 
 int Protect(int socket, int (*attach)(int, const sockaddr *, socklen_t), const sockaddr *address, socklen_t length) {
-    std::unique_ptr<ifaddrs, decltype(freeifaddrs) *> interfaces([]() {
+    const std::unique_ptr<ifaddrs, decltype(freeifaddrs) *> interfaces([]() {
         ifaddrs *interfaces;
         orc_assert(getifaddrs(&interfaces) != -1);
         return interfaces;

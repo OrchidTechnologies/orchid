@@ -84,10 +84,10 @@ class Lottery0 :
             Bytes /*receipt*/, std::vector<Bytes32> /*old*/
         > grab("grab");
 
-        Spawn([=]() mutable noexcept -> task<void> {
+        Spawn([this, executor, args...]() mutable noexcept -> task<void> {
             for (;;) {
                 orc_ignore({
-                    co_await executor->Send(*token_.market_.chain_, {}, contract_, 0, grab(std::forward<Args_>(args)...));
+                    co_await executor->Send(*token_.market_.chain_, {}, contract_, 0, grab(args...));
                     break;
                 });
 

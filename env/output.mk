@@ -30,7 +30,7 @@ code = $(patsubst @/%,$(output)/$(arch)/%,$(header)) $(sysroot)
 # in this model, cflags would be something controlled only by the user
 flags_ = $(if $(filter ./,$(1)),,$(call flags_,$(dir $(patsubst %/,%,$(1)))) $(cflags/$(1)))
 flags- = $(call flags_,$(patsubst ./$(output)/%,%,$(patsubst ./$(output)/$(arch)/%,./$(output)/%,./$(dir $<))))
-flags = $(qflags) $(patsubst -I@/%,-I$(output)/$(arch)/%,$(filter -I%,$(cflags/./$<) $(flags-) $(cflags)) $(filter-out -I%,$(cflags) $(flags-) $(cflags/./$<)))
+flags = $(filter-out $(dflags/./$<),$(qflags)) $(patsubst -I@/%,-I$(output)/$(arch)/%,$(filter -I%,$(cflags/./$<) $(flags-) $(cflags)) $(filter-out -I%,$(cflags) $(flags-) $(cflags/./$<)))
 flags += $(if $(filter $(output)/%,$<),-D__FILE__='"$(patsubst $(output)/%,%,$<)"' -Wno-builtin-macro-redefined)
 
 define compile

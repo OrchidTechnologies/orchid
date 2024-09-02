@@ -200,7 +200,7 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
             nonces.erase(oldest);
         }
 
-        const auto reveal([&, &commit = commit]() {
+        const auto reveal([&]() {
             for (const auto &reveal : locked->reveals_)
                 if (HashK(reveal.first) == commit) {
                     const auto &expire(reveal.second);
@@ -217,8 +217,9 @@ void Server::Submit0(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
             Commit(locked);
     std::make_tuple(reveal, winner); });
 
-    // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
-    nest_.Hatch([&, &commit = commit, &issued = issued, &nonce = nonce, &v = v, &r = r, &s = s, &amount = amount, &ratio = ratio, &start = start, &range = range, &funder = funder, &recipient = recipient, &reveal = reveal, &winner = winner]() noexcept { return [=]() noexcept -> task<void> { try {
+    // XXX: this is related to the long-standing issue with boost multiprecision and clang-tidy
+    // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage)
+    nest_.Hatch([&]() noexcept { return [=, this]() noexcept -> task<void> { try {
         const auto usable(co_await lottery->Check(signer, funder, recipient));
         const auto valid(usable >= amount);
 
@@ -306,7 +307,7 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
             nonces.erase(oldest);
         }
 
-        const auto reveal([&, &commit = commit]() {
+        const auto reveal([&]() {
             for (const auto &reveal : locked->reveals_)
                 if (HashK(reveal.first) == commit) {
                     const auto &expire(reveal.second);
@@ -323,8 +324,9 @@ void Server::Submit1(Pipe<Buffer> *pipe, const Socket &source, const Bytes32 &id
             Commit(locked);
     std::make_tuple(reveal, winner); });
 
-    // XXX: the C++ prohibition on automatic capture of a binding name because it isn't a "variable" is ridiculous
-    nest_.Hatch([&, &amount = amount, &funder = funder, &recipient = recipient, &reveal = reveal, &winner = winner]() noexcept { return [=]() noexcept -> task<void> { try {
+    // XXX: this is related to the long-standing issue with boost multiprecision and clang-tidy
+    // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage)
+    nest_.Hatch([&]() noexcept { return [=, this]() noexcept -> task<void> { try {
         const auto usable(co_await lottery->Check(signer, funder, recipient));
         const auto valid(usable >= amount);
 
@@ -361,7 +363,7 @@ void Server::Land(Pipe<Buffer> *pipe, const Buffer &data) { orc_ignore({
             const auto &[magic, id] = header;
             orc_assert(magic == Magic_);
 
-            Scan(window, [&, &id = id](const Buffer &data) { try {
+            Scan(window, [&](const Buffer &data) { try {
                 const auto [command, window] = Take<uint32_t, Window>(data);
                 if (false);
                 else if (command == Submit0_)

@@ -216,7 +216,7 @@ void Capture::Land(const Buffer &data) {
     orc_ignore({ if (Datagram(data, [&](const Socket &source, const Socket &destination, const Buffer &data) {
         if (destination != Socket(Resolver_, 53))
             return false;
-        up_.Hatch([&]() noexcept { return [=, data = Beam(data)]() mutable -> task<void> {
+        up_.Hatch([&]() noexcept { return [this, source, destination, data = Beam(data)]() mutable -> task<void> {
             const Query query(data.span());
 
             const auto resolver([&]() {
@@ -625,6 +625,9 @@ task<bool> Transform::Send(const Beam &data) {
                 Log() << "ICMP" << subset << std::endl;
             co_return true;
         } break;
+
+        default:
+            break;
     }
 
     co_return false;

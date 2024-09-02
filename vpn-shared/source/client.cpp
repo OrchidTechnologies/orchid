@@ -111,7 +111,7 @@ void Client::Land(Pipe *pipe, const Buffer &data) {
         const auto &[magic, id] = header;
         orc_assert(magic == Magic_);
 
-        Scan(window, [&, &id = id](const Buffer &data) { try {
+        Scan(window, [&](const Buffer &data) { try {
             Invoice(id, data);
         } orc_catch({}) });
     } orc_catch({}) return true; })) {

@@ -79,7 +79,7 @@ struct Numeric<true, Size_, Type_> {
 };
 
 template <typename Type_>
-struct Coded<Type_, typename std::enable_if<std::is_unsigned<Type_>::value>::type> :
+struct Coded<Type_, typename std::enable_if_t<std::is_unsigned_v<Type_>>> :
     public Numeric<false, sizeof(Type_), Type_>
 {
     static void Name(std::ostringstream &signature) {
@@ -88,7 +88,7 @@ struct Coded<Type_, typename std::enable_if<std::is_unsigned<Type_>::value>::typ
 };
 
 template <typename Type_>
-struct Coded<Type_, typename std::enable_if<std::is_signed<Type_>::value>::type> :
+struct Coded<Type_, typename std::enable_if_t<std::is_signed_v<Type_>>> :
     public Numeric<true, sizeof(Type_), Type_>
 {
     static void Name(std::ostringstream &signature) {
@@ -97,7 +97,7 @@ struct Coded<Type_, typename std::enable_if<std::is_signed<Type_>::value>::type>
 };
 
 template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
-struct Coded<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type> :
+struct Coded<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if_t<Bits_ % 8 == 0>> :
     public Numeric<false, (Bits_ >> 3), boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>>
 {
     static void Name(std::ostringstream &signature) {
@@ -106,7 +106,7 @@ struct Coded<boost::multiprecision::number<boost::multiprecision::backends::cpp_
 };
 
 template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
-struct Coded<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::signed_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type> :
+struct Coded<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::signed_magnitude, Check_, void>>, typename std::enable_if_t<Bits_ % 8 == 0>> :
     public Numeric<true, (Bits_ >> 3), boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::signed_magnitude, Check_, void>>>
 {
     static void Name(std::ostringstream &signature) {
@@ -161,7 +161,7 @@ struct Coded<bool, void> {
 };
 
 template <size_t Size_>
-struct Coded<Brick<Size_>, typename std::enable_if<Size_ == 32>::type> {
+struct Coded<Brick<Size_>, typename std::enable_if_t<Size_ == 32>> {
     static const bool dynamic_ = false;
 
     static void Name(std::ostringstream &signature) {

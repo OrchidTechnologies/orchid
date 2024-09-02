@@ -154,6 +154,9 @@ task<void> Egress::Translator::Send(const Buffer &data) {
             Forge(icmp, &openvpn::ICMPv4::id, translated.Port());
             co_return co_await egress_->Send(beam);
         } break;
+
+        default: {
+        } break;
     }
 }
 
@@ -192,6 +195,9 @@ void Egress::Land(const Buffer &data) {
                 Forge(icmp, &openvpn::ICMPv4::id, translation->translated_.Port());
                 return translation->translator_.Land(beam);
             }
+        } break;
+
+        default: {
         } break;
     }
 }

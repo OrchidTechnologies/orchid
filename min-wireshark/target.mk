@@ -139,6 +139,16 @@ cflags/$(pwd/wireshark)/ += -Wno-pointer-sign
 # XXX: fwrite used without check; submit patch
 cflags/$(pwd/wireshark)/ += -Wno-unused-result
 
+# XXX: packet-5co-legacy.c:923:9: error: 'snprintf' will always be truncated; specified size is 8, but format string expands to at least 9 [-Werror,-Wformat-truncation]
+#     snprintf( result, 8, "Disabled");
+#     ^
+cflags/$(pwd/wireshark)/epan/dissectors/packet-5co-legacy.c += -Wno-format-truncation
+
+# XXX: packet-ipars.c:131:33: error: 'snprintf' will always be truncated; specified size is 16, but format string expands to at least 24 [-Werror,-Wformat-truncation]
+#     default:    snprintf(eom_msg, MAX_EOM_MSG_SIZE, "Unknown EOM type (0x%2.2X)", ia);    break;
+#                 ^
+cflags/$(pwd/wireshark)/epan/dissectors/packet-ipars.c += -Wno-format-truncation
+
 # XXX: this is only used if you have libgnutls and I don't know what I think about that :/
 cflags/$(pwd/wireshark)/epan/dissectors/packet-tls-utils.c += -Wno-unused-but-set-variable
 
