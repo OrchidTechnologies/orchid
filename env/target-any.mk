@@ -79,6 +79,8 @@ cflags += -Wno-tautological-overlap-compare
 cflags += -fmessage-length=0
 cflags += -ferror-limit=0
 cflags += -ftemplate-backtrace-limit=0
+cflags += -fmacro-backtrace-limit=0
+cflags += -fdiagnostics-show-note-include-stack
 
 beta := false
 
