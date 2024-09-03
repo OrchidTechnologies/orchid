@@ -4,7 +4,7 @@ set -o pipefail
 
 ndk=27.0.12077973
 
-echo y | "${ANDROID_HOME}"/cmdline-tools/latest/bin/sdkmanager "ndk;${ndk}" "build-tools;29.0.2" "platforms;android-33" >/dev/null
+echo y | "${ANDROID_HOME}"/cmdline-tools/latest/bin/sdkmanager "ndk;${ndk}" "build-tools;30.0.3" "platforms;android-34" >/dev/null
 
 export ANDROID_NDK_ROOT="${ANDROID_HOME}/ndk/${ndk}"
 

@@ -23,7 +23,13 @@ lflags += -framework SystemConfiguration
 
 cflags += -I$(pwd)/source
 
-source += $(wildcard $(pwd)/source/*.cpp)
+ifneq ($(target),ios)
+# XXX: this works on iOS, but requires MacOSX.sdk and is useless
+source += $(pwd)/source/tunnel.cpp
+endif
+
+source += $(pwd)/source/protect.cpp
+
 source += $(wildcard $(pwd)/source/*.mm)
 
 # XXX: this will be fixed with the Capture refactor

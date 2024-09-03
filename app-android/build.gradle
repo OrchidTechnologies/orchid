@@ -1,12 +1,12 @@
 buildscript {
-    ext.kotlin_version = '1.6.10'
+    ext.kotlin_version = '1.8.0'
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.2'
+        classpath 'com.android.tools.build:gradle:7.3.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -14,7 +14,7 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 }
 
@@ -30,12 +30,12 @@ apply plugin: 'kotlin-android'
 def flutter = files(orcFlutter)
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
 
     defaultConfig {
         applicationId orcUnique
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdkVersion 34
         versionCode orcMonotonic.toInteger() - 946684800
         versionName orcVersion
         manifestPlaceholders = [orcUnique: orcUnique, orcName: orcName]
@@ -102,6 +102,8 @@ plugins.plugins.android.each { dependency ->
     }
 
     plugin.afterEvaluate {
+        plugin.android { compileSdkVersion 34 }
+
         plugin.android.buildTypes {
             profile {
                 initWith debug

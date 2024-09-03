@@ -26,13 +26,17 @@ flutter := $(CURDIR)/$(pwd/flutter)/bin/flutter --suppress-analytics --verbose -
 
 # -a is needed as flutter (incorrectly) only installs files for windows *target* on windows *host*
 # https://github.com/flutter/flutter/issues/58379
-precache := --android --ios --linux --macos --windows -a
+
+# XXX: ugh. now I had to disable all the windows support due to Failed to download https://storage.googleapis.com/flutter_infra_release/flutter/b8800d88be4866db1b15f8b954ab2573bba9960f/windows-arm64/artifacts.zip. Ensure you have network connectivity and then try again. Exception: 404
+# I actually think I can get them to fix this, as this breaks precache -a even without --windows and even without --enable-windows-desktop
+
+precache := --android --ios --linux --macos #--windows
 
 $(pwd/flutter)/packages/flutter/pubspec.lock: $(pwd/flutter)/packages/flutter/pubspec.yaml $(call head,$(pwd/flutter))
 	cd $(pwd/flutter) && git clean -fxd
 	cd $(pwd/flutter) && bin/flutter config --enable-linux-desktop
 	cd $(pwd/flutter) && bin/flutter config --enable-macos-desktop
-	cd $(pwd/flutter) && bin/flutter config --enable-windows-desktop
+	#cd $(pwd/flutter) && bin/flutter config --enable-windows-desktop
 	cd $(pwd/flutter) && bin/flutter precache $(precache)
 	cd $(pwd/flutter) && bin/flutter update-packages
 

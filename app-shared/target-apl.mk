@@ -37,13 +37,8 @@ endif
 
 codesign += && touch $(3)
 
-ifeq ($(target),mac)
-cflags += -F$(engine)
-lflags += -F$(engine)
-else
 cflags += -F$(engine)/$(framework).xcframework/$(xcframework)
 lflags += -F$(engine)/$(framework).xcframework/$(xcframework)
-endif
 
 app := $(bundle)$(contents)/Frameworks/App.framework
 embed := $(bundle)$(contents)/Frameworks/$(framework).framework

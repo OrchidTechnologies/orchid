@@ -157,6 +157,7 @@ jobs:
     needs: [cache-submodule]
     runs-on: ubuntu-24.04
 
+    if: ${{ false }} # XXX: Flutter 3.24 --windows
     steps:
     - uses: actions/checkout@v4
     - run: env/setup.sh

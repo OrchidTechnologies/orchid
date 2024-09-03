@@ -20,13 +20,13 @@
 
 assemble := android
 platform := android
+capped := Android
 
 generated := $(pwd/gui)/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant%java
 
 include $(pwd)/target-all.mk
 
 jni := armeabi-v7a arm64-v8a
-#jnis := $(subst $(space),$(comma),$(foreach arch,$(jni),android-$(flutter/$(arch))))
 
 assembled := $(output)/flutter/flutter_assets/AssetManifest%json $(if $(filter noaot,$(debug)),,$(foreach arch,$(jni),$(output)/flutter/$(arch)/app%so))
 $(assembled): $(dart)
@@ -35,6 +35,7 @@ $(assembled): $(dart)
 	    -dTargetPlatform="$(platform)" \
 	    -dTargetFile="lib/main.dart" \
 	    -dBuildMode="$(mode)" \
+	    -d$(capped)Archs="$(foreach arch,$(jni),$(flutter/$(arch)))" \
 	    -dTreeShakeIcons="true" \
 	    -dTrackWidgetCreation="true" \
 	    --output="$(CURDIR)/$(output)/flutter" \

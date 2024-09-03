@@ -28,9 +28,6 @@ signature := /_CodeSignature/CodeResources
 
 isysroot :=  $(shell xcrun --sdk $(sdk) --show-sdk-path)
 more += -isysroot $(isysroot)
-ifneq ($(sdk),macosx)
-more += -idirafter $(shell xcrun --sdk macosx --show-sdk-path)/usr/include
-endif
 
 define _
 more/$(1) := -arch $(1)
