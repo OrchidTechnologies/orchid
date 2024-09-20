@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
@@ -36,7 +37,15 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
   final _stakeeField = AddressValueFieldController();
   final _scrollController = ScrollController();
 
-  Token? _currentStake;
+  // The total stake staked for the stakee by all stakers.
+  Token? _currentStakeTotal;
+
+  // The amount and delay staked for the stakee by the current staker (wallet).
+  StakeResult? _currentStakeStaker;
+
+  // The amount and expiration of the pulled stake pending withdrawal for the first n indexes.
+  List<StakePendingResult>? _currentStakePendingStaker;
+
   Location? _currentLocation;
 
   @override
@@ -74,12 +83,12 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
       children: [
         DappHomeHeader(
           web3Context: web3Context,
-          setNewContext: setNewContext,
           contractVersionsAvailable: contractVersionsAvailable,
           contractVersionSelected: contractVersionSelected,
           selectContractVersion: selectContractVersion,
           // deployContract: deployContract,
           connectEthereum: connectEthereum,
+          connectWalletConnect: connectWalletConnect,
           disconnect: disconnect,
           showChainSelector: false,
         ).padx(24).top(30).bottom(24),
@@ -161,40 +170,147 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
           ).top(24).padx(8),
 
           // Current stake
-          AnimatedVisibility(
-            show: _stakee != null && _currentStake != null,
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Text("Current Stake").title.white,
-                  ],
-                ),
-                TokenValueWidgetRow(
-                  tokenType: Tokens.OXT,
-                  value: _currentStake,
-                  context: context,
-                  child: Text(_currentStake?.formatCurrency(
-                              locale: context.locale, precision: 2) ??
-                          '')
-                      .title
-                      .white,
-                  price: price,
-                ).top(8),
-              ],
-            ).top(24).padx(24),
-          ),
+          _buildCurrentStakePanel(price),
 
           // Tabs
           StakeTabs(
             web3Context: web3Context,
             stakee: _stakee,
-            currentStake: _currentStake,
+            currentStake: _currentStakeStaker?.amount,
             price: price,
+            currentStakeDelay: _currentStakeStaker?.delay,
           ).top(40),
         ],
       ),
     );
+  }
+
+  AnimatedVisibility _buildCurrentStakePanel(USD? price) {
+    // Format the delay (seconds) as a human-readable string
+    final delaySeconds = _currentStakeStaker?.delay;
+    String delayString = _formatDelay(delaySeconds);
+    final showDelay = delaySeconds != null && delaySeconds > BigInt.zero;
+    return AnimatedVisibility(
+      show: _stakee != null && _currentStakeTotal != null,
+      child: Column(
+        children: [
+          // Total stake
+          Column(
+            children: [
+              Row(
+                children: [
+                  Text("Total Stake (All Stakers)").title.white,
+                ],
+              ),
+              TokenValueWidgetRow(
+                tokenType: Tokens.OXT,
+                value: _currentStakeTotal,
+                context: context,
+                child: Text(_currentStakeTotal?.formatCurrency(
+                            locale: context.locale, precision: 2) ??
+                        '')
+                    .title
+                    .white,
+                price: price,
+              ).top(0),
+            ],
+          ).top(32).padx(24),
+
+          // Staker stake
+          Column(
+            children: [
+              Row(
+                children: [
+                  Text("Current Stake (This Wallet)").title.white,
+                ],
+              ),
+              TokenValueWidgetRow(
+                tokenType: Tokens.OXT,
+                value: _currentStakeStaker?.amount,
+                context: context,
+                child: Text(_currentStakeStaker?.amount.formatCurrency(
+                            locale: context.locale, precision: 2) ??
+                        '')
+                    .title
+                    .white,
+                price: price,
+              ).top(0),
+              if (showDelay)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Delay").title.white,
+                    Text(delayString).title.white,
+                  ],
+                ),
+            ],
+          ).top(16).padx(24).bottom(12),
+
+          ..._buildPendingPulls(price),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildPendingPulls(USD? price) {
+    return (_currentStakePendingStaker ?? [])
+        .where((pending) => pending.amount.isNotZero())
+        .mapIndexed((pending, index) {
+      final expireDate =
+          DateTime.fromMillisecondsSinceEpoch(pending.expire.toInt() * 1000);
+      final showExpire = expireDate.isAfter(DateTime.now());
+      final expireString = showExpire
+          ? DateFormat('MM/dd/yyyy HH:mm').format(expireDate.toLocal())
+          : '';
+      final expireLabel = showExpire ? "Locked Until" : "Ready to Withdraw";
+
+      return RoundedRect(
+        backgroundColor: OrchidColors.new_purple,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Text("Pending Pull Request (Index: $index)").title.white,
+              ],
+            ),
+            TokenValueWidgetRow(
+              tokenType: Tokens.OXT,
+              value: pending.amount,
+              context: context,
+              child: Text(pending.amount
+                      .formatCurrency(locale: context.locale, precision: 2))
+                  .title
+                  .white,
+              price: price,
+            ).top(0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(expireLabel).title.white,
+                Text(expireString).title.white,
+              ],
+            ),
+          ],
+        ).top(16).padx(24).bottom(16),
+      );
+    }).toList();
+  }
+
+  String _formatDelay(BigInt? delaySeconds) {
+    String delayString = "...";
+    if (delaySeconds != null) {
+      final delayDaysInt = delaySeconds.toInt() ~/ 86400;
+      if (delayDaysInt >= 1) {
+        delayString = "${delayDaysInt} days";
+      } else {
+        if (delaySeconds > BigInt.zero) {
+          delayString = "${delaySeconds.toInt()} seconds";
+        } else {
+          delayString = "None";
+        }
+      }
+    }
+    return delayString;
   }
 
   Widget _buildProviderView() {
@@ -234,11 +350,43 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
 
   void _updateStake() async {
     if (_stakee != null && web3Context != null) {
-      _currentStake =
-          await OrchidWeb3StakeV0(web3Context!).orchidGetStake(_stakee!);
-      log("XXX: heft = $_currentStake");
+      // Get the total stake for all stakers (heft)
+      final orchidWeb3 = OrchidWeb3StakeV0(web3Context!);
+      _currentStakeTotal = await orchidWeb3.orchidGetTotalStake(_stakee!);
+      log("XXX: heft = $_currentStakeTotal");
+
+      // Get the stake for this staker (wallet)
+      try {
+        _currentStakeStaker = await orchidWeb3.orchidGetStakeForStaker(
+          staker: web3Context!.walletAddress!,
+          stakee: _stakee!,
+        );
+        log("XXX: staker stake = $_currentStakeStaker");
+      } catch (err, stack) {
+        log("Error getting stake for staker: $err");
+        log(stack.toString());
+      }
+
+      // Get the pending stake withdrawals for this staker (wallet)
+      try {
+        List<StakePendingResult> pendingList = [];
+        for (var i = 0; i < 3; i++) {
+          final pending = await orchidWeb3.orchidGetPendingWithdrawal(
+            staker: web3Context!.walletAddress!,
+            index: i,
+          );
+          pendingList.add(pending);
+        }
+        _currentStakePendingStaker = pendingList;
+        log("XXX: pending = $_currentStakePendingStaker");
+      } catch (err, stack) {
+        log("Error getting stake for staker: $err");
+        log(stack.toString());
+      }
     } else {
-      _currentStake = null;
+      _currentStakeTotal = null;
+      _currentStakeStaker = null;
+      _currentStakePendingStaker = null;
     }
     setState(() {});
   }

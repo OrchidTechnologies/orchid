@@ -53,7 +53,7 @@ class OrchidWeb3V0 {
     // Don't attempt to add more than the wallet balance.
     // This mitigates the potential for rounding errors in calculated amounts.
     var totalOXT = Token.min(addBalance.add(addEscrow), walletBalance);
-    log("Add funds signer: $signer, amount: ${totalOXT.subtract(addEscrow)}, escrow: $addEscrow");
+    log("Add funds: signer: $signer, amount: ${totalOXT.subtract(addEscrow)}, escrow: $addEscrow");
 
     List<String> txHashes = [];
 
@@ -64,18 +64,19 @@ class OrchidWeb3V0 {
       spender: OrchidContractV0.lotteryContractAddressV0,
     );
     if (oxtAllowance < totalOXT) {
-      log("XXX: oxtAllowance increase required: $oxtAllowance < $totalOXT");
+      log("Add funds: oxtAllowance increase required: $oxtAllowance < $totalOXT");
       var approveTxHash = await _oxt.approveERC20(
           owner: wallet.address!,
           spender: OrchidContractV0.lotteryContractAddressV0,
           amount: totalOXT);
       txHashes.add(approveTxHash);
     } else {
-      log("XXX: oxtAllowance sufficient: $oxtAllowance");
+      log("Add funds: oxtAllowance already sufficient: $oxtAllowance");
     }
 
     // Do the add call
     var contract = _lotteryContract.connect(context.web3.getSigner());
+    log("Add funds: do push, totalOXT: $totalOXT, addEscrow: $addEscrow");
     TransactionResponse tx = await contract.send(
       'push',
       [

@@ -46,7 +46,7 @@ class OrchidERC20 {
     // This mitigates the potential for rounding errors in calculated amounts.
     amount = Token.min(amount, walletBalance);
 
-    log('XXX: do approve: ${[spender.toString(), amount.intValue.toString()]}');
+    log('approveERC20: do approve: ${[spender.toString(), amount.intValue.toString()]}');
 
     // approve(address spender, uint256 amount) external returns (bool)
     var contract = _contract.connect(context.web3.getSigner());
@@ -70,4 +70,15 @@ class OrchidERC20 {
     'function approve(address spender, uint256 amount) external returns (bool)',
     'function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)',
   ];
+}
+
+// For a transaction that uses an ERC20 token, the transaction may require an approval
+class ERC20PayableTransactionCallbacks {
+  final Future<void> Function(String approvalHash) onApproval;
+  final Future<void> Function(String txHash) onTransaction;
+
+  ERC20PayableTransactionCallbacks({
+    required this.onApproval,
+    required this.onTransaction,
+  });
 }

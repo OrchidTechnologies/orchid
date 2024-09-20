@@ -28,18 +28,18 @@ class UserPreferencesDapp {
             return _setTransactions(txs);
           });
 
-  void addTransaction(DappTransaction tx) {
-    transactions.set(transactions.get()! + [tx]);
+  Future<void> addTransaction(DappTransaction tx) async {
+    await transactions.set(transactions.get()! + [tx]);
   }
 
-  void addTransactions(Iterable<DappTransaction> txs) {
-    transactions.set(transactions.get()! + txs.toList());
+  Future<void> addTransactions(Iterable<DappTransaction> txs) async {
+    await transactions.set(transactions.get()! + txs.toList());
   }
 
-  void removeTransaction(String txHash) {
+  Future<void> removeTransaction(String txHash) async {
     var list = transactions.get()!;
     list.removeWhere((tx) => tx.transactionHash == txHash);
-    transactions.set(list);
+    await transactions.set(list);
   }
 
   static List<DappTransaction> _getTransactions() {

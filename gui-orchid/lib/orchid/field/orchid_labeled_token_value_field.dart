@@ -24,6 +24,7 @@ class OrchidLabeledTokenValueField extends StatelessWidget {
   final Widget? trailing;
   final Widget? bottom;
   final Widget? bottomBanner;
+  final Color? backgroundColor;
 
   // TODO: enhance this to include a message
   final bool error;
@@ -43,6 +44,7 @@ class OrchidLabeledTokenValueField extends StatelessWidget {
     this.bottom,
     this.bottomBanner,
     this.error = false,
+    this.backgroundColor,
   }) : super(key: key);
 
   @override
@@ -55,7 +57,7 @@ class OrchidLabeledTokenValueField extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              color: OrchidColors.dark_background_2,
+              color: backgroundColor ?? OrchidColors.dark_background_2,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

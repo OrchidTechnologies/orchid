@@ -3,6 +3,8 @@
 cd $(dirname "$0")
 
 # Create our patched version of the flutter_web3 package.
+# See the following issue for an explanation of the patch:
+# "Support for Wallet Connect 2.x." @patniemeyer
 # https://github.com/y-pakorn/flutter_web3/issues/56
 #
 if [ -d flutter_web3 ]

@@ -139,7 +139,7 @@ class Token {
     int? minPrecision,
     bool showPrecisionIndicator = false,
   }) {
-    print("XXX: format decimal value: $decimalValue");
+    // print("XXX: format decimal value: $decimalValue");
     return units.formatDecimal(decimalValue,
         locale: locale,
         precision: precision,

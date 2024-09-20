@@ -30,13 +30,18 @@ class DappWalletInfoPanel extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
+    final isWalletConnect = web3Context?.walletConnectProvider != null;
     final link = web3Context?.chain.explorerUrl;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Text(context.s.connectedWithMetamask, style: _textStyle),
+            Text(
+                isWalletConnect
+                    ? "Connected with WalletConnect" // TODO: Localize
+                    : context.s.connectedWithMetamask,
+                style: _textStyle),
           ],
         ).height(26),
         _buildWalletAddressRow().top(16),
