@@ -78,7 +78,7 @@ class _AddStakePanelState extends State<AddStakePanel>
         // Delay label (if non-null)
         // if (_currentStakeDelayIsZero)
         //   Text("Added funds will be staked with no withdrawal delay.").white.caption.top(16),
-        // if (_currentStakeDelayIsNonZero)
+        if (_currentStakeDelayIsNonZero)
           Text("This UI does not support adding funds to an existing stake with a non-zero delay.")
               .caption
               .error

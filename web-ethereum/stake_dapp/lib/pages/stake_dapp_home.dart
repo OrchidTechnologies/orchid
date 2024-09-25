@@ -16,8 +16,9 @@ import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/pages/tabs/location_panel.dart';
 import 'package:orchid/pages/tabs/stake_tabs.dart';
-import 'package:orchid/stake_dapp/orchid_web3_stake_v0.dart';
 import 'package:orchid/stake_dapp/orchid_web3_location_v0.dart';
+import 'package:orchid/stake_dapp/orchid_web3_stake_v0.dart';
+import 'package:orchid/stake_dapp/stake_detail.dart';
 import 'dapp_home_base.dart';
 import 'dapp_home_header.dart';
 
@@ -37,16 +38,20 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
   final _stakeeField = AddressValueFieldController();
   final _scrollController = ScrollController();
 
+  Location? _currentLocation;
+
+  // The current stake details for the staker/stakee pair.
+  StakeDetailPoller? _stakeDetail;
+
   // The total stake staked for the stakee by all stakers.
-  Token? _currentStakeTotal;
+  Token? get _currentStakeTotal => _stakeDetail?.currentStakeTotal;
 
   // The amount and delay staked for the stakee by the current staker (wallet).
-  StakeResult? _currentStakeStaker;
+  StakeResult? get _currentStakeStaker => _stakeDetail?.currentStakeStaker;
 
   // The amount and expiration of the pulled stake pending withdrawal for the first n indexes.
-  List<StakePendingResult>? _currentStakePendingStaker;
-
-  Location? _currentLocation;
+  List<StakePendingResult>? get _currentStakePendingStaker =>
+      _stakeDetail?.currentStakePendingStaker;
 
   @override
   void initState() {
@@ -176,8 +181,8 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
           StakeTabs(
             web3Context: web3Context,
             stakee: _stakee,
-            currentStake: _currentStakeStaker?.amount,
             price: price,
+            currentStake: _currentStakeStaker?.amount,
             currentStakeDelay: _currentStakeStaker?.delay,
           ).top(40),
         ],
@@ -339,55 +344,42 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
   }
 
   // Start polling the correct account
-  // TODO: Poll this
   void _selectedStakeeChanged() async {
     if (isStakerView) {
-      _updateStake();
+      _updateStakePoller();
     } else {
       _updateLocation();
     }
   }
 
-  void _updateStake() async {
-    if (_stakee != null && web3Context != null) {
-      // Get the total stake for all stakers (heft)
-      final orchidWeb3 = OrchidWeb3StakeV0(web3Context!);
-      _currentStakeTotal = await orchidWeb3.orchidGetTotalStake(_stakee!);
-      log("XXX: heft = $_currentStakeTotal");
+  // Create a new poller for the current staker/stakee pair
+  void _updateStakePoller() {
+    // Cancel any existing poller
+    _clearStakePoller();
 
-      // Get the stake for this staker (wallet)
-      try {
-        _currentStakeStaker = await orchidWeb3.orchidGetStakeForStaker(
-          staker: web3Context!.walletAddress!,
-          stakee: _stakee!,
-        );
-        log("XXX: staker stake = $_currentStakeStaker");
-      } catch (err, stack) {
-        log("Error getting stake for staker: $err");
-        log(stack.toString());
-      }
-
-      // Get the pending stake withdrawals for this staker (wallet)
-      try {
-        List<StakePendingResult> pendingList = [];
-        for (var i = 0; i < 3; i++) {
-          final pending = await orchidWeb3.orchidGetPendingWithdrawal(
-            staker: web3Context!.walletAddress!,
-            index: i,
-          );
-          pendingList.add(pending);
-        }
-        _currentStakePendingStaker = pendingList;
-        log("XXX: pending = $_currentStakePendingStaker");
-      } catch (err, stack) {
-        log("Error getting stake for staker: $err");
-        log(stack.toString());
-      }
-    } else {
-      _currentStakeTotal = null;
-      _currentStakeStaker = null;
-      _currentStakePendingStaker = null;
+    // Start a new poller if we have context, staker, and stakee
+    final staker = web3Context?.walletAddress;
+    final stakee = _stakee;
+    if (stakee != null && staker != null) {
+      _stakeDetail = StakeDetailPoller(
+        pollingPeriod: const Duration(seconds: 10),
+        web3Context: web3Context!,
+        staker: staker,
+        stakee: stakee,
+      );
+      _stakeDetail?.addListener(_stakeUpdated);
+      _stakeDetail?.startPolling();
     }
+  }
+
+  void _clearStakePoller() {
+    _stakeDetail?.cancel();
+    _stakeDetail?.removeListener(_stakeUpdated);
+    _stakeDetail = null;
+  }
+
+  // Called when the stake poller has an update
+  void _stakeUpdated() {
     setState(() {});
   }
 
@@ -437,12 +429,14 @@ class _StakeDappHomeState extends DappHomeStateBase<StakeDappHome> {
     // setState(() {
     //   _clearAccountDetail();
     // });
-    super.disconnect();
+    await super.disconnect();
+    _updateStakePoller(); // allow the poller to cancel itself
   }
 
   @override
   void dispose() {
     _stakeeField.removeListener(_stakeeFieldChanged);
+    _clearStakePoller();
     super.dispose();
   }
 

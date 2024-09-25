@@ -144,6 +144,8 @@ class _WithdrawStakePanelState extends State<WithdrawStakePanel>
               )));
 
       _withdrawStakeAmountController.clear();
+      _indexController.clear();
+      _targetController.clear();
       setState(() {});
     } catch (err) {
       log('Error on withdraw funds: $err');

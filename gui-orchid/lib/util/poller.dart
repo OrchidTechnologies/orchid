@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../api/orchid_log.dart';
 
 /*
     Poller.call(foo).every(seconds: 5).dispose(disposal);
@@ -21,10 +22,12 @@ class Poller {
   Poller every({int? seconds, int? minutes, int? hours}) {
     assert(seconds != null || minutes != null || hours != null);
     _timer?.cancel();
-    _timer = Timer.periodic(
-        Duration(
-            seconds: seconds ?? 0, minutes: minutes ?? 0, hours: hours ?? 0),
-        _poll);
+    var duration = Duration(
+        seconds: seconds ?? 0, minutes: minutes ?? 0, hours: hours ?? 0);
+    if (duration.inMilliseconds <= 0) {
+      throw Exception("invalid duration: $duration");
+    }
+    _timer = Timer.periodic(duration, _poll);
     return this;
   }
 
@@ -35,7 +38,11 @@ class Poller {
   }
 
   void _poll(_) {
-    func();
+    try {
+      func();
+    } catch (e) {
+      log("Poller error: $e");
+    }
   }
 
   Poller dispose(List disposal) {
