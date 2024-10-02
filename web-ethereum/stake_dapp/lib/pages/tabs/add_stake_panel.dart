@@ -84,9 +84,10 @@ class _AddStakePanelState extends State<AddStakePanel>
               .error
               .top(24),
 
-        DappButton(
+        DappTransactionButton(
           text: s.addFunds,
           onPressed: _formEnabled ? _addStake : null,
+          txPending: txPending,
         ).top(32),
       ],
     ).width(double.infinity);
@@ -129,31 +130,28 @@ class _AddStakePanelState extends State<AddStakePanel>
       txPending = true;
     });
 
-    bool hasApproval = false;
     final progress = ERC20PayableTransactionCallbacks(
-      onApproval: (txHash) async {
-        hasApproval = true;
+      onApprovalCallback: (txHash, seriesIndex, seriesTotal) async {
         await UserPreferencesDapp().addTransaction(DappTransaction(
           transactionHash: txHash,
           chainId: web3Context!.chain.chainId,
           // always Ethereum
           type: DappTransactionType.addFunds,
           subtype: "approve",
-          // TODO: Localize
-          series_index: 1,
-          series_total: 2,
+          series_index: seriesIndex,
+          series_total: seriesTotal,
         ));
       },
-      onTransaction: (txHash) async {
+      onTransactionCallback: (txHash, seriesIndex, seriesTotal) async {
         await UserPreferencesDapp().addTransaction(DappTransaction(
           transactionHash: txHash,
           chainId: web3Context!.chain.chainId,
           // always Ethereum
           type: DappTransactionType.addFunds,
-          subtype: "push",
           // TODO: Localize
-          series_index: hasApproval ? 2 : null,
-          series_total: hasApproval ? 2 : null,
+          subtype: "push",
+          series_index: seriesIndex,
+          series_total: seriesTotal,
         ));
       },
     );

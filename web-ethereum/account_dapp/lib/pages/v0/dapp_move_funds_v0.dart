@@ -19,7 +19,7 @@ class MoveFundsPaneV0 extends StatefulWidget {
   final bool enabled;
 
   const MoveFundsPaneV0({
-    Key? key, 
+    Key? key,
     required this.context,
     required this.pot,
     required this.signer,
@@ -65,8 +65,11 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DappButton(
-                text: buttonTitle, onPressed: _formEnabled ? _moveFunds : null),
+            DappTransactionButton(
+              text: buttonTitle,
+              onPressed: _formEnabled ? _moveFunds : null,
+              txPending: _txPending,
+            ),
           ],
         ),
       ],
@@ -94,7 +97,8 @@ class _MoveFundsPaneV0State extends State<MoveFundsPaneV0> {
       _txPending = true;
     });
     try {
-      var txHash = await OrchidWeb3V0(widget.context!).orchidMoveBalanceToEscrow(
+      var txHash =
+          await OrchidWeb3V0(widget.context!).orchidMoveBalanceToEscrow(
         signer: widget.signer!,
         pot: pot!,
         moveAmount: _moveBalanceField.value!,

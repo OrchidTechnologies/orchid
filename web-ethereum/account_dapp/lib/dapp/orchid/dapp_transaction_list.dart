@@ -1,6 +1,4 @@
 import 'dart:math';
-import 'package:orchid/api/orchid_eth/chains.dart';
-import 'package:orchid/dapp/preferences/dapp_transaction.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/dapp/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/dapp/preferences/user_preferences_dapp.dart';

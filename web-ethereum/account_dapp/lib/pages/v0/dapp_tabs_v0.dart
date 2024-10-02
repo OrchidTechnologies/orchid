@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
+import 'package:orchid/dapp/orchid_web3/orchid_erc20.dart';
 import 'package:orchid/dapp/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/dapp/orchid_web3/v0/orchid_web3_v0.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
@@ -119,11 +120,12 @@ class _DappTabsV0State extends State<DappTabsV0> {
   }
 
   // Defers construction of the contract until needed
-  Future<List<String> /*TransactionId*/ > _orchidAddFunds({
+  Future<void> _orchidAddFunds({
     required OrchidWallet? wallet,
     required EthereumAddress? signer,
     required Token addBalance,
     required Token addEscrow,
+    required ERC20PayableTransactionCallbacks? callbacks,
   }) async {
     if (widget.web3Context == null || signer == null || wallet == null) {
       throw Exception('No web3 context or null signer');
@@ -133,6 +135,7 @@ class _DappTabsV0State extends State<DappTabsV0> {
       signer: signer,
       addBalance: addBalance,
       addEscrow: addEscrow,
+      callbacks: callbacks,
     );
   }
 }

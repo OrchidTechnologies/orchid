@@ -116,7 +116,11 @@ class _AdvancedFundsPaneV1State extends State<AdvancedFundsPaneV1>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        DappButton(text: buttonTitle, onPressed: _formEnabled ? _doTx : null),
+        DappTransactionButton(
+          text: buttonTitle,
+          onPressed: _formEnabled ? _doTx : null,
+          txPending: txPending,
+        ),
       ],
     );
   }

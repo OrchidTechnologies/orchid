@@ -71,9 +71,10 @@ class _PullStakePanelState extends State<PullStakePanel>
           showPaste: false,
           backgroundColor: OrchidColors.dark_background_2,
         ).top(16).padx(8),
-        DappButton(
+        DappTransactionButton(
           text: "PULL FUNDS",
           onPressed: _formEnabled ? _pullStake : null,
+          txPending: txPending,
         ).top(32),
       ],
     ).width(double.infinity);

@@ -107,7 +107,6 @@ String formatDecimal(
 
     // Implement the min/max manually
     restricted = trimAndPadDecimal(restricted, minPrecision, maxPrecision);
-    print("XXX: restricted: $restricted");
 
     var precisionIndicator = '';
     if (showPrecisionIndicator) {
@@ -122,7 +121,6 @@ String formatDecimal(
       // Workaround: no internationalization at this stage
       final unrestricted = value.toString();
 
-      print("XXX: unrestricted: $unrestricted");
       precisionIndicator =
           restricted.length < unrestricted.length ? ellipsis : '';
     }

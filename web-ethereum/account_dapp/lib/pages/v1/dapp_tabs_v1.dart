@@ -1,4 +1,5 @@
 import 'package:orchid/api/orchid_eth/tokens.dart';
+import 'package:orchid/dapp/orchid_web3/orchid_erc20.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -138,20 +139,23 @@ class _DappTabsV1State extends State<DappTabsV1> with TickerProviderStateMixin {
   }
 
   // Defers construction of the contract until needed
-  Future<List<String> /*TransactionId*/ > _orchidAddFunds({
+  Future<void> _orchidAddFunds({
     required OrchidWallet? wallet,
     required EthereumAddress? signer,
     required Token addBalance,
     required Token addEscrow,
+    required ERC20PayableTransactionCallbacks? callbacks,
   }) async {
     if (signer == null || wallet == null) {
       throw Exception("No signer");
     }
-    return OrchidWeb3V1(widget.web3Context!).orchidAddFunds(
+    // V1 does not support ERC20 tokens at the moment.
+    String txHash = await OrchidWeb3V1(widget.web3Context!).orchidAddFunds(
       wallet: wallet,
       signer: signer,
       addBalance: addBalance,
       addEscrow: addEscrow,
     );
+    callbacks?.onTransaction(txHash);
   }
 }

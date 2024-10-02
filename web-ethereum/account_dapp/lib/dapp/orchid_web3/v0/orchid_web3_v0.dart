@@ -37,11 +37,12 @@ class OrchidWeb3V0 {
 
   /// Transfer the int amount from the user to the specified lottery pot address.
   /// If the total exceeds walletBalance the amount value is automatically reduced.
-  Future<List<String> /*TransactionId*/ > orchidAddFunds({
+  Future<void> orchidAddFunds({
     required OrchidWallet wallet,
     required EthereumAddress signer,
     required Token addBalance,
     required Token addEscrow,
+    required ERC20PayableTransactionCallbacks? callbacks,
   }) async {
     if (wallet.address == null) {
       throw Exception("Wallet address is null");
@@ -55,8 +56,6 @@ class OrchidWeb3V0 {
     var totalOXT = Token.min(addBalance.add(addEscrow), walletBalance);
     log("Add funds: signer: $signer, amount: ${totalOXT.subtract(addEscrow)}, escrow: $addEscrow");
 
-    List<String> txHashes = [];
-
     // Check allowance and skip approval if sufficient.
     // function allowance(address owner, address spender) external view returns (uint256)
     Token oxtAllowance = await _oxt.getERC20Allowance(
@@ -69,7 +68,7 @@ class OrchidWeb3V0 {
           owner: wallet.address!,
           spender: OrchidContractV0.lotteryContractAddressV0,
           amount: totalOXT);
-      txHashes.add(approveTxHash);
+      callbacks?.onApproval(approveTxHash);
     } else {
       log("Add funds: oxtAllowance already sufficient: $oxtAllowance");
     }
@@ -87,8 +86,7 @@ class OrchidWeb3V0 {
       TransactionOverride(
           gasLimit: BigInt.from(OrchidContractV0.gasLimitLotteryPush)),
     );
-    txHashes.add(tx.hash);
-    return txHashes;
+    callbacks?.onTransaction(tx.hash);
   }
 
   /// Withdraw from balance and escrow to the wallet address.

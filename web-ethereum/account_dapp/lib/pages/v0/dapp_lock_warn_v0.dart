@@ -56,7 +56,8 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
               pot!.isUnlocking ? s.unlocking : s.locked);
       statusText += pot!.isUnlocking
           ? '\n' +
-              s.theFundsWillBeAvailableForWithdrawalInTime(pot!.unlockInString())
+              s.theFundsWillBeAvailableForWithdrawalInTime(
+                  pot!.unlockInString())
           : '';
       isUnlockedOrUnlocking = (pot!.isUnlocked || pot!.isUnlocking);
     }
@@ -75,21 +76,25 @@ class _LockWarnPaneV0State extends State<LockWarnPaneV0> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (isUnlockedOrUnlocking)
-              DappButton(
-                  text: s.lockDeposit,
-                  onPressed: _formEnabled()
-                      ? () {
-                          _lockOrUnlock(lock: true);
-                        }
-                      : null)
+              DappTransactionButton(
+                text: s.lockDeposit,
+                onPressed: _formEnabled()
+                    ? () {
+                        _lockOrUnlock(lock: true);
+                      }
+                    : null,
+                txPending: _txPending,
+              )
             else
-              DappButton(
-                  text: s.unlockDeposit,
-                  onPressed: _formEnabled()
-                      ? () {
-                          _lockOrUnlock(lock: false);
-                        }
-                      : null),
+              DappTransactionButton(
+                text: s.unlockDeposit,
+                onPressed: _formEnabled()
+                    ? () {
+                        _lockOrUnlock(lock: false);
+                      }
+                    : null,
+                txPending: _txPending,
+              ),
           ],
         ),
       ],
