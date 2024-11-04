@@ -130,7 +130,7 @@ sysroot += $$(temp)
 
 $(output)/$(1)/%.msys2:
 	@mkdir -p $$(dir $$@)
-	curl https://repo.msys2.org/mingw/$(1)/mingw-w64-$(1)-$$*-any.pkg.tar.zst | zstd -d | tar -C $(output)/$(1) -xvf-
+	curl -L https://repo.msys2.org/mingw/$(1)/mingw-w64-$(1)-$$*-any.pkg.tar.zst | zstd -d | tar -C $(output)/$(1) -xvf-
 	@touch $$@
 sysroot += $(patsubst %,$(output)/$(1)/%.msys2,$(msys2))
 endef
