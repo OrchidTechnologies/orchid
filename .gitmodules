@@ -39,7 +39,7 @@
 	url = https://git.savannah.nongnu.org/git/lwip.git
 [submodule "boringtun"]
 	path = lib-protocol/boringtun
-	url = https://github.com/cloudflare/boringtun.git
+	url = https://github.com/firezone/boringtun.git
 [submodule "tor"]
 	path = vpn-shared/tor
 	url = https://git.torproject.org/tor.git
