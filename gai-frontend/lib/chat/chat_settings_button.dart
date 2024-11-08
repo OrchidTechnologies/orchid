@@ -9,12 +9,18 @@ import '../../../orchid/menu/orchid_popup_menu_button.dart';
 
 class ChatSettingsButton extends StatefulWidget {
   final bool debugMode;
+  final bool multiSelectMode;
   final VoidCallback onDebugModeChanged;
+  final VoidCallback onMultiSelectModeChanged;
+  final VoidCallback onClearChat;
 
   const ChatSettingsButton({
     Key? key,
     required this.debugMode,
+    required this.multiSelectMode,
     required this.onDebugModeChanged,
+    required this.onMultiSelectModeChanged,
+    required this.onClearChat,
   }) : super(key: key);
 
   @override
@@ -33,93 +39,128 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
         const String.fromEnvironment('build_commit', defaultValue: '...');
     final githubUrl =
         'https://github.com/OrchidTechnologies/orchid/tree/$buildCommit/web-ethereum/dapp2';
-    return OrchidPopupMenuButton<dynamic>(
-      width: 40,
-      height: 40,
-      selected: _buttonSelected,
-      onSelected: (item) {
-        setState(() {
-          _buttonSelected = false;
-        });
-      },
-      onCanceled: () {
-        setState(() {
-          _buttonSelected = false;
-        });
-      },
-      itemBuilder: (itemBuilderContext) {
-        setState(() {
-          _buttonSelected = true;
-        });
+        
+    return Center(
+      child: OrchidPopupMenuButton<dynamic>(
+        width: 30,
+        height: 30,
+        selected: _buttonSelected,
+        backgroundColor: Colors.transparent,
+        onSelected: (item) {
+          setState(() {
+            _buttonSelected = false;
+          });
+        },
+        onCanceled: () {
+          setState(() {
+            _buttonSelected = false;
+          });
+        },
+        itemBuilder: (itemBuilderContext) {
+          setState(() {
+            _buttonSelected = true;
+          });
 
-        const div = PopupMenuDivider(height: 1.0);
-        return [
-          // debug mode
-          PopupMenuItem<String>(
-            onTap: widget.onDebugModeChanged,
-            height: _height,
-            child: SizedBox(
-              width: _width,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Debug Mode", style: _textStyle),
-                  Icon(
-                    widget.debugMode
-                        ? Icons.check_box_outlined
-                        : Icons.check_box_outline_blank,
-                    color: Colors.white,
-                  ),
-                ],
+          const div = PopupMenuDivider(height: 1.0);
+          return [
+            // Clear chat
+            PopupMenuItem<String>(
+              onTap: widget.onClearChat,
+              height: _height,
+              child: SizedBox(
+                width: _width,
+                child: Text("Clear Chat", style: _textStyle),
               ),
             ),
-          ),
-          div,
-          SubmenuPopopMenuItemBuilder<String>(
-            builder: _buildIdenticonsPref,
-          ),
-          div,
-          SubmenuPopopMenuItemBuilder<String>(
-            builder: _buildLanguagePref,
-          ),
-          div,
-          PopupMenuItem<String>(
-            onTap: () {
-              Future.delayed(millis(0), () async {
-                _openLicensePage(context);
-              });
-            },
-            height: _height,
-            child: SizedBox(
-              width: _width,
-              child: Text(s.openSourceLicenses, style: _textStyle),
+            div,
+            // debug mode
+            PopupMenuItem<String>(
+              onTap: widget.onDebugModeChanged,
+              height: _height,
+              child: SizedBox(
+                width: _width,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Debug Mode", style: _textStyle),
+                    Icon(
+                      widget.debugMode
+                          ? Icons.check_box_outlined
+                          : Icons.check_box_outline_blank,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
             ),
+            div,
+            // multi-select mode
+            PopupMenuItem<String>(
+              onTap: widget.onMultiSelectModeChanged,
+              height: _height,
+              child: SizedBox(
+                width: _width,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Multi-Model Mode", style: _textStyle),
+                    Icon(
+                      widget.multiSelectMode
+                          ? Icons.check_box_outlined
+                          : Icons.check_box_outline_blank,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            div,
+            SubmenuPopopMenuItemBuilder<String>(
+              builder: _buildIdenticonsPref,
+            ),
+            div,
+            SubmenuPopopMenuItemBuilder<String>(
+              builder: _buildLanguagePref,
+            ),
+            div,
+            PopupMenuItem<String>(
+              onTap: () {
+                Future.delayed(millis(0), () async {
+                  _openLicensePage(context);
+                });
+              },
+              height: _height,
+              child: SizedBox(
+                width: _width,
+                child: Text(s.openSourceLicenses, style: _textStyle),
+              ),
+            ),
+            div,
+            // dapp version item
+            _listMenuItem(
+              selected: false,
+              title: 'Version: ' + buildCommit,
+              onTap: () async {
+                launchUrlString(githubUrl);
+              },
+            ),
+          ];
+        },
+        child: SizedBox(
+          width: 30,
+          height: 30,
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: OrchidAsset.svg.settings_gear,
           ),
-          div,
-          // dapp version item
-          _listMenuItem(
-            selected: false,
-            title: 'Version: ' + buildCommit,
-            onTap: () async {
-              launchUrlString(githubUrl);
-            },
-          ),
-        ];
-      },
-      child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: SizedBox(
-              width: 20, height: 20, child: OrchidAsset.svg.settings_gear)),
+        ),
+      ),
     );
   }
 
   Future _openLicensePage(BuildContext context) {
     // TODO:
     return Future.delayed(millis(100), () async {});
-    // return Navigator.push(context,
-    //     MaterialPageRoute(builder: (BuildContext context) {
-    //   return OpenSourcePage();
-    // }));
   }
 
   Widget _buildLanguagePref(bool expanded) {
@@ -147,12 +188,11 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
           ),
         )
         .toList()
-        .cast<PopupMenuEntry>() // so that we can add the items below
+        .cast<PopupMenuEntry>()
         .separatedWith(
           PopupMenuDivider(height: 1.0),
         );
 
-    // Default system language option
     items.insert(
         0,
         _listMenuItem(
