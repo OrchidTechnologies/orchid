@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_eth/abi_encode.dart';
 import 'package:orchid/api/orchid_log.dart';
 import 'dart:math';
 import 'dart:typed_data';
@@ -165,6 +166,11 @@ class EthereumAddress {
       EthereumAddress.from('0x0000000000000000000000000000000000000000');
 
   final BigInt value;
+
+  // Convert to Uint8List
+  Uint8List get bytes {
+    return value.toBytesUint160();
+  }
 
   EthereumAddress(BigInt value)
       :

@@ -245,10 +245,17 @@ class OrchidWeb3Context {
 
   void removeAllListeners() {
     //log("XXX: context ($id) removing listeners");
-    ethereumProvider?.removeAllListeners();
-    walletConnectProvider?.removeAllListeners();
+    try {
+      ethereumProvider?.removeAllListeners();
+    } catch (err) {
+      log("XXX: exception in removing ethereum listeners: $err");
+    }
+    try {
+      walletConnectProvider?.removeAllListeners();
+    } catch (err) {
+      log("XXX: exception in removing wallet connect listeners: $err");
+    }
     _walletUpdateListener = null;
-    //log("XXX: after removing listeners: ${ethereumProvider.listenerCount()}");
   }
 
   void disconnect() async {

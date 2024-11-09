@@ -12,6 +12,7 @@ class StakeTabs extends StatefulWidget {
   final OrchidWeb3Context? web3Context;
   final EthereumAddress? stakee;
   final Token? currentStake;
+  final BigInt? currentStakeDelay;
   final USD? price;
 
   const StakeTabs({
@@ -20,6 +21,7 @@ class StakeTabs extends StatefulWidget {
     required this.stakee,
     required this.currentStake,
     required this.price,
+    required this.currentStakeDelay,
   }) : super(key: key);
 
   @override
@@ -76,6 +78,7 @@ class _StakeTabsState extends State<StakeTabs> {
       stakee: widget.stakee,
       currentStake: widget.currentStake,
       price: widget.price,
+      currentStakeDelay: widget.currentStakeDelay,
     );
   }
 

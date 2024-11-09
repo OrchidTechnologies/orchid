@@ -117,12 +117,12 @@ class DappHomeState extends DappHomeStateBase<DappHome> {
       children: [
         DappHomeHeader(
           web3Context: web3Context,
-          setNewContext: setNewContext,
           contractVersionsAvailable: contractVersionsAvailable,
           contractVersionSelected: contractVersionSelected,
           selectContractVersion: selectContractVersion,
           deployContract: deployContract,
           connectEthereum: connectEthereum,
+          connectWalletConnect: connectWalletConnect,
           disconnect: disconnect,
         ).padx(24).top(30).bottom(24),
         _buildMainColumn(),

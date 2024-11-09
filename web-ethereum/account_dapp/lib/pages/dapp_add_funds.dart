@@ -1,3 +1,4 @@
+import 'package:orchid/dapp/orchid_web3/orchid_erc20.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
@@ -22,11 +23,12 @@ class AddFundsPane extends StatefulWidget {
   final tokenType;
 
   // Callback to add the funds
-  final Future<List<String>> Function({
+  final Future<void> Function({
     required OrchidWallet? wallet,
     required EthereumAddress? signer,
     required Token addBalance,
     required Token addEscrow,
+    required ERC20PayableTransactionCallbacks? callbacks,
   }) addFunds;
 
   const AddFundsPane({
@@ -100,9 +102,11 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  DappButton(
-                      text: s.addFunds,
-                      onPressed: _addFundsFormEnabled ? _addFunds : null),
+                  DappTransactionButton(
+                    text: s.addFunds,
+                    onPressed: _addFundsFormEnabled ? _addFunds : null,
+                    txPending: txPending,
+                  ),
                 ],
               ),
               pady(32),
@@ -133,7 +137,8 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
 
   bool get _addBalanceFieldValid {
     var value = _addBalanceField.value;
-    return value != null && value <= (walletBalanceOf(tokenType) ?? tokenType.zero);
+    return value != null &&
+        value <= (walletBalanceOf(tokenType) ?? tokenType.zero);
   }
 
   bool get _addBalanceFieldError {
@@ -142,7 +147,8 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
 
   bool get _addDepositFieldValid {
     var value = _addDepositField.value;
-    return value != null && value <= (walletBalanceOf(tokenType) ?? tokenType.zero);
+    return value != null &&
+        value <= (walletBalanceOf(tokenType) ?? tokenType.zero);
   }
 
   bool get _addDepositFieldError {
@@ -176,6 +182,8 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
         _totalAdd.gtZero();
   }
 
+  // This generic add funds method can be delegated to either the V0 or V1 impls and so must accommodate
+  // ERC20 token approvals and transactions.
   void _addFunds() async {
     if (!_addBalanceFieldValid) {
       return;
@@ -183,21 +191,41 @@ class _AddFundsPaneState extends State<AddFundsPane> with DappTabWalletContext {
     setState(() {
       txPending = true;
     });
+
+    final progress = ERC20PayableTransactionCallbacks(
+      onApprovalCallback: (txHash, seriesIndex, seriesTotal) async {
+        await UserPreferencesDapp().addTransaction(DappTransaction(
+          transactionHash: txHash,
+          chainId: web3Context!.chain.chainId /*always Ethereum*/,
+          type: DappTransactionType.addFunds,
+          subtype: "approve",
+          series_index: seriesIndex,
+          series_total: seriesTotal,
+        ));
+      },
+      onTransactionCallback: (txHash, seriesIndex, seriesTotal) async {
+        await UserPreferencesDapp().addTransaction(DappTransaction(
+          transactionHash: txHash,
+          chainId: web3Context!.chain.chainId,
+          // always Ethereum
+          type: DappTransactionType.addFunds,
+          // TODO: Localize
+          subtype: "push",
+          series_index: seriesIndex,
+          series_total: seriesTotal,
+        ));
+      },
+    );
+
     try {
-      final txHashes = await widget.addFunds(
+      await widget.addFunds(
         wallet: wallet,
         signer: widget.signer,
         // nulls guarded by _addBalanceFieldValid and _addDepositFieldValid
         addBalance: _addBalanceField.value!,
         addEscrow: _addDepositField.value!,
+        callbacks: progress,
       );
-
-      // Persisting the transaction(s) will update the UI elsewhere.
-      UserPreferencesDapp().addTransactions(txHashes.map((hash) => DappTransaction(
-            transactionHash: hash,
-            chainId: widget.context!.chain.chainId,
-            type: DappTransactionType.addFunds,
-          )));
 
       _addBalanceField.clear();
       _addDepositField.clear();

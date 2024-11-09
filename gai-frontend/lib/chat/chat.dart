@@ -21,9 +21,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'chat_bubble.dart';
 import 'chat_button.dart';
 import 'chat_message.dart';
-import '../provider.dart';
 import 'chat_prompt.dart';
 import 'chat_model_button.dart';
+import 'models.dart';
+import 'provider_connection.dart';
 import '../config/providers_config.dart';
 
 class ChatView extends StatefulWidget {
@@ -35,14 +36,13 @@ class ChatView extends StatefulWidget {
 
 class _ChatViewState extends State<ChatView> {
   List<ChatMessage> _messages = [];
-//  List<String> _providers = [];
-//  Map<String, Map<String, String>> _providers = {'gpt4': {'url': 'https://nanogenera.danopato.com/ws/', 'name': 'ChatGPT-4'}};
   late final Map<String, Map<String, String>> _providers;
   int _providerIndex = 0;
   bool _debugMode = false;
+  bool _multiSelectMode = false;
   bool _connected = false;
-  double _bid = 0.00007;
   ProviderConnection? _providerConnection;
+  int? _maxTokens; 
 
   // The active account components
   EthereumAddress? _funder;
@@ -52,17 +52,20 @@ class _ChatViewState extends State<ChatView> {
   final _funderFieldController = AddressValueFieldController();
   final ScrollController messageListController = ScrollController();
   final _promptTextController = TextEditingController();
-  final _bidController = NumericValueFieldController();
+  final _maxTokensController = NumericValueFieldController();
   bool _showPromptDetails = false;
   Chain _selectedChain = Chains.Gnosis;
+  final ModelsState _modelsState = ModelsState();
+  List<String> _selectedModelIds = [];
 
   @override
   void initState() {
     super.initState();
     _providers = ProvidersConfig.getProviders();
-    _bidController.value = _bid;
     try {
       _initFromParams();
+      // If we have providers and an account, connect to first provider
+      _connectToInitialProvider();
     } catch (e, stack) {
       log('Error initializing from params: $e, $stack');
     }
@@ -73,6 +76,30 @@ class _ChatViewState extends State<ChatView> {
       return false;
     }
     return true;
+  }
+
+  void _setMaxTokens(int? value) {
+    setState(() {
+      _maxTokens = value;
+    });
+  }
+
+  void _connectToInitialProvider() {
+    if (_providers.isEmpty) {
+      log('No providers configured');
+      return;
+    }
+
+    // Get first provider from the list
+    final firstProviderId = _providers.keys.first;
+    final firstProvider = _providers[firstProviderId];
+    if (firstProvider == null) {
+      log('Invalid provider configuration');
+      return;
+    }
+
+    log('Connecting to initial provider: ${firstProvider['name']}');
+    _connectProvider(firstProviderId);
   }
 
   Account? get _account {
@@ -98,7 +125,16 @@ class _ChatViewState extends State<ChatView> {
     _accountDetail = null;
     if (_account != null) {
       _accountDetail = AccountDetailPoller(account: _account!);
-      _accountDetail?.pollOnce();
+      await _accountDetail?.pollOnce();
+      
+      // Disconnect any existing provider connection
+      if (_connected) {
+        _providerConnection?.dispose();
+        _connected = false;
+      }
+      
+      // Connect to provider with new account
+      _connectToInitialProvider();
     }
     _accountDetailNotifier.notifyListeners();
     setState(() {});
@@ -127,91 +163,165 @@ class _ChatViewState extends State<ChatView> {
   }
 
   void providerConnected([name = '']) {
-    String nameTag = '';
     _connected = true;
-    if (!name.isEmpty) {
-      nameTag = ' ${name}';
-    }
-    addMessage(ChatMessageSource.system, 'Connected to provider${nameTag}.');
+    // Only show connection message in debug mode
+    addMessage(
+      ChatMessageSource.internal,
+      'Connected to provider${name.isEmpty ? '' : ' $name'}.',
+    );
   }
 
   void providerDisconnected() {
     _connected = false;
-    addMessage(ChatMessageSource.system, 'Provider disconnected');
+    // Only show disconnection in debug mode
+    addMessage(
+      ChatMessageSource.internal,
+      'Provider disconnected',
+    );
   }
-
-  void _connectProvider([provider = '']) {
+  
+void _connectProvider([String provider = '']) async {
     var account = _accountDetail;
-    String url;
-    String name;
-    String providerId = '';
     if (account == null) {
+      log('_connectProvider() -- No account');
       return;
     }
-    if (_providers.length == 0) {
-      log('_connectProvider() -- _providers.length == 0');
+    if (_providers.isEmpty) {
+      log('_connectProvider() -- _providers.isEmpty');
       return;
     }
+
+    // Clean up existing connection if any
     if (_connected) {
       _providerConnection?.dispose();
-      _providerIndex = (_providerIndex + 1) % _providers.length;
       _connected = false;
     }
+
+    // Determine which provider to connect to
+    String providerId;
     if (provider.isEmpty) {
-      _providerIndex += 1;
-      providerId = _providers.keys.elementAt(_providerIndex);
+      providerId = _providers.keys.first;
     } else {
       providerId = provider;
     }
-    url = _providers[providerId]?['url'] ?? '';
-    name = _providers[providerId]?['name'] ?? '';
 
-    log('Connecting to provider: ${name}');
-    _providerConnection = ProviderConnection(
-      onMessage: (msg) {
-        addMessage(ChatMessageSource.internal, msg);
-      },
-      onConnect: () { providerConnected(name); },
-      onChat: (msg, metadata) {
-        addMessage(ChatMessageSource.provider, msg, metadata: metadata, sourceName: name);
-      },
-      onDisconnect: providerDisconnected,
-      onError: (msg) {
-        addMessage(ChatMessageSource.system, 'Provider error: $msg');
-      },
-      onSystemMessage: (msg) {
-        addMessage(ChatMessageSource.system, msg);
-      },
-      onInternalMessage: (msg) {
-        addMessage(ChatMessageSource.internal, msg);
-      },
-      accountDetail: account,
-      contract:
-          EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'),
-      url: url,
-    );
-    log('connected...');
+    final providerInfo = _providers[providerId];
+    if (providerInfo == null) {
+      log('Provider not found: $providerId');
+      return;
+    }
+
+    final wsUrl = providerInfo['url'] ?? '';
+    final name = providerInfo['name'] ?? '';
+    final httpUrl = wsUrl.replaceFirst('ws:', 'http:').replaceFirst('wss:', 'https:');
+
+    log('Connecting to provider: $name (ws: $wsUrl, http: $httpUrl)');
+
+    try {
+      _providerConnection = await ProviderConnection.connect(
+        billingUrl: wsUrl,
+        inferenceUrl: httpUrl,
+        contract: EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'),
+        accountDetail: account,
+        onMessage: (msg) {
+          addMessage(ChatMessageSource.internal, msg);
+        },
+        onConnect: () { 
+          providerConnected(name);
+        },
+        onChat: (msg, metadata) {
+          print('onChat received metadata: $metadata'); // See what metadata we get
+          final modelId = metadata['model_id'];
+          print('Found model_id: $modelId'); // Verify we extract model_id
+          
+          String? modelName;
+          if (modelId != null) {
+            print('Available models: ${_modelsState.allModels.map((m) => '${m.id}: ${m.name}')}'); // See what models we have
+            final model = _modelsState.allModels.firstWhere(
+              (m) => m.id == modelId,
+              orElse: () => ModelInfo(
+                id: modelId,
+                name: modelId,
+                provider: '',
+                apiType: '',
+              ),
+            );
+            modelName = model.name;
+            print('Looked up model name: $modelName'); // See what name we found
+          }
+
+          print('Adding message with modelId: $modelId, modelName: $modelName'); // Verify what we're passing
+          addMessage(
+            ChatMessageSource.provider,
+            msg,
+            metadata: metadata,
+            modelId: modelId,
+            modelName: modelName,
+          );
+        },
+        onDisconnect: providerDisconnected,
+        onError: (msg) {
+          addMessage(ChatMessageSource.system, 'Provider error: $msg');
+        },
+        onSystemMessage: (msg) {
+          addMessage(ChatMessageSource.system, msg);
+        },
+        onInternalMessage: (msg) {
+          addMessage(ChatMessageSource.internal, msg);
+        },
+        onAuthToken: (token, url) async {
+          // Fetch models after receiving token
+          log('Fetching models after auth token receipt');
+          if (_providerConnection?.inferenceClient != null) {
+            await _modelsState.fetchModelsForProvider(
+              providerId,
+              _providerConnection!.inferenceClient!,
+            );
+          }
+        },
+      );
+
+      // Request auth token - model fetch will happen in callback
+      await _providerConnection?.requestAuthToken();
+
+    } catch (e, stack) {
+      log('Error connecting to provider: $e\n$stack');
+      addMessage(ChatMessageSource.system, 'Failed to connect to provider: $e');
+    }
   }
-
-  void addMessage(ChatMessageSource source, String msg,
-      {Map<String, dynamic>? metadata, String sourceName = ''}) {
+  
+  void addMessage(
+    ChatMessageSource source,
+    String msg, {
+    Map<String, dynamic>? metadata,
+    String sourceName = '',
+    String? modelId,
+    String? modelName,
+  }) {
     log('Adding message: ${msg.truncate(64)}');
     setState(() {
-      if (sourceName.isEmpty) {
-        _messages.add(ChatMessage(source, msg, metadata: metadata));
-      } else {
-        _messages.add(ChatMessage(source, msg, metadata: metadata, sourceName: sourceName));
-      }
+      _messages.add(ChatMessage(
+        source,
+        msg,
+        metadata: metadata,
+        sourceName: sourceName,
+        modelId: modelId,
+        modelName: modelName,
+      ));
     });
-    // if (source != ChatMessageSource.internal || _debugMode == true) {
     scrollMessagesDown();
-    // }
   }
 
-  void _setBid(double? value) {
+  void _updateSelectedModels(List<String> modelIds) {
     setState(() {
-      _bid = value ?? _bid;
+      if (_multiSelectMode) {
+        _selectedModelIds = modelIds;
+      } else {
+        // In single-select mode, only keep the most recently selected model
+        _selectedModelIds = modelIds.isNotEmpty ? [modelIds.last] : [];
+      }
     });
+    log('Selected models updated to: $_selectedModelIds');
   }
 
   // TODO: Break out widget
@@ -317,18 +427,67 @@ class _ChatViewState extends State<ChatView> {
     _account != null ? _sendPrompt() : _popAccountDialog();
   }
 
-  void _sendPrompt() {
+void _sendPrompt() async {
     var msg = _promptTextController.text;
     if (msg.trim().isEmpty) {
       return;
     }
-    var message = '{"type": "job", "bid": $_bid, "prompt": "$msg"}';
-    _providerConnection?.sendProviderMessage(message);
+
+    if (_providerConnection == null) {
+      addMessage(ChatMessageSource.system, 'Not connected to provider');
+      return;
+    }
+
+    if (_selectedModelIds.isEmpty) {
+      addMessage(ChatMessageSource.system, 
+        _multiSelectMode ? 'Please select at least one model' : 'Please select a model'
+      );
+      return;
+    }
+
+    // Add user message immediately to update UI and include in history
+    addMessage(ChatMessageSource.client, msg);
     _promptTextController.clear();
     FocusManager.instance.primaryFocus?.unfocus();
-    addMessage(ChatMessageSource.client, msg);
-    addMessage(ChatMessageSource.internal, 'Client: $message');
-    log('Sending message to provider $message');
+
+    for (final modelId in _selectedModelIds) {
+      try {
+        final modelInfo = _modelsState.allModels
+            .firstWhere((m) => m.id == modelId,
+                orElse: () => ModelInfo(
+                      id: modelId,
+                      name: modelId,
+                      provider: '',
+                      apiType: '',
+                    ));
+
+        // Get messages relevant to this model
+        final relevantMessages = _messages.where((m) => 
+          (m.source == ChatMessageSource.provider && m.modelId == modelId) ||
+          m.source == ChatMessageSource.client
+        ).toList();
+
+        Map<String, Object>? params;
+        if (_maxTokens != null) {
+          params = {'max_tokens': _maxTokens!};
+        }
+
+        addMessage(
+          ChatMessageSource.internal,
+          'Querying ${modelInfo.name}...',
+          modelId: modelId,
+          modelName: modelInfo.name,
+        );
+
+        await _providerConnection?.requestInference(
+          modelId,
+          relevantMessages,
+          params: params,
+        );
+      } catch (e) {
+        addMessage(ChatMessageSource.system, 'Error querying model $modelId: $e');
+      }
+    }
   }
 
   void scrollMessagesDown() {
@@ -389,9 +548,9 @@ class _ChatViewState extends State<ChatView> {
                           fit: BoxFit.scaleDown,
                           child: SizedBox(
                               width: minWidth,
-                              child: _buildHeaderRow(showIcons: showIcons, providers: _providers)))
+                              child: _buildHeaderRow(showIcons: showIcons)))
                     else
-                      _buildHeaderRow(showIcons: showIcons, providers: _providers),
+                      _buildHeaderRow(showIcons: showIcons),
                     // Messages area
                     _buildChatPane(),
                     // Prompt row
@@ -399,16 +558,12 @@ class _ChatViewState extends State<ChatView> {
                       alignment: Alignment.topCenter,
                       duration: millis(150),
                       child: ChatPromptPanel(
-                              promptTextController: _promptTextController,
-                              onSubmit: _send,
-                              setBid: _setBid,
-                              bidController: _bidController)
-                          .top(8),
+                        promptTextController: _promptTextController,
+                        onSubmit: _send,
+                        setMaxTokens: _setMaxTokens,
+                        maxTokensController: _maxTokensController,
+                      ).top(8),
                     ),
-                    if (!_showPromptDetails)
-                      Text('Your bid is $_bid XDAI per token.',
-                              style: OrchidText.normal_14)
-                          .top(12),
                   ],
                 ),
               ).top(8).bottom(8),
@@ -486,34 +641,72 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Widget _buildHeaderRow({required bool showIcons, required Map<String, Map<String, String>> providers}) {
+  Widget _buildHeaderRow({required bool showIcons}) {
+    final buttonHeight = 40.0;
+    final settingsIconSize = buttonHeight * 1.5;
+    
     return Row(
       children: <Widget>[
-        SizedBox(height: 40, child: OrchidAsset.image.logo),
-        const Spacer(),
-        // Connect button
-        ChatModelButton(
-          updateModel: (id) { log(id); _connectProvider(id); },
-          providers: providers,
-        ).left(8),
-/*
-        ChatButton(
-          text: 'Reroll',
-          onPressed: _connectProvider,
-        ).left(8),
-*/
-        // Clear button
-        ChatButton(text: 'Clear Chat', onPressed: _clearChat).left(8),
-        // Account button
-        ChatButton(text: 'Account', onPressed: _popAccountDialog).left(8),
-        // Settings button
-        ChatSettingsButton(
-          debugMode: _debugMode,
-          onDebugModeChanged: () {
-            setState(() {
-              _debugMode = !_debugMode;
-            });
+        // Logo
+        SizedBox(height: buttonHeight, child: OrchidAsset.image.logo),
+
+        // Model selector with loading state
+        ListenableBuilder(
+          listenable: _modelsState,
+          builder: (context, _) {
+            if (_modelsState.isAnyLoading) {
+              return SizedBox(
+                width: buttonHeight,
+                height: buttonHeight,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                  ),
+                ),
+              );
+            }
+
+            return ModelSelectionButton(
+              models: _modelsState.allModels,
+              selectedModelIds: _selectedModelIds,
+              updateModels: _updateSelectedModels,
+              multiSelectMode: _multiSelectMode,
+            );
           },
+        ).left(24),
+
+        const Spacer(),
+        
+        // Account button
+        OutlinedChatButton(
+          text: 'Account', 
+          onPressed: _popAccountDialog,
+          height: buttonHeight,
+        ).left(8),
+        
+        // Settings button
+        SizedBox(
+          width: settingsIconSize,
+          height: buttonHeight,
+          child: Center(
+            child: ChatSettingsButton(
+              debugMode: _debugMode,
+              multiSelectMode: _multiSelectMode,
+              onDebugModeChanged: () {
+                setState(() {
+                  _debugMode = !_debugMode;
+                });
+              },
+              onMultiSelectModeChanged: () {
+                setState(() {
+                  _multiSelectMode = !_multiSelectMode;
+                  // Reset selections when toggling modes
+                  _selectedModelIds = [];
+                });
+              },
+              onClearChat: _clearChat,
+            ),
+          ),
         ).left(8),
       ],
     );

@@ -15,19 +15,10 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     ChatMessageSource src = message.source;
 
-    List<Color> msgBubbleColor(ChatMessageSource src) {
-      if (src == ChatMessageSource.client) {
-        return <Color>[
-          const Color(0xff52319c),
-          const Color(0xff3b146a),
-        ];
-      } else {
-        return <Color>[
-          const Color(0xff005965),
-          OrchidColors.dark_ff3a3149,
-        ];
-      }
-    }
+    // Constants for consistent spacing
+    const double iconSize = 16.0;
+    const double iconSpacing = 8.0;
+    const double iconTotalWidth = iconSize + iconSpacing;
 
     if (src == ChatMessageSource.system || src == ChatMessageSource.internal) {
       if (!debugMode && src == ChatMessageSource.internal) {
@@ -39,9 +30,13 @@ class ChatBubble extends StatelessWidget {
           children: <Widget>[
             Text(
               message.message,
-              style: src == ChatMessageSource.system
-                  ? OrchidText.normal_14
-                  : OrchidText.normal_14.grey,
+              style: const TextStyle(
+                fontFamily: 'Baloo2',
+                fontSize: 14,  // 16px equivalent
+                height: 1.0,
+                fontWeight: FontWeight.normal,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 2),
           ],
@@ -53,68 +48,112 @@ class ChatBubble extends StatelessWidget {
       alignment: src == ChatMessageSource.provider
           ? Alignment.centerLeft
           : Alignment.centerRight,
-      child: SizedBox(
-        width: 0.6 * 800, //MediaQuery.of(context).size.width * 0.6,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 0.6 * 800),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: src == ChatMessageSource.provider 
+              ? CrossAxisAlignment.start 
+              : CrossAxisAlignment.end,
           children: <Widget>[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: _chatSourceText(message),
-//              child: Text(src == ChatMessageSource.provider ? 'Chat' : 'You',
-//                  style: OrchidText.normal_14),
-            ),
-            const SizedBox(height: 2),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Stack(
-                children: <Widget>[
-                  Positioned.fill(
-                    child: Container(
-                      width: 0.6 * 800,
-                      // MediaQuery.of(context).size.width * 0.6,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: msgBubbleColor(message.source),
-                        ),
-                      ),
+            // Header row with icon and name for both provider and user
+            Row(
+              mainAxisAlignment: src == ChatMessageSource.provider 
+                  ? MainAxisAlignment.start 
+                  : MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (src == ChatMessageSource.provider) ...[
+                  Icon(
+                    Icons.stars_rounded,
+                    color: OrchidColors.blue_highlight,
+                    size: iconSize,
+                  ),
+                  SizedBox(width: iconSpacing),
+                  Text(
+                    message.displayName ?? 'Chat',
+                    style: TextStyle(
+                      fontFamily: 'Baloo2',
+                      fontSize: 14,  // 16px equivalent
+                      height: 1.0,
+                      fontWeight: FontWeight.w500,
+                      color: OrchidColors.blue_highlight,
                     ),
                   ),
-                  Container(
-                    width: 0.6 * 800,
-                    // MediaQuery.of(context).size.width * 0.6,
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(message.message,
-                        style: OrchidText.medium_20_050),
+                ] else ...[
+                  Text(
+                    'You',
+                    style: TextStyle(
+                      fontFamily: 'Baloo2',
+                      fontSize: 14,  // 16px equivalent
+                      height: 1.0,
+                      fontWeight: FontWeight.w500,
+                      color: OrchidColors.blue_highlight,
+                    ),
+                  ),
+                  SizedBox(width: iconSpacing),
+                  Icon(
+                    Icons.account_circle_rounded,
+                    color: OrchidColors.blue_highlight,
+                    size: iconSize,
                   ),
                 ],
-              ),
+              ],
             ),
-            const SizedBox(height: 2),
-            if (src == ChatMessageSource.provider) ...[
-              Text(
-                style: OrchidText.normal_14,
-                'model: ${message.metadata?["model"]}   usage: ${message.metadata?["usage"]}',
+            const SizedBox(height: 4),
+            // Message content with padding for provider messages
+            if (src == ChatMessageSource.provider)
+              Padding(
+                padding: EdgeInsets.only(left: iconTotalWidth),
+                child: Text(
+                  message.message,
+                  style: const TextStyle(
+                    fontFamily: 'Baloo2',
+                    fontSize: 20,  // 20px design spec
+                    height: 1.0,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.white,
+                  ),
+                ),
               )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  message.message,
+                  style: const TextStyle(
+                    fontFamily: 'Baloo2',
+                    fontSize: 20,  // 20px design spec
+                    height: 1.0,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            // Usage metadata for provider messages
+            if (src == ChatMessageSource.provider) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: EdgeInsets.only(left: iconTotalWidth),
+                child: Text(
+                  message.formatUsage(),
+                  style: TextStyle(
+                    fontFamily: 'Baloo2',
+                    fontSize: 14,  // 16px equivalent
+                    height: 1.0,
+                    fontWeight: FontWeight.normal,
+                    color: OrchidColors.purpleCaption,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
             ],
-            const SizedBox(height: 6),
           ],
         ),
       ),
     );
   }
-
-  Widget _chatSourceText(ChatMessage msg) {
-    final String srcText;
-    if (msg.sourceName.isEmpty) {
-      srcText = msg.source == ChatMessageSource.provider ? 'Chat' : 'You';
-    } else {
-      srcText = msg.sourceName;
-    }
-    return Text(
-      srcText,
-      style: OrchidText.normal_14,
-    );
-  }
 }
-

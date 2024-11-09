@@ -37,11 +37,12 @@ class OrchidWeb3V0 {
 
   /// Transfer the int amount from the user to the specified lottery pot address.
   /// If the total exceeds walletBalance the amount value is automatically reduced.
-  Future<List<String> /*TransactionId*/ > orchidAddFunds({
+  Future<void> orchidAddFunds({
     required OrchidWallet wallet,
     required EthereumAddress signer,
     required Token addBalance,
     required Token addEscrow,
+    required ERC20PayableTransactionCallbacks? callbacks,
   }) async {
     if (wallet.address == null) {
       throw Exception("Wallet address is null");
@@ -53,9 +54,7 @@ class OrchidWeb3V0 {
     // Don't attempt to add more than the wallet balance.
     // This mitigates the potential for rounding errors in calculated amounts.
     var totalOXT = Token.min(addBalance.add(addEscrow), walletBalance);
-    log("Add funds signer: $signer, amount: ${totalOXT.subtract(addEscrow)}, escrow: $addEscrow");
-
-    List<String> txHashes = [];
+    log("Add funds: signer: $signer, amount: ${totalOXT.subtract(addEscrow)}, escrow: $addEscrow");
 
     // Check allowance and skip approval if sufficient.
     // function allowance(address owner, address spender) external view returns (uint256)
@@ -64,18 +63,19 @@ class OrchidWeb3V0 {
       spender: OrchidContractV0.lotteryContractAddressV0,
     );
     if (oxtAllowance < totalOXT) {
-      log("XXX: oxtAllowance increase required: $oxtAllowance < $totalOXT");
+      log("Add funds: oxtAllowance increase required: $oxtAllowance < $totalOXT");
       var approveTxHash = await _oxt.approveERC20(
           owner: wallet.address!,
           spender: OrchidContractV0.lotteryContractAddressV0,
           amount: totalOXT);
-      txHashes.add(approveTxHash);
+      callbacks?.onApproval(approveTxHash);
     } else {
-      log("XXX: oxtAllowance sufficient: $oxtAllowance");
+      log("Add funds: oxtAllowance already sufficient: $oxtAllowance");
     }
 
     // Do the add call
     var contract = _lotteryContract.connect(context.web3.getSigner());
+    log("Add funds: do push, totalOXT: $totalOXT, addEscrow: $addEscrow");
     TransactionResponse tx = await contract.send(
       'push',
       [
@@ -86,8 +86,7 @@ class OrchidWeb3V0 {
       TransactionOverride(
           gasLimit: BigInt.from(OrchidContractV0.gasLimitLotteryPush)),
     );
-    txHashes.add(tx.hash);
-    return txHashes;
+    callbacks?.onTransaction(tx.hash);
   }
 
   /// Withdraw from balance and escrow to the wallet address.

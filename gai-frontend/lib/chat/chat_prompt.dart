@@ -2,19 +2,18 @@ import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/orchid/orchid.dart';
 
-// The prompt row and collapsible bid form footer
 class ChatPromptPanel extends StatefulWidget {
   final TextEditingController promptTextController;
   final VoidCallback onSubmit;
-  final ValueChanged<double?> setBid;
-  final NumericValueFieldController bidController;
+  final ValueChanged<int?> setMaxTokens;
+  final NumericValueFieldController maxTokensController;
 
   const ChatPromptPanel({
     super.key,
     required this.promptTextController,
     required this.onSubmit,
-    required this.setBid,
-    required this.bidController,
+    required this.setMaxTokens,
+    required this.maxTokensController,
   });
 
   @override
@@ -63,26 +62,27 @@ class _ChatPromptPanelState extends State<ChatPromptPanel> {
           ],
         ).padx(8),
         if (_showPromptDetails)
-          _buildBidForm(widget.setBid, widget.bidController),
+          _buildPromptParamsForm(widget.setMaxTokens, widget.maxTokensController),
       ],
     );
   }
 
-  Widget _buildBidForm(
-    ValueChanged<double?> setBid,
-    NumericValueFieldController bidController,
+  Widget _buildPromptParamsForm(
+    ValueChanged<int?> setMaxTokens,
+    NumericValueFieldController maxTokensController,
   ) {
     return Container(
       padding: const EdgeInsets.all(10.0),
       child: Column(
         children: <Widget>[
-          Text('Your bid is the price per token in/out you will pay.',
-                  style: OrchidText.medium_20_050)
-              .top(8),
+          Text(
+            'Set the maximum number of tokens for the response.',
+            style: OrchidText.medium_20_050,
+          ).top(8),
           OrchidLabeledNumericField(
-            label: 'Bid',
-            onChange: setBid,
-            controller: bidController,
+            label: 'Max Tokens',
+            onChange: (value) => setMaxTokens(value?.toInt()),
+            controller: maxTokensController,
           ).top(12)
         ],
       ),

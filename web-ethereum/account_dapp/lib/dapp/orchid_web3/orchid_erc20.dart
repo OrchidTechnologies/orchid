@@ -46,7 +46,7 @@ class OrchidERC20 {
     // This mitigates the potential for rounding errors in calculated amounts.
     amount = Token.min(amount, walletBalance);
 
-    log('XXX: do approve: ${[spender.toString(), amount.intValue.toString()]}');
+    log('approveERC20: do approve: ${[spender.toString(), amount.intValue.toString()]}');
 
     // approve(address spender, uint256 amount) external returns (bool)
     var contract = _contract.connect(context.web3.getSigner());
@@ -70,4 +70,30 @@ class OrchidERC20 {
     'function approve(address spender, uint256 amount) external returns (bool)',
     'function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)',
   ];
+}
+
+// For a transaction that uses an ERC20 token, the transaction may require an approval
+class ERC20PayableTransactionCallbacks {
+  final Future<void> Function(String txHash, int seriesIndex, int seriesTotal) onApprovalCallback;
+  final Future<void> Function(String txHash, int seriesIndex, int seriesTotal) onTransactionCallback;
+
+  bool _hasApproval = false;
+
+  ERC20PayableTransactionCallbacks({
+    required this.onApprovalCallback,
+    required this.onTransactionCallback,
+  });
+
+  Future<void> onApproval(String txHash) async {
+    _hasApproval = true;
+    return onApprovalCallback(txHash, 1, 2); // Approval is the first in the series (1 of 2)
+  }
+
+  Future<void> onTransaction(String txHash) async {
+    if (_hasApproval) {
+      return onTransactionCallback(txHash, 2, 2); // If approval has happened, this is the second in the series (2 of 2)
+    } else {
+      return onTransactionCallback(txHash, 1, 1); // No approval needed, this is the only transaction (1 of 1)
+    }
+  }
 }

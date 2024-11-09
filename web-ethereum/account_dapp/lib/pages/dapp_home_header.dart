@@ -5,7 +5,6 @@ import 'package:orchid/dapp/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/pages/settings/logging_page.dart';
-import 'package:orchid/dapp/orchid_web3/wallet_connect_eth_provider.dart';
 import 'package:orchid/util/gestures.dart';
 import '../orchid/menu/orchid_chain_selector_menu.dart';
 import '../dapp/orchid/dapp_settings_button.dart';
@@ -24,18 +23,18 @@ class DappHomeHeader extends StatefulWidget {
   final void Function(int? version)? _selectContractVersion;
   final Future<void> Function() _disconnect;
   final VoidCallback connectEthereum;
-  final void Function(OrchidWeb3Context? web3Context) setNewContext;
+  final Future<void> Function(Chain? userSelectedChain) connectWalletConnect;
   final bool showChainSelector;
 
   const DappHomeHeader({
     super.key,
     required OrchidWeb3Context? web3Context,
-    required this.setNewContext,
     Set<int>? contractVersionsAvailable,
     int? contractVersionSelected,
     void Function(int? version)? selectContractVersion,
     VoidCallback? deployContract,
     required this.connectEthereum,
+    required this.connectWalletConnect,
     required Future<void> Function() disconnect,
     this.showChainSelector = true,
   })  : this._web3Context = web3Context,
@@ -163,8 +162,7 @@ class _DappHomeHeaderState extends State<DappHomeHeader> {
           selectedTextStyle: selectedTextStyle,
           backgroundColor: backgroundColor,
           connectMetamask: widget.connectEthereum,
-          connectWalletConnect: () =>
-              _uiGuardConnectingState(_connectWalletConnect),
+          connectWalletConnect: () => _guardConnectWalletConnect(_userDefaultChainSelection),
         ),
       ),
     );
@@ -230,9 +228,14 @@ class _DappHomeHeaderState extends State<DappHomeHeader> {
             setState(() {
               _userDefaultChainSelection = chain;
             });
-            await _uiGuardConnectingState(_connectWalletConnect);
+            await _guardConnectWalletConnect(chain);
           });
     });
+  }
+
+  Future<void> _guardConnectWalletConnect(Chain? chain) async {
+    log("XXX: guardConnectWalletConnect: chain=$chain");
+    await _uiGuardConnectingState(() => widget.connectWalletConnect(chain));
   }
 
   void _addChain(Chain chain) async {
@@ -280,43 +283,5 @@ class _DappHomeHeaderState extends State<DappHomeHeader> {
         _walletConnectionInProgress = false;
       });
     }
-  }
-
-  Future<void> _connectWalletConnect() async {
-    log("XXX: connectWalletConnect");
-    // const walletConnectProjectId = 'bd5be579e9cae68defff05a6fa7b0049'; // test
-    const walletConnectProjectId = 'afe2e392884aefdae72d4babb5482ced';
-
-    final chain = _userDefaultChainSelection ?? Chains.Ethereum;
-    var wc = await WalletConnectEthereumProvider.init(
-      projectId: walletConnectProjectId,
-      rpcMap: {
-        chain.chainId: chain.providerUrl,
-      },
-      chains: [chain.chainId],
-      // This does not seem to work, otherwise we could simply connect to all
-      // of our chains as optional and allow more straightforward switching.
-      // optionalChains: [Chains.Gnosis.chainId, 31411234],
-      showQrModal: true,
-    );
-    // consoleLog(wc.impl);
-    try {
-      log('Before wc connect');
-      await wc.connect();
-      log('After wc connect');
-    } catch (err) {
-      log('wc connect/init, err = $err');
-      return;
-    }
-    if (!wc.connected) {
-      AppDialogs.showAppDialog(
-          context: context,
-          title: s.error,
-          bodyText: s.failedToConnectToWalletconnect);
-      return;
-    }
-
-    var web3 = await OrchidWeb3Context.fromWalletConnect(wc);
-    widget.setNewContext(web3);
   }
 }

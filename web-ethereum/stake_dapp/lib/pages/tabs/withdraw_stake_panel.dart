@@ -82,9 +82,10 @@ class _WithdrawStakePanelState extends State<WithdrawStakePanel>
           contentPadding:
               EdgeInsets.only(top: 8, bottom: 18, left: 16, right: 16),
         ).top(16).padx(8),
-        DappButton(
+        DappTransactionButton(
           text: "PULL FUNDS",
           onPressed: _formEnabled ? _withdrawStake : null,
+          txPending: txPending,
         ).top(32),
       ],
     ).width(double.infinity);
@@ -144,6 +145,8 @@ class _WithdrawStakePanelState extends State<WithdrawStakePanel>
               )));
 
       _withdrawStakeAmountController.clear();
+      _indexController.clear();
+      _targetController.clear();
       setState(() {});
     } catch (err) {
       log('Error on withdraw funds: $err');

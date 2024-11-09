@@ -1,43 +1,73 @@
 import 'package:orchid/orchid/orchid.dart';
-import 'package:orchid/api/orchid_language.dart';
-import 'package:orchid/api/preferences/user_preferences_ui.dart';
-import 'package:orchid/orchid/menu/expanding_popup_menu_item.dart';
-import 'package:orchid/orchid/menu/orchid_popup_menu_item_utils.dart';
-import 'package:orchid/orchid/menu/submenu_popup_menu_item.dart';
-import 'package:url_launcher/url_launcher_string.dart';
-import '../../../orchid/menu/orchid_popup_menu_button.dart';
-import 'chat_button.dart';
+import 'package:orchid/orchid/menu/orchid_popup_menu_button.dart';
+import 'models.dart';
 
-class ChatModelButton extends StatefulWidget {
-//  final bool debugMode;
-//  final VoidCallback onDebugModeChanged;
-  final updateModel;
-  final Map<String, Map<String, String>> providers;
+class ModelSelectionButton extends StatefulWidget {
+  final List<ModelInfo> models;
+  final List<String> selectedModelIds;
+  final Function(List<String>) updateModels;
+  final bool multiSelectMode;
 
-  const ChatModelButton({
+  const ModelSelectionButton({
     Key? key,
-//    required this.debugMode,
-//    required this.onDebugModeChanged
-    required this.providers,
-    required this.updateModel,
+    required this.models,
+    required this.selectedModelIds,
+    required this.updateModels,
+    required this.multiSelectMode,
   }) : super(key: key);
 
   @override
-  State<ChatModelButton> createState() => _ChatModelButtonState();
+  State<ModelSelectionButton> createState() => _ModelSelectionButtonState();
 }
 
-class _ChatModelButtonState extends State<ChatModelButton> {
-  final _width = 273.0;
-  final _height = 50.0;
+class _ModelSelectionButtonState extends State<ModelSelectionButton> {
+  final _menuWidth = 273.0;
+  final _menuHeight = 50.0;
   final _textStyle = OrchidText.medium_16_025.copyWith(height: 2.0);
   bool _buttonSelected = false;
 
+  String get _buttonText {
+    if (widget.selectedModelIds.isEmpty) {
+      return widget.multiSelectMode ? 'Select Models' : 'Select Model';
+    }
+    if (!widget.multiSelectMode || widget.selectedModelIds.length == 1) {
+      final modelId = widget.selectedModelIds.first;
+      return widget.models
+          .firstWhere(
+            (m) => m.id == modelId,
+            orElse: () => ModelInfo(
+              id: modelId,
+              name: modelId,
+              provider: '',
+              apiType: '',
+            ),
+          )
+          .name;
+    }
+    return '${widget.selectedModelIds.length} Models';
+  }
+
+  void _handleModelSelection(String modelId) {
+    if (widget.multiSelectMode) {
+      final newSelection = List<String>.from(widget.selectedModelIds);
+      if (newSelection.contains(modelId)) {
+        newSelection.remove(modelId);
+      } else {
+        newSelection.add(modelId);
+      }
+      widget.updateModels(newSelection);
+    } else {
+      widget.updateModels([modelId]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return OrchidPopupMenuButton<dynamic>(
-      width: 80,
+    return OrchidPopupMenuButton<String>(
+      width: null,
       height: 40,
       selected: _buttonSelected,
+      backgroundColor: Colors.transparent,
       onSelected: (item) {
         setState(() {
           _buttonSelected = false;
@@ -52,116 +82,73 @@ class _ChatModelButtonState extends State<ChatModelButton> {
         setState(() {
           _buttonSelected = true;
         });
-        
-        return widget.providers.entries.map((entry) {
-          final providerId = entry.key;
-          final providerName = entry.value['name'] ?? providerId;
+
+        if (widget.models.isEmpty) {
+          return [
+            PopupMenuItem<String>(
+              enabled: false,
+              height: _menuHeight,
+              child: SizedBox(
+                width: _menuWidth,
+                child: Text('No models available', style: _textStyle),
+              ),
+            ),
+          ];
+        }
+
+        return widget.models.map((model) {
+          final isSelected = widget.selectedModelIds.contains(model.id);
           
           return PopupMenuItem<String>(
-            onTap: () { widget.updateModel(providerId); },
-            height: _height,
+            onTap: () => _handleModelSelection(model.id),
+            height: _menuHeight,
             child: SizedBox(
-              width: _width,
-              child: Text(providerName, style: _textStyle),
+              width: _menuWidth,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      model.name,
+                      style: _textStyle.copyWith(
+                        color: isSelected ? Theme.of(context).primaryColor : null,
+                      ),
+                    ),
+                  ),
+                  if (isSelected)
+                    Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                ],
+              ),
             ),
           );
         }).toList();
       },
-/*
-      itemBuilder: (itemBuilderContext) {
-        setState(() {
-          _buttonSelected = true;
-        });
-
-        const div = PopupMenuDivider(height: 1.0);
-        return [
-          PopupMenuItem<String>(
-            onTap: () { widget.updateModel('gpt4');  },
-            height: _height,
-            child: SizedBox(
-              width: _width,
-              child: Text('GPT-4', style: _textStyle),
-            ),
+      child: SizedBox(
+        height: 40,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  _buttonText,
+                  textAlign: TextAlign.left,
+                  overflow: TextOverflow.ellipsis,
+                ).button.white,
+              ),
+              Icon(
+                Icons.arrow_drop_down,
+                color: Colors.white,
+                size: 24,
+              ),
+            ],
           ),
-          PopupMenuItem<String>(
-            onTap: () { widget.updateModel('gpt4o');  },
-            height: _height,
-            child: SizedBox(
-              width: _width,
-              child: Text('GPT-4o', style: _textStyle),
-            ),
-          ),
-//          div,
-          PopupMenuItem<String>(
-            onTap: () { widget.updateModel('mistral');  },
-            height: _height,
-            child: SizedBox(
-              width: _width,
-              child: Text('Mistral 7B', style: _textStyle),
-            ),
-          ),
-          PopupMenuItem<String>(
-            onTap: () { widget.updateModel('mixtral-8x22b');  },
-            height: _height,
-            child: SizedBox(
-              width: _width,
-              child: Text('Mixtral 8x22b', style: _textStyle),
-            ),
-          ),
-          PopupMenuItem<String>(
-            onTap: () { widget.updateModel('gemini');  },
-            height: _height,
-            child: SizedBox(
-              width: _width,
-              child: Text('Gemini 1.5', style: _textStyle),
-            ),
-          ),
-          PopupMenuItem<String>(
-            onTap: () { widget.updateModel('claude-3');  },
-            height: _height,
-            child: SizedBox(
-              width: _width,
-              child: Text('Claude 3 Opus', style: _textStyle),
-            ),
-          ),
-          PopupMenuItem<String>(
-            onTap: () { widget.updateModel('claude35sonnet');  },
-            height: _height,
-            child: SizedBox(
-              width: _width,
-              child: Text('Claude 3.5 Sonnet', style: _textStyle),
-            ),
-          ),
-        ];
-      },
-*/
-
-    /*
-      child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: SizedBox(
-              width: 80, height: 20, child: Text('Model'))),
-*/
-//      child: SizedBox(
-//             width: 120, height: 20, child: Text('Model', style: _textStyle).white),
-      child: Align(
-               alignment: Alignment.center,
-               child: Text('Model', textAlign: TextAlign.center).button.white,
-             ),
-    );
-  }
-
-  PopupMenuItem _listMenuItem({
-    required bool selected,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return OrchidPopupMenuItemUtils.listMenuItem(
-      context: context,
-      selected: selected,
-      title: title,
-      onTap: onTap,
-      textStyle: _textStyle,
+        ),
+      ),
     );
   }
 }

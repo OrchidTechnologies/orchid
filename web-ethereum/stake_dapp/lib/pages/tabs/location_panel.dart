@@ -72,11 +72,12 @@ class _LocationPanelState extends State<LocationPanel>
                   .padx(8),
             ],
           ),
-        DappButton(
+        DappTransactionButton(
           text: _isPoke ? "POKE" : "UPDATE",
           onPressed: _isPoke
               ? (_formEnabled ? _poke : null)
               : (_formEnabled ? _updateLocation : null),
+          txPending: txPending,
         ).top(32),
       ],
     ).width(double.infinity);

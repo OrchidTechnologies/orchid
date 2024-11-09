@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/dapp/orchid_web3/v1/orchid_contract_deployment_v1.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:flutter_web3/flutter_web3.dart';
@@ -5,9 +6,15 @@ import 'package:orchid/api/orchid_eth/v1/orchid_eth_v1.dart';
 import 'package:orchid/dapp/orchid_web3/orchid_web3_context.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/dapp/orchid_web3/v1/orchid_eth_v1_web3.dart';
+import 'package:orchid/dapp/orchid_web3/wallet_connect_eth_provider.dart';
 
+// Base class containing web3 connection state for Orchid dapps
 class DappHomeStateBase<T extends StatefulWidget> extends State<T> {
   OrchidWeb3Context? web3Context;
+
+  bool get isConnected => web3Context != null;
+
+  bool get isNotConnected => !isConnected;
 
   /// The contract version defaulted or selected by the user.
   /// Null if no contacts are available.
@@ -33,6 +40,17 @@ class DappHomeStateBase<T extends StatefulWidget> extends State<T> {
   /// If the user has previously connected accounts reconnect without requiring
   /// the user to hit the connect button.
   Future<void> checkForExistingConnectedAccounts() async {
+    await checkForExistingWalletConnectAccounts();
+    if (isNotConnected) {
+      await checkForExistingConnectedEthereumAccounts();
+    }
+  }
+
+  Future<void> checkForExistingWalletConnectAccounts() async {
+    log('checkForExistingWalletConnectAccounts TBD');
+  }
+
+  Future<void> checkForExistingConnectedEthereumAccounts() async {
     try {
       var accounts = await ethereum?.getAccounts() ?? [];
       if (accounts.isNotEmpty) {
@@ -92,6 +110,44 @@ class DappHomeStateBase<T extends StatefulWidget> extends State<T> {
       return;
     }
     var web3 = await OrchidWeb3Context.fromEthereum(ethereum!);
+    setNewContext(web3);
+  }
+
+  Future<void> connectWalletConnect(Chain? userSelectedChain) async {
+    log("XXX: connectWalletConnect");
+    // const walletConnectProjectId = 'bd5be579e9cae68defff05a6fa7b0049'; // test
+    const walletConnectProjectId = 'afe2e392884aefdae72d4babb5482ced';
+
+    final chain = userSelectedChain ?? Chains.Ethereum;
+    var wc = await WalletConnectEthereumProvider.init(
+      projectId: walletConnectProjectId,
+      rpcMap: {
+        chain.chainId: chain.providerUrl,
+      },
+      chains: [chain.chainId],
+      // This does not seem to work, otherwise we could simply connect to all
+      // of our chains as optional and allow more straightforward switching.
+      // optionalChains: [Chains.Gnosis.chainId, 31411234],
+      showQrModal: true,
+    );
+    // consoleLog(wc.impl);
+    try {
+      log('Before wc connect');
+      await wc.connect();
+      log('After wc connect');
+    } catch (err) {
+      log('wc connect/init, err = $err');
+      return;
+    }
+    if (!wc.connected) {
+      AppDialogs.showAppDialog(
+          context: context,
+          title: s.error,
+          bodyText: s.failedToConnectToWalletconnect);
+      return;
+    }
+
+    var web3 = await OrchidWeb3Context.fromWalletConnect(wc);
     setNewContext(web3);
   }
 

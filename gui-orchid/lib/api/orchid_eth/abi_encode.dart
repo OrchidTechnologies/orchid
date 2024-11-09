@@ -111,4 +111,28 @@ extension BigIntExtension on BigInt {
     }
     return result;
   }
+
+  Uint8List toBytesUint160() {
+    final number = this;
+    // Assert the number is non-negative and fits within 160 bits
+    assert(number >= BigInt.zero && number < (BigInt.one << 160),
+        'Number must be non-negative and less than 2^160');
+    var byteData = number.toRadixString(16).padLeft(40, '0'); // Ensure 20 bytes
+    var result = Uint8List(20);
+    for (int i = 0; i < byteData.length; i += 2) {
+      var byteString = byteData.substring(i, i + 2);
+      var byteValue = int.parse(byteString, radix: 16);
+      result[i ~/ 2] = byteValue;
+    }
+    return result;
+  }
+
+  // For a BigInt representing an Ethereum Address (20 bytes)
+  Uint8List toAddress() {
+    return toBytesUint160();
+  }
+}
+
+Uint8List tie(Uint8List a, Uint8List b) {
+  return Uint8List.fromList(a + b);
 }

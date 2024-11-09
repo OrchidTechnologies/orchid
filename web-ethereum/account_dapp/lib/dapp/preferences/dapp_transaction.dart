@@ -22,21 +22,39 @@ class DappTransaction {
   final int chainId;
   final DappTransactionType? type;
 
+  // An optional subtype for components of a composite transaction.
+  // e.g. ERC20 transfer requiring an approval and a push.
+  final String? subtype;
+
+  // If this is part of a series of transactions, the index and total count.
+  final int? series_index;
+  final int? series_total;
+
   DappTransaction({
     this.transactionHash,
     required this.chainId,
     this.type,
+    this.subtype,
+    this.series_index = null,
+    this.series_total = null,
   });
 
   DappTransaction.fromJson(Map<String, dynamic> json)
       : this.transactionHash = json['tx'],
         this.chainId = json['chainId'],
-        this.type = toTransactionType(json['type']); // handles null
+        // toTransactionType() handles nulls
+        this.type = toTransactionType(json['type']),
+        this.subtype = json['subtype'],
+        this.series_index = json['series_index'],
+        this.series_total = json['series_total'];
 
   Map<String, dynamic> toJson() => {
         'tx': transactionHash,
         'chainId': chainId,
         'type': (type ?? DappTransactionType.unknown).name,
+        'subtype': subtype,
+        'series_index': series_index,
+        'series_total': series_total,
       };
 
   static List<DappTransaction> fromList(List<dynamic> list) {
@@ -56,7 +74,15 @@ class DappTransaction {
   }
 
   String description(BuildContext context) {
-    return descriptionForType(context, type);
+    String text = descriptionForType(context, type);
+    if (subtype != null) {
+      if (series_index != null && series_total != null) {
+        text += " ($subtype, $series_index/$series_total)";
+      } else {
+        text += " ($subtype)";
+      }
+    }
+    return text;
   }
 
   static String descriptionForType(
@@ -82,7 +108,7 @@ class DappTransaction {
       case DappTransactionType.accountChanges:
         return s.accountChanges;
       case DappTransactionType.pullFunds:
-        return context.s.withdrawFunds2;
+        return "Pull Funds";
       case DappTransactionType.moveLocation:
         return "Move Location";
       case DappTransactionType.pokeLocation:

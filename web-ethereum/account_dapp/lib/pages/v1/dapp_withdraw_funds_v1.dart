@@ -122,9 +122,11 @@ class _WithdrawFundsPaneV1State extends State<WithdrawFundsPaneV1>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DappButton(
-                text: buttonTitle,
-                onPressed: _formEnabled ? _withdrawFunds : null),
+            DappTransactionButton(
+              text: buttonTitle,
+              onPressed: _formEnabled ? _withdrawFunds : null,
+              txPending: txPending,
+            ),
           ],
         ),
         // pady(32),

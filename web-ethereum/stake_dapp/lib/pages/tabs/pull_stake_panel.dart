@@ -9,7 +9,6 @@ import 'package:orchid/dapp/preferences/dapp_transaction.dart';
 import 'package:orchid/dapp/preferences/user_preferences_dapp.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_token_value_field.dart';
-import 'package:orchid/orchid/menu/expanding_popup_menu_item.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/stake_dapp/orchid_web3_stake_v0.dart';
 
@@ -72,9 +71,10 @@ class _PullStakePanelState extends State<PullStakePanel>
           showPaste: false,
           backgroundColor: OrchidColors.dark_background_2,
         ).top(16).padx(8),
-        DappButton(
+        DappTransactionButton(
           text: "PULL FUNDS",
           onPressed: _formEnabled ? _pullStake : null,
+          txPending: txPending,
         ).top(32),
       ],
     ).width(double.infinity);
@@ -98,7 +98,9 @@ class _PullStakePanelState extends State<PullStakePanel>
   bool get _pullStakeFieldValid {
     var value = _pullStakeAmountController.value;
     return value != null &&
-        value <= (widget.currentStake ?? tokenType.zero);
+        value <= (widget.currentStake ?? tokenType.zero) &&
+        // Limit indices to the ones that we currently check (by brute force).
+        (_indexController.value ?? 0).toInt() < 3;
   }
 
   void _pullStake() async {

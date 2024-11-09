@@ -30,7 +30,7 @@ class OrchidWeb3V1 {
 
   /// Transfer the amount from the user to the specified lottery pot address.
   /// If the total exceeds walletBalance the balance value is reduced.
-  Future<List<String> /*TransactionId*/ > orchidAddFunds({
+  Future<String> /*TransactionId*/ orchidAddFunds({
     required OrchidWallet wallet,
     required EthereumAddress signer,
     required Token addBalance,
@@ -64,7 +64,7 @@ class OrchidWeb3V1 {
       retrieve: retrieve,
       totalPayable: totalPayable,
     );
-    return [tx.hash];
+    return tx.hash;
   }
 
   /// Withdraw funds by moving the specified withdrawEscrow amount from escrow
