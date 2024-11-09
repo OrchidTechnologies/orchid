@@ -300,6 +300,8 @@ jobs:
         machine: [x86_64, arm64]
 
     steps:
+    - run: sudo rm -rf /opt
+
     - uses: actions/checkout@v4
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
