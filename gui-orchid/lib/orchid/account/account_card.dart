@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
@@ -15,7 +16,7 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
 import 'package:orchid/util/timed_builder.dart';
-import 'package:orchid/util/format_currency.dart';
+import 'package:orchid/util/format_decimal.dart';
 import 'package:orchid/api/pricing/usd.dart';
 import '../orchid_panel.dart';
 import '../../api/orchid_eth/orchid_account_detail.dart';
@@ -360,7 +361,7 @@ class _AccountCardState extends State<AccountCard>
 
   String? _balanceText() {
     return widget.accountDetail == null
-        ? formatCurrency(0.0, locale: context.locale, precision: 2)
+        ? formatDouble(0.0, locale: context.locale, precision: 2)
         : (pot?.balance.formatCurrency(locale: context.locale, precision: 2));
   }
 
@@ -505,15 +506,32 @@ class _AccountCardState extends State<AccountCard>
 
   // display token value and symbol on a row with usd price in a row below
   Widget _buildTokenValueTextRow({Token? value, USD? price, Color? textColor}) {
-    final valueText = ((value ?? (tokenType ?? Tokens.TOK).zero).formatCurrency(
+    final valueOrZero = value ?? (tokenType ?? Tokens.TOK).zero;
+
+    final valueText = valueOrZero.formatCurrency(
       locale: context.locale,
       minPrecision: 1,
-      maxPrecision: 5,
+      maxPrecision: OrchidPlatform.isWeb ? 18 : 4,
       showPrecisionIndicator: true,
       showSuffix: false,
-    ));
-    final valueWidget =
-        Text(valueText).extra_large.withColor(textColor ?? Colors.white);
+    );
+
+    final fullValueText = valueOrZero.formatCurrency(
+      locale: context.locale,
+      minPrecision: 1,
+      maxPrecision: (tokenType ?? Tokens.TOK).decimals,
+      showSuffix: false,
+    );
+
+    final style =
+        OrchidText.extra_large.copyWith(color: textColor ?? Colors.white);
+    final valueWidget = TapToCopyText(
+      padding: EdgeInsets.zero,
+      fullValueText,
+      displayText: valueText,
+      style: style,
+    );
+
     return TokenValueWidgetRow(
       context: context,
       child: valueWidget,

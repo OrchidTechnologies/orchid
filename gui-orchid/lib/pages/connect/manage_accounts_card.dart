@@ -12,7 +12,7 @@ import 'package:orchid/vpn/model/circuit.dart';
 import 'package:orchid/vpn/model/circuit_hop.dart';
 import 'package:orchid/vpn/model/orchid_hop.dart';
 import 'package:orchid/util/localization.dart';
-import 'package:orchid/util/format_currency.dart';
+import 'package:orchid/util/format_decimal.dart';
 import '../../orchid/orchid_circular_identicon.dart';
 import '../../orchid/orchid_panel.dart';
 import '../../orchid/orchid_text.dart';
@@ -264,7 +264,7 @@ class _ManageAccountsCardState extends State<ManageAccountsCard> {
         : signerAddress.toString(elide: true);
     final textWidth = signerAddress == null ? null : 120.0;
     final balanceText = signerAddress == null
-        ? formatCurrency(0.0, locale: context.locale, precision: 2)
+        ? formatDouble(0.0, locale: context.locale, precision: 2)
         : (_selectedAccount?.lotteryPot?.balance
                 .formatCurrency(precision: 2, locale: context.locale) ??
             "...");

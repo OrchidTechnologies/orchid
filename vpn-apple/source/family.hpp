@@ -39,8 +39,8 @@ class Family :
         switch (protocol) {
         case 4: return AF_INET;
         case 6: return AF_INET6;
+        default: return 0;
         }
-        return 0;
     }
 
   protected:

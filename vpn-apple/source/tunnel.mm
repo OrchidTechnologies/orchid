@@ -20,10 +20,8 @@
 /* }}} */
 
 
-// the order of these headers matters :/
-#include <sys/sys_domain.h>
-#include <sys/kern_control.h>
-#include <net/if_utun.h>
+#define SYSPROTO_CONTROL 2
+#define UTUN_OPT_IFNAME 2
 
 #include <NetworkExtension/NetworkExtension.h>
 

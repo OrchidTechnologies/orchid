@@ -332,7 +332,7 @@ class Middle :
         }
 
         openvpn::TunClient::Ptr new_tun_client_obj(openvpn_io::io_context &context, openvpn::TunClientParent &parent, openvpn::TransportClient *transport) noexcept override {
-            return new Tunnel(middle_, config_, context, parent);
+            return {new Tunnel(middle_, config_, context, parent)};
         }
     };
 
@@ -365,10 +365,12 @@ class Middle :
     }
 
     openvpn::TransportClientFactory *new_transport_factory(const openvpn::ExternalTransport::Config &config) noexcept override {
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         return new orc::Factory(base_, config);
     }
 
     openvpn::TunClientFactory *new_tun_factory(const openvpn::ExternalTun::Config &config, const openvpn::OptionList &options) noexcept override {
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         return new Factory(*this, config);
     }
 

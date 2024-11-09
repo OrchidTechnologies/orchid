@@ -173,7 +173,7 @@ class _OrchidWidgetHomeState extends State<OrchidWidgetHome> {
         return Container();
       }
       if (_showPricesUSD) {
-        return Text((tokenPrice * token.floatValue)
+        return Text((tokenPrice * token.doubleValue)
                 .formatCurrency(locale: context.locale))
             .body2;
       } else {
@@ -257,7 +257,7 @@ class _ChainModel {
     if (version == 0) {
       costToCreateAccountUSD = (await MarketConditionsV0.getPotStats(
                   efficiency: targetEfficiency, tickets: targetTickets))
-              .floatValue *
+              .doubleValue *
           tokenPriceUSD;
       // log('XXX: V0! tokenPrice = $tokenPriceUSD, cost = $costToCreateAccountUSD');
     }

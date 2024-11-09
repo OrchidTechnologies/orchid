@@ -110,7 +110,7 @@ class Detached {
 };
 
 template <typename Code_>
-auto Spawn(Code_ code, const char *name) noexcept -> typename std::enable_if<noexcept(code())>::type {
+auto Spawn(Code_ code, const char *name) noexcept -> typename std::enable_if_t<noexcept(code())> {
     [](Code_ code, const char *name) mutable noexcept -> Detached {
         co_await Schedule();
 #ifdef ORC_FIBER

@@ -34,16 +34,16 @@ class MarketConditionsV0 implements MarketConditions {
     // log("eth v0: Fetch market conditions");
     // TODO: Add refresh option
     var costToRedeem = await getCostToRedeemTicketV0();
-    var limitedByBalance = balance.floatValue <= (escrow / 2.0).floatValue;
+    var limitedByBalance = balance.doubleValue <= (escrow / 2.0).doubleValue;
     Token maxFaceValue = LotteryPot.maxTicketFaceValueFor(balance, escrow);
 
     // value received as a fraction of ticket face value
-    double efficiency = maxFaceValue.floatValue == 0
+    double efficiency = maxFaceValue.doubleValue == 0
         ? 0
         : max(
                 0,
-                (maxFaceValue - costToRedeem.oxtCostToRedeem).floatValue /
-                    maxFaceValue.floatValue)
+                (maxFaceValue - costToRedeem.oxtCostToRedeem).doubleValue /
+                    maxFaceValue.doubleValue)
             .toDouble();
 
     return new MarketConditionsV0(

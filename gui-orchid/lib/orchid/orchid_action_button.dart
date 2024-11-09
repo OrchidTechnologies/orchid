@@ -62,7 +62,7 @@ class OrchidActionButton extends StatelessWidget {
     final label = Text(text, style: textStyle ?? OrchidText.button.black);
 
     final ButtonStyle buttonStyle = TextButton.styleFrom(
-      primary: Colors.black87,
+      foregroundColor: Colors.black87,
       minimumSize: Size(88, 36),
       padding: EdgeInsets.zero,
       backgroundColor: isEnabled ? null : (backgroundColor ?? Color(0xffaca3bc)),

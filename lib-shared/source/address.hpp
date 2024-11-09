@@ -36,6 +36,8 @@ class Address :
     private uint160_t
 {
   public:
+    // XXX: this check is false positive here
+    // NOLINTNEXTLINE(modernize-type-traits)
     using uint160_t::uint160_t;
 
     Address(const uint160_t &value) :

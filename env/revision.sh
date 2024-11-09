@@ -22,7 +22,9 @@ echo
 if [[ $# -eq 0 ]]; then
     echo; echo
 else
-    "$@" --version | head -n 1
+    # Android NDK annotates version with their clang build-time flags
+    # (as in, the strategy used to optimize clang, not configuration)
+    "$@" --version | sed -e '1!d;s/, [+-][a-z]*//g'
     # ld64 doesn't support --version and prints its version to stderr
     # Android NDK uses inconsistent directories / urls for repository
     "$@" -Wl,-v 2>&1 | sed -e '1!d;s/([^ ]* /(/' || true

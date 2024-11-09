@@ -94,7 +94,7 @@ class Nest final :
     }
 
     template <typename Code_>
-    auto Hatch(Code_ code, const char *name) noexcept -> typename std::enable_if<noexcept(code()), bool>::type {
+    auto Hatch(Code_ code, const char *name) noexcept -> typename std::enable_if_t<noexcept(code()), bool> {
         Count count(this);
         if (count > limit_)
             return false;

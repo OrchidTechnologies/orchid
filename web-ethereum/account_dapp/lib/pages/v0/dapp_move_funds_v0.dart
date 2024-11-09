@@ -19,7 +19,7 @@ class MoveFundsPaneV0 extends StatefulWidget {
   final bool enabled;
 
   const MoveFundsPaneV0({
-    Key? key,
+    Key? key, 
     required this.context,
     required this.pot,
     required this.signer,

@@ -39,6 +39,8 @@ runtime := osx
 more := -mmacosx-version-min=10.15
 include $(pwd)/target-apl.mk
 
+xcframework := macos-arm64_x86_64
+
 contents := /Contents
 resources := /Resources
 versions := /Versions/A

@@ -34,8 +34,9 @@
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 
 namespace orc {
+namespace {
 
-static int file_(-1);
+int file_(-1);
 
 // XXX: there are a number of arrays in this file; are they correct?
 
@@ -74,7 +75,7 @@ class Out {
         if (value == 0)
             *--end = '0';
         else do {
-            unsigned digit(value % 10);
+            const unsigned digit(value % 10);
             value /= 10;
             *--end = static_cast<char>('0' + digit);
         } while (value != 0);
@@ -100,7 +101,7 @@ class Out {
         if (value == 0)
             *--end = '0';
         else do {
-            unsigned digit(value & 0xf);
+            const unsigned digit(value & 0xf);
             value >>= 4;
             *--end = static_cast<char>((digit < 10 ? '0' : 'a' - 10) + digit);
         } while (value != 0);
@@ -110,9 +111,9 @@ class Out {
     }
 };
 
-static size_t total_(0);
+size_t total_(0);
 
-static void Audit(size_t add, size_t sub) {
+void Audit(size_t add, size_t sub) {
     total_ += add;
     total_ -= sub;
     if (add < sub)
@@ -122,8 +123,8 @@ static void Audit(size_t add, size_t sub) {
     Out() << total_ << " (" << (add - sub) << ")";
 }
 
-static decltype(std::declval<_malloc_zone_t *>()->malloc) apl_malloc;
-static void *orc_malloc(struct _malloc_zone_t *zone, size_t size) {
+decltype(std::declval<_malloc_zone_t *>()->malloc) apl_malloc;
+void *orc_malloc(struct _malloc_zone_t *zone, size_t size) {
     auto value(apl_malloc(zone, size));
     if (value == nullptr)
         return nullptr;
@@ -134,8 +135,8 @@ static void *orc_malloc(struct _malloc_zone_t *zone, size_t size) {
     return value;
 }
 
-static decltype(std::declval<_malloc_zone_t *>()->calloc) apl_calloc;
-static void *orc_calloc(struct _malloc_zone_t *zone, size_t count, size_t size) {
+decltype(std::declval<_malloc_zone_t *>()->calloc) apl_calloc;
+void *orc_calloc(struct _malloc_zone_t *zone, size_t count, size_t size) {
     auto value(apl_calloc(zone, count, size));
     if (value == nullptr)
         return nullptr;
@@ -146,8 +147,8 @@ static void *orc_calloc(struct _malloc_zone_t *zone, size_t count, size_t size) 
     return value;
 }
 
-static decltype(std::declval<_malloc_zone_t *>()->valloc) apl_valloc;
-static void *orc_valloc(struct _malloc_zone_t *zone, size_t size) {
+decltype(std::declval<_malloc_zone_t *>()->valloc) apl_valloc;
+void *orc_valloc(struct _malloc_zone_t *zone, size_t size) {
     auto value(apl_valloc(zone, size));
     if (value == nullptr)
         return nullptr;
@@ -158,8 +159,8 @@ static void *orc_valloc(struct _malloc_zone_t *zone, size_t size) {
     return value;
 }
 
-static decltype(std::declval<_malloc_zone_t *>()->realloc) apl_realloc;
-static void *orc_realloc(struct _malloc_zone_t *zone, void *old, size_t size) {
+decltype(std::declval<_malloc_zone_t *>()->realloc) apl_realloc;
+void *orc_realloc(struct _malloc_zone_t *zone, void *old, size_t size) {
     auto before(zone->size(zone, old));
     auto value(apl_realloc(zone, old, size));
     auto after(zone->size(zone, value));
@@ -169,8 +170,8 @@ static void *orc_realloc(struct _malloc_zone_t *zone, void *old, size_t size) {
     return value;
 }
 
-static decltype(std::declval<_malloc_zone_t *>()->free) apl_free;
-static void orc_free(struct _malloc_zone_t *zone, void *value) {
+decltype(std::declval<_malloc_zone_t *>()->free) apl_free;
+void orc_free(struct _malloc_zone_t *zone, void *value) {
     auto full(zone->size(zone, value));
     if (file_ != -1)
         Out() << "free(" << value << ")";
@@ -178,33 +179,33 @@ static void orc_free(struct _malloc_zone_t *zone, void *value) {
     return apl_free(zone, value);
 }
 
-static decltype(std::declval<_malloc_zone_t *>()->batch_malloc) apl_batch_malloc;
-static unsigned orc_batch_malloc(struct _malloc_zone_t *zone, size_t size, void **values, unsigned count) {
+decltype(std::declval<_malloc_zone_t *>()->batch_malloc) apl_batch_malloc;
+unsigned orc_batch_malloc(struct _malloc_zone_t *zone, size_t size, void **values, unsigned count) {
     count = apl_batch_malloc(zone, size, values, count);
     size_t full(0);
     for (size_t i(0); i != count; ++i) {
         full += zone->size(zone, values[i]);
         if (file_ != -1)
-            Out() << "batch_malloc(" << size << ", " << values << "[" << i << "]) = " << values[i];
+            Out() << "batch_malloc(" << size << ", " << reinterpret_cast<void *>(values) << "[" << i << "]) = " << values[i];
     }
     Audit(full, 0);
     return count;
 }
 
-static decltype(std::declval<_malloc_zone_t *>()->batch_free) apl_batch_free;
-static void orc_batch_free(struct _malloc_zone_t *zone, void **values, unsigned count) {
+decltype(std::declval<_malloc_zone_t *>()->batch_free) apl_batch_free;
+void orc_batch_free(struct _malloc_zone_t *zone, void **values, unsigned count) {
     size_t full(0);
     for (size_t i(0); i != count; ++i) {
         full += zone->size(zone, values[i]);
         if (file_ != -1)
-            Out() << "batch_free(" << values << "[" << i << "] = " << values[i] << ")";
+            Out() << "batch_free(" << reinterpret_cast<void *>(values) << "[" << i << "] = " << values[i] << ")";
     }
     Audit(0, full);
     return apl_batch_free(zone, values, count);
 }
 
-static decltype(std::declval<_malloc_zone_t *>()->memalign) apl_memalign;
-static void *orc_memalign(struct _malloc_zone_t *zone, size_t alignment, size_t size) {
+decltype(std::declval<_malloc_zone_t *>()->memalign) apl_memalign;
+void *orc_memalign(struct _malloc_zone_t *zone, size_t alignment, size_t size) {
     auto value(apl_memalign(zone, alignment, size));
     auto full(zone->size(zone, value));
     if (file_ != -1)
@@ -213,8 +214,8 @@ static void *orc_memalign(struct _malloc_zone_t *zone, size_t alignment, size_t 
     return value;
 }
 
-static decltype(std::declval<_malloc_zone_t *>()->free_definite_size) apl_free_definite_size;
-static void orc_free_definite_size(struct _malloc_zone_t *zone, void *value, size_t size) {
+decltype(std::declval<_malloc_zone_t *>()->free_definite_size) apl_free_definite_size;
+void orc_free_definite_size(struct _malloc_zone_t *zone, void *value, size_t size) {
     auto full(zone->size(zone, value));
     if (file_ != -1)
         Out() << "free_definite_size(" << value << ", " << size << ")";
@@ -229,6 +230,9 @@ static void orc_free_definite_size(struct _malloc_zone_t *zone, void *value, siz
     zone->name = &orc_ ## name; \
 } while (false)
 
+} }
+
+namespace orc {
 void Hook() {
     return;
 
@@ -257,9 +261,7 @@ void Hook() {
     orc_swizzle(batch_free);
     orc_swizzle(memalign);
     orc_swizzle(free_definite_size);
-}
-
-}
+} }
 
 #else
 namespace orc {

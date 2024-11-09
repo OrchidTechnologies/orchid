@@ -14,7 +14,7 @@ tag lib-shared/boost 'boost-[0-9.]*'
 tag min-openssl/openssl 'OpenSSL_[0-9_]*[a-z]'
 tag lib-shared/sqlite 'version-[0-9.]*'
 
-head[app-shared/flutter]=3.13.9
+head[app-shared/flutter]=3.24.0
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
 head[min-v8/v8]=$(sed -e '/url = "https:\/\/github.com\/v8\/v8\//!d;s/^.*\///;s/\.tar\.gz",$//' srv-worker/workerd/WORKSPACE)

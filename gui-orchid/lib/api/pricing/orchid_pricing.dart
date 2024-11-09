@@ -20,13 +20,13 @@ class OrchidPricing {
 
   /// The USD value of the token quantity.
   Future<USD> tokenToUSD(Token token) async {
-    return USD(token.floatValue * await tokenToUsdRate(token.type));
+    return USD(token.doubleValue * await tokenToUsdRate(token.type));
   }
 
   /// Convert value of from token to equivalant USD value in 'to' token type.
   Future<Token> tokenToToken(Token fromToken, TokenType toType) async {
     return toType.fromDouble(
-        fromToken.floatValue * await tokenToTokenRate(fromToken.type, toType));
+        fromToken.doubleValue * await tokenToTokenRate(fromToken.type, toType));
   }
 
   /// (toType / fromType): The conversion rate from fromType to toType

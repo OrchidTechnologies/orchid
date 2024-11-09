@@ -6,7 +6,7 @@ apt-get update
 
 apt-get -y install \
     ubuntu-keyring \
-    bc tcl xxd \
+    bc sed tcl xxd \
     curl git-core rsync wget \
     fakeroot libtalloc-dev \
     cpio rpm unzip zstd \

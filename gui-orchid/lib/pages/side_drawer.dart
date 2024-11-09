@@ -204,7 +204,7 @@ class SideDrawerTile extends StatelessWidget {
         child: Container(
           child: ListTile(
               contentPadding: EdgeInsets.only(left: 16, right: 16),
-              horizontalTitleGap: 0,
+              // horizontalTitleGap: 0,
               leading: Padding(
                 padding: EdgeInsets.only(left: hoffset),
                 child: leading,

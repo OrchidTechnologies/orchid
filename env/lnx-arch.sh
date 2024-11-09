@@ -3,7 +3,7 @@ set -e
 
 pacman -Sy \
     ubuntu-keyring \
-    bc tcl vim \
+    bc sed tcl vim \
     curl git rsync wget \
     fakeroot talloc \
     cpio rpm-tools unzip zstd \

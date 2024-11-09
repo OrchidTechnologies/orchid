@@ -377,9 +377,9 @@ class OrchidPACServer {
         Json.toIntSafe(responseJson['store_status'], defaultValue: 0);
 
     // parse store message
-    var jsonMessage = Json.trimStringOrNull(responseJson['message']);
-    String message = (OrchidUserConfig().getUserConfig())
-        .evalStringDefault('pacs.storeMessage', jsonMessage ?? '');
+    String? jsonMessage = Json.trimStringOrNull(responseJson['message']);
+    String? message = (OrchidUserConfig().getUserConfig())
+        .evalStringDefaultNullable('pacs.storeMessage', jsonMessage);
 
     // parse the seller address map
     // TODO: ...
@@ -462,12 +462,18 @@ class PACStoreStatus {
   final bool open;
 
   // Message to display or null if none.
-  final String message;
+  final String? message;
 
   // product status
   //Map<String, bool> product;
 
   PACStoreStatus({required this.message, required this.open});
+
+  // tostring
+  @override
+  String toString() {
+    return 'PACStoreStatus{open: $open, message: $message}';
+  }
 }
 
 class PacAccount {

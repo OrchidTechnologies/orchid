@@ -54,7 +54,7 @@ class PricingV0 {
     if (oxt == null) {
       return null;
     }
-    return USD(oxt.floatValue * oxtPriceUSD);
+    return USD(oxt.doubleValue * oxtPriceUSD);
   }
 
   OXT? toOXT(USD? usd) {

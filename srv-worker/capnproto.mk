@@ -40,4 +40,6 @@ $(output)/capnp/%.capnp.h: %.capnp $(capnp)
 cflags += -I$(pwd)/capnproto/c++/src
 cflags += -I$(output)/capnp/capnproto/c++/src
 
+cflags/$(pwd)/capnproto/ += -Wno-deprecated-this-capture
+
 source += $(shell find $(pwd)/capnproto/c++/src/kj -name '*.c++' -not -name '*test.c++')

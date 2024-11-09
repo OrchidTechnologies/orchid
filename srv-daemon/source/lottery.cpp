@@ -31,7 +31,7 @@ std::ostream &operator <<(std::ostream &out, const Pot &pot) {
 }
 
 void Lottery::Open() {
-    Spawn([=]() mutable noexcept -> task<void> {
+    Spawn([this]() mutable noexcept -> task<void> {
         for (auto height(co_await Height());;) try {
             co_await Sleep(10*1000);
             auto next(co_await Height());

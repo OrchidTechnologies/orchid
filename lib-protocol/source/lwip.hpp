@@ -56,6 +56,7 @@ typedef int SOCKET;
 using namespace rtc;
 
 // Event constants for the Dispatcher class.
+// NOLINTNEXTLINE(performance-enum-size)
 enum DispatcherEvent {
   DE_READ = 0x0001,
   DE_WRITE = 0x0002,

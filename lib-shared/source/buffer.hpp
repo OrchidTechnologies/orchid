@@ -153,7 +153,7 @@ template <typename Type_, typename Enable_ = void>
 struct Cast;
 
 template <typename Type_>
-struct Cast<Type_, typename std::enable_if<std::is_arithmetic<Type_>::value>::type> {
+struct Cast<Type_, typename std::enable_if_t<std::is_arithmetic_v<Type_>>> {
     static auto Load(const uint8_t *data, size_t size) {
         orc_assert(size == sizeof(Type_));
         return boost::endian::big_to_native(*reinterpret_cast<const Type_ *>(data));
@@ -161,7 +161,7 @@ struct Cast<Type_, typename std::enable_if<std::is_arithmetic<Type_>::value>::ty
 };
 
 template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
-struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type> {
+struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if_t<Bits_ % 8 == 0>> {
     static auto Load(const uint8_t *data, size_t size) {
         orc_assert(size == Bits_ / 8);
         boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> value;
@@ -171,7 +171,7 @@ struct Cast<boost::multiprecision::number<boost::multiprecision::backends::cpp_i
 };
 
 template <size_t Bits_>
-struct Cast<intx::uint<Bits_>, typename std::enable_if<Bits_ % 8 == 0>::type> {
+struct Cast<intx::uint<Bits_>, typename std::enable_if_t<Bits_ % 8 == 0>> {
     static auto Load(const uint8_t *data, size_t size) {
         orc_assert(size == Bits_ / 8);
         return intx::be::load<intx::uint<Bits_>>(*reinterpret_cast<const uint8_t (*)[Bits_ / 8]>(data));
@@ -737,7 +737,7 @@ inline Brick<Size_> operator ^(const Data<Size_> &lhs, const Data<Size_> &rhs) {
     return value;
 }
 
-template <typename Type_, bool Arithmetic_ = std::is_arithmetic<Type_>::value>
+template <typename Type_, bool Arithmetic_ = std::is_arithmetic_v<Type_>>
 class Number;
 
 template <typename Type_>
@@ -1043,12 +1043,12 @@ inline bool Each(const char &data, const std::function<bool (const uint8_t *, si
 }
 
 template <typename Type_>
-inline typename std::enable_if<std::is_arithmetic<Type_>::value && !std::is_same_v<Type_, char>, bool>::type Each(const Type_ &value, const std::function<bool (const uint8_t *, size_t)> &code) {
+inline typename std::enable_if_t<std::is_arithmetic_v<Type_> && !std::is_same_v<Type_, char>, bool> Each(const Type_ &value, const std::function<bool (const uint8_t *, size_t)> &code) {
     return Number<Type_>(value).each(code);
 }
 
 template <size_t Bits_, boost::multiprecision::cpp_int_check_type Check_>
-inline typename std::enable_if<Bits_ % 8 == 0, bool>::type Each(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value, const std::function<bool (const uint8_t *, size_t)> &code) {
+inline typename std::enable_if_t<Bits_ % 8 == 0, bool> Each(const boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>> &value, const std::function<bool (const uint8_t *, size_t)> &code) {
     return Number<boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>>(value).each(code);
 }
 
@@ -1357,7 +1357,7 @@ static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
 } };
 
 template <size_t Index_, size_t Bits_, boost::multiprecision::cpp_int_check_type Check_, typename... Taking_>
-struct Taking<Index_, boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if<Bits_ % 8 == 0>::type, Taking_...> final {
+struct Taking<Index_, boost::multiprecision::number<boost::multiprecision::backends::cpp_int_backend<Bits_, Bits_, boost::multiprecision::unsigned_magnitude, Check_, void>>, typename std::enable_if_t<Bits_ % 8 == 0>, Taking_...> final {
 template <typename Tuple_, typename Buffer_>
 static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
     Brick<Bits_ / 8> brick;
@@ -1367,7 +1367,7 @@ static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
 } };
 
 template <size_t Index_, typename Next_, typename... Taking_>
-struct Taking<Index_, Next_, typename std::enable_if<std::is_arithmetic<Next_>::value>::type, Taking_...> {
+struct Taking<Index_, Next_, typename std::enable_if_t<std::is_arithmetic_v<Next_>>, Taking_...> {
 template <typename Tuple_, typename Buffer_>
 static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
     Brick<sizeof(Next_)> brick;
@@ -1380,7 +1380,7 @@ template <size_t Index_>
 struct Taking<Index_, Window, void> {
 template <typename Tuple_, typename Buffer_>
 static bool Take(Tuple_ &tuple, Window &window, Buffer_ &&buffer) {
-    static_assert(!std::is_rvalue_reference<Buffer_ &&>::value);
+    static_assert(!std::is_rvalue_reference_v<Buffer_ &&>);
     std::get<Index_>(tuple) = std::move(window);
     return false;
 } };

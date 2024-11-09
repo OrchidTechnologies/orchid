@@ -23,7 +23,7 @@ import 'package:orchid/orchid/orchid_circular_identicon.dart';
 import 'package:orchid/orchid/orchid_circular_progress.dart';
 import 'package:orchid/orchid/orchid_titled_panel.dart';
 import 'package:orchid/pages/purchase/purchase_page.dart';
-import 'package:orchid/util/format_currency.dart';
+import 'package:orchid/util/format_decimal.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:styled_text/styled_text.dart';
 import '../app_routes.dart';
@@ -697,21 +697,21 @@ class _WelcomePanelState extends State<WelcomePanel> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(s.vpnCredits).body2,
-              Text(formatCurrency(credits, locale: context.locale)).body2,
+              Text(formatDouble(credits, locale: context.locale)).body2,
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(s.blockchainFee).body2,
-              Text('+ ' + formatCurrency(fee, locale: context.locale)).body2,
+              Text('+ ' + formatDouble(fee, locale: context.locale)).body2,
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(s.promotion, style: OrchidText.body2.blueHightlight),
-              Text('- ' + formatCurrency(promo, locale: context.locale),
+              Text('- ' + formatDouble(promo, locale: context.locale),
                   style: OrchidText.body2.blueHightlight),
             ],
           ),
@@ -720,7 +720,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(s.total.toUpperCase()).subtitle,
-              Text(formatCurrency(total, locale: context.locale)).subtitle,
+              Text(formatDouble(total, locale: context.locale)).subtitle,
             ],
           )
         ],

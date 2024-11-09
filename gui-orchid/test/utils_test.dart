@@ -7,6 +7,7 @@ import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/token_type.dart';
 import 'package:orchid/api/orchid_eth/tokens.dart';
+import 'package:orchid/util/format_decimal.dart';
 import 'package:orchid/vpn/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/util/cacheable.dart';
 import 'package:orchid/util/json.dart';
@@ -198,6 +199,18 @@ void main() {
         print("error fetching bar = " +err.toString());
       }
       print("bar = " +eval.toString());
+    });
+
+    test('decimal format util test 1', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      expect(trimAndPadDecimal("0", 2, 8), equals("0.00"));
+      expect(trimAndPadDecimal(".0", 2, 8), equals("0.00"));
+      expect(trimAndPadDecimal("0.000000000000000000", 2, 8), equals("0.00"));
+      expect(trimAndPadDecimal("0.000000123000000000", 2, 8), equals("0.00000012"));
+      expect(trimAndPadDecimal("1.123456789", 2, 5), equals("1.12345"));
+      expect(trimAndPadDecimal("1.1", 2, 5), equals("1.10"));
+      expect(trimAndPadDecimal("1.0", 2, 5), equals("1.00"));
+      print("passed");
     });
 
     //

@@ -68,7 +68,11 @@ $(call include,shared/target-ios.mk)
 local := 
 local += app.mm.o
 
-local += $(subst %,.,$(word 1,$(generated))).o
+temp := $(subst %,.,$(word 1,$(generated)))
+local += $(temp).o
+
+$(call depend,$(temp).o,$(output)/XCBuildData/build.db)
+cflags/$(temp) += -fmodules $(patsubst %,-fmodule-map-file=%,$(wildcard $(output)/Release-$(sdk)/*/*.modulemap)) -Wno-ignored-attributes
 
 include env/output.mk
 
@@ -139,7 +143,7 @@ $(bundle)/Assets.car: $(wildcard Assets.xcassets/*/*)
 	@mkdir -p $(output)/info
 	# XXX: --launch-image LaunchImage
 	actool --output-format human-readable-text --errors --warnings --notices \
-	    --target-device iphone --target-device ipad --minimum-deployment-target 11.0 \
+	    --target-device iphone --target-device ipad --minimum-deployment-target 12.0 \
 	    --platform iphoneos \
 	    --app-icon AppIcon \
 	    --compress-pngs \

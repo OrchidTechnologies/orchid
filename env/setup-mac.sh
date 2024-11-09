@@ -4,6 +4,7 @@ which brew &>/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubuserconte
 
 # XXX: duplicate linux setup as much as possible
 brew install \
+    gnu-sed \
     fakeroot \
     rpm2cpio zstd \
     binutils \

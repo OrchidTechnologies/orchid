@@ -90,7 +90,7 @@ class Sunk {
     }
 };
 
-template <typename Super_, typename Drain_, typename Inner_ = typename std::remove_reference<decltype(std::declval<Outer<Super_>>().Inner())>::type>
+template <typename Super_, typename Drain_, typename Inner_ = typename std::remove_reference_t<decltype(std::declval<Outer<Super_>>().Inner())>>
 class Sink :
     public Super_,
     public Sunk<Drain_, Inner_>

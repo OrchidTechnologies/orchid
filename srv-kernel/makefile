@@ -93,6 +93,7 @@ qflags += -mno-red-zone
 qflags += -mno-sse
 cflags/$(pwd)/source/paging.cpp += -m32
 cflags/$(pwd)/source/paging.cpp += -g0
+dflags/$(pwd)/source/paging.cpp += -mcmodel=%
 oflags/$(pwd)/source/paging.cpp += -O elf64-x86-64
 endif
 
