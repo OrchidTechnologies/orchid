@@ -134,11 +134,10 @@ cflags += -I@/extra
 # -fdebug-compilation-dir .
 # -no-canonical-prefixes
 
-# with clang 10 we get access to -ffile-prefix-map
 # XXX: I don't remember what this was actually for
-qflags += -fdebug-prefix-map=./=
+qflags += -ffile-prefix-map=./=
 # XXX: I need to verify the lack of trailing slash
-qflags += -fdebug-prefix-map=$(CURDIR)=.
+qflags += -ffile-prefix-map=$(CURDIR)=.
 
 rflags += --remap-path-prefix=$(CURDIR)/$(output)/cargo/=~/.cargo/
 

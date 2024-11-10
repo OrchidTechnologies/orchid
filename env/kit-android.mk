@@ -77,4 +77,4 @@ $(each)
 tidy := $(llvm)/bin/clang-tidy
 
 $(shell rm -f $(output)/ndk && mkdir -p $(output) && ln -sf $(llvm) $(output)/ndk)
-qflags += -fdebug-prefix-map=$(llvm)=$(output)/ndk
+qflags += -ffile-prefix-map=$(shell realpath $(llvm))=$(output)/ndk
