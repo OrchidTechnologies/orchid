@@ -28,6 +28,8 @@ w_jemalloc += --with-malloc-conf=tcache:false
 w_jemalloc += ac_cv_func_sbrk=no
 w_jemalloc += force_tls=0
 
+w_jemalloc += je_cv_lg_vaddr=48
+
 jemalloc := lib/libjemalloc_pic.a
 $(output)/%/$(pwd)/jemalloc/$(jemalloc): $(output)/%/$(pwd)/jemalloc/Makefile
 	$(MAKE) -C $(dir $<) $(jemalloc)
