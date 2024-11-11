@@ -147,7 +147,7 @@ $(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/
 
 rust := PATH=$${PATH}:~/.cargo/bin
 
-rustc := 1.77.0
+rustc := 1.82.0
 
 $(output)/rustup-install-%:
 	$(rust) rustup install $*

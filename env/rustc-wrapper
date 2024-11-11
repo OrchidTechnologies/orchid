@@ -4,9 +4,6 @@ set -e
 # XXX: this only exists due to this Cargo bug :(
 # https://github.com/rust-lang/cargo/issues/8140
 
-# XXX: consider just doing something trivial with sed
-#exec $(echo "$*" | sed -e 's/ -C metadata=[^ ]*//g')
-
 file=
 for arg in "$@"; do
     if [[ ${arg} == ${CARGO_HOME}/* && -z ${file} ]]; then
