@@ -38,8 +38,8 @@ class _ChatPromptPanelState extends State<ChatPromptPanel> {
                 });
               },
               icon: _showPromptDetails
-                  ? const Icon(Icons.expand_more, color: Colors.white)
-                  : const Icon(Icons.chevron_right, color: Colors.white),
+                  ? const Icon(Icons.tune, color: Colors.white)
+                  : const Icon(Icons.tune, color: Colors.white),
             ),
             Flexible(
               child: OrchidTextField(

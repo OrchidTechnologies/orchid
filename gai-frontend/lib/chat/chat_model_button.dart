@@ -90,7 +90,7 @@ class _ModelSelectionButtonState extends State<ModelSelectionButton> {
               height: _menuHeight,
               child: SizedBox(
                 width: _menuWidth,
-                child: Text('No models available', style: _textStyle),
+                child: Text('Enter an account to see models', style: _textStyle),
               ),
             ),
           ];

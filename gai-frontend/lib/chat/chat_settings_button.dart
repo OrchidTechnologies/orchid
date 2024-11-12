@@ -118,6 +118,7 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
             SubmenuPopopMenuItemBuilder<String>(
               builder: _buildIdenticonsPref,
             ),
+/*
             div,
             SubmenuPopopMenuItemBuilder<String>(
               builder: _buildLanguagePref,
@@ -144,6 +145,7 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
                 launchUrlString(githubUrl);
               },
             ),
+*/
           ];
         },
         child: SizedBox(
