@@ -13,12 +13,17 @@ function tag() {
 tag lib-shared/boost 'boost-[0-9.]*'
 tag min-openssl/openssl 'OpenSSL_[0-9_]*[a-z]'
 tag lib-shared/sqlite 'version-[0-9.]*'
+tag env/mingw-w64 'v[0-9.]*'
 
 head[app-shared/flutter]=3.24.0
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
+# XXX: boringssl should be tracked by workerd, I guess; but is also pinned by ngtcp2 currently (to a newer version)
+# I also care deeply about DTLS 1.3 support and post-quantum cryptography, so this dependency is a balancing act :/
+
+head[srv-worker/capnproto]=$(sed -e '/^COMMIT = "/!d;s///;s/"$//' srv-worker/workerd/build/deps/gen/dep_capnp_cpp.bzl)
 head[min-v8/v8]=$(sed -e '/url = "https:\/\/github.com\/v8\/v8\//!d;s/^.*\///;s/\.tar\.gz",$//' srv-worker/workerd/WORKSPACE)
-head[srv-worker/capnproto]=$(sed -e '/url.*"https:\/\/github.com\/capnproto\/capnproto\//!d;s/^.*\///;s/".*//' srv-worker/workerd/WORKSPACE)
+# XXX: workerd is really annoying with respect to local v8 patches :/
 
 # cairo and pixman decided to drop autotools, which is really annoying :/
 # fmt is stuck due to Jina2Cpp needing a patch to support fmt after 11.x

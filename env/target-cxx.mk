@@ -30,6 +30,9 @@ qflags += -D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS
 cflags/$(pwd)/libcxx/ += -D_LIBCPP_BUILDING_LIBRARY=
 cflags/$(pwd)/libcxxabi/ += -D_LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS=
 
+# XXX: I think this is supposed to be temporary
+cflags/$(pwd)/libcxx/ += -Wno-deprecated-declarations
+
 ifneq ($(filter $(target),and ios mac),)
 cflags/$(pwd)/libcxx/ += -D_LIBCPPABI_VERSION=15000
 cflags/$(pwd)/libcxx/ += -DLIBCXX_BUILDING_LIBCXXABI

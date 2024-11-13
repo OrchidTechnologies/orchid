@@ -24,6 +24,6 @@ source += $(filter-out \
     %_test_common.cc \
     %_testing.cc \
     %/absl/hash/internal/print_hash_of.cc \
-,$(foreach sub,base container crc debugging hash numeric profiling types strings synchronization time,$(wildcard $(pwd)/abseil-cpp/absl/$(sub)/*.cc $(pwd)/abseil-cpp/absl/$(sub)/internal/*.cc)) $(wildcard $(pwd)/abseil-cpp/absl/time/internal/cctz/src/*.cc))
+,$(foreach sub,base container crc debugging hash numeric profiling types strings synchronization time,$(wildcard $(pwd)/abseil-cpp/absl/$(sub)/*.cc $(pwd)/abseil-cpp/absl/$(sub)/internal/*.cc)) $(wildcard $(pwd)/abseil-cpp/absl/strings/internal/str_format/*.cc) $(wildcard $(pwd)/abseil-cpp/absl/time/internal/cctz/src/*.cc))
 
 cflags += -I$(pwd)/abseil-cpp

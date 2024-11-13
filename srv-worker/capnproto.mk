@@ -35,6 +35,7 @@ $(output)/capnp/%.capnp.h: %.capnp $(capnp)
 	capnp compile \
 	    -I$(pwd)/capnproto/c++/src \
 	    -I$(pwd)/workerd/src \
+	    -I$(pwd)/extra \
 	    $< -oc++:$(output)/capnp
 
 cflags += -I$(pwd)/capnproto/c++/src

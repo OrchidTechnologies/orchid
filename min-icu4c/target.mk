@@ -9,8 +9,10 @@
 # }}}
 
 
-# XXX: this now needs to be per target (due to -m$(bits))
+$(pwd)/icu4c/configure:
+	@touch $@
 
+# XXX: this now needs to be per target (due to -m$(bits))
 $(output)/icu4c/Makefile: $(pwd)/icu4c/configure
 	mkdir -p $(dir $@)
 	cd $(dir $@) && $(CURDIR)/$< --enable-static \

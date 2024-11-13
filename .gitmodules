@@ -250,3 +250,12 @@
 [submodule "rapidjson"]
 	path = min-jinja2cpp/rapidjson
 	url = https://github.com/Tencent/rapidjson.git
+[submodule "ngtcp2"]
+	path = min-http3/ngtcp2
+	url = https://github.com/ngtcp2/ngtcp2.git
+[submodule "nghttp3"]
+	path = min-http3/nghttp3
+	url = https://github.com/ngtcp2/nghttp3.git
+[submodule "simdutf"]
+	path = srv-worker/simdutf
+	url = https://github.com/simdutf/simdutf.git

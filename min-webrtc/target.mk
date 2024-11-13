@@ -42,6 +42,7 @@ webrtc += $(pwd)/webrtc/api/audio/audio_processing_statistics.cc
 
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_codec_pair_id.cc
 webrtc += $(pwd)/webrtc/api/audio_codecs/audio_encoder.cc
+webrtc += $(pwd)/webrtc/api/audio_codecs/audio_format.cc
 
 webrtc += $(pwd)/webrtc/api/call/transport.cc
 webrtc += $(pwd)/webrtc/api/environment/environment_factory.cc
@@ -69,12 +70,15 @@ webrtc += $(pwd)/webrtc/api/video_codecs/video_codec.cc
 webrtc += $(pwd)/webrtc/api/video_codecs/vp9_profile.cc
 
 webrtc += $(pwd)/webrtc/call/call_config.cc
+webrtc += $(pwd)/webrtc/call/payload_type_picker.cc
 webrtc += $(pwd)/webrtc/call/rtp_bitrate_configurator.cc
 webrtc += $(pwd)/webrtc/call/rtp_config.cc
 webrtc += $(pwd)/webrtc/call/rtp_demuxer.cc
 webrtc += $(pwd)/webrtc/call/rtp_payload_params.cc
 webrtc += $(pwd)/webrtc/call/rtp_transport_controller_send.cc
 webrtc += $(pwd)/webrtc/call/rtp_video_sender.cc
+
+webrtc += $(pwd)/webrtc/common_video/corruption_detection_converters.cc
 
 webrtc += $(pwd)/webrtc/common_video/generic_frame_descriptor/generic_frame_info.cc
 

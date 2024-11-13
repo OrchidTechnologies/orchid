@@ -9,7 +9,7 @@ unset MAKEFLAGS
 unset MFLAGS
 
 if [[ -e ./autogen.sh ]]; then
-    NOCONFIGURE=1 ./autogen.sh "$@"
+    NOCONFIGURE=1 CC=clang ./autogen.sh "$@"
 else
     autoreconf -i
 fi

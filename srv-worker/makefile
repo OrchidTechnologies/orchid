@@ -67,17 +67,26 @@ include jemalloc.mk
 
 include capnproto.mk
 
+cflags += -I$(pwd)/simdutf/include
+
+cflags += -I$(pwd)/workerd/src/workerd/api
 cflags += -I$(pwd)/workerd/src
 cflags += -I$(output)/capnp/workerd/src
-#source += $(filter-out %-test.c++,$(wildcard $(pwd)/workerd/src/workerd/api/crypto-impl-*.c++))
+
+#source += $(pwd)/workerd/src/workerd/jsg/util.c++
+#source += $(filter-out %-test.c++,$(wildcard $(pwd)/workerd/src/workerd/api/crypto/*.c++))
+
+chacks/$(pwd)/workerd/src/workerd/api/crypto/dh.c++ += s/^constexpr int OPENSSL_DH_MAX_MODULUS_BITS = .*//;
 
 header += $(output)/capnp/$(pwd)/capnproto/c++/src/capnp/compat/byte-stream.capnp.h
 header += $(output)/capnp/$(pwd)/capnproto/c++/src/capnp/compat/http-over-capnp.capnp.h
 
 header += $(output)/capnp/$(pwd)/workerd/src/workerd/io/actor-storage.capnp.h
 header += $(output)/capnp/$(pwd)/workerd/src/workerd/io/compatibility-date.capnp.h
+header += $(output)/capnp/$(pwd)/workerd/src/workerd/io/features.capnp.h
 header += $(output)/capnp/$(pwd)/workerd/src/workerd/io/outcome.capnp.h
 header += $(output)/capnp/$(pwd)/workerd/src/workerd/io/script-version.capnp.h
+header += $(output)/capnp/$(pwd)/workerd/src/workerd/io/supported-compatibility-date.capnp.h
 header += $(output)/capnp/$(pwd)/workerd/src/workerd/io/worker-interface.capnp.h
 
 header += $(output)/capnp/$(pwd)/workerd/src/workerd/jsg/modules.capnp.h

@@ -77,9 +77,6 @@ $(output)/%.c++.o: $$(specific) $$(folder).c++ $$(code)
 	@echo [CC] $(target)/$(arch) $<
 	$(call compile,cxx,c++,-std=c++20)
 
-# XXX: -std=c++2b is currently blocked on an incompatibility with libwebrtc
-# https://issues.webrtc.org/issues/339074792
-
 $(output)/%.cpp.o: $$(specific) $$(folder).cpp $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
@@ -87,11 +84,11 @@ ifeq ($(filter notidy,$(debug)),)
 	@if [[ $< =~ $(filter) && ! $< =~ .*/(base58|lwip|monitor)\.cpp ]]; then \
 	    echo [CT] $(target)/$(arch) $<; \
 	    $(tidy) $< --quiet --warnings-as-errors='*' --header-filter='$(filter)' --config='{Checks: "$(checks)", CheckOptions: [$(foreach v,$(filter checks/%,$(.VARIABLES)),{key: "$(patsubst checks/%,%,$(v))", value: $($(v))}$(comma) )]}' -- \
-	        $(wordlist 2,$(words $(cxx)),$(cxx)) $(more/$(arch)) -std=c++20 -Wconversion -Wno-sign-conversion $(flags) $(xflags); \
+	        $(wordlist 2,$(words $(cxx)),$(cxx)) $(more/$(arch)) -std=c++2b -Wconversion -Wno-sign-conversion $(flags) $(xflags); \
 	fi
 endif
 	@echo [CC] $(target)/$(arch) $<
-	$(call compile,cxx,c++,-std=c++20)
+	$(call compile,cxx,c++,-std=c++2b)
 
 $(output)/%.rc.o: $$(specific) $$(folder).rc $$(code)
 	$(specific)

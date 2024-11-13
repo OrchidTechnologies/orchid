@@ -20,5 +20,8 @@ cflags += -I$(pwd)/Jinja2Cpp/include
 
 cflags += -DJINJA2CPP_WITH_JSON_BINDINGS_BOOST
 
+# XXX: jinja2cpp relies on nonstd::expected_lite::expected::get_unexpected
+cflags += -Dnsel_CONFIG_SELECT_EXPECTED=nsel_EXPECTED_NONSTD
+
 source += $(wildcard $(pwd)/Jinja2Cpp/src/*.cpp)
 source += $(pwd)/Jinja2Cpp/src/binding/boost_json_serializer.cpp

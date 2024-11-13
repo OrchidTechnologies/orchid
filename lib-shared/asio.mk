@@ -101,6 +101,9 @@ cflags += -DBOOST_ASIO_DISABLE_CONNECTEX
 cflags += -DBOOST_FILESYSTEM_NO_CXX20_ATOMIC_REF
 cflags += -DBOOST_NO_CXX20_HDR_CONCEPTS
 
+# XXX: https://github.com/ned14/outcome/pull/308
+cflags += -DBOOST_OUTCOME_DISABLE_INLINE_GDB_PRETTY_PRINTERS
+
 ifneq ($(filter ios mac,$(target)),)
 # newer Xcode unconditionally defines _LIBCPP_HAS_ALIGNED_ALLOC but it requires MacOS 10.15+ / iOS 13.0+
 cflags += -DBOOST_ASIO_DISABLE_STD_ALIGNED_ALLOC

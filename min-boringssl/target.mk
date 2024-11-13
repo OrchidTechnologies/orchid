@@ -18,4 +18,4 @@
 # }}}
 
 
-cflags += -I$(pwd)/boringssl/src/include
+cflags += -I$(pwd)/boringssl/include
