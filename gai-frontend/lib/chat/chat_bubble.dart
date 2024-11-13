@@ -28,7 +28,7 @@ class ChatBubble extends StatelessWidget {
       return Center(
         child: Column(
           children: <Widget>[
-            Text(
+            SelectableText(
               message.message,
               style: const TextStyle(
                 fontFamily: 'Baloo2',
@@ -104,7 +104,7 @@ class ChatBubble extends StatelessWidget {
             if (src == ChatMessageSource.provider)
               Padding(
                 padding: EdgeInsets.only(left: iconTotalWidth),
-                child: Text(
+                child: SelectableText(
                   message.message,
                   style: const TextStyle(
                     fontFamily: 'Baloo2',
@@ -122,7 +122,7 @@ class ChatBubble extends StatelessWidget {
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(
+                child: SelectableText(
                   message.message,
                   style: const TextStyle(
                     fontFamily: 'Baloo2',
@@ -138,7 +138,7 @@ class ChatBubble extends StatelessWidget {
               const SizedBox(height: 4),
               Padding(
                 padding: EdgeInsets.only(left: iconTotalWidth),
-                child: Text(
+                child: SelectableText(
                   message.formatUsage(),
                   style: TextStyle(
                     fontFamily: 'Baloo2',
