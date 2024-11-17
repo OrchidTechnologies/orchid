@@ -69,7 +69,7 @@ $(output)/%.cc.o: $$(specific) $$(folder).cc $$(code)
 	$(specific)
 	@mkdir -p $(dir $@)
 	@echo [CC] $(target)/$(arch) $<
-	$(call compile,cxx,c++,-std=c++17)
+	$(call compile,cxx,c++,-std=c++20)
 
 $(output)/%.c++.o: $$(specific) $$(folder).c++ $$(code)
 	$(specific)

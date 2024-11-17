@@ -123,7 +123,7 @@
 	url = https://chromium.googlesource.com/chromium/src/base/trace_event/common.git
 [submodule "protobuf"]
 	path = lib-protocol/protobuf
-	url = https://chromium.googlesource.com/external/github.com/google/protobuf
+	url = https://github.com/protocolbuffers/protobuf.git
 [submodule "jinja2"]
 	path = min-v8/jinja2
 	url = https://chromium.googlesource.com/chromium/src/third_party/jinja2.git
@@ -259,3 +259,6 @@
 [submodule "simdutf"]
 	path = srv-worker/simdutf
 	url = https://github.com/simdutf/simdutf.git
+[submodule "fast_float"]
+	path = min-v8/fast_float
+	url = https://github.com/fastfloat/fast_float.git

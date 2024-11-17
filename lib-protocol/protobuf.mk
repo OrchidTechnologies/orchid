@@ -30,7 +30,7 @@ protoc := $(output)/protoc
 
 $(output)/protobuf/%.o: $(pwd/protobuf)/src/google/protobuf/%.cc
 	@mkdir -p $(dir $@)
-	clang++ -stdlib=libc++ -c -std=c++11 -o $@ -DHAVE_PTHREAD -I$(pwd/protobuf)/src -Isrc $<
+	clang++ -stdlib=libc++ -c -std=c++20 -o $@ -DHAVE_PTHREAD -I$(pwd/protobuf)/src -Isrc $<
 
 $(protoc): $(patsubst $(pwd/protobuf)/src/google/protobuf/%.cc,$(output)/protobuf/%.o,$(shell echo $(pwd/protobuf)/src/google/protobuf/{,compiler/{,cpp/,csharp/,java/,js/,objectivec/,php/,python/,ruby/},io/,stubs/}!(*test*|*mock*).cc))
 	@mkdir -p $(dir $@)
@@ -46,3 +46,6 @@ $(foreach ext,cc h,$$(output)/pb$(1)/%.pb.$(ext)): $(2)/%.proto $$(protoc)
 pflags += -I$(2)
 cflags += -I$(output)/pb$(1)
 endef
+
+# XXX: this is only because I'm using an old protobuf
+cflags/$(pwd/protobuf)/ += -Wno-deprecated-pragma

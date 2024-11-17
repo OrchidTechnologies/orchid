@@ -29,6 +29,7 @@ v8all := $(patsubst ./%,$(pwd/v8)/src/%,$(shell cd $(pwd/v8)/src && find . \
     -path "./third_party" -prune -o \
     -path "./tracing" -prune -o \
     -path "./wasm/fuzzing" -prune -o \
+    -path "./wasm/interpreter" -prune -o \
     \
     ! -path "./builtins/generate-bytecodes-builtins-list.cc" \
     ! -path "./regexp/gen-regexp-special-case.cc" \
@@ -73,6 +74,7 @@ v8src := $(filter-out \
     %_win.cc \
     %-win.cc \
     %-win64.cc \
+    %_zos.cc \
 ,$(v8all))
 
 # XXX: this is a mess that I need to clean up
@@ -145,7 +147,7 @@ vflags += -DV8_WIN64_UNWINDING_INFO
 
 ifeq ($(bits/$(machine)),64)
 #vflags += -DV8_COMPRESS_POINTERS
-#vflags += -DV8_COMPRESS_POINTERS_IN_ISOLATE_CAGE
+#vflags += -DV8_COMPRESS_POINTERS_IN_MULTIPLE_CAGES
 #vflags += -DV8_SHORT_BUILTIN_CALLS
 endif
 
@@ -184,7 +186,7 @@ vflags += -include cstdint
 
 $(output)/$(pwd/v8)/gen-regexp-special-case: $(pwd)/v8/src/regexp/gen-regexp-special-case.cc $(pwd)/fatal.cc $(output)/icu4c/lib/libicuuc.a $(output)/icu4c/lib/libicudata.a
 	@mkdir -p $(dir $@)
-	clang++ -std=c++17 -pthread -o $@ $^ $(vflags) $(icu4c) -ldl -m$(bits/$(machine))
+	clang++ -std=c++20 -pthread -o $@ $^ $(vflags) $(icu4c) -ldl -m$(bits/$(machine))
 
 $(output)/$(pwd/v8)/special-case.cc: $(output)/$(pwd/v8)/gen-regexp-special-case
 	@mkdir -p $(dir $@)
@@ -197,7 +199,7 @@ source += $(output)/$(pwd/v8)/special-case.cc
 
 $(output)/$(pwd/v8)/generate-bytecodes-builtins-list: $(pwd)/v8/src/builtins/generate-bytecodes-builtins-list.cc $(pwd)/v8/src/interpreter/bytecodes.cc $(pwd)/v8/src/interpreter/bytecode-operands.cc $(pwd)/fatal.cc
 	@mkdir -p $(dir $@)
-	clang++ -std=c++17 -pthread -o $@ $^ $(vflags) -m$(bits/$(machine))
+	clang++ -std=c++20 -pthread -o $@ $^ $(vflags) -m$(bits/$(machine))
 
 $(output)/$(pwd/v8)/builtins-generated/bytecodes-builtins-list.h: $(output)/$(pwd/v8)/generate-bytecodes-builtins-list
 	@mkdir -p $(dir $@)
@@ -216,7 +218,7 @@ torque := $(patsubst ./%,%,$(sort $(shell cd $(pwd)/v8 && find . -name '*.tq')))
 $(output)/$(pwd/v8)/torque: $(wildcard $(pwd)/v8/src/torque/*.cc) $(pwd)/fatal.cc
 	@rm -rf $(dir $@)
 	@mkdir -p $(dir $@)
-	clang++ -std=c++17 -pthread -o $@ $^ $(vflags) -m$(bits/$(machine))
+	clang++ -std=c++20 -pthread -o $@ $^ $(vflags) -m$(bits/$(machine))
 
 tqsrc := $(patsubst %.tq,%-tq-csa.cc,$(torque))
 tqsrc += class-debug-readers.cc
@@ -275,6 +277,8 @@ cflags/$(pwd/v8)/ += -Wno-builtin-assume-aligned-alignment
 
 # XXX: they might have already changed many of these cases
 cflags/$(pwd/v8)/ += -Wno-unused-but-set-variable
+
+cflags/$(pwd/v8)/ += -Wno-unneeded-internal-declaration
 
 cflags += -Wno-invalid-offsetof
 

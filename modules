@@ -30,6 +30,7 @@ head[min-v8/v8]=$(sed -e '/url = "https:\/\/github.com\/v8\/v8\//!d;s/^.*\///;s/
 # XXX: https://github.com/jinja2cpp/Jinja2Cpp/issues/257
 # llvm-project (libcxx/libcxxabi) is stuck due to me being bored of this
 # openvpn3 is stuck due to external transport factory breaking OPENVPN_LOG
+# protobuf is stuck due to their build system being extremely annoying :/
 
 git submodule foreach -q 'echo $displaypath' | while read -r sub; do (
     cd "${sub}"
