@@ -12,7 +12,8 @@ brew install \
     python-packaging \
     groff \
     autoconf{,-archive} automake libtool \
-    make meson ninja pkg-config \
+    make ninja pkg-config \
+    cmake meson \
     rustup-init \
 
 rustup-init -y --no-modify-path --no-update-default-toolchain

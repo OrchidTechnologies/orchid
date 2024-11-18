@@ -43,6 +43,7 @@ cfg="${curdir}/${output}/${arch}/meson.cfg"
 echo "${wflags[@]}" >"${curdir}/${output}/${arch}/meson.cfg"
 cfg=(--config "${cfg}")
 
+
 function args() {
     comma=false
     for arg in "$@"; do

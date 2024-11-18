@@ -23,12 +23,12 @@ p_cairo += -Wno-unused-variable
 p_cairo += -I$(CURDIR)/$(pwd)/zlb/libz
 l_cairo += -L@/$(pwd)/zlb
 
-p_cairo += -I$(CURDIR)/$(pwd)/libpng
 p_cairo += -I@/$(pwd)/libpng
+p_cairo += -I$(CURDIR)/$(pwd)/libpng
 l_cairo += -L@/libpbg/.libs
 
-p_cairo += -I$(CURDIR)/$(pwd)/pixman/pixman
 p_cairo += -I@/$(pwd)/pixman/pixman
+p_cairo += -I$(CURDIR)/$(pwd)/pixman/pixman
 l_cairo += -L@/$(pwd)/pixman/.libs
 
 libcairo := $(pwd)/cairo/src/.libs/libcairo.a
@@ -38,8 +38,8 @@ $(subst @,%,$(patsubst %,$(output)/@/%,$(libcairo))) \
 : $(output)/%/$(pwd)/cairo/Makefile $(sysroot)
 	$(MAKE) -C $(dir $<)/src
 
-cflags += -I$(pwd)/cairo/src
 cflags += -I@/$(pwd)/cairo/src
+cflags += -I$(pwd)/cairo/src
 
 linked += $(libcairo)
 

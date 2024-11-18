@@ -18,19 +18,17 @@
 # }}}
 
 
-pwd/boringssl := $(pwd)/boringssl
+w_nghttp3 += --enable-lib-only
 
-boringssl := 
-boringssl += $(pwd/boringssl)/cmake/libssl.a
-boringssl += $(pwd/boringssl)/cmake/libcrypto.a
+nghttp3 := 
+nghttp3 += $(pwd)/nghttp3/lib/.libs/libnghttp3.a
 
-$(subst @,%,$(patsubst %,$(output)/@/%,$(boringssl))): $(output)/%/$(pwd/boringssl)/cmake/Makefile
-	$(MAKE) -C $(dir $<) ssl
+$(output)/%/$(pwd)/nghttp3/lib/includes/nghttp3/version.h $(subst @,%,$(patsubst %,$(output)/@/%,$(nghttp3))): $(output)/%/$(pwd)/nghttp3/Makefile
+	$(MAKE) -C $(dir $<)
 
-cflags += -I$(pwd)/boringssl/include
+cflags += -I@/$(pwd)/nghttp3/lib/includes
+cflags += -I$(pwd)/nghttp3/lib/includes
 
-linked += $(boringssl)
+header += @/$(pwd)/nghttp3/lib/includes/nghttp3/version.h
 
-export BORINGSSL_CFLAGS := -I$(CURDIR)/$(pwd/boringssl)/include
-# XXX: this needs to be shoved down and then split for each architecture
-export BORINGSSL_LIBS := -L$(CURDIR)/$(output)/$(machine)/$(pwd/boringssl)/cmake -lcrypto -lssl
+linked += $(nghttp3)

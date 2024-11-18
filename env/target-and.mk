@@ -15,6 +15,7 @@ lib := a
 exe := 
 
 meson := linux
+cmake += Android
 
 archs += armeabi-v7a
 openssl/armeabi-v7a := android-arm

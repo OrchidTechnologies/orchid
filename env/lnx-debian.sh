@@ -19,7 +19,8 @@ apt-get -y install \
     bison flex gperf \
     gettext groff texinfo \
     autoconf{,-archive} automake libtool \
-    make meson ninja-build pkg-config \
+    make ninja-build pkg-config \
+    cmake meson \
     qemu-system-{x86,arm} \
 
 if dpkg --compare-versions $(meson --version) '<<' "1.2.0"; then

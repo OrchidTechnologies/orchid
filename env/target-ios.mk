@@ -9,6 +9,8 @@
 # }}}
 
 
+cmake := iOS
+
 archs += armv7
 openssl/armv7 := ios-xcrun
 host/armv7 := arm-apple-darwin

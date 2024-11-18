@@ -15,6 +15,7 @@ lib := lib
 exe := .exe
 
 meson := windows
+cmake := CYGWIN
 
 archs += i686
 openssl/i686 := mingw

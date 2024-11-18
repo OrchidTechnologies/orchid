@@ -16,5 +16,6 @@ pacman -Sy \
     bison flex gperf \
     gettext groff texinfo \
     autoconf{,-archive} automake libtool \
-    make meson ninja pkgconf \
+    make ninja pkgconf \
+    cmake meson \
     qemu-system-{x86,aarch64} \

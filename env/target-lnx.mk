@@ -19,6 +19,7 @@ libc := gnu
 endif
 
 meson := linux
+cmake := Linux
 
 archs += i386
 openssl/i386 := linux-x86

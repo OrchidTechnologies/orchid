@@ -9,6 +9,8 @@
 # }}}
 
 
+cmake := Darwin
+
 archs += i386
 openssl/i386 := darwin-i386-cc
 host/i386 := i386-apple-darwin

@@ -34,12 +34,15 @@ $(output)/%/openssl/Makefile $(subst @,%,$(patsubst %,$(output)/@/openssl/includ
 $(output)/%/openssl/libssl.a $(output)/%/openssl/libcrypto.a: $(output)/%/openssl/Makefile $(sysroot)
 	$(if $(findstring /,$(word 1,$(cc))),PATH=$(dir $(word 1,$(cc))):$${PATH}) $(MAKE) -C $(output)/$*/openssl build_libs
 
-cflags += -I$(pwd)/openssl/include
-cflags += -I$(pwd)/openssl/test/ossl_shim/include
 cflags += -I@/openssl/include
+cflags += -I$(pwd)/openssl/include
+
+cflags += -I$(pwd)/openssl/test/ossl_shim/include
+
+header += @/openssl/include/openssl/opensslconf.h
+
 linked += openssl/libssl.a
 linked += openssl/libcrypto.a
-header += @/openssl/include/openssl/opensslconf.h
 
 define _
 export $(subst -,_,$(call uc,$(triple/$(1))))_OPENSSL_LIB_DIR := $(CURDIR)/$(output)/$(1)/openssl

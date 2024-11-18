@@ -112,6 +112,7 @@ export ENV_CURDIR := $(CURDIR)
 export ENV_OUTPUT := $(output)
 
 define _
+$(shell env/cmake.sh $(1) $(output) '$(CURDIR)' '$(cmake) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc) $(more/$(1))' '$(cxx) $(more/$(1))' '$(objc) $(more/$(1))' '$(qflags)' '$(wflags)' '$(xflags)' '$(mflags)')
 $(shell env/meson.sh $(1) $(output) '$(CURDIR)' '$(meson) $(meson/$(1))' '$(ar/$(1))' '$(strip/$(1))' '$(windres/$(1))' '$(cc) $(more/$(1))' '$(cxx) $(more/$(1))' '$(objc) $(more/$(1))' '$(qflags)' '$(wflags)' '$(xflags)' '$(mflags)')
 endef
 $(each)
@@ -133,6 +134,12 @@ $(output)/%/Makefile: $$(specific) $$(folder)/configure $(sysroot) $$(call head,
 	    LDFLAGS="$(wflags) $(patsubst -L@/%,-L$(CURDIR)/$(output)/$(arch)/%,$(l_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))" \
 	    --enable-static --disable-shared $(subst =@/,=$(CURDIR)/$(output)/$(arch)/,$(w_$(subst -,_,$(notdir $(patsubst %/configure,%,$<)))))
 	cd $(dir $@); $(m_$(subst -,_,$(notdir $(patsubst %/configure,%,$<))))
+
+$(output)/%/cmake/Makefile: $$(specific) $$(folder)/CMakeLists.txt $(output)/$$(arch)/cmake.txt $(sysroot) $$(call head,$$(folder))
+	$(specific)
+	@rm -rf $(dir $@)
+	@mkdir -p $(dir $@)
+	cmake -S$(dir $<) --toolchain $(CURDIR)/$(output)/$(arch)/cmake.txt -B$(dir $@) -DCMAKE_BUILD_TYPE=Release
 
 $(output)/%/build.ninja: $$(specific) $$(folder)/meson.build $(output)/$$(arch)/meson.txt $(sysroot) $$(call head,$$(folder)) $(output)/$$(arch)/usr/bin/pkg-config
 	$(specific)

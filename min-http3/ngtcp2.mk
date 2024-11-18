@@ -18,19 +18,29 @@
 # }}}
 
 
-pwd/boringssl := $(pwd)/boringssl
+w_ngtcp2 += --enable-lib-only
 
-boringssl := 
-boringssl += $(pwd/boringssl)/cmake/libssl.a
-boringssl += $(pwd/boringssl)/cmake/libcrypto.a
+w_ngtcp2 += --without-libev
+w_ngtcp2 += --without-openssl
+w_ngtcp2 += --with-boringssl
 
-$(subst @,%,$(patsubst %,$(output)/@/%,$(boringssl))): $(output)/%/$(pwd/boringssl)/cmake/Makefile
-	$(MAKE) -C $(dir $<) ssl
+define _
+$(output)/$(1)/$(pwd)/ngtcp2/Makefile: $(output)/$(1)/$(pwd/boringssl)/cmake/libssl.a
+endef
+$(each)
 
-cflags += -I$(pwd)/boringssl/include
+ngtcp2 := 
+ngtcp2 += $(pwd)/ngtcp2/lib/.libs/libngtcp2.a
+ngtcp2 += $(pwd)/ngtcp2/crypto/boringssl/libngtcp2_crypto_boringssl.a
 
-linked += $(boringssl)
+$(output)/%/$(pwd)/ngtcp2/lib/includes/ngtcp2/version.h $(subst @,%,$(patsubst %,$(output)/@/%,$(ngtcp2))): $(output)/%/$(pwd)/ngtcp2/Makefile
+	$(MAKE) -C $(dir $<)
 
-export BORINGSSL_CFLAGS := -I$(CURDIR)/$(pwd/boringssl)/include
-# XXX: this needs to be shoved down and then split for each architecture
-export BORINGSSL_LIBS := -L$(CURDIR)/$(output)/$(machine)/$(pwd/boringssl)/cmake -lcrypto -lssl
+cflags += -I$(pwd)/ngtcp2/crypto/includes
+
+cflags += -I@/$(pwd)/ngtcp2/lib/includes
+cflags += -I$(pwd)/ngtcp2/lib/includes
+
+header += @/$(pwd)/ngtcp2/lib/includes/ngtcp2/version.h
+
+linked += $(ngtcp2)

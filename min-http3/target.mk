@@ -18,19 +18,5 @@
 # }}}
 
 
-pwd/boringssl := $(pwd)/boringssl
-
-boringssl := 
-boringssl += $(pwd/boringssl)/cmake/libssl.a
-boringssl += $(pwd/boringssl)/cmake/libcrypto.a
-
-$(subst @,%,$(patsubst %,$(output)/@/%,$(boringssl))): $(output)/%/$(pwd/boringssl)/cmake/Makefile
-	$(MAKE) -C $(dir $<) ssl
-
-cflags += -I$(pwd)/boringssl/include
-
-linked += $(boringssl)
-
-export BORINGSSL_CFLAGS := -I$(CURDIR)/$(pwd/boringssl)/include
-# XXX: this needs to be shoved down and then split for each architecture
-export BORINGSSL_LIBS := -L$(CURDIR)/$(output)/$(machine)/$(pwd/boringssl)/cmake -lcrypto -lssl
+include $(pwd)/ngtcp2.mk
+include $(pwd)/nghttp3.mk

@@ -52,6 +52,7 @@ cflags += -I$(pwd)/extra
 $(call include,cv8/target.mk)
 
 $(call include,lib/target.mk)
+$(call include,http3/target.mk)
 
 # XXX: I might not need this anymore
 cflags += -D_LIBCPP_HAS_NO_STDIN=

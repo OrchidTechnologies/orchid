@@ -102,6 +102,7 @@ else
 zflags := -0
 endif
 
+
 objc := false
 include $(pwd)/target-$(target).mk
 
@@ -109,9 +110,15 @@ ifeq ($(machine),)
 machine := $(default)
 endif
 
--include $(pwd)/cpu-$(machine).mk
+ifneq ($(target),win)
+# XXX: this breaks libgcrypt due to cet.h being ELF-specific
+more/x86_64 += -fcf-protection=full
+endif
 
-cflags += -I@/usr/include
+# XXX: this broke ARM iOS/macOS exception handling in coroutines
+# XXX: consider using =pac-ret+leaf
+#more/arm64 += -mbranch-protection=standard
+
 
 define depend
 $(foreach arch,$(archs),$(eval $(output)/$(arch)/$(1): $(patsubst @/%,$(output)/$(arch)/%,$(2))))
@@ -124,8 +131,11 @@ $(eval folder := $(subst $(space),/,$(wordlist 2,$(words $(temp)),$(temp))))
 endef
 specific = $(eval $(value preamble))
 
-cflags += -I$(output)/extra
+
 cflags += -I@/extra
+cflags += -I$(output)/extra
+
+cflags += -I@/usr/include
 
 
 # I doubt this will ever become important, but just in case: v8 had this idea ;P
@@ -141,7 +151,9 @@ qflags += -ffile-prefix-map=$(CURDIR)=.
 
 rflags += --remap-path-prefix=$(CURDIR)/$(output)/cargo/=~/.cargo/
 
-qflags += -fno-ident
+# putting -fno-ident directly into qflags breaks cmake
+qflags += --config=$(CURDIR)/$(pwd)/fnoident.cfg
+
 
 $(output)/%/extra/revision.hpp: force
 	@mkdir -p $(dir $@)
