@@ -78,10 +78,13 @@ android {
         implementation flutter
         implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
-        implementation "androidx.activity:activity:1.0.0"
-        implementation "androidx.core:core:1.6.0"
-        implementation "androidx.tracing:tracing:1.0.0"
-        implementation "androidx.window:window:1.0.0"
+        implementation "androidx.activity:activity:1.8.1"
+        implementation "androidx.core:core:1.13.1"
+        implementation "androidx.lifecycle:lifecycle-common:2.7.0"
+        implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
+        implementation "androidx.tracing:tracing:1.2.0"
+        implementation "androidx.window:window:1.2.0"
+        implementation "androidx.window:window-java:1.2.0"
     }
 
     lintOptions {
