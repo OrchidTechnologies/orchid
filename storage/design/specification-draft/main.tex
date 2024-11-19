@@ -1,0 +1,571 @@
+\documentclass{article}
+\usepackage{amsfonts}      
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{cite}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{marvosym}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\newcommand{\ds}{\displaystyle}
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
+
+\title{Orchid Storage Spec: DRAFT}
+
+\author{Justin Sheek, Chloe Avery}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\vspace{.7in}
+
+\section{Orchid Storage}
+
+Orchid Storage is a decentralized storage system capable of maintaining files and issuing payments based on data availability even when the client is offline. This is accomplished through incentive-aligned providers, non-interactive verification protocols, and efficient data repair and migration capabilities. The primary actors and entities involved in the system are: 
+
+The \textbf{Clients}, who upload encoded data to one or more Providers and arrange for payment via issuing \textbf{Rate Certificates} (RC).  
+The \textbf{Providers}, who store and serve the data, perform periodic \textbf{Bonded Commitments} to it, and participate in an incentive-aligned \textbf{Cohort} to maintain and repair the data over time.  
+There is also a set of \textbf{Storage Contracts} on the blockchain, which implement payment settlement from the rate certificates and resolve them to unlock the bonds.
+
+\section{Client}
+This section describes the interactions initiated by the client including locating providers and uploading the initial set of data.
+
+\subsection{Client Setup - Locating Providers}
+
+Providers are located using stake-weighted random selection via the Orchid Directory, which is a contract on Ethereum holding OXT staked amounts associated with endpoints.  Random selection forms the basis for a set that is then filtered by custom curation lists.  (See Section \ref{Orchid Directory} for more details.)
+
+Clients will require access to the directory contract on Ethereum (e.g. via a traditional provider such as Infura, Alchemy, or some new mechanism).
+
+TODO: Discuss why stake-weighting is important here.  
+
+TODO: Discuss here at a high level how the client will use the directory and what the initial interaction with the providers will be.  What if anything is negotiated up-front?  How are non-responsive providers handled?
+
+TODO: Discuss how curation applied.
+
+
+\subsection{Client Setup - Encoding and Storing Data}
+
+The Client prepares for data storage by funding an Orchid Account with value for payments. (See Section \ref{Orchid Accounts}).
+
+
+The Client prepares to store Source Data (SD) 
+on the Orchid distributed network by first encoding it into many separate Twin Coded Erasure Blocks (EB).  (See Section \ref{Stored Data}).  This produces a set of blocks that may be uploaded to separate providers with redundancy determined by the client-chosen k of n parameters of the erasure encoding.
+
+Each erasure block is sent to a Provider and a negotiation is performed:  
+
+The client offers a Rate Certificate (RC) (See Section \ref{Rate Certificates}), which is a construct that binds the data to a commitment to pay for periodic proofs of data availability.  The Rate Certificate is bound to the data using a polynomial commitment in a form understood by all parties. 
+
+The Provider evaluates this “contract” offer (the RC), the state of Client payment Orchid Account (balance and escrowed amount), and the EB data.
+
+The Provider receives EB in packets, charging the Client for the  bandwidth required to upload them (See Section \ref{Paying for Bandwidth}). 
+
+Once complete, the Provider creates \textbf{KZG commitment} to the full erasure block and sends it to the Client.  The Client, having constructed its own KZG commitment, checks that they match. The Client repeats this for every EB stored with each Provider in the Cohort. 
+
+The Client retains the {Provider -> KZG} commitment and sends metadata about the Cohort
+to each Provider member. Providers are responsible to retain and update this metadata over time.
+
+
+TODO: Describe the cohort metadata.  What is it’s content and structure?
+
+\subsection{Client Usage - Finding the Provider Cohort and Retrieving Data}
+
+The client may be offline for an arbitrary period of time.  Upon returning it must locate the current cohort to find its data…
+
+TODO: List the procedure for following “breadcrumbs” left online to find the latest cohort.
+...
+
+\subsection{Client Maintenance Task - Updating and Removing Stored Data}
+… 
+See `Firing Providers`
+
+\subsection{Client Maintenance Task - Updating Payment Rates and Firing Providers*}
+As a Client, I would like to be able to switch the Provider responsible for an EB (aka fire a Provider, with or without cause)
+
+Select a new Provider. Execute the “new Provider” bootstrap. Ensure the RC is stamped with a newer (e.g. Lamport or realtime) time. 
+If they accept, initiate a Repair (sans RC) with the new Provider as Target. Target bills me for this. Optional: inform the old Provider that they’re fired.
+
+
+As a Client, I would like to be able to update the terms of my payment (RC) with an existing Provider.
+
+Issue new RC to the Provider. If Provider doesn’t use it at next opportunity (implicitly overriding the old RC as a consequence), then “fire” them.
+
+\subsection{The Client Messaging API}
+When a client is communicating with providers, what kinds of messages must it be able to create and interact with?
+
+
+\section{Providers}
+Intro..
+\subsection{Overview}
+…
+\subsection{Providers Setup - Advertising Services}
+Using the directory service
+
+\subsection{Provider Setup - Receiving and Storing Files*}
+As a Provider, I want to profit from the (faithful operation of) storage tasks. Assume I’m an honest Provider, entering into this market. I already have the software downloaded and OXT in my account.
+
+Phase 1 (Core interaction):
+Register storage capability on public directory by staking OXT on-chain. Receive inbound storage requests from Clients who discover my service on the directory. More stake = more inbound. When I receive an inbound request, this will begin with a connection and local accounting bootstrapping phase, then later accompanied by a Rate Certificate (RC).
+Decide whether RC is profitable (including whether Client account is in good standing with sufficient balance => RC is a credible commitment). If accepted, charge for bandwidth when receiving Erasure Block (EB), sending invoices as necessary (“bandwidth game” already covered by Orchid bandwidth protocol). Assemble EB according to protocol. Construct KZG commitment and transmit to Client. Self-interested Client will accept correctly constructed KZG and reject an incorrect KZG.
+
+Phase 2 (OK but there’s a cohort):
+Because Clients construct cohorts that self-repair (for their own purpose and peace of mind). As a Provider, I need to interact with a cohort. That means chiefly that I have a maintenance task, which is to retain Cohort Metadata (CM [ref], what does this entail?) about the other cohort members. CM is subject to disagreement across network partitions or network latency (***complicated story here, “consensus-lite”). Given my local view of CM, I need to find each of their on-chain Periodic Commitments (PC) to Client data, then use the accompanying blob data to check them for completeness. I want to do this because I profit greatly from finding any errors, consequently selling pieces of my EB to a repair target (as far as our estimates say, this is most of the profit of my Provider operation).
+
+Cohort-level operations –
+Phase 3a (Repairs):
+Not issued by the Client (typically). Triggered by an incomplete (or absent) commitment by some other member of my cohort. Twincoding enters. RC reconstruction. CM reconstruction. EB reconstruction. All follow protocol-defined erasure coding algorithm and parameters.
+
+Phase 3b (Reconstruction of SD):
+Issued by the Client. Directive to ask me to participate in a reconstruction of SD using my EB as one of the sources.
+
+
+\subsection{Provider Maintenance - Periodic Commitments*}
+As a Provider, I would like to produce a verifiable, public, indelible record of self-audits (abstractly, a sequence of witnesses) so that my correct (and complete) operation can be later verified either by the Client or on-chain during payment settlement. (In lieu of interactive audits, in case the Client is offline. As designed, there isn’t really a switch between interactive and non-interactive auditing, because the Cohort would have to receive some kind of signal that causes them to start/stop checking my PC.) A self-audit consists of a (non-anticipatable) random beacon, which deterministically, according to protocol, selects a sub-block of each EB for me to commit to. I produce a KZG commitment which consists of a vector (\~1:1 with Client) of these sub-blocks. I also produce a “paired” KZG commitment which consists of a vector of the EB at a top-level (see “Storage Auditing using Merkle trees and KZG commitments” for data structure). An honest Provider that hasn’t lost any data has an essentially unique commitment (they have the freedom to reorder the vector indices). Self-audits are required every Commitment Epoch (CE). (Probabilistic argument falls apart if either: ***Problem \#1: Beacon grinding, 
+Problem \#2: just-in-time reconstruction of sub-blocks)
+
+
+\subsection{Provider Payment - Charging for Bandwidth} \label{Paying for Bandwidth}
+…
+\subsection{Provider Payment - Client Offline Payment*}
+Client goes offline. Providers make \textbf{Periodic Commitments (PC)} to their respective EBs, using KZG commitments (using protodanksharding blobs). Meanwhile, Cohort members check each others’ blobs for presence of commitment to respective EBs. Provider, at their discretion, goes to the blockchain to receive Client payment. Provider supplies RC (authenticated payment terms), points to PCs (self-audit witness), KZG opening (verification of witness) to demonstrate correct operation and receive payment.
+Provider Maintenance - File Repair*
+As a Provider, I want to profit from (faithful operation of) repair tasks. Assume I’ve already got an Orchid account, the Orchid software, an operational storage service, and OXT staked in the directory. Presumably I already have Clients.
+
+***Receiving: Receive inbound request \textit{from Cohort} (distinguished from the usual storage case, where I receive an inbound request from Client). Four key differences: first, I need to be convinced that I was correctly selected (that means I need to receive the Client selection algorithm from the Cohort, which also needs to be authenticated). Second, RC needs to be reconstructed from erasure blocks received from Cohort. Third, once I receive RC, I need to both decide whether it’s a contract I care to accept, but also that the RC conditions were not fulfilled by the previous Provider (the Cohort can only fire a Provider with cause). Fourth, I need to pay for bandwidth in order to receive the erasure blocks that I will reconstruct into the EB (rather than Client paying me for this).
+
+Sending: I am reading relevant blobs on the blockchain, as a background process. I notice that a Provider in my cohort has failed. Either that Provider’s KZG didn’t contain Client key (\textit{completeness}), or (uncommonly) Provider failed a KZG opening on-chain (\textit{correctness}). I use the Client selection algorithm (e.g. curator + random beacon) that I am storing to discover a Repair Target (RT). Schelling game or consensus-lite begins. I send Client selection algorithm (or a piece of it… pending design) to RT. This convinces RT that they are correctly selected. Send RT my erasure block of their RC. Profit. Suppose RT decides they like the terms of RC. Send RT my erasure block of their EB. Profit.
+
+\subsection{Provider Maintenance - Firing a Client*}
+
+As a Provider, I want to gracefully relinquish responsibility for EB sometimes (due to better prices offered on market, or bespoke reasons). I identify, according to Client provider selection algorithm, a Provider which I intend to become the new owner, pending their availability and acceptance of RC. I contact that Provider. Send RC to them for approval. If they don’t approve, try again with a new target. If they approve, then send the whole shebang (EB, cohort metadata, maybe Client info), paying for the pleasure. I confirm that the data/metadata was transferred successfully. At this point, I start gossipping the new owner to the Cohort. Then I wait for the new owner to post their first commitment to the EB. Check that it’s correct. Then I include a “data transfer” flag when I next post my commitment to the EB. Then I finalize any payments/openings on-chain to close out my relationship with Client over EB. Then I delete EB.
+
+\subsection{The Provider API}
+The provider offers a set of networked services.  What is the high level API that a provider must offer?
+\subsubsection{Data Upload / Storage}
+\subsubsection{Data Query / Retrieval / Repair}
+
+\section{Cohort Interactions}
+
+\subsection{Overview}
+
+\subsection{Cohort - Data Repair}
+Upon the unresponsiveness or failure of a provider
+(break this down to scenarios under here?)
+\subsubsection{Nominating a New Provider}
+Provider Bob goes offline and fails to make a commitment. (Cohort - Bob) identify Bob’s failure and \textbf{Repair} Bob’s data by finding a replacement and delivering EBs to them.
+
+\subsection{Cohort Metadata}
+
+\subsection{Cohort Adversarial Attack Scenarios}
+
+\section{Blockchain Contracts}
+
+\subsection{Contracts Overview}
+\subsection{The Settlement Contract*}
+
+As a Consensus Layer, I want to securely remit one-time(*) payment to a Provider for verifiably correct operation of storage task units (STUs)
+
+Securely: When receiving a RC, I need to check that its authenticating signature matches the authorized signature of the account it draws money from
+
+Remit: Call the payment smart contract (assume for the moment we can re-use nanopayment remittance logic) with the specified amount
+
+One-time(*): Each storage epoch can have payment remitted exactly once (except for grace periods of overlapping RCs). Protect against replay attacks
+
+Verifiably correct:
+
+  Path \#1: RC is accompanied by a Client-authenticated message that endorses correctness of certain STUs (correct operation of storage within certain epochs)
+  
+  Path \#2 (\$\$\$): RC is accompanied by KZG opening demonstrating correctness of certain STUs -> logically produces an endorsement equivalent to Client endorsement
+
+For composability sake, this should probably live in a separate contract: then “unmark”/”unsequester” the bond associated with each verified STU
+
+
+
+Poly R
+Represents one erasure block - calculated at upload time, may or may not be posted on chain (probably does not need to be , e.g. gossip)
+Covers hashes of all sub-blocks within the erasure block. (maybe hashing is not necessary)
+
+Periodic commitment:
+Poly Q covers all data for a given client
+Poly Q(i) = sub-block identifier (commitments to sub-blocks)
+
+Periodic commitment:
+Poly P covers sub-blocks for one client’s data
+Poly P(i) = sub-block data chunk
+
+\section{Stored Data} \label{Stored Data}
+
+…
+
+\subsection{Erasure Blocks}
+
+Erasure blocks are a redundant, linear encoding, of data chunks supporting a configurable k of n recovery in which any k of n encoded shards can be used to fully recover the data.  Additionally, erasure blocks in Orchid Storage are encoded using Twin Coding (See Section \ref{Twin Coding}) which allows for optimal recovery of lost shards by cooperating storage providers.
+
+\subsection{Twin Coding} \label{Twin Coding}
+
+A key aspect of the Orchid Storage project is the use of an efficient encoding scheme that minimizes bandwidth costs incurred during migration of distributed data through providers over time.
+Twin Coding is a hybrid encoding scheme that works with any two linear coding schemes and combines them to achieve a space-bandwidth tradeoff, minimizing the amount of data that must be transferred between storage nodes in order to recover a lost shard of data. In contrast to a traditional erasure scheme, in which restoration of a lost node requires a full reconstruction of the original file, Twin Coding allows for the recovery of a lost data shard with data transfer totalling exactly the size of the lost data shard, with no additional transfer overhead.
+This repository contains an implementation of Twin Coding, as well as a command line API for encoding files, decoding files with erasures, and optimally recovering lost shards.
+The original Twin Coding paper can be found in \cite{rashmi2011enabling}.
+
+\section{Polynomial Commitments}
+
+This section defines the three types of polynomial commitment used in the system.  
+
+An erasure block (\textbf{EB}) is one complete and erasure coded block, uploaded by the client to a provider..  Note that a provider may hold multiple erasure blocks for the same client.  
+
+The term \textbf{interpolates} here means that the polynomial is constructed to pass through the specified data points at a known sequence of distinct positions (ordinals) within its domain.
+
+We have three polynomials.
+
+\subsection{The $r$ polynomial}
+The $r$ polynomial is the original “receipt” for the full EB agreed upon by the client and provider.
+
+$r$:  This polynomial interpolates (identifiers of) the subblocks of the given erasure block:
+$$r_{EB,Provider}(i)=h\left(s_{EB,Provider,i}\right)$$
+
+It is created when a Client uploads an erasure block to a Provider.
+
+(here $h$ is the identifier, maybe a hash function, and $s$ is a sub-block. $EB,Provider$ indicates which erasure block, and $i$ indicates which sub-block of the erasure block)
+
+Polynomial $r$ is agreed-to by the client which verifies that a commitment to $r$ matches its own and includes it in the Rate Certificate (RC).
+
+The next two are part of the periodic commitment scheme:
+
+\subsection{The $q$ polynomial}
+The $q$ polynomial allows the cohort to determine which client blocks are committed to by a provider.
+
+$q$: This polynomial is part of the periodic commitment (PC) posted once every epoch by a Provider (by each Provider). It interpolates the commitments to $r$ for each erasure block held by the Provider.
+
+$$q_{Provider,Epoch}(EB)=C_{EB,Provider}$$
+
+(here $C_{EB,Provider}$ is the commitment to the polynomial $r_{EB,Provider}$)
+
+\subsection{The $p$ polynomial}
+The $p$ polynomial attests to the sub-blocks chosen by the random beacon for an interval.  It is part of the periodic commitment (PC) posted once every epoch by a Provider to prove data availability.
+
+$p$: This polynomial is posted once every epoch by a Provider (by each Provider). It interpolates sub-blocks, one from each erasure block that the Provider is holding, each chosen randomly. 
+
+$$p_{Provider,Epoch}(EB)=s_{EB,Provider,Random(Epoch)}$$
+
+(Here $Random(Epoch)$ takes the Epoch in as input and returns a random number [between 0 and the number of sub-blocks minus 1] of erasure block $EB$)
+
+\section{Rate Certificates} \label{Rate Certificates}
+One for each block (unit of responsibility)
+
+Rate Certificates exist so that the Client can go offline. (Rate certs are not needed in a purely interactive protocol, which can function in a manner similar to the Bandwidth case). Rate Certificates function as a credible commitment from the Client to the Provider that the Provider will be paid for storing data. They provide incentive for the Provider to retain the data. On the flip side, the Rate Certificate also contains conditions for payment, so that the Provider is not able to indiscriminately collect payments. 
+
+\textbf{What are Rate Certificates? What data goes in them?}
+
+A rate certificate contains: 
+\begin{itemize}
+    \item A rate (price per commitment and how often a commitment should happen, such as every $n$ blocks)
+    \item Some sort of data identifier (such as the content hash or KZG root)
+    \item A timestamp
+    \item The Orchid account of the Client
+    \item A signature from the Client
+\end{itemize}
+
+
+A Rate Certificate is shown by the Provider to the Blockchain (to some smart contract on-chain) any time that the Provider wants to claim payment. 
+
+Anyone holding the Rate Certificate who is able to provide proof that they are storing the requested piece of data during a given interval will receive payment. 
+
+The Rate Certificate is also erasure-coded and the erasure blocks are handed to the other Providers in the cohort so that they can choose a new Provider and issue a new Rate Certificate upon Provider failure.
+
+What happens if a Provider misses a proof, the cohort selects a new Provider, and then the old Provider comes back and keeps trying to make claims of having the data?
+
+See Payment settlement
+
+How do we ensure that Rate Cert does not pay out twice for the same work?
+
+How are Rate Certificates transferred between Providers?
+
+Situations that may warrant transfer of Rate Certificate: 
+Client issues new Rate Certificate
+Client wants to switch providers
+	
+Rate Certificates contain a timestamp. If the Provider issues a new Rate Cert with a more recent timestamp, the blockchain should accept only the newest Rate cert. Maybe have an overlap, or grace period in order to let the old Provider settle outstanding claims. The cohort must also be notified of this change and given pieces of new rate cert.	
+
+Client is offline and a Provider has failed
+
+
+What happens if a cohort needs to choose a new Provider and the Curator that the Client selected no longer exists?
+
+How does a Client stop paying for storing their data? IE “fire” all providers, but not get penalized?
+
+-current lottery contract lets you remove deposit after a certain period of time. Maybe we could do something like this. Client signals that they want to remove their money from their account, give Providers time to unwind
+-What about issuing a new Rate certificate for \$0 to
+	-client posts \$0 rate cert themselves. Expensive?
+	-another provider? They’d have to pay this provider. At this point why would the client not do this themselves
+-blind signatures?
+	-Provider signs new Rate Cert without seeing it, Client can convince a third party later that Provider has seen it. Now if Provider makes claims using old Rate cert, Client can go on chain and use the signed message as evidence for slashing
+
+How do we ensure Client doesn’t issue two identical Rate Certificates with identical timestamps?
+
+-Maybe add some other field to rate cert such as a nonce?
+
+
+\section{Periodic Commitments}
+\subsection{KZG Commitments}
+\subsection{Storage Commitment Structure}
+\subsection{Correctness and Completeness / Forward vs Retrospective Verification}
+
+Providers post periodic commitments at pre-specified times, which could be determined by the protocol or by the client. 
+
+\section{Commitment Bonding}
+
+Purpose: Consequence for Provider not acting correctly (not posting proof, posting incorrect proof). 
+Grows with time-proportional to time and number of commitments
+“Reverse slashing condition”
+
+What is a bonded commitment?
+
+Why does the bond have to grow?
+	Otherwise there is an attack where a Provider could post incorrect proofs basically indefinitely for a fixed* cost
+	*I suppose the cost is not fixed because if they never perform the “opening” phase of the commitment, they are still eating the cost of putting commitments on-chain. However, the size of this cost is variable and unpredictable since it depends on gas costs. Therefore, we can’t rely on the cost of posting commitments to replace the Bond. 
+
+
+How do we make sure that bonded commitments are earmarked correctly?
+
+What determines the size of the bond?
+Amount specified by protocol
+Determined by number of subblocks, not determined by size of subblocks
+
+Unwinding:
+
+What happens with bond if it is forfeited by the Provider?
+At least some of this money needs to go to repairing the data
+
+How does the Provider get the bond back? There are two possibilities:
+\begin{enumerate}
+    \item Client signs off that proofs have been done correctly, and Provider shows this to the blockchain. 
+    \item Provider performs Kate opening (which poly?*****)
+\end{enumerate}
+This both enables the Provider to get their bond back and be paid for the work they did.
+
+\section{Payment Settlement/Verification}
+
+Verification that work was done correctly could be costly. Therefore, it would be beneficial for the Provider to post multiple proofs at one time, as a batch, in order to amortize costs.
+
+There are two ways of doing Payment Settlement:
+\begin{itemize}
+    \item The Client has done all of the work checking off-chain (interactively)
+    \begin{itemize}
+        \item Client wants to do this because
+        \begin{itemize}
+            \item They won’t need to carry as much money in their account
+            \item Provider will factor cost of on-chain settlement into rate
+        \end{itemize}
+        \item Provider wants to do this because it is cheaper for them (provider pays)
+        \item Client checks:
+        \begin{itemize}
+            \item Opening from Provider
+            \item Data from chain
+        \end{itemize}
+        \item Client signs message, and Provider presents this, along with Rate Cert to blockchain (data that goes into this message here)
+    \end{itemize}
+    \item Provider performs payment settlement without Client (on-chain verification)
+\end{itemize}
+
+
+
+Written for people who will write code. Three different implementation pieces: 
+\begin{itemize}
+    \item Client
+    \begin{itemize}
+        \item File system
+        \item Erasure coding Library
+        \item Provider selection
+        \begin{itemize}
+            \item Need view of Blockchain (Infura/Alchemy, or Orchid first-party)
+        \end{itemize}
+        \item Rate Certificates
+        \item Logic that connects cohort to each other
+        \begin{itemize}
+            \item Metadata that allows cohort to track each-other
+        \end{itemize}
+        \item Way to check commitment by Provider
+        \begin{itemize}
+            \item KZG code resides on both Client and Provider
+        \end{itemize}
+        \item Data stored in order to later be able to find data (file pointers)
+        \begin{itemize}
+            \item And way to update this later- go to blockchain and find out who latest Providers are
+        \end{itemize}
+        \item Code to Reconstruct data
+        \item Code to construct new Rate certificate
+    \end{itemize}
+\item Provider
+\item Blockchain/Smart Contract
+\end{itemize}
+
+
+\subsection{Online Settlement}
+
+Cost-optimal settlement with an online client via external payment channel.
+
+\subsection{Offline Settlement}
+
+Forcing payment via on-chain proofs without client interaction.
+
+
+\subsection{The Settlement Contract}
+
+The Provider is identified by a public key.  
+
+There is a settlement contract responsible for verifying an interactive or non-interactive settlement request encompassing some range of data commitments.
+
+The provider will request settlement / payment for a range of commitments it has made.  These commitments are on-chain data / polynomial commitments to one or more clients’ hosted data blocks.
+
+The Non-interactive settlement case is the general case where the client is not available / cooperating and the provider must prove to the contract that its commitments were valid to receive payment.
+
+\textbf{What data is required to perform the settlement?}
+
+\begin{itemize}
+    \item For each commitment period there are \textbf{four elements} provided to the contract (corresponding to the args of the verify\_kzg\_proof() ckzg lib as listed below):
+    \begin{itemize}
+        \item The commitment (point-sized element)
+        \item The proof (point-sized element)
+        \item The z (evaluation value) 
+        \item The y (output value)
+    \end{itemize}
+
+These comprise the information needed to verify the PC (periodic commitments) for the periods to be settled as posted on-chain  \textbf{commitments to $p$}, the periodic commitment polynomial that interpolates the beacon-selected sub-blocks of a provider’s data.  This constitutes the openings / inclusion proofs for the beacon-selected indexes for each of the periods to be settled.
+
+    \item There must be some witness that shows that the commitments above were actually posted on-chain (See discussion below - how do we do this?)   Note that the other elements are proffered as part of the proof and stand on their own.
+
+    \item There must be some \textbf{witness to the random beacon}, which will confirm that these openings are for the correct beacon-selected sub-blocks for each period in question.
+
+With the information above we can prove the PCs are valid (opening the $p$ poly).  Next we need to prove that the PCs correspond to a particular RC... by the RC root identifier... This will require another KZG opening of $q$ poly... (the $q$ poly at position i holds the root block identifier for the EB erasure block in question...)
+
+We need a kzg opening of $q$
+$q$ holds commitments to $r$, which are the "root block identifiers" for the EBs which stored in the RCs.
+
+And we need an opening of $r$ ???
+
+    \item The provider must make the connection between these commitments and (one or more?) rate certificates via the RC block root identifier. TODO: Presumably the RCs are provided here.  These are structures of type YYY and approximate size ZZZ.
+\end{itemize}
+
+
+\textbf{Post verification settlement steps}
+
+Unwinding the provider bond commitments - releasing them to the provider after settlement.
+
+Authorizing payments...
+
+How are replay attacks prevented?  
+TBD: Contract storage records the settlement.
+
+How does this affect the RC?
+
+\textbf{Topic}: Can settlement be presented in any epoch combination / order?  
+Proposal to simplify by requiring contiguous epoch settlement:
+Just store the last settled epoch (index) for the RC.
+
+\textbf{
+Topic}: What about competing RCs  (two providers hold the same RC)?
+When does this happen?  In the case of transfer of providers the old provider may have outstanding epochs to claim... We'd like this to be possible... e.g. by allowing overlap for at least one epoch.
+
+- \textbf{Client-initiated}/online case: 
+the client could sign a new RC (including some new nonce or timestamp).
+
+- \textbf{Cohort-initiated}/repair case (cohort fires a provider):
+"consensus light" - honest providers will agree when a firing is required...
+Dispute resolution?  e.g. offline providers could present evidence that a dishonest provider has made a claim and the contract could slash their bond or prevent them from claiming in the future.
+
+- \textbf{Provider-initiated} a client / bowing out case: 
+The provider must replace itself with a new provider gracefully...
+@see previous discussion 
+
+\textbf{Simplifying assumption: Rate Certificates on-chain}
+Let's make the (simplifying?) assumption that RCs are recorded on-chain.  Question: How will the cohort-initiated transfer be handled in that case?
+
+TBD: Reference the discussion(s) about solutions for RCs off-chain for future enhancement.
+
+
+\begin{verbatim}\textbf{==== ckzg Lib API ====}
+
+In the ckzg lib an opening is performed by ⁠ compute\_kzg\_proof ⁠, which for a specified evaluation point returns the value of the poly at that point and a proof of that value.  The proof can then be validated against the original commitment with ⁠ verify\_kzg\_proof ⁠.
+
+/**
+ * Compute KZG proof for polynomial in Lagrange form at position z.
+ *
+ * @param[out] proof_out The  proof (a G1 element)
+ * @param[out] y_out     The evaluation of the polynomial at the evaluation point z
+ * @param[in]  blob      The blob (polynomial) 
+ * @param[in]  z         The z-value of the evaluation point
+ * @param[in]  s         The trusted setup
+ */
+C_KZG_RET \textbf{compute_kzg_proof}(...)
+
+/**
+ * Verify a KZG proof claiming that `p(z) == y`.
+ *
+ * @param[out] ok         True if the proof is valid, otherwise false
+ * @param[in]  commitment The KZG commitment corresponding to poly p(x)
+ * @param[in]  z          The evaluation point
+ * @param[in]  y          The claimed evaluation result
+ * @param[in]  kzg_proof  The KZG proof
+ * @param[in]  s          The trusted setup
+ */
+C_KZG_RET \textbf{verify_kzg_proof}(...)
+
+p[i] = sub block in the i'th position.
+
+\textbf{=================}
+\end{verbatim}
+
+
+%\textbf{TODO: How can the provider prove that the commitments were posted on-chain? } 
+%Contracts do not have access to prior transaction data (only hashes of the previous 256 blocks).  
+%See light wallets, etc. 
+
+
+\section{Orchid Accounts} \label{Orchid Accounts}
+
+An orchid account stores value as tokens in an account contract (e.g. the original Orchid Lottery Contract) and imposes some guarantees on availability for payment.  It supports a “deposit” amount that is escrowed for payments for a period of time, allowing a window for claims to be settled and prevents double payment.
+
+\section{The Orchid Directory} \label{Orchid Directory}
+
+The Orchid Directory is a facility that supports stake-weighted random selection of providers in conjunction with curation lists.  Staking is performed using OXT on Ethereum.
+
+\subsection{The Orchid Directory - Curation}
+TODO
+
+\subsection{Orchid Directory API (2024)}
+
+\begin{verbatim}
+
+function pick(uint128 percent) external view returns (address, uint128)
+
+Selects a stakee and associated delay based on a percentage of the total staked amount.
+Parameters: percent: Proportion of the total stake (as a uint128) for selection.
+Returns: Tuple with stakee address and delay.
+\end{verbatim}
+
+
+
+
+
+%\section{Acknowledgements}
+
+%\nocite{*}
+\bibliography{bibliography}{}
+\bibliographystyle{plain}
+    
+
+
+
+\end{document}
+
+
+
+
+
+
