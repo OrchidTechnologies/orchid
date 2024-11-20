@@ -1,0 +1,25 @@
+
+Orchid Storage Technical Meeting: Discussing process and deliverables
+
+1. **Litepaper Refinements:**
+   - A participant reported adding comments to the litepaper for clarity and deeper technical exploration.
+   - A plan was established to consolidate comments and improve readability by restructuring dense sections.
+   - Goals for streamlining the document into a cohesive narrative were discussed, including turning it into actionable specifications.
+
+2. **Smart Contract Considerations:**
+   - Discussion centered on defining the scope and API for blockchain smart contracts related to storage.
+   - Questions included:
+     - Access to historical data by contracts.
+     - Cost structures for verifying multiple storage events concurrently.
+   - Suggestions to identify experts for resolving ambiguities, though basic research might clarify many points.
+
+3. **Collaborative Documentation Process:**
+   - Proposed breaking work into smaller, actionable deliverables to accelerate progress.
+   - The current focus is on the blockchain story within the litepaper, which outlines settlement, bonded commitments, and self-audit mechanisms.
+   - Establishing a workflow for creating visible, milestone-based deliverables to maintain stakeholder engagement.
+
+4. **Technical Strategies:**
+   - Emphasis on "working backward" from constraints imposed by blockchain contracts to refine system components such as erasure coding and nanopayment integration.
+   - Twin-coding, detailed in the litepaper, was noted as critical for optimizing repair costs.
+
+

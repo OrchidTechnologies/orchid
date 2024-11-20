@@ -1,0 +1,40 @@
+
+Orchid Storage Technical Meeting: Goals for Specification Documents
+
+**Summary of Technical Discussion:**
+
+1. **Purpose and Context:**
+   - Building on the concepts from the Orchid Storage litepaper, the meeting focused on drafting a practical, implementable specification for decentralized data storage.
+   - The objective is to create a clear, actionable design that developers can use to build the system.
+
+2. **High-Level Goals:**
+   - Produce three key documents:
+     - **Implementation Document:** Detailed enough for developers to build smart contracts, provider-side, and client-side systems.
+     - **Spec for Open Contribution:** A high-level but comprehensive specification to allow external developers to contribute.
+     - **White Paper/Outreach Document:** Explains the technology and positions it within the broader decentralized storage ecosystem.
+
+3. **System Design Approach:**
+   - Defined roles (client, provider, blockchain) and their interactions:
+     - Clients encode data into erasure-coded blocks.
+     - Providers store these blocks and self-audit using bonded commitments and cryptographic proofs.
+     - Blockchain mediates payments and ensures correctness through legible and irreversible audits.
+
+4. **Discussion Breakdown:**
+   - **Phase 1: Initial Data Storage**
+     - Client chooses a cohort of providers using the Orchid Directory.
+     - Data is erasure-coded into blocks and distributed among providers.
+     - Providers commit to storing blocks and send KZG commitments to the client.
+   - **Phase 2: Regular Operations**
+     - Providers perform periodic self-audits, submitting bonded commitments to ensure availability and correctness.
+     - Cohorts verify each other’s commitments, ensuring redundancy and preparing for potential provider failures.
+   - **Phase 3: Repair and Failure Handling**
+     - Failed providers are identified via incomplete audits.
+     - Cohorts collaborate to reconstruct missing data and onboard new providers using the twin-coding repair mechanism.
+     - Payments to providers are settled through blockchain interactions based on verified audits.
+
+5. **Proposed Next Steps:**
+   - Develop a narrative-style technical document starting from a user story ("As a client, I want to store data").
+   - Outline actor responsibilities and data flows in increasing detail.
+   - Focus on drafting APIs and pseudo-code to guide implementation.
+
+By clarifying the operational flows and specifying interactions between clients, providers, and the blockchain, the meeting laid the groundwork for a comprehensive, implementation-ready specification.

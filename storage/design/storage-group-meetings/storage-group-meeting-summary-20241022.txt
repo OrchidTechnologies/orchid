@@ -1,0 +1,44 @@
+
+Orchid Storage Technical Meeting: Periodic Commitments
+
+#### **Context and Key Topic:**
+The meeting revolved around refining the design of periodic commitments for decentralized data storage, as described in the litepaper. The goal is to ensure storage providers can prove data integrity efficiently while incentivizing honesty and deterring fraudulent or lazy behaviors.
+
+#### **Technical Overview:**
+1. **Purpose of Periodic Commitments**:
+   - Providers perform "self-audits" using cryptographic commitments to verify stored data's presence and integrity.
+   - Commitments rely on KZG polynomial schemes, offering scalability and efficient verification.
+   - These commitments ensure data retrievability while remaining decentralized and minimizing blockchain interactions.
+
+2. **Design Features**:
+   - **Non-anticipatable Selection**:
+     - Randomly selected sub-blocks ensure providers must store all data, as the specific audited pieces can't be predicted.
+   - **Irreversibility**:
+     - Commitments are recorded on-chain, making it infeasible to modify past claims.
+   - **Legibility**:
+     - Commitments' metadata must be easily verifiable by clients and cohorts to avoid hidden data loss.
+
+3. **Challenges**:
+   - **Random Beacon Timing**:
+     - The need to ensure fair, unpredictable timing for random beacon selection to prevent "beacon grinding" (where providers avoid commitment epochs to conceal missing data).
+   - **Just-In-Time Reconstruction Exploits**:
+     - Providers might avoid storing data, reconstructing only requested pieces during audits. Addressing this requires:
+       - Cohort pricing dynamics to discourage misuse of shared data.
+       - Efficient yet restrictive protocols limiting reconstruction to genuine failures.
+
+4. **Proposed Solutions**:
+   - **Amortized Commitments**:
+     - Exploring multi-dimensional amortization (across epochs and blocks) for cost-efficient on-chain commitments.
+   - **Cohort Economics**:
+     - Introducing adaptive pricing for data retrieval within cohorts to disincentivize reliance on others for storage.
+
+5. **Open Questions**:
+   - Clarifying the trade-offs between granularity (sub-block size) and probabilistic guarantees of data availability.
+   - Investigating mathematical strategies for compressing multi-dimensional KZG polynomial openings.
+
+#### **Actionable Outcomes**:
+- Finalize definitions and parameters for periodic commitment epochs.
+- Continue researching advanced KZG polynomial applications to address amortization challenges.
+- Align commitment protocols with Proto-Danksharding to leverage its irreversibility and scalability.
+
+
