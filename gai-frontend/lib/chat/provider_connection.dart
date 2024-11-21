@@ -44,13 +44,15 @@ class ProviderConnection {
   final VoidCallback onDisconnect;
   final MessageCallback onSystemMessage;
   final MessageCallback onInternalMessage;
-  final EthereumAddress contract;
+  final EthereumAddress? contract;
   final String url;
-  final AccountDetail accountDetail;
+  final String? authToken;
+  final AccountDetail? accountDetail;
   final AuthTokenCallback? onAuthToken;
   final Map<String, String> _requestModels = {};  
   final Map<String, _PendingRequest> _pendingRequests = {};
-  
+  bool _usingDirectAuth = false;
+
   String _generateRequestId() {
     return '${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(10000)}';
   }
@@ -63,31 +65,42 @@ class ProviderConnection {
     required this.onError,
     required this.onSystemMessage,
     required this.onInternalMessage,
-    required this.contract,
+    this.contract,
     required this.url,
-    required this.accountDetail,
+    this.accountDetail,
+    this.authToken,
     this.onAuthToken,
   }) {
-    try {
-      _providerChannel = WebSocketChannel.connect(Uri.parse(url));
-      _providerChannel?.ready;
-    } catch (e) {
-      onError('Failed on provider connection: $e');
-      return;
+    _usingDirectAuth = authToken != null;
+    
+    if (!_usingDirectAuth) {
+      try {
+        _providerChannel = WebSocketChannel.connect(Uri.parse(url));
+        _providerChannel?.ready;
+      } catch (e) {
+        onError('Failed on provider connection: $e');
+        return;
+      }
+      _providerChannel?.stream.listen(
+        receiveProviderMessage,
+        onDone: () => onDisconnect(),
+        onError: (error) => onError('ws error: $error'),
+      );
+    } else {
+      // Set up inference client directly with auth token
+      _inferenceClient = InferenceClient(baseUrl: url);
+      _inferenceClient!.setAuthToken(authToken!);
+      onInternalMessage('Using direct auth token');
     }
-    _providerChannel?.stream.listen(
-      receiveProviderMessage,
-      onDone: () => onDisconnect(),
-      onError: (error) => onError('ws error: $error'),
-    );
     onConnect();
   }
 
   static Future<ProviderConnection> connect({
     required String billingUrl,
-    required String inferenceUrl,  // This won't be used initially
-    required EthereumAddress contract,
-    required AccountDetail accountDetail,
+    required String inferenceUrl,
+    EthereumAddress? contract,
+    AccountDetail? accountDetail,
+    String? authToken,
     required MessageCallback onMessage,
     required ChatCallback onChat,
     required VoidCallback onConnect,
@@ -97,6 +110,10 @@ class ProviderConnection {
     required MessageCallback onInternalMessage,
     AuthTokenCallback? onAuthToken,
   }) async {
+    if (authToken == null && accountDetail == null) {
+      throw Exception('Either authToken or accountDetail must be provided');
+    }
+
     final connection = ProviderConnection(
       onMessage: onMessage,
       onConnect: onConnect,
@@ -106,8 +123,9 @@ class ProviderConnection {
       onSystemMessage: onSystemMessage,
       onInternalMessage: onInternalMessage,
       contract: contract,
-      url: billingUrl,
+      url: authToken != null ? inferenceUrl : billingUrl,
       accountDetail: accountDetail,
+      authToken: authToken,
       onAuthToken: onAuthToken,
     );
     
@@ -122,7 +140,6 @@ class ProviderConnection {
       return;
     }
 
-    // Create new inference client with the URL from the auth token
     _inferenceClient = InferenceClient(baseUrl: inferenceUrl);
     _inferenceClient!.setAuthToken(token);
     onInternalMessage('Auth token received and inference client initialized');
@@ -136,15 +153,20 @@ class ProviderConnection {
   }
 
   void payInvoice(Map<String, dynamic> invoice) {
+    if (_usingDirectAuth) {
+      onError('Unexpected invoice received while using direct auth token');
+      return;
+    }
+
     var payment;
     if (!validInvoice(invoice)) {
       onError('Invalid invoice ${invoice}');
       return;
     }
     
-    assert(accountDetail.funder != null);
-    final balance = accountDetail.lotteryPot?.balance.intValue ?? BigInt.zero;
-    final deposit = accountDetail.lotteryPot?.deposit.intValue ?? BigInt.zero;
+    assert(accountDetail?.funder != null);
+    final balance = accountDetail?.lotteryPot?.balance.intValue ?? BigInt.zero;
+    final deposit = accountDetail?.lotteryPot?.deposit.intValue ?? BigInt.zero;
     
     if (balance <= BigInt.zero || deposit <= BigInt.zero) {
       onError('Insufficient funds: balance=$balance, deposit=$deposit');
@@ -175,14 +197,14 @@ class ProviderConnection {
     
     final ticket = OrchidTicket(
       data: data,
-      lotaddr: lotaddr,
+      lotaddr: lotaddr!,
       token: token,
       amount: faceval,
       ratio: ratio,
-      funder: accountDetail.account.funder,
+      funder: accountDetail!.account.funder,
       recipient: EthereumAddress.from(recipient),
       commitment: commit,
-      privateKey: accountDetail.account.signerKey.private,
+      privateKey: accountDetail!.account.signerKey.private,
       millisecondsSinceEpoch: DateTime.now().millisecondsSinceEpoch,
     );
     
@@ -219,6 +241,11 @@ class ProviderConnection {
   }
 
   Future<void> requestAuthToken() async {
+    if (_usingDirectAuth) {
+      onError('Cannot request auth token when using direct auth');
+      return;
+    }
+    
     final message = '{"type": "request_token"}';
     onInternalMessage('Requesting auth token');
     _sendProviderMessage(message);
@@ -229,7 +256,7 @@ class ProviderConnection {
     List<ChatMessage> messages, {
     Map<String, Object>? params,
   }) async {
-    if (_inferenceClient == null) {
+    if (!_usingDirectAuth && _inferenceClient == null) {
       await requestAuthToken();
       await Future.delayed(Duration(milliseconds: 100));
       
@@ -282,6 +309,10 @@ class ProviderConnection {
   }
 
   void _sendProviderMessage(String message) {
+    if (_usingDirectAuth) {
+      onError('Cannot send provider message when using direct auth');
+      return;
+    }
     print('Sending message to provider $message');
     _providerChannel?.sink.add(message);
   }

@@ -38,6 +38,20 @@ class ModelsState extends ChangeNotifier {
     return _modelsByProvider[providerId] ?? [];
   }
 
+  String? getModelName(String? modelId) {
+    if (modelId == null) return null;
+    final model = allModels.firstWhere(
+      (m) => m.id == modelId,
+      orElse: () => ModelInfo(
+        id: modelId,
+        name: modelId,
+        provider: '',
+        apiType: '',
+      ),
+    );
+    return model.name;
+  }
+
   List<ModelInfo> get allModels {
     final models = _modelsByProvider.values.expand((models) => models).toList();
     print('ModelsState.allModels returning ${models.length} models: $models');

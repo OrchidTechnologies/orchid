@@ -26,6 +26,9 @@ import 'chat_model_button.dart';
 import 'models.dart';
 import 'provider_connection.dart';
 import '../config/providers_config.dart';
+import 'auth_dialog.dart';
+
+enum AuthTokenMethod { manual, walletConnect }
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key});
@@ -57,6 +60,10 @@ class _ChatViewState extends State<ChatView> {
   Chain _selectedChain = Chains.Gnosis;
   final ModelsState _modelsState = ModelsState();
   List<String> _selectedModelIds = [];
+
+  AuthTokenMethod _authTokenMethod = AuthTokenMethod.manual;
+  String? _authToken;
+  String? _inferenceUrl;
 
   @override
   void initState() {
@@ -100,6 +107,60 @@ class _ChatViewState extends State<ChatView> {
 
     log('Connecting to initial provider: ${firstProvider['name']}');
     _connectProvider(firstProviderId);
+  }
+
+  void _connectWithAuthToken(String token, String inferenceUrl) async {
+    // Clean up existing connection if any
+    if (_connected) {
+      _providerConnection?.dispose();
+      _connected = false;
+    }
+
+    try {
+      _providerConnection = await ProviderConnection.connect(
+        billingUrl: inferenceUrl,
+        inferenceUrl: inferenceUrl,
+        contract: null,
+        accountDetail: null,
+        authToken: token,
+        onMessage: (msg) {
+          addMessage(ChatMessageSource.internal, msg);
+        },
+        onConnect: () { 
+          providerConnected('Direct Auth');
+        },
+        onChat: (msg, metadata) {
+          addMessage(
+            ChatMessageSource.provider,
+            msg,
+            metadata: metadata,
+            modelId: metadata['model_id'],
+            modelName: _modelsState.getModelName(metadata['model_id']),
+          );
+        },
+        onDisconnect: providerDisconnected,
+        onError: (msg) {
+          addMessage(ChatMessageSource.system, 'Provider error: $msg');
+        },
+        onSystemMessage: (msg) {
+          addMessage(ChatMessageSource.system, msg);
+        },
+        onInternalMessage: (msg) {
+          addMessage(ChatMessageSource.internal, msg);
+        },
+      );
+      // Fetch models after connection
+      if (_providerConnection?.inferenceClient != null) {
+        await _modelsState.fetchModelsForProvider(
+          'direct-auth',
+          _providerConnection!.inferenceClient!,
+        );
+      }
+
+    } catch (e, stack) {
+      log('Error connecting with auth token: $e\n$stack');
+      addMessage(ChatMessageSource.system, 'Failed to connect: $e');
+    }
   }
 
   Account? get _account {
@@ -180,7 +241,7 @@ class _ChatViewState extends State<ChatView> {
     );
   }
   
-void _connectProvider([String provider = '']) async {
+  void _connectProvider([String provider = '']) async {
     var account = _accountDetail;
     if (account == null) {
       log('_connectProvider() -- No account');
@@ -230,33 +291,16 @@ void _connectProvider([String provider = '']) async {
           providerConnected(name);
         },
         onChat: (msg, metadata) {
-          print('onChat received metadata: $metadata'); // See what metadata we get
+          print('onChat received metadata: $metadata');
           final modelId = metadata['model_id'];
-          print('Found model_id: $modelId'); // Verify we extract model_id
+          print('Found model_id: $modelId'); 
           
-          String? modelName;
-          if (modelId != null) {
-            print('Available models: ${_modelsState.allModels.map((m) => '${m.id}: ${m.name}')}'); // See what models we have
-            final model = _modelsState.allModels.firstWhere(
-              (m) => m.id == modelId,
-              orElse: () => ModelInfo(
-                id: modelId,
-                name: modelId,
-                provider: '',
-                apiType: '',
-              ),
-            );
-            modelName = model.name;
-            print('Looked up model name: $modelName'); // See what name we found
-          }
-
-          print('Adding message with modelId: $modelId, modelName: $modelName'); // Verify what we're passing
           addMessage(
             ChatMessageSource.provider,
             msg,
             metadata: metadata,
             modelId: modelId,
-            modelName: modelName,
+            modelName: _modelsState.getModelName(modelId),
           );
         },
         onDisconnect: providerDisconnected,
@@ -324,97 +368,37 @@ void _connectProvider([String provider = '']) async {
     log('Selected models updated to: $_selectedModelIds');
   }
 
-  // TODO: Break out widget
-  Widget _buildAccountDialog(BuildContext context) {
-    if (_funder != null) {
-      _funderFieldController.value = _funder;
-    }
-    return SizedBox(
-      key: ValueKey(_account?.hashCode ?? 'key'),
-      // Width here is effectively a max width and prevents dialog resizing
-      width: 500,
-      child: IntrinsicHeight(
-        child: ListenableBuilder(
-            listenable: _accountDetailNotifier,
-            builder: (context, child) {
-              return OrchidTitledPanel(
-                highlight: false,
-                opaque: true,
-                titleText: "Set your Orchid account",
-                onDismiss: () {
-                  Navigator.pop(context);
-                },
-                body: Column(
-                  children: [
-                    // Chain selector
-                    Row(
-                      children: [
-                        SizedBox(
-                          height: 40,
-                          width: 190,
-                          child: OrchidChainSelectorMenu(
-                            backgroundColor: Colors.white.withOpacity(0.1),
-                            selected: _selectedChain,
-                            onSelection: (chain) {
-                              setState(() {
-                                _selectedChain = chain;
-                              });
-                              _accountChanged();
-                            },
-                            enabled: true,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Funder field
-                    OrchidLabeledAddressField(
-                      label: 'Funder Address',
-                      onChange: (EthereumAddress? s) {
-                        setState(() {
-                          _funder = s;
-                        });
-                        _accountChanged();
-                      },
-                      controller: _funderFieldController,
-                    ).top(16),
-                    // Signer field
-                    OrchidLabeledTextField(
-                      label: 'Signer Key',
-                      controller: _signerFieldController,
-                      hintText: '0x...',
-                      onChanged: (String s) {
-                        setState(() {
-                          try {
-                            _signerKey = BigInt.parse(s);
-                          } catch (e) {
-                            _signerKey = null;
-                          }
-                        });
-                        _accountChanged();
-                      },
-                    ).top(16),
-                    // Account card
-                    AccountCard(accountDetail: _accountDetail).top(20),
-                    ChatButton(
-                      onPressed: () => _launchURL('https://account.orchid.com'),
-                      text: 'Manage Account',
-                      width: 200,
-                    ).top(20),
-                  ],
-                ).pad(24),
-              );
-            }),
-      ),
-    );
-  }
-
   void _popAccountDialog() {
-    AppDialogs.showAppDialog(
-      context: context,
-      showActions: false,
-      contentPadding: EdgeInsets.zero,
-      body: _buildAccountDialog(context),
+    AuthDialog.show(
+      context,
+      initialChain: _selectedChain,
+      initialFunder: _funder,
+      initialSignerKey: _signerKey,
+      initialAuthToken: _authToken,  // Add this
+      initialInferenceUrl: _inferenceUrl,  // Add this
+      accountDetail: _accountDetail,
+      accountDetailNotifier: _accountDetailNotifier,
+      onAccountChanged: (chain, funder, signerKey) {
+        setState(() {
+          _selectedChain = chain;
+          _funder = funder;
+          _signerKey = signerKey;
+          // Clear auth token values when switching to account mode
+          _authToken = null;
+          _inferenceUrl = null;
+        });
+        _accountChanged();
+      },
+      onAuthTokenChanged: (token, url) {
+        setState(() {
+          _authToken = token;
+          _inferenceUrl = url;
+          // Clear account values when switching to token mode
+          _funder = null;
+          _signerKey = null;
+        });
+        _connectWithAuthToken(token, url);
+      },
     );
   }
 
@@ -424,10 +408,19 @@ void _connectProvider([String provider = '']) async {
   }
 
   void _send() {
-    _account != null ? _sendPrompt() : _popAccountDialog();
+    if (_canSendMessages()) {
+      _sendPrompt();
+    } else {
+      _popAccountDialog();
+    }
   }
 
-void _sendPrompt() async {
+  bool _canSendMessages() {
+    return (_providerConnection?.inferenceClient != null) || 
+           (_authToken != null && _inferenceUrl != null);
+  }
+
+  void _sendPrompt() async {
     var msg = _promptTextController.text;
     if (msg.trim().isEmpty) {
       return;
