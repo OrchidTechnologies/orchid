@@ -45,8 +45,11 @@ task<cricket::Candidate> Peer::Candidate() {
 }
 
 std::string Strip(const std::string &sdp) {
-    static const std::regex re("\r?\na=candidate:[^\r\n]*");
-    return std::regex_replace(sdp, re, "");
+    // XXX: using regex for this is a poor approach
+    static const std::regex aeq("\r?\na=candidate:[^\r\n]*");
+    static const std::regex ip4("IN IP4 [0-9.]*");
+    static const std::regex meq("m=application [0-9]* ");
+    return std::regex_replace(std::regex_replace(std::regex_replace(sdp, aeq, ""), ip4, "IN IP4 0.0.0.0"), meq, "m=application 9 ");
 }
 
 }
