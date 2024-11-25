@@ -2,6 +2,9 @@
 set -e
 which brew &>/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+# XXX: https://github.com/Homebrew/homebrew-core/issues/198881
+brew unlink pkg-config@0.29.2 || true
+
 # XXX: duplicate linux setup as much as possible
 brew install \
     gnu-sed \
