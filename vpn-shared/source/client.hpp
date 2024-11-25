@@ -91,7 +91,7 @@ class Client :
   public:
     Client(BufferDrain &drain, S<Updated<Prices>> oracle);
 
-    task<void> Open(const Provider &provider, const S<Base> &base);
+    task<void> Open(const S<Base> &base, const Locator &locator, const S<rtc::SSLFingerprint> &fingerprint = {});
     task<void> Shut() noexcept override;
 
     task<void> Send(const Buffer &data) override;

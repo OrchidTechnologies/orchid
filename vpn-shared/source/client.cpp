@@ -130,10 +130,12 @@ Client::Client(BufferDrain &drain, S<Updated<Prices>> oracle) :
 {
 }
 
-task<void> Client::Open(const Provider &provider, const S<Base> &base) {
+task<void> Client::Open(const S<Base> &base, const Locator &locator, const S<rtc::SSLFingerprint> &fingerprint) {
     const auto verify([&](const std::list<const rtc::OpenSSLCertificate> &certificates) -> bool {
+        if (!fingerprint)
+            return true;
         for (const auto &certificate : certificates)
-            if (*provider.fingerprint_ == *rtc::SSLFingerprint::Create(provider.fingerprint_->algorithm, certificate))
+            if (*fingerprint == *rtc::SSLFingerprint::Create(fingerprint->algorithm, certificate))
                 return true;
         return false;
     });
@@ -147,7 +149,7 @@ task<void> Client::Open(const Provider &provider, const S<Base> &base) {
         return configuration;
     }(), [&](std::string offer) -> task<std::string> {
         // XXX: implement 307 redirect
-        const auto answer((co_await base->Fetch("POST", provider.locator_, {
+        const auto answer((co_await base->Fetch("POST", locator, {
             {"content-type", "application/sdp"},
         }, offer, verify))());
         if (Verbose) {

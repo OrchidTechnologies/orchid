@@ -118,7 +118,7 @@ task<Report> TestOrchid(const S<Base> &base, const S<Network> &network, const Ad
     co_return co_await Using<BufferSink<Remote>>([&](BufferSink<Remote> &remote) -> task<Report> {
         const auto provider(co_await network->Select("untrusted.orch1d.eth", address));
         Client &client(co_await code(remote));
-        co_await client.Open(provider, base);
+        co_await client.Open(base, provider.locator_, provider.fingerprint_);
         remote.Open();
 
         const auto host(co_await Find(remote));
