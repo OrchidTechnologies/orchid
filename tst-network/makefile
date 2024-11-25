@@ -29,22 +29,22 @@ include env/target.mk
 version := 0.9
 
 .PHONY: all
-all: $(output)/$(machine)/orchidtop$(exe)
+all: $(output)/$(machine)/orchidstat$(exe)
 
 .PHONY: test
-test: $(output)/$(machine)/orchidtop$(exe)
+test: $(output)/$(machine)/orchidstat$(exe)
 	$< $(args)
 
 .PHONY: debug
-debug: $(output)/$(machine)/orchidtop$(exe)
+debug: $(output)/$(machine)/orchidstat$(exe)
 	lldb -o 'run $(args)' $<
 
 .PHONY: record
-record: $(output)/$(machine)/orchidtop$(exe)
+record: $(output)/$(machine)/orchidstat$(exe)
 	perf record --call-graph dwarf $< $(args)
 
 .PHONY: report
-report: $(output)/$(machine)/orchidtop$(exe)
+report: $(output)/$(machine)/orchidstat$(exe)
 	perf report --sort=cpu
 
 $(call include,vpn/target.mk)
@@ -59,7 +59,7 @@ cflags/$(pwd)/source/main.cpp += -Wno-implicit-const-int-float-conversion
 
 include env/output.mk
 
-$(output)/%/orchidtop$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
+$(output)/%/orchidstat$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
 	@echo [LD] $@
 	@set -o pipefail; $(cxx) $(more/$*) $(wflags) -o $@ $(filter %.o,$^) $(filter %.a,$^) $(filter %.lib,$^) $(lflags) 2>&1 | nl
 	@ls -la $@
