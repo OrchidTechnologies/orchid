@@ -2,6 +2,8 @@
 set -e
 which brew &>/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+brew update
+
 # XXX: duplicate linux setup as much as possible
 brew install \
     gnu-sed \

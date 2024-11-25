@@ -79,7 +79,7 @@ namespace po = boost::program_options;
 
 int TestWorker(const asio::ip::address &bind, uint16_t port, const std::string &key, const std::string &certificates, const std::string &params);
 
-task<bool> Symmetric(const S<Base> &base) {
+task<void> Check(const S<Base> &base) {
     const auto offer(co_await Description(base, {"stun:stun.l.google.com:19302", "stun:stun.cloudflare.com:3478"}));
     std::cout << std::endl;
     std::cout << Filter(false, offer) << std::endl;
@@ -103,12 +103,11 @@ task<bool> Symmetric(const S<Base> &base) {
             const auto &candidate(ice->candidate());
             if (!candidate.is_stun())
                 continue;
-            if (!reflexive.emplace(candidate.related_address(), candidate.address()).second)
-                co_return true;
+            orc_assert_(reflexive.emplace(candidate.related_address(), candidate.address()).second, "symmetric NAT is not supported");
         }
     }
 
-    co_return false;
+    orc_assert_(!reflexive.empty(), "must have at least a single route");
 }
 
 int Main(int argc, const char *const argv[]) {
@@ -270,7 +269,10 @@ int Main(int argc, const char *const argv[]) {
 
 
     S<Base> base(args.count("network") == 0 ? Break<Local>() : Break<Local>(args["network"].as<std::string>()));
-    orc_assert_(!Wait(Symmetric(base)), "server must not use symmetric NAT");
+
+    Wait([&]() -> task<void> {
+        co_await Check(base);
+    }());
 
 
     auto cashier([&]() -> S<Cashier> {
@@ -366,9 +368,8 @@ int Main(int argc, const char *const argv[]) {
         auto remote(Break<BufferSink<Remote>>());
         Egress::Wire(egress, *remote);
         remote->Open();
-        co_await remote->Resolve("one.one.one.one", "443");
-        if (co_await Symmetric(remote))
-            Log() << "egress should not use symmetric NAT" << std::endl;
+        co_await remote->Resolve("one.one", "443");
+        co_await Check(remote);
     }());
 
 
