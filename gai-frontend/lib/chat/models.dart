@@ -81,7 +81,7 @@ class ModelsState extends ChangeNotifier {
       
       print('ModelsState: Created models list: $modelsList');
       
-      _modelsByProvider[providerId] = modelsList;
+      _modelsByProvider[providerId] = modelsList.cast<ModelInfo>();
       print('ModelsState: Updated models for provider $providerId: $modelsList');
     } catch (e, stack) {
       print('ModelsState: Error fetching models: $e\n$stack');
