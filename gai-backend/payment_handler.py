@@ -1,7 +1,6 @@
 import web3
 from decimal import Decimal
 import random
-import ethereum
 from typing import Tuple, Optional
 import json
 import sys
@@ -31,7 +30,9 @@ class PaymentHandler:
         num = hex(random.randrange(pow(2,256)))[2:]
         reveal = '0x' + num[2:].zfill(64)
         try:
-            commit = ethereum.utils.sha3(bytes.fromhex(reveal[2:])).hex()
+            # Using Web3's keccak instead of ethereum.utils.sha3
+            reveal_bytes = bytes.fromhex(reveal[2:])
+            commit = self.w3.keccak(reveal_bytes).hex()
             return reveal, commit
         except Exception as e:
             logger.error(f"Failed to generate reveal/commit pair: {e}")
