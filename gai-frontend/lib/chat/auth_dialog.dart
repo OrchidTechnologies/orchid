@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
@@ -12,17 +11,18 @@ import 'package:orchid/gui-orchid/lib/orchid/menu/orchid_chain_selector_menu.dar
 import 'package:orchid/orchid/account/account_card.dart';
 import 'chat_button.dart';
 
-typedef AccountChangedCallback = void Function(Chain chain, EthereumAddress? funder, BigInt? signerKey);
-typedef AuthTokenChangedCallback = void Function(String token, String inferenceUrl);
+typedef AccountChangedCallback = void Function(
+    Chain chain, EthereumAddress? funder, BigInt? signerKey);
+typedef AuthTokenChangedCallback = void Function(
+    String token, String inferenceUrl);
 
 class AuthDialog extends StatefulWidget {
   final Chain initialChain;
   final EthereumAddress? initialFunder;
   final BigInt? initialSignerKey;
-  final String? initialAuthToken;     // Add field declaration
-  final String? initialInferenceUrl;  // Add field declaration
-  final AccountDetail? accountDetail;
-  final ChangeNotifier accountDetailNotifier;
+  final String? initialAuthToken;
+  final String? initialInferenceUrl;
+  final ValueNotifier<AccountDetail?> accountDetailNotifier;
   final AccountChangedCallback onAccountChanged;
   final AuthTokenChangedCallback onAuthTokenChanged;
 
@@ -33,7 +33,6 @@ class AuthDialog extends StatefulWidget {
     this.initialSignerKey,
     this.initialAuthToken,
     this.initialInferenceUrl,
-    this.accountDetail,
     required this.accountDetailNotifier,
     required this.onAccountChanged,
     required this.onAuthTokenChanged,
@@ -44,10 +43,9 @@ class AuthDialog extends StatefulWidget {
     required Chain initialChain,
     EthereumAddress? initialFunder,
     BigInt? initialSignerKey,
-    String? initialAuthToken,         // Add to method signature
-    String? initialInferenceUrl,      // Add to method signature
-    AccountDetail? accountDetail,
-    required ChangeNotifier accountDetailNotifier,
+    String? initialAuthToken,
+    String? initialInferenceUrl,
+    required ValueNotifier<AccountDetail?> accountDetailNotifier,
     required AccountChangedCallback onAccountChanged,
     required AuthTokenChangedCallback onAuthTokenChanged,
   }) {
@@ -59,9 +57,8 @@ class AuthDialog extends StatefulWidget {
         initialChain: initialChain,
         initialFunder: initialFunder,
         initialSignerKey: initialSignerKey,
-        initialAuthToken: initialAuthToken,       // Pass through
-        initialInferenceUrl: initialInferenceUrl, // Pass through
-        accountDetail: accountDetail,
+        initialAuthToken: initialAuthToken,
+        initialInferenceUrl: initialInferenceUrl,
         accountDetailNotifier: accountDetailNotifier,
         onAccountChanged: onAccountChanged,
         onAuthTokenChanged: onAuthTokenChanged,
@@ -91,73 +88,72 @@ class _AuthDialogState extends State<AuthDialog> {
     _selectedChain = widget.initialChain;
     _funder = widget.initialFunder;
     _signerKey = widget.initialSignerKey;
-    _authToken = widget.initialAuthToken; 
-    _inferenceUrl = widget.initialInferenceUrl; 
+    _authToken = widget.initialAuthToken;
+    _inferenceUrl = widget.initialInferenceUrl;
     if (_funder != null) {
       _funderFieldController.text = _funder.toString();
     }
     if (_signerKey != null) {
       _signerFieldController.text = _signerKey.toString();
     }
-    if (_authToken != null) { 
+    if (_authToken != null) {
       _authTokenController.text = _authToken!;
     }
     if (_inferenceUrl != null) {
       _inferenceUrlController.text = _inferenceUrl!;
-    }    
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      key: ValueKey(widget.accountDetail?.hashCode ?? 'key'),
+      key: ValueKey(widget.accountDetailNotifier?.hashCode ?? 'key'),
       width: 500,
       child: IntrinsicHeight(
-        child: ListenableBuilder(
-          listenable: widget.accountDetailNotifier,
-          builder: (context, child) {
-            return OrchidTitledPanel(
-              highlight: false,
-              opaque: true,
-              titleText: "Connect to Provider",
-              onDismiss: () {
-                Navigator.pop(context);
-              },
-              body: DefaultTabController(
-                length: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TabBar(
-                      tabs: const [
-                        Tab(text: 'Orchid Account'),
-                        Tab(text: 'Auth Token'),
-                      ],
-                      labelColor: Colors.white,
-                      unselectedLabelColor: Colors.white60,
-                      indicatorColor: Colors.white,
-                    ),
-                    
-                    SizedBox(
-                      height: 500,
-                      child: TabBarView(
-                        children: [
-                          _buildOrchidAccountTab(),
-                          _buildAuthTokenTab(),
+        child: ValueListenableBuilder(
+            valueListenable: widget.accountDetailNotifier,
+            builder: (BuildContext context, AccountDetail? accountDetail,
+                Widget? child) {
+              return OrchidTitledPanel(
+                highlight: false,
+                opaque: true,
+                titleText: "Connect to Provider",
+                onDismiss: () {
+                  Navigator.pop(context);
+                },
+                body: DefaultTabController(
+                  length: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const TabBar(
+                        tabs: [
+                          Tab(text: 'Orchid Account'),
+                          Tab(text: 'Auth Token'),
                         ],
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.white60,
+                        indicatorColor: Colors.white,
                       ),
-                    ),
-                  ],
+                      SizedBox(
+                        height: 500,
+                        child: TabBarView(
+                          children: [
+                            _buildOrchidAccountTab(accountDetail),
+                            _buildAuthTokenTab(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }
-        ),
+              );
+            }),
       ),
     );
   }
 
-  Widget _buildOrchidAccountTab() {
+  Widget _buildOrchidAccountTab(AccountDetail? accountDetail) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -175,7 +171,8 @@ class _AuthDialogState extends State<AuthDialog> {
                     setState(() {
                       _selectedChain = chain;
                     });
-                    widget.onAccountChanged(_selectedChain, _funder, _signerKey);
+                    widget.onAccountChanged(
+                        _selectedChain, _funder, _signerKey);
                   },
                   enabled: true,
                 ),
@@ -194,7 +191,7 @@ class _AuthDialogState extends State<AuthDialog> {
             },
             controller: _funderFieldController,
           ).top(16),
-          
+
           // Signer field
           OrchidLabeledTextField(
             label: 'Signer Key',
@@ -210,11 +207,17 @@ class _AuthDialogState extends State<AuthDialog> {
               });
               widget.onAccountChanged(_selectedChain, _funder, _signerKey);
             },
+            onClear: () {
+              setState(() {
+                _signerKey = null;
+              });
+              widget.onAccountChanged(_selectedChain, _funder, _signerKey);
+            },
           ).top(16),
-          
+
           // Account card
-          AccountCard(accountDetail: widget.accountDetail).top(20),
-          
+          AccountCard(accountDetail: accountDetail).top(20),
+
           ChatButton(
             onPressed: () => _launchURL('https://account.orchid.com'),
             text: 'Manage Account',
@@ -246,7 +249,6 @@ class _AuthDialogState extends State<AuthDialog> {
               });
             },
           ),
-          
           OrchidLabeledTextField(
             label: 'Inference URL',
             controller: _inferenceUrlController,
@@ -257,19 +259,17 @@ class _AuthDialogState extends State<AuthDialog> {
               });
             },
           ).top(16),
-
           ChatButton(
-            onPressed: (_authToken?.isNotEmpty == true && 
-                      _inferenceUrl?.isNotEmpty == true)
-              ? () {
-                  widget.onAuthTokenChanged(_authToken!, _inferenceUrl!);
-                  Navigator.pop(context);
-                }
-              : () {},
+            onPressed: (_authToken?.isNotEmpty == true &&
+                    _inferenceUrl?.isNotEmpty == true)
+                ? () {
+                    widget.onAuthTokenChanged(_authToken!, _inferenceUrl!);
+                    Navigator.pop(context);
+                  }
+                : () {},
             text: 'Connect',
             width: double.infinity,
           ).top(24),
-
           Text(
             'Connect directly with an auth token from a running wallet',
             style: OrchidText.body2.copyWith(color: Colors.white70),

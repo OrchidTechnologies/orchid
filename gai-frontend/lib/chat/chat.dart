@@ -2,20 +2,14 @@ import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_keys.dart';
-import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/chat/chat_settings_button.dart';
-import 'package:orchid/gui-orchid/lib/orchid/menu/orchid_chain_selector_menu.dart';
-import 'package:orchid/orchid/account/account_card.dart';
 import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
-import 'package:orchid/orchid/field/orchid_labeled_text_field.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
-import 'package:orchid/orchid/orchid_titled_panel.dart';
 
-import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'chat_bubble.dart';
@@ -45,7 +39,7 @@ class _ChatViewState extends State<ChatView> {
   bool _multiSelectMode = false;
   bool _connected = false;
   ProviderConnection? _providerConnection;
-  int? _maxTokens; 
+  int? _maxTokens;
 
   // The active account components
   EthereumAddress? _funder;
@@ -126,7 +120,7 @@ class _ChatViewState extends State<ChatView> {
         onMessage: (msg) {
           addMessage(ChatMessageSource.internal, msg);
         },
-        onConnect: () { 
+        onConnect: () {
           providerConnected('Direct Auth');
         },
         onChat: (msg, metadata) {
@@ -156,7 +150,6 @@ class _ChatViewState extends State<ChatView> {
           _providerConnection!.inferenceClient!,
         );
       }
-
     } catch (e, stack) {
       log('Error connecting with auth token: $e\n$stack');
       addMessage(ChatMessageSource.system, 'Failed to connect: $e');
@@ -177,27 +170,28 @@ class _ChatViewState extends State<ChatView> {
 
   // This should be wrapped up in a provider.  See WIP in vpn app.
   AccountDetailPoller? _accountDetail;
-  final _accountDetailNotifier = ChangeNotifier();
+  final _accountDetailNotifier = ValueNotifier<AccountDetail?>(null);
 
   // This should be wrapped up in a provider.  See WIP in vpn app.
   void _accountChanged() async {
-    log("accountChanged: $_account");
+    log("chat: accountChanged: $_account");
     _accountDetail?.cancel();
     _accountDetail = null;
     if (_account != null) {
       _accountDetail = AccountDetailPoller(account: _account!);
       await _accountDetail?.pollOnce();
-      
+
       // Disconnect any existing provider connection
       if (_connected) {
         _providerConnection?.dispose();
         _connected = false;
       }
-      
+
       // Connect to provider with new account
       _connectToInitialProvider();
     }
-    _accountDetailNotifier.notifyListeners();
+    _accountDetailNotifier.value =
+        _accountDetail; // This notifies the listeners
     setState(() {});
   }
 
@@ -219,7 +213,9 @@ class _ChatViewState extends State<ChatView> {
     _accountChanged();
     String? provider = params['provider'];
     if (provider != null) {
-      _providers = {'user-provider': {'url': provider, 'name': 'User Provider'}};
+      _providers = {
+        'user-provider': {'url': provider, 'name': 'User Provider'}
+      };
     }
   }
 
@@ -240,7 +236,7 @@ class _ChatViewState extends State<ChatView> {
       'Provider disconnected',
     );
   }
-  
+
   void _connectProvider([String provider = '']) async {
     var account = _accountDetail;
     if (account == null) {
@@ -274,7 +270,8 @@ class _ChatViewState extends State<ChatView> {
 
     final wsUrl = providerInfo['url'] ?? '';
     final name = providerInfo['name'] ?? '';
-    final httpUrl = wsUrl.replaceFirst('ws:', 'http:').replaceFirst('wss:', 'https:');
+    final httpUrl =
+        wsUrl.replaceFirst('ws:', 'http:').replaceFirst('wss:', 'https:');
 
     log('Connecting to provider: $name (ws: $wsUrl, http: $httpUrl)');
 
@@ -282,19 +279,20 @@ class _ChatViewState extends State<ChatView> {
       _providerConnection = await ProviderConnection.connect(
         billingUrl: wsUrl,
         inferenceUrl: httpUrl,
-        contract: EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'),
+        contract:
+            EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'),
         accountDetail: account,
         onMessage: (msg) {
           addMessage(ChatMessageSource.internal, msg);
         },
-        onConnect: () { 
+        onConnect: () {
           providerConnected(name);
         },
         onChat: (msg, metadata) {
           print('onChat received metadata: $metadata');
           final modelId = metadata['model_id'];
-          print('Found model_id: $modelId'); 
-          
+          print('Found model_id: $modelId');
+
           addMessage(
             ChatMessageSource.provider,
             msg,
@@ -327,13 +325,12 @@ class _ChatViewState extends State<ChatView> {
 
       // Request auth token - model fetch will happen in callback
       await _providerConnection?.requestAuthToken();
-
     } catch (e, stack) {
       log('Error connecting to provider: $e\n$stack');
       addMessage(ChatMessageSource.system, 'Failed to connect to provider: $e');
     }
   }
-  
+
   void addMessage(
     ChatMessageSource source,
     String msg, {
@@ -374,11 +371,13 @@ class _ChatViewState extends State<ChatView> {
       initialChain: _selectedChain,
       initialFunder: _funder,
       initialSignerKey: _signerKey,
-      initialAuthToken: _authToken,  // Add this
-      initialInferenceUrl: _inferenceUrl,  // Add this
-      accountDetail: _accountDetail,
+      initialAuthToken: _authToken,
+      // Add this
+      initialInferenceUrl: _inferenceUrl,
+      // Add this
       accountDetailNotifier: _accountDetailNotifier,
       onAccountChanged: (chain, funder, signerKey) {
+        // log('onAccountChanged: Account changed: $chain, $funder, $signerKey');
         setState(() {
           _selectedChain = chain;
           _funder = funder;
@@ -416,8 +415,8 @@ class _ChatViewState extends State<ChatView> {
   }
 
   bool _canSendMessages() {
-    return (_providerConnection?.inferenceClient != null) || 
-           (_authToken != null && _inferenceUrl != null);
+    return (_providerConnection?.inferenceClient != null) ||
+        (_authToken != null && _inferenceUrl != null);
   }
 
   void _sendPrompt() async {
@@ -432,9 +431,11 @@ class _ChatViewState extends State<ChatView> {
     }
 
     if (_selectedModelIds.isEmpty) {
-      addMessage(ChatMessageSource.system, 
-        _multiSelectMode ? 'Please select at least one model' : 'Please select a model'
-      );
+      addMessage(
+          ChatMessageSource.system,
+          _multiSelectMode
+              ? 'Please select at least one model'
+              : 'Please select a model');
       return;
     }
 
@@ -445,8 +446,8 @@ class _ChatViewState extends State<ChatView> {
 
     for (final modelId in _selectedModelIds) {
       try {
-        final modelInfo = _modelsState.allModels
-            .firstWhere((m) => m.id == modelId,
+        final modelInfo =
+            _modelsState.allModels.firstWhere((m) => m.id == modelId,
                 orElse: () => ModelInfo(
                       id: modelId,
                       name: modelId,
@@ -455,10 +456,12 @@ class _ChatViewState extends State<ChatView> {
                     ));
 
         // Get messages relevant to this model
-        final relevantMessages = _messages.where((m) => 
-          (m.source == ChatMessageSource.provider && m.modelId == modelId) ||
-          m.source == ChatMessageSource.client
-        ).toList();
+        final relevantMessages = _messages
+            .where((m) =>
+                (m.source == ChatMessageSource.provider &&
+                    m.modelId == modelId) ||
+                m.source == ChatMessageSource.client)
+            .toList();
 
         Map<String, Object>? params;
         if (_maxTokens != null) {
@@ -478,7 +481,8 @@ class _ChatViewState extends State<ChatView> {
           params: params,
         );
       } catch (e) {
-        addMessage(ChatMessageSource.system, 'Error querying model $modelId: $e');
+        addMessage(
+            ChatMessageSource.system, 'Error querying model $modelId: $e');
       }
     }
   }
@@ -590,26 +594,30 @@ class _ChatViewState extends State<ChatView> {
                     children: [
                       Text(
                         'This is a demonstration of the application of Orchid Nanopayments within a consolidated Multi-LLM chat service.',
-                        style: OrchidText.normal_14.copyWith(color: Colors.white),
+                        style:
+                            OrchidText.normal_14.copyWith(color: Colors.white),
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: 16),
                       Text(
                         'To get started, enter or create a funded Orchid account.',
-                        style: OrchidText.normal_14.copyWith(color: Colors.white),
+                        style:
+                            OrchidText.normal_14.copyWith(color: Colors.white),
                         textAlign: TextAlign.center,
                       ),
                       ChatButton(
-                        text: 'Enter Account', 
-                        onPressed: _popAccountDialog, 
+                        text: 'Enter Account',
+                        onPressed: _popAccountDialog,
                         width: 200,
                       ).top(24),
                       SizedBox(height: 16),
                       OutlinedButton(
-                        onPressed: () => _launchURL('https://account.orchid.com'),
+                        onPressed: () =>
+                            _launchURL('https://account.orchid.com'),
                         child: Text('Create Account').button,
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Theme.of(context).primaryColor),
+                          side:
+                              BorderSide(color: Theme.of(context).primaryColor),
                           minimumSize: Size(200, 50),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(25),
@@ -618,10 +626,13 @@ class _ChatViewState extends State<ChatView> {
                       ),
                       SizedBox(height: 24),
                       InkWell(
-                        onTap: () => _launchURL('https://docs.orchid.com/en/latest/accounts/'),
+                        onTap: () => _launchURL(
+                            'https://docs.orchid.com/en/latest/accounts/'),
                         child: Text(
                           'Learn more about creating an Orchid account',
-                          style: TextStyle(color: Colors.blue[300], decoration: TextDecoration.underline),
+                          style: TextStyle(
+                              color: Colors.blue[300],
+                              decoration: TextDecoration.underline),
                         ),
                       ),
                     ],
@@ -637,7 +648,7 @@ class _ChatViewState extends State<ChatView> {
   Widget _buildHeaderRow({required bool showIcons}) {
     final buttonHeight = 40.0;
     final settingsIconSize = buttonHeight * 1.5;
-    
+
     return Row(
       children: <Widget>[
         // Logo
@@ -669,14 +680,14 @@ class _ChatViewState extends State<ChatView> {
         ).left(24),
 
         const Spacer(),
-        
+
         // Account button
         OutlinedChatButton(
-          text: 'Account', 
+          text: 'Account',
           onPressed: _popAccountDialog,
           height: buttonHeight,
         ).left(8),
-        
+
         // Settings button
         SizedBox(
           width: settingsIconSize,
@@ -717,7 +728,8 @@ class CalloutPainter extends CustomPainter {
     final radius = 10.0; // Corner radius
     final calloutWidth = 25.0;
     final calloutHeight = 20.0;
-    final calloutStart = size.width - 115.0; // Adjust this to position the callout
+    final calloutStart =
+        size.width - 115.0; // Adjust this to position the callout
 
     final path = Path()
       ..moveTo(radius, 0)
@@ -727,7 +739,8 @@ class CalloutPainter extends CustomPainter {
       ..lineTo(size.width - radius, 0)
       ..quadraticBezierTo(size.width, 0, size.width, radius)
       ..lineTo(size.width, size.height - radius)
-      ..quadraticBezierTo(size.width, size.height, size.width - radius, size.height)
+      ..quadraticBezierTo(
+          size.width, size.height, size.width - radius, size.height)
       ..lineTo(radius, size.height)
       ..quadraticBezierTo(0, size.height, 0, size.height - radius)
       ..lineTo(0, radius)
