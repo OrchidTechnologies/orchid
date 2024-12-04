@@ -257,7 +257,7 @@ class ProviderConnection {
 
   Future<void> requestInference(
     String modelId,
-    List<ChatMessage> messages, {
+    List<Map<String, dynamic>> preparedMessages, {
     Map<String, Object>? params,
   }) async {
     if (!_usingDirectAuth && _inferenceClient == null) {
@@ -276,7 +276,7 @@ class ProviderConnection {
       _pendingRequests[requestId] = _PendingRequest(
         requestId: requestId,
         modelId: modelId,
-        messages: messages,
+        messages: [], // Empty since we're using preparedMessages now
         params: params,
       );
 
@@ -286,23 +286,24 @@ class ProviderConnection {
       };
 
       onInternalMessage('Sending inference request:\n'
-          'Model: $modelId\n'
-          'Messages: ${messages.map((m) => "${m.source}: ${m.message}").join("\n")}\n'
-          'Params: $allParams');
+        'Model: $modelId\n'
+        'Messages: ${preparedMessages}\n'
+        'Params: $allParams'
+      );
 
       final result = await _inferenceClient!.inference(
-        messages: messages,
+        messages: preparedMessages,
         model: modelId,
         params: allParams,
       );
-
+      
       final pendingRequest = _pendingRequests.remove(requestId);
 
       onChat(result['response'], {
         'type': 'job_complete',
         'output': result['response'],
         'usage': result['usage'],
-        'model_id': pendingRequest?.modelId,
+        'model_id': modelId,
         'request_id': requestId,
         'estimated_prompt_tokens': result['estimated_prompt_tokens'],
       });

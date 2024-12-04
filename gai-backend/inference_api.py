@@ -1,15 +1,31 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from redis.asyncio import Redis
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, Tuple, List, Literal
-import json
+from typing import Dict, Any, AsyncGenerator
 import os
+import json
 import requests
+import logging
+from datetime import datetime
+
 from config_manager import ConfigManager
 from billing import StrictRedisBilling, BillingError
-import logging
+from inference_models import (
+    ChatCompletionRequest, 
+    ChatCompletion, 
+    ChatCompletionChunk,
+    ChatChoice, 
+    Message, 
+    Usage, 
+    ModelInfo,
+    OpenAIModel,
+    OpenAIModelList,
+    InferenceAPIError, 
+    PricingError
+)
+from inference_adapters import ModelAdapter
 
 app = FastAPI()
 security = HTTPBearer()
@@ -23,32 +39,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class Message(BaseModel):
-    role: Literal["system", "user", "assistant"]
-    content: str
-    name: Optional[str] = None
-
-class InferenceRequest(BaseModel):
-    messages: List[Message]
-    model: str
-    params: Optional[Dict[str, Any]] = None
-    request_id: Optional[str] = None
-
-class ModelInfo(BaseModel):
-    id: str
-    name: str
-    api_type: Literal["openai", "anthropic", "openrouter"]
-    endpoint: str
-
-class InferenceAPIError(Exception):
-    def __init__(self, status_code: int, detail: str):
-        self.status_code = status_code
-        self.detail = detail
-
-class PricingError(Exception):
-    """Raised when pricing calculation fails"""
-    pass
-
 class InferenceAPI:
     def __init__(self, redis: Redis):
         self.redis = redis
@@ -58,21 +48,6 @@ class InferenceAPI:
     async def init(self):
         await self.billing.init()
         await self.config_manager.load_config()
-
-    async def list_models(self) -> Dict[str, ModelInfo]:
-        config = await self.config_manager.load_config()
-        models = {}
-
-        for endpoint_id, endpoint in config['inference']['endpoints'].items():
-            for model in endpoint['models']:
-                models[model['id']] = ModelInfo(
-                    id=model['id'],
-                    name=model.get('display_name', model['id']),
-                    api_type=endpoint['api_type'],
-                    endpoint=endpoint_id
-                )
-
-        return models
 
     async def validate_session(self, credentials: HTTPAuthorizationCredentials) -> str:
         if not credentials:
@@ -106,8 +81,8 @@ class InferenceAPI:
         except Exception as e:
             logger.error(f"Unexpected error during validation: {e}")
             raise InferenceAPIError(500, f"Internal service error: {e}")
-        
-    async def get_model_config(self, model_id: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+
+    async def get_model_config(self, model_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
         config = await self.config_manager.load_config()
         endpoints = config['inference']['endpoints']
         
@@ -118,141 +93,7 @@ class InferenceAPI:
                     
         raise InferenceAPIError(400, f"Unknown model: {model_id}")
 
-    def prepare_request(self, endpoint_config: Dict[str, Any], model_config: Dict[str, Any], request: InferenceRequest) -> Tuple[Dict[str, Any], Dict[str, str]]:
-        params = {
-            **(endpoint_config.get('params', {})),
-            **(model_config.get('params', {})),
-            **(request.params or {})
-        }
-        
-        headers = {"Content-Type": "application/json"}
-        api_type = endpoint_config['api_type']
-        
-        if not (api_key := endpoint_config.get('api_key')):
-            logger.error("No API key configured for endpoint")
-            raise InferenceAPIError(500, "Backend authentication not configured")
-
-        data: Dict[str, Any] = {}
-            
-        if api_type == 'openai':
-            headers["Authorization"] = f"Bearer {api_key}"
-            data = {
-                'model': model_config['id'],
-                'messages': [msg.dict(exclude_none=True) for msg in request.messages]
-            }
-            if 'max_tokens' in (request.params or {}):
-                data['max_tokens'] = params['max_tokens']
-            
-        elif api_type == 'openrouter':
-            headers["Authorization"] = f"Bearer {api_key}"
-            data = {
-                'model': model_config['id'],
-                'messages': [msg.dict(exclude_none=True) for msg in request.messages]
-            }
-            
-            if 'max_tokens' in (request.params or {}):
-                user_max_tokens = params['max_tokens']
-                config_max_tokens = model_config.get('params', {}).get('max_tokens')
-                
-                if config_max_tokens and user_max_tokens > config_max_tokens:
-                    raise InferenceAPIError(400, f"Requested max_tokens {user_max_tokens} exceeds model limit {config_max_tokens}")
-                
-                prompt_tokens = self.count_input_tokens(request)
-                if config_max_tokens and (prompt_tokens + user_max_tokens) > config_max_tokens:
-                    raise InferenceAPIError(400, 
-                        f"Combined prompt ({prompt_tokens}) and max_tokens ({user_max_tokens}) "
-                        f"exceeds model context limit {config_max_tokens}")
-                
-                data['max_tokens'] = user_max_tokens
-            
-        elif api_type == 'anthropic':
-            headers["x-api-key"] = api_key
-            headers["anthropic-version"] = "2023-06-01"
-            system_message = next((msg.content for msg in request.messages if msg.role == "system"), None)
-            conversation = [msg for msg in request.messages if msg.role != "system"]
-            
-            data = {
-                'model': model_config['id'],
-                'messages': [{'role': msg.role, 'content': msg.content} for msg in conversation],
-                'max_tokens': params.get('max_tokens', 4096)
-            }
-            if system_message:
-                data['system'] = system_message
-                
-        else:
-            raise InferenceAPIError(500, f"Unsupported API type: {api_type}")
-            
-        for k, v in params.items():
-            if k != 'max_tokens' and k not in data:
-                data[k] = v
-                
-        return data, headers
-
-    def parse_response(self, api_type: str, response: Dict[str, Any], request_id: Optional[str] = None) -> Dict[str, Any]:
-        try:
-            base_response = {
-                'request_id': request_id,
-            }
-            
-            if api_type in ['openai', 'openrouter']:  # OpenRouter follows OpenAI response format
-                return {
-                    **base_response,
-                    'response': response['choices'][0]['message']['content'],
-                    'usage': response['usage']
-                }
-            elif api_type == 'anthropic':
-                return {
-                    **base_response,
-                    'response': response['content'][0]['text'],
-                    'usage': {
-                        'prompt_tokens': response['usage']['input_tokens'],
-                        'completion_tokens': response['usage']['output_tokens'],
-                        'total_tokens': response['usage']['input_tokens'] + response['usage']['output_tokens']
-                    }
-                }
-            else:
-                raise InferenceAPIError(500, f"Unsupported API type: {api_type}")
-        except KeyError as e:
-            logger.error(f"Failed to parse {api_type} response: {e}")
-            logger.error(f"Response: {response}")
-            logger.debug(f"Raw response: {response}")
-            raise InferenceAPIError(502, f"Invalid {api_type} response format")
-
-    def query_backend(self, endpoint_config: Dict[str, Any], model_config: Dict[str, Any], request: InferenceRequest) -> Dict[str, Any]:
-        try:
-            data, headers = self.prepare_request(endpoint_config, model_config, request)
-            
-            logger.info(f"Sending request to backend: {endpoint_config['url']}")
-            logger.debug(f"Request headers: {headers}")
-            logger.debug(f"Request data: {data}")
-            
-            response = requests.post(
-                endpoint_config['url'],
-                headers=headers,
-                json=data,
-                timeout=30
-            )
-            
-            try:
-                response.raise_for_status()
-            except requests.exceptions.HTTPError as e:
-                if response.status_code == 400:
-                    if endpoint_config['api_type'] == 'openrouter':
-                        error_body = response.json()
-                        if 'error' in error_body and 'message' in error_body['error']:
-                            raise InferenceAPIError(400, error_body['error']['message'])
-                raise
-            
-            result = response.json()
-            logger.debug(f"Raw backend response: {result}")
-            
-            return self.parse_response(endpoint_config['api_type'], result, request.request_id)
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Backend request failed: {e}")
-            raise InferenceAPIError(502, "Backend service error")
-
-    def get_token_prices(self, pricing_config: Dict[str, Any]) -> Tuple[float, float]:
+    def get_token_prices(self, pricing_config: Dict[str, Any]) -> tuple[float, float]:
         try:
             pricing_type = pricing_config['type']
             
@@ -279,7 +120,7 @@ class InferenceAPI:
                 
         except KeyError as e:
             raise PricingError(f"Missing required pricing field: {e}")
-            
+
     def calculate_cost(self, pricing_config: Dict[str, Any], input_tokens: int, output_tokens: int) -> float:
         try:
             input_price, output_price = self.get_token_prices(pricing_config)
@@ -297,20 +138,147 @@ class InferenceAPI:
     def estimate_max_cost(self, pricing_config: Dict[str, Any], input_tokens: int, max_output_tokens: int) -> float:
         return self.calculate_cost(pricing_config, input_tokens, max_output_tokens)
         
-    def count_input_tokens(self, request: InferenceRequest) -> int:
+    def count_input_tokens(self, request: ChatCompletionRequest) -> int:
         # TODO: Implement proper tokenization based on model
-        return sum(len(msg.content) // 4 for msg in request.messages)  # Rough estimate
-        
-    async def handle_inference(
-        self,
-        request: InferenceRequest,
-        session_id: str
-    ) -> Dict[str, Any]:
+        return sum(len(msg.content or "") // 4 for msg in request.messages)  # Rough estimate
+
+    def query_backend(self, endpoint_config: Dict[str, Any], model_config: Dict[str, Any], request: ChatCompletionRequest) -> ChatCompletion:
+            try:
+                data, headers = ModelAdapter.prepare_request(endpoint_config, model_config, request)
+                
+                logger.info(f"Sending request to backend: {endpoint_config['url']}")
+                logger.debug(f"Request headers: {headers}")
+                logger.debug(f"Request data: {data}")
+                
+                response = requests.post(
+                    endpoint_config['url'],
+                    headers=headers,
+                    json=data,
+                    timeout=30
+                )
+                
+                try:
+                    response.raise_for_status()
+                except requests.exceptions.HTTPError as e:
+                    if response.status_code == 400:
+                        if endpoint_config['api_type'] == 'openrouter':
+                            error_body = response.json()
+                            if 'error' in error_body and 'message' in error_body['error']:
+                                raise InferenceAPIError(400, error_body['error']['message'])
+                    raise
+                
+                result = response.json()
+                logger.info(f"Raw backend response: {result}")
+                
+                completion = ModelAdapter.parse_response(
+                    api_type=endpoint_config['api_type'],
+                    response=result,
+                    model=request.model,
+                    request_id=request.request_id
+                )
+                
+                # Log the final response we're sending back
+                logger.info(f"Sending completion response: {completion.dict()}")
+                
+                return completion
+                
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Backend request failed: {e}")
+                raise InferenceAPIError(502, "Backend service error")
+
+    async def list_models(self) -> Dict[str, ModelInfo]:
+        config = await self.config_manager.load_config()
+        models = {}
+
+        for endpoint_id, endpoint in config['inference']['endpoints'].items():
+            for model in endpoint['models']:
+                models[model['id']] = ModelInfo(
+                    id=model['id'],
+                    name=model.get('display_name', model['id']),
+                    api_type=endpoint['api_type'],
+                    endpoint=endpoint_id
+                )
+
+        return models
+
+    async def list_openai_models(self) -> OpenAIModelList:
+        """OpenAI-compatible /v1/models endpoint"""
+        config = await self.config_manager.load_config()
+        models = []
+        created = int(datetime.now().timestamp())
+
+        for endpoint_id, endpoint in config['inference']['endpoints'].items():
+            for model in endpoint['models']:
+                models.append({
+                    "id": model['id'],
+                    "created": model.get('created', created),
+                    "owned_by": endpoint.get('provider', 'orchid-labs')
+                })
+
+        return OpenAIModelList(data=models)
+
+    async def create_stream_chunks(self, completion: ChatCompletion) -> AsyncGenerator[str, None]:
+        """Convert a completion into a stream of chunks"""
+        # Create delta chunk
+        chunk = ChatCompletionChunk(
+            id=completion.id,
+            model=completion.model,
+            choices=[
+                ChatChoice(
+                    index=0,
+                    message=Message(
+                        role="assistant",
+                        content=completion.choices[0].message.content
+                    ),
+                    finish_reason=None  # Will be included in final chunk
+                )
+            ]
+        )
+
+        # Send the chunk
+        yield f"data: {json.dumps(chunk.dict())}\n\n"
+
+        # Send final chunk with finish_reason
+        final_chunk = ChatCompletionChunk(
+            id=completion.id,
+            model=completion.model,
+            choices=[
+                ChatChoice(
+                    index=0,
+                    message=Message(
+                        role="assistant",
+                        content=None  # Content is empty in final chunk
+                    ),
+                    finish_reason=completion.choices[0].finish_reason
+                )
+            ]
+        )
+        yield f"data: {json.dumps(final_chunk.dict())}\n\n"
+
+        # Send the final [DONE] message
+        yield "data: [DONE]\n\n"
+
+    async def stream_inference(self, request: ChatCompletionRequest, session_id: str) -> AsyncGenerator[str, None]:
+        """Handle streaming inference requests"""
         try:
-            # Get endpoint and model configs - model is now required
+            completion = await self.handle_inference(request, session_id)
+            async for chunk in self.create_stream_chunks(completion):
+                yield chunk
+        except Exception as e:
+            logger.error(f"Error during streaming: {e}")
+            error_payload = {
+                "error": {
+                    "message": str(e),
+                    "type": type(e).__name__,
+                }
+            }
+            yield f"data: {json.dumps(error_payload)}\n\n"
+            yield "data: [DONE]\n\n"
+
+    async def handle_inference(self, request: ChatCompletionRequest, session_id: str) -> ChatCompletion:
+        try:
             endpoint_config, model_config = await self.get_model_config(request.model)
             
-            # Calculate maximum possible cost
             input_tokens = self.count_input_tokens(request)
             max_output_tokens = model_config.get('params', {}).get(
                 'max_tokens',
@@ -340,8 +308,8 @@ class InferenceAPI:
                 
                 actual_cost = self.calculate_cost(
                     model_config['pricing'],
-                    result['usage']['prompt_tokens'],
-                    result['usage']['completion_tokens']
+                    result.usage.prompt_tokens,
+                    result.usage.completion_tokens
                 )
                 
                 logger.info(f"Actual cost: {actual_cost} (reserved: {max_cost})")
@@ -383,13 +351,32 @@ async def startup():
 
 @app.post("/v1/chat/completions")
 async def chat_completion(
-    request: InferenceRequest,
+    request: ChatCompletionRequest,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    logger.info(f"Received chat completion request with auth: {credentials.scheme} {credentials.credentials}")
+    logger.info(f"Received chat completion request: {request.dict()}")
+    logger.info(f"Auth: {credentials.scheme} {credentials.credentials}")
+    
     try:
         session_id = await api.validate_session(credentials)
-        return await api.handle_inference(request, session_id)
+        
+        if request.stream:
+            logger.info("Streaming response requested")
+            return StreamingResponse(
+                api.stream_inference(request, session_id),
+                media_type="text/event-stream",
+                headers={
+                    "Content-Type": "text/event-stream",
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                    "Transfer-Encoding": "chunked",
+                }
+            )
+        else:
+            logger.info("Normal response requested")
+            result = await api.handle_inference(request, session_id)
+            logger.info(f"Final API response: {result.dict()}")
+            return result
     except InferenceAPIError as e:
         logger.error(f"Inference API error: {e.status_code} - {e.detail}")
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -399,17 +386,26 @@ async def chat_completion(
 
 @app.post("/v1/inference")
 async def inference(
-    request: InferenceRequest,
+    request: ChatCompletionRequest,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     return await chat_completion(request, credentials)
 
 @app.get("/v1/models")
-async def list_models():
-    """List available inference models"""
+async def list_openai_models():
+    """OpenAI-compatible models list endpoint"""
+    try:
+        return await api.list_openai_models()
+    except Exception as e:
+        logger.error(f"Failed to list OpenAI-compatible models: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/v1/inference/models")
+async def list_inference_models():
+    """Detailed models list for inference"""
     try:
         models = await api.list_models()
         return models
     except Exception as e:
-        logger.error(f"Failed to list models: {e}")
+        logger.error(f"Failed to list inference models: {e}")
         raise HTTPException(status_code=500, detail=str(e))

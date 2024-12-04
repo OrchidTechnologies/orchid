@@ -21,6 +21,8 @@ import 'models.dart';
 import 'provider_connection.dart';
 import '../config/providers_config.dart';
 import 'auth_dialog.dart';
+import 'chat_history.dart';
+
 
 enum AuthTokenMethod { manual, walletConnect }
 
@@ -32,11 +34,12 @@ class ChatView extends StatefulWidget {
 }
 
 class _ChatViewState extends State<ChatView> {
-  List<ChatMessage> _messages = [];
+  final ChatHistory _chatHistory = ChatHistory();
   late final Map<String, Map<String, String>> _providers;
   int _providerIndex = 0;
   bool _debugMode = false;
   bool _multiSelectMode = false;
+  bool _partyMode = false;
   bool _connected = false;
   ProviderConnection? _providerConnection;
   int? _maxTokens;
@@ -340,15 +343,17 @@ class _ChatViewState extends State<ChatView> {
     String? modelName,
   }) {
     log('Adding message: ${msg.truncate(64)}');
+    final message = ChatMessage(
+      source,
+      msg,
+      metadata: metadata,
+      sourceName: sourceName,
+      modelId: modelId,
+      modelName: modelName,
+    );
+    
     setState(() {
-      _messages.add(ChatMessage(
-        source,
-        msg,
-        metadata: metadata,
-        sourceName: sourceName,
-        modelId: modelId,
-        modelName: modelName,
-      ));
+      _chatHistory.addMessage(message);
     });
     scrollMessagesDown();
   }
@@ -403,8 +408,12 @@ class _ChatViewState extends State<ChatView> {
 
   // item builder
   Widget _buildChatBubble(BuildContext context, int index) {
-    return ChatBubble(message: _messages[index], debugMode: _debugMode);
+    return ChatBubble(
+      message: _chatHistory.messages[index],
+      debugMode: _debugMode,
+    );
   }
+
 
   void _send() {
     if (_canSendMessages()) {
@@ -446,23 +455,21 @@ class _ChatViewState extends State<ChatView> {
 
     for (final modelId in _selectedModelIds) {
       try {
-        final modelInfo =
-            _modelsState.allModels.firstWhere((m) => m.id == modelId,
-                orElse: () => ModelInfo(
-                      id: modelId,
-                      name: modelId,
-                      provider: '',
-                      apiType: '',
-                    ));
+        final modelInfo = _modelsState.allModels.firstWhere(
+          (m) => m.id == modelId,
+          orElse: () => ModelInfo(
+            id: modelId,
+            name: modelId,
+            provider: '',
+            apiType: '',
+          ),
+        );
 
-        // Get messages relevant to this model
-        final relevantMessages = _messages
-            .where((m) =>
-                (m.source == ChatMessageSource.provider &&
-                    m.modelId == modelId) ||
-                m.source == ChatMessageSource.client)
-            .toList();
-
+        // Prepare messages for this specific model
+        final preparedMessages = _chatHistory.prepareForModel(
+          modelId: modelId,
+          preparationFunction: _partyMode ? ChatHistory.partyMode : ChatHistory.isolatedMode,
+        );
         Map<String, Object>? params;
         if (_maxTokens != null) {
           params = {'max_tokens': _maxTokens!};
@@ -477,7 +484,7 @@ class _ChatViewState extends State<ChatView> {
 
         await _providerConnection?.requestInference(
           modelId,
-          relevantMessages,
+          preparedMessages,
           params: params,
         );
       } catch (e) {
@@ -508,8 +515,9 @@ class _ChatViewState extends State<ChatView> {
   }
 
   void _clearChat() {
-    _messages = [];
-    setState(() {});
+    setState(() {
+      _chatHistory.clear();
+    });
   }
 
   @override
@@ -577,7 +585,7 @@ class _ChatViewState extends State<ChatView> {
         children: <Widget>[
           ListView.builder(
             controller: messageListController,
-            itemCount: _messages.length,
+            itemCount: _chatHistory.messages.length,
             itemBuilder: _buildChatBubble,
           ).top(16),
           if (_emptyState())
@@ -696,6 +704,7 @@ class _ChatViewState extends State<ChatView> {
             child: ChatSettingsButton(
               debugMode: _debugMode,
               multiSelectMode: _multiSelectMode,
+              partyMode: _partyMode,
               onDebugModeChanged: () {
                 setState(() {
                   _debugMode = !_debugMode;
@@ -706,6 +715,11 @@ class _ChatViewState extends State<ChatView> {
                   _multiSelectMode = !_multiSelectMode;
                   // Reset selections when toggling modes
                   _selectedModelIds = [];
+                });
+              },
+              onPartyModeChanged: () {
+                setState(() {
+                  _partyMode = !_partyMode;
                 });
               },
               onClearChat: _clearChat,
