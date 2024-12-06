@@ -1,3 +1,4 @@
+import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/chat/chat_message.dart';
 
 /// Manages chat history and prepares messages for model inference requests.
@@ -85,6 +86,7 @@ class ChatHistory {
         }
       } else {
         // Should never hit this due to the filter above
+        log('Error: Unexpected message source: ${msg.source}');
         return null;
       }
 

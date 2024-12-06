@@ -4,27 +4,21 @@ import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/chat/chat_settings_button.dart';
-import 'package:orchid/orchid/field/orchid_labeled_address_field.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/orchid/orchid_gradients.dart';
-
 import 'package:url_launcher/url_launcher.dart';
-
+import 'callout_painter.dart';
 import 'chat_bubble.dart';
 import 'chat_button.dart';
 import 'chat_message.dart';
 import 'chat_prompt.dart';
 import 'chat_model_button.dart';
 import 'models.dart';
-import 'provider_connection.dart';
-import '../config/providers_config.dart';
 import 'auth_dialog.dart';
 import 'chat_history.dart';
-
-
-enum AuthTokenMethod { manual, walletConnect }
+import 'provider_manager.dart';
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key});
@@ -34,45 +28,62 @@ class ChatView extends StatefulWidget {
 }
 
 class _ChatViewState extends State<ChatView> {
-  final ChatHistory _chatHistory = ChatHistory();
-  late final Map<String, Map<String, String>> _providers;
-  int _providerIndex = 0;
+  // UI state
   bool _debugMode = false;
   bool _multiSelectMode = false;
   bool _partyMode = false;
-  bool _connected = false;
-  ProviderConnection? _providerConnection;
   int? _maxTokens;
-
-  // The active account components
-  EthereumAddress? _funder;
-  BigInt? _signerKey;
-
-  final _signerFieldController = TextEditingController();
-  final _funderFieldController = AddressValueFieldController();
+  Chain _selectedChain = Chains.Gnosis;
   final ScrollController messageListController = ScrollController();
   final _promptTextController = TextEditingController();
   final _maxTokensController = NumericValueFieldController();
-  bool _showPromptDetails = false;
-  Chain _selectedChain = Chains.Gnosis;
+
+  // Chat
+  final ChatHistory _chatHistory = ChatHistory();
+
+  // Providers
+  late final ProviderManager _providerManager;
+
+  // Models
   final ModelsState _modelsState = ModelsState();
   List<String> _selectedModelIds = [];
 
-  AuthTokenMethod _authTokenMethod = AuthTokenMethod.manual;
+  // Account
+  // This should be wrapped up in a provider.  See WIP in vpn app.
+  EthereumAddress? _funder;
+  BigInt? _signerKey;
+  AccountDetailPoller? _accountDetail;
+  final _accountDetailNotifier = ValueNotifier<AccountDetail?>(null);
+
+  // Auth
+  // AuthTokenMethod _authTokenMethod = AuthTokenMethod.manual;
   String? _authToken;
   String? _inferenceUrl;
 
   @override
   void initState() {
     super.initState();
-    _providers = ProvidersConfig.getProviders();
+
+    // Init the provider manager
+    _providerManager = ProviderManager(
+      modelsState: _modelsState,
+      onProviderConnected: providerConnected,
+      onProviderDisconnected: providerDisconnected,
+      onChatMessage: _addChatMessage,
+    );
+
+    // Get account details from parameters if provided
     try {
       _initFromParams();
       // If we have providers and an account, connect to first provider
-      _connectToInitialProvider();
+      _providerManager.connectToInitialProvider();
     } catch (e, stack) {
       log('Error initializing from params: $e, $stack');
     }
+  }
+
+  bool get _connected {
+    return _providerManager.connected;
   }
 
   bool _emptyState() {
@@ -88,77 +99,7 @@ class _ChatViewState extends State<ChatView> {
     });
   }
 
-  void _connectToInitialProvider() {
-    if (_providers.isEmpty) {
-      log('No providers configured');
-      return;
-    }
-
-    // Get first provider from the list
-    final firstProviderId = _providers.keys.first;
-    final firstProvider = _providers[firstProviderId];
-    if (firstProvider == null) {
-      log('Invalid provider configuration');
-      return;
-    }
-
-    log('Connecting to initial provider: ${firstProvider['name']}');
-    _connectProvider(firstProviderId);
-  }
-
-  void _connectWithAuthToken(String token, String inferenceUrl) async {
-    // Clean up existing connection if any
-    if (_connected) {
-      _providerConnection?.dispose();
-      _connected = false;
-    }
-
-    try {
-      _providerConnection = await ProviderConnection.connect(
-        billingUrl: inferenceUrl,
-        inferenceUrl: inferenceUrl,
-        contract: null,
-        accountDetail: null,
-        authToken: token,
-        onMessage: (msg) {
-          addMessage(ChatMessageSource.internal, msg);
-        },
-        onConnect: () {
-          providerConnected('Direct Auth');
-        },
-        onChat: (msg, metadata) {
-          addMessage(
-            ChatMessageSource.provider,
-            msg,
-            metadata: metadata,
-            modelId: metadata['model_id'],
-            modelName: _modelsState.getModelName(metadata['model_id']),
-          );
-        },
-        onDisconnect: providerDisconnected,
-        onError: (msg) {
-          addMessage(ChatMessageSource.system, 'Provider error: $msg');
-        },
-        onSystemMessage: (msg) {
-          addMessage(ChatMessageSource.system, msg);
-        },
-        onInternalMessage: (msg) {
-          addMessage(ChatMessageSource.internal, msg);
-        },
-      );
-      // Fetch models after connection
-      if (_providerConnection?.inferenceClient != null) {
-        await _modelsState.fetchModelsForProvider(
-          'direct-auth',
-          _providerConnection!.inferenceClient!,
-        );
-      }
-    } catch (e, stack) {
-      log('Error connecting with auth token: $e\n$stack');
-      addMessage(ChatMessageSource.system, 'Failed to connect: $e');
-    }
-  }
-
+  // Get an account view of the funder/signer pair
   Account? get _account {
     if (_funder == null || _signerKey == null) {
       return null;
@@ -172,27 +113,26 @@ class _ChatViewState extends State<ChatView> {
   }
 
   // This should be wrapped up in a provider.  See WIP in vpn app.
-  AccountDetailPoller? _accountDetail;
-  final _accountDetailNotifier = ValueNotifier<AccountDetail?>(null);
-
-  // This should be wrapped up in a provider.  See WIP in vpn app.
   void _accountChanged() async {
     log("chat: accountChanged: $_account");
     _accountDetail?.cancel();
     _accountDetail = null;
+
     if (_account != null) {
       _accountDetail = AccountDetailPoller(account: _account!);
       await _accountDetail?.pollOnce();
 
-      // Disconnect any existing provider connection
-      if (_connected) {
-        _providerConnection?.dispose();
-        _connected = false;
-      }
+      // Disconnects any existing provider connection
+      _providerManager.setAccountDetail(_accountDetail);
 
       // Connect to provider with new account
-      _connectToInitialProvider();
+      _providerManager.connectToInitialProvider();
+    } else {
+      // Disconnects any existing provider connection
+      _providerManager.setAccountDetail(null);
+      _modelsState.clear();
     }
+
     _accountDetailNotifier.value =
         _accountDetail; // This notifies the listeners
     setState(() {});
@@ -203,138 +143,39 @@ class _ChatViewState extends State<ChatView> {
     Map<String, String> params = Uri.base.queryParameters;
     try {
       _funder = EthereumAddress.from(params['funder'] ?? '');
-      _funderFieldController.text = _funder.toString();
     } catch (e) {
       _funder = null;
     }
     try {
       _signerKey = BigInt.parse(params['signer'] ?? '');
-      _signerFieldController.text = _signerKey.toString();
     } catch (e) {
       _signerKey = null;
     }
     _accountChanged();
+
     String? provider = params['provider'];
     if (provider != null) {
-      _providers = {
-        'user-provider': {'url': provider, 'name': 'User Provider'}
-      };
+      _providerManager.setUserProvider(provider);
     }
   }
 
   void providerConnected([name = '']) {
-    _connected = true;
     // Only show connection message in debug mode
-    addMessage(
+    _addMessage(
       ChatMessageSource.internal,
       'Connected to provider${name.isEmpty ? '' : ' $name'}.',
     );
   }
 
   void providerDisconnected() {
-    _connected = false;
     // Only show disconnection in debug mode
-    addMessage(
+    _addMessage(
       ChatMessageSource.internal,
       'Provider disconnected',
     );
   }
 
-  void _connectProvider([String provider = '']) async {
-    var account = _accountDetail;
-    if (account == null) {
-      log('_connectProvider() -- No account');
-      return;
-    }
-    if (_providers.isEmpty) {
-      log('_connectProvider() -- _providers.isEmpty');
-      return;
-    }
-
-    // Clean up existing connection if any
-    if (_connected) {
-      _providerConnection?.dispose();
-      _connected = false;
-    }
-
-    // Determine which provider to connect to
-    String providerId;
-    if (provider.isEmpty) {
-      providerId = _providers.keys.first;
-    } else {
-      providerId = provider;
-    }
-
-    final providerInfo = _providers[providerId];
-    if (providerInfo == null) {
-      log('Provider not found: $providerId');
-      return;
-    }
-
-    final wsUrl = providerInfo['url'] ?? '';
-    final name = providerInfo['name'] ?? '';
-    final httpUrl =
-        wsUrl.replaceFirst('ws:', 'http:').replaceFirst('wss:', 'https:');
-
-    log('Connecting to provider: $name (ws: $wsUrl, http: $httpUrl)');
-
-    try {
-      _providerConnection = await ProviderConnection.connect(
-        billingUrl: wsUrl,
-        inferenceUrl: httpUrl,
-        contract:
-            EthereumAddress.from('0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'),
-        accountDetail: account,
-        onMessage: (msg) {
-          addMessage(ChatMessageSource.internal, msg);
-        },
-        onConnect: () {
-          providerConnected(name);
-        },
-        onChat: (msg, metadata) {
-          print('onChat received metadata: $metadata');
-          final modelId = metadata['model_id'];
-          print('Found model_id: $modelId');
-
-          addMessage(
-            ChatMessageSource.provider,
-            msg,
-            metadata: metadata,
-            modelId: modelId,
-            modelName: _modelsState.getModelName(modelId),
-          );
-        },
-        onDisconnect: providerDisconnected,
-        onError: (msg) {
-          addMessage(ChatMessageSource.system, 'Provider error: $msg');
-        },
-        onSystemMessage: (msg) {
-          addMessage(ChatMessageSource.system, msg);
-        },
-        onInternalMessage: (msg) {
-          addMessage(ChatMessageSource.internal, msg);
-        },
-        onAuthToken: (token, url) async {
-          // Fetch models after receiving token
-          log('Fetching models after auth token receipt');
-          if (_providerConnection?.inferenceClient != null) {
-            await _modelsState.fetchModelsForProvider(
-              providerId,
-              _providerConnection!.inferenceClient!,
-            );
-          }
-        },
-      );
-
-      // Request auth token - model fetch will happen in callback
-      await _providerConnection?.requestAuthToken();
-    } catch (e, stack) {
-      log('Error connecting to provider: $e\n$stack');
-      addMessage(ChatMessageSource.system, 'Failed to connect to provider: $e');
-    }
-  }
-
-  void addMessage(
+  void _addMessage(
     ChatMessageSource source,
     String msg, {
     Map<String, dynamic>? metadata,
@@ -342,7 +183,6 @@ class _ChatViewState extends State<ChatView> {
     String? modelId,
     String? modelName,
   }) {
-    log('Adding message: ${msg.truncate(64)}');
     final message = ChatMessage(
       source,
       msg,
@@ -351,11 +191,16 @@ class _ChatViewState extends State<ChatView> {
       modelId: modelId,
       modelName: modelName,
     );
-    
+    _addChatMessage(message);
+  }
+
+  void _addChatMessage(ChatMessage message) {
+    log('Adding message: ${message.msg.truncate(64)}');
     setState(() {
       _chatHistory.addMessage(message);
     });
     scrollMessagesDown();
+    log('Chat history updated: ${_chatHistory.messages.length}, ${_chatHistory.messages}');
   }
 
   void _updateSelectedModels(List<String> modelIds) {
@@ -377,9 +222,7 @@ class _ChatViewState extends State<ChatView> {
       initialFunder: _funder,
       initialSignerKey: _signerKey,
       initialAuthToken: _authToken,
-      // Add this
       initialInferenceUrl: _inferenceUrl,
-      // Add this
       accountDetailNotifier: _accountDetailNotifier,
       onAccountChanged: (chain, funder, signerKey) {
         // log('onAccountChanged: Account changed: $chain, $funder, $signerKey');
@@ -401,7 +244,7 @@ class _ChatViewState extends State<ChatView> {
           _funder = null;
           _signerKey = null;
         });
-        _connectWithAuthToken(token, url);
+        _providerManager.connectWithAuthToken(token, url);
       },
     );
   }
@@ -414,7 +257,6 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-
   void _send() {
     if (_canSendMessages()) {
       _sendPrompt();
@@ -424,23 +266,24 @@ class _ChatViewState extends State<ChatView> {
   }
 
   bool _canSendMessages() {
-    return (_providerConnection?.inferenceClient != null) ||
+    return (_providerManager.hasInferenceClient) ||
         (_authToken != null && _inferenceUrl != null);
   }
 
+  // Apply the prompt to history and send to selected models
   void _sendPrompt() async {
     var msg = _promptTextController.text;
     if (msg.trim().isEmpty) {
       return;
     }
 
-    if (_providerConnection == null) {
-      addMessage(ChatMessageSource.system, 'Not connected to provider');
+    if (!_providerManager.hasProviderConnection) {
+      _addMessage(ChatMessageSource.system, 'Not connected to provider');
       return;
     }
 
     if (_selectedModelIds.isEmpty) {
-      addMessage(
+      _addMessage(
           ChatMessageSource.system,
           _multiSelectMode
               ? 'Please select at least one model'
@@ -449,10 +292,15 @@ class _ChatViewState extends State<ChatView> {
     }
 
     // Add user message immediately to update UI and include in history
-    addMessage(ChatMessageSource.client, msg);
+    _addMessage(ChatMessageSource.client, msg);
     _promptTextController.clear();
     FocusManager.instance.primaryFocus?.unfocus();
 
+    await _sendChatToModels();
+  }
+
+  // Send the appropriate chat history to the selected models
+  Future<void> _sendChatToModels() async {
     for (final modelId in _selectedModelIds) {
       try {
         final modelInfo = _modelsState.allModels.firstWhere(
@@ -468,27 +316,29 @@ class _ChatViewState extends State<ChatView> {
         // Prepare messages for this specific model
         final preparedMessages = _chatHistory.prepareForModel(
           modelId: modelId,
-          preparationFunction: _partyMode ? ChatHistory.partyMode : ChatHistory.isolatedMode,
+          preparationFunction:
+              _partyMode ? ChatHistory.partyMode : ChatHistory.isolatedMode,
         );
         Map<String, Object>? params;
         if (_maxTokens != null) {
           params = {'max_tokens': _maxTokens!};
         }
 
-        addMessage(
+        _addMessage(
           ChatMessageSource.internal,
           'Querying ${modelInfo.name}...',
           modelId: modelId,
           modelName: modelInfo.name,
         );
 
-        await _providerConnection?.requestInference(
+        // TODO: Move request inference to the provider manager?
+        await _providerManager.providerConnection?.requestInference(
           modelId,
           preparedMessages,
           params: params,
         );
       } catch (e) {
-        addMessage(
+        _addMessage(
             ChatMessageSource.system, 'Error querying model $modelId: $e');
       }
     }
@@ -596,7 +446,7 @@ class _ChatViewState extends State<ChatView> {
                 painter: CalloutPainter(),
                 child: Container(
                   width: 390,
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -606,7 +456,7 @@ class _ChatViewState extends State<ChatView> {
                             OrchidText.normal_14.copyWith(color: Colors.white),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(
                         'To get started, enter or create a funded Orchid account.',
                         style:
@@ -618,21 +468,21 @@ class _ChatViewState extends State<ChatView> {
                         onPressed: _popAccountDialog,
                         width: 200,
                       ).top(24),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       OutlinedButton(
                         onPressed: () =>
                             _launchURL('https://account.orchid.com'),
-                        child: Text('Create Account').button,
                         style: OutlinedButton.styleFrom(
                           side:
                               BorderSide(color: Theme.of(context).primaryColor),
-                          minimumSize: Size(200, 50),
+                          minimumSize: const Size(200, 50),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(25),
                           ),
                         ),
+                        child: const Text('Create Account').button,
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
                       InkWell(
                         onTap: () => _launchURL(
                             'https://docs.orchid.com/en/latest/accounts/'),
@@ -654,8 +504,8 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Widget _buildHeaderRow({required bool showIcons}) {
-    final buttonHeight = 40.0;
-    final settingsIconSize = buttonHeight * 1.5;
+    const buttonHeight = 40.0;
+    const settingsIconSize = buttonHeight * 1.5;
 
     return Row(
       children: <Widget>[
@@ -667,7 +517,7 @@ class _ChatViewState extends State<ChatView> {
           listenable: _modelsState,
           builder: (context, _) {
             if (_modelsState.isAnyLoading) {
-              return SizedBox(
+              return const SizedBox(
                 width: buttonHeight,
                 height: buttonHeight,
                 child: Center(
@@ -731,42 +581,6 @@ class _ChatViewState extends State<ChatView> {
   }
 }
 
-class CalloutPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    final radius = 10.0; // Corner radius
-    final calloutWidth = 25.0;
-    final calloutHeight = 20.0;
-    final calloutStart =
-        size.width - 115.0; // Adjust this to position the callout
-
-    final path = Path()
-      ..moveTo(radius, 0)
-      ..lineTo(calloutStart, 0)
-      ..lineTo(calloutStart + (calloutWidth / 2), -calloutHeight)
-      ..lineTo(calloutStart + calloutWidth, 0)
-      ..lineTo(size.width - radius, 0)
-      ..quadraticBezierTo(size.width, 0, size.width, radius)
-      ..lineTo(size.width, size.height - radius)
-      ..quadraticBezierTo(
-          size.width, size.height, size.width - radius, size.height)
-      ..lineTo(radius, size.height)
-      ..quadraticBezierTo(0, size.height, 0, size.height - radius)
-      ..lineTo(0, radius)
-      ..quadraticBezierTo(0, 0, radius, 0);
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
-}
-
 Future<void> _launchURL(String urlString) async {
   final Uri url = Uri.parse(urlString);
   if (!await launchUrl(url)) {
@@ -774,9 +588,6 @@ Future<void> _launchURL(String urlString) async {
   }
 }
 
-// Rename this in a subclass as prelude to refactoring later.
-class TransientEthereumKey extends StoredEthereumKey {
-  TransientEthereumKey({required super.imported, required super.private});
-}
+enum AuthTokenMethod { manual, walletConnect }
 
 enum OrchataMenuItem { debug }

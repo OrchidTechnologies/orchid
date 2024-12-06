@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_ticket.dart';
-import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'inference_client.dart';
 import 'chat_message.dart';
@@ -250,7 +249,7 @@ class ProviderConnection {
       return;
     }
 
-    final message = '{"type": "request_token"}';
+    const message = '{"type": "request_token"}';
     onInternalMessage('Requesting auth token');
     _sendProviderMessage(message);
   }
@@ -262,7 +261,7 @@ class ProviderConnection {
   }) async {
     if (!_usingDirectAuth && _inferenceClient == null) {
       await requestAuthToken();
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 100));
 
       if (_inferenceClient == null) {
         onError('No inference connection available');
