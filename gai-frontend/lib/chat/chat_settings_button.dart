@@ -10,16 +10,20 @@ import '../../../orchid/menu/orchid_popup_menu_button.dart';
 class ChatSettingsButton extends StatefulWidget {
   final bool debugMode;
   final bool multiSelectMode;
+  final bool partyMode;
   final VoidCallback onDebugModeChanged;
   final VoidCallback onMultiSelectModeChanged;
+  final VoidCallback onPartyModeChanged;
   final VoidCallback onClearChat;
 
   const ChatSettingsButton({
     Key? key,
     required this.debugMode,
     required this.multiSelectMode,
+    required this.partyMode,
     required this.onDebugModeChanged,
     required this.onMultiSelectModeChanged,
+    required this.onPartyModeChanged,
     required this.onClearChat,
   }) : super(key: key);
 
@@ -115,37 +119,41 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
               ),
             ),
             div,
+            // party mode
+            PopupMenuItem<String>(
+              onTap: widget.onPartyModeChanged,
+              height: _height,
+              child: SizedBox(
+                width: _width,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Party Mode", style: _textStyle),
+                    Icon(
+                      widget.partyMode
+                          ? Icons.check_box_outlined
+                          : Icons.check_box_outline_blank,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            div,
             SubmenuPopopMenuItemBuilder<String>(
               builder: _buildIdenticonsPref,
             ),
-/*
-            div,
-            SubmenuPopopMenuItemBuilder<String>(
-              builder: _buildLanguagePref,
-            ),
             div,
             PopupMenuItem<String>(
-              onTap: () {
-                Future.delayed(millis(0), () async {
-                  _openLicensePage(context);
-                });
+              onTap: () async {
+                launchUrlString(githubUrl);
               },
               height: _height,
               child: SizedBox(
                 width: _width,
-                child: Text(s.openSourceLicenses, style: _textStyle),
+                child: Text('Version: $buildCommit', style: _textStyle),
               ),
             ),
-            div,
-            // dapp version item
-            _listMenuItem(
-              selected: false,
-              title: 'Version: ' + buildCommit,
-              onTap: () async {
-                launchUrlString(githubUrl);
-              },
-            ),
-*/
           ];
         },
         child: SizedBox(

@@ -30,9 +30,7 @@ class StoredEthereumKey {
   }
 
   EthereumKeyPair get() {
-    if (_keyPair == null) {
-      _keyPair = Crypto.fromPrivateKey(private);
-    }
+    _keyPair ??= Crypto.fromPrivateKey(private);
     return _keyPair!; // !
   }
 
@@ -184,3 +182,12 @@ class TransientEthereumKeyRef extends EthereumKeyRef {
     return key;
   }
 }
+
+// A full key entered by the user that is not intended to be stored persistently.
+class TransientEthereumKey extends StoredEthereumKey {
+  TransientEthereumKey({required super.imported, required super.private});
+
+  @override
+  String get uid => '<no uid>'; // No persistent UID
+}
+

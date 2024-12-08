@@ -1,0 +1,47 @@
+
+Orchid Storage Technical Meeting: Discussion of Bonded Commitments 
+
+### Summary of Discussion
+
+#### Purpose of Bonded Commitments
+- **Definition:** Bonded commitments are mechanisms that incentivize storage providers to act correctly even in the absence of active monitoring by clients.
+- **Objective:** Ensure that providers maintain and securely store client data, with penalties (slashing conditions) for failure.
+
+#### Key Concepts Explored
+1. **Bond Growth Over Time:**
+   - Providers post a bond for every commitment made, which grows as they handle more data over time.
+   - Bond size scales with the number of clients and data sub-blocks associated with the provider.
+   - Bonds can only be reclaimed by proving correctness through cryptographic methods or client signatures.
+
+2. **Slashing and Incentives:**
+   - If a provider fails an audit (interactive or non-interactive), their bond is partially or fully forfeited.
+   - The slashed amount can fund data repair or be awarded to replacement providers.
+
+3. **Two Approaches to Verifying Commitments:**
+   - **Backward-Looking Protocol:** Bonds are posted and later justified through proofs at settlement, ensuring correct behavior over a longer period. This method minimizes on-chain interactions but introduces delays in penalizing failures.
+   - **Forward-Looking Protocol:** Cohorts of verifiers actively assess correctness in real-time, which might allow immediate responses to failures but could increase operational costs and complexity.
+
+4. **Challenges and Debates:**
+   - Incentivizing verifiers to actively perform checks when failure probabilities are low.
+   - Balancing cost-efficiency with robustness in detecting incorrect or incomplete commitments.
+   - Determining the practicality of encoding metadata to simplify verifications while ensuring correctness and scalability.
+
+#### Implementation Challenges
+- **Protocol Simplicity vs. Flexibility:**
+  - Initial proposals favor protocol-defined constants (e.g., fixed bond sizes per sub-block) to simplify design and implementation.
+  - More sophisticated mechanisms for scaling bond sizes dynamically were considered but may require further analysis for feasibility.
+- **Network Partition and Repair Protocols:**
+  - Addressing how overlapping cohorts handle incomplete or conflicting audits.
+  - Ensuring effective and prompt data repair mechanisms to maintain client trust.
+
+#### Open Questions
+- How to efficiently encode and verify metadata for bonds?
+- What are the optimal values for fixed constants in initial implementations?
+- Can incentives be effectively aligned for real-time cohort-based verification without adding excessive cost?
+
+#### Next Steps
+- Finalize parameters for bonded commitments (e.g., bond size, posting frequency).
+- Investigate metadata encoding techniques to simplify cohort checks.
+- Develop prototypes for both backward-looking and forward-looking protocols to compare efficiency and reliability.
+- Solicit feedback on the feasibility of incentivizing cohort members for correctness checks.
+

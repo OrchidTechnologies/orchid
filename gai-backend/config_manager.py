@@ -26,60 +26,74 @@ class ConfigManager:
             raise ConfigError(f"Failed to load config file: {e}")
 
     def process_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
-            if 'inference' not in config:
-                raise ConfigError("Missing required 'inference' section")
-                
-            if 'endpoints' not in config['inference']:
-                raise ConfigError("Missing required 'endpoints' in inference config")
-            
-            endpoints = config['inference']['endpoints']
-            if not endpoints:
-                raise ConfigError("No inference endpoints configured")
-            
-            total_models = 0
-            
-            for endpoint_id, endpoint in endpoints.items():
-                required_fields = ['api_type', 'url', 'api_key', 'models']
-                missing = [field for field in required_fields if field not in endpoint]
-                if missing:
-                    raise ConfigError(f"Endpoint {endpoint_id} missing required fields: {', '.join(missing)}")
-                if not isinstance(endpoint['models'], list):
-                    raise ConfigError(f"Endpoint {endpoint_id} 'models' must be a list")
-                if not endpoint['models']:
-                    raise ConfigError(f"Endpoint {endpoint_id} has no models configured")
-                
-                total_models += len(endpoint['models'])
-                
-                for model in endpoint['models']:
-                    required_model_fields = ['id', 'pricing']
-                    missing = [field for field in required_model_fields if field not in model]
-                    if missing:
-                        raise ConfigError(f"Model in endpoint {endpoint_id} missing required fields: {', '.join(missing)}")
-                    if 'params' not in model:
-                        model['params'] = {}
-                        
-                    pricing = model['pricing']
-                    if 'type' not in pricing:
-                        raise ConfigError(f"Model {model['id']} missing required pricing type")
-                        
-                    required_pricing_fields = {
-                        'fixed': ['input_price', 'output_price'],
-                        'cost_plus': ['backend_input', 'backend_output', 'input_markup', 'output_markup'],
-                        'multiplier': ['backend_input', 'backend_output', 'input_multiplier', 'output_multiplier']
-                    }
-                    
-                    if pricing['type'] not in required_pricing_fields:
-                        raise ConfigError(f"Invalid pricing type for model {model['id']}: {pricing['type']}")
-                        
-                    missing = [field for field in required_pricing_fields[pricing['type']]
-                              if field not in pricing]
-                    if missing:
-                        raise ConfigError(f"Model {model['id']} pricing missing required fields: {', '.join(missing)}")
-            
-            if total_models == 0:
-                raise ConfigError("No models configured across all endpoints")
-            
-            return config
+       if 'inference' not in config and 'rpc' not in config:
+           raise ConfigError("Config must contain either 'inference' or 'rpc' section")
+               
+       if 'inference' in config:
+           if 'endpoints' not in config['inference']:
+               raise ConfigError("Missing required 'endpoints' in inference config")
+           
+           endpoints = config['inference']['endpoints']
+           if not endpoints:
+               raise ConfigError("No inference endpoints configured")
+           
+           total_models = 0
+           
+           for endpoint_id, endpoint in endpoints.items():
+               required_fields = ['api_type', 'url', 'api_key', 'models']
+               missing = [field for field in required_fields if field not in endpoint]
+               if missing:
+                   raise ConfigError(f"Endpoint {endpoint_id} missing required fields: {', '.join(missing)}")
+               if not isinstance(endpoint['models'], list):
+                   raise ConfigError(f"Endpoint {endpoint_id} 'models' must be a list")
+               if not endpoint['models']:
+                   raise ConfigError(f"Endpoint {endpoint_id} has no models configured")
+               
+               total_models += len(endpoint['models'])
+               
+               for model in endpoint['models']:
+                   required_model_fields = ['id', 'pricing']
+                   missing = [field for field in required_model_fields if field not in model]
+                   if missing:
+                       raise ConfigError(f"Model in endpoint {endpoint_id} missing required fields: {', '.join(missing)}")
+                   if 'params' not in model:
+                       model['params'] = {}
+                       
+                   pricing = model['pricing']
+                   if 'type' not in pricing:
+                       raise ConfigError(f"Model {model['id']} missing required pricing type")
+                       
+                   required_pricing_fields = {
+                       'fixed': ['input_price', 'output_price'],
+                       'cost_plus': ['backend_input', 'backend_output', 'input_markup', 'output_markup'],
+                       'multiplier': ['backend_input', 'backend_output', 'input_multiplier', 'output_multiplier']
+                   }
+                   
+                   if pricing['type'] not in required_pricing_fields:
+                       raise ConfigError(f"Invalid pricing type for model {model['id']}: {pricing['type']}")
+                       
+                   missing = [field for field in required_pricing_fields[pricing['type']]
+                             if field not in pricing]
+                   if missing:
+                       raise ConfigError(f"Model {model['id']} pricing missing required fields: {', '.join(missing)}")
+           
+           if total_models == 0:
+               raise ConfigError("No models configured across all endpoints")
+
+       if 'rpc' in config:
+           rpc = config['rpc']
+           required_fields = ['provider_url', 'provider_key', 'prices', 'pricing']
+           missing = [f for f in required_fields if f not in rpc]
+           if missing:
+               raise ConfigError(f"RPC config missing required fields: {', '.join(missing)}")
+               
+           pricing = rpc['pricing']
+           required_pricing = ['base_unit', 'credit_to_usd', 'min_usd_charge']
+           missing = [f for f in required_pricing if f not in pricing]
+           if missing:
+               raise ConfigError(f"RPC pricing missing required fields: {', '.join(missing)}")
+               
+       return config
 
     async def write_config(self, config: Dict[str, Any], force: bool = False):
         try:

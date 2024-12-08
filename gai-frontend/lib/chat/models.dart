@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:orchid/orchid/orchid.dart';
 
 class ModelInfo {
   final String id;          
@@ -38,9 +38,23 @@ class ModelsState extends ChangeNotifier {
     return _modelsByProvider[providerId] ?? [];
   }
 
+  String? getModelName(String? modelId) {
+    if (modelId == null) return null;
+    final model = allModels.firstWhere(
+      (m) => m.id == modelId,
+      orElse: () => ModelInfo(
+        id: modelId,
+        name: modelId,
+        provider: '',
+        apiType: '',
+      ),
+    );
+    return model.name;
+  }
+
   List<ModelInfo> get allModels {
-    final models = _modelsByProvider.values.expand((models) => models).toList();
-    print('ModelsState.allModels returning ${models.length} models: $models');
+    final List<ModelInfo> models = _modelsByProvider.values.expand((models) => models).toList();
+    log('ModelsState.allModels returning ${models.length} models: ${models.toString().truncate(64)}');
     return models;
   }
 
@@ -48,14 +62,14 @@ class ModelsState extends ChangeNotifier {
     String providerId, 
     dynamic client,
   ) async {
-    print('ModelsState: Fetching models for provider $providerId');
+    log('ModelsState: Fetching models for provider $providerId');
     _loadingProviders.add(providerId);
     _errors.remove(providerId);
     notifyListeners();
 
     try {
       final response = await client.listModels();
-      print('ModelsState: Received model data from client: $response');
+      log('ModelsState: Received model data from client: ${response.toString().truncate(64)}');
       
       // Convert the response map entries directly to ModelInfo objects
       final modelsList = response.entries.map((entry) => ModelInfo(
@@ -65,18 +79,18 @@ class ModelsState extends ChangeNotifier {
         apiType: entry.value.apiType,
       )).toList();
       
-      print('ModelsState: Created models list: $modelsList');
-      
-      _modelsByProvider[providerId] = modelsList;
-      print('ModelsState: Updated models for provider $providerId: $modelsList');
+      log('ModelsState: Created models list: ${modelsList.toString().truncate(64)}');
+
+      _modelsByProvider[providerId] = modelsList.cast<ModelInfo>();
+      log('ModelsState: Updated models for provider $providerId: ${modelsList.toString().truncate(64)}');
     } catch (e, stack) {
-      print('ModelsState: Error fetching models: $e\n$stack');
+      log('ModelsState: Error fetching models: $e\n$stack');
       _errors[providerId] = e.toString();
     } finally {
       _loadingProviders.remove(providerId);
       notifyListeners();
-      print('ModelsState: Notified listeners, current state: \n'
-            'Models: ${_modelsByProvider}\n'
+      log('ModelsState: Notified listeners, current state: \n'
+            'Models: ${_modelsByProvider.toString().truncate(64)}\n'
             'Loading: $_loadingProviders\n'
             'Errors: $_errors');
     }
@@ -86,6 +100,14 @@ class ModelsState extends ChangeNotifier {
     _modelsByProvider.remove(providerId);
     _errors.remove(providerId);
     _loadingProviders.remove(providerId);
+    notifyListeners();
+  }
+
+  void clear() {
+    log('ModelsState: Clearing all models');
+    _modelsByProvider.clear();
+    _errors.clear();
+    _loadingProviders.clear();
     notifyListeners();
   }
 

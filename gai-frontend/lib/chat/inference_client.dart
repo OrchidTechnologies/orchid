@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'chat_message.dart';
 
 class InferenceError implements Exception {
   final int statusCode;
@@ -123,31 +122,6 @@ class InferenceClient {
     ));
   }
 
-  Map<String, dynamic> _chatMessageToJson(ChatMessage msg) {
-    String role;
-    switch (msg.source) {
-      case ChatMessageSource.client:
-        role = 'user';
-        break;
-      case ChatMessageSource.provider:
-        role = 'assistant';
-        break;
-      default:
-        role = 'system';
-    }
-
-    final map = <String, dynamic>{
-      'role': role,
-      'content': msg.message,
-    };
-    
-    if (msg.modelName != null) {
-      map['name'] = msg.modelName;
-    }
-    
-    return map;
-  }
-
   // Simple token estimation
   int _estimateTokenCount(String text) {
     // Average English word is ~4 characters + space
@@ -156,7 +130,7 @@ class InferenceClient {
   }
 
   Future<Map<String, dynamic>> inference({
-    required List<ChatMessage> messages,
+    required List<Map<String, dynamic>> messages,
     String? model,
     Map<String, Object>? params,
   }) async {
@@ -169,13 +143,11 @@ class InferenceClient {
     }
 
     final estimatedTokens = messages.fold<int>(
-      0, (sum, msg) => sum + _estimateTokenCount(msg.message)
+      0, (sum, msg) => sum + _estimateTokenCount(msg['content'] as String)
     );
     
-    final formattedMessages = messages.map(_chatMessageToJson).toList();
-    
     final Map<String, Object> payload = {
-      'messages': formattedMessages,
+      'messages': messages,
       'estimated_prompt_tokens': estimatedTokens,
     };
     

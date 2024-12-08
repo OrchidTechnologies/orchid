@@ -1,0 +1,27 @@
+
+**Meeting Title:**
+Revisiting Directory Delay, Metadata Management, and Cohort-Level Operations in Decentralized Storage
+
+**Summary:**
+
+The meeting explored changes to the concensus on the directory delay topic.
+
+The team then shifted to discussing **cohort metadata** and provider operations, identifying essential components that enable providers to effectively collaborate within a decentralized storage network. This includes metadata on erasure coding protocols, positions, identity management, and communication within the cohort. Participants also emphasized the importance of ensuring consistent definitions and comprehensive coverage in future drafts.
+
+Some key points discussed:
+- **Metadata Components:** The team categorized cohort metadata into:
+  - **Provider Information:** Blockchain identities, network protocols, erasure coding roles, and adjacency mapping.
+  - **Data Operations:** Erasure block identifiers, encoding schemes, and parameters.
+  - **Protocol Parameters:** Communication protocols, audit cadences, and repair triggers.
+- **Cohort-Level Repairs:** When providers fail, the cohort initiates repairs via erasure coding and ensures self-healing without requiring clients to be online. The roles of metadata in facilitating these processes, such as tracking failed providers and selecting replacements, were discussed.
+- **Trustless Operations:** There was emphasis on building trustless mechanisms for metadata updates and repair operations, potentially leveraging on-chain solutions for accountability.
+
+Lastly, there was a brief organizational discussion to consolidate earlier notes, with suggestions to restructure the draft for better readability and alignment with outlined priorities.
+
+**Next Steps:**
+- Consolidate existing discussions on repairs and metadata into a coherent draft section.
+- Explore metadata’s trustless and efficient handling mechanisms.
+- Refine section 4 (Cohort Operations) to align with broader document goals.
+- Schedule follow-up for metadata and finalize missing repair details.
+
+

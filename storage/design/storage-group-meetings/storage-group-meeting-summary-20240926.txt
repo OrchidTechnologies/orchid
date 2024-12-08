@@ -1,0 +1,37 @@
+
+Orchid Storage Technical Meeting: Provider and Cohort Core Interactions
+
+---
+
+#### **Key Themes:**
+
+1. **Provider Stories and Core Interactions:**
+   - The meeting began by structuring the provider's journey through decentralized data storage. The provider's role involves:
+     - Advertising storage capabilities via staking mechanisms.
+     - Accepting storage tasks based on incoming Rate Certificates (RCs).
+     - Validating RCs to ensure they are credible commitments.
+     - Performing bandwidth transactions while assembling data blocks.
+     - Constructing cryptographic commitments (e.g., KZG) to ensure auditability.
+
+2. **Cohort Mechanics:**
+   - A "cohort" represents a group of storage providers collaborating to maintain data reliability.
+   - Interactions within cohorts include:
+     - Sharing metadata about members.
+     - Identifying incomplete or invalid commitments during audits.
+     - Supporting data reconstruction using erasure coding.
+   - Providers are incentivized to participate in repairs and verification, enhancing data durability.
+
+3. **Operational Phases:**
+   - **Phase 1:** Core interaction between a provider and a client:
+     - Focused on direct commitments and bandwidth exchanges without external dependencies.
+   - **Phase 2:** Integration of cohort-level interactions:
+     - Handling failures and repairs collaboratively.
+     - Incentive alignment ensures honest provider participation in the cohort's repair processes.
+   - **Phase 3:** Reconstruction and repair:
+     - Providers execute client-signed recovery tasks even in the client’s absence.
+     - Cohorts employ erasure and twin-coding schemes for efficient block regeneration.
+
+4. **Document Structure and Levels of Detail:**
+   - There was a consensus to separate design and incentive motivations from detailed technical specifications (the "spec").
+   - Abstract concepts like Rate Certificates, Bonded Commitments, and Erasure Coding need discrete sections for clarity.
+

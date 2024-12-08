@@ -15,12 +15,11 @@ class EthereumTransaction /*extends EthereumTransactionParams*/ {
   Map<String, dynamic> toJson() {
     // Export flat json
     var json = params.toJson();
-    json.addAll(<String, dynamic>{'data': data});
+    json['data'] = data;
+
     // Exclude nonce if null
     if (nonce != null) {
-      json.addAll({
-        'nonce': nonce, // decimal int
-      });
+      json['nonce'] = nonce;
     }
     return json;
   }
@@ -34,8 +33,7 @@ class EthereumTransaction /*extends EthereumTransactionParams*/ {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      super == other &&
-          other is EthereumTransaction &&
+      other is EthereumTransaction &&
           runtimeType == other.runtimeType &&
           params == other.params &&
           data == other.data &&

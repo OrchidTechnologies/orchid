@@ -1,3 +1,5 @@
+import 'package:orchid/orchid/orchid.dart';
+
 enum ChatMessageSource { client, provider, system, internal }
 
 class ChatMessage {
@@ -20,14 +22,14 @@ class ChatMessage {
   String get message => msg;
 
   String? get displayName {
-    print('Getting displayName. source: $source, modelName: $modelName, sourceName: $sourceName'); // Debug what we have
+    log('Getting displayName. source: $source, modelName: $modelName, sourceName: $sourceName'); // Debug what we have
     if (source == ChatMessageSource.provider && modelName != null) {
       return modelName;
     }
     if (sourceName.isNotEmpty) {
       return sourceName;
     }
-    print('Returning null displayName'); // See when we hit this case
+    log('Returning null displayName'); // See when we hit this case
     return null;
   }
 
