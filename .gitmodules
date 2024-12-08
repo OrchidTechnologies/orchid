@@ -262,3 +262,12 @@
 [submodule "fast_float"]
 	path = min-v8/fast_float
 	url = https://github.com/fastfloat/fast_float.git
+[submodule "ldns"]
+	path = lib-protocol/ldns
+	url = https://github.com/NLnetLabs/ldns.git
+[submodule "oqs-provider"]
+	path = lib-protocol/oqs-provider
+	url = https://github.com/open-quantum-safe/oqs-provider.git
+[submodule "liboqs"]
+	path = lib-protocol/liboqs
+	url = https://github.com/open-quantum-safe/liboqs.git
