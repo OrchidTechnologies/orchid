@@ -7,8 +7,10 @@ class ChatMessage {
   final String sourceName;
   final String msg;
   final Map<String, dynamic>? metadata;
+
   // The modelId of the model that generated this message
   final String? modelId;
+
   // The name of the model that generated this message
   final String? modelName;
 
@@ -38,7 +40,7 @@ class ChatMessage {
     if (metadata == null || !metadata!.containsKey('usage')) {
       return '';
     }
-    
+
     final usage = metadata!['usage'];
     if (usage == null) {
       return '';
@@ -59,4 +61,3 @@ class ChatMessage {
     return 'ChatMessage(source: $source, modelId: $modelId, model: $modelName, msg: ${msg.substring(0, msg.length.clamp(0, 50))}...)';
   }
 }
-

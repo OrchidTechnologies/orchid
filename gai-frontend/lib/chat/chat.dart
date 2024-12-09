@@ -86,14 +86,17 @@ class _ChatViewState extends State<ChatView> {
       log('Error initializing from params: $e, $stack');
     }
 
+    /*
     // Initialize scripting extension
-    // ChatScripting.init(
-    //   url: 'lib/extensions/test.js',
-    //   debugMode: true,
-    //   providerManager: _providerManager,
-    //   chatHistory: _chatHistory,
-    //   addChatMessageToUI: _addChatMessage,
-    // );
+    ChatScripting.init(
+      // url: 'lib/extensions/test.js',
+      url: 'lib/extensions/party_mode.js',
+      debugMode: true,
+      providerManager: _providerManager,
+      chatHistory: _chatHistory,
+      addChatMessageToUI: _addChatMessage,
+    );
+     */
   }
 
   bool get _connected {

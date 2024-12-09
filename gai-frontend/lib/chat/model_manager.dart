@@ -56,7 +56,7 @@ class ModelManager extends ChangeNotifier {
   List<ModelInfo> get allModels {
     final List<ModelInfo> models =
     _modelsByProvider.values.expand((models) => models).toList();
-    log('ModelsState.allModels returning ${models.length} models: ${models.toString().truncate(64)}');
+    // log('ModelsState.allModels returning ${models.length} models: ${models.toString().truncate(64)}');
     return models;
   }
 

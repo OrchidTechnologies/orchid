@@ -27,7 +27,3 @@ script.onload = () => {
         console.error("Lodash is not available!");
     }
 };
-
-// Define a result variable
-const result = 42;
-result; // Return this value from eval

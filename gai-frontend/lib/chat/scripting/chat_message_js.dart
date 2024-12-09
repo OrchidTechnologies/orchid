@@ -19,7 +19,7 @@ class ChatMessageJS {
 
   static ChatMessageJS fromChatMessage(ChatMessage chatMessage) {
     return ChatMessageJS(
-      source: chatMessage.source.toString(),
+      source: chatMessage.source.name, // enum name not toString()
       sourceName: chatMessage.sourceName,
       msg: chatMessage.msg,
       metadata: jsonEncode(chatMessage.metadata).toJS,
@@ -37,16 +37,18 @@ class ChatMessageJS {
     return ChatMessage(
       ChatMessageSource.values.byName(chatMessageJS.source),
       chatMessageJS.msg,
+
       // TODO:
       // metadata: jsonDecode((chatMessageJS.metadata ?? "").toString()),
       metadata: {},
-      // sourceName: '',
-      // modelId: chatMessageJS.modelId,
-      // modelName: chatMessageJS.modelName,
+
+      sourceName: '',
+      modelId: chatMessageJS.modelId,
+      modelName: chatMessageJS.modelName,
     );
   }
 
-  // Map a list of ChatMessageJS to a list of ChatMessage
+  // Map a list of ChatMessageJS   to a list of ChatMessage
   static List<ChatMessage> toChatMessages(List<ChatMessageJS> chatMessagesJS) {
     return chatMessagesJS.map((msg) => toChatMessage(msg)).toList();
   }

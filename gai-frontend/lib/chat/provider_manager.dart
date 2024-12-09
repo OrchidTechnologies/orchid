@@ -202,7 +202,7 @@ class ProviderManager {
         onConnect: () {
           _providerConnected(name);
         },
-        onChat: (msg, metadata) {
+        onChat: (String msg, Map<String, dynamic> metadata) {
           log('onChat received metadata: $metadata');
           final modelId = metadata['model_id'];
           log('Found model_id: $modelId');

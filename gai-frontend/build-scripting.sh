@@ -23,7 +23,8 @@ for file in *.ts; do
   echo "Building extension $file"
   # rename the file to js
   jsfile=$(echo $file | sed 's/\.ts/\.js/')
-  tsc --outFile "$jsfile" "$file"
+  #tsc --target es2020 --module es2022 "$file"
+  tsc --target es2020 "$file"
   mv "$jsfile" "$base/web/lib/extensions/"
 done
 

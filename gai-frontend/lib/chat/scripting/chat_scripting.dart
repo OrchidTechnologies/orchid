@@ -9,9 +9,8 @@ import 'chat_message_js.dart';
 import 'model_info_js.dart';
 import 'package:http/http.dart' as http;
 
-
 class ChatScripting {
-
+  // Singleton
   static ChatScripting? _instance;
 
   static ChatScripting get instance {
@@ -23,6 +22,7 @@ class ChatScripting {
 
   static bool get enabled => _instance != null;
 
+  // Scripting config
   late String script;
   late ProviderManager providerManager;
   late ChatHistory chatHistory;
@@ -35,7 +35,6 @@ class ChatScripting {
 
     // If debugMode is true, the script will be re-loaded before each invocation
     bool debugMode = false,
-
     required ProviderManager providerManager,
     required ChatHistory chatHistory,
     required Function(ChatMessage) addChatMessageToUI,
@@ -51,11 +50,11 @@ class ChatScripting {
     instance.addChatMessageToUI = addChatMessageToUI;
 
     // Install persistent callback functions
-    doGlobalSetup();
+    addGlobalBindings();
 
     await instance.loadExtensionScript(url);
     // Do one setup and evaluation of the script now
-    instance.doPerCallSetup();
+    instance.updatePerCallBindings();
   }
 
   Future<void> loadExtensionScript(String url) async {
@@ -64,12 +63,14 @@ class ChatScripting {
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode != 200) {
-      throw Exception("Failed to load script from $url: ${response.statusCode}");
+      throw Exception(
+          "Failed to load script from $url: ${response.statusCode}");
     }
 
     // If the result is HTML we have failed
     if (response.headers['content-type']!.contains('text/html')) {
-      throw Exception("Failed to load script from $url: HTML response: ${response.body.truncate(64)}");
+      throw Exception(
+          "Failed to load script from $url: HTML response: ${response.body.truncate(64)}");
     }
 
     script = response.body;
@@ -77,9 +78,10 @@ class ChatScripting {
   }
 
   void evalExtensionScript() {
+    // Wrap the script in an async function to allow top level await without messing with modules.
+    // final wrappedScript = "(async () => {$script})();";
     try {
-      final result = evaluateJS(script);
-      log("Evaluated script: $result, ${result.runtimeType}");
+      evaluateJS(script); // We could get a result back async here if needed
     } catch (e, stack) {
       log("Failed to evaluate script: $e");
       log(stack.toString());
@@ -87,17 +89,17 @@ class ChatScripting {
   }
 
   // Install the persistent callback functions
-  static void doGlobalSetup() {
+  static void addGlobalBindings() {
     addChatMessageJS = instance.addChatMessageFromJS.toJS;
     sendMessagesToModelJS = instance.sendMessagesToModelFromJS.toJS;
   }
 
   // Items that need to be copied before each invocation of the JS scripting extension
-  void doPerCallSetup({List<ModelInfo>? userSelectedModels}) {
-    chatHistoryJS =
-        ChatMessageJS.fromChatMessages(chatHistory.messages).jsify() as JSArray;
-    userSelectedModelsJS =
-        ModelInfoJS.fromModelInfos(userSelectedModels ?? []).jsify() as JSArray;
+  void updatePerCallBindings({List<ModelInfo>? userSelectedModels}) {
+    chatHistoryJS = ChatMessageJS.fromChatMessages(chatHistory.messages).jsify() as JSArray;
+    if (userSelectedModels != null) {
+      userSelectedModelsJS = ModelInfoJS.fromModelInfos(userSelectedModels).jsify() as JSArray;
+    }
     if (debugMode) {
       evalExtensionScript();
     }
@@ -106,7 +108,7 @@ class ChatScripting {
   // Send the user prompt to the JS scripting extension
   void sendUserPrompt(String userPrompt, List<ModelInfo> userSelectedModels) {
     log("Invoke onUserPrompt on the scripting extension: $userPrompt");
-    doPerCallSetup(userSelectedModels: userSelectedModels);
+    updatePerCallBindings(userSelectedModels: userSelectedModels);
     onUserPromptJS(userPrompt);
   }
 
@@ -119,18 +121,44 @@ class ChatScripting {
   void addChatMessageFromJS(ChatMessageJS message) {
     log("Add chat message: ${message.source}, ${message.msg}");
     addChatMessageToUI(ChatMessageJS.toChatMessage(message));
+    updatePerCallBindings(); // History has changed
   }
 
   // Implementation of sendMessagesToModel callback function invoked from JS
   // Send a list of ChatMessage to a model for inference
-  String sendMessagesToModelFromJS(JSArray messagesJS, String modelId, int? maxTokens) {
-    final List<ChatMessageJS> listJS = (messagesJS.dartify() as List).cast<ChatMessageJS>();
-    final List<ChatMessage> messages = ChatMessageJS.toChatMessages(listJS);
-    log("Send messages to model: $modelId, ${messages.length} messages");
-    if (messages.isNotEmpty) {
-      log("messages[0] = ${messages[0]}");
-    }
-    return "result from dart";
+  JSPromise sendMessagesToModelFromJS(
+      JSArray messagesJS, String modelId, int? maxTokens) {
+    log("dart: Send messages to model called.");
+    // We must capture the Future and return convert it to a JSPromise
+    return (() async {
+      try {
+        final listJS = (messagesJS.toDart).cast<ChatMessageJS>();
+        final messages = ChatMessageJS.toChatMessages(listJS);
+        log("messages = ${messages}");
+        if (messages.isEmpty) {
+          return [];
+        }
+
+        // Simulate delay
+        // log("dart: simulate delay");
+        // await Future.delayed(const Duration(seconds: 3));
+        // log("dart: after delay response from sendMessagesToModel sent.");
+
+        // Send the messages to the model
+        await providerManager.sendMessagesToModel(messages, modelId, maxTokens);
+
+        // TODO: Fake return
+        return ["message 1", "message 2"].jsify(); // Don't forget value to JS
+      } catch (e, stack) {
+        log("Failed to send messages to model: $e");
+        log(stack.toString());
+        return ["error: $e"].jsify();
+      }
+    })()
+        .toJS;
   }
 
+  ///
+  /// END: callbacks from JS
+  ///
 }

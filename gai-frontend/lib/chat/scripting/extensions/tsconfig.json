@@ -1,0 +1,10 @@
+// This is just for the IDE to tell it the typescript level
+// See build-scripting.sh for the tsc options.
+{
+  "compilerOptions": {
+    "target": "es2020",
+    // "module": "es2022",
+    // "moduleResolution": "node",
+    "strict": true
+  }
+}

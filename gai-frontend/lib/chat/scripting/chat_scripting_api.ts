@@ -1,3 +1,7 @@
+// A TS API for the chat scripting environment
+// This is compiled to JS by the build script and included in the html for basic structural type info.
+// See chat_scripting_bindings_js.dart for the dart bindings.
+
 enum ChatMessageSource {
     CLIENT = 'client',
     PROVIDER = 'provider',
@@ -41,9 +45,8 @@ declare let userSelectedModels: ReadonlyArray<ModelInfo>;
 declare function sendMessagesToModel(
     messages: Array<ChatMessage>,
     modelId: string,
-    maxTokens?: number,
-// ) : Promise<string[]>
-) : string
+    maxTokens?: number | null,
+): Promise<Array<string>>
 
 // Send a list of formatted messages to a model for inference
 declare function sendFormattedMessagesToModel(
