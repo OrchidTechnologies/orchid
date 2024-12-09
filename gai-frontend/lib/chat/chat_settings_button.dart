@@ -43,7 +43,7 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
         const String.fromEnvironment('build_commit', defaultValue: '...');
     final githubUrl =
         'https://github.com/OrchidTechnologies/orchid/tree/$buildCommit/web-ethereum/dapp2';
-        
+
     return Center(
       child: OrchidPopupMenuButton<dynamic>(
         width: 30,

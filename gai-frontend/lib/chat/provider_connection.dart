@@ -7,6 +7,7 @@ import 'package:orchid/api/orchid_eth/orchid_ticket.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'inference_client.dart';
 import 'chat_message.dart';
+import 'package:orchid/api/orchid_log.dart';
 
 typedef MessageCallback = void Function(String message);
 typedef ChatCallback = void Function(
@@ -259,6 +260,11 @@ class ProviderConnection {
     List<Map<String, dynamic>> preparedMessages, {
     Map<String, Object>? params,
   }) async {
+    /*
+      Requesting inference for model gpt-4o-mini
+      Prepared messages: [{role: user, content: Hello!}, {role: assistant, content: Hello! How can I assist you today?}, {role: user, content: How are you?}]
+      Params: null
+     */
     if (!_usingDirectAuth && _inferenceClient == null) {
       await requestAuthToken();
       await Future.delayed(const Duration(milliseconds: 100));
@@ -290,13 +296,13 @@ class ProviderConnection {
         'Params: $allParams'
       );
 
-      final result = await _inferenceClient!.inference(
+      final Map<String, dynamic> result = await _inferenceClient!.inference(
         messages: preparedMessages,
         model: modelId,
         params: allParams,
       );
       
-      final pendingRequest = _pendingRequests.remove(requestId);
+      _pendingRequests.remove(requestId);
 
       onChat(result['response'], {
         'type': 'job_complete',

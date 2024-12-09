@@ -2,7 +2,7 @@ import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'chat_message.dart';
-import 'models.dart';
+import 'model_manager.dart';
 import 'provider_connection.dart';
 import 'dart:convert';
 
@@ -13,9 +13,7 @@ class ProviderManager {
   final VoidCallback onProviderDisconnected;
   final void Function(ChatMessage) onChatMessage;
 
-  // TODO: ProviderManager probably shouldn't need direct access to the models state
-  // TODO: Currently used to fetch models after connecting to a provider and to get model names
-  final ModelsState modelsState;
+  final ModelManager modelsState;
 
   AccountDetail? accountDetail;
   ProviderConnection? providerConnection;
@@ -97,6 +95,7 @@ class ProviderManager {
     onChatMessage(message);
   }
 
+  // TODO: review duplication between auth modes
   void connectWithAuthToken(String token, String inferenceUrl) async {
     // Clean up existing connection if any
     if (_connected) {
@@ -117,13 +116,15 @@ class ProviderManager {
         onConnect: () {
           _providerConnected('Direct Auth');
         },
-        onChat: (msg, metadata) {
+        onChat: (String msg, Map<String, dynamic> metadata) {
           _addMessage(
             ChatMessageSource.provider,
             msg,
             metadata: metadata,
             modelId: metadata['model_id'],
-            modelName: modelsState.getModelName(metadata['model_id']),
+            modelName: modelsState
+                .getModelOrDefaultNullable(metadata['model_id'])
+                ?.name,
           );
         },
         onDisconnect: _providerDisconnected,
@@ -211,7 +212,7 @@ class ProviderManager {
             msg,
             metadata: metadata,
             modelId: modelId,
-            modelName: modelsState.getModelName(modelId),
+            modelName: modelsState.getModelOrDefaultNullable(modelId)?.name,
           );
         },
         onDisconnect: _providerDisconnected,
@@ -253,6 +254,49 @@ class ProviderManager {
   void _providerDisconnected() {
     _connected = false;
     onProviderDisconnected();
+  }
+
+  // Note: This method is exposed to the scripting environment.
+  Future<void> sendMessagesToModel(
+    List<ChatMessage> messages,
+    String modelId,
+    int? maxTokens,
+  ) {
+    final modelInfo = modelsState.getModelOrDefault(modelId);
+
+    // Format messages for this model
+    // Note: The default formatting logic knows how to render messages from foreign models
+    // Note: as other "user" roles with prefixed model names.  The scripting environment
+    // Note: can override this formatting by calling sendFormattedMessagesToModel() directly.
+    final formattedMessages = modelInfo.formatMessages(messages);
+    return sendFormattedMessagesToModel(formattedMessages, modelId, maxTokens);
+  }
+
+  // Note: This method is exposed to the scripting environment.
+  Future<void> sendFormattedMessagesToModel(
+    List<Map<String, String>> formattedMessages,
+    String modelId,
+    int? maxTokens,
+  ) async {
+    // Add api params
+    Map<String, Object>? params;
+    if (maxTokens != null) {
+      params = {'max_tokens': maxTokens};
+    }
+
+    final modelInfo = modelsState.getModelOrDefault(modelId);
+    _addMessage(
+      ChatMessageSource.internal,
+      'Querying ${modelInfo.name}...',
+      modelId: modelInfo.id,
+      modelName: modelInfo.name,
+    );
+
+    await providerConnection?.requestInference(
+      modelInfo.id,
+      formattedMessages,
+      params: params,
+    );
   }
 
   static Map<String, Map<String, String>> getFromEnv() {

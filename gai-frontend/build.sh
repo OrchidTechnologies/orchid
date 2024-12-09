@@ -1,4 +1,8 @@
 #!/bin/bash
+set -euxo pipefail
+
+# Build the scripting extensions
+sh build-scripting.sh
 
 # Set default mode to prod if not specified
 MODE=${1:-prod}

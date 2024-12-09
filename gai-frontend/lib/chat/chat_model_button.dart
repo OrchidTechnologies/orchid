@@ -1,6 +1,6 @@
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/orchid/menu/orchid_popup_menu_button.dart';
-import 'models.dart';
+import 'model.dart';
 
 class ModelSelectionButton extends StatefulWidget {
   final List<ModelInfo> models;

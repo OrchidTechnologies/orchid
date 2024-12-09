@@ -7,7 +7,9 @@ class ChatMessage {
   final String sourceName;
   final String msg;
   final Map<String, dynamic>? metadata;
+  // The modelId of the model that generated this message
   final String? modelId;
+  // The name of the model that generated this message
   final String? modelName;
 
   ChatMessage(
@@ -22,7 +24,6 @@ class ChatMessage {
   String get message => msg;
 
   String? get displayName {
-    log('Getting displayName. source: $source, modelName: $modelName, sourceName: $sourceName'); // Debug what we have
     if (source == ChatMessageSource.provider && modelName != null) {
       return modelName;
     }
@@ -55,7 +56,7 @@ class ChatMessage {
 
   @override
   String toString() {
-    return 'ChatMessage(source: $source, model: $modelName, msg: ${msg.substring(0, msg.length.clamp(0, 50))}...)';
+    return 'ChatMessage(source: $source, modelId: $modelId, model: $modelName, msg: ${msg.substring(0, msg.length.clamp(0, 50))}...)';
   }
 }
 

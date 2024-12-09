@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'chat/chat.dart';
+import 'chat/scripting/chat_scripting.dart';
 
 void main() async {
   await UserPreferences.init();

@@ -2,6 +2,8 @@ import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_keys.dart';
+import 'package:orchid/chat/model.dart';
+import 'package:orchid/chat/scripting/chat_scripting.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/chat/chat_settings_button.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
@@ -15,9 +17,9 @@ import 'chat_button.dart';
 import 'chat_message.dart';
 import 'chat_prompt.dart';
 import 'chat_model_button.dart';
-import 'models.dart';
 import 'auth_dialog.dart';
 import 'chat_history.dart';
+import 'model_manager.dart';
 import 'provider_manager.dart';
 
 class ChatView extends StatefulWidget {
@@ -45,8 +47,11 @@ class _ChatViewState extends State<ChatView> {
   late final ProviderManager _providerManager;
 
   // Models
-  final ModelsState _modelsState = ModelsState();
+  final ModelManager _modelsState = ModelManager();
   List<String> _selectedModelIds = [];
+
+  List<ModelInfo> get _selectedModels =>
+      _modelsState.getModelsOrDefault(_selectedModelIds);
 
   // Account
   // This should be wrapped up in a provider.  See WIP in vpn app.
@@ -80,6 +85,15 @@ class _ChatViewState extends State<ChatView> {
     } catch (e, stack) {
       log('Error initializing from params: $e, $stack');
     }
+
+    // Initialize scripting extension
+    // ChatScripting.init(
+    //   url: 'lib/extensions/test.js',
+    //   debugMode: true,
+    //   providerManager: _providerManager,
+    //   chatHistory: _chatHistory,
+    //   addChatMessageToUI: _addChatMessage,
+    // );
   }
 
   bool get _connected {
@@ -259,7 +273,7 @@ class _ChatViewState extends State<ChatView> {
 
   void _send() {
     if (_canSendMessages()) {
-      _sendPrompt();
+      _sendUserPrompt();
     } else {
       _popAccountDialog();
     }
@@ -270,18 +284,22 @@ class _ChatViewState extends State<ChatView> {
         (_authToken != null && _inferenceUrl != null);
   }
 
-  // Apply the prompt to history and send to selected models
-  void _sendPrompt() async {
+  // Validate the prompt, selections, and provider connection and then send the prompt to models.
+  void _sendUserPrompt() async {
     var msg = _promptTextController.text;
+
+    // Validate the prompt
     if (msg.trim().isEmpty) {
       return;
     }
 
+    // Validate the provider connection
     if (!_providerManager.hasProviderConnection) {
       _addMessage(ChatMessageSource.system, 'Not connected to provider');
       return;
     }
 
+    // Validate the selected models
     if (_selectedModelIds.isEmpty) {
       _addMessage(
           ChatMessageSource.system,
@@ -291,52 +309,40 @@ class _ChatViewState extends State<ChatView> {
       return;
     }
 
-    // Add user message immediately to update UI and include in history
-    _addMessage(ChatMessageSource.client, msg);
+    // Manage the prompt UI
     _promptTextController.clear();
-    FocusManager.instance.primaryFocus?.unfocus();
+    // FocusManager.instance.primaryFocus?.unfocus(); // ?
 
-    await _sendChatToModels();
+    // If we have a script selected allow it to handle the prompt
+    if (ChatScripting.enabled) {
+      ChatScripting.instance.sendUserPrompt(msg, _selectedModels);
+    } else {
+      _sendUserPromptDefaultBehavior(msg);
+    }
   }
 
-  // Send the appropriate chat history to the selected models
-  Future<void> _sendChatToModels() async {
+  // The default behavior for handling the user prompt and selected models.
+  Future<void> _sendUserPromptDefaultBehavior(String msg) async {
+    // Add user message immediately to update UI and include in history
+    _addMessage(ChatMessageSource.client, msg);
+
+    // Send the prompt to the selected models
+    await _sendChatHistoryToSelectedModels();
+  }
+
+  // The default strategy for sending the next round of the full, potentially multi-model, chat history:
+  // This strategy selects messages based on the isolated / party mode and sends them sequentially to each
+  // of the user-selected models allowing each model to see the previous responses.
+  Future<void> _sendChatHistoryToSelectedModels() async {
     for (final modelId in _selectedModelIds) {
       try {
-        final modelInfo = _modelsState.allModels.firstWhere(
-          (m) => m.id == modelId,
-          orElse: () => ModelInfo(
-            id: modelId,
-            name: modelId,
-            provider: '',
-            apiType: '',
-          ),
-        );
+        // Filter messages based on conversation mode.
+        final selectedMessages = _partyMode
+            ? _chatHistory.getConversation()
+            : _chatHistory.getConversation(withModelId: modelId);
 
-        // Prepare messages for this specific model
-        final preparedMessages = _chatHistory.prepareForModel(
-          modelId: modelId,
-          preparationFunction:
-              _partyMode ? ChatHistory.partyMode : ChatHistory.isolatedMode,
-        );
-        Map<String, Object>? params;
-        if (_maxTokens != null) {
-          params = {'max_tokens': _maxTokens!};
-        }
-
-        _addMessage(
-          ChatMessageSource.internal,
-          'Querying ${modelInfo.name}...',
-          modelId: modelId,
-          modelName: modelInfo.name,
-        );
-
-        // TODO: Move request inference to the provider manager?
-        await _providerManager.providerConnection?.requestInference(
-          modelId,
-          preparedMessages,
-          params: params,
-        );
+        await _providerManager.sendMessagesToModel(
+            selectedMessages, modelId, _maxTokens);
       } catch (e) {
         _addMessage(
             ChatMessageSource.system, 'Error querying model $modelId: $e');
@@ -591,3 +597,4 @@ Future<void> _launchURL(String urlString) async {
 enum AuthTokenMethod { manual, walletConnect }
 
 enum OrchataMenuItem { debug }
+

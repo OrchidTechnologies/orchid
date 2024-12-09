@@ -49,3 +49,5 @@ deploy-pat.sh
 
 set_providers.sh
 
+web/lib/extensions/*.js
+web/index.html.new
