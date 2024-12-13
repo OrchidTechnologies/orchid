@@ -9,14 +9,17 @@ function onUserPrompt(userPrompt: string): void {
         addChatMessage(new ChatMessage(ChatMessageSource.SYSTEM, 'Extension: Party mode invoked', {}));
         addChatMessage(new ChatMessage(ChatMessageSource.CLIENT, userPrompt, {}));
 
+        throw new Error('History is not currently updated, fix this...');
+
         // Gather messages of source type 'client' or 'provider', irrespective of the model
+        // [See getConversation()]
         const filteredMessages = chatHistory.filter(
             (message) =>
                 message.source === ChatMessageSource.CLIENT ||
                 message.source === ChatMessageSource.PROVIDER
         );
 
-        // Send them to all user-selected models
+        // Send to each user-selected model
         for (const model of userSelectedModels) {
             console.log(`party_mode: Sending messages to model: ${model.name}`);
             await sendMessagesToModel(filteredMessages, model.id, null);

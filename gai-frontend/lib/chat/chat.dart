@@ -3,6 +3,7 @@ import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/chat/model.dart';
+import 'package:orchid/chat/provider_connection.dart';
 import 'package:orchid/chat/scripting/chat_scripting.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/chat/chat_settings_button.dart';
@@ -86,11 +87,12 @@ class _ChatViewState extends State<ChatView> {
       log('Error initializing from params: $e, $stack');
     }
 
-    /*
     // Initialize scripting extension
+    /*
     ChatScripting.init(
       // url: 'lib/extensions/test.js',
-      url: 'lib/extensions/party_mode.js',
+      // url: 'lib/extensions/party_mode.js',
+      url: 'lib/extensions/filter_example.js',
       debugMode: true,
       providerManager: _providerManager,
       chatHistory: _chatHistory,
@@ -201,8 +203,8 @@ class _ChatViewState extends State<ChatView> {
     String? modelName,
   }) {
     final message = ChatMessage(
-      source,
-      msg,
+      source: source,
+      message: msg,
       metadata: metadata,
       sourceName: sourceName,
       modelId: modelId,
@@ -212,7 +214,7 @@ class _ChatViewState extends State<ChatView> {
   }
 
   void _addChatMessage(ChatMessage message) {
-    log('Adding message: ${message.msg.truncate(64)}');
+    log('Adding message: ${message.message.truncate(64)}');
     setState(() {
       _chatHistory.addMessage(message);
     });
@@ -302,6 +304,15 @@ class _ChatViewState extends State<ChatView> {
       return;
     }
 
+    // Debug hack
+    if (_selectedModelIds.isEmpty &&
+        ChatScripting.enabled &&
+        ChatScripting.instance.debugMode) {
+      setState(() {
+        _selectedModelIds = ['gpt-4o'];
+      });
+    }
+
     // Validate the selected models
     if (_selectedModelIds.isEmpty) {
       _addMessage(
@@ -344,13 +355,33 @@ class _ChatViewState extends State<ChatView> {
             ? _chatHistory.getConversation()
             : _chatHistory.getConversation(withModelId: modelId);
 
-        await _providerManager.sendMessagesToModel(
+        final chatResponse = await _providerManager.sendMessagesToModel(
             selectedMessages, modelId, _maxTokens);
+
+        if (chatResponse != null) {
+          _handleChatResponseDefaultBehavior(chatResponse);
+        } else {
+          // The provider connection should have logged the issue.  Do nothing.
+        }
       } catch (e) {
         _addMessage(
             ChatMessageSource.system, 'Error querying model $modelId: $e');
       }
     }
+  }
+
+  // The default handler for chat responses from the models (simply adds response to the chat history).
+  void _handleChatResponseDefaultBehavior(ChatInferenceResponse chatResponse) {
+    final metadata = chatResponse.metadata;
+    final modelId = metadata['model_id']; // or request.modelId?
+    log('Handle response: ${chatResponse.message}, $metadata');
+    _addMessage(
+      ChatMessageSource.provider,
+      chatResponse.message,
+      metadata: metadata,
+      modelId: modelId,
+      modelName: _modelsState.getModelOrDefaultNullable(modelId)?.name,
+    );
   }
 
   void scrollMessagesDown() {
@@ -600,4 +631,3 @@ Future<void> _launchURL(String urlString) async {
 enum AuthTokenMethod { manual, walletConnect }
 
 enum OrchataMenuItem { debug }
-

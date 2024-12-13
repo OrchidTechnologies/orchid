@@ -21,7 +21,7 @@ class ChatMessageJS {
     return ChatMessageJS(
       source: chatMessage.source.name, // enum name not toString()
       sourceName: chatMessage.sourceName,
-      msg: chatMessage.msg,
+      msg: chatMessage.message,
       metadata: jsonEncode(chatMessage.metadata).toJS,
       modelId: chatMessage.modelId,
       modelName: chatMessage.modelName,
@@ -35,8 +35,8 @@ class ChatMessageJS {
 
   static ChatMessage toChatMessage(ChatMessageJS chatMessageJS) {
     return ChatMessage(
-      ChatMessageSource.values.byName(chatMessageJS.source),
-      chatMessageJS.msg,
+      source: ChatMessageSource.values.byName(chatMessageJS.source),
+      message: chatMessageJS.msg,
 
       // TODO:
       // metadata: jsonDecode((chatMessageJS.metadata ?? "").toString()),

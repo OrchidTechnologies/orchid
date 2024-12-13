@@ -11,6 +11,8 @@ class ProviderManager {
   late final Map<String, Map<String, String>> _providers;
   final VoidCallback onProviderConnected;
   final VoidCallback onProviderDisconnected;
+
+  // Callback for to the UI to add to the chat history
   final void Function(ChatMessage) onChatMessage;
 
   final ModelManager modelsState;
@@ -78,21 +80,21 @@ class ProviderManager {
 
   void _addMessage(
     ChatMessageSource source,
-    String msg, {
+    String message, {
     Map<String, dynamic>? metadata,
     String sourceName = '',
     String? modelId,
     String? modelName,
   }) {
-    final message = ChatMessage(
-      source,
-      msg,
+    final chatMessage = ChatMessage(
+      source: source,
+      message: message,
       metadata: metadata,
       sourceName: sourceName,
       modelId: modelId,
       modelName: modelName,
     );
-    onChatMessage(message);
+    onChatMessage(chatMessage);
   }
 
   // TODO: review duplication between auth modes
@@ -115,17 +117,6 @@ class ProviderManager {
         },
         onConnect: () {
           _providerConnected('Direct Auth');
-        },
-        onChat: (String msg, Map<String, dynamic> metadata) {
-          _addMessage(
-            ChatMessageSource.provider,
-            msg,
-            metadata: metadata,
-            modelId: metadata['model_id'],
-            modelName: modelsState
-                .getModelOrDefaultNullable(metadata['model_id'])
-                ?.name,
-          );
         },
         onDisconnect: _providerDisconnected,
         onError: (msg) {
@@ -202,19 +193,6 @@ class ProviderManager {
         onConnect: () {
           _providerConnected(name);
         },
-        onChat: (String msg, Map<String, dynamic> metadata) {
-          log('onChat received metadata: $metadata');
-          final modelId = metadata['model_id'];
-          log('Found model_id: $modelId');
-
-          _addMessage(
-            ChatMessageSource.provider,
-            msg,
-            metadata: metadata,
-            modelId: modelId,
-            modelName: modelsState.getModelOrDefaultNullable(modelId)?.name,
-          );
-        },
         onDisconnect: _providerDisconnected,
         onError: (msg) {
           _addMessage(ChatMessageSource.system, 'Provider error: $msg');
@@ -257,7 +235,7 @@ class ProviderManager {
   }
 
   // Note: This method is exposed to the scripting environment.
-  Future<void> sendMessagesToModel(
+  Future<ChatInferenceResponse?> sendMessagesToModel(
     List<ChatMessage> messages,
     String modelId,
     int? maxTokens,
@@ -273,7 +251,7 @@ class ProviderManager {
   }
 
   // Note: This method is exposed to the scripting environment.
-  Future<void> sendFormattedMessagesToModel(
+  Future<ChatInferenceResponse?> sendFormattedMessagesToModel(
     List<Map<String, String>> formattedMessages,
     String modelId,
     int? maxTokens,
@@ -292,7 +270,7 @@ class ProviderManager {
       modelName: modelInfo.name,
     );
 
-    await providerConnection?.requestInference(
+    return providerConnection?.requestInference(
       modelInfo.id,
       formattedMessages,
       params: params,

@@ -5,11 +5,7 @@
     console.log('test_script: Evaluating JavaScript code from Dart...');
     console.log('test_script: Chat History:', chatHistory);
 
-    const chatMessage = new ChatMessage(
-        ChatMessageSource.SYSTEM,
-        'Extension: Test Script',
-        {'foo': 'bar'}
-    );
+    const chatMessage = new ChatMessage(ChatMessageSource.SYSTEM, 'Extension: Test Script', {'foo': 'bar'});
     addChatMessage(chatMessage);
 
     const promise = sendMessagesToModel([chatMessage], 'test-model', null);

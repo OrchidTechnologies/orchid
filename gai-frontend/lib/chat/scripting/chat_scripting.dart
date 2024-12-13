@@ -1,6 +1,7 @@
 import 'package:orchid/chat/chat_history.dart';
 import 'package:orchid/chat/chat_message.dart';
 import 'package:orchid/chat/model.dart';
+import 'package:orchid/chat/provider_connection.dart';
 import 'package:orchid/chat/provider_manager.dart';
 import 'package:orchid/gui-orchid/lib/orchid/orchid.dart';
 import 'dart:js_interop';
@@ -96,9 +97,11 @@ class ChatScripting {
 
   // Items that need to be copied before each invocation of the JS scripting extension
   void updatePerCallBindings({List<ModelInfo>? userSelectedModels}) {
-    chatHistoryJS = ChatMessageJS.fromChatMessages(chatHistory.messages).jsify() as JSArray;
+    chatHistoryJS =
+        ChatMessageJS.fromChatMessages(chatHistory.messages).jsify() as JSArray;
     if (userSelectedModels != null) {
-      userSelectedModelsJS = ModelInfoJS.fromModelInfos(userSelectedModels).jsify() as JSArray;
+      userSelectedModelsJS =
+          ModelInfoJS.fromModelInfos(userSelectedModels).jsify() as JSArray;
     }
     if (debugMode) {
       evalExtensionScript();
@@ -121,38 +124,47 @@ class ChatScripting {
   void addChatMessageFromJS(ChatMessageJS message) {
     log("Add chat message: ${message.source}, ${message.msg}");
     addChatMessageToUI(ChatMessageJS.toChatMessage(message));
-    updatePerCallBindings(); // History has changed
+    // TODO: This can cause looping, let's invert the relevant calls (e.g. history) so that this is necessary.
+    // updatePerCallBindings(); // History has changed
   }
 
   // Implementation of sendMessagesToModel callback function invoked from JS
-  // Send a list of ChatMessage to a model for inference
+  // Send a list of ChatMessage to a model for inference and return a promise of ChatMessageJS
   JSPromise sendMessagesToModelFromJS(
       JSArray messagesJS, String modelId, int? maxTokens) {
     log("dart: Send messages to model called.");
-    // We must capture the Future and return convert it to a JSPromise
+
     return (() async {
       try {
         final listJS = (messagesJS.toDart).cast<ChatMessageJS>();
-        final messages = ChatMessageJS.toChatMessages(listJS);
-        log("messages = ${messages}");
+        final List<ChatMessage> messages = ChatMessageJS.toChatMessages(listJS);
+        log("messages = $messages");
+
         if (messages.isEmpty) {
-          return [];
+          log("No messages to send.");
+          // Wow: If you forget the .jsify() here the promise will crash, even if this
+          // code path is not executed.
+          return null.jsify();
         }
 
-        // Simulate delay
         // log("dart: simulate delay");
-        // await Future.delayed(const Duration(seconds: 3));
+        // await Future.delayed(const Duration(seconds: 2));
         // log("dart: after delay response from sendMessagesToModel sent.");
+        // return ["message 1", "message 2"].jsify(); // Don't forget value to JS
 
         // Send the messages to the model
-        await providerManager.sendMessagesToModel(messages, modelId, maxTokens);
+        final ChatInferenceResponse? response = await providerManager
+            .sendMessagesToModel(messages, modelId, maxTokens);
+        if (response == null) {
+          log("No response from model.");
+          return null.jsify();
+        }
 
-        // TODO: Fake return
-        return ["message 1", "message 2"].jsify(); // Don't forget value to JS
+        return ChatMessageJS.fromChatMessage(response.toChatMessage()).jsify();
       } catch (e, stack) {
         log("Failed to send messages to model: $e");
         log(stack.toString());
-        return ["error: $e"].jsify();
+        return null.jsify();
       }
     })()
         .toJS;

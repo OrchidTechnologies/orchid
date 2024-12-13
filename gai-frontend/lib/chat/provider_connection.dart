@@ -5,30 +5,50 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_eth/orchid_ticket.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
-import 'inference_client.dart';
 import 'chat_message.dart';
-import 'package:orchid/api/orchid_log.dart';
+import 'inference_client.dart';
 
 typedef MessageCallback = void Function(String message);
-typedef ChatCallback = void Function(
-    String message, Map<String, dynamic> metadata);
 typedef VoidCallback = void Function();
 typedef ErrorCallback = void Function(String error);
 typedef AuthTokenCallback = void Function(String token, String inferenceUrl);
 
-class _PendingRequest {
-  final String requestId;
+class ChatInferenceRequest {
   final String modelId;
-  final List<ChatMessage> messages;
-  final Map<String, Object>? params;
+  final List<Map<String, dynamic>> preparedMessages;
+  final Map<String, Object>? requestParams;
   final DateTime timestamp;
 
-  _PendingRequest({
-    required this.requestId,
+  ChatInferenceRequest({
     required this.modelId,
-    required this.messages,
-    required this.params,
+    required this.preparedMessages,
+    required this.requestParams,
   }) : timestamp = DateTime.now();
+}
+
+class ChatInferenceResponse {
+  // Request
+  final ChatInferenceRequest request;
+
+  // Result
+  final String message;
+  final Map<String, dynamic> metadata;
+
+  ChatInferenceResponse({
+    required this.request,
+    required this.message,
+    required this.metadata,
+  });
+
+  ChatMessage toChatMessage() {
+    return ChatMessage(
+      source: ChatMessageSource.provider,
+      message: message,
+      // sourceName: request.modelId,
+      metadata: metadata,
+      modelId: request.modelId,
+    );
+  }
 }
 
 class ProviderConnection {
@@ -40,7 +60,7 @@ class ProviderConnection {
   InferenceClient? get inferenceClient => _inferenceClient;
   InferenceClient? _inferenceClient;
   final MessageCallback onMessage;
-  final ChatCallback onChat;
+
   final VoidCallback onConnect;
   final ErrorCallback onError;
   final VoidCallback onDisconnect;
@@ -51,8 +71,7 @@ class ProviderConnection {
   final String? authToken;
   final AccountDetail? accountDetail;
   final AuthTokenCallback? onAuthToken;
-  final Map<String, String> _requestModels = {};
-  final Map<String, _PendingRequest> _pendingRequests = {};
+
   bool _usingDirectAuth = false;
 
   String _generateRequestId() {
@@ -62,7 +81,7 @@ class ProviderConnection {
   ProviderConnection({
     required this.onMessage,
     required this.onConnect,
-    required this.onChat,
+    // required this.onChat,
     required this.onDisconnect,
     required this.onError,
     required this.onSystemMessage,
@@ -104,7 +123,7 @@ class ProviderConnection {
     AccountDetail? accountDetail,
     String? authToken,
     required MessageCallback onMessage,
-    required ChatCallback onChat,
+    // required ChatCallback onChat,
     required VoidCallback onConnect,
     required ErrorCallback onError,
     required VoidCallback onDisconnect,
@@ -119,7 +138,7 @@ class ProviderConnection {
     final connection = ProviderConnection(
       onMessage: onMessage,
       onConnect: onConnect,
-      onChat: onChat,
+      // onChat: onChat,
       onDisconnect: onDisconnect,
       onError: onError,
       onSystemMessage: onSystemMessage,
@@ -222,16 +241,6 @@ class ProviderConnection {
     onMessage('Provider: $message');
 
     switch (data['type']) {
-      case 'job_complete':
-        final requestId = data['request_id'];
-        final pendingRequest =
-            requestId != null ? _pendingRequests.remove(requestId) : null;
-
-        onChat(data['output'], {
-          ...data,
-          'model_id': pendingRequest?.modelId,
-        });
-        break;
       case 'invoice':
         payInvoice(data);
         break;
@@ -255,11 +264,16 @@ class ProviderConnection {
     _sendProviderMessage(message);
   }
 
-  Future<void> requestInference(
+  Future<ChatInferenceResponse?> requestInference(
     String modelId,
     List<Map<String, dynamic>> preparedMessages, {
     Map<String, Object>? params,
   }) async {
+    var request = ChatInferenceRequest(
+      modelId: modelId,
+      preparedMessages: preparedMessages,
+      requestParams: params,
+    );
     /*
       Requesting inference for model gpt-4o-mini
       Prepared messages: [{role: user, content: Hello!}, {role: assistant, content: Hello! How can I assist you today?}, {role: user, content: How are you?}]
@@ -271,19 +285,12 @@ class ProviderConnection {
 
       if (_inferenceClient == null) {
         onError('No inference connection available');
-        return;
+        return null;
       }
     }
 
     try {
       final requestId = _generateRequestId();
-
-      _pendingRequests[requestId] = _PendingRequest(
-        requestId: requestId,
-        modelId: modelId,
-        messages: [], // Empty since we're using preparedMessages now
-        params: params,
-      );
 
       final allParams = {
         ...?params,
@@ -291,29 +298,33 @@ class ProviderConnection {
       };
 
       onInternalMessage('Sending inference request:\n'
-        'Model: $modelId\n'
-        'Messages: ${preparedMessages}\n'
-        'Params: $allParams'
-      );
+          'Model: $modelId\n'
+          'Messages: ${preparedMessages}\n'
+          'Params: $allParams');
 
       final Map<String, dynamic> result = await _inferenceClient!.inference(
         messages: preparedMessages,
         model: modelId,
         params: allParams,
       );
-      
-      _pendingRequests.remove(requestId);
 
-      onChat(result['response'], {
-        'type': 'job_complete',
-        'output': result['response'],
-        'usage': result['usage'],
-        'model_id': modelId,
-        'request_id': requestId,
-        'estimated_prompt_tokens': result['estimated_prompt_tokens'],
-      });
+      final chatResult = ChatInferenceResponse(
+          request: request,
+          message: result['response'],
+          metadata: {
+            'type': 'job_complete',
+            'output': result['response'],
+            'usage': result['usage'],
+            'model_id': modelId,
+            'request_id': requestId,
+            'estimated_prompt_tokens': result['estimated_prompt_tokens'],
+          });
+
+      return chatResult;
+
     } catch (e, stack) {
       onError('Failed to send inference request: $e\n$stack');
+      return null;
     }
   }
 
@@ -328,7 +339,6 @@ class ProviderConnection {
 
   void dispose() {
     _providerChannel?.sink.close();
-    _pendingRequests.clear();
     onDisconnect();
   }
 

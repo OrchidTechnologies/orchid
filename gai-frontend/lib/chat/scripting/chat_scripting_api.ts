@@ -45,15 +45,15 @@ declare let userSelectedModels: ReadonlyArray<ModelInfo>;
 declare function sendMessagesToModel(
     messages: Array<ChatMessage>,
     modelId: string,
-    maxTokens?: number | null,
-): Promise<Array<string>>
+    maxTokens: number | null,
+): Promise<ChatMessage>;
 
 // Send a list of formatted messages to a model for inference
 declare function sendFormattedMessagesToModel(
     formattedMessages: Array<Object>,
     modelId: string,
     maxTokens?: number,
-): void
+): Promise<ChatMessage>;
 
 // Add a chat message to the history
 declare function addChatMessage(chatMessage: ChatMessage): void
@@ -61,7 +61,13 @@ declare function addChatMessage(chatMessage: ChatMessage): void
 // Extension entry point: The user has hit enter on a new prompt.
 declare function onUserPrompt(userPrompt: string): void
 
-// Extension entry point: A response came back from inference
-declare function onChatResponse(chatResponse: ChatMessage): void
+function getConversation(): Array<ChatMessage> {
+    // Gather messages of source type 'client' or 'provider', irrespective of the provider model
+    return chatHistory.filter(
+        (message) =>
+            message.source === ChatMessageSource.CLIENT ||
+            message.source === ChatMessageSource.PROVIDER
+    );
+}
 
 console.log('Chat Scripting API loaded');

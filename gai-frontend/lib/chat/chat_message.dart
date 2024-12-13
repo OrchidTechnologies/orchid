@@ -5,7 +5,7 @@ enum ChatMessageSource { client, provider, system, internal }
 class ChatMessage {
   final ChatMessageSource source;
   final String sourceName;
-  final String msg;
+  final String message;
   final Map<String, dynamic>? metadata;
 
   // The modelId of the model that generated this message
@@ -14,16 +14,14 @@ class ChatMessage {
   // The name of the model that generated this message
   final String? modelName;
 
-  ChatMessage(
-    this.source,
-    this.msg, {
+  ChatMessage({
+    required this.source,
+    required this.message,
     this.metadata,
     this.sourceName = '',
     this.modelId,
     this.modelName,
   });
-
-  String get message => msg;
 
   String? get displayName {
     if (source == ChatMessageSource.provider && modelName != null) {
@@ -58,6 +56,6 @@ class ChatMessage {
 
   @override
   String toString() {
-    return 'ChatMessage(source: $source, modelId: $modelId, model: $modelName, msg: ${msg.substring(0, msg.length.clamp(0, 50))}...)';
+    return 'ChatMessage(source: $source, modelId: $modelId, model: $modelName, msg: ${message.substring(0, message.length.clamp(0, 50))}...)';
   }
 }
