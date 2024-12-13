@@ -44,7 +44,7 @@ class ChatInferenceResponse {
     return ChatMessage(
       source: ChatMessageSource.provider,
       message: message,
-      // sourceName: request.modelId,
+      sourceName: request.modelId,
       metadata: metadata,
       modelId: request.modelId,
     );

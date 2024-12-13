@@ -54,6 +54,25 @@ class ChatMessage {
     return 'tokens: $prompt in, $completion out';
   }
 
+  // Clone this immutable object with new values for some fields
+  ChatMessage copyWith({
+    ChatMessageSource? source,
+    String? message,
+    Map<String, dynamic>? metadata,
+    String? sourceName,
+    String? modelId,
+    String? modelName,
+  }) {
+    return ChatMessage(
+      source: source ?? this.source,
+      message: message ?? this.message,
+      metadata: metadata ?? this.metadata,
+      sourceName: sourceName ?? this.sourceName,
+      modelId: modelId ?? this.modelId,
+      modelName: modelName ?? this.modelName,
+    );
+  }
+
   @override
   String toString() {
     return 'ChatMessage(source: $source, modelId: $modelId, model: $modelName, msg: ${message.substring(0, message.length.clamp(0, 50))}...)';

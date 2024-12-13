@@ -9,19 +9,20 @@ function onUserPrompt(userPrompt: string): void {
         chatSystemMessage('Extension: Party mode invoked');
         chatClientMessage(userPrompt)
 
-        // Gather messages of source type 'client' or 'provider', irrespective of the model
-        // (Same as getConversation(), doing this for illustration)
-        const filteredMessages = getChatHistory().filter(
-            (message) =>
-                message.source === ChatMessageSource.CLIENT ||
-                message.source === ChatMessageSource.PROVIDER
-        );
-
-        // Send to each user-selected model
+        // Send to each user-selected model in turn
         for (const model of getUserSelectedModels()) {
+            // Gather all messages of source type 'client' or 'provider', irrespective of source model.
+            // (Doing this inside the loop allows the models to see the previous models responses.)
+            const filteredMessages = getChatHistory().filter(
+                (message) =>
+                    message.source === ChatMessageSource.CLIENT ||
+                    message.source === ChatMessageSource.PROVIDER
+            );
+
+            // Send the messages to the model and add the response to the chat
             console.log(`party_mode: Sending messages to model: ${model.name}`);
-            await chatSendToModel(filteredMessages, model.id);
+            const response = await chatSendToModel(filteredMessages, model.id);
+            addChatMessage(response);
         }
     })();
 }
-

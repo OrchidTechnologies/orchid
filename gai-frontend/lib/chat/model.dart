@@ -25,11 +25,6 @@ class ModelInfo {
     );
   }
 
-  // Format a chat message for this model.
-  Map<String, String> formatMessage(ChatMessage message) {
-    return ModelAPI.formatMessage(message, id);
-  }
-
   // Format chat messages for this model.
   List<Map<String, String>> formatMessages(List<ChatMessage> messages) {
     return ModelAPI.formatMessages(messages, id);

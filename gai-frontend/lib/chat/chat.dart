@@ -204,19 +204,27 @@ class _ChatViewState extends State<ChatView> {
     String? modelId,
     String? modelName,
   }) {
-    final message = ChatMessage(
+    _addChatMessage(ChatMessage(
       source: source,
       message: msg,
       metadata: metadata,
       sourceName: sourceName,
       modelId: modelId,
       modelName: modelName,
-    );
-    _addChatMessage(message);
+    ));
   }
 
+  // Add a message to the chat history and update the UI
   void _addChatMessage(ChatMessage message) {
     log('Adding message: ${message.message.truncate(64)}');
+
+    // Add the verbose model name for the model if not provided.
+    // Note: This should probably be pushed down to the UI logic to support localization.
+    if (message.modelName == null && message.modelId != null) {
+      final model = _modelManager.getModel(message.modelId!);
+      message = message.copyWith(modelName: model?.name);
+    }
+
     setState(() {
       _chatHistory.addMessage(message);
     });
@@ -382,7 +390,6 @@ class _ChatViewState extends State<ChatView> {
       chatResponse.message,
       metadata: metadata,
       modelId: modelId,
-      modelName: _modelManager.getModelOrDefaultNullable(modelId)?.name,
     );
   }
 
@@ -612,6 +619,9 @@ class _ChatViewState extends State<ChatView> {
               onPartyModeChanged: () {
                 setState(() {
                   _partyMode = !_partyMode;
+                  if (_partyMode) {
+                    _multiSelectMode = true;
+                  }
                 });
               },
               onClearChat: _clearChat,
