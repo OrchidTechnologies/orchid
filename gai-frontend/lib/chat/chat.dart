@@ -48,11 +48,11 @@ class _ChatViewState extends State<ChatView> {
   late final ProviderManager _providerManager;
 
   // Models
-  final ModelManager _modelsState = ModelManager();
-  List<String> _selectedModelIds = [];
+  final ModelManager _modelManager = ModelManager();
+  List<String> _userSelectedModelIds = [];
 
-  List<ModelInfo> get _selectedModels =>
-      _modelsState.getModelsOrDefault(_selectedModelIds);
+  List<ModelInfo> get _userSelectedModels =>
+      _modelManager.getModelsOrDefault(_userSelectedModelIds);
 
   // Account
   // This should be wrapped up in a provider.  See WIP in vpn app.
@@ -72,7 +72,7 @@ class _ChatViewState extends State<ChatView> {
 
     // Init the provider manager
     _providerManager = ProviderManager(
-      modelsState: _modelsState,
+      modelsState: _modelManager,
       onProviderConnected: providerConnected,
       onProviderDisconnected: providerDisconnected,
       onChatMessage: _addChatMessage,
@@ -95,6 +95,8 @@ class _ChatViewState extends State<ChatView> {
       url: 'lib/extensions/filter_example.js',
       debugMode: true,
       providerManager: _providerManager,
+      modelManager: _modelManager,
+      getUserSelectedModels: () => _userSelectedModels,
       chatHistory: _chatHistory,
       addChatMessageToUI: _addChatMessage,
     );
@@ -149,7 +151,7 @@ class _ChatViewState extends State<ChatView> {
     } else {
       // Disconnects any existing provider connection
       _providerManager.setAccountDetail(null);
-      _modelsState.clear();
+      _modelManager.clear();
     }
 
     _accountDetailNotifier.value =
@@ -219,19 +221,19 @@ class _ChatViewState extends State<ChatView> {
       _chatHistory.addMessage(message);
     });
     scrollMessagesDown();
-    log('Chat history updated: ${_chatHistory.messages.length}, ${_chatHistory.messages}');
+    // log('Chat history updated: ${_chatHistory.messages.length}, ${_chatHistory.messages}');
   }
 
   void _updateSelectedModels(List<String> modelIds) {
     setState(() {
       if (_multiSelectMode) {
-        _selectedModelIds = modelIds;
+        _userSelectedModelIds = modelIds;
       } else {
         // In single-select mode, only keep the most recently selected model
-        _selectedModelIds = modelIds.isNotEmpty ? [modelIds.last] : [];
+        _userSelectedModelIds = modelIds.isNotEmpty ? [modelIds.last] : [];
       }
     });
-    log('Selected models updated to: $_selectedModelIds');
+    log('Selected models updated to: $_userSelectedModelIds');
   }
 
   void _popAccountDialog() {
@@ -305,16 +307,16 @@ class _ChatViewState extends State<ChatView> {
     }
 
     // Debug hack
-    if (_selectedModelIds.isEmpty &&
+    if (_userSelectedModelIds.isEmpty &&
         ChatScripting.enabled &&
         ChatScripting.instance.debugMode) {
       setState(() {
-        _selectedModelIds = ['gpt-4o'];
+        _userSelectedModelIds = ['gpt-4o'];
       });
     }
 
     // Validate the selected models
-    if (_selectedModelIds.isEmpty) {
+    if (_userSelectedModelIds.isEmpty) {
       _addMessage(
           ChatMessageSource.system,
           _multiSelectMode
@@ -329,7 +331,7 @@ class _ChatViewState extends State<ChatView> {
 
     // If we have a script selected allow it to handle the prompt
     if (ChatScripting.enabled) {
-      ChatScripting.instance.sendUserPrompt(msg, _selectedModels);
+      ChatScripting.instance.sendUserPrompt(msg, _userSelectedModels);
     } else {
       _sendUserPromptDefaultBehavior(msg);
     }
@@ -348,7 +350,7 @@ class _ChatViewState extends State<ChatView> {
   // This strategy selects messages based on the isolated / party mode and sends them sequentially to each
   // of the user-selected models allowing each model to see the previous responses.
   Future<void> _sendChatHistoryToSelectedModels() async {
-    for (final modelId in _selectedModelIds) {
+    for (final modelId in _userSelectedModelIds) {
       try {
         // Filter messages based on conversation mode.
         final selectedMessages = _partyMode
@@ -380,7 +382,7 @@ class _ChatViewState extends State<ChatView> {
       chatResponse.message,
       metadata: metadata,
       modelId: modelId,
-      modelName: _modelsState.getModelOrDefaultNullable(modelId)?.name,
+      modelName: _modelManager.getModelOrDefaultNullable(modelId)?.name,
     );
   }
 
@@ -554,9 +556,9 @@ class _ChatViewState extends State<ChatView> {
 
         // Model selector with loading state
         ListenableBuilder(
-          listenable: _modelsState,
+          listenable: _modelManager,
           builder: (context, _) {
-            if (_modelsState.isAnyLoading) {
+            if (_modelManager.isAnyLoading) {
               return const SizedBox(
                 width: buttonHeight,
                 height: buttonHeight,
@@ -569,8 +571,8 @@ class _ChatViewState extends State<ChatView> {
             }
 
             return ModelSelectionButton(
-              models: _modelsState.allModels,
-              selectedModelIds: _selectedModelIds,
+              models: _modelManager.allModels,
+              selectedModelIds: _userSelectedModelIds,
               updateModels: _updateSelectedModels,
               multiSelectMode: _multiSelectMode,
             );
@@ -604,7 +606,7 @@ class _ChatViewState extends State<ChatView> {
                 setState(() {
                   _multiSelectMode = !_multiSelectMode;
                   // Reset selections when toggling modes
-                  _selectedModelIds = [];
+                  _userSelectedModelIds = [];
                 });
               },
               onPartyModeChanged: () {

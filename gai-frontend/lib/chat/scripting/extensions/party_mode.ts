@@ -6,23 +6,21 @@
 // Main entry point when the user has hit enter on a new prompt
 function onUserPrompt(userPrompt: string): void {
     (async () => {
-        addChatMessage(new ChatMessage(ChatMessageSource.SYSTEM, 'Extension: Party mode invoked', {}));
-        addChatMessage(new ChatMessage(ChatMessageSource.CLIENT, userPrompt, {}));
-
-        throw new Error('History is not currently updated, fix this...');
+        chatSystemMessage('Extension: Party mode invoked');
+        chatClientMessage(userPrompt)
 
         // Gather messages of source type 'client' or 'provider', irrespective of the model
-        // [See getConversation()]
-        const filteredMessages = chatHistory.filter(
+        // (Same as getConversation(), doing this for illustration)
+        const filteredMessages = getChatHistory().filter(
             (message) =>
                 message.source === ChatMessageSource.CLIENT ||
                 message.source === ChatMessageSource.PROVIDER
         );
 
         // Send to each user-selected model
-        for (const model of userSelectedModels) {
+        for (const model of getUserSelectedModels()) {
             console.log(`party_mode: Sending messages to model: ${model.name}`);
-            await sendMessagesToModel(filteredMessages, model.id, null);
+            await chatSendToModel(filteredMessages, model.id);
         }
     })();
 }

@@ -7,13 +7,13 @@ external JSAny? evaluateJS(String jsCode);
 
 // Setter to install the chatHistory variable in JS
 // let chatHistory: ReadonlyArray<ChatMessage>;
-@JS('chatHistory')
-external set chatHistoryJS(JSArray value);
+@JS('getChatHistory')
+external set getChatHistoryJS(JSFunction value);
 
 // Setter to install the userSelectedModels variable in JS
 // List of ModelInfo user-selected models, read-only
-@JS('userSelectedModels')
-external set userSelectedModelsJS(JSArray value);
+@JS('getUserSelectedModels')
+external set getUserSelectedModelsJS(JSFunction value);
 
 // Setter to install the sendMessagesToModel callback function in JS
 // Send a list of ChatMessage to a model for inference

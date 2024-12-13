@@ -36,10 +36,10 @@ class ModelInfo {
 }
 
 // List of ChatMessage structs, read-only
-declare let chatHistory: ReadonlyArray<ChatMessage>;
+declare function getChatHistory(): ReadonlyArray<ChatMessage>;
 
 // List of ModelInfo user-selected models, read-only
-declare let userSelectedModels: ReadonlyArray<ModelInfo>;
+declare function getUserSelectedModels(): ReadonlyArray<ModelInfo>;
 
 // Send a list of ChatMessage to a model for inference
 declare function sendMessagesToModel(
@@ -58,12 +58,44 @@ declare function sendFormattedMessagesToModel(
 // Add a chat message to the history
 declare function addChatMessage(chatMessage: ChatMessage): void
 
+// @ts-ignore
 // Extension entry point: The user has hit enter on a new prompt.
 declare function onUserPrompt(userPrompt: string): void
 
+//
+// Helper / util implementations
+//
+
+// Add a system message to the chat
+function chatSystemMessage(message: string): void {
+    addChatMessage(new ChatMessage(ChatMessageSource.SYSTEM, message, {}));
+}
+// Add a provider message to the chat
+function chatProviderMessage(message: string): void {
+    addChatMessage(new ChatMessage(ChatMessageSource.PROVIDER, message, {}));
+}
+// Add an internal message to the chat
+function chatInternalMessage(message: string): void {
+    addChatMessage(new ChatMessage(ChatMessageSource.INTERNAL, message, {}));
+}
+// Add a client message to the chat
+function chatClientMessage(message: string): void {
+    addChatMessage(new ChatMessage(ChatMessageSource.CLIENT, message, {}));
+}
+
+// Send a list of messages to a model for inference
+function chatSendToModel(
+    messages: Array<ChatMessage>,
+    modelId: string,
+    maxTokens: number | null = null,
+): Promise<ChatMessage> {
+    return sendMessagesToModel(messages, modelId, maxTokens);
+}
+
+// Get the conversation history for all models
 function getConversation(): Array<ChatMessage> {
     // Gather messages of source type 'client' or 'provider', irrespective of the provider model
-    return chatHistory.filter(
+    return getChatHistory().filter(
         (message) =>
             message.source === ChatMessageSource.CLIENT ||
             message.source === ChatMessageSource.PROVIDER

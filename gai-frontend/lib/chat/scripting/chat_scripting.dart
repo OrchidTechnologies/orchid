@@ -1,6 +1,7 @@
 import 'package:orchid/chat/chat_history.dart';
 import 'package:orchid/chat/chat_message.dart';
 import 'package:orchid/chat/model.dart';
+import 'package:orchid/chat/model_manager.dart';
 import 'package:orchid/chat/provider_connection.dart';
 import 'package:orchid/chat/provider_manager.dart';
 import 'package:orchid/gui-orchid/lib/orchid/orchid.dart';
@@ -23,9 +24,11 @@ class ChatScripting {
 
   static bool get enabled => _instance != null;
 
-  // Scripting config
+  // Scripting State
   late String script;
   late ProviderManager providerManager;
+  late ModelManager modelManager;
+  late List<ModelInfo> Function() getUserSelectedModels;
   late ChatHistory chatHistory;
   late void Function(ChatMessage) addChatMessageToUI;
   late bool debugMode;
@@ -38,6 +41,8 @@ class ChatScripting {
     bool debugMode = false,
     required ProviderManager providerManager,
     required ChatHistory chatHistory,
+    required ModelManager modelManager,
+    required List<ModelInfo> Function() getUserSelectedModels,
     required Function(ChatMessage) addChatMessageToUI,
   }) async {
     if (_instance != null) {
@@ -48,6 +53,8 @@ class ChatScripting {
     instance.debugMode = debugMode;
     instance.providerManager = providerManager;
     instance.chatHistory = chatHistory;
+    instance.modelManager = modelManager;
+    instance.getUserSelectedModels = getUserSelectedModels;
     instance.addChatMessageToUI = addChatMessageToUI;
 
     // Install persistent callback functions
@@ -55,7 +62,7 @@ class ChatScripting {
 
     await instance.loadExtensionScript(url);
     // Do one setup and evaluation of the script now
-    instance.updatePerCallBindings();
+    instance.evalExtensionScript();
   }
 
   Future<void> loadExtensionScript(String url) async {
@@ -91,46 +98,46 @@ class ChatScripting {
 
   // Install the persistent callback functions
   static void addGlobalBindings() {
-    addChatMessageJS = instance.addChatMessageFromJS.toJS;
-    sendMessagesToModelJS = instance.sendMessagesToModelFromJS.toJS;
-  }
-
-  // Items that need to be copied before each invocation of the JS scripting extension
-  void updatePerCallBindings({List<ModelInfo>? userSelectedModels}) {
-    chatHistoryJS =
-        ChatMessageJS.fromChatMessages(chatHistory.messages).jsify() as JSArray;
-    if (userSelectedModels != null) {
-      userSelectedModelsJS =
-          ModelInfoJS.fromModelInfos(userSelectedModels).jsify() as JSArray;
-    }
-    if (debugMode) {
-      evalExtensionScript();
-    }
+    addChatMessageJS = instance.addChatMessageJSImpl.toJS;
+    sendMessagesToModelJS = instance.sendMessagesToModelJSImpl.toJS;
+    getChatHistoryJS = instance.getChatHistoryJSImpl.toJS;
+    getUserSelectedModelsJS = instance.getUserSelectedModelsJSImpl.toJS;
   }
 
   // Send the user prompt to the JS scripting extension
   void sendUserPrompt(String userPrompt, List<ModelInfo> userSelectedModels) {
     log("Invoke onUserPrompt on the scripting extension: $userPrompt");
-    updatePerCallBindings(userSelectedModels: userSelectedModels);
+
+    // If debug mode evaluate the script before each usage
+    if (debugMode) {
+      evalExtensionScript();
+    }
+
     onUserPromptJS(userPrompt);
   }
 
   ///
-  /// BEGIN: callbacks from JS
+  /// BEGIN: JS callback implementations
   ///
+
+  // Implementation of the getChatHistory callback function invoked from JS
+  JSArray getChatHistoryJSImpl() =>
+      ChatMessageJS.fromChatMessages(chatHistory.messages).jsify() as JSArray;
+
+  // Implementation of the getUserSelectedModels callback function invoked from JS
+  JSArray getUserSelectedModelsJSImpl() =>
+      ModelInfoJS.fromModelInfos(getUserSelectedModels()).jsify() as JSArray;
 
   // Implementation of the addChatMessage callback function invoked from JS
   // Add a chat message to the local history.
-  void addChatMessageFromJS(ChatMessageJS message) {
+  void addChatMessageJSImpl(ChatMessageJS message) {
     log("Add chat message: ${message.source}, ${message.msg}");
     addChatMessageToUI(ChatMessageJS.toChatMessage(message));
-    // TODO: This can cause looping, let's invert the relevant calls (e.g. history) so that this is necessary.
-    // updatePerCallBindings(); // History has changed
   }
 
   // Implementation of sendMessagesToModel callback function invoked from JS
   // Send a list of ChatMessage to a model for inference and return a promise of ChatMessageJS
-  JSPromise sendMessagesToModelFromJS(
+  JSPromise sendMessagesToModelJSImpl(
       JSArray messagesJS, String modelId, int? maxTokens) {
     log("dart: Send messages to model called.");
 
@@ -171,6 +178,6 @@ class ChatScripting {
   }
 
   ///
-  /// END: callbacks from JS
+  /// END: JS callback implementations
   ///
 }
