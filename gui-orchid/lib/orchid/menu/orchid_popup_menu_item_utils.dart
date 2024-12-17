@@ -14,7 +14,7 @@ class OrchidPopupMenuItemUtils {
       child: ListTile(
         selected: selected,
         selectedTileColor: OrchidColors.selected_color_dark,
-        title: body ?? Text(title ?? '', style: textStyle),
+        title: body ?? Text(title ?? '', style: textStyle).left(8),
         onTap: () {
           // Close the menu item
           Navigator.pop(context);

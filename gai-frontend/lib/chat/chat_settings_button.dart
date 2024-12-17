@@ -1,7 +1,8 @@
+import 'package:orchid/chat/identicon_options_menu_item.dart';
+import 'package:orchid/chat/scripting/code_viewer/scripts_menu_item.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_language.dart';
 import 'package:orchid/api/preferences/user_preferences_ui.dart';
-import 'package:orchid/orchid/menu/expanding_popup_menu_item.dart';
 import 'package:orchid/orchid/menu/orchid_popup_menu_item_utils.dart';
 import 'package:orchid/orchid/menu/submenu_popup_menu_item.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -15,6 +16,7 @@ class ChatSettingsButton extends StatefulWidget {
   final VoidCallback onMultiSelectModeChanged;
   final VoidCallback onPartyModeChanged;
   final VoidCallback onClearChat;
+  final VoidCallback editUserScript;
 
   const ChatSettingsButton({
     Key? key,
@@ -25,6 +27,7 @@ class ChatSettingsButton extends StatefulWidget {
     required this.onMultiSelectModeChanged,
     required this.onPartyModeChanged,
     required this.onClearChat,
+    required this.editUserScript,
   }) : super(key: key);
 
   @override
@@ -44,130 +47,159 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
     final githubUrl =
         'https://github.com/OrchidTechnologies/orchid/tree/$buildCommit/web-ethereum/dapp2';
 
-    return Center(
-      child: OrchidPopupMenuButton<dynamic>(
+    return OrchidPopupMenuButton<dynamic>(
+      width: 30,
+      height: 30,
+      selected: _buttonSelected,
+      backgroundColor: Colors.transparent,
+      onSelected: (item) {
+        setState(() {
+          _buttonSelected = false;
+        });
+      },
+      onCanceled: () {
+        setState(() {
+          _buttonSelected = false;
+        });
+      },
+      itemBuilder: (itemBuilderContext) {
+        setState(() {
+          _buttonSelected = true;
+        });
+
+        const div = PopupMenuDivider(height: 1.0);
+        return [
+          // Clear chat
+          PopupMenuItem<String>(
+            onTap: widget.onClearChat,
+            height: _height,
+            child: SizedBox(
+              width: _width,
+              child: Text("Clear Chat", style: _textStyle),
+            ),
+          ),
+          div,
+
+          // debug mode
+          PopupMenuItem<String>(
+            onTap: widget.onDebugModeChanged,
+            height: _height,
+            child: SizedBox(
+              width: _width,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Debug Mode", style: _textStyle),
+                  Icon(
+                    widget.debugMode
+                        ? Icons.check_box_outlined
+                        : Icons.check_box_outline_blank,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          div,
+
+          // multi-select mode
+          PopupMenuItem<String>(
+            onTap: widget.onMultiSelectModeChanged,
+            height: _height,
+            child: SizedBox(
+              width: _width,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Multi-Model Mode", style: _textStyle),
+                  Icon(
+                    widget.multiSelectMode
+                        ? Icons.check_box_outlined
+                        : Icons.check_box_outline_blank,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          div,
+
+          /*
+          // party mode
+          PopupMenuItem<String>(
+            onTap: widget.onPartyModeChanged,
+            height: _height,
+            child: SizedBox(
+              width: _width,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Party Mode", style: _textStyle),
+                  Icon(
+                    widget.partyMode
+                        ? Icons.check_box_outlined
+                        : Icons.check_box_outline_blank,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          div,
+           */
+
+          // scripts
+          SubmenuPopopMenuItemBuilder<String>(
+            builder: (bool expanded) => ScriptsMenuItem(
+              height: _height,
+              width: _width,
+              expanded: expanded,
+              textStyle: _textStyle,
+              editScript: () {
+                log('edit script');
+                Navigator.pop(context);
+                widget.editUserScript();
+              },
+            ),
+          ),
+          div,
+
+          // identicon style menu
+          SubmenuPopopMenuItemBuilder<String>(
+            builder: (bool expanded) => IdenticonOptionsMenuItem(
+              expanded: expanded,
+              textStyle: _textStyle,
+            ),
+          ),
+          div,
+
+          // build version
+          PopupMenuItem<String>(
+            onTap: () async {
+              launchUrlString(githubUrl);
+            },
+            height: _height,
+            child: SizedBox(
+              width: _width,
+              child: Text('Version: $buildCommit', style: _textStyle),
+            ),
+          ),
+        ];
+      },
+
+      // settings icon
+      child: SizedBox(
         width: 30,
         height: 30,
-        selected: _buttonSelected,
-        backgroundColor: Colors.transparent,
-        onSelected: (item) {
-          setState(() {
-            _buttonSelected = false;
-          });
-        },
-        onCanceled: () {
-          setState(() {
-            _buttonSelected = false;
-          });
-        },
-        itemBuilder: (itemBuilderContext) {
-          setState(() {
-            _buttonSelected = true;
-          });
-
-          const div = PopupMenuDivider(height: 1.0);
-          return [
-            // Clear chat
-            PopupMenuItem<String>(
-              onTap: widget.onClearChat,
-              height: _height,
-              child: SizedBox(
-                width: _width,
-                child: Text("Clear Chat", style: _textStyle),
-              ),
-            ),
-            div,
-            // debug mode
-            PopupMenuItem<String>(
-              onTap: widget.onDebugModeChanged,
-              height: _height,
-              child: SizedBox(
-                width: _width,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Debug Mode", style: _textStyle),
-                    Icon(
-                      widget.debugMode
-                          ? Icons.check_box_outlined
-                          : Icons.check_box_outline_blank,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            div,
-            // multi-select mode
-            PopupMenuItem<String>(
-              onTap: widget.onMultiSelectModeChanged,
-              height: _height,
-              child: SizedBox(
-                width: _width,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Multi-Model Mode", style: _textStyle),
-                    Icon(
-                      widget.multiSelectMode
-                          ? Icons.check_box_outlined
-                          : Icons.check_box_outline_blank,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            div,
-            // party mode
-            PopupMenuItem<String>(
-              onTap: widget.onPartyModeChanged,
-              height: _height,
-              child: SizedBox(
-                width: _width,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Party Mode", style: _textStyle),
-                    Icon(
-                      widget.partyMode
-                          ? Icons.check_box_outlined
-                          : Icons.check_box_outline_blank,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            div,
-            SubmenuPopopMenuItemBuilder<String>(
-              builder: _buildIdenticonsPref,
-            ),
-            div,
-            PopupMenuItem<String>(
-              onTap: () async {
-                launchUrlString(githubUrl);
-              },
-              height: _height,
-              child: SizedBox(
-                width: _width,
-                child: Text('Version: $buildCommit', style: _textStyle),
-              ),
-            ),
-          ];
-        },
-        child: SizedBox(
-          width: 30,
-          height: 30,
-          child: FittedBox(
-            fit: BoxFit.contain,
-            child: OrchidAsset.svg.settings_gear,
-          ),
+        child: FittedBox(
+          fit: BoxFit.contain,
+          child: OrchidAsset.svg.settings_gear,
         ),
       ),
     );
   }
 
+  /*
   Future _openLicensePage(BuildContext context) {
     // TODO:
     return Future.delayed(millis(100), () async {});
@@ -185,6 +217,7 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
       );
     });
   }
+   */
 
   Widget _languageOptions(String? selected) {
     var items = OrchidLanguage.languages.keys
@@ -200,7 +233,7 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
         .toList()
         .cast<PopupMenuEntry>()
         .separatedWith(
-          PopupMenuDivider(height: 1.0),
+          const PopupMenuDivider(height: 1.0),
         );
 
     items.insert(
@@ -216,50 +249,6 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: items,
-    );
-  }
-
-  Widget _buildIdenticonsPref(bool expanded) {
-    return UserPreferencesUI().useBlockiesIdenticons.builder(
-      (useBlockies) {
-        if (useBlockies == null) {
-          return Container();
-        }
-        return ExpandingPopupMenuItem(
-          expanded: expanded,
-          title: s.identiconStyle,
-          currentSelectionText:
-              (!expanded ? (useBlockies ? s.blockies : s.jazzicon) : ''),
-          expandedContent: _identiconOptions(useBlockies),
-          expandedHeight: 108,
-          textStyle: _textStyle,
-        );
-      },
-    );
-  }
-
-  Widget _identiconOptions(bool useBlockies) {
-    final pref = UserPreferencesUI().useBlockiesIdenticons;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        PopupMenuDivider(height: 1.0),
-        _listMenuItem(
-          selected: useBlockies,
-          title: s.blockies,
-          onTap: () async {
-            await pref.set(true);
-          },
-        ),
-        PopupMenuDivider(height: 1.0),
-        _listMenuItem(
-          selected: !useBlockies,
-          title: s.jazzicon,
-          onTap: () async {
-            await pref.set(false);
-          },
-        ),
-      ],
     );
   }
 

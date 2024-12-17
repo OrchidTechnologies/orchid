@@ -37,6 +37,10 @@ dependencies:
   decimal: ^3.0.2
   http: ^0.13.4
 
+  code_text_field: ^1.1.0
+  font_awesome_flutter: ^10.8.0
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

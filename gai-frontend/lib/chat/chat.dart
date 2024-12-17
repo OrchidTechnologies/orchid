@@ -2,9 +2,11 @@ import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_keys.dart';
+import 'package:orchid/chat/api/user_preferences_chat.dart';
 import 'package:orchid/chat/model.dart';
 import 'package:orchid/chat/provider_connection.dart';
 import 'package:orchid/chat/scripting/chat_scripting.dart';
+import 'package:orchid/chat/scripting/code_viewer/user_script_dialog.dart';
 import 'package:orchid/common/app_sizes.dart';
 import 'package:orchid/chat/chat_settings_button.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
@@ -87,20 +89,21 @@ class _ChatViewState extends State<ChatView> {
       log('Error initializing from params: $e, $stack');
     }
 
-    // Initialize scripting extension
-    /*
+    // final script = UserPreferencesScripts().userScript.get();
+    // log('User script on start: $script');
+
+    // Initialize the scripting extension mechanism
     ChatScripting.init(
-      // url: 'lib/extensions/test.js',
-      // url: 'lib/extensions/party_mode.js',
-      url: 'lib/extensions/filter_example.js',
-      debugMode: true,
+      // url: 'lib/extensions/filter_example.js',
+      // debugMode: true,
+      script: UserPreferencesScripts().userScript.get(),
+      // Not: script overrides url
       providerManager: _providerManager,
       modelManager: _modelManager,
       getUserSelectedModels: () => _userSelectedModels,
       chatHistory: _chatHistory,
       addChatMessageToUI: _addChatMessage,
     );
-     */
   }
 
   bool get _connected {
@@ -317,6 +320,7 @@ class _ChatViewState extends State<ChatView> {
     // Debug hack
     if (_userSelectedModelIds.isEmpty &&
         ChatScripting.enabled &&
+        (UserPreferencesScripts().userScriptEnabled.get() ?? false) &&
         ChatScripting.instance.debugMode) {
       setState(() {
         _userSelectedModelIds = ['gpt-4o'];
@@ -338,7 +342,8 @@ class _ChatViewState extends State<ChatView> {
     // FocusManager.instance.primaryFocus?.unfocus(); // ?
 
     // If we have a script selected allow it to handle the prompt
-    if (ChatScripting.enabled) {
+    if (ChatScripting.enabled &&
+        (UserPreferencesScripts().userScriptEnabled.get() ?? false)) {
       ChatScripting.instance.sendUserPrompt(msg, _userSelectedModels);
     } else {
       _sendUserPromptDefaultBehavior(msg);
@@ -402,15 +407,6 @@ class _ChatViewState extends State<ChatView> {
         curve: Curves.fastOutSlowIn,
       );
     });
-  }
-
-  List<PopupMenuEntry<OrchataMenuItem>> buildMenu(BuildContext context) {
-    return <PopupMenuEntry<OrchataMenuItem>>[
-      const PopupMenuItem<OrchataMenuItem>(
-        value: OrchataMenuItem.debug,
-        child: Text('Debug'),
-      )
-    ];
   }
 
   void _clearChat() {
@@ -554,7 +550,6 @@ class _ChatViewState extends State<ChatView> {
 
   Widget _buildHeaderRow({required bool showIcons}) {
     const buttonHeight = 40.0;
-    const settingsIconSize = buttonHeight * 1.5;
 
     return Row(
       children: <Widget>[
@@ -596,39 +591,47 @@ class _ChatViewState extends State<ChatView> {
         ).left(8),
 
         // Settings button
-        SizedBox(
-          width: settingsIconSize,
-          height: buttonHeight,
-          child: Center(
-            child: ChatSettingsButton(
-              debugMode: _debugMode,
-              multiSelectMode: _multiSelectMode,
-              partyMode: _partyMode,
-              onDebugModeChanged: () {
-                setState(() {
-                  _debugMode = !_debugMode;
-                });
-              },
-              onMultiSelectModeChanged: () {
-                setState(() {
-                  _multiSelectMode = !_multiSelectMode;
-                  // Reset selections when toggling modes
-                  _userSelectedModelIds = [];
-                });
-              },
-              onPartyModeChanged: () {
-                setState(() {
-                  _partyMode = !_partyMode;
-                  if (_partyMode) {
-                    _multiSelectMode = true;
-                  }
-                });
-              },
-              onClearChat: _clearChat,
-            ),
-          ),
-        ).left(8),
+        _buildSettingsButton(buttonHeight).left(8),
       ],
+    );
+  }
+
+  SizedBox _buildSettingsButton(double buttonHeight) {
+    final settingsIconSize = buttonHeight * 1.5;
+    return SizedBox(
+      width: settingsIconSize,
+      height: buttonHeight,
+      child: Center(
+        child: ChatSettingsButton(
+          debugMode: _debugMode,
+          multiSelectMode: _multiSelectMode,
+          partyMode: _partyMode,
+          onDebugModeChanged: () {
+            setState(() {
+              _debugMode = !_debugMode;
+            });
+          },
+          onMultiSelectModeChanged: () {
+            setState(() {
+              _multiSelectMode = !_multiSelectMode;
+              // Reset selections when toggling modes
+              _userSelectedModelIds = [];
+            });
+          },
+          onPartyModeChanged: () {
+            setState(() {
+              _partyMode = !_partyMode;
+              if (_partyMode) {
+                _multiSelectMode = true;
+              }
+            });
+          },
+          onClearChat: _clearChat,
+          editUserScript: () {
+            UserScriptDialog.show(context);
+          },
+        ),
+      ),
     );
   }
 }
@@ -639,7 +642,3 @@ Future<void> _launchURL(String urlString) async {
     throw 'Could not launch $url';
   }
 }
-
-enum AuthTokenMethod { manual, walletConnect }
-
-enum OrchataMenuItem { debug }

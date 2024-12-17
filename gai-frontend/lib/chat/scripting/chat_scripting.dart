@@ -25,7 +25,7 @@ class ChatScripting {
   static bool get enabled => _instance != null;
 
   // Scripting State
-  late String script;
+  String? script;
   late ProviderManager providerManager;
   late ModelManager modelManager;
   late List<ModelInfo> Function() getUserSelectedModels;
@@ -34,8 +34,11 @@ class ChatScripting {
   late bool debugMode;
 
   static Future<void> init({
+    // A script
+    String? script,
+
     // The URL from which to load the script
-    required String url,
+    String? url,
 
     // If debugMode is true, the script will be re-loaded before each invocation
     bool debugMode = false,
@@ -57,15 +60,29 @@ class ChatScripting {
     instance.getUserSelectedModels = getUserSelectedModels;
     instance.addChatMessageToUI = addChatMessageToUI;
 
-    // Install persistent callback functions
-    addGlobalBindings();
+    if (url != null) {
+      // Install persistent callback functions
+      final script = await instance.loadScriptFromURL(url);
+      instance.setScript(script);
+    }
 
-    await instance.loadExtensionScript(url);
-    // Do one setup and evaluation of the script now
-    instance.evalExtensionScript();
+    if (script != null) {
+      instance.setScript(script);
+    }
   }
 
-  Future<void> loadExtensionScript(String url) async {
+  // Set the script into the environment
+  void setScript(String newScript) {
+    // init the global bindings once, when we have a script
+    if (script == null) {
+      addGlobalBindings();
+    }
+    script = newScript;
+    // Do one setup and evaluation of the script now
+    evalExtensionScript();
+  }
+
+  Future<String> loadScriptFromURL(String url) async {
     // Load the script from the URL as a string
     log("Loading script from $url");
     final response = await http.get(Uri.parse(url));
@@ -81,15 +98,18 @@ class ChatScripting {
           "Failed to load script from $url: HTML response: ${response.body.truncate(64)}");
     }
 
-    script = response.body;
     // log("Loaded script: $script");
+    return response.body;
   }
 
   void evalExtensionScript() {
     // Wrap the script in an async function to allow top level await without messing with modules.
     // final wrappedScript = "(async () => {$script})();";
     try {
-      evaluateJS(script); // We could get a result back async here if needed
+      if (script == null) {
+        throw Exception("No script to evaluate.");
+      }
+      evaluateJS(script!); // We could get a result back async here if needed
     } catch (e, stack) {
       log("Failed to evaluate script: $e");
       log(stack.toString());
