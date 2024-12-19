@@ -50,6 +50,7 @@ class ScriptsMenuItem extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+
         // show one line of the script
         if (hasScript)
           Container(

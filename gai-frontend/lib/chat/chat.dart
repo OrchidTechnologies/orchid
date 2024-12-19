@@ -2,6 +2,7 @@ import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_keys.dart';
+import 'package:orchid/api/orchid_user_config/orchid_user_param.dart';
 import 'package:orchid/chat/api/user_preferences_chat.dart';
 import 'package:orchid/chat/model.dart';
 import 'package:orchid/chat/provider_connection.dart';
@@ -67,6 +68,7 @@ class _ChatViewState extends State<ChatView> {
   // AuthTokenMethod _authTokenMethod = AuthTokenMethod.manual;
   String? _authToken;
   String? _inferenceUrl;
+  String? _scriptURLParam;
 
   @override
   void initState() {
@@ -89,20 +91,39 @@ class _ChatViewState extends State<ChatView> {
       log('Error initializing from params: $e, $stack');
     }
 
+    // Initialize the scripting extension mechanism
+    _initScripting();
+  }
+
+  void _initScripting() {
     // final script = UserPreferencesScripts().userScript.get();
     // log('User script on start: $script');
 
-    // Initialize the scripting extension mechanism
     ChatScripting.init(
+      // If a script URL is provided, it will be loaded.
       // url: 'lib/extensions/filter_example.js',
+      url: _scriptURLParam,
+      // If debugMode is true, the script will be re-loaded before each invocation
       // debugMode: true,
-      script: UserPreferencesScripts().userScript.get(),
-      // Not: script overrides url
+
+      // Allow a provided script url param to override the stored script
+      script: _scriptURLParam == null
+          ? UserPreferencesScripts().userScript.get()
+          : null,
+
       providerManager: _providerManager,
       modelManager: _modelManager,
       getUserSelectedModels: () => _userSelectedModels,
       chatHistory: _chatHistory,
       addChatMessageToUI: _addChatMessage,
+      onScriptError: (error) {
+        _addMessage(ChatMessageSource.internal,
+            'User Script error: ${error.truncate(128)}');
+        _addMessage(ChatMessageSource.system, 'User Script error (see logs).');
+      },
+      onScriptLoaded: (msg) {
+        _addMessage(ChatMessageSource.system, msg);
+      },
     );
   }
 
@@ -164,23 +185,17 @@ class _ChatViewState extends State<ChatView> {
 
   // Init from user parameters (for web)
   void _initFromParams() {
-    Map<String, String> params = Uri.base.queryParameters;
-    try {
-      _funder = EthereumAddress.from(params['funder'] ?? '');
-    } catch (e) {
-      _funder = null;
-    }
-    try {
-      _signerKey = BigInt.parse(params['signer'] ?? '');
-    } catch (e) {
-      _signerKey = null;
-    }
+    final params = OrchidUserParams();
+    _funder = params.getEthereumAddress('funder');
+    _signerKey = params.getBigInt('signer');
     _accountChanged();
 
-    String? provider = params['provider'];
+    String? provider = params.get('provider');
     if (provider != null) {
       _providerManager.setUserProvider(provider);
     }
+
+    _scriptURLParam = params.getURL('script');
   }
 
   void providerConnected([name = '']) {
@@ -342,8 +357,7 @@ class _ChatViewState extends State<ChatView> {
     // FocusManager.instance.primaryFocus?.unfocus(); // ?
 
     // If we have a script selected allow it to handle the prompt
-    if (ChatScripting.enabled &&
-        (UserPreferencesScripts().userScriptEnabled.get() ?? false)) {
+    if (ChatScripting.enabled) {
       ChatScripting.instance.sendUserPrompt(msg, _userSelectedModels);
     } else {
       _sendUserPromptDefaultBehavior(msg);

@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/util/hex.dart';
 
@@ -39,6 +40,26 @@ class OrchidUserParams {
       return Color(int.parse(Hex.remove0x(svalue), radix: 16));
     } catch (err) {
       log("Error in color: $err");
+      return null;
+    }
+  }
+
+  String? getURL(String name) {
+    return get(name);
+  }
+
+  EthereumAddress? getEthereumAddress(String name) {
+    try {
+      return EthereumAddress.from(params[name] ?? '');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  BigInt? getBigInt(String name) {
+    try {
+      return BigInt.parse(params[name] ?? '');
+    } catch (e) {
       return null;
     }
   }

@@ -1,3 +1,4 @@
+import 'package:orchid/chat/api/user_preferences_chat.dart';
 import 'package:orchid/chat/chat_history.dart';
 import 'package:orchid/chat/chat_message.dart';
 import 'package:orchid/chat/model.dart';
@@ -22,15 +23,16 @@ class ChatScripting {
     return _instance!;
   }
 
-  static bool get enabled => _instance != null;
-
   // Scripting State
+  String? url;
   String? script;
   late ProviderManager providerManager;
   late ModelManager modelManager;
   late List<ModelInfo> Function() getUserSelectedModels;
   late ChatHistory chatHistory;
   late void Function(ChatMessage) addChatMessageToUI;
+  late void Function(String) onScriptError;
+  late void Function(String) onScriptLoaded;
   late bool debugMode;
 
   static Future<void> init({
@@ -47,6 +49,8 @@ class ChatScripting {
     required ModelManager modelManager,
     required List<ModelInfo> Function() getUserSelectedModels,
     required Function(ChatMessage) addChatMessageToUI,
+    required void Function(String) onScriptError,
+    required void Function(String) onScriptLoaded,
   }) async {
     if (_instance != null) {
       throw Exception("ChatScripting already initialized!");
@@ -59,27 +63,55 @@ class ChatScripting {
     instance.modelManager = modelManager;
     instance.getUserSelectedModels = getUserSelectedModels;
     instance.addChatMessageToUI = addChatMessageToUI;
+    instance.onScriptError = onScriptError;
+    instance.onScriptLoaded = onScriptLoaded;
 
     if (url != null) {
-      // Install persistent callback functions
-      final script = await instance.loadScriptFromURL(url);
-      instance.setScript(script);
+      instance.setURL(url);
     }
-
     if (script != null) {
       instance.setScript(script);
     }
   }
 
+  static bool get enabled {
+    return ChatScripting._instance != null
+        && (instance.url != null // assume enabled when URL provided as param
+            || (userPrefEnabled && instance.script != null));
+  }
+
+  static bool get userPrefEnabled {
+    return (UserPreferencesScripts().userScriptEnabled.get() ?? false);
+  }
+
+  Future<void> setURL(String newURL) async {
+    url = newURL;
+    final String script;
+    try {
+      script = await instance.loadScriptFromURL(url!);
+      onScriptLoaded("Script loaded from URL: $url");
+      setScript(script);
+    } catch (e) {
+      log("Failed to load script from URL: $e");
+      onScriptError(e.toString());
+    }
+  }
+
   // Set the script into the environment
   void setScript(String newScript) {
-    // init the global bindings once, when we have a script
-    if (script == null) {
-      addGlobalBindings();
+    try {
+      // init the global bindings once, when we have a script
+      if (script == null) {
+        addGlobalBindings();
+      }
+      script = newScript;
+      // Do one setup and evaluation of the script now
+      evalExtensionScript();
+    } catch (e, stack) {
+      log("Failed to eval script: $e");
+      log(stack.toString());
+      onScriptError(e.toString());
     }
-    script = newScript;
-    // Do one setup and evaluation of the script now
-    evalExtensionScript();
   }
 
   Future<String> loadScriptFromURL(String url) async {
@@ -95,7 +127,8 @@ class ChatScripting {
     // If the result is HTML we have failed
     if (response.headers['content-type']!.contains('text/html')) {
       throw Exception(
-          "Failed to load script from $url: HTML response: ${response.body.truncate(64)}");
+          "Failed to load script from $url: HTML response: ${response.body
+              .truncate(64)}");
     }
 
     // log("Loaded script: $script");
@@ -110,6 +143,7 @@ class ChatScripting {
         throw Exception("No script to evaluate.");
       }
       evaluateJS(script!); // We could get a result back async here if needed
+      onScriptLoaded("Script installed.");
     } catch (e, stack) {
       log("Failed to evaluate script: $e");
       log(stack.toString());
@@ -130,6 +164,10 @@ class ChatScripting {
 
     // If debug mode evaluate the script before each usage
     if (debugMode) {
+      // reload the URL in debug mode
+      if (url != null) {
+        setURL(url!); // reload the script from the URL
+      }
       evalExtensionScript();
     }
 
@@ -157,8 +195,8 @@ class ChatScripting {
 
   // Implementation of sendMessagesToModel callback function invoked from JS
   // Send a list of ChatMessage to a model for inference and return a promise of ChatMessageJS
-  JSPromise sendMessagesToModelJSImpl(
-      JSArray messagesJS, String modelId, int? maxTokens) {
+  JSPromise sendMessagesToModelJSImpl(JSArray messagesJS, String modelId,
+      int? maxTokens) {
     log("dart: Send messages to model called.");
 
     return (() async {
@@ -197,7 +235,7 @@ class ChatScripting {
         .toJS;
   }
 
-  ///
-  /// END: JS callback implementations
-  ///
+///
+/// END: JS callback implementations
+///
 }
