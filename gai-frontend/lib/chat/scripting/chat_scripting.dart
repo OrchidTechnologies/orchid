@@ -89,7 +89,7 @@ class ChatScripting {
     final String script;
     try {
       script = await instance.loadScriptFromURL(url!);
-      onScriptLoaded("Script loaded from URL: $url");
+      // onScriptLoaded("Script loaded from URL: $url");
       setScript(script);
     } catch (e) {
       log("Failed to load script from URL: $e");
@@ -143,7 +143,11 @@ class ChatScripting {
         throw Exception("No script to evaluate.");
       }
       evaluateJS(script!); // We could get a result back async here if needed
-      onScriptLoaded("Script installed.");
+      if (url != null) {
+        onScriptLoaded("Script loaded from URL: ${url!.truncate(32)}");
+      } else {
+        onScriptLoaded("Script loaded.");
+      }
     } catch (e, stack) {
       log("Failed to evaluate script: $e");
       log(stack.toString());
