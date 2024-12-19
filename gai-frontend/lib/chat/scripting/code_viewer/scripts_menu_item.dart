@@ -1,4 +1,5 @@
 import 'package:orchid/chat/api/user_preferences_chat.dart';
+import 'package:orchid/chat/scripting/chat_scripting.dart';
 import 'package:orchid/common/app_text.dart';
 import 'package:orchid/common/rounded_rect.dart';
 import 'package:orchid/orchid/orchid.dart';
@@ -28,7 +29,8 @@ class ScriptsMenuItem extends StatelessWidget {
           return Container();
         }
         final scriptInitialized =
-            UserPreferencesScripts().userScript.get() != null;
+            UserPreferencesScripts().userScript.get() != null ||
+                ChatScripting.instance.url != null;
         return ExpandingPopupMenuItem(
           expanded: expanded,
           title: "User Script",
@@ -47,10 +49,21 @@ class ScriptsMenuItem extends StatelessWidget {
     final script = UserPreferencesScripts().userScript.get();
     final bool hasScript = script != null && script.isNotEmpty;
 
+    final scriptIsURL = ChatScripting.instance.url != null;
+    if (scriptIsURL) {
+      final url = ChatScripting.instance.url!;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text("Script from URL:").body1.top(16),
+          Text(ChatScripting.instance.url ?? '').linkStyle.link(url: url).top(16),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-
         // show one line of the script
         if (hasScript)
           Container(
