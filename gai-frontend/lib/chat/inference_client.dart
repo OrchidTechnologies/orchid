@@ -107,7 +107,7 @@ class InferenceClient {
     }
     
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/models'),
+      Uri.parse('$baseUrl/v1/inference/models'),
       headers: {'Authorization': 'Bearer $_authToken'},
     );
     
