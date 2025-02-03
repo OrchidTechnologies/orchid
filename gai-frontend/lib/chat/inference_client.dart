@@ -82,6 +82,9 @@ class InferenceClient {
   final String baseUrl;
   String? _authToken;
   
+  // Add getter for auth token
+  String? get authToken => _authToken;
+  
   InferenceClient({required String baseUrl}) 
     : baseUrl = _normalizeBaseUrl(baseUrl);
   

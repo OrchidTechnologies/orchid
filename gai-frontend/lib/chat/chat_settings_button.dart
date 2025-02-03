@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:orchid/chat/identicon_options_menu_item.dart';
 import 'package:orchid/chat/scripting/code_viewer/scripts_menu_item.dart';
 import 'package:orchid/orchid/orchid.dart';
@@ -17,6 +18,8 @@ class ChatSettingsButton extends StatefulWidget {
   final VoidCallback onPartyModeChanged;
   final VoidCallback onClearChat;
   final VoidCallback editUserScript;
+  final String? authToken;
+  final String? inferenceUrl;
 
   const ChatSettingsButton({
     Key? key,
@@ -28,6 +31,8 @@ class ChatSettingsButton extends StatefulWidget {
     required this.onPartyModeChanged,
     required this.onClearChat,
     required this.editUserScript,
+    this.authToken,
+    this.inferenceUrl,
   }) : super(key: key);
 
   @override
@@ -40,12 +45,68 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
   final _textStyle = OrchidText.medium_16_025.copyWith(height: 2.0);
   bool _buttonSelected = false;
 
+  Future<void> _copyToClipboard(String text, String label) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$label copied to clipboard')),
+      );
+    }
+  }
+
+  List<PopupMenuEntry<dynamic>> _buildInferenceInfo() {
+    if (widget.authToken == null || widget.inferenceUrl == null) {
+      return [];
+    }
+
+    return [
+      const PopupMenuDivider(height: 1.0),
+      PopupMenuItem<String>(
+        height: _height,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            title: Text('Inference Connection', style: _textStyle),
+            children: [
+              ListTile(
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Auth Token:', style: TextStyle(color: Colors.white)),
+                    Text(
+                      widget.authToken!,
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    TextButton(
+                      onPressed: () => _copyToClipboard(widget.authToken!, 'Auth token'),
+                      child: const Text('Copy Token', style: TextStyle(color: Colors.white)),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Inference URL:', style: TextStyle(color: Colors.white)),
+                    Text(
+                      widget.inferenceUrl!,
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    TextButton(
+                      onPressed: () => _copyToClipboard(widget.inferenceUrl!, 'Inference URL'),
+                      child: const Text('Copy URL', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final buildCommit =
-        const String.fromEnvironment('build_commit', defaultValue: '...');
-    final githubUrl =
-        'https://github.com/OrchidTechnologies/orchid/tree/$buildCommit/web-ethereum/dapp2';
+    final buildCommit = const String.fromEnvironment('build_commit', defaultValue: '...');
+    final githubUrl = 'https://github.com/OrchidTechnologies/orchid/tree/$buildCommit/web-ethereum/dapp2';
 
     return OrchidPopupMenuButton<dynamic>(
       width: 30,
@@ -124,30 +185,6 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
           ),
           div,
 
-          /*
-          // party mode
-          PopupMenuItem<String>(
-            onTap: widget.onPartyModeChanged,
-            height: _height,
-            child: SizedBox(
-              width: _width,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Party Mode", style: _textStyle),
-                  Icon(
-                    widget.partyMode
-                        ? Icons.check_box_outlined
-                        : Icons.check_box_outline_blank,
-                    color: Colors.white,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          div,
-           */
-
           // scripts
           SubmenuPopopMenuItemBuilder<String>(
             builder: (bool expanded) => ScriptsMenuItem(
@@ -156,7 +193,6 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
               expanded: expanded,
               textStyle: _textStyle,
               editScript: () {
-                log('edit script');
                 Navigator.pop(context);
                 widget.editUserScript();
               },
@@ -171,6 +207,10 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
               textStyle: _textStyle,
             ),
           ),
+
+          // Inference connection info
+          ..._buildInferenceInfo(),
+
           div,
 
           // build version
@@ -196,73 +236,6 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
           child: OrchidAsset.svg.settings_gear,
         ),
       ),
-    );
-  }
-
-  /*
-  Future _openLicensePage(BuildContext context) {
-    // TODO:
-    return Future.delayed(millis(100), () async {});
-  }
-
-  Widget _buildLanguagePref(bool expanded) {
-    return UserPreferencesUI().languageOverride.builder((languageOverride) {
-      return ExpandingPopupMenuItem(
-        expanded: expanded,
-        title: s.language,
-        currentSelectionText: OrchidLanguage.languages[languageOverride] ?? '',
-        expandedContent: _languageOptions(languageOverride),
-        expandedHeight: 690,
-        textStyle: _textStyle,
-      );
-    });
-  }
-   */
-
-  Widget _languageOptions(String? selected) {
-    var items = OrchidLanguage.languages.keys
-        .map(
-          (key) => _listMenuItem(
-            selected: key == selected,
-            title: OrchidLanguage.languages[key]!,
-            onTap: () async {
-              await UserPreferencesUI().languageOverride.set(key);
-            },
-          ),
-        )
-        .toList()
-        .cast<PopupMenuEntry>()
-        .separatedWith(
-          const PopupMenuDivider(height: 1.0),
-        );
-
-    items.insert(
-        0,
-        _listMenuItem(
-          selected: selected == null,
-          title: s.systemDefault,
-          onTap: () async {
-            await UserPreferencesUI().languageOverride.set(null);
-          },
-        ));
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: items,
-    );
-  }
-
-  PopupMenuItem _listMenuItem({
-    required bool selected,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return OrchidPopupMenuItemUtils.listMenuItem(
-      context: context,
-      selected: selected,
-      title: title,
-      onTap: onTap,
-      textStyle: _textStyle,
     );
   }
 }

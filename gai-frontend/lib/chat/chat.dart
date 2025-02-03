@@ -58,14 +58,12 @@ class _ChatViewState extends State<ChatView> {
       _modelManager.getModelsOrDefault(_userSelectedModelIds);
 
   // Account
-  // This should be wrapped up in a provider.  See WIP in vpn app.
   EthereumAddress? _funder;
   BigInt? _signerKey;
   AccountDetailPoller? _accountDetail;
   final _accountDetailNotifier = ValueNotifier<AccountDetail?>(null);
 
   // Auth
-  // AuthTokenMethod _authTokenMethod = AuthTokenMethod.manual;
   String? _authToken;
   String? _inferenceUrl;
   String? _scriptURLParam;
@@ -96,21 +94,12 @@ class _ChatViewState extends State<ChatView> {
   }
 
   void _initScripting() {
-    // final script = UserPreferencesScripts().userScript.get();
-    // log('User script on start: $script');
-
     ChatScripting.init(
       // If a script URL is provided, it will be loaded.
-      // url: 'lib/extensions/filter_example.js',
       url: _scriptURLParam,
-      // If debugMode is true, the script will be re-loaded before each invocation
-      // debugMode: true,
-
-      // Allow a provided script url param to override the stored script
       script: _scriptURLParam == null
           ? UserPreferencesScripts().userScript.get()
           : null,
-
       providerManager: _providerManager,
       modelManager: _modelManager,
       getUserSelectedModels: () => _userSelectedModels,
@@ -157,7 +146,6 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  // This should be wrapped up in a provider.  See WIP in vpn app.
   void _accountChanged() async {
     log("chat: accountChanged: $_account");
     _accountDetail?.cancel();
@@ -247,7 +235,6 @@ class _ChatViewState extends State<ChatView> {
       _chatHistory.addMessage(message);
     });
     scrollMessagesDown();
-    // log('Chat history updated: ${_chatHistory.messages.length}, ${_chatHistory.messages}');
   }
 
   void _updateSelectedModels(List<String> modelIds) {
@@ -272,7 +259,6 @@ class _ChatViewState extends State<ChatView> {
       initialInferenceUrl: _inferenceUrl,
       accountDetailNotifier: _accountDetailNotifier,
       onAccountChanged: (chain, funder, signerKey) {
-        // log('onAccountChanged: Account changed: $chain, $funder, $signerKey');
         setState(() {
           _selectedChain = chain;
           _funder = funder;
@@ -354,7 +340,6 @@ class _ChatViewState extends State<ChatView> {
 
     // Manage the prompt UI
     _promptTextController.clear();
-    // FocusManager.instance.primaryFocus?.unfocus(); // ?
 
     // If we have a script selected allow it to handle the prompt
     if (ChatScripting.enabled) {
@@ -390,7 +375,7 @@ class _ChatViewState extends State<ChatView> {
         if (chatResponse != null) {
           _handleChatResponseDefaultBehavior(chatResponse);
         } else {
-          // The provider connection should have logged the issue.  Do nothing.
+          // The provider connection should have logged the issue. Do nothing.
         }
       } catch (e) {
         _addMessage(
@@ -605,12 +590,16 @@ class _ChatViewState extends State<ChatView> {
         ).left(8),
 
         // Settings button
-        _buildSettingsButton(buttonHeight).left(8),
+        _buildSettingsButton(
+          buttonHeight,
+          authToken: _authToken ?? _providerManager.providerConnection?.inferenceClient?.authToken,
+          inferenceUrl: _inferenceUrl ?? _providerManager.providerConnection?.inferenceClient?.baseUrl,
+        ).left(8),
       ],
     );
   }
 
-  SizedBox _buildSettingsButton(double buttonHeight) {
+  SizedBox _buildSettingsButton(double buttonHeight, {String? authToken, String? inferenceUrl}) {
     final settingsIconSize = buttonHeight * 1.5;
     return SizedBox(
       width: settingsIconSize,
@@ -644,6 +633,8 @@ class _ChatViewState extends State<ChatView> {
           editUserScript: () {
             UserScriptDialog.show(context);
           },
+          authToken: authToken,
+          inferenceUrl: inferenceUrl,
         ),
       ),
     );
