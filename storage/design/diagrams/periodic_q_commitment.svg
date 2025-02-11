@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="-774.9569 3293.6104 1405.3208 1263.5328" width="1405.3208" height="1263.5328">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 10 8" markerWidth="10" markerHeight="8" color="black">
+      <g>
+        <path d="M 8 0 L 0 -3 L 0 3 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_2" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 7 6" markerWidth="7" markerHeight="6" color="black">
+      <g>
+        <path d="M 4.8 0 L 0 -1.8 L 0 1.8 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g id="Canvas_1" stroke-opacity="1" stroke-dasharray="none" stroke="none" fill="none" fill-opacity="1">
+    <title>Canvas 1</title>
+    <rect fill="white" x="-774.9569" y="3293.6104" width="1405.3208" height="1263.5328"/>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_125">
+        <rect x="-618.784" y="3977" width="862.1322" height="404.66067" fill="white"/>
+        <rect x="-618.784" y="3977" width="862.1322" height="404.66067" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_126">
+        <rect x="-364.48174" y="4136.1453" width="111.61328" height="104.17763" fill="white"/>
+        <rect x="-364.48174" y="4136.1453" width="111.61328" height="104.17763" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-359.48174 4141.1453)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="2.3506406" y="15" xml:space="preserve">client-block 0</tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="16" fill="black" x="5.9106406" y="51.448" xml:space="preserve">commitment</tspan>
+        </text>
+      </g>
+      <g id="Graphic_129">
+        <rect x="-439.93096" y="4285.852" width="588.8151" height=".125" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-434.93096 4276.6907)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15" xml:space="preserve">                             |                            |                           |                             |</tspan>
+        </text>
+      </g>
+      <g id="Graphic_130">
+        <rect x="-454.44984" y="4078.7585" width=".125" height="185.3457" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-445.16334 4083.7585) rotate(90)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="85.89685" y="15" xml:space="preserve">|   </tspan>
+        </text>
+      </g>
+      <g id="Graphic_131">
+        <rect x="22.518257" y="4136.1453" width="111.61328" height="104.17763" fill="white"/>
+        <rect x="22.518257" y="4136.1453" width="111.61328" height="104.17763" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(27.518257 4141.1453)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="42.80664" y="15" xml:space="preserve">…</tspan>
+        </text>
+      </g>
+      <g id="Graphic_132">
+        <rect x="-293.7695" y="4333.852" width="277" height="23" fill="white"/>
+        <text transform="translate(-288.7695 4333.572)" fill="black">
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="20" fill="black" x="54.98" y="19" xml:space="preserve">client-block index</tspan>
+        </text>
+      </g>
+      <g id="Graphic_133">
+        <text transform="translate(-434.93096 4300.6907)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15" xml:space="preserve">                             0                          1                          2                            3</tspan>
+        </text>
+      </g>
+      <g id="Graphic_134">
+        <rect x="-610.993" y="4159.9313" width="142.1211" height="23" fill="white"/>
+        <text transform="translate(-605.993 4136.0913)" fill="black">
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="20" fill="black" x="40.700547" y="19" xml:space="preserve">Poly r </tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="20" fill="black" x="9.940547" y="42.56" xml:space="preserve">commitment</tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="20" fill="black" x="28.470547" y="66.119995" xml:space="preserve">(Root id)</tspan>
+        </text>
+      </g>
+      <g id="Graphic_137">
+        <rect x="-235.48174" y="4136.1453" width="111.61328" height="104.17763" fill="white"/>
+        <rect x="-235.48174" y="4136.1453" width="111.61328" height="104.17763" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-230.48174 4141.1453)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="2.3506406" y="15" xml:space="preserve">client-block 1</tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="16" fill="black" x="5.9106406" y="51.448" xml:space="preserve">commitment</tspan>
+        </text>
+      </g>
+      <g id="Graphic_409">
+        <rect x="-750.4569" y="3426.4897" width="1135.4443" height="259.88234" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-745.4569 3431.4897)" fill="black">
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="23" fill="black" x="516.71067" y="22" xml:space="preserve">Provider</tspan>
+        </text>
+      </g>
+      <g id="Graphic_408">
+        <rect x="-691.8526" y="3506.6238" width="329.96436" height="128" fill="white"/>
+        <rect x="-691.8526" y="3506.6238" width="329.96436" height="128" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-686.8526 3511.6238)" fill="black">
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="21" fill="black" x="122.65468" y="20" xml:space="preserve">Block 0</tspan>
+        </text>
+      </g>
+      <g id="Graphic_407">
+        <rect x="-660.1448" y="3554.208" width="82.3777" height="59.99816" fill="white"/>
+        <rect x="-660.1448" y="3554.208" width="82.3777" height="59.99816" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_406">
+        <rect x="-564.93455" y="3554.208" width="82.3777" height="59.99816" fill="white"/>
+        <rect x="-564.93455" y="3554.208" width="82.3777" height="59.99816" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_405">
+        <rect x="-469.72434" y="3554.208" width="82.3777" height="59.99816" fill="white"/>
+        <rect x="-469.72434" y="3554.208" width="82.3777" height="59.99816" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-464.72434 3559.208)" fill="black"/>
+      </g>
+      <g id="Graphic_404">
+        <rect x="-338.69965" y="3506.6238" width="329.96436" height="128" fill="white"/>
+        <rect x="-338.69965" y="3506.6238" width="329.96436" height="128" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-333.69965 3511.6238)" fill="black">
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="21" fill="black" x="122.65468" y="20" xml:space="preserve">Block 1</tspan>
+        </text>
+      </g>
+      <g id="Graphic_403">
+        <rect x="-304.08915" y="3552.3255" width="82.3777" height="59.99816" fill="white"/>
+        <rect x="-304.08915" y="3552.3255" width="82.3777" height="59.99816" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_402">
+        <rect x="-208.87894" y="3552.3255" width="82.3777" height="59.99816" fill="white"/>
+        <rect x="-208.87894" y="3552.3255" width="82.3777" height="59.99816" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_401">
+        <rect x="-113.66873" y="3552.3255" width="82.3777" height="59.99816" fill="white"/>
+        <rect x="-113.66873" y="3552.3255" width="82.3777" height="59.99816" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-108.66873 3557.3255)" fill="black"/>
+      </g>
+      <g id="Graphic_400">
+        <rect x="14.453336" y="3506.6238" width="329.96436" height="128" fill="white"/>
+        <rect x="14.453336" y="3506.6238" width="329.96436" height="128" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(19.453336 3511.6238)" fill="black">
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="21" fill="black" x="122.26618" y="20" xml:space="preserve">Block n</tspan>
+          <tspan font-family="Helvetica Neue" font-size="22" fill="black" x="148.98218" y="73.60915" xml:space="preserve">…</tspan>
+        </text>
+      </g>
+      <g id="Graphic_410">
+        <rect x="-586.51894" y="3758.029" width="227.2673" height="156" fill="white"/>
+        <rect x="-586.51894" y="3758.029" width="227.2673" height="156" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-581.51894 3763.029)" fill="black">
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="23" fill="black" x="67.75115" y="22" xml:space="preserve">Block 0</tspan>
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="23" fill="black" x="69.03915" y="49.66716" xml:space="preserve">Root id</tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="23" fill="black" x="25.373652" y="105.33432" xml:space="preserve">commitment(r[I])</tspan>
+        </text>
+      </g>
+      <g id="Graphic_411">
+        <rect x="-292.29075" y="3758.029" width="227.2673" height="156" fill="white"/>
+        <rect x="-292.29075" y="3758.029" width="227.2673" height="156" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-287.29075 3763.029)" fill="black">
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="23" fill="black" x="67.75115" y="22" xml:space="preserve">Block 1</tspan>
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="23" fill="black" x="69.03915" y="49.66716" xml:space="preserve">Root id</tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="23" fill="black" x="25.373652" y="105.33432" xml:space="preserve">commitment(r[I])</tspan>
+        </text>
+      </g>
+      <g id="Graphic_412">
+        <rect x="1.9374364" y="3758.029" width="227.2673" height="156" fill="white"/>
+        <rect x="1.9374364" y="3758.029" width="227.2673" height="156" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(6.9374364 3763.029)" fill="black">
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="23" fill="black" x="67.32565" y="22" xml:space="preserve">Block n</tspan>
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="23" fill="black" x="69.03915" y="49.66716" xml:space="preserve">Root id</tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="23" fill="black" x="25.373652" y="105.33432" xml:space="preserve">commitment(r[I])</tspan>
+        </text>
+      </g>
+      <g id="Line_413">
+        <line x1="-513.8524" y1="3634.6238" x2="-490.7243" y2="3748.3275" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_414">
+        <line x1="-174.90861" y1="3634.6238" x2="-177.02116" y2="3748.1305" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_416">
+        <line x1="164.0352" y1="3634.6238" x2="136.65636" y2="3748.4036" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_417">
+        <text transform="translate(-677.8515 4418.455)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="24" fill="black" x="6.3314336" y="23" xml:space="preserve">For each time period a provider posts a commitment encompassing all of its hosted client blocks.</tspan>
+          <tspan font-family="Helvetica Neue" font-size="24" fill="black" x="75.22343" y="51.672" xml:space="preserve">Poly </tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="24" fill="black" y="51.672" xml:space="preserve">q</tspan>
+          <tspan font-family="Helvetica Neue" font-size="24" fill="black" y="51.672" xml:space="preserve"> encodes the </tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="24" fill="black" y="51.672" xml:space="preserve">r</tspan>
+          <tspan font-family="Helvetica Neue" font-size="24" fill="black" y="51.672" xml:space="preserve"> poly commitment (root id) of each block hosted by the provider.</tspan>
+          <tspan font-family="Helvetica Neue" font-size="24" fill="black" x="129.88343" y="80.34399" xml:space="preserve">A commitment to </tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="24" fill="black" y="80.34399" xml:space="preserve">q</tspan>
+          <tspan font-family="Helvetica Neue" font-size="24" fill="black" y="80.34399" xml:space="preserve"> is posted on-chain and poly </tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="24" fill="black" y="80.34399" xml:space="preserve">q</tspan>
+          <tspan font-family="Helvetica Neue" font-size="24" fill="black" y="80.34399" xml:space="preserve"> is posted to blob space.</tspan>
+          <tspan font-family="Helvetica Neue" font-size="24" fill="black" x="254.65943" y="109.01599" xml:space="preserve">Providers evaluate q to search for known block ids.</tspan>
+        </text>
+      </g>
+      <g id="Graphic_429">
+        <text transform="translate(-449.44985 3322.6104)" fill="black">
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="40" fill="black" x="8526513e-19" y="39" xml:space="preserve">Periodic Client Commitment</tspan>
+        </text>
+      </g>
+      <g id="Line_430">
+        <line x1="-436.519" y1="3914.029" x2="-337.14408" y2="4127.1726" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_431">
+        <line x1="-178.88255" y1="3914.029" x2="-179.49593" y2="4126.2453" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_432">
+        <line x1="107.32248" y1="3914.029" x2="84.87449" y2="4126.3" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_433">
+        <rect x="-341.11416" y="4015.671" width="323.675" height="69.42517" fill="white"/>
+        <text transform="translate(-336.11417 4020.671)" fill="black">
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="25" fill="black" x="3.475" y="24" xml:space="preserve">Polynomial </tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-weight="bold" font-size="25" fill="black" y="24" xml:space="preserve">q</tspan>
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="25" fill="black" y="24" xml:space="preserve"> (“qlient list”) </tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="25" fill="black" x="35.6875" y="53.725174" xml:space="preserve">q(i)=commitment( r[i] )</tspan>
+        </text>
+      </g>
+      <g id="Line_436">
+        <line x1="243.3482" y1="4092.624" x2="494.83674" y2="4092.624" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_437">
+        <text transform="translate(288.9925 4109.182)" fill="black">
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="22" fill="black" x="1.639" y="21" xml:space="preserve">Commitment (q)</tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="22" fill="black" x="0" y="47.616" xml:space="preserve">Posted on-chain</tspan>
+        </text>
+      </g>
+      <g id="Graphic_441">
+        <title>Filter Drama</title>
+        <path d="M 587.2144 4237.679 C 584.41404 4223.4714 571.936 4212.8053 556.9459 4212.8053 C 545.0444 4212.8053 534.749 4219.559 529.6013 4229.4427 C 517.2056 4230.7605 507.5279 4241.2206 507.5279 4253.987 C 507.5279 4267.618 518.6058 4278.696 532.2369 4278.696 L 585.77304 4278.696 C 597.1392 4278.696 606.36386 4269.471 606.36386 4258.105 C 606.36386 4247.233 597.9216 4238.4203 587.2144 4237.679 Z M 585.77304 4270.4596 L 532.2369 4270.4596 C 523.1358 4270.4596 515.76426 4263.088 515.76426 4253.987 C 515.76426 4244.886 523.1358 4237.5143 532.2369 4237.5143 C 541.33805 4237.5143 548.70957 4244.886 548.70957 4253.987 L 556.9459 4253.987 C 556.9459 4242.621 549.2861 4233.0667 538.826 4230.184 C 542.9853 4224.6656 549.5332 4221.0416 556.9459 4221.0416 C 569.4239 4221.0416 579.5958 4231.2135 579.5958 4243.6915 L 579.5958 4245.7506 L 585.77304 4245.7506 C 592.568 4245.7506 598.1275 4251.31 598.1275 4258.105 C 598.1275 4264.9 592.568 4270.4596 585.77304 4270.4596 Z" fill="black"/>
+      </g>
+      <g id="Line_442">
+        <line x1="243.3482" y1="4245.7506" x2="496.0351" y2="4245.7506" marker-end="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_443">
+        <text transform="translate(264.9575 4259.2987)" fill="black">
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="22" fill="black" x="73.964" y="21" xml:space="preserve">Poly q</tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="22" fill="black" x="0" y="47.616" xml:space="preserve">Posted to blob space</tspan>
+        </text>
+      </g>
+      <g id="Graphic_446">
+        <title>VPN Lock</title>
+        <path d="M 596.202 4058.8435 L 596.202 4056.732 C 596.202 4050.905 591.4727 4046.176 585.64555 4046.176 C 579.8184 4046.176 575.0891 4050.905 575.0891 4056.732 L 575.0891 4058.8435 C 572.7667 4058.8435 570.86654 4060.7437 570.86654 4063.066 L 570.86654 4079.9564 C 570.86654 4082.279 572.7667 4084.179 575.0891 4084.179 L 596.202 4084.179 C 598.5244 4084.179 600.42456 4082.279 600.42456 4079.9564 L 600.42456 4063.066 C 600.42456 4060.7437 598.5244 4058.8435 596.202 4058.8435 Z M 592.8239 4058.8435 L 578.4672 4058.8435 L 578.4672 4056.732 C 578.4672 4052.763 581.6763 4049.554 585.64555 4049.554 C 589.6148 4049.554 592.8239 4052.763 592.8239 4056.732 L 592.8239 4058.8435 Z M 583.19646 4092.624 C 583.36536 4094.0176 583.53426 4095.411 583.53426 4096.8467 C 583.53426 4105.6296 580.1562 4113.6103 574.66686 4119.6064 C 573.569 4116.186 570.4443 4113.737 566.644 4113.737 L 562.4214 4113.737 L 562.4214 4101.0693 C 562.4214 4098.747 560.52124 4096.8467 558.1988 4096.8467 L 532.8634 4096.8467 L 532.8634 4088.4015 L 541.3085 4088.4015 C 543.63094 4088.4015 545.5311 4086.5014 545.5311 4084.179 L 545.5311 4075.734 L 553.97625 4075.734 C 558.6211 4075.734 562.4214 4071.9335 562.4214 4067.2887 L 562.4214 4056.5633 C 558.40995 4055.2966 554.1874 4054.621 549.7537 4054.621 C 526.44506 4054.621 507.5279 4073.538 507.5279 4096.8467 C 507.5279 4120.1553 526.44506 4139.0724 549.7537 4139.0724 C 573.0623 4139.0724 591.9794 4120.1553 591.9794 4096.8467 C 591.9794 4095.411 591.89496 4094.0176 591.7683 4092.624 L 583.19646 4092.624 Z M 545.5311 4130.3317 C 528.8519 4128.2626 515.9731 4114.075 515.9731 4096.8467 C 515.9731 4094.2287 516.3109 4091.7374 516.8598 4089.2883 L 537.08595 4109.5144 L 537.08595 4113.737 C 537.08595 4118.382 540.88627 4122.182 545.5311 4122.182 L 545.5311 4130.3317 Z" fill="black"/>
+      </g>
+      <g id="Graphic_449">
+        <rect x="-106.48174" y="4136.1453" width="111.61328" height="104.17763" fill="white"/>
+        <rect x="-106.48174" y="4136.1453" width="111.61328" height="104.17763" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-101.48174 4141.1453)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="2.3506406" y="15" xml:space="preserve">client-block 2</tspan>
+          <tspan font-family="Helvetica Neue" font-style="italic" font-size="16" fill="black" x="5.9106406" y="51.448" xml:space="preserve">commitment</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>
