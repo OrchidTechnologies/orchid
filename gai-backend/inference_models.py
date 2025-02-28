@@ -5,6 +5,7 @@ import uuid
 import re
 
 def validate_tool_name(v: str) -> str:
+    # Validate tool name according to Claude API requirements
     if not re.match(r'^[a-zA-Z0-9_-]{1,64}$', v):
         raise ValueError("Tool name must match regex ^[a-zA-Z0-9_-]{1,64}$")
     return v

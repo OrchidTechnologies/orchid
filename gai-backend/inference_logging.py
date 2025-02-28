@@ -25,7 +25,7 @@ LOGGING_CONFIG = {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "colored",
-            "level": "INFO"
+            "level": "DEBUG"
         }
     },
     "loggers": {
@@ -38,6 +38,11 @@ LOGGING_CONFIG = {
             "level": "INFO",
         },
         "inference": {
+            "handlers": ["console"],
+            "level": os.getenv("ORCHID_GENAI_INF_LOGLVL", "INFO"),
+            "propagate": False
+        },
+        "config_manager": {
             "handlers": ["console"],
             "level": os.getenv("ORCHID_GENAI_INF_LOGLVL", "INFO"),
             "propagate": False

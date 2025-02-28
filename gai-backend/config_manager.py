@@ -3,6 +3,9 @@ from redis.asyncio import Redis
 import json
 import time
 import os
+import logging
+
+logger = logging.getLogger("config_manager")
 
 class ConfigError(Exception):
     """Raised when config operations fail"""
@@ -118,28 +121,54 @@ class ConfigManager:
 
     async def load_config(self, config_path: Optional[str] = None, force_reload: bool = False) -> Dict[str, Any]:
         try:
+            logger.debug(f"Loading config - path: {config_path}, force_reload: {force_reload}")
+            
             if config_path:
+                logger.debug(f"Loading config from file: {config_path}")
                 config = await self.load_from_file(config_path)
                 await self.write_config(config, force=True)
+                logger.debug("Loaded and wrote config from file")
                 return config
             
             timestamp = await self.redis.get("config:last_update")
+            logger.debug(f"Redis config timestamp: {timestamp}, last_load_time: {self.last_load_time}")
             
             if not force_reload and timestamp and self.last_load_time >= float(timestamp):
+                logger.debug("Using cached config (no changes detected)")
                 return self.current_config
             
             config_data = await self.redis.get("config:data")
             if not config_data:
-                raise ConfigError("No configuration found in Redis")
+                logger.warning("No configuration found in Redis")
+                # Provide a minimal default config instead of raising an error
+                default_config = {
+                    "inference": {
+                        "endpoints": {},
+                        "tools": {
+                            "enabled": False,
+                            "inject_defaults": False
+                        }
+                    }
+                }
+                logger.debug("Using minimal default configuration")
+                self.current_config = default_config
+                return default_config
                 
+            logger.debug("Loading config from Redis")
             config = json.loads(config_data)
             config = self.process_config(config)
             
+            if "tools" in config.get("inference", {}):
+                tools_cfg = config["inference"]["tools"]
+                logger.debug(f"Tools config loaded - enabled: {tools_cfg.get('enabled')}, inject_defaults: {tools_cfg.get('inject_defaults')}")
+            
             self.current_config = config
             self.last_load_time = float(timestamp) if timestamp else time.time()
+            logger.debug("Successfully loaded config from Redis")
             return config
             
         except Exception as e:
+            logger.error(f"Failed to load config: {e}", exc_info=True)
             raise ConfigError(f"Failed to load config: {e}")
 
     async def check_for_updates(self) -> bool:

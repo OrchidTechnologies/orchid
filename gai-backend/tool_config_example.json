@@ -1,0 +1,184 @@
+{
+  "inference": {
+    "api_url": "https://api.example.com/v1",
+    "endpoints": {
+      "anthropic": {
+        "api_type": "anthropic",
+        "url": "https://api.anthropic.com/v1/messages",
+        "api_key": "YOUR_ANTHROPIC_API_KEY",
+        "models": [
+          {
+            "id": "claude-3-opus-20240229",
+            "display_name": "Claude 3 Opus",
+            "pricing": {
+              "type": "fixed",
+              "input_price": 15000,
+              "output_price": 75000
+            }
+          },
+          {
+            "id": "claude-3-sonnet-20240229",
+            "display_name": "Claude 3 Sonnet",
+            "pricing": {
+              "type": "fixed",
+              "input_price": 3000,
+              "output_price": 15000
+            }
+          }
+        ]
+      }
+    },
+    "tools": {
+      "enabled": true,
+      "inject_defaults": true,
+      "default_timeout_ms": 5000,
+      "refund_on_error": true,
+      "refund_on_timeout": true,
+      "mcp_servers": {
+        "exa-mcp": {
+          "command": "node",
+          "args": ["/opt/homebrew/lib/node_modules/exa-mcp-server/build/index.js"],
+          "env": {"EXA_API_KEY": "your-exa-api-key-here"}
+        },
+        "weather-mcp": {
+          "command": "node",
+          "args": ["/opt/homebrew/lib/node_modules/weather-mcp/index.js"],
+          "env": {"WEATHER_API_KEY": "your-weather-api-key-here"}
+        },
+        "database-mcp": {
+          "command": "python",
+          "args": ["-m", "database_mcp.server"],
+          "env": {"DB_CONNECTION_STRING": "postgresql://user:pass@localhost/db"}
+        }
+      },
+      "registry": {
+        "web_search": {
+          "enabled": true,
+          "type": "mcp",
+          "server": "exa-mcp",
+          "billing_type": "web_search",
+          "description": "Search the web for current information on a given query.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "The search query. Be specific and concise."
+              }
+            },
+            "required": ["query"]
+          }
+        },
+        "image_search": {
+          "enabled": true,
+          "type": "mcp",
+          "server": "exa-mcp",
+          "billing_type": "web_search",
+          "description": "Search for images online.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "The image search query."
+              },
+              "count": {
+                "type": "integer",
+                "description": "Number of images to return (max 10).",
+                "default": 3
+              }
+            },
+            "required": ["query"]
+          }
+        },
+        "unit_converter": {
+          "enabled": true,
+          "type": "python",
+          "module": "tool_unit_converter",
+          "billing_type": "function_call",
+          "description": "Convert values between different units of measurement. Supports length, mass, volume, temperature, area, and time conversions.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "number",
+                "description": "The numeric value to convert"
+              },
+              "from_unit": {
+                "type": "string",
+                "description": "The source unit (e.g., 'm', 'kg', 'c')"
+              },
+              "to_unit": {
+                "type": "string",
+                "description": "The target unit (e.g., 'ft', 'lb', 'f')"
+              },
+              "unit_type": {
+                "type": "string",
+                "description": "The type of conversion to perform",
+                "enum": ["length", "mass", "volume", "temperature", "area", "time"]
+              }
+            },
+            "required": ["value", "from_unit", "to_unit", "unit_type"]
+          }
+        },
+        "weather": {
+          "enabled": true,
+          "type": "mcp",
+          "server": "weather-mcp",
+          "billing_type": "api_call",
+          "description": "Get current weather conditions for a location.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "description": "City name or geographic coordinates."
+              },
+              "units": {
+                "type": "string",
+                "description": "Units of measurement (metric, imperial, standard).",
+                "enum": ["metric", "imperial", "standard"],
+                "default": "metric"
+              }
+            },
+            "required": ["location"]
+          }
+        },
+        "database_query": {
+          "enabled": true,
+          "type": "mcp",
+          "server": "database-mcp",
+          "billing_type": "data_query",
+          "description": "Query the application database (read-only).",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "SQL query to execute. SELECT statements only."
+              },
+              "limit": {
+                "type": "integer",
+                "description": "Maximum number of rows to return.",
+                "default": 100
+              }
+            },
+            "required": ["query"]
+          }
+        }
+      }
+    }
+  },
+  "billing": {
+    "prices": {
+      "invoice": 1.0,
+      "payment": 1.0,
+      "auth_token": 1.0,
+      "error": 1.0,
+      "function_call": 5.0,
+      "web_search": 10.0,
+      "api_call": 8.0,
+      "data_query": 15.0
+    }
+  }
+}

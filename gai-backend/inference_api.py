@@ -98,17 +98,23 @@ async def chat_completion(
 @app.get("/v1/models")
 async def list_openai_models():
     try:
+        logger.debug("Handling request to /v1/models")
         return await api.list_openai_models()
     except Exception as e:
+        logger.error(f"Error listing OpenAI models: {e}", exc_info=True)
         if isinstance(e, InferenceError):
             raise
-        raise HTTPException(status_code=500, detail=str(e))
+        # Return empty list instead of error
+        return {"data": []}
 
 @app.get("/v1/inference/models")
 async def list_inference_models():
     try:
+        logger.debug("Handling request to /v1/inference/models")
         return await api.list_models()
     except Exception as e:
+        logger.error(f"Error listing inference models: {e}", exc_info=True)
         if isinstance(e, InferenceError):
             raise
-        raise HTTPException(status_code=500, detail=str(e))
+        # Return empty dict instead of error
+        return {}

@@ -19,6 +19,8 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class ModelAdapter:
+    logger = logging.getLogger(__name__)
+    
     @staticmethod
     def parse_response(api_type: str, response: Dict[str, Any], model: str, request_id: str) -> ChatCompletion:
         if api_type in ('openai', 'openrouter'):
@@ -72,8 +74,8 @@ class ModelAdapter:
             system_fingerprint=response.get('system_fingerprint')
         )
 
-    @staticmethod
-    def prepare_anthropic_request(model_config: Dict[str, Any], api_key: str, request: ChatCompletionRequest) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    @classmethod
+    def prepare_anthropic_request(cls, model_config: Dict[str, Any], api_key: str, request: ChatCompletionRequest) -> Tuple[Dict[str, Any], Dict[str, str]]:
         headers = {
             "Content-Type": "application/json", 
             "x-api-key": api_key,
@@ -129,6 +131,7 @@ class ModelAdapter:
         # Handle tools
         tools = request.get_effective_tools()
         if tools:
+            cls.logger.debug(f"Including {len(tools)} tools in Anthropic request")
             data["tools"] = []
             for tool in tools:
                 tool_def = {
@@ -137,8 +140,9 @@ class ModelAdapter:
                     "input_schema": tool.function.parameters
                 }
                 data["tools"].append(tool_def)
-
-            # Handle tool choice
+            cls.logger.debug(f"Tools in Anthropic request: {json.dumps(data['tools'])}")
+            
+            # Handle tool choice - only when tools are present
             tool_choice = request.get_effective_tool_choice()
             if isinstance(tool_choice, str):
                 data["tool_choice"] = "none" if tool_choice == "none" else {"type": "auto"}
@@ -149,6 +153,8 @@ class ModelAdapter:
                 }
             else:
                 data["tool_choice"] = {"type": "auto"}
+        else:
+            cls.logger.debug("No tools to include in Anthropic request")
 
         # Copy other parameters
         if request.temperature is not None:
@@ -188,8 +194,8 @@ class ModelAdapter:
             )
         )
 
-    @staticmethod
-    def prepare_openai_request(model_config: Dict[str, Any], api_key: str, request: ChatCompletionRequest) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    @classmethod
+    def prepare_openai_request(cls, model_config: Dict[str, Any], api_key: str, request: ChatCompletionRequest) -> Tuple[Dict[str, Any], Dict[str, str]]:
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}"
@@ -197,6 +203,15 @@ class ModelAdapter:
 
         data = request.dict(exclude_none=True, exclude={'request_id'})
         data['model'] = model_config['id']
+        
+        # Log tools information
+        tools = request.get_effective_tools()
+        if tools:
+            cls.logger.debug(f"Including {len(tools)} tools in OpenAI request")
+            for tool in tools:
+                cls.logger.debug(f"Tool in OpenAI request: {tool.function.name}")
+        else:
+            cls.logger.debug("No tools to include in OpenAI request")
         
         return data, headers
         
