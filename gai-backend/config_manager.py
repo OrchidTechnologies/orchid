@@ -79,7 +79,11 @@ class ConfigManager:
            total_models = 0
            
            for endpoint_id, endpoint in endpoints.items():
-               required_fields = ['api_type', 'url', 'api_key', 'models']
+               required_fields = ['api_type', 'url', 'models']
+               # Check if api_key exists either in config or in environment
+               if 'api_key' not in endpoint and (not env_api_keys or endpoint_id not in env_api_keys):
+                   required_fields.append('api_key')
+               
                missing = [field for field in required_fields if field not in endpoint]
                if missing:
                    raise ConfigError(f"Endpoint {endpoint_id} missing required fields: {', '.join(missing)}")
