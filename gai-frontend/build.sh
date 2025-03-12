@@ -13,18 +13,24 @@ if [ "$MODE" = "test" ]; then
         echo "Error: ORCHID_GENAI_FRONTEND_PROVIDERS_TEST environment variable not set"
         exit 1
     fi
-    export PROVIDERS="$ORCHID_GENAI_FRONTEND_PROVIDERS_TEST"
+    export PROVIDERS=$(echo "$ORCHID_GENAI_FRONTEND_PROVIDERS_TEST" | tr -d '\n')
+elif [ "$MODE" = "local" ]; then
+    # Use a default local configuration with both inference and tool providers
+    # Note: For the Tool Node Protocol, endpoints should match your local server setup
+    # Convert multi-line JSON to a single line for the dart-define parameter
+    export PROVIDERS=$(echo "$ORCHID_GENAI_FRONTEND_PROVIDERS_LOCAL" | tr -d '\n')
+    echo "Using local development configuration with localhost endpoints"
 else
     if [ -z "$ORCHID_GENAI_FRONTEND_PROVIDERS_PROD" ]; then
         echo "Error: ORCHID_GENAI_FRONTEND_PROVIDERS_PROD environment variable not set"
         exit 1
     fi
-    export PROVIDERS="$ORCHID_GENAI_FRONTEND_PROVIDERS_PROD"
+    export PROVIDERS=$(echo "$ORCHID_GENAI_FRONTEND_PROVIDERS_PROD" | tr -d '\n')
 fi
 
-BUILD_CMD="flutter build web --dart-define=PROVIDERS='$PROVIDERS'"
-echo "Executing: $BUILD_CMD"
-eval "$BUILD_CMD"
+# Use an array to properly handle the arguments with quotes
+echo "Building with providers: $PROVIDERS"
+flutter build web --dart-define=PROVIDERS="$PROVIDERS"
 
 # Clean up
 unset PROVIDERS

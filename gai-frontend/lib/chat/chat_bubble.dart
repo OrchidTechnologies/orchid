@@ -20,8 +20,14 @@ class ChatBubble extends StatelessWidget {
     const double iconSpacing = 8.0;
     const double iconTotalWidth = iconSize + iconSpacing;
 
-    if (src == ChatMessageSource.system || src == ChatMessageSource.internal) {
+    if (src == ChatMessageSource.notice || src == ChatMessageSource.internal || src == ChatMessageSource.system) {
+      // Don't show internal messages unless in debug mode
       if (!debugMode && src == ChatMessageSource.internal) {
+        return Container();
+      }
+      
+      // System messages are for LLMs only, not for display
+      if (src == ChatMessageSource.system) {
         return Container();
       }
 

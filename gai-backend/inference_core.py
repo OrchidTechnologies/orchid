@@ -2,7 +2,7 @@ from redis.asyncio import Redis
 import json
 import requests
 import copy
-from typing import Dict, Any, Tuple, AsyncGenerator, Union
+from typing import Dict, Any, Tuple, AsyncGenerator, Union, List
 from datetime import datetime
 import subprocess
 from mcp import ClientSession, StdioServerParameters
@@ -20,7 +20,8 @@ from inference_models import (
     OpenAIModelList,
     Tool,
     ToolChoice,
-    FunctionDefinition
+    FunctionDefinition,
+    ToolDefinition
 )
 from inference_errors import (
     InferenceError,
@@ -290,6 +291,49 @@ class InferenceAPI:
                     self.tool_registry.register_mcp_session(server_id, session)
                     logger.info(f"Successfully connected and registered MCP server: {server_id}")
                     
+                    # Auto-register tools from MCP server
+                    # Get tools information for registration
+                    if hasattr(tools_response, 'tools'):
+                        from tool_registry import MCPTool
+                        for tool in tools_response.tools:
+                            if hasattr(tool, 'name') and hasattr(tool, 'description'):
+                                tool_name = tool.name
+                                # Create a config for the tool
+                                tool_config = {
+                                    "type": "mcp",
+                                    "server": server_id,
+                                    "billing_type": "mcp_tool",
+                                    "description": tool.description,
+                                    "parameters": tool.parameters if hasattr(tool, 'parameters') else {
+                                        "type": "object",
+                                        "properties": {},
+                                        "required": []
+                                    }
+                                }
+                                # Register the tool
+                                self.tool_registry.register_tool(MCPTool(tool_name, tool_config, session))
+                                logger.info(f"Auto-registered MCP tool: {tool_name} from server {server_id}")
+                    elif isinstance(tools_response, list):
+                        from tool_registry import MCPTool
+                        for tool in tools_response:
+                            if 'name' in tool:
+                                tool_name = tool['name']
+                                # Create a config for the tool
+                                tool_config = {
+                                    "type": "mcp",
+                                    "server": server_id,
+                                    "billing_type": "mcp_tool",
+                                    "description": tool.get('description', f"Execute the {tool_name} tool"),
+                                    "parameters": tool.get('parameters', {
+                                        "type": "object",
+                                        "properties": {},
+                                        "required": []
+                                    })
+                                }
+                                # Register the tool
+                                self.tool_registry.register_tool(MCPTool(tool_name, tool_config, session))
+                                logger.info(f"Auto-registered MCP tool: {tool_name} from server {server_id}")
+                    
                     # Store the exit stack for proper cleanup later
                     if not hasattr(self, '_mcp_stacks'):
                         self._mcp_stacks = {}
@@ -317,12 +361,51 @@ class InferenceAPI:
         if balance is None:
             raise AuthenticationError()
             
-        min_balance = await self.billing.min_balance()
-        if balance < min_balance:
-            raise InsufficientBalanceError()
+        # For tools-only configuration, don't require a minimum balance
+        # This fixes insufficient balance errors in tools endpoints
+        config = await self.config_manager.load_config()
+        tools_enabled = config.get('tools', {}).get('enabled', False) or config.get('inference', {}).get('tools', {}).get('enabled', False)
+        endpoints_exist = bool(config.get('inference', {}).get('endpoints'))
+        
+        # Only check minimum balance if not in tools-only mode
+        if not (tools_enabled and not endpoints_exist):
+            min_balance = await self.billing.min_balance()
+            if balance < min_balance:
+                raise InsufficientBalanceError()
 
     async def get_model_config(self, model_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
         config = await self.config_manager.load_config()
+        
+        # Check if we're in tools-only mode
+        tools_enabled = config.get('tools', {}).get('enabled', False) or config.get('inference', {}).get('tools', {}).get('enabled', False)
+        endpoints_exist = 'endpoints' in config.get('inference', {}) and bool(config.get('inference', {}).get('endpoints'))
+        
+        # In tools-only mode, return a dummy config instead of raising an error
+        if tools_enabled and not endpoints_exist:
+            # Create dummy configs that have the minimum required fields
+            endpoint_config = {
+                "api_type": "tools_only",
+                "url": config.get('api_url', ''),
+                "provider": "tools_only_provider"
+            }
+            model_config = {
+                "id": model_id,
+                "display_name": f"{model_id} (Tools Only)",
+                "pricing": {
+                    "type": "fixed",
+                    "input_price": 0.0001,
+                    "output_price": 0.0001
+                },
+                "params": {
+                    "max_tokens": 4096
+                }
+            }
+            return endpoint_config, model_config
+        
+        # Regular path for inference endpoints
+        if 'inference' not in config or 'endpoints' not in config['inference']:
+            raise ConfigurationError("No inference endpoints configured")
+            
         endpoints = config['inference']['endpoints']
         
         for endpoint_id, endpoint in endpoints.items():
@@ -383,6 +466,65 @@ class InferenceAPI:
     def query_backend(self, endpoint_config: Dict[str, Any], model_config: Dict[str, Any], 
                      request: ChatCompletionRequest) -> ChatCompletion:
         try:
+            # Check if we're in tools-only mode
+            if endpoint_config.get('api_type') == 'tools_only':
+                # In tools-only mode, we don't send to a real backend
+                # Instead, create a minimal response that will trigger tool execution
+                logger.info("Running in tools-only mode, creating synthetic response for tool execution")
+                
+                # Create a minimal completion that includes the first requested tool
+                import uuid
+                from inference_models import ChatCompletion, ChatChoice, Message, Usage, ToolCall, FunctionCall
+                
+                # Make sure we have tools
+                if not request.tools:
+                    raise ValidationError("Tools-only mode requires at least one tool in the request")
+                
+                # Find the first available tool
+                tool_choice = request.tool_choice
+                if tool_choice and isinstance(tool_choice, dict) and tool_choice.get('type') == 'function':
+                    # User specified which tool to use
+                    tool_name = tool_choice.get('function', {}).get('name')
+                else:
+                    # Default to first tool
+                    tool_name = request.tools[0].function.name
+                
+                # Create synthetic tool call
+                tool_calls = [
+                    ToolCall(
+                        id=f"call-{uuid.uuid4().hex[:8]}",
+                        type="function",
+                        function=FunctionCall(
+                            name=tool_name,
+                            arguments="{}"  # Empty arguments, tools-only mode expects arguments from client
+                        )
+                    )
+                ]
+                
+                return ChatCompletion(
+                    id=f"chatcmpl-{uuid.uuid4().hex[:10]}",
+                    object="chat.completion",
+                    created=int(time.time()),
+                    model=request.model,
+                    choices=[
+                        ChatChoice(
+                            index=0,
+                            message=Message(
+                                role="assistant",
+                                content=None,
+                                tool_calls=tool_calls
+                            ),
+                            finish_reason="tool_calls"
+                        )
+                    ],
+                    usage=Usage(
+                        prompt_tokens=10,
+                        completion_tokens=10,
+                        total_tokens=20
+                    )
+                )
+                
+            # Normal path - send to real backend
             data, headers = ModelAdapter.prepare_request(endpoint_config, model_config, request)
             
             # Log the prepared request data for debugging (redact API keys)
@@ -492,6 +634,264 @@ class InferenceAPI:
         except Exception as e:
             logger.error(f"Error fetching OpenAI models list: {e}", exc_info=True)
             return OpenAIModelList(data=[])  # Return empty list instead of failing
+            
+    async def list_tools(self) -> List[ToolDefinition]:
+        """List available tools for the Tool Node Protocol"""
+        try:
+            # Ensure tools are initialized
+            if not self.tools_initialized:
+                if self.tools_initialization_error:
+                    logger.warning(f"Tool initialization failed, returning limited tool set: {self.tools_initialization_error}")
+                else:
+                    logger.warning("Tools are still initializing, returning limited tool set")
+            
+            # Get current configuration to check for MCP servers
+            config = await self.config_manager.load_config()
+            tools_config = config.get('inference', {}).get('tools', {})
+            mcp_servers = tools_config.get('mcp_servers', {})
+            
+            # Collect all tool definitions
+            all_tool_definitions = []
+            
+            # If we have MCP servers configured, query them directly for tools
+            for server_id, server_config in mcp_servers.items():
+                try:
+                    # Get the MCP session for this server
+                    session = self.tool_registry.get_mcp_session(server_id)
+                    if not session:
+                        logger.warning(f"MCP server {server_id} has no active session, skipping tools")
+                        continue
+                    
+                    logger.info(f"Querying MCP server {server_id} for tools")
+                    
+                    # Query the server for its tool definitions
+                    from mcp_wrapper import MCPSession
+                    
+                    if isinstance(session, MCPSession):
+                        tools_response = await session.list_tools()
+                        
+                        # Process the tools response based on its format
+                        if hasattr(tools_response, 'tools'):
+                            # New style response (ToolsResponse object)
+                            tools_list = tools_response.tools
+                            logger.info(f"MCP server {server_id} returned {len(tools_list)} tools")
+                            
+                            for tool in tools_list:
+                                # Handle both attribute and dictionary style access
+                                if hasattr(tool, 'name') and hasattr(tool, 'description'):
+                                    # Create a server-specific namespaced name for the tool
+                                    namespaced_name = f"mcp__{server_id}__{tool.name}"
+                                    
+                                    # Create a ToolDefinition for this tool
+                                    # Get parameters and ensure they have the required format
+                                    tool_params = {}
+                                    if hasattr(tool, 'parameters'):
+                                        tool_params = tool.parameters
+                                        # Ensure required structure exists
+                                        if "type" not in tool_params:
+                                            tool_params["type"] = "object"
+                                        if "properties" not in tool_params:
+                                            tool_params["properties"] = {}
+                                        if "required" not in tool_params:
+                                            tool_params["required"] = []
+                                    else:
+                                        tool_params = {
+                                            "type": "object", 
+                                            "properties": {},
+                                            "required": []
+                                        }
+                                        
+                                    all_tool_definitions.append(
+                                        ToolDefinition(
+                                            name=namespaced_name,
+                                            description=tool.description,
+                                            parameters=tool_params
+                                        )
+                                    )
+                                    logger.debug(f"Added tool: {namespaced_name} from server {server_id} with parameters: {tool_params}")
+                                else:
+                                    # Dictionary style access
+                                    namespaced_name = f"mcp__{server_id}__{tool.get('name')}"
+                                    
+                                    # Get parameters and ensure they have the required format
+                                    # Check for both 'parameters' and 'inputSchema' fields (different MCP server versions use different names)
+                                    tool_params = tool.get('parameters') or tool.get('inputSchema', {})
+                                    if not tool_params:
+                                        tool_params = {
+                                            "type": "object", 
+                                            "properties": {},
+                                            "required": []
+                                        }
+                                    elif "type" not in tool_params:
+                                        tool_params["type"] = "object"
+                                    if "properties" not in tool_params:
+                                        tool_params["properties"] = {}
+                                    if "required" not in tool_params:
+                                        tool_params["required"] = []
+                                    
+                                    all_tool_definitions.append(
+                                        ToolDefinition(
+                                            name=namespaced_name,
+                                            description=tool.get('description', ''),
+                                            parameters=tool_params
+                                        )
+                                    )
+                                    logger.debug(f"Added tool: {namespaced_name} from server {server_id} with parameters: {tool_params}")
+                        
+                        elif isinstance(tools_response, list):
+                            # Old style response (list of dictionaries)
+                            logger.info(f"MCP server {server_id} returned {len(tools_response)} tools (list format)")
+                            
+                            for tool in tools_response:
+                                namespaced_name = f"mcp__{server_id}__{tool.get('name')}"
+                                
+                                # Get parameters and ensure they have the required format
+                                tool_params = tool.get('parameters', {})
+                                if not tool_params:
+                                    tool_params = {
+                                        "type": "object", 
+                                        "properties": {},
+                                        "required": []
+                                    }
+                                elif "type" not in tool_params:
+                                    tool_params["type"] = "object"
+                                if "properties" not in tool_params:
+                                    tool_params["properties"] = {}
+                                if "required" not in tool_params:
+                                    tool_params["required"] = []
+                                
+                                all_tool_definitions.append(
+                                    ToolDefinition(
+                                        name=namespaced_name,
+                                        description=tool.get('description', ''),
+                                        parameters=tool_params
+                                    )
+                                )
+                                logger.debug(f"Added tool: {namespaced_name} from server {server_id} with parameters: {tool_params}")
+                    
+                    elif hasattr(session, 'tools') and hasattr(session.tools, 'list'):
+                        # Standard MCP ClientSession
+                        tools_response = await session.tools.list()
+                        
+                        if hasattr(tools_response, 'tools'):
+                            logger.info(f"MCP server {server_id} returned {len(tools_response.tools)} tools")
+                            
+                            for tool in tools_response.tools:
+                                namespaced_name = f"mcp__{server_id}__{tool.name}"
+                                # Get parameters and ensure they have the required format
+                                tool_params = {}
+                                if hasattr(tool, 'parameters'):
+                                    tool_params = tool.parameters
+                                    # Ensure required structure exists
+                                    if "type" not in tool_params:
+                                        tool_params["type"] = "object"
+                                    if "properties" not in tool_params:
+                                        tool_params["properties"] = {}
+                                    if "required" not in tool_params:
+                                        tool_params["required"] = []
+                                else:
+                                    tool_params = {
+                                        "type": "object", 
+                                        "properties": {},
+                                        "required": []
+                                    }
+                                    
+                                all_tool_definitions.append(
+                                    ToolDefinition(
+                                        name=namespaced_name,
+                                        description=tool.description,
+                                        parameters=tool_params
+                                    )
+                                )
+                                logger.debug(f"Added tool: {namespaced_name} from server {server_id} with parameters: {tool_params}")
+                    
+                    else:
+                        logger.warning(f"Unknown session type for server {server_id}, cannot query tools")
+                
+                except Exception as e:
+                    logger.error(f"Error querying tools from MCP server {server_id}: {str(e)}", exc_info=True)
+            
+            # Get all registered tools from the registry (this will include both Python tools and
+            # any MCP tools that were registered through configuration)
+            registry_tool_names = self.tool_registry.list_tools()
+            logger.info(f"Registry has {len(registry_tool_names)} registered tools")
+            
+            # Convert registry tools to ToolDefinition format
+            registry_tool_definitions = []
+            for tool_name in registry_tool_names:
+                # Get the actual tool object
+                tool = self.tool_registry.get_tool(tool_name)
+                if not tool or not tool.is_available:
+                    continue
+                    
+                tool_def = tool.get_definition()
+                
+                # Get parameters and ensure they have the required format
+                tool_params = tool_def.parameters
+                # Ensure required structure exists
+                if not tool_params:
+                    tool_params = {
+                        "type": "object", 
+                        "properties": {},
+                        "required": []
+                    }
+                elif "type" not in tool_params:
+                    tool_params["type"] = "object"
+                if "properties" not in tool_params:
+                    tool_params["properties"] = {}
+                if "required" not in tool_params:
+                    tool_params["required"] = []
+                
+                # Create a ToolDefinition using the schema from the spec
+                registry_tool_definitions.append(
+                    ToolDefinition(
+                        name=tool_def.name,
+                        description=tool_def.description,
+                        parameters=tool_params
+                    )
+                )
+                logger.debug(f"Added registry tool: {tool_def.name} with parameters: {tool_params}")
+            
+            # Combine direct MCP server tools with registry tools
+            # (ensuring we don't have duplicates by checking names)
+            registered_names = {tool.name for tool in registry_tool_definitions}
+            mcp_tools = [tool for tool in all_tool_definitions if tool.name not in registered_names]
+            
+            # Combine both sources of tools
+            combined_tools = registry_tool_definitions + mcp_tools
+            logger.info(f"Total combined tools: {len(combined_tools)} (Registry: {len(registry_tool_definitions)}, Direct MCP: {len(mcp_tools)})")
+            
+            return combined_tools
+        except Exception as e:
+            logger.error(f"Error listing tools: {str(e)}", exc_info=True)
+            raise ConfigurationError(f"Failed to list tools: {str(e)}")
+
+    async def execute_tool(self, tool_name: str, arguments: Dict[str, Any], session_id: str) -> str:
+        """Execute a tool with the given arguments"""
+        try:
+            # Validate the session
+            await self.validate_session(session_id)
+            
+            # Generate a tool call ID
+            import uuid
+            tool_call_id = f"call_{uuid.uuid4().hex[:12]}"
+            
+            # Execute the tool with billing via the tool executor
+            tool_result = await self.tool_executor.execute_tool_with_billing(
+                session_id=session_id,
+                tool_call_id=tool_call_id,
+                tool_name=tool_name,
+                arguments=arguments
+            )
+            
+            # Return the tool result as a string
+            return tool_result
+        except Exception as e:
+            logger.error(f"Error executing tool {tool_name}: {str(e)}", exc_info=True)
+            # Ensure we maintain our error hierarchy
+            if isinstance(e, InferenceError):
+                raise
+            raise BackendServiceError(f"Failed to execute tool: {str(e)}")
 
     async def create_stream_chunks(self, completion: ChatCompletion) -> AsyncGenerator[str, None]:
         first_chunk = ChatCompletionChunk(
@@ -583,12 +983,38 @@ class InferenceAPI:
             retry_count = 0
             retry_delay = 0.5  # seconds
             
+            # First check if we're in tools-only mode
+            config = await self.config_manager.load_config()
+            tools_enabled = config.get('tools', {}).get('enabled', False) or config.get('inference', {}).get('tools', {}).get('enabled', False)
+            endpoints_exist = bool(config.get('inference', {}).get('endpoints'))
+            tools_only_mode = tools_enabled and not endpoints_exist
+            
+            # Special error handling for tools-only mode
+            if tools_only_mode and request.tools is None:
+                logger.warning(f"Running in tools-only mode but no tools specified in request")
+                from inference_errors import ValidationError
+                raise ValidationError("Must specify at least one tool when using tools-only mode")
+            
             while retry_count <= max_retries:
                 try:
                     logger.debug(f"Starting inference handling for session {session_id}")
                     if retry_count > 0:
                         logger.info(f"Retry attempt {retry_count} for request {request.request_id}")
-                    endpoint_config, model_config = await self.get_model_config(request.model)
+                    
+                    # Only try to get model config if not in tools-only mode
+                    if not tools_only_mode:
+                        endpoint_config, model_config = await self.get_model_config(request.model)
+                    else:
+                        # In tools-only mode, we don't need real endpoint/model configs
+                        # Create minimal configs with required fields
+                        endpoint_config = {
+                            "api_type": "tools_only",
+                            "url": config.get('api_url', '')
+                        }
+                        model_config = {
+                            "id": request.model,
+                            "pricing": config.get('billing', {}).get('prices', {})
+                        }
 
                     # Inject tools if configured and no tools are specified
                     config = await self.config_manager.load_config()
@@ -600,7 +1026,29 @@ class InferenceAPI:
                     
                     # Check if the request already has tools
                     if request.tools:
-                        logger.debug(f"Request already has {len(request.tools)} tools defined, not injecting")
+                        # If we're in tools-only mode, verify that the tools are actually available
+                        if tools_only_mode:
+                            tool_names = [tool.function.name for tool in request.tools]
+                            logger.debug(f"Tools-only mode with specified tools: {tool_names}")
+                            
+                            # Validate that at least one of the requested tools is available
+                            available_tool_names = self.tool_registry.list_tools()
+                            
+                            # Check if any requested tools are available
+                            available_requested_tools = [name for name in tool_names if name in available_tool_names]
+                            if not available_requested_tools:
+                                logger.warning(f"None of the requested tools {tool_names} are available in tools-only mode")
+                                logger.warning(f"Available tools: {available_tool_names}")
+                                # Generate helpful error message
+                                if not available_tool_names:
+                                    error_msg = "No tools are available on this server"
+                                else:
+                                    error_msg = f"Requested tools not available. Available tools: {', '.join(available_tool_names)}"
+                                raise ValidationError(error_msg)
+                            
+                            logger.debug(f"Available requested tools: {available_requested_tools}")
+                        else:
+                            logger.debug(f"Request already has {len(request.tools)} tools defined, not injecting")
                     elif tools_enabled and inject_defaults:
                         # Check if tools are initialized
                         if not self.tools_initialized:
@@ -670,8 +1118,50 @@ class InferenceAPI:
                     # Get initial completion which may include tool calls
                     initial_completion = self.query_backend(endpoint_config, model_config, request)
                     
-                    # Check if the response includes tool calls
-                    if initial_completion.choices and initial_completion.choices[0].message.tool_calls:
+                    # Check if this is a tool that was injected by the server 
+                    # and should be handled server-side
+
+                    # Get server-injected tools
+                    tools_config = config.get('inference', {}).get('tools', {})
+                    tools_enabled = tools_config.get('enabled', False)
+                    injected_tools = []
+
+                    if tools_enabled:
+                        injected_tools = self.tool_registry.list_tools() 
+                        logger.debug(f"Server has injected tools: {injected_tools}")
+
+                    # Check if the tool call is for a server-injected tool
+                    server_should_handle_tools = False
+                    if (initial_completion.choices and 
+                        initial_completion.choices[0].message.tool_calls):
+                        
+                        # Check each tool call to see if it's a server-injected tool
+                        tool_calls = initial_completion.choices[0].message.tool_calls
+                        server_tool_calls = []
+                        client_tool_calls = []
+                        
+                        for tc in tool_calls:
+                            if tc["type"] == "function":
+                                tool_name = tc["function"]["name"]
+                                if tools_enabled and tool_name in injected_tools:
+                                    server_tool_calls.append(tc)
+                                    logger.debug(f"Tool {tool_name} will be handled by server")
+                                else:
+                                    client_tool_calls.append(tc)
+                                    logger.debug(f"Tool {tool_name} will be handled by client")
+                                    
+                        # Server should handle tools if there are any server tool calls
+                        server_should_handle_tools = len(server_tool_calls) > 0
+                        
+                        # If all tools are client-side, skip server processing
+                        if len(client_tool_calls) > 0 and len(server_tool_calls) == 0:
+                            logger.info(f"All tool calls are for client-side tools, skipping server processing")
+                            server_should_handle_tools = False
+                    
+                    # Check if the response includes server-side tool calls
+                    if (initial_completion.choices and 
+                        initial_completion.choices[0].message.tool_calls and 
+                        server_should_handle_tools):
                         # Save the initial content from the model (may be None)
                         initial_content = initial_completion.choices[0].message.content
                         accumulated_content = [] if initial_content is None else [initial_content]

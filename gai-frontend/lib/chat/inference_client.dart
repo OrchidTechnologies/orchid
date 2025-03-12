@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'provider_manager.dart'; // For ProviderManager.instance
 
 class InferenceError implements Exception {
   final int statusCode;
@@ -57,44 +58,94 @@ class ModelInfo {
   }
 }
 
-class InferenceResponse {
-  final String response;
+class ChatCompletionResponse {
+  final String id;
+  final String object;
+  final int created;
+  final String model;
+  final List<ChatCompletionChoice> choices;
   final TokenUsage usage;
 
-  InferenceResponse({
-    required this.response,
+  ChatCompletionResponse({
+    required this.id,
+    required this.object,
+    required this.created,
+    required this.model,
+    required this.choices,
     required this.usage,
   });
 
-  factory InferenceResponse.fromJson(Map<String, dynamic> json) {
-    return InferenceResponse(
-      response: json['response'],
+  factory ChatCompletionResponse.fromJson(Map<String, dynamic> json) {
+    return ChatCompletionResponse(
+      id: json['id'],
+      object: json['object'],
+      created: json['created'],
+      model: json['model'],
+      choices: (json['choices'] as List)
+          .map((x) => ChatCompletionChoice.fromJson(x))
+          .toList(),
       usage: TokenUsage.fromJson(json['usage']),
     );
   }
+}
 
-  Map<String, dynamic> toMetadata() => {
-    'usage': usage.toJson(),
-  };
+class ChatCompletionChoice {
+  final int index;
+  final Map<String, dynamic> message;
+  final String? finishReason;
+
+  ChatCompletionChoice({
+    required this.index,
+    required this.message,
+    this.finishReason,
+  });
+
+  factory ChatCompletionChoice.fromJson(Map<String, dynamic> json) {
+    return ChatCompletionChoice(
+      index: json['index'],
+      message: json['message'],
+      finishReason: json['finish_reason'],
+    );
+  }
 }
 
 class InferenceClient {
   final String baseUrl;
   String? _authToken;
   
-  // Add getter for auth token
+  // HTTP client to handle requests, made non-final for cancellation
+  http.Client _httpClient = http.Client();
+  
   String? get authToken => _authToken;
   
   InferenceClient({required String baseUrl}) 
     : baseUrl = _normalizeBaseUrl(baseUrl);
+    
+  // Cancel ongoing requests by closing and recreating the HTTP client
+  void cancelRequests() {
+    print('InferenceClient: Cancelling ongoing requests');
+    try {
+      // Close the current client which cancels all ongoing requests
+      _httpClient.close();
+      
+      // Create a new client for future requests
+      _httpClient = http.Client();
+      print('InferenceClient: Created new HTTP client');
+    } catch (e) {
+      print('Error cancelling inference requests: $e');
+    }
+  }
   
   static String _normalizeBaseUrl(String url) {
+    // Remove trailing slash if present
     if (url.endsWith('/')) {
       url = url.substring(0, url.length - 1);
     }
     
-    if (url.endsWith('/v1/inference')) {
-      url = url.substring(0, url.length - '/v1/inference'.length);
+    // Remove any v1/inference suffix as we'll add the correct paths for each endpoint
+    final v1Suffix = '/v1/inference';
+    if (url.endsWith(v1Suffix)) {
+      url = url.substring(0, url.length - v1Suffix.length);
     }
     
     return url;
@@ -109,7 +160,7 @@ class InferenceClient {
       throw InferenceError(401, 'No auth token');
     }
     
-    final response = await http.get(
+    final response = await _httpClient.get(
       Uri.parse('$baseUrl/v1/inference/models'),
       headers: {'Authorization': 'Bearer $_authToken'},
     );
@@ -125,10 +176,7 @@ class InferenceClient {
     ));
   }
 
-  // Simple token estimation
   int _estimateTokenCount(String text) {
-    // Average English word is ~4 characters + space
-    // Average token is ~4 characters
     return (text.length / 4).ceil();
   }
 
@@ -136,6 +184,7 @@ class InferenceClient {
     required List<Map<String, dynamic>> messages,
     String? model,
     Map<String, Object>? params,
+    List<Map<String, dynamic>>? tools,
   }) async {
     if (_authToken == null) {
       throw InferenceError(401, 'No auth token');
@@ -146,36 +195,42 @@ class InferenceClient {
     }
 
     final estimatedTokens = messages.fold<int>(
-      0, (sum, msg) => sum + _estimateTokenCount(msg['content'] as String)
+      0, (sum, msg) => sum + _estimateTokenCount(msg['content'] as String? ?? "")
     );
     
     final Map<String, Object> payload = {
       'messages': messages,
+      'model': model ?? 'gpt-3.5-turbo',
       'estimated_prompt_tokens': estimatedTokens,
     };
     
-    if (model != null) {
-      payload['model'] = model;
+      // Add tools if provided - IMPORTANT: Keep tool definitions clean
+    // We want to provide the raw tool definitions to the inference API
+    // and let the backend handle routing
+    if (tools != null && tools.isNotEmpty) {
+      // Simply add the tools to the payload without modifying them
+      // Tool routing information should be provided separately in params
+      payload['tools'] = tools;
+      
+      // Enable tool routing flag if not already set
+      if (params == null || !params.containsKey('route_tool_calls')) {
+        payload['route_tool_calls'] = true;
+      }
     }
     
+    // Add other parameters - these should include tool provider routing info if needed
     if (params != null) {
       payload.addAll(params);
     }
-    
-    print('InferenceClient: Preparing request to $baseUrl/v1/inference');
-    print('Payload: ${const JsonEncoder.withIndent('  ').convert(payload)}');
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/v1/inference'),
+    final response = await _httpClient.post(
+      Uri.parse('$baseUrl/v1/chat/completions'),
       headers: {
         'Authorization': 'Bearer $_authToken',
         'Content-Type': 'application/json',
       },
       body: json.encode(payload),
     );
-
-    print('InferenceClient: Received response status ${response.statusCode}');
-    print('Response body: ${response.body}');
 
     if (response.statusCode == 402) {
       throw InferenceError(402, 'Insufficient balance');
@@ -185,14 +240,27 @@ class InferenceClient {
       throw InferenceError(response.statusCode, response.body);
     }
     
-    final inferenceResponse = InferenceResponse.fromJson(
-      json.decode(response.body)
-    );
+    // Parse the response with tool calls if present
+    final responseBody = json.decode(response.body);
+    final completionResponse = ChatCompletionResponse.fromJson(responseBody);
     
+    // Extract any tool calls for processing
+    Map<String, dynamic> toolCalls = {};
+    try {
+      if (completionResponse.choices.isNotEmpty &&
+          completionResponse.choices[0].message.containsKey('tool_calls')) {
+        toolCalls = {'tool_calls': completionResponse.choices[0].message['tool_calls']};
+      }
+    } catch (e) {
+      print('Error extracting tool calls: $e');
+    }
+    
+    // Convert to the format expected by the existing code
     return {
-      'response': inferenceResponse.response,
-      'usage': inferenceResponse.usage.toJson(),
+      'response': completionResponse.choices[0].message['content'],
+      'usage': completionResponse.usage.toJson(),
       'estimated_prompt_tokens': estimatedTokens,
+      ...toolCalls, // Include tool calls if present
     };
   }
 }

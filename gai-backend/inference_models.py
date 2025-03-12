@@ -22,6 +22,26 @@ class ToolFunction(BaseModel):
 class Tool(BaseModel):
     type: Literal["function"] = "function"
     function: FunctionDefinition
+    
+# Models for the Tool Node Protocol
+class ToolDefinition(BaseModel):
+    name: str = Field(..., description="The name of the tool")
+    description: Optional[str] = Field(None, description="A description of what the tool does")
+    parameters: Dict[str, Any] = Field(..., description="The parameters schema the tool accepts")
+    
+class ListToolsResponse(BaseModel):
+    tools: List[ToolDefinition] = Field(..., description="List of available tools")
+    
+class ToolCallRequest(BaseModel):
+    name: str = Field(..., description="The name of the tool to call")
+    arguments: Dict[str, Any] = Field(..., description="The arguments to pass to the tool")
+    
+class ContentItem(BaseModel):
+    type: Literal["text"] = "text"
+    text: str
+    
+class ToolCallResponse(BaseModel):
+    content: List[ContentItem]
 
 class ToolChoice(BaseModel):
     type: Literal["none", "auto", "function"] = "auto"
@@ -130,7 +150,7 @@ class ChatCompletionChunk(BaseModel):
 class ModelInfo(BaseModel):
     id: str
     name: str
-    api_type: Literal["openai", "anthropic", "openrouter"]
+    api_type: Literal["openai", "anthropic", "openrouter", "tools_only"]
     endpoint: str
 
 class OpenAIModel(BaseModel):

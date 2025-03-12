@@ -207,6 +207,16 @@ class MCPSession:
                     
                 if "result" in response_data and "tools" in response_data["result"]:
                     tools = response_data["result"]["tools"]
+                    
+                    # Log the full tool definitions in debug mode
+                    logger.debug(f"Raw tool definitions: {json.dumps(tools)}")
+                    
+                    # Check for inputSchema field which some servers use instead of parameters
+                    for tool in tools:
+                        if 'inputSchema' in tool and 'parameters' not in tool:
+                            tool['parameters'] = tool['inputSchema']
+                            logger.debug(f"Mapped inputSchema to parameters for tool {tool.get('name')}")
+                    
                     tool_names = [tool.get('name', 'unnamed') for tool in tools]
                     logger.info(f"Found {len(tools)} tools: {tool_names}")
                     
@@ -224,6 +234,28 @@ class MCPSession:
                             name=tool.get('name', 'unnamed'),
                             description=tool.get('description', '')
                         )
+                        # Store the parameters schema, checking both 'parameters' and 'inputSchema' fields
+                        # MCP v1 uses 'parameters', but some tools use 'inputSchema' instead
+                        tool_params = tool.get('parameters') or tool.get('inputSchema', {})
+                        
+                        # Ensure required parameters data exists in the right format
+                        if not tool_params:
+                            tool_params = {
+                                "type": "object",
+                                "properties": {},
+                                "required": []
+                            }
+                        elif "type" not in tool_params:
+                            tool_params["type"] = "object"
+                        if "properties" not in tool_params:
+                            tool_params["properties"] = {}
+                        if "required" not in tool_params:
+                            tool_params["required"] = []
+                        
+                        logger.debug(f"Tool {tool.get('name')} parameters: {tool_params}")
+                        # Store parameters in the object
+                        tool_obj.parameters = tool_params
+                        logger.debug(f"Tool {tool_obj.name} parameters: {tool_params}")
                         tool_objects.append(tool_obj)
                     
                     # We return this for tool_registry compatibility

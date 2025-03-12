@@ -60,6 +60,9 @@ class ModelManager extends ChangeNotifier {
     return models;
   }
 
+  // Set debug mode for additional logging
+  bool debugMode = true;
+
   Future<void> fetchModelsForProvider(
       String providerId,
       dynamic client,

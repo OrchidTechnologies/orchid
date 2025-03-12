@@ -28,15 +28,53 @@ class ToolExecutor:
         
     async def get_tool_price(self, tool_name: str) -> float:
         """Get the price for executing a tool."""
+        # Check if this is a registered tool first
         tool = self.registry.get_tool(tool_name)
+        
+        # Special handling for dynamically discovered MCP tools (not in registry)
+        if not tool and tool_name.startswith("mcp__"):
+            # For dynamically discovered tools, use default pricing
+            billing_prices = self.config.get('billing', {}).get('prices', {})
+            
+            # Use the 'mcp_tool' billing type if exists, otherwise fallback to 'function_call'
+            default_billing_type = 'mcp_tool'
+            if default_billing_type not in billing_prices:
+                default_billing_type = 'function_call'
+                
+            # Get price from billing config
+            price = billing_prices.get(default_billing_type, 0.0)
+            
+            # For tools-only mode, reduce price to avoid balance issues
+            tools_enabled = self.config.get('tools', {}).get('enabled', False) or self.config.get('inference', {}).get('tools', {}).get('enabled', False)
+            endpoints_exist = bool(self.config.get('inference', {}).get('endpoints'))
+            
+            if tools_enabled and not endpoints_exist:
+                # In tools-only mode, use minimal pricing to avoid balance issues
+                price = min(price, 0.0001)
+                
+            logger.info(f"Using default price {price} for dynamically discovered tool: {tool_name}")
+            return price
+        
+        # No tool found in registry or dynamic discovery
         if not tool:
+            logger.warning(f"No tool found for pricing: {tool_name}, using zero price")
             return 0.0
             
+        # For registered tools, get pricing from tool config
         billing_type = tool.config.get('billing_type', 'function_call')
         billing_prices = self.config.get('billing', {}).get('prices', {})
         
         # Get price from billing config
         price = billing_prices.get(billing_type, 0.0)
+        
+        # For tools-only mode, reduce price to avoid balance issues
+        tools_enabled = self.config.get('tools', {}).get('enabled', False) or self.config.get('inference', {}).get('tools', {}).get('enabled', False)
+        endpoints_exist = bool(self.config.get('inference', {}).get('endpoints'))
+        
+        if tools_enabled and not endpoints_exist:
+            # In tools-only mode, use minimal pricing to avoid balance issues
+            price = min(price, 0.0001)
+            
         return price
         
     async def execute_tool_with_billing(
@@ -71,17 +109,9 @@ class ToolExecutor:
             'request_id': context.get('request_id', str(uuid.uuid4()))
         })
         
-        # Get the tool (either by namespaced name or by original name)
-        tool = self.registry.get_tool(tool_name)
-        if not tool:
-            # Try lookup by original name for backward compatibility
-            original_name_matches = [t for t in self.registry._tools.values() 
-                                    if getattr(t, 'original_name', None) == tool_name]
-            if original_name_matches:
-                tool = original_name_matches[0]
-                logger.info(f"Found tool by original name {tool_name}, using namespaced name {tool.name}")
-                tool_name = tool.name
-            
+        # For dynamically discovered tools, we don't need to try to get the tool here
+        # since it will be dynamically created during execution
+        
         # Calculate and pre-authorize the cost
         price = await self.get_tool_price(tool_name)
         
@@ -99,7 +129,10 @@ class ToolExecutor:
             return result
             
         except asyncio.TimeoutError:
+            # Get tool for display name if it exists
+            tool = self.registry.get_tool(tool_name)
             display_name = tool.display_name if tool else tool_name
+            
             logger.error(f"Tool execution timed out: {display_name}")
             # Refund on timeout if configured
             if price > 0 and self.config.get('inference', {}).get('tools', {}).get('refund_on_timeout', True):
@@ -108,7 +141,10 @@ class ToolExecutor:
             return "Error: Tool execution timed out"
             
         except ToolExecutionError as e:
+            # Get tool for display name if it exists
+            tool = self.registry.get_tool(tool_name)
             display_name = tool.display_name if tool else tool_name
+            
             logger.error(f"Tool execution error for {display_name}: {e}")
             # Refund on error if configured
             if price > 0 and self.config.get('inference', {}).get('tools', {}).get('refund_on_error', True):
@@ -117,7 +153,10 @@ class ToolExecutor:
             return f"Error: {str(e)}"
             
         except Exception as e:
+            # Get tool for display name if it exists
+            tool = self.registry.get_tool(tool_name)
             display_name = tool.display_name if tool else tool_name
+            
             logger.error(f"Unexpected error in tool execution for {display_name}: {e}")
             # Refund on error if configured
             if price > 0 and self.config.get('inference', {}).get('tools', {}).get('refund_on_error', True):

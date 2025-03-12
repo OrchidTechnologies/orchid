@@ -26,7 +26,7 @@ class ModelInfo {
   }
 
   // Format chat messages for this model.
-  List<Map<String, String>> formatMessages(List<ChatMessage> messages) {
+  List<Map<String, dynamic>> formatMessages(List<ChatMessage> messages) {
     return ModelAPI.formatMessages(messages, id);
   }
 

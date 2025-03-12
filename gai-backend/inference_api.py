@@ -1,13 +1,21 @@
 import os
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from redis.asyncio import Redis
 from contextlib import asynccontextmanager
 import uuid
 
-from inference_models import ChatCompletionRequest
+from inference_models import (
+    ChatCompletionRequest, 
+    ListToolsResponse,
+    ToolCallRequest, 
+    ToolCallResponse, 
+    ToolDefinition,
+    ContentItem
+)
 from inference_errors import InferenceError
 from inference_core import InferenceAPI
 from inference_logging import configure_logging
@@ -49,14 +57,17 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.add_exception_handler(InferenceError, inference_error_handler)
 
-redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+redis_url = os.environ.get('ORCHID_GENAI_REDIS_URL', os.environ.get('REDIS_URL', 'redis://localhost:6379'))
 redis = Redis.from_url(redis_url, decode_responses=True)
 api = InferenceAPI(redis)
+
+security = HTTPBearer()
 
 @app.post("/v1/chat/completions")
 async def chat_completion(
@@ -118,3 +129,64 @@ async def list_inference_models():
             raise
         # Return empty dict instead of error
         return {}
+        
+@app.post("/v1/tools/list")
+@app.options("/v1/tools/list")
+async def list_tools(
+    request: Request, 
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    # Handle OPTIONS request for CORS preflight
+    if request.method == "OPTIONS":
+        return {}
+    try:
+        logger.info("Processing tools list request")
+        session_id = credentials.credentials
+        await api.validate_session(session_id)
+        
+        # Get available tools from registry
+        tool_definitions = await api.list_tools()
+        
+        # Debug output to see what's happening with tool parameters
+        for tool in tool_definitions:
+            logger.debug(f"Tool {tool.name} parameters: {tool.parameters}")
+        
+        # Format the response according to the spec
+        response = ListToolsResponse(tools=tool_definitions)
+        return response
+    except Exception as e:
+        logger.error(f"Error listing tools: {str(e)}", exc_info=True)
+        if isinstance(e, InferenceError):
+            raise
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/v1/tools/call")
+@app.options("/v1/tools/call")
+async def call_tool(
+    request: Request,
+    tool_request: ToolCallRequest = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    # Handle OPTIONS request for CORS preflight
+    if request.method == "OPTIONS":
+        return {}
+    try:
+        if tool_request is None:
+            raise HTTPException(status_code=400, detail="Missing tool request body")
+        
+        logger.info(f"Processing tool call request for tool: {tool_request.name}")
+        session_id = credentials.credentials
+        await api.validate_session(session_id)
+        
+        # Execute the tool with billing
+        result = await api.execute_tool(tool_request.name, tool_request.arguments, session_id)
+        
+        # Format the response according to the spec
+        content_item = ContentItem(type="text", text=result)
+        response = ToolCallResponse(content=[content_item])
+        return response
+    except Exception as e:
+        logger.error(f"Error executing tool {tool_request.name}: {str(e)}", exc_info=True)
+        if isinstance(e, InferenceError):
+            raise
+        raise HTTPException(status_code=500, detail=str(e))

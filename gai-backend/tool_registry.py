@@ -356,8 +356,8 @@ class ToolRegistry:
                                                 # Find tools in server but not in registry
                                                 unknown_tools = set(tool_names) - set(registry_tools)
                                                 if unknown_tools:
-                                                    logger.error(f"MCP server {server} has tools not defined in registry: {unknown_tools}")
-                                                    logger.error(f"Please update Redis config to add these tools")
+                                                    logger.info(f"MCP server {server} has tools not defined in registry: {unknown_tools}")
+                                                    logger.info(f"These tools will be dynamically created when needed")
                                                 
                                                 tool_listing_success = True
                                             elif isinstance(tools_response, list) and len(tools_response) > 0:
@@ -376,7 +376,8 @@ class ToolRegistry:
                                                 
                                                 unknown_tools = set(tool_names) - set(registry_tools)
                                                 if unknown_tools:
-                                                    logger.error(f"MCP server {server} has tools not defined in registry: {unknown_tools}")
+                                                    logger.info(f"MCP server {server} has tools not defined in registry: {unknown_tools}")
+                                                    logger.info(f"These tools will be dynamically created when needed")
                                                 
                                                 tool_listing_success = True
                                             else:
@@ -434,16 +435,58 @@ class ToolRegistry:
                            context: Dict[str, Any]) -> str:
         """Execute a tool by name"""
         tool = self.get_tool(name)
+        
+        # If tool not found in registry, check if it's a direct MCP tool
         if not tool:
             # Try lookup by original name for backward compatibility
             original_name_matches = [t for t in self._tools.values() 
-                                      if getattr(t, 'original_name', None) == name]
+                                    if getattr(t, 'original_name', None) == name]
             if original_name_matches:
                 tool = original_name_matches[0]
                 logger.info(f"Found tool by original name {name}, mapped to namespaced name {tool.name}")
+            # If not found in registry, check if it's an MCP server tool by parsing namespaced name
+            elif name.startswith("mcp__"):
+                # Format is "mcp__<server_id>__<tool_name>"
+                parts = name.split("__", 2)
+                if len(parts) == 3:
+                    server_id = parts[1]
+                    original_tool_name = parts[2]
+                    
+                    # Get the MCP session
+                    session = self.get_mcp_session(server_id)
+                    if session:
+                        logger.info(f"Found MCP session for server {server_id}, creating dynamic tool for {original_tool_name}")
+                        
+                        # Create a temporary MCPTool instance for execution
+                        # First try to fetch tool parameters from server
+                        tool_params = {}
+                        try:
+                            # Use our wrapper to list tools from this server
+                            from mcp_wrapper import MCPSession
+                            if isinstance(session, MCPSession):
+                                tools_response = await session.list_tools()
+                                if tools_response and hasattr(tools_response, "tools"):
+                                    for t in tools_response.tools:
+                                        if t.name == original_tool_name and hasattr(t, "parameters"):
+                                            logger.info(f"Found parameters for tool {original_tool_name}")
+                                            tool_params = t.parameters
+                                            break
+                        except Exception as e:
+                            logger.warning(f"Error fetching parameters for tool {original_tool_name}: {e}")
+                        
+                        # Create the tool with parameters if available
+                        tool = MCPTool(
+                            name=original_tool_name,
+                            config={"server": server_id, "parameters": tool_params},
+                            session=session
+                        )
+                    else:
+                        raise ToolExecutionError(f"MCP server {server_id} not found for tool {name}")
+                else:
+                    raise ToolExecutionError(f"Invalid MCP tool name format: {name}")
             else:
                 raise ToolExecutionError(f"Tool not found: {name}")
-            
+        
         if not tool.is_available:
             raise ToolExecutionError(f"Tool is not available: {tool.display_name}")
             

@@ -1,3 +1,4 @@
+import 'package:orchid/chat/tool_management_panel.dart';
 import 'package:orchid/orchid/field/orchid_labeled_numeric_field.dart';
 import 'package:orchid/orchid/field/orchid_text_field.dart';
 import 'package:orchid/orchid/orchid.dart';
@@ -75,6 +76,7 @@ class _ChatPromptPanelState extends State<ChatPromptPanel> {
       padding: const EdgeInsets.all(10.0),
       child: Column(
         children: <Widget>[
+          // Max tokens section
           Text(
             'Set the maximum number of tokens for the response.',
             style: OrchidText.medium_20_050,
@@ -83,7 +85,14 @@ class _ChatPromptPanelState extends State<ChatPromptPanel> {
             label: 'Max Tokens',
             onChange: (value) => setMaxTokens(value?.toInt()),
             controller: maxTokensController,
-          ).top(12)
+          ).top(12),
+          
+          // Tool management section
+          SizedBox(height: 16),
+          Container(
+            constraints: BoxConstraints(maxHeight: 300),
+            child: ToolManagementPanel(),
+          ).top(8),
         ],
       ),
     );

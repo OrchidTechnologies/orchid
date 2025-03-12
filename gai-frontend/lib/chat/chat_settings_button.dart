@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:orchid/chat/identicon_options_menu_item.dart';
+import 'package:orchid/chat/provider_management_dialog.dart';
+import 'package:orchid/chat/provider_manager.dart';
 import 'package:orchid/chat/scripting/code_viewer/scripts_menu_item.dart';
 import 'package:orchid/orchid/orchid.dart';
 import 'package:orchid/api/orchid_language.dart';
@@ -205,6 +207,26 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
             builder: (bool expanded) => IdenticonOptionsMenuItem(
               expanded: expanded,
               textStyle: _textStyle,
+            ),
+          ),
+          
+          div,
+          
+          // Tool Providers Management
+          PopupMenuItem<String>(
+            onTap: () {
+              // Need to use Future.delayed because we can't show a dialog during onTap callback
+              Future.delayed(Duration.zero, () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const ProviderManagementDialog(),
+                );
+              });
+            },
+            height: _height,
+            child: SizedBox(
+              width: _width,
+              child: Text("Manage Tool Providers", style: _textStyle),
             ),
           ),
 
