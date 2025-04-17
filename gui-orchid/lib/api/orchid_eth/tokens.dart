@@ -64,8 +64,8 @@ class Tokens {
   static const TokenType BNB = TokenType(
     symbol: 'BNB',
     exchangeRateSource: UniswapPriceSource(
-      //  WBNB / ETH 0.3%
-      tokenVsETHPoolAddress: '0xba8080b0b09181e09bca0612b22b9475d8171055',
+      //  WBNB / ETH 1.0%
+      tokenVsETHPoolAddress: '0x12d92d69c6de36d972e2c1046e615b7f53bf9c8e',
     ),
     chainId: Chains.BSC_CHAINID,
     iconPath: OrchidAssetSvgToken.binance_coin_bnb_token_path,
