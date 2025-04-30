@@ -1,5 +1,4 @@
 import 'package:orchid/api/orchid_eth/abi_encode.dart';
-import 'package:orchid/api/orchid_log.dart';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:orchid/util/hex.dart';
@@ -10,9 +9,8 @@ import 'package:pointycastle/ecc/curves/secp256k1.dart';
 import 'package:pointycastle/key_generators/api.dart';
 import 'package:pointycastle/key_generators/ec_key_generator.dart';
 import 'package:uuid/uuid.dart';
-import 'package:uuid/uuid_util.dart';
-import 'package:web3dart/credentials.dart' as web3;
-import 'package:web3dart/crypto.dart';
+import 'package:web3dart/web3dart.dart' as web3;
+import 'package:wallet/wallet.dart' as wallet;
 
 class Crypto {
   static final ECDomainParameters curve = ECCurve_secp256k1();
@@ -24,7 +22,7 @@ class Crypto {
     final params = ECKeyGeneratorParameters(curve);
     generator.init(ParametersWithRandom(params, DartSecureRandom()));
     final key = generator.generateKeyPair();
-    final BigInt? privateKey = (key.privateKey as ECPrivateKey).d;
+    final BigInt? privateKey = (key.privateKey).d;
     if (privateKey == null) {
       throw Exception('Failed to produce private key');
     }
@@ -56,6 +54,7 @@ class Crypto {
         addressString: toHex(ethereumAddress));
   }
 
+  // TODO: Move to Hex.dart
   static String toHex(Uint8List bytes) {
     var result = StringBuffer('0x');
     bytes.forEach((val) {
@@ -85,7 +84,7 @@ class Crypto {
   }
 
   static String uuid() {
-    return Uuid(options: {'grng': UuidUtil.cryptoRNG}).v4();
+    return Uuid().v4(); // uses CryptoRNG by default
   }
 
   static String formatSecretFixed(BigInt private) {
@@ -143,7 +142,7 @@ class DartSecureRandom implements SecureRandom {
   BigInt nextBigInteger(int bitLength) {
     final byteLength = bitLength ~/ 8;
     final remainderBits = bitLength % 8;
-    final part1 = bytesToUnsignedInt(nextBytes(byteLength));
+    final part1 = web3.bytesToUnsignedInt(nextBytes(byteLength));
     final part2 = BigInt.from(random.nextInt(1 << remainderBits));
     return part1 + (part2 << (byteLength * 8));
   }
@@ -252,29 +251,31 @@ class EthereumAddress {
 }
 
 class Web3DartUtils {
-  /// Converts an Ethereum address to a checksummed address (EIP-55).
+  /// Converts an Ethereum address to a checksummed address (EIP-55) including the '0x' prefix.
   static String eip55ChecksumEthereumAddress(String address) {
-    return web3.EthereumAddress.fromHex(address).hexEip55;
+    return wallet.EthereumAddress.fromHex(address).eip55With0x;
   }
 
   /// Returns true if the eth address is valid and conforms to the rules of EIP55.
   static bool isEip55ValidEthereumAddress(String address) {
+    // Accept if fully lowercase or uppercase
+    final noPrefix = Hex.remove0x(address);
+    if (noPrefix.toLowerCase() == noPrefix || noPrefix.toUpperCase() == noPrefix) {
+      return true;
+    }
+    // Accept if matches the EIP55 checksum string
     try {
-      web3.EthereumAddress.fromHex(address);
-      // web3.EthereumAddress.fromHex(address, enforceEip55: false);
-      // _fromHex(address);
-    } catch (err) {
-      log("XXX: isEip55ValidEthereumAddress err = $err");
+      return noPrefix == wallet.EthereumAddress.fromHex(address).eip55Without0x;
+    } catch (_) {
       return false;
     }
-    return true;
   }
 
-  static MsgSignature web3Sign(Uint8List payload, BigInt key) {
+  static web3.MsgSignature web3Sign(Uint8List payload, BigInt key) {
     final web3.EthPrivateKey credentials =
         web3.EthPrivateKey.fromHex(Crypto.formatSecretFixed(key));
     // Use web3 sign(), not web3 credentials.sign() which does a keccak256 on payload.
-    return sign(payload, credentials.privateKey);
+    return web3.sign(payload, credentials.privateKey);
   }
 
   // Imitating what web3dart does

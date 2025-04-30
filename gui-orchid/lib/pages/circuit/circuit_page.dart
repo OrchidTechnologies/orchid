@@ -7,7 +7,6 @@ import 'package:orchid/vpn/model/orchid_hop.dart';
 import 'package:orchid/vpn/orchid_api.dart';
 import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/vpn/preferences/user_preferences_vpn.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:orchid/common/app_dialogs.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_asset.dart';
@@ -24,6 +23,7 @@ import 'hop_editor.dart';
 import 'package:orchid/vpn/model/circuit_hop.dart';
 import 'package:orchid/util/collections.dart';
 import 'package:orchid/util/localization.dart';
+import 'package:orchid/l10n/app_localizations.dart';
 
 /// The multi-hop circuit builder page.
 class CircuitPage extends StatefulWidget {
