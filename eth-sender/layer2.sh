@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Orchid - WebRTC P2P VPN Market (on Ethereum)
 # Copyright (C) 2017-2020  The Orchid Authors
 
@@ -17,34 +19,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # }}}
 
+set -e
+set -o pipefail
 
-args := 
+runs=4294967295
 
-include env/target.mk
-
-.PHONY: all
-all: $(output)/$(machine)/cj$(exe)
-
-.PHONY: test
-test: $(output)/$(machine)/cj$(exe)
-	$< $(args)
-
-source += $(wildcard $(pwd)/source/*.cpp)
-cflags += -I$(pwd)/source
-
-# XXX: this literally crashes clang-tidy and I haven't filed the bug
-checks/$(pwd)/source/main.cpp += -bugprone-unchecked-optional-access
-
-$(call include,lib/target.mk)
-
-linked += $(pwd)/riscy/librust.a
-cflags += -I$(pwd)/riscy
-$(call depend,$(pwd)/riscy/librust.a,$(patsubst %,$(pwd)/riscy/%,Cargo.toml Cargo.lock riscy.rs))
-
-include env/output.mk
-
-$(output)/%/cj$(exe): $(patsubst %,$(output)/$$*/%,$(object) $(linked))
-	@mkdir -p $(dir $@)
-	@echo [LD] $@
-	@$(cxx) $(more/$*) $(wflags) -o $@ $^ $(lflags)
-	@ls -la $@
+env/solc.sh 0.8.28 - layer2.yul --strict-assembly --evm-version prague

@@ -40,12 +40,15 @@
 #include "local.hpp"
 #include "nested.hpp"
 #include "pricing.hpp"
+#include "riscy.hpp"
 #include "segwit.hpp"
+#include "sequence.hpp"
 #include "signed.hpp"
 #include "sleep.hpp"
 #include "ticket.hpp"
 #include "time.hpp"
 #include "trezor.hpp"
+#include "trie.hpp"
 #include "uniswap.hpp"
 
 namespace orc {
@@ -289,6 +292,19 @@ static Locator _(std::string_view arg) {
 } };
 
 template <>
+struct Option_<riscy_Level> {
+static riscy_Level _(std::string_view arg) {
+    if (false);
+    else if (arg == "composite")
+        return riscy_Level::COMPOSITE;
+    else if (arg == "succinct")
+        return riscy_Level::SUCCINCT;
+    else if (arg == "groth16")
+        return riscy_Level::GROTH16;
+    else orc_assert_(false, "unknown level " << arg);
+} };
+
+template <>
 struct Option_<Any> {
 static Any _(const std::string &arg) {
     return Parse(arg);
@@ -320,6 +336,12 @@ auto Options(Args &args) {
     return Options<Types_...>(args, std::index_sequence_for<Types_...>());
 }
 
+std::string Read() {
+    std::string data;
+    std::getline(std::cin, data);
+    return data;
+}
+
 task<void> ScanState(const S<Chain> &chain, uint64_t height);
 task<void> ScanStorage(const S<Chain> &chain, uint64_t height, const Address &address);
 
@@ -330,10 +352,6 @@ task<Block> GetBlock(const S<Chain> &chain) {
 task<void> Command(const std::string &command, Args &args) {
     if (false) {
 
-    } else if (command == "address") {
-        const auto [key] = Options<Key>(args);
-        std::cout << Address(key) << std::endl;
-
     } else if (command == "avax") {
         // https://docs.avax.network/build/references/cryptographic-primitives
         const auto [key] = Options<Key>(args);
@@ -342,6 +360,14 @@ task<void> Command(const std::string &command, Args &args) {
     } else if (command == "binance") {
         const auto [pair] = Options<std::string>(args);
         std::cout << co_await Binance(*base_, pair, 1) << std::endl;
+
+    } else if (command == "bless") {
+        while (!args.empty()) {
+            const auto arg(Bless(args()));
+            std::cout.write(reinterpret_cast<const char *>(arg.data()), Fit(arg.size()));
+        }
+        Options<>(args);
+        std::cout << std::flush;
 
     } else if (command == "cb58") {
         auto [data] = Options<Bytes>(args);
@@ -360,10 +386,6 @@ task<void> Command(const std::string &command, Args &args) {
         const auto secret(Random<32>());
         std::cout << secret.hex().substr(2) << std::endl;
 
-    } else if (command == "hash") {
-        auto [data] = Options<Bytes>(args);
-        std::cout << HashK(data).hex() << std::endl;
-
     } else if (command == "hex") {
         Options<>(args);
         std::cout << "0x";
@@ -380,9 +402,21 @@ task<void> Command(const std::string &command, Args &args) {
         }
         std::cout << std::endl;
 
-    } else if (command == "number") {
-        const auto [number] = Options<uint256_t>(args);
-        std::cout << "0x" << std::hex << number << std::endl;
+    } else if (command == "keccak256") {
+        auto [data] = Options<Bytes>(args);
+        std::cout << HashK(data).hex() << std::endl;
+
+    } else if (command == "lve32le") {
+        std::cout << "0x";
+        while (!args.empty()) {
+            const auto arg(Bless(args()));
+            uint32_t size(Fit(arg.size()));
+            size = boost::endian::native_to_little(size);
+            std::cout << Subset(&size).hex(false);
+            std::cout << arg.hex(false);
+        }
+        Options<>(args);
+        std::cout << std::endl;
 
     } else if (command == "p2pkh") {
         // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
@@ -399,12 +433,17 @@ task<void> Command(const std::string &command, Args &args) {
         const auto [key] = Options<Key>(args);
         std::cout << ToSegwit("bc", 0, Hash2(Tie(uint8_t(0x21), ToCompressed(key), uint8_t(0xac)))) << std::endl;
 
+    } else if (command == "public") {
+        const auto [key] = Options<Key>(args);
+        std::cout << Address(key) << std::endl;
+
     } else if (command == "recover") {
         const auto [signature, message] = Options<Signature, Bytes>(args);
         std::cout << ToUncompressed(Recover(HashK(message), signature)).hex() << std::endl;
 
     } else if (command == "rlp-decode") {
-        const auto [data] = Options<Bytes>(args);
+        Options<>(args);
+        const auto data(Bless(Read()));
         Window window(data);
         const auto nested(Explode(window));
         std::cout << nested.json();
@@ -429,6 +468,18 @@ task<void> Command(const std::string &command, Args &args) {
         const auto [prefix, version, key] = Options<std::string, std::optional<uint8_t>, Key>(args);
         std::cout << ToSegwit(prefix, version, HashR(Hash2(ToCompressed(key)))) << std::endl;
 
+    } else if (command == "selector") {
+        auto [name] = Options<std::string>(args);
+        std::cout << HashK(name).template Clip<0, 4>().hex(true) << std::endl;
+
+    } else if (command == "sha256") {
+        auto [data] = Options<Bytes>(args);
+        std::cout << Hash2(data).hex() << std::endl;
+
+    } else if (command == "sha256compress") {
+        auto [one, two] = Options<Bytes32, Bytes32>(args);
+        std::cout << HashC(one, two).hex() << std::endl;
+
     } else if (command == "sign") {
         const auto [secret, message] = Options<Bytes32, Bytes>(args);
         std::cout << Sign(secret, HashK(message)).operator Brick<65>().hex() << std::endl;
@@ -437,12 +488,33 @@ task<void> Command(const std::string &command, Args &args) {
         Options<>(args);
         std::cout << Timestamp() << std::endl;
 
+    } else if (command == "uint64") {
+        const auto [value] = Options<uint64_t>(args);
+        std::cout << std::hex << Number<uint64_t>(value).hex(true) << std::endl;
+
+    } else if (command == "uint256") {
+        const auto [value] = Options<uint256_t>(args);
+        std::cout << std::hex << Number<uint256_t>(value).hex(true) << std::endl;
+
     } else if (command == "wif") {
         // https://en.bitcoin.it/wiki/Wallet_import_format
         // prefix with 0x80 for mainnet and 0xEF for testnet
         // suffix with 0x01 if this will be a compressed key
         const auto [data] = Options<Bytes>(args);
         std::cout << ToBase58Check(data) << std::endl;
+
+    } else if (command == "xdr") {
+        while (!args.empty()) {
+            const auto arg(Bless(args()));
+            uint32_t size(Fit(arg.size()));
+            size = boost::endian::native_to_big(size);
+            std::cout.write(reinterpret_cast<const char *>(&size), Fit(sizeof(size)));
+            std::cout.write(reinterpret_cast<const char *>(arg.data()), Fit(arg.size()));
+            static char padding[4] = {};
+            std::cout.write(padding, Fit((sizeof(uint32_t) - arg.size()) % sizeof(uint32_t)));
+        }
+        Options<>(args);
+        std::cout << std::flush;
 
     } else orc_assert_(false, "unknown command " << command);
 }
@@ -452,12 +524,25 @@ task<void> Command(const std::string &command, Args &args, const S<Chain> &chain
 
     } else if (command == "account") {
         const auto [address] = Options<Address>(args);
-        const auto [account] = co_await chain->Get(co_await GetBlock(chain), address, nullptr);
-        std::cout << account.balance_ << std::endl;
+        std::cout << address << std::endl;
 
     } else if (command == "accounts") {
+        Options<>(args);
         for (const auto &account : co_await (*chain)("personal_listAccounts", {}))
             std::cout << Address(account.asString()) << std::endl;
+
+    } else if (command == "ancient") {
+        const auto [table] = Options<std::string>(args);
+        std::cout << Str(co_await chain->Call("debug_dbAncient", {table, unsigned(*height_)})) << std::endl;
+
+    } else if (command == "ancients") {
+        Options<>(args);
+        std::cout << Num<uint64_t>(co_await chain->Call("debug_dbAncients", {})) << std::endl;
+
+    } else if (command == "balance") {
+        const auto [address] = Options<Address>(args);
+        const auto [account] = co_await chain->Get(co_await GetBlock(chain), address, nullptr);
+        std::cout << account.balance_ << std::endl;
 
     } else if (command == "bid") {
         Options<>(args);
@@ -466,6 +551,10 @@ task<void> Command(const std::string &command, Args &args, const S<Chain> &chain
     } else if (command == "block") {
         Options<>(args);
         std::cout << co_await (*chain)("eth_getBlockByNumber", {*height_, true}) << std::endl;
+
+    } else if (command == "block-hash") {
+        const auto [hash] = Options<Bytes32>(args);
+        std::cout << co_await (*chain)("eth_getBlockByHash", {hash, true}) << std::endl;
 
     } else if (command == "block-rlp") {
         Options<>(args);
@@ -558,6 +647,10 @@ task<void> Command(const std::string &command, Args &args, const S<Chain> &chain
         const auto [account] = co_await chain->Get(co_await GetBlock(chain), address, nullptr);
         std::cout << account.balance_ / co_await chain->Bid() << std::endl;
 
+    } else if (command == "get") {
+        const auto [key] = Options<std::string>(args);
+        std::cout << Str(co_await chain->Call("debug_dbGet", {key})) << std::endl;
+
     } else if (command == "height") {
         Options<>(args);
         std::cout << *height_ << std::endl;
@@ -633,6 +726,35 @@ task<void> Command(const std::string &command, Args &args, const S<Chain> &chain
         const auto currency(co_await Currency::New(5000, ethereum, base_, symbol));
         std::cout << currency.dollars_() << std::endl;
 
+    } else if (command == "proof:log") {
+        const auto [index] = Options<uint64_t>(args);
+        Trie trie;
+        const auto receipts((co_await chain->Call("eth_getBlockReceipts", {*height_})).as_array());
+        for (const auto &receipt : receipts) {
+            Nested nested({
+                To<uint64_t>(Str(receipt.at("status"))),
+                To<uint64_t>(Str(receipt.at("cumulativeGasUsed"))),
+                Bless(Str(receipt.at("logsBloom"))),
+                Map([](const Any &value) -> Nested {
+                    const auto &log(value.as_object());
+                    return {Address(Str(log.at("address"))), Map([](const Any &value) {
+                        return Bless(Str(value)).str();
+                    }, log.at("topics").as_array()), Bless(Str(log.at("data"))).str()};
+                }, receipt.at("logs").as_array()),
+            });
+            std::string value;
+            if (const auto type = To<uint8_t>(Str(receipt.at("type"))))
+                value = char(type);
+            value += Implode(nested);
+            trie.insert(Strung(Implode(To<uint64_t>(Str(receipt.at("transactionIndex"))))).hex(false), value);
+        }
+        for (const auto &proof : trie.prove(Strung(Stripped(index)).hex(false)))
+            std::cout << Strung(proof).hex(true) << std::endl;
+
+    } else if (command == "proof:slot") {
+        auto [address, slot] = Options<Address, uint256_t>(args);
+        std::cout << co_await chain->Call("eth_getProof", {address, {slot}, *height_}) << std::endl;
+
     } else if (command == "read") {
         const auto [contract, slot] = Options<Address, uint256_t>(args);
         const auto [account, value] = co_await chain->Get(co_await GetBlock(chain), contract, nullptr, slot);
@@ -647,6 +769,10 @@ task<void> Command(const std::string &command, Args &args, const S<Chain> &chain
             std::cout << receipt << std::endl;
             break;
         }
+
+    } else if (command == "receipts") {
+        Options<>(args);
+        std::cout << co_await (*chain)("eth_getBlockReceipts", {*height_}) << std::endl;
 
     } else if (command == "resolve") {
         const auto [name] = Options<std::string>(args);
@@ -936,10 +1062,6 @@ task<void> CommandExecutor(Args &args, const S<Chain> &chain, const S<Executor> 
         if (!execution_.gas) execution_.gas = 3000000;
         std::cout << (co_await executor->Send(*chain, execution_, factory, 0, deploy(code, salt))).hex() << std::endl;
 
-    } else if (command == "this") {
-        Options<>(args);
-        std::cout << executor->operator Address() << std::endl;
-
     } else if (command == "unwrap") {
         const auto [token, amount] = Options<Address, uint256_t>(args);
         static Selector<void, uint256_t> withdraw("withdraw");
@@ -1082,12 +1204,105 @@ task<void> CommandEvm(Args &args) {
     co_return co_await CommandChain(command, args, chain_);
 }
 
+task<void> CommandRisc0(Args &args) {
+    if (const auto command(args()); false) {
+
+    } else if (command == "image") {
+        const auto elf(Load(Option<std::string>(args())));
+        Options<>(args);
+        Bytes32 image;
+        riscy_image(elf, image.data());
+        std::cout << image.hex(true) << std::endl;
+
+    } else if (command == "execute") {
+        const auto elf(Load(Option<std::string>(args())));
+        std::vector<std::string> assumptions;
+        std::vector<std::string> arguments;
+        while (!args.empty())
+            if (auto arg = args(); arg != "--")
+                assumptions.emplace_back(Load(arg));
+            else {
+                while (!args.empty())
+                    arguments.emplace_back(args());
+                break;
+            }
+        Options<>(args);
+        std::string journal;
+        const auto cycles(riscy_execute(elf, assumptions, arguments, &riscy_Output_string, &journal));
+        std::cout << Strung(journal).hex(true) << std::endl;
+        std::cout << cycles << std::endl;
+
+    } else if (command == "prove") {
+        const auto level(Option<riscy_Level>(args()));
+        const auto receipt_path(Option<std::string>(args()));
+        const auto elf(Load(Option<std::string>(args())));
+        std::vector<std::string> assumptions;
+        std::vector<std::string> arguments;
+        while (!args.empty())
+            if (auto arg = args(); arg != "--")
+                assumptions.emplace_back(Load(arg));
+            else {
+                while (!args.empty())
+                    arguments.emplace_back(args());
+                break;
+            }
+        Options<>(args);
+        std::string receipt;
+        riscy_prove(level, elf, assumptions, arguments, &riscy_Output_string, &receipt);
+        Save(receipt_path, receipt);
+
+    } else if (command == "compress") {
+        const auto level(Option<riscy_Level>(args()));
+        const auto receipt_path(Option<std::string>(args()));
+        const auto assumption(Load(Option<std::string>(args())));
+        Options<>(args);
+        std::string receipt;
+        riscy_compress(level, assumption, &riscy_Output_string, &receipt);
+        Save(receipt_path, receipt);
+
+    } else if (command == "verify") {
+        const auto image(Option<Bytes32>(args()));
+        const auto assumption(Load(Option<std::string>(args())));
+        Options<>(args);
+        std::string journal;
+        riscy_verify(image.data(), assumption, &riscy_Output_string, &journal);
+        std::cout << Strung(journal).hex(true) << std::endl;
+
+    } else if (command == "claim") {
+        const auto assumption(Load(Option<std::string>(args())));
+        Options<>(args);
+        std::string text;
+        riscy_claim(assumption, &riscy_Output_string, &text);
+        std::cout << text << std::endl;
+
+    } else if (command == "journal") {
+        const auto assumption(Load(Option<std::string>(args())));
+        Options<>(args);
+        std::string journal;
+        riscy_journal(assumption, &riscy_Output_string, &journal);
+        std::cout << Strung(journal).hex(true) << std::endl;
+
+    } else if (command == "seal") {
+        const auto assumption(Load(Option<std::string>(args())));
+        Options<>(args);
+        std::string seal;
+        riscy_seal(assumption, &riscy_Output_string, &seal);
+        std::cout << Strung(seal).hex(true) << std::endl;
+
+    } else orc_assert_(false, "unknown command " << command);
+
+    co_return;
+}
+
 task<void> CommandMain(Args &args) {
     const auto command(args());
     if (false) {
 
     } else if (command == "evm") {
         co_return co_await CommandEvm(args);
+
+    } else if (command == "risc0") {
+        co_return co_await CommandRisc0(args);
 
     } else co_return co_await Command(command, args);
 }

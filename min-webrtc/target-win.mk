@@ -24,6 +24,10 @@ lflags += -lole32
 # XXX: technically for rust
 lflags += -lbcrypt
 lflags += -lntdll
+# XXX: technically for risc0
+lflags += -lncrypt
+lflags += -loleaut32
+lflags += -lruntimeobject
 
 lflags += -lcrypt32
 lflags += -ldbghelp

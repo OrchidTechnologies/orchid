@@ -166,6 +166,22 @@ Brick<16> Hash5(const Buffer &data) {
     return hash;
 }
 
+Brick<32> HashC(const Brick<32> &one, const Brick<32> &two) {
+    SHA256_CTX context;
+    SHA256_Init(&context);
+
+    SHA256_Update(&context, one.data(), one.size());
+    SHA256_Update(&context, two.data(), two.size());
+    orc_assert(context.num == 0);
+
+    Brick<32> hash;
+    for (size_t i(0); i != hash.size() / sizeof(uint32_t); ++i)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        reinterpret_cast<uint32_t *>(hash.data())[i] = boost::endian::native_to_big(context.h[i]);
+
+    return hash;
+}
+
 Signature::Signature(const Brick<32> &r, const Brick<32> &s, uint8_t v) :
     r_(r), s_(s), v_(v)
 {

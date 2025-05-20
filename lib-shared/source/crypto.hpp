@@ -70,6 +70,8 @@ Brick<16> Hash5(const Buffer &data);
 inline Brick<16> Hash5(const std::string &data) {
     return Hash5(Subset(data)); }
 
+Brick<32> HashC(const Brick<32> &one, const Brick<32> &two);
+
 template <auto Hash_, size_t Size_, typename Data_>
 auto Auth(const Region &secret, const Data_ &data) {
     Brick<Size_> inner; memset(inner.data(), 0x36, inner.size());

@@ -59,7 +59,7 @@ Nested Verify(const Json::Value &proofs, Brick<32> hash, const Region &path) {
             case 2: {
                 const auto leg(proof[0].buf());
                 const auto type(leg.nib(0));
-                for (size_t i((type & 0x1) != 0 ? 1 : 2), e(leg.size() * 2); i != e; ++i)
+                for (size_t i((type & 0x1) != 0 ? 1 : ({ orc_assert(leg.nib(1) == 0); 2; })), e(leg.size() * 2); i != e; ++i)
                     if (path.nib(offset++) != leg.nib(i))
                         return nullptr;
                 const Segment segment(proof[1].buf());
