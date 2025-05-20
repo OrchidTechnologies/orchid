@@ -109,9 +109,30 @@ async def session(
 
         if config_manager:
             config = await config_manager.load_config()
-            inference_url = config.get('inference', {}).get('api_url')
-        if not inference_url:
-            print("No inference URL configured")
+            
+            # First check top-level api_url (new format)
+            inference_url = config.get('api_url')
+            
+            # Fall back to inference.api_url for backward compatibility
+            if not inference_url:
+                inference_url = config.get('inference', {}).get('api_url')
+            
+            # Check if tools are enabled - could be at top level or in inference section
+            tools_section = config.get('tools', config.get('inference', {}).get('tools', {}))
+            tools_enabled = tools_section.get('enabled', False)
+            
+            if not inference_url:
+                print("No inference API URL configured")
+                await websocket.close(reason='Missing required api_url')
+                return
+                
+            # Detect tools-only mode
+            has_endpoints = bool(config.get('inference', {}).get('endpoints'))
+            if tools_enabled and (not has_endpoints or not config.get('inference', {}).get('endpoints')):
+                print(f"Running in tools-only mode with API URL: {inference_url}")
+        else:
+            # No config manager means we can't proceed
+            print("No configuration manager available")
             await websocket.close(reason='Configuration error')
             return
             

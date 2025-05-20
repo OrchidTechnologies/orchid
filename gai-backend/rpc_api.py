@@ -11,7 +11,7 @@ from billing import StrictRedisBilling
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    redis_url = os.environ['ORCHID_GENAI_REDIS_URL']
+    redis_url = os.environ.get('ORCHID_GENAI_REDIS_URL', os.environ.get('REDIS_URL', 'redis://localhost:6379'))
     redis = Redis.from_url(redis_url, decode_responses=True)
     app.state.api = RPCAPI(redis)
     await app.state.api.init()

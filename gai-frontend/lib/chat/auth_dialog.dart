@@ -109,47 +109,45 @@ class _AuthDialogState extends State<AuthDialog> {
     return SizedBox(
       key: ValueKey(widget.accountDetailNotifier?.hashCode ?? 'key'),
       width: 500,
-      child: IntrinsicHeight(
-        child: ValueListenableBuilder(
-            valueListenable: widget.accountDetailNotifier,
-            builder: (BuildContext context, AccountDetail? accountDetail,
-                Widget? child) {
-              return OrchidTitledPanel(
-                highlight: false,
-                opaque: true,
-                titleText: "Connect to Provider",
-                onDismiss: () {
-                  Navigator.pop(context);
-                },
-                body: DefaultTabController(
-                  length: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const TabBar(
-                        tabs: [
-                          Tab(text: 'Orchid Account'),
-                          Tab(text: 'Auth Token'),
+      child: ValueListenableBuilder(
+          valueListenable: widget.accountDetailNotifier,
+          builder: (BuildContext context, AccountDetail? accountDetail,
+              Widget? child) {
+            return OrchidTitledPanel(
+              highlight: false,
+              opaque: true,
+              titleText: "Connect to Provider",
+              onDismiss: () {
+                Navigator.pop(context);
+              },
+              body: DefaultTabController(
+                length: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const TabBar(
+                      tabs: [
+                        Tab(text: 'Orchid Account'),
+                        Tab(text: 'Auth Token'),
+                      ],
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.white60,
+                      indicatorColor: Colors.white,
+                    ),
+                    SizedBox(
+                      height: 560,
+                      child: TabBarView(
+                        children: [
+                          _buildOrchidAccountTab(accountDetail),
+                          _buildAuthTokenTab(),
                         ],
-                        labelColor: Colors.white,
-                        unselectedLabelColor: Colors.white60,
-                        indicatorColor: Colors.white,
                       ),
-                      SizedBox(
-                        height: 500,
-                        child: TabBarView(
-                          children: [
-                            _buildOrchidAccountTab(accountDetail),
-                            _buildAuthTokenTab(),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              );
-            }),
-      ),
+              ),
+            );
+          }),
     );
   }
 

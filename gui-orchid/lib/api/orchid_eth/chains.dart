@@ -179,7 +179,7 @@ class Chains {
     chainId: FANTOM_CHAINID,
     name: 'Fantom',
     nativeCurrency: Tokens.FTM,
-    defaultProviderUrl: 'https://rpc.ftm.tools',
+    defaultProviderUrl: 'https://fantom-rpc.publicnode.com',
     iconPath: OrchidAssetSvgToken.fantom_ftm_token_path,
     explorerUrl: 'https://ftmscan.com',
     supportsLogs: true,

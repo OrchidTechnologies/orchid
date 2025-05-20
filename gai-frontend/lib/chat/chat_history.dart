@@ -6,7 +6,7 @@ import 'package:orchid/chat/chat_message.dart';
 /// user-supplied preparation scripts.
 class ChatHistory {
   final List<ChatMessage> _messages = [];
-  
+
   // Built-in preparation functions
   static const String isolatedMode = 'isolated';
   static const String partyMode = 'party-mode';
@@ -21,79 +21,41 @@ class ChatHistory {
     _messages.clear();
   }
 
-  /// Prepare messages for a specific model's inference request.
-  /// Returns messages formatted for the chat completions API.
-  List<Map<String, dynamic>> prepareForModel({
-    required String modelId,
-    required String preparationFunction,
-  }) {
-    switch (preparationFunction) {
-      case isolatedMode:
-        return _prepareIsolated(modelId);
-      case partyMode:
-        return _preparePartyMode(modelId);
-      default:
-        // TODO: Hook up JS engine dispatch
-        throw UnimplementedError('Custom preparation functions not yet supported');
-    }
-  }
-
-  /// Default preparation mode where models only see their own history
-  List<Map<String, dynamic>> _prepareIsolated(String modelId) {
-    final relevantMessages = _messages.where((msg) =>
-      // Only include client messages and this model's responses
-      (msg.source == ChatMessageSource.client) ||
-      (msg.source == ChatMessageSource.provider && msg.modelId == modelId)
-    );
-
-    return _formatMessages(relevantMessages.toList(), modelId);
-  }
-
-  /// Party mode where models can see and respond to each other
-  List<Map<String, dynamic>> _preparePartyMode(String modelId) {
-    // Filter to only include actual conversation messages
-    final relevantMessages = _messages.where((msg) =>
-      msg.source == ChatMessageSource.client ||
-      msg.source == ChatMessageSource.provider
-    ).toList();
-    
-    return _formatMessages(relevantMessages, modelId);
-  }
-
-  /// Format a single message from the perspective of the target model
-  List<Map<String, dynamic>> _formatMessages(List<ChatMessage> messages, String modelId) {
-    return messages.map((msg) {
-      // Skip internal messages entirely
-      if (msg.source == ChatMessageSource.system || 
-          msg.source == ChatMessageSource.internal) {
-        return null;
-      }
-
-      String role;
-      String content = msg.message;
-
-      // Map conversation messages to appropriate roles
-      if (msg.source == ChatMessageSource.client) {
-        role = 'user';
-      } else if (msg.source == ChatMessageSource.provider) {
-        if (msg.modelId == modelId) {
-          role = 'assistant';
-        } else {
-          // Another model's message - show as user with identification
-          role = 'user';
-          final modelName = msg.modelName ?? msg.modelId;
-          content = '[$modelName]: $content';
-        }
-      } else {
-        // Should never hit this due to the filter above
-        log('Error: Unexpected message source: ${msg.source}');
-        return null;
-      }
-
-      return {
-        'role': role,
-        'content': content,
-      };
-    }).whereType<Map<String, dynamic>>().toList(); // Remove any nulls from skipped messages
+  // Return all messages that should be included in an inference request,
+  // optionally limited to the specified model id.
+  // Notice and internal messages are always excluded as they are UI notifications only.
+  List<ChatMessage> getConversation({String? withModelId}) {
+    return _messages
+        .where((msg) {
+          // Always exclude notice and internal messages
+          if (msg.source == ChatMessageSource.notice || 
+              msg.source == ChatMessageSource.internal) {
+            return false;
+          }
+          
+          // Always include system messages (instructions)
+          if (msg.source == ChatMessageSource.system) {
+            return true;
+          }
+          
+          // Always include client messages
+          if (msg.source == ChatMessageSource.client) {
+            return true;
+          }
+          
+          // Always include tool calls and tool results
+          if (msg.source == ChatMessageSource.tool || 
+              msg.source == ChatMessageSource.toolResult) {
+            return true;
+          }
+          
+          // For provider messages, filter by model ID if specified
+          if (msg.source == ChatMessageSource.provider) {
+            return (withModelId == null || msg.modelId == withModelId);
+          }
+          
+          return false; // Default case, should not be reached
+        })
+        .toList();
   }
 }
