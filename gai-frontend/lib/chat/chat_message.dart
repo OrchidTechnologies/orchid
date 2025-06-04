@@ -305,4 +305,55 @@ class ChatMessage {
       return 'ChatMessage($srcType, modelId: $modelId, model: $modelName, msg: $msgPrefix...)';
     }
   }
+  
+  // Serialization methods
+  Map<String, dynamic> toJson() {
+    return {
+      'source': source.index,
+      'sourceName': sourceName,
+      'message': message,
+      if (metadata != null) 'metadata': metadata,
+      if (modelId != null) 'modelId': modelId,
+      if (modelName != null) 'modelName': modelName,
+      if (toolName != null) 'toolName': toolName,
+      if (providerId != null) 'providerId': providerId,
+      if (toolArguments != null) 'toolArguments': toolArguments,
+      if (toolResult != null) 'toolResult': {
+        'toolName': toolResult!.toolName,
+        'arguments': toolResult!.arguments,
+        'content': toolResult!.content.map((c) => c.toJson()).toList(),
+        'statusCode': toolResult!.statusCode,
+        if (toolResult!.error != null) 'error': toolResult!.error,
+        'providerId': toolResult!.providerId,
+        if (toolResult!.toolCallId != null) 'toolCallId': toolResult!.toolCallId,
+      },
+    };
+  }
+  
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      source: ChatMessageSource.values[json['source'] as int],
+      sourceName: json['sourceName'] ?? '',
+      message: json['message'] ?? '',
+      metadata: json['metadata'] as Map<String, dynamic>?,
+      modelId: json['modelId'] as String?,
+      modelName: json['modelName'] as String?,
+      toolName: json['toolName'] as String?,
+      providerId: json['providerId'] as String?,
+      toolArguments: json['toolArguments'] as Map<String, dynamic>?,
+      toolResult: json['toolResult'] != null
+          ? ToolResult(
+              toolName: json['toolResult']['toolName'] as String,
+              arguments: json['toolResult']['arguments'] as Map<String, dynamic>,
+              content: (json['toolResult']['content'] as List)
+                  .map((c) => ToolResultContent.fromJson(c as Map<String, dynamic>))
+                  .toList(),
+              statusCode: json['toolResult']['statusCode'] as int? ?? 200,
+              error: json['toolResult']['error'] as Map<String, dynamic>?,
+              providerId: json['toolResult']['providerId'] as String,
+              toolCallId: json['toolResult']['toolCallId'] as String?,
+            )
+          : null,
+    );
+  }
 }

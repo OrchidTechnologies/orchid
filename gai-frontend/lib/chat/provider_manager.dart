@@ -8,6 +8,7 @@ import 'chat_message.dart';
 import 'model_manager.dart';
 import 'provider_connection.dart';
 import 'tool_definition.dart';
+import 'state_manager.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -519,6 +520,9 @@ class ProviderManager {
       // Save as JSON string
       await prefs.setString('tool_providers', jsonEncode(providers));
       log('Saved ${providers.length} provider configurations');
+      
+      // Trigger state auto-save
+      StateManager().onStateChanged();
     } catch (e) {
       log('Error saving provider configurations: $e');
     }
@@ -696,6 +700,9 @@ class ProviderManager {
       // Notify UI that tool preferences have changed
       availableToolsNotifier.value = [...getAllAvailableTools()];
       availableToolsNotifier.notifyListeners();
+      
+      // Trigger state auto-save
+      StateManager().onStateChanged();
     } catch (e) {
       log('Error saving tool preferences: $e');
     }
@@ -1589,19 +1596,34 @@ class ProviderManager {
     log('Provider config from environment: $providersJson');
     
     try {
-      // Parse providers as a JSON array of objects
-      final List<dynamic> providersList = json.decode(providersJson);
+      final decoded = json.decode(providersJson);
       final providers = <String, Map<String, dynamic>>{};
       
-      // Convert array to map with generated IDs
-      for (int i = 0; i < providersList.length; i++) {
-        final provider = providersList[i] as Map<String, dynamic>;
-        final id = 'env-provider-$i';
-        
-        providers[id] = {
-          'url': provider['url'] as String? ?? '',
-          'name': provider['name'] as String? ?? 'Provider $i',
-        };
+      // Handle both array and object formats
+      if (decoded is List) {
+        // Array format: [{"url": "...", "name": "..."}, ...]
+        for (int i = 0; i < decoded.length; i++) {
+          final provider = decoded[i] as Map<String, dynamic>;
+          final id = 'env-provider-$i';
+          
+          providers[id] = {
+            'url': provider['url'] as String? ?? '',
+            'name': provider['name'] as String? ?? 'Provider $i',
+          };
+        }
+      } else if (decoded is Map<String, dynamic>) {
+        // Object format: {"Provider1": {"url": "...", "name": "..."}, ...}
+        int i = 0;
+        for (final entry in decoded.entries) {
+          final id = 'env-provider-$i';
+          final providerData = entry.value as Map<String, dynamic>;
+          
+          providers[id] = {
+            'url': providerData['url'] as String? ?? '',
+            'name': providerData['name'] as String? ?? entry.key,
+          };
+          i++;
+        }
       }
       
       return providers;
@@ -1642,5 +1664,43 @@ class ProviderManager {
     }
     
     return providers;
+  }
+  
+  // State management methods
+  List<String> get disabledTools => _disabledTools.toList();
+  
+  List<Map<String, dynamic>> getProvidersConfig() {
+    return _providersConfig.entries.map((entry) => {
+      'id': entry.key,
+      'name': entry.value['name'] ?? 'Provider',
+      'url': entry.value['url'] ?? '',
+    }).toList();
+  }
+  
+  void setProvidersFromState(List<Map<String, dynamic>> providers) {
+    // Clear existing providers
+    _providersConfig.clear();
+    _providerStates.clear();
+    
+    // Add providers from state
+    for (final provider in providers) {
+      final id = provider['id'] ?? 'state-provider-${DateTime.now().millisecondsSinceEpoch}';
+      _providersConfig[id] = {
+        'name': provider['name'] ?? 'Provider',
+        'url': provider['url'] ?? '',
+      };
+    }
+    
+    // Save the configuration
+    _saveProviderConfigs();
+    
+    // Reconnect to providers
+    connectToInitialProvider();
+  }
+  
+  void setDisabledTools(List<String> tools) {
+    _disabledTools = tools.toSet();
+    _saveToolPreferences();
+    availableToolsNotifier.value = getAllAvailableTools();
   }
 }

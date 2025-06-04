@@ -20,6 +20,11 @@ class ChatHistory {
   void clear() {
     _messages.clear();
   }
+  
+  void setMessages(List<ChatMessage> messages) {
+    _messages.clear();
+    _messages.addAll(messages);
+  }
 
   // Return all messages that should be included in an inference request,
   // optionally limited to the specified model id.

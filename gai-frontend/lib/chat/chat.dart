@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 // Conditionally import JS only when compiling for web
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
@@ -32,6 +33,7 @@ import 'auth_dialog.dart';
 import 'chat_history.dart';
 import 'model_manager.dart';
 import 'provider_manager.dart';
+import 'state_manager.dart';
 
 class ChatView extends StatefulWidget {
   const ChatView({super.key});
@@ -110,6 +112,18 @@ class _ChatViewState extends State<ChatView> {
     if (kIsWeb) {
       _initBrowserKeyboardListeners();
     }
+    
+    // Initialize state manager
+    StateManager().init(
+      captureState: _captureCurrentState,
+      applyState: _applyState,
+      getMessages: () => _chatHistory.messages,
+      setMessages: (messages) {
+        setState(() {
+          _chatHistory.setMessages(messages);
+        });
+      },
+    );
   }
   
   // For web only: directly hook into browser events
@@ -226,6 +240,7 @@ class _ChatViewState extends State<ChatView> {
     setState(() {
       _maxTokens = value;
     });
+    StateManager().onStateChanged();
   }
 
   // Get an account view of the funder/signer pair
@@ -388,6 +403,7 @@ class _ChatViewState extends State<ChatView> {
       }
     });
     log('Selected models updated to: $_userSelectedModelIds');
+    StateManager().onStateChanged();
   }
 
   void _popAccountDialog() {
@@ -1096,6 +1112,230 @@ class _ChatViewState extends State<ChatView> {
     });
   }
 
+  // State management methods
+  CoreAppState _captureCurrentState() {
+    // Get current script state
+    Map<String, dynamic>? scriptState;
+    final scriptUrl = ChatScripting().currentScriptUrl;
+    final scriptContent = UserPreferencesScripts().userScript.get();
+    if (scriptUrl != null || scriptContent != null) {
+      scriptState = {
+        'url': scriptUrl,
+        'content': scriptContent,
+        'enabled': UserPreferencesScripts().userScriptEnabled.get(),
+      };
+    }
+
+    return CoreAppState(
+      providers: _providerManager.getProvidersConfig(),
+      selectedModelIds: _userSelectedModelIds,
+      maxTokens: _maxTokens,
+      disabledTools: _providerManager.disabledTools,
+      script: scriptState,
+      uiPreferences: {
+        'debugMode': _debugMode,
+        'multiSelectMode': _multiSelectMode,
+        'partyMode': _partyMode,
+      },
+    );
+  }
+
+  void _applyState(CoreAppState state) {
+    setState(() {
+      // Apply UI preferences
+      _debugMode = state.uiPreferences['debugMode'] ?? false;
+      _multiSelectMode = state.uiPreferences['multiSelectMode'] ?? false;
+      _partyMode = state.uiPreferences['partyMode'] ?? false;
+      
+      // Apply model selection
+      _userSelectedModelIds = state.selectedModelIds;
+      
+      // Apply max tokens
+      _maxTokens = state.maxTokens;
+      if (_maxTokens != null) {
+        _maxTokensController.value = _maxTokens!.toDouble();
+      }
+    });
+
+    // Apply providers configuration
+    if (state.providers.isNotEmpty) {
+      _providerManager.setProvidersFromState(state.providers);
+    }
+
+    // Apply disabled tools
+    _providerManager.setDisabledTools(state.disabledTools);
+
+    // Apply script state
+    if (state.script != null) {
+      final scriptUrl = state.script!['url'] as String?;
+      final scriptContent = state.script!['content'] as String?;
+      final scriptEnabled = state.script!['enabled'] as bool? ?? false;
+
+      if (scriptUrl != null) {
+        ChatScripting().setURL(scriptUrl);
+      } else if (scriptContent != null) {
+        UserPreferencesScripts().userScript.set(scriptContent);
+        UserPreferencesScripts().userScriptEnabled.set(scriptEnabled);
+        if (scriptEnabled) {
+          ChatScripting().setScript(scriptContent);
+        }
+      }
+    }
+  }
+
+  void _exportState() async {
+    try {
+      final stateJson = await StateManager().exportFullState();
+      
+      // Show export dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Export Session'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Session includes ${_chatHistory.messages.length} messages'),
+                Text('Size: ${(stateJson.length / 1024).toStringAsFixed(1)} KB'),
+                const SizedBox(height: 16),
+                const Text('Save this JSON to GitHub Gist, Pastebin, or any text hosting service:'),
+                const SizedBox(height: 8),
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 300),
+                  child: TextField(
+                    controller: TextEditingController(text: stateJson),
+                    maxLines: null,
+                    readOnly: true,
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.copy),
+                        onPressed: () async {
+                          await Clipboard.setData(ClipboardData(text: stateJson));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Copied to clipboard')),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to export state: $e')),
+      );
+    }
+  }
+
+  void _importState() {
+    final textController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Import Session'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Paste the session JSON or enter a URL to load from:'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: textController,
+                maxLines: 10,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Paste JSON or URL here...',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final input = textController.text.trim();
+              if (input.isEmpty) return;
+
+              try {
+                Navigator.of(context).pop();
+                
+                // Show loading indicator
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const AlertDialog(
+                    content: Row(
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(width: 16),
+                        Text('Importing session...'),
+                      ],
+                    ),
+                  ),
+                );
+                
+                // Check if it's a URL
+                if (input.startsWith('http://') || input.startsWith('https://')) {
+                  // Fetch content from URL
+                  final response = await http.get(Uri.parse(input));
+                  if (response.statusCode == 200) {
+                    await StateManager().importStateJson(response.body, isFullState: true);
+                  } else {
+                    throw Exception('Failed to fetch from URL: ${response.statusCode}');
+                  }
+                } else if (input.startsWith('data:')) {
+                  // Handle data URL
+                  final base64Part = input.split(',').last;
+                  final bytes = base64Decode(base64Part);
+                  final jsonStr = utf8.decode(bytes);
+                  await StateManager().importStateJson(jsonStr, isFullState: true);
+                } else {
+                  // Import JSON directly
+                  await StateManager().importStateJson(input, isFullState: true);
+                }
+                
+                if (mounted) {
+                  Navigator.of(context).pop(); // Close loading dialog
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Session imported successfully')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.of(context).pop(); // Close loading dialog if error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to import state: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Import'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _accountDetail?.cancel();
@@ -1361,6 +1601,7 @@ class _ChatViewState extends State<ChatView> {
             setState(() {
               _debugMode = !_debugMode;
             });
+            StateManager().onStateChanged();
           },
           onMultiSelectModeChanged: () {
             setState(() {
@@ -1368,6 +1609,7 @@ class _ChatViewState extends State<ChatView> {
               // Reset selections when toggling modes
               _userSelectedModelIds = [];
             });
+            StateManager().onStateChanged();
           },
           onPartyModeChanged: () {
             setState(() {
@@ -1376,11 +1618,14 @@ class _ChatViewState extends State<ChatView> {
                 _multiSelectMode = true;
               }
             });
+            StateManager().onStateChanged();
           },
           onClearChat: _clearChat,
           editUserScript: () {
             UserScriptDialog.show(context);
           },
+          onExportState: _exportState,
+          onImportState: _importState,
           authToken: authToken,
           inferenceUrl: inferenceUrl,
         ),

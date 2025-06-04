@@ -20,6 +20,8 @@ class ChatSettingsButton extends StatefulWidget {
   final VoidCallback onPartyModeChanged;
   final VoidCallback onClearChat;
   final VoidCallback editUserScript;
+  final VoidCallback onExportState;
+  final VoidCallback onImportState;
   final String? authToken;
   final String? inferenceUrl;
 
@@ -33,6 +35,8 @@ class ChatSettingsButton extends StatefulWidget {
     required this.onPartyModeChanged,
     required this.onClearChat,
     required this.editUserScript,
+    required this.onExportState,
+    required this.onImportState,
     this.authToken,
     this.inferenceUrl,
   }) : super(key: key);
@@ -139,6 +143,39 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
             child: SizedBox(
               width: _width,
               child: Text("Clear Chat", style: _textStyle),
+            ),
+          ),
+          div,
+
+          // Export state
+          PopupMenuItem<String>(
+            onTap: widget.onExportState,
+            height: _height,
+            child: SizedBox(
+              width: _width,
+              child: Row(
+                children: [
+                  const Icon(Icons.download, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text("Export Session", style: _textStyle),
+                ],
+              ),
+            ),
+          ),
+
+          // Import state
+          PopupMenuItem<String>(
+            onTap: widget.onImportState,
+            height: _height,
+            child: SizedBox(
+              width: _width,
+              child: Row(
+                children: [
+                  const Icon(Icons.upload, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text("Import Session", style: _textStyle),
+                ],
+              ),
             ),
           ),
           div,
