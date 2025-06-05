@@ -1116,7 +1116,13 @@ class _ChatViewState extends State<ChatView> {
   CoreAppState _captureCurrentState() {
     // Get current script state
     Map<String, dynamic>? scriptState;
-    final scriptUrl = ChatScripting().currentScriptUrl;
+    String? scriptUrl;
+    
+    // Safely get script URL if ChatScripting is initialized
+    if (ChatScripting.enabled) {
+      scriptUrl = ChatScripting.instance.currentScriptUrl;
+    }
+    
     final scriptContent = UserPreferencesScripts().userScript.get();
     if (scriptUrl != null || scriptContent != null) {
       scriptState = {
@@ -1171,13 +1177,13 @@ class _ChatViewState extends State<ChatView> {
       final scriptContent = state.script!['content'] as String?;
       final scriptEnabled = state.script!['enabled'] as bool? ?? false;
 
-      if (scriptUrl != null) {
-        ChatScripting().setURL(scriptUrl);
+      if (scriptUrl != null && ChatScripting.enabled) {
+        ChatScripting.instance.setURL(scriptUrl);
       } else if (scriptContent != null) {
         UserPreferencesScripts().userScript.set(scriptContent);
         UserPreferencesScripts().userScriptEnabled.set(scriptEnabled);
-        if (scriptEnabled) {
-          ChatScripting().setScript(scriptContent);
+        if (scriptEnabled && ChatScripting.enabled) {
+          ChatScripting.instance.setScript(scriptContent);
         }
       }
     }
