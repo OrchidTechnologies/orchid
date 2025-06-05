@@ -48,6 +48,7 @@ class _ChatViewState extends State<ChatView> {
   bool _multiSelectMode = false;
   bool _partyMode = false;
   bool _isProcessingRequest = false; // Track if we're processing a request
+  bool _calloutDismissed = false; // Track if the account callout has been dismissed
   int? _maxTokens;
   Chain _selectedChain = Chains.Gnosis;
   final ScrollController messageListController = ScrollController();
@@ -1473,64 +1474,82 @@ class _ChatViewState extends State<ChatView> {
             itemCount: _chatHistory.messages.length,
             itemBuilder: _buildChatBubble,
           ).top(16),
-          if (_emptyState())
+          if (_emptyState() && !_calloutDismissed)
             Positioned(
               top: 35, // Adjust this value to align with the Account button
               right: 0,
-              child: CustomPaint(
-                painter: CalloutPainter(),
-                child: Container(
-                  width: 390,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'This is a demonstration of the application of Orchid Nanopayments within a consolidated Multi-LLM chat service.',
-                        style:
-                            OrchidText.normal_14.copyWith(color: Colors.white),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'To get started, enter or create a funded Orchid account.',
-                        style:
-                            OrchidText.normal_14.copyWith(color: Colors.white),
-                        textAlign: TextAlign.center,
-                      ),
-                      ChatButton(
-                        text: 'Enter Account',
-                        onPressed: _popAccountDialog,
-                        width: 200,
-                      ).top(24),
-                      const SizedBox(height: 16),
-                      OutlinedButton(
-                        onPressed: () =>
-                            _launchURL('https://account.orchid.com'),
-                        style: OutlinedButton.styleFrom(
-                          side:
-                              BorderSide(color: Theme.of(context).primaryColor),
-                          minimumSize: const Size(200, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
+              child: Stack(
+                children: [
+                  CustomPaint(
+                    painter: CalloutPainter(),
+                    child: Container(
+                      width: 390,
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'This is a demonstration of the application of Orchid Nanopayments within a consolidated Multi-LLM chat service.',
+                            style:
+                                OrchidText.normal_14.copyWith(color: Colors.white),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                        child: const Text('Create Account').button,
+                          const SizedBox(height: 16),
+                          Text(
+                            'To get started, enter or create a funded Orchid account.',
+                            style:
+                                OrchidText.normal_14.copyWith(color: Colors.white),
+                            textAlign: TextAlign.center,
+                          ),
+                          ChatButton(
+                            text: 'Enter Account',
+                            onPressed: _popAccountDialog,
+                            width: 200,
+                          ).top(24),
+                          const SizedBox(height: 16),
+                          OutlinedButton(
+                            onPressed: () =>
+                                _launchURL('https://account.orchid.com'),
+                            style: OutlinedButton.styleFrom(
+                              side:
+                                  BorderSide(color: Theme.of(context).primaryColor),
+                              minimumSize: const Size(200, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
+                            child: const Text('Create Account').button,
+                          ),
+                          const SizedBox(height: 24),
+                          InkWell(
+                            onTap: () => _launchURL(
+                                'https://docs.orchid.com/en/latest/accounts/'),
+                            child: Text(
+                              'Learn more about creating an Orchid account',
+                              style: TextStyle(
+                                  color: Colors.blue[300],
+                                  decoration: TextDecoration.underline),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 24),
-                      InkWell(
-                        onTap: () => _launchURL(
-                            'https://docs.orchid.com/en/latest/accounts/'),
-                        child: Text(
-                          'Learn more about creating an Orchid account',
-                          style: TextStyle(
-                              color: Colors.blue[300],
-                              decoration: TextDecoration.underline),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  // Close button positioned at top-right
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: IconButton(
+                      icon: Icon(Icons.close, color: Colors.white.withOpacity(0.8)),
+                      onPressed: () {
+                        setState(() {
+                          _calloutDismissed = true;
+                        });
+                      },
+                      tooltip: 'Dismiss',
+                    ),
+                  ),
+                ],
               ),
             ),
         ],

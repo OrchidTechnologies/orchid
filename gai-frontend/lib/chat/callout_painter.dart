@@ -3,7 +3,13 @@ import 'package:orchid/orchid/orchid.dart';
 class CalloutPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    // Fill paint for black background
+    final fillPaint = Paint()
+      ..color = Colors.black.withOpacity(0.9)
+      ..style = PaintingStyle.fill;
+    
+    // Stroke paint for border
+    final strokePaint = Paint()
       ..color = Colors.white.withOpacity(0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
@@ -29,7 +35,10 @@ class CalloutPainter extends CustomPainter {
       ..lineTo(0, radius)
       ..quadraticBezierTo(0, 0, radius, 0);
 
-    canvas.drawPath(path, paint);
+    // Draw filled background first
+    canvas.drawPath(path, fillPaint);
+    // Then draw the border
+    canvas.drawPath(path, strokePaint);
   }
 
   @override
