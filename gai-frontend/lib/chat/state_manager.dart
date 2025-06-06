@@ -98,6 +98,7 @@ class StateManager {
   
   bool _autoSaveEnabled = true;
   Timer? _saveDebouncer;
+  String? _loadedStateUrl; // Store the URL we loaded from
   
   // Callbacks to get current state from various managers
   CoreAppState Function()? _captureStateCallback;
@@ -106,6 +107,7 @@ class StateManager {
   void Function(List<ChatMessage>)? _setMessagesCallback;
   
   bool get autoSaveEnabled => _autoSaveEnabled;
+  String? get loadedStateUrl => _loadedStateUrl;
   
   /// Initialize the state manager with callbacks
   void init({
@@ -119,12 +121,60 @@ class StateManager {
     _getMessagesCallback = getMessages;
     _setMessagesCallback = setMessages;
     
-    // Check for state parameter in URL
+    // Check for state parameter in URL or hash
     final uri = Uri.base;
-    final stateParam = uri.queryParameters['state'];
+    String? stateParam = uri.queryParameters['state'];
+    
+    // If not in query params, check hash fragment
+    if (stateParam == null && uri.fragment.isNotEmpty) {
+      String fragment = uri.fragment;
+      
+      // Handle hashbang format (#!?state=...)
+      if (fragment.startsWith('!?')) {
+        fragment = fragment.substring(2); // Remove the !?
+      } else if (fragment.startsWith('!')) {
+        fragment = fragment.substring(1); // Remove just the !
+      }
+      
+      // Parse hash parameters
+      final hashParams = Uri.splitQueryString(fragment);
+      stateParam = hashParams['state'];
+    }
     
     if (stateParam != null) {
       _autoSaveEnabled = false;
+      
+      // Store the full URL that was used to load the state
+      try {
+        if (uri.queryParameters.containsKey('state')) {
+          // For query parameter URLs, preserve all parameters
+          _loadedStateUrl = uri.toString();
+          log('Captured state URL from query params: $_loadedStateUrl');
+        } else if (uri.fragment.isNotEmpty) {
+          // For hashbang URLs, reconstruct the full URL
+          _loadedStateUrl = '${uri.origin}${uri.path}#${uri.fragment}';
+          log('Captured state URL from hashbang: $_loadedStateUrl');
+        }
+      } catch (e) {
+        log('Error capturing state URL: $e');
+        // Fallback: try to reconstruct the URL
+        try {
+          if (uri.queryParameters.containsKey('state')) {
+            final params = uri.queryParameters;
+            final queryString = params.entries
+                .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+                .join('&');
+            _loadedStateUrl = '${uri.origin}${uri.path}?$queryString';
+            log('Reconstructed state URL: $_loadedStateUrl');
+          } else if (uri.fragment.isNotEmpty) {
+            _loadedStateUrl = '${uri.origin}${uri.path}#${uri.fragment}';
+            log('Reconstructed state URL from fragment: $_loadedStateUrl');
+          }
+        } catch (e2) {
+          log('Failed to reconstruct URL: $e2');
+        }
+      }
+      
       _loadFromUrl(stateParam);
     } else {
       _loadFromLocalStorage();
@@ -173,20 +223,32 @@ class StateManager {
     try {
       log('Loading state from URL: $url');
       
+      String processedUrl = url;
+      
+      // Auto-add https:// if it looks like a URL without protocol
+      if (!url.startsWith('http://') && 
+          !url.startsWith('https://') && 
+          !url.startsWith('data:') &&
+          !url.startsWith('{') &&
+          (url.contains('.') && (url.contains('/') || url.split('.').last.length <= 4))) {
+        processedUrl = 'https://$url';
+        log('Added https:// prefix to URL: $processedUrl');
+      }
+      
       String stateData;
       
       // Handle data URLs
-      if (url.startsWith('data:')) {
-        final base64Part = url.split(',').last;
+      if (processedUrl.startsWith('data:')) {
+        final base64Part = processedUrl.split(',').last;
         final bytes = base64Decode(base64Part);
         stateData = utf8.decode(bytes);
       } else {
         // Fetch from URL
-        final response = await http.get(Uri.parse(url));
+        final response = await http.get(Uri.parse(processedUrl));
         stateData = response.body;
       }
       
-      await importStateJson(stateData, isFullState: true);
+      await importStateJson(stateData, isFullState: true, enableAutoSave: false);
       log('State loaded from URL');
     } catch (e) {
       log('Failed to load state from URL: $e');
@@ -217,7 +279,7 @@ class StateManager {
   }
   
   /// Import state from JSON string
-  Future<void> importStateJson(String stateJson, {bool isFullState = false}) async {
+  Future<void> importStateJson(String stateJson, {bool isFullState = false, bool enableAutoSave = true}) async {
     if (_applyStateCallback == null) {
       throw Exception('State manager not initialized');
     }
@@ -244,9 +306,11 @@ class StateManager {
       _applyStateCallback!(coreState);
     }
     
-    // Re-enable auto-save after manual import
-    _autoSaveEnabled = true;
-    onStateChanged(); // Save the imported state
+    // Only re-enable auto-save if requested (not when loading from URL)
+    if (enableAutoSave) {
+      _autoSaveEnabled = true;
+      onStateChanged(); // Save the imported state
+    }
   }
   
   /// Clear all saved state
@@ -255,13 +319,15 @@ class StateManager {
     log('Cleared saved state');
   }
   
-  /// Get a shareable URL with current state
-  Future<String> getShareableUrl() async {
+  /// Get a shareable URL with current state (always private)
+  Future<String> getShareableUrl({bool useHashbang = true}) async {
     final state = await exportFullState();
     final base64 = base64Encode(utf8.encode(state));
     final dataUrl = 'data:application/json;base64,$base64';
     
     final baseUrl = html.window.location.origin + (html.window.location.pathname ?? '');
-    return '$baseUrl?state=${Uri.encodeComponent(dataUrl)}';
+    
+    // Always use hashbang format for privacy
+    return '$baseUrl#!?state=${Uri.encodeComponent(dataUrl)}';
   }
 }

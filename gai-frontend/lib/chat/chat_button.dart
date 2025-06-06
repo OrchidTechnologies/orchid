@@ -38,11 +38,13 @@ class OutlinedChatButton extends StatelessWidget {
     required this.onPressed,
     this.width,
     this.height = 40,
+    this.icon,
   });
 
   final String text;
   final VoidCallback onPressed;
   final double? width, height;
+  final Widget? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +59,16 @@ class OutlinedChatButton extends StatelessWidget {
           ),
         ),
         onPressed: onPressed,
-        child: Text(text).button.white,
+        child: icon != null
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  icon!,
+                  SizedBox(width: 6),
+                  Text(text).button.white,
+                ],
+              )
+            : Text(text).button.white,
       ),
     );
   }

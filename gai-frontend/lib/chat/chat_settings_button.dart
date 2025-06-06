@@ -1,12 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:orchid/chat/identicon_options_menu_item.dart';
 import 'package:orchid/chat/provider_management_dialog.dart';
-import 'package:orchid/chat/provider_manager.dart';
 import 'package:orchid/chat/scripting/code_viewer/scripts_menu_item.dart';
 import 'package:orchid/orchid/orchid.dart';
-import 'package:orchid/api/orchid_language.dart';
-import 'package:orchid/api/preferences/user_preferences_ui.dart';
-import 'package:orchid/orchid/menu/orchid_popup_menu_item_utils.dart';
 import 'package:orchid/orchid/menu/submenu_popup_menu_item.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../../../orchid/menu/orchid_popup_menu_button.dart';
@@ -24,6 +20,7 @@ class ChatSettingsButton extends StatefulWidget {
   final VoidCallback onImportState;
   final String? authToken;
   final String? inferenceUrl;
+  final String? stateUrl;
 
   const ChatSettingsButton({
     Key? key,
@@ -39,6 +36,7 @@ class ChatSettingsButton extends StatefulWidget {
     required this.onImportState,
     this.authToken,
     this.inferenceUrl,
+    this.stateUrl,
   }) : super(key: key);
 
   @override
@@ -178,7 +176,46 @@ class _ChatSettingsButtonState extends State<ChatSettingsButton> {
               ),
             ),
           ),
-          div,
+          
+          // Session URL (if loaded from state)
+          if (widget.stateUrl != null) ...[
+            PopupMenuItem<String>(
+              height: _height,
+              onTap: () async {
+                try {
+                  final url = widget.stateUrl;
+                  if (url != null && url.isNotEmpty) {
+                    await Clipboard.setData(ClipboardData(text: url));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Session link copied to clipboard')),
+                    );
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to copy: $e')),
+                  );
+                }
+              },
+              child: SizedBox(
+                width: _width,
+                child: Row(
+                  children: [
+                    const Icon(Icons.link, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Session Link",
+                        style: _textStyle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(Icons.copy, color: Colors.white, size: 16),
+                  ],
+                ),
+              ),
+            ),
+            div,
+          ],
 
           // debug mode
           PopupMenuItem<String>(

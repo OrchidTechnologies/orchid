@@ -1193,6 +1193,7 @@ class _ChatViewState extends State<ChatView> {
   void _exportState() async {
     try {
       final stateJson = await StateManager().exportFullState();
+      final canGenerateDirectLink = stateJson.length <= 100000; // ~100KB limit for URLs
       
       // Show export dialog
       showDialog(
@@ -1207,7 +1208,37 @@ class _ChatViewState extends State<ChatView> {
                 Text('Session includes ${_chatHistory.messages.length} messages'),
                 Text('Size: ${(stateJson.length / 1024).toStringAsFixed(1)} KB'),
                 const SizedBox(height: 16),
-                const Text('Save this JSON to GitHub Gist, Pastebin, or any text hosting service:'),
+                
+                if (canGenerateDirectLink) ...[
+                  Row(
+                    children: [
+                      Icon(Icons.lock, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Privacy-preserving link (client-side only)',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.link),
+                    label: const Text('Copy Private Link'),
+                    onPressed: () async {
+                      final url = await StateManager().getShareableUrl(useHashbang: true);
+                      await Clipboard.setData(ClipboardData(text: url));
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Private link copied to clipboard')),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                ],
+                
+                const Text('Or save this JSON to GitHub Gist, Pastebin, or any text hosting service:'),
                 const SizedBox(height: 8),
                 Container(
                   constraints: const BoxConstraints(maxHeight: 300),
@@ -1223,13 +1254,21 @@ class _ChatViewState extends State<ChatView> {
                         onPressed: () async {
                           await Clipboard.setData(ClipboardData(text: stateJson));
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Copied to clipboard')),
+                            const SnackBar(content: Text('JSON copied to clipboard')),
                           );
                         },
                       ),
                     ),
                   ),
                 ),
+                
+                if (!canGenerateDirectLink) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Session too large for direct link. Please use external hosting.',
+                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.orange[700]),
+                  ),
+                ],
               ],
             ),
           ),
@@ -1302,23 +1341,34 @@ class _ChatViewState extends State<ChatView> {
                 );
                 
                 // Check if it's a URL
-                if (input.startsWith('http://') || input.startsWith('https://')) {
+                String processedInput = input;
+                
+                // Auto-add https:// if it looks like a URL without protocol
+                if (!input.startsWith('http://') && 
+                    !input.startsWith('https://') && 
+                    !input.startsWith('data:') &&
+                    !input.startsWith('{') &&
+                    (input.contains('.') && (input.contains('/') || input.split('.').last.length <= 4))) {
+                  processedInput = 'https://$input';
+                }
+                
+                if (processedInput.startsWith('http://') || processedInput.startsWith('https://')) {
                   // Fetch content from URL
-                  final response = await http.get(Uri.parse(input));
+                  final response = await http.get(Uri.parse(processedInput));
                   if (response.statusCode == 200) {
                     await StateManager().importStateJson(response.body, isFullState: true);
                   } else {
                     throw Exception('Failed to fetch from URL: ${response.statusCode}');
                   }
-                } else if (input.startsWith('data:')) {
+                } else if (processedInput.startsWith('data:')) {
                   // Handle data URL
-                  final base64Part = input.split(',').last;
+                  final base64Part = processedInput.split(',').last;
                   final bytes = base64Decode(base64Part);
                   final jsonStr = utf8.decode(bytes);
                   await StateManager().importStateJson(jsonStr, isFullState: true);
                 } else {
                   // Import JSON directly
-                  await StateManager().importStateJson(input, isFullState: true);
+                  await StateManager().importStateJson(processedInput, isFullState: true);
                 }
                 
                 if (mounted) {
@@ -1484,7 +1534,7 @@ class _ChatViewState extends State<ChatView> {
                     painter: CalloutPainter(),
                     child: Container(
                       width: 390,
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 40, 16, 16),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -1597,6 +1647,13 @@ class _ChatViewState extends State<ChatView> {
           text: 'Account',
           onPressed: _popAccountDialog,
           height: buttonHeight,
+          icon: _emptyState()
+              ? Icon(
+                  Icons.warning_amber_rounded,
+                  size: 18,
+                  color: Colors.amber,
+                )
+              : null,
         ).left(8),
 
         // Settings button
@@ -1653,6 +1710,7 @@ class _ChatViewState extends State<ChatView> {
           onImportState: _importState,
           authToken: authToken,
           inferenceUrl: inferenceUrl,
+          stateUrl: StateManager().loadedStateUrl,
         ),
       ),
     );
