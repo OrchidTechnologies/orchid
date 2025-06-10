@@ -28,7 +28,7 @@ file_env "ORCHID_GENAI_RECIPIENT_KEY"
 
 while true
 do
-  python server.py;
+  python server.py --config config.json;
   sleep 1;
 done
 

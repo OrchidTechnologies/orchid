@@ -12,11 +12,12 @@ RUN pip install -U \
     wheel
 
 COPY requirements.txt ./
-COPY run.sh ./
+COPY run-docker.sh ./
 COPY lottery0.abi ./
 COPY lottery1.abi ./
+COPY config.json ./
 
-RUN chmod +x ./run.sh
+RUN chmod +x ./run-docker.sh
 COPY *.py ./
 
 RUN pip install -r requirements.txt
@@ -40,12 +41,12 @@ RUN NODE_VERSION="$(curl -fsSL https://nodejs.org/dist/latest/SHASUMS256.txt | h
   && rm "node-$NODE_VERSION-linux-$ARCH.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt \
   && ln -s /usr/local/bin/node /usr/local/bin/nodejs \
   && /usr/local/bin/npm install -g npm@11.2.0 \
-  && /usr/local/bin/npm install exa-mcp-server exa-mcp-server && pip install uv
+  && /usr/local/bin/npm install exa-mcp-server && pip install uv
 
 RUN useradd -m -r gai && chown -R gai /gai-backend
 USER gai
 
-ENTRYPOINT ["./tini", "--", "./run.sh"]
+ENTRYPOINT ["./tini", "--", "./run-docker.sh"]
 EXPOSE 8000 8000
 
 HEALTHCHECK CMD bash -c "exec 6<> /dev/tcp/localhost/8000" 

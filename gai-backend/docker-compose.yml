@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  gaiserver:
+    image: gai-server:25
+    deploy:
+      replicas: 1
+    environment:
+      ORCHID_GENAI_ADDR: "0.0.0.0"
+      ORCHID_GENAI_PORT: "8000"
+      ORCHID_GENAI_REDIS_URL: "redis://redis:6379"
+      ORCHID_GENAI_RECIPIENT_KEY_FILE: "/run/secrets/recipient_key"
+    secrets:
+      - recipient_key
+    volumes:
+      - ./config.json:/gai-backend/config.json
+    ports:
+      - 8000:8000
+    networks:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    deploy:
+      replicas: 1
+    networks:
+      - redis
+
+secrets:
+  recipient_key:
+    external: true
+
+networks:
+  redis:
+    external:
+      name: redis
+
