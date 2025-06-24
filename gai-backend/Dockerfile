@@ -1,4 +1,4 @@
-FROM python:3.8.5
+FROM python:3.11-bookworm
 
 ENV TINI_VERSION="v0.19.0"
 WORKDIR /gai-backend
@@ -12,15 +12,18 @@ RUN pip install -U \
     wheel
 
 COPY requirements.txt ./
-COPY run-docker.sh ./
+COPY run.sh ./
 COPY lottery0.abi ./
 COPY lottery1.abi ./
 COPY config.json ./
 
-RUN chmod +x ./run-docker.sh
+RUN chmod +x ./run.sh
 COPY *.py ./
+copy Youtube-MCP-Local-main ./Youtube-MCP
 
 RUN pip install -r requirements.txt
+RUN pip install mcp 
+RUN pip install colorlog
 
 RUN NODE_VERSION="$(curl -fsSL https://nodejs.org/dist/latest/SHASUMS256.txt | head -n1 | awk '{ print $2}' | awk -F - '{ print $2}')" \
   ARCH= && dpkgArch="$(dpkg --print-architecture)" \
@@ -46,7 +49,11 @@ RUN NODE_VERSION="$(curl -fsSL https://nodejs.org/dist/latest/SHASUMS256.txt | h
 RUN useradd -m -r gai && chown -R gai /gai-backend
 USER gai
 
-ENTRYPOINT ["./tini", "--", "./run-docker.sh"]
-EXPOSE 8000 8000
+WORKDIR /gai-backend/Youtube-MCP
+RUN /usr/local/bin/uv sync
 
-HEALTHCHECK CMD bash -c "exec 6<> /dev/tcp/localhost/8000" 
+WORKDIR /gai-backend
+
+ENTRYPOINT ["./tini", "--", "./run.sh"]
+EXPOSE 8010 8010
+EXPOSE 8000 8000

@@ -1,8 +1,23 @@
 version: "3.8"
 
 services:
+  caddy:
+    image: caddy:latest
+    deploy:
+      replicas: 1
+    ports:    
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    networks:
+      - proxy
+      
   gaiserver:
-    image: gai-server:25
+    image: gai-server:1
     deploy:
       replicas: 1
     environment:
@@ -10,6 +25,7 @@ services:
       ORCHID_GENAI_PORT: "8000"
       ORCHID_GENAI_REDIS_URL: "redis://redis:6379"
       ORCHID_GENAI_RECIPIENT_KEY_FILE: "/run/secrets/recipient_key"
+      ORCHID_GENAI_BILLING: "true"
     secrets:
       - recipient_key
     volumes:
@@ -18,7 +34,26 @@ services:
       - 8000:8000
     networks:
       - redis
+      - proxy
 
+  iserver:
+    image: gai-server:1
+    deploy:
+      replicas: 1
+    environment:
+      ORCHID_GENAI_ADDR: "0.0.0.0"
+      ORCHID_GENAI_PORT: "8010"
+      ORCHID_GENAI_REDIS_URL: "redis://redis:6379"
+      ORCHID_GENAI_RECIPIENT_KEY_FILE: "/run/secrets/recipient_key"
+      ORCHID_GENAI_INFERENCE: "true"
+    secrets:
+      - recipient_key
+    ports:
+      - 8010:8010
+    networks:
+      - redis
+      - proxy
+      
   redis:
     image: redis:7-alpine
     deploy:
@@ -34,4 +69,6 @@ networks:
   redis:
     external:
       name: redis
-
+  proxy:
+    external:
+      name: proxy
