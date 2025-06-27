@@ -19,11 +19,8 @@ COPY config.json ./
 
 RUN chmod +x ./run.sh
 COPY *.py ./
-copy Youtube-MCP-Local-main ./Youtube-MCP
 
 RUN pip install -r requirements.txt
-RUN pip install mcp 
-RUN pip install colorlog
 
 RUN NODE_VERSION="$(curl -fsSL https://nodejs.org/dist/latest/SHASUMS256.txt | head -n1 | awk '{ print $2}' | awk -F - '{ print $2}')" \
   ARCH= && dpkgArch="$(dpkg --print-architecture)" \
@@ -48,11 +45,6 @@ RUN NODE_VERSION="$(curl -fsSL https://nodejs.org/dist/latest/SHASUMS256.txt | h
 
 RUN useradd -m -r gai && chown -R gai /gai-backend
 USER gai
-
-WORKDIR /gai-backend/Youtube-MCP
-RUN /usr/local/bin/uv sync
-
-WORKDIR /gai-backend
 
 ENTRYPOINT ["./tini", "--", "./run.sh"]
 EXPOSE 8010 8010
