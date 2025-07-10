@@ -302,21 +302,15 @@ class ProviderManager {
         final url = config['url'] ?? '';
         final name = config['name'] ?? 'Provider';
         
-        // Convert WebSocket URL to HTTP URL
-        String httpUrl;
-        if (url.startsWith('ws://')) {
-          httpUrl = 'http://' + url.substring(5);
-        } else if (url.startsWith('wss://')) {
-          httpUrl = 'https://' + url.substring(6);
-        } else {
-          // If it's not a WebSocket URL, use as-is
-          httpUrl = url;
-        }
+        // For WebSocket connections, use the same URL as provided
+        // The server will handle the WebSocket upgrade
+        String wsUrl = url;
+        String httpUrl = url;
         
         _providerStates[id] = ProviderState(
           id: id,
           name: name,
-          wsUrl: url,
+          wsUrl: wsUrl,
           httpUrl: httpUrl,
         );
       }
@@ -325,18 +319,8 @@ class ProviderManager {
       _saveProviderConfigs();
     });
     
-    // 4. Attempt to connect to any configured tool providers in the background
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (accountDetail != null) {
-        connectToAllToolProviders().then((_) {
-          if (getAllAvailableTools().isNotEmpty) {
-            log('Found ${getAllAvailableTools().length} tools across ${toolProviders.length} providers');
-            // Update the tools notifier
-            availableToolsNotifier.value = getAllAvailableTools();
-          }
-        });
-      }
-    });
+    // 4. Don't auto-connect here - wait for account to be set via setAccountDetail
+    // The chat view will call connectToInitialProvider after setting the account
   }
 
   void setAccountDetail(AccountDetail? accountDetail) {
@@ -354,19 +338,8 @@ class ProviderManager {
     // Clear active provider
     _activeInferenceProviderId = null;
     
-    // If account is set, attempt to connect to providers
-    if (accountDetail != null) {
-      // Connect to tool providers in the background
-      Future.delayed(const Duration(milliseconds: 500), () {
-        connectToAllToolProviders().then((_) {
-          if (getAllAvailableTools().isNotEmpty) {
-            log('Connected to tool providers: found ${getAllAvailableTools().length} tools');
-            // Update the tools notifier
-            availableToolsNotifier.value = getAllAvailableTools();
-          }
-        });
-      });
-    }
+    // Don't auto-connect here - the chat view will handle connections
+    // after the account is properly set up
   }
 
   void setProviders(Map<String, Map<String, dynamic>> providers) {
@@ -849,7 +822,7 @@ class ProviderManager {
   }
 
   // Connect to the initial provider
-  void connectToInitialProvider() {
+  Future<void> connectToInitialProvider() async {
     if (_providersConfig.isEmpty) {
       log('No providers configured');
       return;
@@ -864,7 +837,7 @@ class ProviderManager {
     }
 
     log('Connecting to initial provider: ${firstProvider['name']}');
-    _connectProvider(firstProviderId);
+    await _connectProvider(firstProviderId);
   }
 
   // Connect to all configured providers
@@ -1034,19 +1007,13 @@ class ProviderManager {
       return false;
     }
 
-    final wsUrl = providerInfo['url'] ?? '';
+    final url = providerInfo['url'] ?? '';
     final name = providerInfo['name'] ?? '';
     
-    // Convert WebSocket URL to HTTP URL while preserving path
-    String httpUrl;
-    if (wsUrl.startsWith('ws://')) {
-      httpUrl = 'http://' + wsUrl.substring(5);
-    } else if (wsUrl.startsWith('wss://')) {
-      httpUrl = 'https://' + wsUrl.substring(6);
-    } else {
-      // If it's not a WebSocket URL, use as-is (likely already HTTP/HTTPS)
-      httpUrl = wsUrl;
-    }
+    // For WebSocket connections, use the same URL as provided
+    // The server will handle the WebSocket upgrade
+    String wsUrl = url;
+    String httpUrl = url;
 
     log('Connecting to provider: $name (ws: $wsUrl, http: $httpUrl)');
     
@@ -1694,8 +1661,8 @@ class ProviderManager {
     // Save the configuration
     _saveProviderConfigs();
     
-    // Reconnect to providers
-    connectToInitialProvider();
+    // Don't auto-connect here - the account might not be ready yet
+    // The chat view will handle connection after account is initialized
   }
   
   void setDisabledTools(List<String> tools) {

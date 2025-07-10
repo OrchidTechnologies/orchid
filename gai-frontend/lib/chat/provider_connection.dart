@@ -115,19 +115,55 @@ class ProviderConnection {
 
     if (!_usingDirectAuth) {
       try {
-        _providerChannel = WebSocketChannel.connect(Uri.parse(wsUrl));
-        _providerChannel?.ready;
+        // Convert HTTP(S) URL to WebSocket URL for the actual connection
+        String actualWsUrl = wsUrl;
+        if (wsUrl.startsWith('http://')) {
+          actualWsUrl = 'ws://' + wsUrl.substring(7);
+        } else if (wsUrl.startsWith('https://')) {
+          actualWsUrl = 'wss://' + wsUrl.substring(8);
+        }
+        
+        log('Attempting WebSocket connection to: $actualWsUrl (original: $wsUrl)');
+        _providerChannel = WebSocketChannel.connect(Uri.parse(actualWsUrl));
+        log('WebSocket channel created: ${_providerChannel != null}');
+        _providerChannel?.ready.then((_) {
+          log('WebSocket ready');
+        }).catchError((e) {
+          log('WebSocket ready error: $e');
+        });
       } catch (e) {
+        log('WebSocket connection failed: $e');
         onError('Failed on provider connection: $e');
         return;
       }
       _providerChannel?.stream.listen(
-        receiveProviderMessage,
-        onDone: () => onDisconnect(),
-        onError: (error) => onError('ws error: $error'),
+        (message) {
+          log('Received message from provider: $message');
+          receiveProviderMessage(message);
+        },
+        onDone: () {
+          log('WebSocket connection closed. Close code: ${_providerChannel?.closeCode}, Close reason: ${_providerChannel?.closeReason}');
+          if (_providerChannel?.closeCode != null) {
+            onError('WebSocket closed with code ${_providerChannel?.closeCode}: ${_providerChannel?.closeReason}');
+          }
+          onDisconnect();
+        },
+        onError: (error) {
+          log('WebSocket error: $error');
+          onError('ws error: $error');
+        },
       );
       onInternalMessage('WebSocket connecting to $wsUrl');
       // Do not call onConnect() here - we'll wait for auth token to be received
+      
+      // Request auth token after WebSocket connection is established
+      _providerChannel?.ready.then((_) {
+        log('WebSocket connection established, requesting auth token');
+        requestAuthToken();
+      }).catchError((e) {
+        log('WebSocket ready error, cannot request auth token: $e');
+        onError('WebSocket connection failed: $e');
+      });
     } else {
       // Set up inference client directly with auth token
       _inferenceClient = InferenceClient(baseUrl: httpBaseUrl);
@@ -206,7 +242,7 @@ class ProviderConnection {
 
   // This method will be called when we get payment confirmation
   void _fetchToolsIfReady() {
-    // Only try once
+    // Only try once per payment confirmation
     if (_toolsFetchAttempted) return;
     _toolsFetchAttempted = true;
 
@@ -219,22 +255,25 @@ class ProviderConnection {
     onInternalMessage(
         'Attempting to fetch tools now that payment is confirmed');
 
-    // Try to fetch available tools
-    fetchAvailableTools().then((tools) {
-      if (tools.isNotEmpty) {
-        onInternalMessage('Fetched ${tools.length} tools from provider');
-      } else {
-        onInternalMessage('No tools available from this provider');
-      }
-    }).catchError((e) {
-      onError('Failed to fetch tools: $e');
-      // If we get insufficient funds, we might need to wait longer
-      if (e.toString().contains('402') ||
-          e.toString().contains('insufficient')) {
-        onInternalMessage(
-            'Insufficient funds for tool fetching, will retry later');
-        _toolsFetchAttempted = false; // Allow retry
-      }
+    // Add a small delay to allow payment to propagate to the inference server
+    Future.delayed(const Duration(milliseconds: 500), () {
+      // Try to fetch available tools
+      fetchAvailableTools().then((tools) {
+        if (tools.isNotEmpty) {
+          onInternalMessage('Fetched ${tools.length} tools from provider');
+        } else {
+          onInternalMessage('No tools available from this provider');
+        }
+      }).catchError((e) {
+        onError('Failed to fetch tools: $e');
+        // If we get insufficient funds, we might need to wait longer
+        if (e.toString().contains('402') ||
+            e.toString().contains('insufficient')) {
+          onInternalMessage(
+              'Insufficient funds for tool fetching, will retry later');
+          _toolsFetchAttempted = false; // Allow retry
+        }
+      });
     });
   }
 
@@ -315,6 +354,9 @@ class ProviderConnection {
     final data = jsonDecode(message) as Map<String, dynamic>;
     print(message);
     onMessage('Provider: $message');
+    
+    // Log message type for debugging
+    log('Received provider message type: ${data['type']}');
 
     switch (data['type']) {
       case 'invoice':
@@ -324,12 +366,18 @@ class ProviderConnection {
         // The server has confirmed it received our payment
         onInternalMessage('Payment confirmed by server');
         onPaymentConfirmed?.call();
+        // Reset tool fetch attempts to allow retrying with new balance
+        _toolsFetchAttempted = false;
+        _fetchToolsIfReady();
         break;
       case 'balance_updated':
         // The server has updated our balance
         final balance = data['balance'];
         onInternalMessage('Balance updated: $balance');
         onPaymentConfirmed?.call();
+        // Reset tool fetch attempts to allow retrying with new balance
+        _toolsFetchAttempted = false;
+        _fetchToolsIfReady();
         break;
       case 'bid_low':
         onSystemMessage("Bid below provider's reserve price.");
@@ -348,6 +396,7 @@ class ProviderConnection {
 
     const message = '{"type": "request_token"}';
     onInternalMessage('Requesting auth token');
+    log('Sending auth token request: $message');
     _sendProviderMessage(message);
   }
 
@@ -635,8 +684,12 @@ class ProviderConnection {
       _toolFetchRetries++;
 
       final toolsUrl = '$inferenceBaseUrl/v1/tools/list';
+      final authToken = _inferenceClient!.authToken;
+      final tokenPreview = authToken != null && authToken.isNotEmpty 
+          ? authToken.substring(0, math.min(10, authToken.length)) + '...'
+          : '<no token>';
       onInternalMessage(
-          'Fetching tools from: $toolsUrl with auth token: ${_inferenceClient!.authToken!.substring(0, math.min(10, _inferenceClient!.authToken!.length))}...');
+          'Fetching tools from: $toolsUrl with auth token: $tokenPreview');
 
       // Extra logging for diagnosing provider connection issues
       try {
@@ -665,10 +718,14 @@ class ProviderConnection {
         log('Error getting provider info: $e');
       }
 
+      if (authToken == null) {
+        throw Exception('No auth token available for tools request');
+      }
+      
       final response = await _httpClient.post(
         Uri.parse(toolsUrl),
         headers: {
-          'Authorization': 'Bearer ${_inferenceClient!.authToken}',
+          'Authorization': 'Bearer $authToken',
           'Content-Type': 'application/json',
         },
       );
@@ -687,6 +744,12 @@ class ProviderConnection {
 
             // Reset the tool fetch attempt flag to allow retrying later
             _toolsFetchAttempted = false;
+            
+            // Schedule a retry after a delay to allow balance to propagate
+            Future.delayed(Duration(seconds: 2 + _toolFetchRetries), () {
+              log('Retrying tool fetch after insufficient balance (attempt $_toolFetchRetries)');
+              _fetchToolsIfReady();
+            });
 
             throw Exception('Insufficient balance to fetch tools: HTTP 402');
           }
@@ -710,7 +773,7 @@ class ProviderConnection {
         log('Tools response body, full content below:');
         logWrapped(response.body);
 
-        final data = json.decode(response.body) as Map<String, dynamic>;
+        final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
         if (!data.containsKey('tools') || data['tools'] is! List) {
           onError('Invalid tools response: ${response.body}');
           throw Exception('Invalid tools response format');
@@ -907,7 +970,7 @@ class ProviderConnection {
           String errorMessage;
           try {
             final errorData =
-                json.decode(response.body) as Map<String, dynamic>;
+                json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
             errorMessage = errorData['error']?['message'] ?? 'Unknown error';
           } catch (e) {
             errorMessage = 'Error: ${response.body}';
@@ -925,7 +988,7 @@ class ProviderConnection {
         }
 
         // Parse the successful response
-        final data = json.decode(response.body) as Map<String, dynamic>;
+        final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
 
         // Clean up the request ID as it's completed
         _activeRequestIds.remove(requestId);
@@ -1035,6 +1098,12 @@ class ProviderConnection {
       return;
     }
     print('Sending message to provider $message');
+    if (_providerChannel == null) {
+      log('ERROR: WebSocket channel is null when trying to send message');
+      onError('WebSocket not connected');
+      return;
+    }
+    log('WebSocket channel state: ${_providerChannel?.closeCode ?? "open"}');
     _providerChannel?.sink.add(message);
   }
 

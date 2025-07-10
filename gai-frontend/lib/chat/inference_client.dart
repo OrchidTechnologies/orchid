@@ -169,7 +169,7 @@ class InferenceClient {
       throw InferenceError(response.statusCode, response.body);
     }
     
-    final data = json.decode(response.body) as Map<String, dynamic>;
+    final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     return data.map((key, value) => MapEntry(
       key,
       ModelInfo.fromJson(value as Map<String, dynamic>),
@@ -241,7 +241,8 @@ class InferenceClient {
     }
     
     // Parse the response with tool calls if present
-    final responseBody = json.decode(response.body);
+    // IMPORTANT: Use utf8.decode to ensure proper UTF-8 decoding
+    final responseBody = json.decode(utf8.decode(response.bodyBytes));
     final completionResponse = ChatCompletionResponse.fromJson(responseBody);
     
     // Extract any tool calls for processing

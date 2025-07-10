@@ -95,13 +95,15 @@ class _ChatViewState extends State<ChatView> {
     );
 
     // Get account details from parameters if provided
-    try {
-      _initFromParams();
-      // If we have providers and an account, connect to first provider
-      _providerManager.connectToInitialProvider();
-    } catch (e, stack) {
-      log('Error initializing from params: $e, $stack');
-    }
+    // Use Future to initialize params without blocking initState
+    Future(() async {
+      try {
+        await _initFromParams();
+        // Account is now initialized, provider connections will be made by _accountChanged
+      } catch (e, stack) {
+        log('Error initializing from params: $e, $stack');
+      }
+    });
 
     // Initialize the scripting extension mechanism
     _initScripting();
@@ -257,7 +259,7 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  void _accountChanged() async {
+  Future<void> _accountChanged() async {
     log("chat: accountChanged: $_account");
     _accountDetail?.cancel();
     _accountDetail = null;
@@ -266,11 +268,11 @@ class _ChatViewState extends State<ChatView> {
       _accountDetail = AccountDetailPoller(account: _account!);
       await _accountDetail?.pollOnce();
 
-      // Disconnects any existing provider connection
+      // IMPORTANT: Set account detail BEFORE trying to connect
       _providerManager.setAccountDetail(_accountDetail);
 
-      // Connect to provider with new account
-      _providerManager.connectToInitialProvider();
+      // Now connect to provider with new account - the account detail is already set
+      await _providerManager.connectToInitialProvider();
     } else {
       // Disconnects any existing provider connection
       _providerManager.setAccountDetail(null);
@@ -283,11 +285,13 @@ class _ChatViewState extends State<ChatView> {
   }
 
   // Init from user parameters (for web)
-  void _initFromParams() {
+  Future<void> _initFromParams() async {
     final params = OrchidUserParams();
     _funder = params.getEthereumAddress('funder');
     _signerKey = params.getBigInt('signer');
-    _accountChanged();
+    
+    // Wait for account to be fully initialized before proceeding
+    await _accountChanged();
 
     String? provider = params.get('provider');
     if (provider != null) {
