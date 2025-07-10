@@ -303,7 +303,7 @@ class ToolNodeClient:
 class OrchidLLMTestClient:
     def __init__(self, config_path: str, wallet_only: bool = False, inference_only: bool = False, 
                  inference_url: Optional[str] = None, auth_key: Optional[str] = None, 
-                 prompt: Optional[str] = None):
+                 prompt: Optional[str] = None, debug: bool = False):
         self.config = ClientConfig.from_file(config_path)
         if prompt:
             self.config.test.messages = [Message(role="user", content=prompt)]
@@ -315,6 +315,7 @@ class OrchidLLMTestClient:
         self.inference_only = inference_only
         self.cli_inference_url = inference_url
         self.cli_auth_key = auth_key
+        self.debug = debug
         
         if not inference_only:
             if not self.config.inference.rpc:
@@ -372,7 +373,10 @@ class OrchidLLMTestClient:
                 'type': 'payment',
                 'tickets': [ticket_str]
             }
-            await self.ws.send(json.dumps(payment))
+            payment_json = json.dumps(payment)
+            if self.debug:
+                print(f"[DEBUG] Sending WebSocket message: {payment_json}")
+            await self.ws.send(payment_json)
             self.logger.info(f"Sent payment ticket")
             
         except Exception as e:
@@ -382,6 +386,8 @@ class OrchidLLMTestClient:
     async def _billing_handler(self) -> None:
         try:
             async for message in self.ws:
+                if self.debug:
+                    print(f"[DEBUG] Received WebSocket message: {message}")
                 msg = json.loads(message)
                 self.logger.debug(f"Received WS message: {msg['type']}")
                 
@@ -389,8 +395,9 @@ class OrchidLLMTestClient:
                     # Handle invoice immediately
                     await self._handle_invoice(msg)
                 elif msg['type'] == 'auth_token':
-                    self.session_id = msg['session_id']
-                    self.inference_url = msg['inference_url']
+                    self.session_id = msg.get('session_id')
+                    self.inference_url = msg.get('inference_url')
+                    self.logger.info(f"Received auth token message")
                     if self.wallet_only:
                         print(f"\nAuth Token: {self.session_id}")
                         print(f"Inference URL: {self.inference_url}")
@@ -445,21 +452,37 @@ class OrchidLLMTestClient:
                 raise Exception(f"No configuration found for provider: {provider}")
                 
             self.logger.info(f"Connecting to provider {provider} at {provider_config.billing_url}")
+            
+            # Debug: Log the exact URL being used
+            self.logger.debug(f"WebSocket URL before connect: {provider_config.billing_url}")
+            self.logger.debug(f"URL scheme: {provider_config.billing_url.split('://')[0] if '://' in provider_config.billing_url else 'no scheme'}")
+            
             self.ws = await websockets.connect(provider_config.billing_url)
             
             self._handler_task = asyncio.create_task(self._billing_handler())
             
-            await self.ws.send(json.dumps({
+            request_msg = json.dumps({
                 'type': 'request_token',
                 'orchid_account': self.config.inference.funder
-            }))
+            })
+            if self.debug:
+                print(f"[DEBUG] Sending WebSocket message: {request_msg}")
+            await self.ws.send(request_msg)
             
             if not self.wallet_only:
-                msg_type, session_id = await self.message_queue.get()
-                if msg_type != 'auth_received':
-                    raise Exception(f"Authentication failed: {session_id}")
-                    
-                self.logger.info("Successfully authenticated")
+                try:
+                    # Wait for auth response with timeout
+                    msg_type, session_id = await asyncio.wait_for(
+                        self.message_queue.get(),
+                        timeout=10.0
+                    )
+                    if msg_type != 'auth_received':
+                        raise Exception(f"Authentication failed: {session_id}")
+                        
+                    self.logger.info("Successfully authenticated")
+                except asyncio.TimeoutError:
+                    self.logger.error("Timeout waiting for authentication response")
+                    raise Exception("Authentication timeout - no response from server")
                 
                 # Initialize tool clients if tools_url is provided in the provider config
                 if provider_config.tools_url:
@@ -626,7 +649,8 @@ async def main(config_path: str, wallet_only: bool = False, inference_only: bool
                cmd_providers: List[str] = None, auth_key: Optional[str] = None,
                prompt: Optional[str] = None, 
                list_tools: bool = False, 
-               tool_name: Optional[str] = None, tool_args: Optional[str] = None):
+               tool_name: Optional[str] = None, tool_args: Optional[str] = None,
+               debug: bool = False):
     """
     Run the client with the specified options.
     
@@ -685,7 +709,8 @@ async def main(config_path: str, wallet_only: bool = False, inference_only: bool
         inference_only,
         main_provider['url'] if inference_only else None,  # Use URL directly only in inference_only mode
         auth_key,
-        prompt
+        prompt,
+        debug
     )
     
     try:
@@ -729,11 +754,12 @@ async def main(config_path: str, wallet_only: bool = False, inference_only: bool
                 # Create a dedicated client for each provider
                 provider_client = OrchidLLMTestClient(
                     config_path,
-                    False,  # Not wallet_only
+                    wallet_only and provider is main_provider,  # wallet_only if this is the main provider
                     False,  # Not inference_only
                     None,   # No URL override
                     None,   # No key override
-                    None    # No prompt
+                    None,   # No prompt
+                    debug
                 )
                 
                 # Manually set the provider to connect to
@@ -779,18 +805,23 @@ async def main(config_path: str, wallet_only: bool = False, inference_only: bool
                             logger=client.logger
                         )
                     
-                    # Close the provider's connection if not the main provider
-                    if provider is not main_provider:
+                    # Keep the main provider client for wallet mode
+                    if provider is main_provider and wallet_only:
+                        # Replace the main client with the provider client for wallet mode
+                        client = provider_client
+                    elif provider is not main_provider:
                         await provider_client.close()
                     
                 except Exception as e:
                     print(f"Failed to connect to provider {provider_name}: {e}")
                     await provider_client.close()
             
-            # Verify we have a session for the main client
-            if not client.session_id:
-                print("Failed to authenticate with main provider")
-                return
+            # In wallet mode, we want to keep running even without full authentication
+            if not wallet_only:
+                # Verify we have a session for the main client
+                if not client.session_id:
+                    print("Failed to authenticate with main provider")
+                    return
         
         # Load available tools for each provider
         for provider_name, tool_client in client.tool_clients.items():
@@ -882,6 +913,7 @@ if __name__ == "__main__":
     mode_group = parser.add_argument_group("Mode options")
     mode_group.add_argument("--wallet", action="store_true", help="Run in wallet-only mode")
     mode_group.add_argument("--inference", action="store_true", help="Run in inference-only mode")
+    mode_group.add_argument("--debug", action="store_true", help="Enable debug logging for WebSocket messages")
     
     # Provider and authentication options
     provider_group = parser.add_argument_group("Provider options")
@@ -923,5 +955,6 @@ if __name__ == "__main__":
         prompt,
         args.list_tools,
         args.tool_name,
-        args.tool_args
+        args.tool_args,
+        args.debug
     ))
