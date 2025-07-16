@@ -76,13 +76,15 @@ class ChatScripting {
 
   static bool get enabled {
     return ChatScripting._instance != null
-        && (instance.url != null // assume enabled when URL provided as param
-            || (userPrefEnabled && instance.script != null));
+        && (_instance!.url != null // assume enabled when URL provided as param
+            || (userPrefEnabled && _instance!.script != null));
   }
 
   static bool get userPrefEnabled {
     return (UserPreferencesScripts().userScriptEnabled.get() ?? false);
   }
+  
+  String? get currentScriptUrl => url;
 
   Future<void> setURL(String newURL) async {
     url = newURL;
