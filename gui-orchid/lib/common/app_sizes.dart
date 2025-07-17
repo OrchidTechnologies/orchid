@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
 
+// TODO: Rename AppWidth
+// Note: we separate AppSize and AppWidth to avoid binding widgets to changes in the app height
+// unnecessarily. MediaQuery is an inherited widget and can cause unnecessary rebuilds when the layout
+// changes, e.g. when the keyboard opens or closes.
 class AppSize {
   static const Size small_android = Size(360, 640);
   static const Size iphone_se = Size(320, 568);
   static const Size iphone_xs = Size(375, 812); // Original X and Xs
   static const Size iphone_12_pro_max = Size(428, 926);
 
-  Size size;
+  double width;
 
-  AppSize(BuildContext context) : this.size = MediaQuery.of(context).size;
-
-  bool tallerThan(Size targetSize) {
-    return size.height > targetSize.height;
-  }
-
-  bool shorterThan(Size targetSize) {
-    return !tallerThan(targetSize);
-  }
+  // sizeOf().width does not subscribe to height and so the inherited widget won't keep updating
+  // on height changues due to e.g. keyboard opening.
+  // AppSize(BuildContext context) : this.size = MediaQuery.of(context).size;
+  AppSize(BuildContext ctx) : width = MediaQuery.sizeOf(ctx).width;
 
   bool widerThan(Size targetSize) {
-    return size.width > targetSize.width;
+    return width > targetSize.width;
   }
 
   bool narrowerThan(Size targetSize) {
@@ -41,20 +40,16 @@ class AppSize {
   }
 }
 
-/// Encapsulate a decision about a value or component that depends on screen height
-class AdaptiveHeight<T> {
-  final T large;
-  final T small;
-  final Size thresholdSize;
+class AppHeight {
+  double height;
 
-  const AdaptiveHeight(this.large, this.small,
-      [this.thresholdSize = AppSize.iphone_xs]);
+  AppHeight(BuildContext ctx) : height = MediaQuery.sizeOf(ctx).height;
 
-  /// Return the larger value if the screen height is greater than thresholdSize
-  /// height, otherwise return the smaller value.
-  T value(BuildContext context) {
-    return MediaQuery.of(context).size.height > thresholdSize.height
-        ? large
-        : small;
+  bool tallerThan(Size targetSize) {
+    return height > targetSize.height;
+  }
+
+  bool shorterThan(Size targetSize) {
+    return !tallerThan(targetSize);
   }
 }

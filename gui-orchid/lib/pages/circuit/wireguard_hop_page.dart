@@ -67,7 +67,7 @@ class _WireGuardHopPageState extends State<WireGuardHopPage> {
                   constraints: BoxConstraints(maxWidth: 700),
                   child: Column(
                     children: <Widget>[
-                      if (AppSize(context).tallerThan(AppSize.iphone_12_pro_max))
+                      if (AppHeight(context).tallerThan(AppSize.iphone_12_pro_max))
                         pady(64),
                       pady(16),
                       ConfigLabel(text: s.config),

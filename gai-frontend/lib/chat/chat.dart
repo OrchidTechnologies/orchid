@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+
 // Conditionally import JS only when compiling for web
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
 import 'package:orchid/api/orchid_keys.dart';
 import 'package:orchid/api/orchid_user_config/orchid_user_param.dart';
-import 'package:orchid/api/orchid_log.dart';  // Import logWrapped
+import 'package:orchid/api/orchid_log.dart'; // Import logWrapped
 import 'package:orchid/chat/api/user_preferences_chat.dart';
 import 'package:orchid/chat/model.dart';
 import 'package:orchid/chat/provider_connection.dart';
@@ -48,26 +50,38 @@ class _ChatViewState extends State<ChatView> {
     // On web, check the target platform
     if (kIsWeb) {
       // Web on mobile browsers
-      return defaultTargetPlatform == TargetPlatform.iOS || 
-             defaultTargetPlatform == TargetPlatform.android;
+      return defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.android;
     }
     // Native mobile apps
-    return defaultTargetPlatform == TargetPlatform.iOS || 
-           defaultTargetPlatform == TargetPlatform.android;
+    return defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.android;
   }
-  
+
+  bool get _isMobileWeb {
+    // On web, check the target platform
+    if (kIsWeb) {
+      // Web on mobile browsers
+      return defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.android;
+    }
+    // Not mobile web on native platforms
+    return false;
+  }
+
   // UI state
   bool _debugMode = false;
   bool _multiSelectMode = false;
   bool _partyMode = false;
   bool _isProcessingRequest = false; // Track if we're processing a request
-  bool _calloutDismissed = false; // Track if the account callout has been dismissed
+  bool _calloutDismissed =
+      false; // Track if the account callout has been dismissed
   int? _maxTokens;
   Chain _selectedChain = Chains.Gnosis;
   final ScrollController messageListController = ScrollController();
   final _promptTextController = TextEditingController();
   final _maxTokensController = NumericValueFieldController();
-  
+
   // Focus node to detect key events
   final FocusNode _keyboardFocusNode = FocusNode();
 
@@ -120,17 +134,17 @@ class _ChatViewState extends State<ChatView> {
 
     // Initialize the scripting extension mechanism
     _initScripting();
-    
+
     // Initialize keyboard listener only on non-mobile platforms
     if (!_isMobilePlatform) {
       _initKeyboardListener();
-      
+
       // Register a browser-level event listener if we're running on the web
       if (kIsWeb) {
         _initBrowserKeyboardListeners();
       }
     }
-    
+
     // Initialize state manager
     StateManager().init(
       captureState: _captureCurrentState,
@@ -143,17 +157,17 @@ class _ChatViewState extends State<ChatView> {
       },
     );
   }
-  
+
   // For web only: directly hook into browser events
   void _initBrowserKeyboardListeners() {
     log('Setting up browser keyboard listener for web');
-    
+
     // Use HardwareKeyboard for listening to key events
     HardwareKeyboard.instance.addHandler(_handleKeyEvent);
-    
+
     log('Browser keyboard listener initialized');
   }
-  
+
   bool _handleKeyEvent(KeyEvent event) {
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.escape) {
@@ -165,12 +179,13 @@ class _ChatViewState extends State<ChatView> {
     }
     return false; // Not handled
   }
-  
+
   void _initKeyboardListener() {
     // Add callback for key events on our focus node
     _keyboardFocusNode.onKeyEvent = (node, event) {
       // Only respond to key down events to avoid handling the same press twice
-      if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+      if (event is KeyDownEvent &&
+          event.logicalKey == LogicalKeyboardKey.escape) {
         if (_isProcessingRequest) {
           _cancelOngoingRequests();
           return KeyEventResult.handled;
@@ -179,42 +194,42 @@ class _ChatViewState extends State<ChatView> {
       return KeyEventResult.ignored;
     };
   }
-  
+
   // Flag to prevent duplicate cancellation
   bool _isCancelling = false;
-  
+
   void _cancelOngoingRequests() {
     // Prevent multiple cancellations
     if (_isCancelling || !_isProcessingRequest) {
       return;
     }
-    
+
     // Set flag to prevent duplicate cancellation messages
     _isCancelling = true;
-    
+
     // Add message to indicate cancellation
     _addMessage(
       ChatMessageSource.system,
       'Request interrupted by user',
     );
-    
+
     // Tell provider manager to cancel ongoing requests
     _providerManager.cancelActiveRequests();
-    
+
     // Reset processing state
     setState(() {
       _isProcessingRequest = false;
     });
-    
+
     // Force a notification to the user
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Request cancelled'), 
+        content: Text('Request cancelled'),
         duration: Duration(seconds: 1),
         backgroundColor: Colors.red[800],
       ),
     );
-    
+
     // Reset cancellation flag after a short delay
     Future.delayed(Duration(milliseconds: 500), () {
       _isCancelling = false;
@@ -305,7 +320,7 @@ class _ChatViewState extends State<ChatView> {
     final params = OrchidUserParams();
     _funder = params.getEthereumAddress('funder');
     _signerKey = params.getBigInt('signer');
-    
+
     // Wait for account to be fully initialized before proceeding
     await _accountChanged();
 
@@ -346,7 +361,7 @@ class _ChatViewState extends State<ChatView> {
   }) {
     // Use factory methods for specific types
     ChatMessage message;
-    
+
     switch (source) {
       case ChatMessageSource.notice:
         message = ChatMessage.notice(
@@ -355,14 +370,14 @@ class _ChatViewState extends State<ChatView> {
           sourceName: sourceName.isNotEmpty ? sourceName : 'Notice',
         );
         break;
-        
+
       case ChatMessageSource.system:
         message = ChatMessage.systemInstruction(
           instruction: msg,
           metadata: metadata,
         );
         break;
-        
+
       default:
         // Use the default constructor for other types
         message = ChatMessage(
@@ -377,17 +392,17 @@ class _ChatViewState extends State<ChatView> {
           toolArguments: toolArguments,
         );
     }
-    
+
     _addChatMessage(message);
   }
 
   // Helper method to log chat responses with proper chunking
   void _logResponseDetails(String label, Object data) {
     final jsonString = json.encode(data);
-    
-    // First log the label with clear indication this is full content 
+
+    // First log the label with clear indication this is full content
     log('$label, full content below:');
-    
+
     // Then use logWrapped for the content which will show in the browser console
     logWrapped(jsonString);
   }
@@ -397,8 +412,10 @@ class _ChatViewState extends State<ChatView> {
     log('Adding message: ${message.message.truncate(64)}');
 
     // Log complete metadata for tool calls and responses to help with debugging
-    if (message.source == ChatMessageSource.provider && message.metadata != null) {
-      _logResponseDetails('Handle response: ${message.message.truncate(64)}', message.metadata!);
+    if (message.source == ChatMessageSource.provider &&
+        message.metadata != null) {
+      _logResponseDetails('Handle response: ${message.message.truncate(64)}',
+          message.metadata!);
     }
 
     // Add the verbose model name for the model if not provided.
@@ -550,17 +567,17 @@ class _ChatViewState extends State<ChatView> {
     setState(() {
       _isProcessingRequest = true;
     });
-    
+
     // Tell the provider manager we have active, cancellable requests
     _providerManager.setHasCancellableRequests(true);
-    
+
     log('Starting processing request - ESC to cancel');
-    
+
     // Ensure the app has focus for keyboard events (only on non-mobile platforms)
     if (!_isMobilePlatform && _keyboardFocusNode.canRequestFocus) {
       _keyboardFocusNode.requestFocus();
     }
-    
+
     try {
       // Add user message immediately to update UI and include in history
       _addMessage(ChatMessageSource.client, msg);
@@ -650,7 +667,7 @@ class _ChatViewState extends State<ChatView> {
       metadata: metadata,
       modelId: modelId,
     );
-    
+
     // Add the message to the chat history
     _addChatMessage(assistantMessage);
 
@@ -661,7 +678,7 @@ class _ChatViewState extends State<ChatView> {
 
       // We need to maintain the processing request state across the whole sequence
       // Don't reset the _isProcessingRequest flag here as tool processing will take over
-      
+
       // Process each tool call sequentially - this function will handle its own state
       _processToolCalls(toolCalls);
     } else {
@@ -679,31 +696,31 @@ class _ChatViewState extends State<ChatView> {
 
   // Flag to avoid resetting state in nested async calls
   bool _inToolProcessingMode = false;
-  
+
   // Process and execute tool calls extracted from a model response
   // IMPORTANT: This handles both single tool calls and sequences of tool calls
   Future<void> _processToolCalls(List<dynamic> toolCalls) async {
     // Debug info to track entry/exit
     log('ENTER _processToolCalls with ${toolCalls.length} tool calls');
-    
+
     // Maintain mapping between tool calls and results for proper sequencing
     Map<String, ChatMessage> toolCallResultMap = {};
     // Set the tool processing mode flag to prevent premature state reset
     _inToolProcessingMode = true;
-    
+
     // Mark as processing request so we can interrupt with ESC
     setState(() {
       _isProcessingRequest = true;
     });
-    
+
     // Tell the provider manager we have active, cancellable requests
     _providerManager.setHasCancellableRequests(true);
-    
+
     // Ensure we have focus for keyboard events (only on non-mobile platforms)
     if (!_isMobilePlatform && _keyboardFocusNode.canRequestFocus) {
       _keyboardFocusNode.requestFocus();
     }
-    
+
     List<ChatMessage> toolResultMessages = [];
     String? modelId;
 
@@ -714,7 +731,7 @@ class _ChatViewState extends State<ChatView> {
           log('Tool processing was cancelled - skipping remaining tool calls');
           break;
         }
-        
+
         try {
           if (toolCall is! Map) continue;
 
@@ -778,19 +795,17 @@ class _ChatViewState extends State<ChatView> {
               'provider_name': providerName ?? '',
               'tool_call_id': toolCallId,
             },
-            sourceName: toolName.contains('__') ? toolName.split('__').last : toolName,
+            sourceName:
+                toolName.contains('__') ? toolName.split('__').last : toolName,
             toolName: toolName,
             toolArguments: arguments,
           );
 
           // Execute the tool call with the provider manager - making sure it's marked as processing
           // Pass the tool call ID to ensure it's preserved in the result
-          final result = await _providerManager.callTool(
-            toolName, 
-            arguments,
-            toolCallId: toolCallId
-          );
-          
+          final result = await _providerManager.callTool(toolName, arguments,
+              toolCallId: toolCallId);
+
           // Check if request was cancelled during tool execution
           if (!_isProcessingRequest) {
             log('Request was cancelled during tool execution');
@@ -801,13 +816,13 @@ class _ChatViewState extends State<ChatView> {
             // CRITICAL: For proper linking of tool calls to results, ensure the toolCallId is preserved
             // First check if the result already has a toolCallId from the API response
             String effectiveToolCallId = result.toolCallId ?? toolCallId ?? '';
-            
+
             if (effectiveToolCallId.isEmpty) {
               log('WARNING: No tool call ID available for tool result. This may cause format errors.');
             } else {
               log('Tool result has tool_call_id: $effectiveToolCallId');
             }
-            
+
             // Add the result to the chat history - with tool_call_id explicitly set
             final resultMessage = ChatMessage.toolResult(
               result: result,
@@ -821,22 +836,22 @@ class _ChatViewState extends State<ChatView> {
                 'provider_name': providerName ?? result.providerId,
               },
             );
-            
+
             // Verify the result message has the correct tool_call_id in its metadata
-            if (resultMessage.metadata == null || 
+            if (resultMessage.metadata == null ||
                 !resultMessage.metadata!.containsKey('tool_call_id') ||
                 resultMessage.metadata!['tool_call_id'].toString().isEmpty) {
               log('ERROR: Created tool result message without valid tool_call_id!');
             } else {
               log('Verified tool result has tool_call_id: ${resultMessage.metadata!['tool_call_id']}');
             }
-            
+
             // Add to chat history
             _addChatMessage(resultMessage);
 
             // Store the result message for sending back to the model
             toolResultMessages.add(resultMessage);
-            
+
             // Store in our tool call to result mapping
             if (effectiveToolCallId.isNotEmpty) {
               toolCallResultMap[effectiveToolCallId] = resultMessage;
@@ -846,21 +861,23 @@ class _ChatViewState extends State<ChatView> {
             // Special extra logging for sequential thinking tool
             if (toolName == 'mcp__sequentialthinking__sequentialthinking') {
               try {
-                if (result.content.isNotEmpty && result.content.first.text != null) {
+                if (result.content.isNotEmpty &&
+                    result.content.first.text != null) {
                   final rawContent = result.content.first.text!;
                   log('Sequential thinking raw JSON content:');
                   log(rawContent);
-                  
+
                   final parsed = json.decode(rawContent);
                   final thoughtNumber = parsed['thoughtNumber'] ?? 1;
                   final totalThoughts = parsed['totalThoughts'] ?? 1;
-                  final nextThoughtNeeded = parsed['nextThoughtNeeded'] ?? false;
+                  final nextThoughtNeeded =
+                      parsed['nextThoughtNeeded'] ?? false;
                   final thought = parsed['thought'] ?? '';
-                  
+
                   log('Sequential thinking thought number: $thoughtNumber / $totalThoughts');
                   log('Next thought needed: $nextThoughtNeeded');
                   log('Thought content (first 100 chars): ${thought.toString().substring(0, math.min(100, thought.toString().length))}...');
-                  
+
                   // Add a message showing the parsed thought information to make it more visible
                   _addMessage(
                     ChatMessageSource.internal,
@@ -897,7 +914,8 @@ class _ChatViewState extends State<ChatView> {
         if (modelId == null) {
           final latestMessages = _chatHistory.getConversation();
           for (final msg in latestMessages.reversed) {
-            if (msg.source == ChatMessageSource.provider && msg.modelId != null) {
+            if (msg.source == ChatMessageSource.provider &&
+                msg.modelId != null) {
               modelId = msg.modelId;
               break;
             }
@@ -924,7 +942,7 @@ class _ChatViewState extends State<ChatView> {
     } finally {
       // Reset the tool processing mode flag
       _inToolProcessingMode = false;
-      
+
       // Only reset processing state if we're not in the middle of a follow-up model call
       // This is checked by examining if toolResultMessages is empty or if all tools failed
       if (toolResultMessages.isEmpty) {
@@ -937,7 +955,7 @@ class _ChatViewState extends State<ChatView> {
         log('Tool execution complete with ${toolResultMessages.length} results - maintaining processing state for follow-up model call');
         // Keep processing state active for the follow-up model call
       }
-      
+
       // Debug info to track entry/exit
       log('EXIT _processToolCalls with ${toolResultMessages.length} tool results');
     }
@@ -945,33 +963,33 @@ class _ChatViewState extends State<ChatView> {
 
   // Flag to track if recent response has tool calls
   bool _responseHasToolCalls = false;
-  
+
   // Send tool results back to the model to continue the conversation
   Future<void> _sendToolResultsToModel(
       List<ChatMessage> toolResultMessages, String modelId) async {
     // Debug info to track entry/exit
     log('ENTER _sendToolResultsToModel with ${toolResultMessages.length} tool results to model: $modelId');
-      
+
     // Make sure we're marked as processing so interruption works
     setState(() {
       _isProcessingRequest = true;
     });
-    
+
     // Reset tool calls flag
     _responseHasToolCalls = false;
-    
+
     // Update the provider manager state
     _providerManager.setHasCancellableRequests(true);
-    
+
     try {
       // Check if already cancelled
       if (!_isProcessingRequest) {
         log('Request was cancelled before sending tool results to model');
         return;
       }
-      
+
       log('Sending ${toolResultMessages.length} tool results back to model: $modelId');
-      
+
       // Add system message for internal tracking
       _addMessage(
         ChatMessageSource.internal,
@@ -980,10 +998,10 @@ class _ChatViewState extends State<ChatView> {
 
       // IMPORTANT: Use the FULL conversation history for all inference requests
       // This ensures consistency and avoids the "forgetting" problem with tools
-      
+
       // Get the full conversation from the chat history
       final conversationHistory = _chatHistory.getConversation();
-      
+
       // Use standard formatting for the conversation
       // This will automatically include all user messages, assistant responses,
       // and tool calls/results already in the conversation
@@ -996,19 +1014,19 @@ class _ChatViewState extends State<ChatView> {
         );
         return;
       }
-      
+
       // Format the conversation using the standard method
       // The model_api.formatMessages method will properly filter notice/internal messages
       // and format all messages with appropriate roles (user, assistant, system, tool)
       final formattedMessages = model.formatMessages(conversationHistory);
-      
+
       // Log the conversation being sent
       log('Sending complete conversation with ${formattedMessages.length} messages');
       for (int i = 0; i < formattedMessages.length; i++) {
         final msg = formattedMessages[i];
         final role = msg['role'] as String;
         String details = '';
-        
+
         if (role == 'assistant' && msg.containsKey('tool_calls')) {
           final toolCalls = msg['tool_calls'] as List;
           List<String> ids = [];
@@ -1021,21 +1039,23 @@ class _ChatViewState extends State<ChatView> {
         } else if (role == 'tool' && msg.containsKey('tool_call_id')) {
           details = '(tool_call_id: ${msg['tool_call_id']})';
         }
-        
+
         log('  [$i] $role $details');
       }
-      
+
       // Log message sequence for debugging
       log('Message role sequence:');
-      List<String> roleSequence = formattedMessages.map((m) => m['role'] as String).toList();
+      List<String> roleSequence =
+          formattedMessages.map((m) => m['role'] as String).toList();
       log(roleSequence.join(' -> '));
-      
+
       try {
         // Send the formatted messages to the model
         log('Sending complete conversation to model');
-        final chatResponse = await _providerManager.sendFormattedMessagesToModel(
-            formattedMessages, modelId, _maxTokens);
-        
+        final chatResponse =
+            await _providerManager.sendFormattedMessagesToModel(
+                formattedMessages, modelId, _maxTokens);
+
         // Check if we were cancelled during the model call
         if (!_isProcessingRequest) {
           log('Request was cancelled during model continuation call');
@@ -1046,23 +1066,24 @@ class _ChatViewState extends State<ChatView> {
         if (chatResponse != null) {
           // Check if this response has tool calls
           final metadata = chatResponse.metadata;
-          if (metadata.containsKey('tool_calls') && 
-              metadata['tool_calls'] is List && 
+          if (metadata.containsKey('tool_calls') &&
+              metadata['tool_calls'] is List &&
               (metadata['tool_calls'] as List).isNotEmpty) {
             // Mark that we have tool calls in this response
             _responseHasToolCalls = true;
             log('Follow-up response has more tool calls, will not reset processing state yet');
-            
+
             // IMPORTANT: Still need to add the assistant message to keep conversation flow
             final assistantMessage = ChatMessage(
               source: ChatMessageSource.provider,
-              message: chatResponse.message ?? "Processing additional tool calls...",
+              message:
+                  chatResponse.message ?? "Processing additional tool calls...",
               metadata: metadata,
               modelId: modelId,
             );
-            
+
             _addChatMessage(assistantMessage);
-            
+
             // Create an artificial delay to ensure the UI is properly updated
             // and the previous message is visible before we process the tools
             Future.delayed(Duration(milliseconds: 100), () {
@@ -1107,7 +1128,7 @@ class _ChatViewState extends State<ChatView> {
         log('Follow-up response has more tool calls, maintaining processing state');
         // Do not reset state here as _processToolCalls will handle it
       }
-      
+
       // Debug info to track entry/exit
       log('EXIT _sendToolResultsToModel, responseHasToolCalls=$_responseHasToolCalls');
     }
@@ -1135,12 +1156,12 @@ class _ChatViewState extends State<ChatView> {
     // Get current script state
     Map<String, dynamic>? scriptState;
     String? scriptUrl;
-    
+
     // Safely get script URL if ChatScripting is initialized
     if (ChatScripting.enabled) {
       scriptUrl = ChatScripting.instance.currentScriptUrl;
     }
-    
+
     final scriptContent = UserPreferencesScripts().userScript.get();
     if (scriptUrl != null || scriptContent != null) {
       scriptState = {
@@ -1170,10 +1191,10 @@ class _ChatViewState extends State<ChatView> {
       _debugMode = state.uiPreferences['debugMode'] ?? false;
       _multiSelectMode = state.uiPreferences['multiSelectMode'] ?? false;
       _partyMode = state.uiPreferences['partyMode'] ?? false;
-      
+
       // Apply model selection
       _userSelectedModelIds = state.selectedModelIds;
-      
+
       // Apply max tokens
       _maxTokens = state.maxTokens;
       if (_maxTokens != null) {
@@ -1210,8 +1231,9 @@ class _ChatViewState extends State<ChatView> {
   void _exportState() async {
     try {
       final stateJson = await StateManager().exportFullState();
-      final canGenerateDirectLink = stateJson.length <= 100000; // ~100KB limit for URLs
-      
+      final canGenerateDirectLink =
+          stateJson.length <= 100000; // ~100KB limit for URLs
+
       // Show export dialog
       showDialog(
         context: context,
@@ -1222,10 +1244,11 @@ class _ChatViewState extends State<ChatView> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Session includes ${_chatHistory.messages.length} messages'),
-                Text('Size: ${(stateJson.length / 1024).toStringAsFixed(1)} KB'),
+                Text(
+                    'Session includes ${_chatHistory.messages.length} messages'),
+                Text(
+                    'Size: ${(stateJson.length / 1024).toStringAsFixed(1)} KB'),
                 const SizedBox(height: 16),
-                
                 if (canGenerateDirectLink) ...[
                   Row(
                     children: [
@@ -1242,11 +1265,13 @@ class _ChatViewState extends State<ChatView> {
                     icon: const Icon(Icons.link),
                     label: const Text('Copy Private Link'),
                     onPressed: () async {
-                      final url = await StateManager().getShareableUrl(useHashbang: true);
+                      final url = await StateManager()
+                          .getShareableUrl(useHashbang: true);
                       await Clipboard.setData(ClipboardData(text: url));
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Private link copied to clipboard')),
+                        const SnackBar(
+                            content: Text('Private link copied to clipboard')),
                       );
                     },
                   ),
@@ -1254,8 +1279,8 @@ class _ChatViewState extends State<ChatView> {
                   const Divider(),
                   const SizedBox(height: 16),
                 ],
-                
-                const Text('Or save this JSON to GitHub Gist, Pastebin, or any text hosting service:'),
+                const Text(
+                    'Or save this JSON to GitHub Gist, Pastebin, or any text hosting service:'),
                 const SizedBox(height: 8),
                 Container(
                   constraints: const BoxConstraints(maxHeight: 300),
@@ -1263,27 +1288,32 @@ class _ChatViewState extends State<ChatView> {
                     controller: TextEditingController(text: stateJson),
                     maxLines: null,
                     readOnly: true,
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 12),
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.copy),
                         onPressed: () async {
-                          await Clipboard.setData(ClipboardData(text: stateJson));
+                          await Clipboard.setData(
+                              ClipboardData(text: stateJson));
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('JSON copied to clipboard')),
+                            const SnackBar(
+                                content: Text('JSON copied to clipboard')),
                           );
                         },
                       ),
                     ),
                   ),
                 ),
-                
                 if (!canGenerateDirectLink) ...[
                   const SizedBox(height: 8),
                   Text(
                     'Session too large for direct link. Please use external hosting.',
-                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.orange[700]),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.orange[700]),
                   ),
                 ],
               ],
@@ -1306,7 +1336,7 @@ class _ChatViewState extends State<ChatView> {
 
   void _importState() {
     final textController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1341,7 +1371,7 @@ class _ChatViewState extends State<ChatView> {
 
               try {
                 Navigator.of(context).pop();
-                
+
                 // Show loading indicator
                 showDialog(
                   context: context,
@@ -1356,42 +1386,50 @@ class _ChatViewState extends State<ChatView> {
                     ),
                   ),
                 );
-                
+
                 // Check if it's a URL
                 String processedInput = input;
-                
+
                 // Auto-add https:// if it looks like a URL without protocol
-                if (!input.startsWith('http://') && 
-                    !input.startsWith('https://') && 
+                if (!input.startsWith('http://') &&
+                    !input.startsWith('https://') &&
                     !input.startsWith('data:') &&
                     !input.startsWith('{') &&
-                    (input.contains('.') && (input.contains('/') || input.split('.').last.length <= 4))) {
+                    (input.contains('.') &&
+                        (input.contains('/') ||
+                            input.split('.').last.length <= 4))) {
                   processedInput = 'https://$input';
                 }
-                
-                if (processedInput.startsWith('http://') || processedInput.startsWith('https://')) {
+
+                if (processedInput.startsWith('http://') ||
+                    processedInput.startsWith('https://')) {
                   // Fetch content from URL
                   final response = await http.get(Uri.parse(processedInput));
                   if (response.statusCode == 200) {
-                    await StateManager().importStateJson(response.body, isFullState: true);
+                    await StateManager()
+                        .importStateJson(response.body, isFullState: true);
                   } else {
-                    throw Exception('Failed to fetch from URL: ${response.statusCode}');
+                    throw Exception(
+                        'Failed to fetch from URL: ${response.statusCode}');
                   }
                 } else if (processedInput.startsWith('data:')) {
                   // Handle data URL
                   final base64Part = processedInput.split(',').last;
                   final bytes = base64Decode(base64Part);
                   final jsonStr = utf8.decode(bytes);
-                  await StateManager().importStateJson(jsonStr, isFullState: true);
+                  await StateManager()
+                      .importStateJson(jsonStr, isFullState: true);
                 } else {
                   // Import JSON directly
-                  await StateManager().importStateJson(processedInput, isFullState: true);
+                  await StateManager()
+                      .importStateJson(processedInput, isFullState: true);
                 }
-                
+
                 if (mounted) {
                   Navigator.of(context).pop(); // Close loading dialog
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Session imported successfully')),
+                    const SnackBar(
+                        content: Text('Session imported successfully')),
                   );
                 }
               } catch (e) {
@@ -1414,12 +1452,12 @@ class _ChatViewState extends State<ChatView> {
   void dispose() {
     _accountDetail?.cancel();
     _keyboardFocusNode.dispose();
-    
+
     // Clean up global keyboard listener (only if it was added on non-mobile platforms)
     if (!_isMobilePlatform && kIsWeb) {
       HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
     }
-    
+
     super.dispose();
   }
 
@@ -1428,7 +1466,7 @@ class _ChatViewState extends State<ChatView> {
     const minWidth = 500.0;
     var showIcons = AppSize(context).narrowerThanWidth(700);
     var showMinWidth = AppSize(context).narrowerThanWidth(minWidth);
-    
+
     // Request focus for keyboard detection on first build (only on non-mobile platforms)
     if (!_isMobilePlatform) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1437,101 +1475,107 @@ class _ChatViewState extends State<ChatView> {
         }
       });
     }
-    
-    // Use a global key so we can access this widget from anywhere 
+
+    // Use a global key so we can access this widget from anywhere
     final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-    
+
     // Listen for key presses at the document level (more reliable in web)
     // Only wrap with Focus on desktop to avoid interfering with mobile text input
     Widget scaffoldWidget = Scaffold(
-        key: scaffoldKey,
-        body: SafeArea(
-          child: Stack(
-            children: <Widget>[
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: OrchidGradients.blackGradientBackground,
-                ),
+      key: scaffoldKey,
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Stack(
+          children: <Widget>[
+            Container(
+              decoration: const BoxDecoration(
+                gradient: OrchidGradients.blackGradientBackground,
               ),
-              Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 800),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(10.0),
-                  child: Column(
-                    children: <Widget>[
-                      // header row
-                      if (showMinWidth)
-                        FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: SizedBox(
-                                width: minWidth,
-                                child: _buildHeaderRow(showIcons: showIcons)))
-                      else
-                        _buildHeaderRow(showIcons: showIcons),
-                      // Messages area
-                      _buildChatPane(),
-                      // Prompt row
-                      AnimatedSize(
-                        alignment: Alignment.topCenter,
-                        duration: millis(150),
-                        child: ChatPromptPanel(
-                          promptTextController: _promptTextController,
-                          onSubmit: _send,
-                          setMaxTokens: _setMaxTokens,
-                          maxTokensController: _maxTokensController,
-                        ).top(8),
-                      ),
-                      // Processing indicator
-                      if (_isProcessingRequest)
-                        GestureDetector(
-                          onTap: !_isMobilePlatform ? _cancelOngoingRequests : null, // Disable tap cancellation on mobile
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 16, 
-                                  height: 16, 
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context).primaryColor,
-                                    ),
+            ),
+            Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 800),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  children: <Widget>[
+                    // header row
+                    if (showMinWidth)
+                      FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: SizedBox(
+                              width: minWidth,
+                              child: _buildHeaderRow(showIcons: showIcons)))
+                    else
+                      _buildHeaderRow(showIcons: showIcons),
+                    // Messages area
+                    _buildChatPane(),
+                    // Prompt row
+                    AnimatedSize(
+                      alignment: Alignment.topCenter,
+                      duration: millis(150),
+                      child: ChatPromptPanel(
+                        promptTextController: _promptTextController,
+                        onSubmit: _send,
+                        setMaxTokens: _setMaxTokens,
+                        maxTokensController: _maxTokensController,
+                        isMobileWeb: _isMobileWeb,
+                      ).top(8),
+                    ),
+                    // Processing indicator
+                    if (_isProcessingRequest)
+                      GestureDetector(
+                        onTap: !_isMobilePlatform
+                            ? _cancelOngoingRequests
+                            : null, // Disable tap cancellation on mobile
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Theme.of(context).primaryColor,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Text(_isMobilePlatform 
-                                    ? 'Processing...' 
-                                    : 'Processing... Press ESC or tap here to cancel', 
-                                  style: OrchidText.caption.copyWith(
-                                    color: Colors.white70,
-                                    decoration: _isMobilePlatform 
-                                        ? TextDecoration.none 
-                                        : TextDecoration.underline,
-                                  ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _isMobilePlatform
+                                    ? 'Processing...'
+                                    : 'Processing... Press ESC or tap here to cancel',
+                                style: OrchidText.caption.copyWith(
+                                  color: Colors.white70,
+                                  decoration: _isMobilePlatform
+                                      ? TextDecoration.none
+                                      : TextDecoration.underline,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                    ],
-                  ),
-                ).top(8).bottom(8),
-              ),
-            ],
-          ),
+                      ),
+                  ],
+                ),
+              ).top(8).bottom(8),
+            ),
+          ],
         ),
-      );
-    
+      ),
+    );
+
     // Only wrap with Focus on desktop platforms to avoid interfering with mobile text input
     if (!_isMobilePlatform) {
       return Focus(
         autofocus: true,
         onKeyEvent: (FocusNode node, KeyEvent event) {
           // Check for escape key
-          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+          if (event is KeyDownEvent &&
+              event.logicalKey == LogicalKeyboardKey.escape) {
             if (_isProcessingRequest) {
               _cancelOngoingRequests();
               return KeyEventResult.handled;
@@ -1571,15 +1615,15 @@ class _ChatViewState extends State<ChatView> {
                         children: [
                           Text(
                             'This is a demonstration of the application of Orchid Nanopayments within a consolidated Multi-LLM chat service.',
-                            style:
-                                OrchidText.normal_14.copyWith(color: Colors.white),
+                            style: OrchidText.normal_14
+                                .copyWith(color: Colors.white),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'To get started, enter or create a funded Orchid account.',
-                            style:
-                                OrchidText.normal_14.copyWith(color: Colors.white),
+                            style: OrchidText.normal_14
+                                .copyWith(color: Colors.white),
                             textAlign: TextAlign.center,
                           ),
                           ChatButton(
@@ -1592,8 +1636,8 @@ class _ChatViewState extends State<ChatView> {
                             onPressed: () =>
                                 _launchURL('https://account.orchid.com'),
                             style: OutlinedButton.styleFrom(
-                              side:
-                                  BorderSide(color: Theme.of(context).primaryColor),
+                              side: BorderSide(
+                                  color: Theme.of(context).primaryColor),
                               minimumSize: const Size(200, 50),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(25),
@@ -1621,7 +1665,8 @@ class _ChatViewState extends State<ChatView> {
                     top: 8,
                     right: 8,
                     child: IconButton(
-                      icon: Icon(Icons.close, color: Colors.white.withOpacity(0.8)),
+                      icon: Icon(Icons.close,
+                          color: Colors.white.withOpacity(0.8)),
                       onPressed: () {
                         setState(() {
                           _calloutDismissed = true;

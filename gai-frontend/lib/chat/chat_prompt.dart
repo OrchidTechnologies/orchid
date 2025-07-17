@@ -8,6 +8,7 @@ class ChatPromptPanel extends StatefulWidget {
   final VoidCallback onSubmit;
   final ValueChanged<int?> setMaxTokens;
   final NumericValueFieldController maxTokensController;
+  final bool isMobileWeb;
 
   const ChatPromptPanel({
     super.key,
@@ -15,6 +16,7 @@ class ChatPromptPanel extends StatefulWidget {
     required this.onSubmit,
     required this.setMaxTokens,
     required this.maxTokensController,
+    required this.isMobileWeb,
   });
 
   @override
@@ -48,7 +50,8 @@ class _ChatPromptPanelState extends State<ChatPromptPanel> {
                 hintText: 'Enter a prompt',
                 contentPadding: const EdgeInsets.only(bottom: 26, left: 16),
                 style: OrchidText.body1,
-                autoFocus: true,
+                // Doesn't work well on mobile web, e.g. Safari won't show the keyboard without a user interaction.
+                autoFocus: !widget.isMobileWeb,
                 onSubmitted: (String s) {
                   widget.onSubmit();
                 },
@@ -63,7 +66,8 @@ class _ChatPromptPanelState extends State<ChatPromptPanel> {
           ],
         ).padx(8),
         if (_showPromptDetails)
-          _buildPromptParamsForm(widget.setMaxTokens, widget.maxTokensController),
+          _buildPromptParamsForm(
+              widget.setMaxTokens, widget.maxTokensController),
       ],
     );
   }
@@ -86,7 +90,7 @@ class _ChatPromptPanelState extends State<ChatPromptPanel> {
             onChange: (value) => setMaxTokens(value?.toInt()),
             controller: maxTokensController,
           ).top(12),
-          
+
           // Tool management section
           SizedBox(height: 16),
           Container(
