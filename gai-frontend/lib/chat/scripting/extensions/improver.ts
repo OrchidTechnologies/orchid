@@ -21,7 +21,7 @@ function onUserPrompt(userPrompt: string): void {
 
         // Log the original and improved prompts
         chatSystemMessage(`Original prompt: ${userPrompt}`);
-        chatSystemMessage(`Improved prompt: ${improvedPrompt}`);
+        chatInternalMessage(`Improved prompt: ${improvedPrompt}`);
 
         // Create a message with the improved prompt
         const userMessage = new ChatMessage(ChatMessageSource.CLIENT, improvedPrompt, {});
