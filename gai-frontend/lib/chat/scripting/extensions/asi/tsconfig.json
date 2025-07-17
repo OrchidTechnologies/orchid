@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "es2020",
+        "moduleResolution": "node",
+        "outDir": "./dist",
+        "baseUrl": ".",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "allowJs": true,
+        "declaration": false,
+        "noEmitOnError": true,
+        "removeComments": true
+    },
+    "include": [
+        "./*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ],
+    "compileOnSave": false
+}
