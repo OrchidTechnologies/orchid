@@ -4,7 +4,7 @@ import 'dart:math' as math;
 // Conditionally import JS only when compiling for web
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_eth/orchid_account_detail.dart';
@@ -43,6 +43,19 @@ class ChatView extends StatefulWidget {
 }
 
 class _ChatViewState extends State<ChatView> {
+  // Platform detection helper
+  bool get _isMobilePlatform {
+    // On web, check the target platform
+    if (kIsWeb) {
+      // Web on mobile browsers
+      return defaultTargetPlatform == TargetPlatform.iOS || 
+             defaultTargetPlatform == TargetPlatform.android;
+    }
+    // Native mobile apps
+    return defaultTargetPlatform == TargetPlatform.iOS || 
+           defaultTargetPlatform == TargetPlatform.android;
+  }
+  
   // UI state
   bool _debugMode = false;
   bool _multiSelectMode = false;
@@ -108,12 +121,14 @@ class _ChatViewState extends State<ChatView> {
     // Initialize the scripting extension mechanism
     _initScripting();
     
-    // Initialize keyboard listener
-    _initKeyboardListener();
-    
-    // Register a browser-level event listener if we're running on the web
-    if (kIsWeb) {
-      _initBrowserKeyboardListeners();
+    // Initialize keyboard listener only on non-mobile platforms
+    if (!_isMobilePlatform) {
+      _initKeyboardListener();
+      
+      // Register a browser-level event listener if we're running on the web
+      if (kIsWeb) {
+        _initBrowserKeyboardListeners();
+      }
     }
     
     // Initialize state manager
@@ -133,21 +148,22 @@ class _ChatViewState extends State<ChatView> {
   void _initBrowserKeyboardListeners() {
     log('Setting up browser keyboard listener for web');
     
-    // Use a simple approach that doesn't rely on dart:js
-    // Register a global key handler that listens for Escape
-    RawKeyboard.instance.addListener(_handleRawKeyEvent);
+    // Use HardwareKeyboard for listening to key events
+    HardwareKeyboard.instance.addHandler(_handleKeyEvent);
     
     log('Browser keyboard listener initialized');
   }
   
-  void _handleRawKeyEvent(RawKeyEvent event) {
-    if (event is RawKeyDownEvent) {
+  bool _handleKeyEvent(KeyEvent event) {
+    if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.escape) {
         if (_isProcessingRequest) {
           _cancelOngoingRequests();
+          return true; // Handled
         }
       }
     }
+    return false; // Not handled
   }
   
   void _initKeyboardListener() {
@@ -540,8 +556,8 @@ class _ChatViewState extends State<ChatView> {
     
     log('Starting processing request - ESC to cancel');
     
-    // Ensure the app has focus for keyboard events
-    if (_keyboardFocusNode.canRequestFocus) {
+    // Ensure the app has focus for keyboard events (only on non-mobile platforms)
+    if (!_isMobilePlatform && _keyboardFocusNode.canRequestFocus) {
       _keyboardFocusNode.requestFocus();
     }
     
@@ -683,16 +699,13 @@ class _ChatViewState extends State<ChatView> {
     // Tell the provider manager we have active, cancellable requests
     _providerManager.setHasCancellableRequests(true);
     
-    // Ensure we have focus for keyboard events
-    if (_keyboardFocusNode.canRequestFocus) {
+    // Ensure we have focus for keyboard events (only on non-mobile platforms)
+    if (!_isMobilePlatform && _keyboardFocusNode.canRequestFocus) {
       _keyboardFocusNode.requestFocus();
     }
     
     List<ChatMessage> toolResultMessages = [];
     String? modelId;
-    
-    // Store the source of this tool call invocation for debugging
-    String callSource = "direct";
 
     try {
       for (final toolCall in toolCalls) {
@@ -1402,9 +1415,9 @@ class _ChatViewState extends State<ChatView> {
     _accountDetail?.cancel();
     _keyboardFocusNode.dispose();
     
-    // Clean up global keyboard listener
-    if (kIsWeb) {
-      RawKeyboard.instance.removeListener(_handleRawKeyEvent);
+    // Clean up global keyboard listener (only if it was added on non-mobile platforms)
+    if (!_isMobilePlatform && kIsWeb) {
+      HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
     }
     
     super.dispose();
@@ -1416,30 +1429,21 @@ class _ChatViewState extends State<ChatView> {
     var showIcons = AppSize(context).narrowerThanWidth(700);
     var showMinWidth = AppSize(context).narrowerThanWidth(minWidth);
     
-    // Request focus for keyboard detection on first build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_keyboardFocusNode.canRequestFocus) {
-        _keyboardFocusNode.requestFocus();
-      }
-    });
+    // Request focus for keyboard detection on first build (only on non-mobile platforms)
+    if (!_isMobilePlatform) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_keyboardFocusNode.canRequestFocus) {
+          _keyboardFocusNode.requestFocus();
+        }
+      });
+    }
     
     // Use a global key so we can access this widget from anywhere 
     final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
     
     // Listen for key presses at the document level (more reliable in web)
-    return Focus(
-      autofocus: true,
-      onKeyEvent: (FocusNode node, KeyEvent event) {
-        // Check for escape key
-        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
-          if (_isProcessingRequest) {
-            _cancelOngoingRequests();
-            return KeyEventResult.handled;
-          }
-        }
-        return KeyEventResult.ignored;
-      },
-      child: Scaffold(
+    // Only wrap with Focus on desktop to avoid interfering with mobile text input
+    Widget scaffoldWidget = Scaffold(
         key: scaffoldKey,
         body: SafeArea(
           child: Stack(
@@ -1481,7 +1485,7 @@ class _ChatViewState extends State<ChatView> {
                       // Processing indicator
                       if (_isProcessingRequest)
                         GestureDetector(
-                          onTap: _cancelOngoingRequests, // Allow cancelling by tap as well
+                          onTap: !_isMobilePlatform ? _cancelOngoingRequests : null, // Disable tap cancellation on mobile
                           child: Padding(
                             padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
                             child: Row(
@@ -1498,10 +1502,14 @@ class _ChatViewState extends State<ChatView> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                Text('Processing... Press ESC or tap here to cancel', 
+                                Text(_isMobilePlatform 
+                                    ? 'Processing...' 
+                                    : 'Processing... Press ESC or tap here to cancel', 
                                   style: OrchidText.caption.copyWith(
                                     color: Colors.white70,
-                                    decoration: TextDecoration.underline,
+                                    decoration: _isMobilePlatform 
+                                        ? TextDecoration.none 
+                                        : TextDecoration.underline,
                                   ),
                                 ),
                               ],
@@ -1515,8 +1523,27 @@ class _ChatViewState extends State<ChatView> {
             ],
           ),
         ),
-      ),
-    );
+      );
+    
+    // Only wrap with Focus on desktop platforms to avoid interfering with mobile text input
+    if (!_isMobilePlatform) {
+      return Focus(
+        autofocus: true,
+        onKeyEvent: (FocusNode node, KeyEvent event) {
+          // Check for escape key
+          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+            if (_isProcessingRequest) {
+              _cancelOngoingRequests();
+              return KeyEventResult.handled;
+            }
+          }
+          return KeyEventResult.ignored;
+        },
+        child: scaffoldWidget,
+      );
+    } else {
+      return scaffoldWidget;
+    }
   }
 
   Widget _buildChatPane() {

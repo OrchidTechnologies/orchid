@@ -46,7 +46,7 @@ class _ChatPromptPanelState extends State<ChatPromptPanel> {
               child: OrchidTextField(
                 controller: widget.promptTextController,
                 hintText: 'Enter a prompt',
-                contentPadding: EdgeInsets.only(bottom: 26, left: 16),
+                contentPadding: const EdgeInsets.only(bottom: 26, left: 16),
                 style: OrchidText.body1,
                 autoFocus: true,
                 onSubmitted: (String s) {
