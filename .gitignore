@@ -13,3 +13,5 @@ bundle.js
 perf.data
 perf.data.old
 site/
+.DS_Store
+
