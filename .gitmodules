@@ -157,9 +157,6 @@
 [submodule "chains"]
 	path = lib-protocol/chains
 	url = https://github.com/ethereum-lists/chains.git
-[submodule "engine"]
-	path = app-shared/engine
-	url = https://github.com/flutter/engine.git
 [submodule "vpn-libraries"]
 	path = min-krypton/vpn-libraries
 	url = https://github.com/google/vpn-libraries.git
