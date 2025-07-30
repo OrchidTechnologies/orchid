@@ -47,7 +47,7 @@ ifeq ($(target),mac)
 temp := 
 else
 temp := $(pwd/gui)/ios/Flutter/AppFrameworkInfo.plist
-$(temp): $(pwd/flutter)/packages/flutter_tools/templates/app_shared/ios.tmpl/Flutter/AppFrameworkInfo.plist
+$(temp): $(pwd/flutter)/packages/flutter_tools/templates/app/ios.tmpl/Flutter/AppFrameworkInfo.plist
 	mkdir -p $(dir $@)
 	cp -f $< $@
 endif

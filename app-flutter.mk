@@ -33,9 +33,9 @@ sed := $(shell which gsed sed | head -n1)
 create: $(pwd/flutter)/packages/flutter/pubspec.lock
 	$(flutter) create -i objc -a java --no-pub --project-name orchid .
 	$(flutter) pub get
-	$(sed) -ie 's/flutter\.compileSdkVersion/34/g;s/flutter.minSdkVersion/21/g' android/app/build.gradle
-	$(sed) -ie '0,/subprojects {/s//\0 afterEvaluate { android { compileSdkVersion 34 } }/' android/build.gradle
-	$(sed) -ie '/org\.jetbrains\.kotlin\.android/s/\(version "\)[^"]*/\11.8.0/' android/settings.gradle
+	$(sed) -ie 's/flutter\.compileSdkVersion/34/g;s/flutter.minSdkVersion/21/g' android/app/build.gradle.kts
+	$(sed) -ie '0,/subprojects {/s//\0 afterEvaluate { android { compileSdkVersion 34 } }/' android/build.gradle.kts
+	$(sed) -ie '/org\.jetbrains\.kotlin\.android/s/\(version "\)[^"]*/\11.8.0/' android/settings.gradle.kts
 	$(sed) -ie "/^# platform :ios/{s/^# //;}" ios/Podfile
 	$(sed) -ie "/^platform :osx/{s/,.*/, '10.15'/;}" macos/Podfile
 	$(sed) -ie "/MACOSX_DEPLOYMENT_TARGET =/{s/=.*/= 10.15;/g;}" macos/Runner.xcodeproj/project.pbxproj
