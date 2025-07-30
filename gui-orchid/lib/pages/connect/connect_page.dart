@@ -596,11 +596,11 @@ class _ConnectPageState extends State<ConnectPage>
   }
 
   bool get isShort {
-    return AppSize(context).shorterThan(Size(0, 700));
+    return AppHeight(context).shorterThan(Size(0, 700));
   }
 
   bool get isReallyShort {
-    return AppSize(context).shorterThan(Size(0, 590));
+    return AppHeight(context).shorterThan(Size(0, 590));
   }
 
   @override

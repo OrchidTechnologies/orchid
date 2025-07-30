@@ -213,14 +213,14 @@ class AccountSelectorDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = AppSize(context).size;
+    final appHeight = AppHeight(context).height;
     final cardHeight = 152.0;
     final spacing = 24.0;
     final ypad = 32.0;
     final intrinsicHeight = accounts.length * cardHeight +
         (accounts.length - 1) * spacing +
         2 * ypad;
-    final height = min(size.height * 0.7, intrinsicHeight);
+    final height = min(appHeight * 0.7, intrinsicHeight);
 
     return SizedBox(
       height: height,
