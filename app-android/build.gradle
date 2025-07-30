@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.8.0'
+    ext.kotlin_version = '1.8.10'
     repositories {
         google()
         mavenCentral()
@@ -26,10 +26,10 @@ subprojects {
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-
-def flutter = files(orcFlutter)
+apply plugin: 'dev.flutter.flutter-gradle-plugin'
 
 android {
+    namespace orcUnique
     compileSdkVersion 34
 
     defaultConfig {
@@ -65,6 +65,14 @@ android {
         targetCompatibility 1.8
     }
 
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
     sourceSets {
         main {
             java.srcDirs += [orcInterface + "/android/app/src/main/java"]
@@ -75,7 +83,6 @@ android {
     }
 
     dependencies {
-        implementation flutter
         implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
         implementation "androidx.activity:activity:1.8.1"
@@ -92,32 +99,5 @@ android {
         // Or, if you prefer, you can continue to check for errors in release builds,
         // but continue the build even when errors are found:
         abortOnError false
-    }
-}
-
-import groovy.json.JsonSlurper
-def plugins = new JsonSlurper().parseText(file(orcInterface + "/.flutter-plugins-dependencies").text)
-plugins.plugins.android.each { dependency ->
-    def plugin = project.rootProject.findProject(":${dependency.name}")
-
-    project.dependencies {
-        implementation plugin
-    }
-
-    plugin.afterEvaluate {
-        plugin.android { compileSdkVersion 34 }
-
-        plugin.android.buildTypes {
-            profile {
-                initWith debug
-            }
-        }
-        plugin.dependencies {
-            compileOnly flutter
-
-            // https://github.com/flutter/flutter/issues/56686
-            // WakelockPlugin.kt: Unresolved reference: NonNull
-            implementation "androidx.annotation:annotation:1.0.0"
-        }
     }
 }

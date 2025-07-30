@@ -15,7 +15,7 @@ apt-get -y install \
     binutils-mingw-w64-{i686,x86-64} \
     libc++-dev libc++abi-dev \
     python3-{packaging,pip,setuptools} \
-    openjdk-11-jre-headless \
+    openjdk-17-jdk-headless \
     bison flex gperf \
     gettext groff texinfo \
     autoconf{,-archive} automake libtool \

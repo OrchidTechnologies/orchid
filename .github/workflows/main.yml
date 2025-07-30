@@ -165,7 +165,7 @@ jobs:
 
     - run: DEBIAN_FRONTEND=noninteractive sudo -EH apt-get -y install mingw-w64
 
-    - run: debug=crossndk make -j3 -C app-windows ./env/dotdot/gui-orchid/.flutter-plugins
+    - run: debug=crossndk make -j3 -C app-windows ./env/dotdot/gui-orchid/.flutter-plugins-dependencies
     - run: debug=crossndk make -j3 -C app-windows target=win precache='--no-android --no-ios --windows -a'
 
     - uses: actions/upload-artifact@v4
@@ -246,7 +246,7 @@ jobs:
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
 
-    - run: debug=crossndk make -j3 -C app-linux ./env/dotdot/gui-orchid/.flutter-plugins
+    - run: debug=crossndk make -j3 -C app-linux ./env/dotdot/gui-orchid/.flutter-plugins-dependencies
     - run: debug=crossndk make -j3 -C app-linux precache='--no-android --no-ios --linux'
 
     - uses: actions/upload-artifact@v4

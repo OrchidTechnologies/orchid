@@ -42,13 +42,13 @@ $(pwd/flutter)/packages/flutter/pubspec.lock: $(pwd/flutter)/packages/flutter/pu
 
 dart := 
 dart += $(pwd/gui)/.dart_tool/package_config.json
-dart += $(pwd/gui)/.flutter-plugins
+dart += $(pwd/gui)/.flutter-plugins-dependencies
 dart += $(pwd/gui)/.packages
 
 # XXX: use $(dart) to generate the first three of these
-$(pwd/gui)/.dart_tool/package_config%json $(pwd/gui)/%flutter-plugins $(pwd/gui)/%packages $(generated): $(pwd/gui)/pubspec.yaml $(pwd/gui)/pubspec.lock $(pwd/flutter)/packages/flutter/pubspec.lock $(forks)
+$(pwd/gui)/.dart_tool/package_config%json $(pwd/gui)/%flutter-plugins-dependencies $(pwd/gui)/%packages $(generated): $(pwd/gui)/pubspec.yaml $(pwd/gui)/pubspec.lock $(pwd/flutter)/packages/flutter/pubspec.lock $(forks)
 	@mkdir -p $(pwd/gui)/{android,ios,linux,macos,windows}
-	@rm -f $(pwd/gui)/.flutter-plugins
+	@rm -f $(pwd/gui)/.flutter-plugins-dependencies
 	! grep ': ^' $(pwd/gui)/pubspec.yaml
 	cd $(pwd/gui) && $(flutter) pub get
 	@touch $(pwd/gui)/.packages

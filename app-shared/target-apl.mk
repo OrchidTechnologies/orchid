@@ -96,7 +96,7 @@ $(embed)$(versions)$(signature): shared/empty.plist $(embed)$(versions)$(resourc
 
 cflags += -I$(pwd/gui)/$(assemble)/Pods/Headers/Public
 
-$(pwd/gui)/$(assemble)/Pods/Manifest.lock: $(pwd/gui)/$(assemble)/Podfile $(pwd/gui)/.flutter-plugins
+$(pwd/gui)/$(assemble)/Pods/Manifest.lock: $(pwd/gui)/$(assemble)/Podfile $(pwd/gui)/.flutter-plugins-dependencies
 	cd $(pwd/gui)/$(assemble) && pod install
 	touch $@
 
