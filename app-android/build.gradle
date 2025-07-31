@@ -26,11 +26,16 @@ subprojects {
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'dev.flutter.flutter-gradle-plugin'
+
+def flutterFile = files(orcFlutter)
+
+ext {
+    flutter = [compileSdkVersion: 34]
+}
 
 android {
     namespace orcUnique
-    compileSdkVersion 34
+    compileSdkVersion flutter.compileSdkVersion
 
     defaultConfig {
         applicationId orcUnique
@@ -83,6 +88,7 @@ android {
     }
 
     dependencies {
+        implementation flutterFile
         implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
         implementation "androidx.activity:activity:1.8.1"
@@ -99,5 +105,32 @@ android {
         // Or, if you prefer, you can continue to check for errors in release builds,
         // but continue the build even when errors are found:
         abortOnError false
+    }
+}
+
+import groovy.json.JsonSlurper
+def plugins = new JsonSlurper().parseText(file(orcInterface + "/.flutter-plugins-dependencies").text)
+plugins.plugins.android.each { dependency ->
+    def plugin = project.rootProject.findProject(":${dependency.name}")
+
+    project.dependencies {
+        implementation plugin
+    }
+
+    plugin.afterEvaluate {
+        plugin.android { compileSdkVersion flutter.compileSdkVersion }
+
+        plugin.android.buildTypes {
+            profile {
+                initWith debug
+            }
+        }
+        plugin.dependencies {
+            compileOnly flutterFile
+
+            implementation "androidx.annotation:annotation:1.0.0"
+            implementation "com.android.support:support-annotations:28.0.0"
+            implementation "org.jetbrains:annotations:24.0.1"
+        }
     }
 }

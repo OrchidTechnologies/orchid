@@ -186,10 +186,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_js
-      sha256: d19cde4bad2f7c301ff5f69d7b3452ff91f2ca89d153569dd03e544579d8610d
+      sha256: a04966b102967891ee4947d6e52b450676f16204876ba936e394008ca26db04b
       url: "https://pub.dev"
     source: hosted
-    version: "0.8.1"
+    version: "0.8.5"
   flutter_localizations:
     dependency: "direct main"
     description: flutter
@@ -598,10 +598,10 @@ packages:
     dependency: "direct main"
     description:
       name: sqflite
-      sha256: "643ab681a84d299bb5b661995668008e732f0577725b5be50d1dd25c1ed42d53"
+      sha256: ff5a2436ef8ebdfda748fbfe957f9981524cb5ff11e7bafa8c42771840e8a788
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0+3"
+    version: "2.3.3+2"
   sqflite_common:
     dependency: transitive
     description:

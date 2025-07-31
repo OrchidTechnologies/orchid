@@ -11,7 +11,7 @@ publish_to: none
 version: 0.9.0+1
 
 environment:
-  sdk: ">=3.0.6 <4.0.0"
+  sdk: ">=3.3.0 <4.0.0"
 
 dependencies:
   badges: 3.1.1
@@ -20,7 +20,7 @@ dependencies:
   dotted_border: 2.0.0+2
   email_validator: 2.0.1
   fixnum: 1.1.0
-  flutter_js: 0.8.1
+  flutter_js: 0.8.5
   flutter:
     sdk: flutter
   flutter_html: 3.0.0-beta.2
@@ -31,7 +31,7 @@ dependencies:
   font_awesome_flutter: 9.0.0
   http: 1.1.0
   in_app_purchase_storekit: 0.3.5+2
-#  in_app_purchase_android: 0.2.3+7
+  #in_app_purchase_android: 0.2.3+7
   in_app_purchase_android: 0.3.6+8
   intl: 0.20.2
   jdenticon_dart: 2.0.0
@@ -44,7 +44,7 @@ dependencies:
   rxdart: 0.27.7
   shared_preferences: 2.3.2
   styled_text: 8.1.0
-  sqflite: 2.0.0+3
+  sqflite: 2.3.3+2
   url_launcher: 6.3.1
   uuid: 4.5.1
   web3dart: 3.0.1 # Utils used in orchid_crypto
