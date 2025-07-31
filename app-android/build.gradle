@@ -34,7 +34,7 @@ ext {
 }
 
 android {
-    namespace orcUnique
+    namespace "net.orchid.Orchid"
     compileSdkVersion flutter.compileSdkVersion
 
     defaultConfig {
