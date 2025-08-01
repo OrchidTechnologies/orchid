@@ -1,7 +1,7 @@
 runs:
   using: "composite"
   steps:
-    - run: brew install docker lima
+    - run: brew install docker lima lima-additional-guestagents
       shell: bash
     - run: limactl start template://docker --arch=x86_64
       shell: bash
