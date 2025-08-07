@@ -14,7 +14,7 @@ import 'package:orchid/api/pricing/orchid_pricing.dart';
 import 'package:orchid/api/pricing/usd.dart';
 import 'orchid_pac_transaction.dart';
 import 'package:orchid/util/hex.dart';
-import 'package:web3dart/crypto.dart';
+import 'package:web3dart/web3dart.dart';
 import 'package:convert/convert.dart';
 import 'dart:convert' show utf8;
 

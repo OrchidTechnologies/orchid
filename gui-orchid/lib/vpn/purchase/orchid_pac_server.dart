@@ -12,7 +12,7 @@ import 'package:orchid/api/orchid_log.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/vpn/orchid_api.dart';
 import 'package:orchid/util/json.dart';
-import 'package:web3dart/crypto.dart';
+import 'package:web3dart/web3dart.dart';
 import 'orchid_pac_seller.dart';
 import 'orchid_pac_transaction.dart';
 import 'orchid_purchase.dart';

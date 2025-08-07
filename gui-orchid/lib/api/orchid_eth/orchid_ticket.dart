@@ -3,8 +3,8 @@ import 'dart:typed_data';
 import 'package:convert/convert.dart';
 import 'package:orchid/api/orchid_crypto.dart';
 import 'package:orchid/util/hex.dart';
-import 'package:web3dart/crypto.dart';
-import 'package:web3dart/credentials.dart' as web3;
+import 'package:web3dart/web3dart.dart' as web3;
+import 'package:pointycastle/digests/keccak.dart';
 import 'abi_encode.dart';
 
 // Orchid Lottery ticket serialization and evaluation.
@@ -75,8 +75,11 @@ class OrchidTicket {
     }
     final dateForNonce =
         '${nowUtc.toIso8601String().replaceFirst('T', ' ').replaceFirst('Z', '')}000';
+
     Uint8List hash = keccak256(Uint8List.fromList(utf8.encode(dateForNonce)));
-    final hashhex = bytesToHex(hash);
+
+    // final hashhex = bytesToHex(hash);
+    final hashhex = Crypto.toHex(hash); // includes 0x prefix
     final hashint = BigInt.parse(hashhex, radix: 16);
     final l2nonce = hashint & uint64;
     BigInt expire = BigInt.from(2).pow(31) - BigInt.from(1);
@@ -101,13 +104,19 @@ class OrchidTicket {
     final payload = Uint8List.fromList(hex.decode(encoded));
     final credentials =
         web3.EthPrivateKey.fromHex(Crypto.formatSecretFixed(privateKey));
-    MsgSignature sig = sign(keccak256(payload), credentials.privateKey);
+    // web3.MsgSignature sig = sign(keccak256(payload), credentials.privateKey);
+    web3.MsgSignature sig = Web3DartUtils.web3Sign(keccak256(payload), credentials.privateKeyInt);
 
     packed1 = (packed1 << 1) | BigInt.from((sig.v - 27) & 1);
     this.packed0 = packed0;
     this.packed1 = packed1;
     this.sig_r = AbiEncode.toHexBytes32(sig.r);
     this.sig_s = AbiEncode.toHexBytes32(sig.s);
+  }
+
+  Uint8List keccak256(Uint8List data) {
+    final keccakDigest = KeccakDigest(256 /*bits*/);
+    return keccakDigest.process(data);
   }
 
   String serializeTicket() {
@@ -127,7 +136,7 @@ class OrchidTicket {
     final nonceBytes = nonce().toBytesUint128();
     final message = Uint8List.fromList([...revealBytes, ...nonceBytes]);
     final Uint8List digest = keccak256(message);
-    final hash = BigInt.parse(bytesToHex(digest), radix: 16);
+    final hash = BigInt.parse(Crypto.toHex(digest), radix: 16);
     final comp = uint64 & hash;
     return ratio >= comp;
   }

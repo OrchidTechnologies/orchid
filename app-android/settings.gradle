@@ -1,13 +1,6 @@
-def root = rootProject.projectDir.toPath()
-
-def plugins = new Properties()
-def file = file(orcInterface + "/.flutter-plugins")
-if (file.exists()) {
-    file.withReader('UTF-8') { reader -> plugins.load(reader) }
-}
-
-plugins.each { name, path ->
-    def plugin = root.resolve(path).resolve('android').toFile()
-    include ":$name"
-    project(":$name").projectDir = plugin
+import groovy.json.JsonSlurper
+def plugins = new JsonSlurper().parseText(file(orcInterface + "/.flutter-plugins-dependencies").text)
+plugins.plugins.android.each { dependency ->
+    include ":${dependency.name}"
+    project(":${dependency.name}").projectDir = file("${dependency.path}/android")
 }

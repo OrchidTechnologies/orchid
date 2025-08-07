@@ -11,7 +11,6 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
-import io.flutter.view.FlutterMain
 
 import android.content.Intent;
 import android.net.VpnService;
@@ -86,19 +85,5 @@ class MainActivity(): FlutterActivity() {
 
     private fun configFile(): File {
         return File(filesDir.absolutePath + "/orchid.cfg");
-    }
-
-    fun copyTo(ins: InputStream, dst: File) {
-        ins.use { ins ->
-            val out = FileOutputStream(dst)
-            out.use { out ->
-                // Transfer bytes from in to out
-                val buf = ByteArray(4096)
-                var len: Int = 0
-                while ({ len = ins.read(buf); len }() > 0) {
-                    out.write(buf, 0, len)
-                }
-            }
-        }
     }
 }

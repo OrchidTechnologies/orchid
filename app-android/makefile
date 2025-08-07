@@ -77,11 +77,12 @@ $(word 1,$(keystore)).keystore:
 endif
 
 $(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle $(word 1,$(keystore)).keystore src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json $(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar
-	@./gradlew -Pandroid.debug.obsoleteApi=true assemble$(if $(filter noaot,$(debug)),Debug,Release) --console verbose --warning-mode all \
-	    -PorcUnique='$(domain).$(name)' -PorcName='$(name)' -PorcOutput='$(output)' \
+	@FLUTTER_ROOT=$(CURDIR)/shared/flutter ./gradlew assemble$(if $(filter noaot,$(debug)),Debug,Release) \
+	    -Pandroid.debug.obsoleteApi=true --console verbose --warning-mode all \
 	    -PorcStore='$(word 1,$(keystore)).keystore' -PorcAlias='$(word 2,$(keystore))' -PorcPassword='$(word 3,$(keystore))' \
 	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
-	    -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/$(flutter/$(machine))$(engine)/flutter.jar -PorcInterface='$(pwd/gui)'
+	     -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/$(flutter/$(machine))$(engine)/flutter.jar \
+	    -PorcUnique='$(domain).$(name)' -PorcName='$(name)' -PorcOutput='$(output)' -PorcInterface='$(pwd/gui)'
 	exit 0
 	touch $@
 

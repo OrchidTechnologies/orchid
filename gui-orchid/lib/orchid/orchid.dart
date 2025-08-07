@@ -1,7 +1,7 @@
 /// Common imports
 export 'package:flutter/material.dart';
 export 'package:orchid/api/orchid_log.dart';
-export 'package:flutter_gen/gen_l10n/app_localizations.dart';
+export 'package:orchid/l10n/app_localizations.dart';
 export 'package:orchid/util/localization.dart';
 export 'package:orchid/orchid/orchid_colors.dart';
 export 'package:orchid/orchid/orchid_text.dart';

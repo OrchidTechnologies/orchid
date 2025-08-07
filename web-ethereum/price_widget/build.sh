@@ -7,8 +7,8 @@ base=$(dirname "$0"); cd $base
 
 rm -rf build/
 
-$FLUTTER build web --web-renderer canvaskit
-#flutter build web --web-renderer html
+# --web-rendered is obsolete in 3.29.  Now defaults to canvaskit.
+$FLUTTER build web
 
 cp web/page.html build/web/
 

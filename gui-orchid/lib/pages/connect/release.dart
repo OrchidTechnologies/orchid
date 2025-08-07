@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:orchid/vpn/preferences/release_version.dart';
 import 'package:orchid/vpn/orchid_api.dart';
 import 'package:orchid/api/orchid_platform.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:orchid/l10n/app_localizations.dart';
 import 'package:orchid/vpn/purchase/orchid_purchase.dart';
 import 'package:orchid/common/formatting.dart';
 import 'package:orchid/orchid/orchid_text.dart';

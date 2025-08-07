@@ -11,7 +11,7 @@ import 'dart:typed_data';
 import 'package:convert/convert.dart';
 import 'package:orchid/gui-orchid/lib/api/orchid_eth/abi_encode.dart';
 import 'package:orchid/gui-orchid/lib/util/hex.dart';
-import 'package:web3dart/crypto.dart';
+import 'package:web3dart/web3dart.dart' as web3;
 
 class OrchidWeb3StakeV0 {
   final OrchidWeb3Context context;
@@ -51,10 +51,10 @@ class OrchidWeb3StakeV0 {
     BigInt calculateStorageSlot(
         EthereumAddress staker, EthereumAddress stakee) {
       final Uint8List keccakStakerStakee =
-          keccak256(tie(staker.bytes, stakee.bytes));
+          web3.keccak256(tie(staker.bytes, stakee.bytes));
       // 2 is the index of the stakes_ mapping in the Directory contract
       final Uint8List slot =
-          keccak256(tie(keccakStakerStakee, BigInt.two.toBytesUint256()));
+          web3.keccak256(tie(keccakStakerStakee, BigInt.two.toBytesUint256()));
       return BigInt.parse(hex.encode(slot), radix: 16);
     }
 
@@ -82,11 +82,11 @@ class OrchidWeb3StakeV0 {
     // Calculate the storage slot for the pending withdrawal amount
     BigInt calculatePendingStorageSlot(EthereumAddress staker, int index) {
       // (staker, contract slot index)
-      final Uint8List keccakStakerSlot = keccak256(
+      final Uint8List keccakStakerSlot = web3.keccak256(
           tie(staker.value.toBytesUint256(), BigInt.from(4).toBytesUint256()));
       // (array index, slot)
       final Uint8List slot =
-          keccak256(tie(BigInt.from(index).toBytesUint256(), keccakStakerSlot));
+          web3.keccak256(tie(BigInt.from(index).toBytesUint256(), keccakStakerSlot));
       return BigInt.parse(hex.encode(slot), radix: 16);
     }
 
