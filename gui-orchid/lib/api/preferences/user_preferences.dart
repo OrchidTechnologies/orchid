@@ -34,6 +34,10 @@ class UserPreferences {
     return sharedPreferences().getString(keyString);
   }
 
+  Future<bool> remove(UserPreferenceKey key) async {
+    return putStringForKey(key, null);
+  }
+
   // This method maps null to property removal.
   Future<bool> putStringForKey(UserPreferenceKey key, String? value) async {
     var keyString = _keyToLookupString(key);

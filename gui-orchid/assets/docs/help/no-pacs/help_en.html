@@ -1,0 +1,84 @@
+
+<h1>Orchid Help</h1>
+
+<p>For details about how Orchid works and for troubleshooting, visit the <a href="https://docs.orchid.com">Orchid help docs</a>.</p>
+
+<p>Join <a href="https://discord.gg/GDbxmjxX9F">Orchid's Discord channel</a> for product support and related questions. If you have general feedback, email <a href="mailto:help@orchid.com">help@orchid.com</a>.</p>
+
+<help_index></help_index>
+
+<h2>Getting started</h2>
+<ul><li>What is Orchid?</li>
+<li>How do I turn Orchid on?</li>
+<li>What if Orchid is stuck on Connecting?</li>
+<li>How do I use the Circuit Builder?</li>
+<li>How does Manage Accounts work?</li>
+<li>What is the traffic monitor?</li>
+<li>How do I access multi-hop, OpenVPN and WireGuard?</li></ul>
+
+<h2>Orchid Identities and Accounts</h2>
+<ul>
+<li>Can I create an Orchid Account using crypto?</li>
+<li>How do I import an existing Orchid Account?</li></ul>
+
+<h1>Getting started</h1>
+
+<h2>What is Orchid?</h2>
+
+<p>Orchid connects you to a VPN marketplace with multiple VPN providers offering service to you. Each time you connect, you are assigned a provider randomly from the network. If at any time you dislike your service, you can turn Orchid off and on again to recycle the connection and get reassigned to a provider. Once you connect and are using the VPN, you pay for service by the byte, sending nanopayments for service.</p>
+
+<p>To pay the VPN providers for service, the app will need access to at least one Orchid account. The Orchid account will also have to have the correct minimum deposit and balance in order to function. For more information on minimum deposits and balances by supported blockchain, you can view a <a href="https://account.orchid.com/widget/">chart</a> to see up-to-date values for funding your account. It is recommended to add funds sufficient for four tickets and 90% account efficiency; read more about efficiency and ticket size <a href="https://docs.orchid.com/en/latest/accounts/#orchid-account-efficiency">here.</a></p>
+
+<h2>How do I turn Orchid on?</h2>
+
+<p>Once you have at least one account funded, either by buying in-app credits or funding an Orchid Account with the <a href="https://account.orchid.com/">dApp</a>, and you have it selected in the Circuit Builder, hit connect on the home screen to turn Orchid on and see the status of your connection.</p>
+
+<p>You will need to authorize VPN permissions the first time you turn Orchid on. Each time you turn Orchid on, you randomly connect to a provider on the network. Turning Orchid off and then on using the button will recycle your connection and randomly connect you again.</p>
+
+<h2>What if Orchid is stuck on Connecting?</h2>
+
+<p>When Orchid connects, the app needs to query the Ethereum blockchain to get information about the VPN providers. Sometimes networks can try to block connections to the Ethereum blockchain. If that happens, the button will say Connecting and the screen will display a message stating that the app is Querying Ethereum for a random provider.</p>
+
+<p>To fix this, you will need to get a connection to the Ethereum blockchain working. Go into the settings panel by swiping from left to right, open “Settings” and select “Chain Settings”. You will need to find an Ethereum RPC endpoint that works for Orchid to function; use the Test button to test the default RPC or any RPC that you paste into the box. Read more <a href="https://docs.orchid.com/en/latest/using-orchid/#chain-settings">here</a>.</p>
+
+<h2>How do I use the Circuit Builder?</h2>
+
+<p>Access the Circuit Builder from the home screen by clicking on ‘0 hop circuit’, then add at least one hop, powered by an Orchid Account, to connect to a VPN provider.</p>
+
+<p>To add an Orchid Account as a hop, you will need to select the corresponding Orchid Identity, Funder Address (this will match the address of the wallet you used to create) and the chain the account was funded on, then hit save.</p>
+
+<p>You can add multiple hops to make an “onion route” with multiple independent VPN servers. Orchid, WireGuard and OpenVPN protocols are supported.</p>
+
+<h2>How does Manage Accounts work?</h2>
+
+<p>Manage Accounts is where you can see details about Orchid Identities and all their associated accounts. You can use an Orchid Identity to both buy an account with credits and create an account with your own cryptocurrency funds in the Orchid dApp.</p>
+
+<p>Below your currently selected Orchid Identity, you will see all accounts associated with it. You will need to connect a funded account to build a circuit.</p>
+
+<p>See more about buying and creating Orchid accounts below.</p>
+
+<h2>What is the traffic monitor?</h2>
+
+<p>The Traffic Monitor is a network protocol analyzer that allows you to see information about your phone's network connections. You can access it from the home screen by clicking the traffic light icon at the top-right.</p>
+
+<h2>How do I access multi-hop, OpenVPN and WireGuard?</h2>
+
+<p>To use OpenVPN and/or WireGuard hops, go to the Circuit Builder by tapping “0 Hop Circuit” on the home screen and click “Add New Hop”. There, you can enter your OpenVPN/WireGuard configurations and add them to your circuit.</p>
+
+<h1>Orchid Identities and Accounts</h1>
+
+<h2>Can I create an Orchid Account using Crypto?</h2>
+
+<p>Yes! The Orchid ecosystem has a <a href="https://account.orchid.com/">dApp</a> (decentralized application) where users can connect a wallet and put crypto funds into an Orchid account. </p>
+
+<p>Orchid accounts can be created by funding the Orchid Identity created in the app. You will need to copy the Orchid Identity from the app to the Orchid dApp by clicking on it on the Manage Accounts screen, connect a wallet and then fund the account for it to be created.</p>
+
+<p>To copy the Orchid Identity, tap the number below where it says ‘Orchid Identity’ on the ‘Manage Accounts’ screen.</p>
+
+<p>For more help read the <a href="https://docs.orchid.com/en/latest/orchid-dapp/">help documentation</a>.</p>
+
+<h2>How do I import an existing Orchid Account?</h2>
+
+<p>Once an account is created from within the app or elsewhere, it can be exported and shared. To import an existing account, go to ‘Manage Accounts’ and tap on the cog icon on the top right, then go to ‘Import Identity’.  You can then paste your Orchid Identity. Once your Orchid Identity appears in the app, go to the cog icon and hit Import Account, paste or select the Funder Address (corresponding to the wallet address you used to create the account and used to access it in the dApp), then choose the chain the account was funded on.</p>
+
+<p>Once it has been added you should see the balance and deposit associated with the account.</p>

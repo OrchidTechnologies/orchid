@@ -46,17 +46,18 @@ class DappHomeState extends DappHomeStateBase<DappHome> {
   }
 
   void initStateAsync() async {
-    await _supportTestAccountConnect();
+    await _supportDeepLinkConnect();
     await checkForExistingConnectedAccounts();
   }
 
-  Future<void> _supportTestAccountConnect() async {
-    // (TESTING)
-    if (OrchidUserParams().test) {
+  Future<void> _supportDeepLinkConnect() async {
+    // var deepLinkChain = OrchidUserParams().get("chain");
+
+    var deepLinkSigner = OrchidUserParams().getEthereumAddress("signer");
+    if (deepLinkSigner != null) {
       await Future.delayed(Duration(seconds: 0), () {
         connectEthereum();
-        _signer =
-            EthereumAddress.from('0x5eea55E63a62138f51D028615e8fd6bb26b8D354');
+        _signer = deepLinkSigner;
         _signerField.textController.text = _signer.toString();
       });
     }

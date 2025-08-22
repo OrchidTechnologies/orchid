@@ -4,6 +4,10 @@ import 'orchid_log.dart';
 
 /// Support overriding the platform for testing.
 class OrchidPlatform {
+
+  // PACS feature flag. See also 'no-pacs' localized help text in assets.
+  static bool ENABLE_PACS = true;
+
   // To maintain synchronous operation this value is set on startup and
   // after changing the advanced config (which may override it).
   static bool pretendToBeAndroid = false;
@@ -79,7 +83,7 @@ class OrchidPlatform {
   }
 
   static bool get hasPurchase {
-    return isApple || isAndroid;
+    return ENABLE_PACS && (isApple || isAndroid);
   }
 
   static String get operatingSystem {

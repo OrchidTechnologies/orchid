@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:orchid/api/orchid_keys.dart';
+import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/orchid_user_config/orchid_account_import.dart';
 import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
@@ -225,18 +226,18 @@ class _WelcomePanelState extends State<WelcomePanel> {
             });
           },
         ),
-        pady(16),
-        Visibility(
-          visible: _dollarPAC != null,
-          child: OrchidOutlineButton(
-            text: s.buyCredits.toUpperCase(),
-            onPressed: () {
-              setState(() {
-                _state = _State.confirm_purchase;
-              });
-            },
-          ),
-        ),
+        if (OrchidPlatform.hasPurchase)
+          Visibility(
+            visible: _dollarPAC != null,
+            child: OrchidOutlineButton(
+              text: s.buyCredits.toUpperCase(),
+              onPressed: () {
+                setState(() {
+                  _state = _State.confirm_purchase;
+                });
+              },
+            ),
+          ).top(16),
         pady(24),
         if (widget.onDismiss != null)
           Text(s.illDoThisLater).linkButton(onTapped: _dismiss),
@@ -344,8 +345,9 @@ class _WelcomePanelState extends State<WelcomePanel> {
                 value: _selectedIdentity!.address
                     .toString(prefix: true, elide: false))
             .center
-            .top(16),
-        Text(s.enterYourWeb3).body2.top(32),
+            .top(8),
+        DappUtil.buildDappLink(_selectedIdentity?.address),
+        Text(s.enterYourWeb3).body2.top(16),
         OrchidLabeledAddressField(
           label: s.funderWalletAddress,
           onChange: (value) {
@@ -508,7 +510,7 @@ class _WelcomePanelState extends State<WelcomePanel> {
           Text(label ?? s.copyIdentity).body2.tappable.left(14).top(2),
           SizedBox(width: 20),
         ],
-      ),
+      ).pady(8),
       onPressed: () {
         Clipboard.setData(ClipboardData(text: value));
       },
@@ -531,7 +533,6 @@ class _WelcomePanelState extends State<WelcomePanel> {
             .top(32)
             // Note: styled text breaks animated size layout so we provide a height
             .height(100),
-
         _buildConfirmPurchaseDetails(pac: _dollarPAC).top(40),
         OrchidActionButton(
           enabled: _state == _State.confirm_purchase,
@@ -819,4 +820,26 @@ class _TitleContent {
     this.showDismiss = false,
     this.backState,
   });
+}
+
+class DappUtil {
+  static Row buildDappLink(EthereumAddress? signer) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Icon(Icons.link, color: OrchidColors.active, size: 16),
+        Icon(Icons.open_in_new, color: OrchidColors.active, size: 16),
+        Text(
+          "Go to the Orchid dapp -\nFund this account with crypto\non account.orchid.com",
+          textAlign: TextAlign.center,
+          style: OrchidText.linkStyle,
+        ).linkButton(
+            onTapped: () {
+              OrchidUrls.openDapp(signer: signer);
+            },
+            pad_y: 16),
+      ],
+    );
+  }
+
 }

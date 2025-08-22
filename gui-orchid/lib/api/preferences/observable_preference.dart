@@ -1,3 +1,4 @@
+import 'package:orchid/api/orchid_log.dart';
 import 'package:flutter/material.dart';
 import 'package:orchid/api/preferences/user_preferences.dart';
 import 'package:rxdart/rxdart.dart';
@@ -56,6 +57,7 @@ class ObservablePreference<T> {
   }
 
   Future<void> clear() async {
+    log("ObservablePreference: clear $key");
     await set(null);
   }
 

@@ -155,12 +155,14 @@ class LinkStyleTextButton extends StatelessWidget {
   final String text;
   final TextAlign alignment;
   final TextStyle? style;
+  final double? pad_y;
 
   LinkStyleTextButton(
     this.text, {
     this.alignment = TextAlign.center,
     this.onTapped,
     this.style,
+    this.pad_y,
   });
 
   @override
@@ -171,7 +173,7 @@ class LinkStyleTextButton extends StatelessWidget {
         text,
         textAlign: alignment,
         style: style ?? OrchidText.linkStyle,
-      ),
+      ).pady(pad_y ?? 0),
     );
   }
 }

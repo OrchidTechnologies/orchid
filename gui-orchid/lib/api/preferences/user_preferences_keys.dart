@@ -30,47 +30,49 @@ class UserPreferencesKeys {
 
   /// Return the user's keys or [] empty array if uninitialized.
   static List<StoredEthereumKey> _getKeys() {
+    log("UserPreferenceKeys: getKeys: retrieving keys");
     if (AccountMock.mockAccounts) {
       return AccountMock.mockKeys;
     }
 
     String? value =
-    UserPreferences().getStringForKey(_UserPreferenceKeyKeys.Keys);
+        UserPreferences().getStringForKey(_UserPreferenceKeyKeys.Keys);
     if (value == null) {
+      log("UserPreferenceKeys: getKeys: no keys found, returning empty list");
       return [];
     }
     try {
       var jsonList = jsonDecode(value) as List<dynamic>;
+      // log("UserPreferenceKeys: getKeys: found keys: $jsonList");
       return jsonList
           .map((el) {
-        try {
-          return StoredEthereumKey.fromJson(el);
-        } catch (err) {
-          log("Error decoding key: $err");
-          return null;
-        }
-      })
+            try {
+              return StoredEthereumKey.fromJson(el);
+            } catch (err) {
+              log("UserPreferenceKeys: Error decoding key: $err");
+              return null;
+            }
+          })
           .whereType<StoredEthereumKey>()
           .toList();
     } catch (err) {
-      log("Error retrieving keys!: $value, $err");
+      log("UserPreferenceKeys: Error retrieving keys!: $value, $err");
       return [];
     }
   }
 
   static Future<bool> _setKeys(List<StoredEthereumKey>? keys) async {
-    print("setKeys: storing keys: ${jsonEncode(keys)}");
+    // log("UserPreferenceKeys: setKeys: storing keys: ${jsonEncode(keys)}");
     if (keys == null) {
-      return UserPreferences()
-          .sharedPreferences()
-          .remove(_UserPreferenceKeyKeys.Keys.toString());
+      log("UserPreferenceKeys: setKeys: removing keys");
+      return await UserPreferences().remove(_UserPreferenceKeyKeys.Keys);
     }
     try {
       var value = jsonEncode(keys);
       return await UserPreferences()
           .putStringForKey(_UserPreferenceKeyKeys.Keys, value);
     } catch (err) {
-      log("Error storing keys!: $err");
+      log("UserPreferenceKeys: Error storing keys!: $err");
       return false;
     }
   }
@@ -81,7 +83,7 @@ class UserPreferencesKeys {
     try {
       keysList.removeWhere((key) => key.uid == keyRef.keyUid);
     } catch (err) {
-      log("account: error removing key: $keyRef");
+      log("UserPreferenceKeys: account: error removing key: $keyRef");
       return false;
     }
     await keys.set(keysList);
@@ -95,13 +97,13 @@ class UserPreferencesKeys {
 
   /// Add a key to the user's keystore if it does not already exist.
   Future<void> addKeyIfNeeded(StoredEthereumKey key) async {
-    log("XXX: addKeyIfNeeded: add key if needed: $key");
+    log("UserPreferenceKeys: addKeyIfNeeded: add key if needed: $key");
     var curKeys = keys.get() ?? [];
     if (!curKeys.contains(key)) {
-      log("XXX: addKeyIfNeeded: adding key");
+      log("UserPreferenceKeys: addKeyIfNeeded: adding key");
       await keys.set(curKeys + [key]);
     } else {
-      log("XXX: addKeyIfNeeded: duplicate key");
+      log("UserPreferenceKeys: addKeyIfNeeded: duplicate key");
     }
   }
 
@@ -111,10 +113,9 @@ class UserPreferencesKeys {
     await keys.set(allKeys);
   }
 
-///
-/// End: Keys
-///
-
+  ///
+  /// End: Keys
+  ///
 }
 
 enum _UserPreferenceKeyKeys implements UserPreferenceKey {

@@ -7,6 +7,7 @@ import 'package:orchid/api/orchid_eth/chains.dart';
 import 'package:orchid/api/orchid_eth/orchid_account.dart';
 import 'package:orchid/api/orchid_platform.dart';
 import 'package:orchid/api/orchid_urls.dart';
+import 'package:orchid/pages/connect/welcome_panel.dart';
 import 'package:orchid/vpn/preferences/user_preferences_vpn.dart';
 import 'package:orchid/vpn/purchase/orchid_pac_transaction.dart';
 import 'package:orchid/orchid/account/account_card.dart';
@@ -209,7 +210,9 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
   Widget _buildIdentitySelectorDropdownMenu() {
     return Theme(
       data: Theme.of(context).copyWith(
-        cardColor: OrchidColors.dark_background,
+        popupMenuTheme: PopupMenuThemeData(
+          color: OrchidColors.dark_background,
+        ),
         highlightColor: OrchidColors.purple_menu,
       ),
       child: PopupMenuButton<_IdentitySelectorMenuItem>(
@@ -254,6 +257,11 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
                 PopupMenuItem<_IdentitySelectorMenuItem>(
                     value: _IdentitySelectorMenuItem(action: _importAccount),
                     child: Text(s.importAccount, style: style)),
+                PopupMenuItem<_IdentitySelectorMenuItem>(
+                    value: _IdentitySelectorMenuItem(action: (){
+                      OrchidUrls.openDapp(signer: _selectedIdentity?.address);
+                    }),
+                    child: Text("Fund with Dapp", style: style)),
               ];
         },
       ),
@@ -583,13 +591,16 @@ class _AccountManagerPageState extends State<AccountManagerPage> {
               text: "MANUALLY IMPORT ACOUNT",
               onPressed: _importAccount,
             ).top(32),
+
+            DappUtil.buildDappLink(_selectedIdentity?.address).top(8),
+
             OrchidOutlineButton(
               text: "SCAN FOR ACCOUNTS",
               onPressed: () async {
                 await _refreshIndicatorKey.currentState?.show();
               },
               borderColor: Colors.transparent,
-            ).top(16).bottom(40),
+            ).top(0).bottom(32),
           ],
         ),
       ),

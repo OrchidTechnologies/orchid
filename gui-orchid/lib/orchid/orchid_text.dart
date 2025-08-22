@@ -327,11 +327,12 @@ extension OrchidTextExtensions on Text {
         ));
   }
 
-  Widget linkButton({required VoidCallback onTapped, TextStyle? style}) {
+  Widget linkButton({required VoidCallback onTapped, TextStyle? style, double? pad_y}) {
     return LinkStyleTextButton(
       this.data ?? '',
       style: style ?? this.style,
       onTapped: onTapped,
+      pad_y: pad_y,
     );
   }
 
