@@ -334,7 +334,7 @@ class ChainlinkContract {
 }
 
 /// Compare chainlink data rounds by date.
-class ChainlinkRoundDateTimeComparable extends Comparable<ChainlinkRoundData> {
+class ChainlinkRoundDateTimeComparable implements Comparable<ChainlinkRoundData> {
   final DateTimeComparable compare;
 
   ChainlinkRoundDateTimeComparable(

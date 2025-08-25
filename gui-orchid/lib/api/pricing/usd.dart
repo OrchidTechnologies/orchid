@@ -33,13 +33,25 @@ class USD extends ScalarValue<double> {
     return divideDouble(other);
   }
 
-  String formatCurrency(
-      {required Locale locale,
-        int precision = 2,
-        bool showPrefix = true,
-        showSuffix = false}) {
+  String formatCurrency({
+    required Locale locale,
+    int precision = 2,
+    minPrecision = null,
+    maxPrecision = null,
+    bool showPrefix = true,
+    showSuffix = false,
+    showPrecisionIndicator = false,
+  }) {
     return (showPrefix ? '\$' : '') +
-        _formatCurrency(this.value, locale: locale, precision: precision) +
+        _formatCurrency(
+          this.value,
+          locale: locale,
+          precision: precision,
+          // Specifying min/max enables showPrecisionIndicator
+          minPrecision: minPrecision,
+          maxPrecision: maxPrecision,
+          showPrecisionIndicator: showPrecisionIndicator,
+        ) +
         (showSuffix ? ' USD' : '');
   }
 
@@ -52,10 +64,10 @@ class USD extends ScalarValue<double> {
   }) {
     return ((price ?? USD.zero) * (tokenAmount ?? Tokens.TOK.zero).doubleValue)
         .formatCurrency(
-        locale: context.locale,
-        precision: 2,
-        showPrefix: false,
-        showSuffix: showSuffix);
+            locale: context.locale,
+            precision: 2,
+            showPrefix: false,
+            showSuffix: showSuffix);
   }
 }
 
@@ -80,4 +92,3 @@ class ScalarValue<T extends num> {
 
   int get hashCode => value.hashCode;
 }
-

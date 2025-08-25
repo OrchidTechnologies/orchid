@@ -121,6 +121,8 @@ String formatDecimal(
       // Workaround: no internationalization at this stage
       final unrestricted = value.toString();
 
+      // print("XXX: restricted decimal: $restricted");
+      // print("XXX: unrestricted decimal: $unrestricted");
       precisionIndicator =
           restricted.length < unrestricted.length ? ellipsis : '';
     }

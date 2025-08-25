@@ -132,7 +132,7 @@ class SeriesBinarySearch<T> {
 }
 
 /// Fuzzy date comparison.
-class DateTimeComparable extends Comparable<DateTime> {
+class DateTimeComparable implements Comparable<DateTime> {
   final DateTime date;
   final Duration within;
 

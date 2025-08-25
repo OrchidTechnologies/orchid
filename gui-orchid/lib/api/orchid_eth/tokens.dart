@@ -54,8 +54,8 @@ class Tokens {
   static const TokenType AVAX = TokenType(
     symbol: 'AVAX',
     exchangeRateSource: UniswapPriceSource(
-      //  WAVAX / ETH 0.3%
-      tokenVsETHPoolAddress: '0x00C6A247a868dEE7e84d16eBa22D1Ab903108a44',
+      //  WAVAX / ETH 1.0%
+      tokenVsETHPoolAddress: '0x3bd4c71155de785328bd7d1118acad7798cbaf6b',
     ),
     chainId: Chains.AVALANCHE_CHAINID,
     iconPath: OrchidAssetSvgToken.avalanche_avax_token_path,

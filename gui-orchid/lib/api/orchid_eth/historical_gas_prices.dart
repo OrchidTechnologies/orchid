@@ -130,7 +130,7 @@ class GasPrice {
   }
 }
 
-class GasPriceDateTimeComparable extends Comparable<GasPrice> {
+class GasPriceDateTimeComparable implements Comparable<GasPrice> {
   final DateTimeComparable compare;
 
   GasPriceDateTimeComparable({required DateTime date, required Duration within})
