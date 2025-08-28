@@ -39,10 +39,10 @@ fi
 
 if [[ "$ORCHID_GENAI_INFERENCE" == "true" ]] ;
 then
-    command="uvicorn inference_api:app --host 0.0.0.0 --port 8010;"
+    command="uvicorn inference_api:app --host 0.0.0.0 --port $ORCHID_GENAI_PORT;"
 elif [[ "$ORCHID_GENAI_BILLING" == "true" ]]
 then
-    command="python server.py --config config.json"
+    command="python -u server.py --config config.json"
 else
     echo >&2 'Neither $ORCHID_GENAI_BILLING or $ORCHID_GENAI_INFERENCE are set to "true", and one is required to be set to "true"'
     exit 1
