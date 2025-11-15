@@ -63,7 +63,7 @@ struct msghdr {
 #else
 #define IPPROTO_UDPLITE 136
 #define MSG_MORE 0x400000
-#define SO_BINDTODEVICE 0x100b
+#define SO_BINDTODEVICE 0x1134
 #define SO_NO_CHECK 0x100a
 #endif
 
