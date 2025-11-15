@@ -54,7 +54,7 @@ U<cricket::PortAllocator> Base::Allocator() {
     }, Thread()));
 }
 
-task<Response> Base::Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify) { orc_ahead orc_block({
+task<Response> Base::Fetch(const std::string &method, const Locator &locator, const std::map<std::string, std::string> &headers, const std::string &data, const std::function<bool (const std::list<rtc::OpenSSLCertificate> &)> &verify) { orc_ahead orc_block({
     http::request<http::string_body> request(http::string_to_verb(method), locator.path_, 11);
     request.set(http::field::host, locator.origin_.host_);
     request.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
