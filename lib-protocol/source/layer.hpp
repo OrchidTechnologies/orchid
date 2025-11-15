@@ -33,7 +33,7 @@
 namespace orc {
 
 template <template<typename> class Type_, typename Code_>
-auto Layer(Base &base, const Locator &locator, const std::function<bool (const std::list<const rtc::OpenSSLCertificate> &)> &verify, Code_ code) -> decltype(std::declval<Code_>()(nullptr)) {
+auto Layer(Base &base, const Locator &locator, const std::function<bool (const std::list<rtc::OpenSSLCertificate> &)> &verify, Code_ code) -> decltype(std::declval<Code_>()(nullptr)) {
     const auto endpoints(co_await base.Resolve(locator.origin_.host_, locator.origin_.port_));
     std::exception_ptr error;
     for (const auto &endpoint : endpoints) try { orc_block({
@@ -54,7 +54,7 @@ auto Layer(Base &base, const Locator &locator, const std::function<bool (const s
                 context.set_verify_callback([&](bool preverified, boost::asio::ssl::verify_context &context) {
                     const auto store(context.native_handle());
                     const auto chain(X509_STORE_CTX_get0_chain(store));
-                    std::list<const rtc::OpenSSLCertificate> certificates;
+                    std::list<rtc::OpenSSLCertificate> certificates;
                     for (auto e(sk_X509_num(chain)), i(decltype(e)(0)); i != e; i++)
                         certificates.emplace_back(sk_X509_value(chain, i));
                     return verify(certificates);

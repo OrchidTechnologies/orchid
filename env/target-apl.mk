@@ -34,29 +34,7 @@ more/$(1) := -arch $(1)
 endef
 $(each)
 
-ifeq ($(filter crossndk,$(debug)),)
 include $(pwd)/kit-default.mk
-else
-
-define _
-more/$(1) += -target $(host/$(1))19
-endef
-$(each)
-
-# XXX: needed for ___isPlatformVersionAtLeast
-resource := $(shell clang -print-resource-dir)
-lflags += $(resource)/lib/darwin/libclang_rt.$(runtime).a
-
-# XXX: this is obsolete but feels right
-#more += -B$(dir $(clang))
-more += -fno-strict-return
-include $(pwd)/kit-android.mk
-
-include $(pwd)/target-lld.mk
-
-endif
-
-include $(pwd)/target-cxx.mk
 lflags += -lc++abi
 
 objc := $(cc)

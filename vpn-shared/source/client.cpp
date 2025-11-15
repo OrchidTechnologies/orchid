@@ -131,7 +131,7 @@ Client::Client(BufferDrain &drain, S<Updated<Prices>> oracle) :
 }
 
 task<void> Client::Open(const S<Base> &base, const Locator &locator, const S<rtc::SSLFingerprint> &fingerprint) {
-    const auto verify([&](const std::list<const rtc::OpenSSLCertificate> &certificates) -> bool {
+    const auto verify([&](const std::list<rtc::OpenSSLCertificate> &certificates) -> bool {
         if (!fingerprint)
             return true;
         for (const auto &certificate : certificates)

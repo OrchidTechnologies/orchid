@@ -52,7 +52,7 @@ class Egress :
     };
 
     typedef std::map<Translator *, Neutral *> Translators;
-    typedef std::list<const Three> Recents;
+    typedef std::list<Three> Recents;
 
     struct Translation {
         const Socket translated_;
