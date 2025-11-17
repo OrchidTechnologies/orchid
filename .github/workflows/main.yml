@@ -71,6 +71,7 @@ jobs:
 
     steps:
     - run: sudo rm -rf /opt
+    - run: sudo rm -rf /usr/local/lib/android
 
     - uses: actions/checkout@v4
     - run: env/setup-git.sh
