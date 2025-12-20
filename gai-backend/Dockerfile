@@ -41,7 +41,9 @@ RUN NODE_VERSION="$(curl -fsSL https://nodejs.org/dist/latest/SHASUMS256.txt | h
   && rm "node-$NODE_VERSION-linux-$ARCH.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt \
   && ln -s /usr/local/bin/node /usr/local/bin/nodejs \
   && /usr/local/bin/npm install -g npm@11.2.0 \
-  && /usr/local/bin/npm install exa-mcp-server && pip install uv
+  && /usr/local/bin/npm install -g exa-mcp-server && pip install uv \
+  && /usr/local/bin/npm install -g --force @modelcontextprotocol/server-brave-search
+
 
 RUN useradd -m -r gai && chown -R gai /gai-backend
 USER gai
