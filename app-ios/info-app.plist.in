@@ -60,7 +60,7 @@
     <integer>11</integer>
 
     <key>MinimumOSVersion</key>
-    <string>12.0</string>
+    <string>13.0</string>
 
     <key>CFBundleSupportedPlatforms</key>
     <array>

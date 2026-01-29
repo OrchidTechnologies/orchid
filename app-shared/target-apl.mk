@@ -93,8 +93,7 @@ $(embed)$(versions)$(signature): shared/empty.plist $(embed)$(versions)$(resourc
 	@rm -rf $(dir $@)
 	$(call codesign,$(embed),$<,$@)
 
-
-cflags += -I$(pwd/gui)/$(assemble)/Pods/Headers/Public
+cflags += -I$(pwd/gui)/$(assemble)/Pods/Headers/Public{,/in_app_purchase_storekit} # XXX: generalize 
 
 $(pwd/gui)/$(assemble)/Pods/Manifest.lock: $(pwd/gui)/$(assemble)/Podfile $(pwd/gui)/.flutter-plugins-dependencies
 	cd $(pwd/gui)/$(assemble) && pod install

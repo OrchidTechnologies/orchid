@@ -30,8 +30,7 @@ dependencies:
   flutter_svg: 2.1.0
   font_awesome_flutter: 9.0.0
   http: 1.1.0
-  in_app_purchase_storekit: 0.3.5+2
-  #in_app_purchase_android: 0.2.3+7
+  in_app_purchase_storekit: 0.4.7
   in_app_purchase_android: 0.3.6+8
   intl: 0.20.2
   jdenticon_dart: 2.0.0

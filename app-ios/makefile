@@ -143,7 +143,7 @@ $(bundle)/Assets.car: $(wildcard Assets.xcassets/*/*)
 	@mkdir -p $(output)/info
 	# XXX: --launch-image LaunchImage
 	actool --output-format human-readable-text --errors --warnings --notices \
-	    --target-device iphone --target-device ipad --minimum-deployment-target 12.0 \
+	    --target-device iphone --target-device ipad --minimum-deployment-target 13.0 \
 	    --platform iphoneos \
 	    --app-icon AppIcon \
 	    --compress-pngs \

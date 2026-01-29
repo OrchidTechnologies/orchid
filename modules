@@ -15,7 +15,7 @@ tag min-openssl/openssl 'OpenSSL_[0-9_]*[a-z]'
 tag lib-shared/sqlite 'version-[0-9.]*'
 tag env/mingw-w64 'v[0-9.]*'
 
-head[app-shared/flutter]=3.24.0
+head[app-shared/flutter]=3.38.7
 head[app-shared/engine]=$(cat app-shared/flutter/bin/internal/engine.version)
 
 # XXX: boringssl should be tracked by workerd, I guess; but is also pinned by ngtcp2 currently (to a newer version)

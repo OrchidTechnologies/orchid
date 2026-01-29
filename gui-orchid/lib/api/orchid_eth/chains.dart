@@ -14,15 +14,17 @@ import 'tokens.dart';
 
 // Some chain data from https://github.com/ethereum-lists/chains
 class Chains {
-  static final _defaultEthereumProviderUrl = 'htt' +
-      'ps://et' +
-      'h-main' +
-      'ne' +
-      't.alc' +
-      'hemya' +
-      'pi.i' +
-      'o/v' +
-      '2/VwJMm1VlCgpmjULmKeaVAt3Ik4XVwxO0';
+
+  static final _defaultEthereumProviderUrl = 'htt'
+      'ps://eth'
+      '-mainnet'
+      '.g.alch'
+      'emy.com/v'
+      '2/VwJMm'
+      '1VlCgpm'
+      'jULmKea'
+      'VAt3Ik4'
+      'XVwxO0';
 
   // Get the provider URL allowing override in the advanced config
   static String get _overriddenEthereumProviderUrl {
