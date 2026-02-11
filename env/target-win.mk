@@ -113,12 +113,12 @@ qflags += -I$(CURDIR)/$(pwd)/mingw
 # XXX: I need gcc as I don't have windows compiler-rt in NDK
 #qflags += --rtlib=compiler-rt
 
-mingw := git-11.0.0.r680.g257321cea
+mingw := 13.0.0.r505.g7d006b2ea
 
 msys2 := 
 msys2 += crt-$(mingw)-1
 msys2 += dlfcn-1.4.2-1
-msys2 += gcc-13.2.0-5
+msys2 += gcc-15.2.0-11
 msys2 += headers-$(mingw)-1
 msys2 += winpthreads-$(mingw)-1
 

@@ -1,9 +1,0 @@
-runs:
-  using: "composite"
-  steps:
-    - run: brew install lima lima-additional-guestagents
-      shell: bash
-    - run: limactl start default --arch=x86_64
-      shell: bash
-    - run: echo "ENV_DOCKER=nerdctl.lima" >>"${GITHUB_ENV}"
-      shell: bash

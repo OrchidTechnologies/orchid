@@ -1,0 +1,7 @@
+runs:
+  using: "composite"
+  steps:
+    - run: brew install docker colima lima-additional-guestagents
+      shell: bash
+    - run: colima start --arch x86_64
+      shell: bash

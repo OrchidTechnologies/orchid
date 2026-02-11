@@ -32,7 +32,7 @@ flutter := $(CURDIR)/$(pwd/flutter)/bin/flutter --suppress-analytics --verbose -
 
 precache := --android --ios --linux --macos #--windows
 
-$(pwd/flutter)/packages/flutter/pubspec.lock: $(pwd/flutter)/packages/flutter/pubspec.yaml $(call head,$(pwd/flutter))
+$(pwd/flutter)/packages/flutter_tools/pubspec.lock: $(pwd/flutter)/packages/flutter_tools/pubspec.yaml $(call head,$(pwd/flutter))
 	cd $(pwd/flutter) && git clean -fxd
 	cd $(pwd/flutter) && bin/flutter config --enable-linux-desktop
 	cd $(pwd/flutter) && bin/flutter config --enable-macos-desktop
@@ -46,14 +46,14 @@ dart += $(pwd/gui)/.flutter-plugins-dependencies
 dart += $(pwd/gui)/.packages
 
 # XXX: use $(dart) to generate the first three of these
-$(pwd/gui)/.dart_tool/package_config%json $(pwd/gui)/%flutter-plugins-dependencies $(pwd/gui)/%packages $(generated): $(pwd/gui)/pubspec.yaml $(pwd/gui)/pubspec.lock $(pwd/flutter)/packages/flutter/pubspec.lock $(forks)
+$(pwd/gui)/.dart_tool/package_config%json $(pwd/gui)/%flutter-plugins-dependencies $(pwd/gui)/%packages $(generated): $(pwd/gui)/pubspec.yaml $(pwd/gui)/pubspec.lock $(pwd/flutter)/packages/flutter_tools/pubspec.lock $(forks)
 	@mkdir -p $(pwd/gui)/{android,ios,linux,macos,windows}
 	@rm -f $(pwd/gui)/.flutter-plugins-dependencies
 	! grep ': ^' $(pwd/gui)/pubspec.yaml
 	cd $(pwd/gui) && $(flutter) pub get
 	@touch $(pwd/gui)/.packages
 
-dart += $(pwd/flutter)/packages/flutter/pubspec.lock
+dart += $(pwd/flutter)/packages/flutter_tools/pubspec.lock
 dart += $(shell find $(pwd/gui)/lib/ -name '*.dart' -o -name '*.arb')
 
 ifeq ($(filter noaot,$(debug)),)

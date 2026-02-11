@@ -29,7 +29,7 @@ endif
 
 sdk := iphoneos
 runtime := ios
-more := -miphoneos-version-min=12.0
+more := -miphoneos-version-min=13.0
 include $(pwd)/target-apl.mk
 
 support := iPhoneOS

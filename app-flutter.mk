@@ -30,11 +30,11 @@ $(foreach fork,$(forks),$(shell ln -sf $(patsubst %/pubspec.yaml,%,$(fork)) >/de
 sed := $(shell which gsed sed | head -n1)
 
 .PHONY: create
-create: $(pwd/flutter)/packages/flutter/pubspec.lock
+create: $(pwd/flutter)/packages/flutter_tools/pubspec.lock
 	$(flutter) create -i objc -a java --no-pub --project-name orchid .
 	$(flutter) pub get
-	$(sed) -ie 's/flutter\.compileSdkVersion/34/g;s/flutter.minSdkVersion/21/g' android/app/build.gradle.kts
-	$(sed) -ie '/org\.jetbrains\.kotlin\.android/s/\(version "\)[^"]*/\11.8.10/' android/settings.gradle.kts
+	$(sed) -ie 's/flutter\.compileSdkVersion/36/g;s/flutter.minSdkVersion/24/g' android/app/build.gradle.kts
+	$(sed) -ie '/org\.jetbrains\.kotlin\.android/s/\(version "\)[^"]*/\12.2.20/' android/settings.gradle.kts
 	$(sed) -ie "/^# platform :ios/{s/^# //;}" ios/Podfile
 	$(sed) -ie "/^platform :osx/{s/,.*/, '10.15'/;}" macos/Podfile
 	$(sed) -ie "/MACOSX_DEPLOYMENT_TARGET =/{s/=.*/= 10.15;/g;}" macos/Runner.xcodeproj/project.pbxproj

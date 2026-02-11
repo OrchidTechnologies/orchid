@@ -47,14 +47,14 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/window_size/macos
 
 SPEC CHECKSUMS:
-  flutter_js: 79c3c70d33ba464c67d8eb88639a61aa718cd8b8
-  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  in_app_purchase_storekit: e3aa97dd8b05816b844c816bec5ad62608b2812e
-  mobile_scanner: 02d3360a57298e7f1826fd14ea0c735f44245b00
-  shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
-  sqflite: c35dad70033b8862124f8337cc994a809fcd9fa3
-  url_launcher_macos: 0fba8ddabfc33ce0a9afe7c5fef5aab3d8d2d673
-  window_size: 4bd15034e6e3d0720fd77928a7c42e5492cfece9
+  flutter_js: c664361655af1d8fc24e278c7d086e9cbe0d68bc
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  in_app_purchase_storekit: 2342c0a5da86593124d08dd13d920f39a52b273a
+  mobile_scanner: 4d1f08373cb0321594c81c7709aa460c17b8b84f
+  shared_preferences_foundation: 5086985c1d43c5ba4d5e69a4e8083a389e2909e6
+  sqflite: 673a0e54cc04b7d6dba8d24fb8095b31c3a99eec
+  url_launcher_macos: 175a54c831f4375a6cf895875f716ee5af3888ce
+  window_size: 339dafa0b27a95a62a843042038fa6c3c48de195
 
 PODFILE CHECKSUM: ce32ab99a0089086c289cf0789c8382f403ce92b
 

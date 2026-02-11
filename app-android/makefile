@@ -60,7 +60,7 @@ $(output)/assets/flutter_assets/AssetManifest%json: $(output)/flutter/flutter_as
 	@mkdir -p $(dir $@)
 	rsync -a --delete $(dir $<) $(dir $@)
 
-$(pwd/flutter)/bin/cache/artifacts/engine/android-%$(engine)/flutter.jar: $(pwd/flutter)/packages/flutter/pubspec.lock
+$(pwd/flutter)/bin/cache/artifacts/engine/android-%$(engine)/flutter.jar: $(pwd/flutter)/packages/flutter_tools/pubspec.lock
 	@
 
 temp := $(foreach arch,$(jni),$(foreach base,orchid flutter $(if $(filter noaot,$(debug)),,app),$(output)/jnilibs/$(arch)/lib$(base).so))

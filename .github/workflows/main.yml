@@ -361,7 +361,7 @@ jobs:
     - run: env/setup.sh
     - uses: ./.github/actions/submodule
 
-    - uses: ./.github/actions/nerdctl
+    - uses: ./.github/actions/colima
     - run: env/setup-ndk.sh
 
     - run: gmake -j3 -C srv-daemon target=lnx machine=x86_64
