@@ -1,4 +1,6 @@
 #!/bin/bash
 set -e
+file=$1
+shift
 "$@"
-tar -czf /tmp/export.tgz -C / --one-file-system --exclude=./tmp .
+tar -czf "${file}" -C / --one-file-system --exclude=./tmp .

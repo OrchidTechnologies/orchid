@@ -35,20 +35,13 @@ if [[ $(uname -s) = Linux ]]; then
     echo "deb http://archive.ubuntu.com/ubuntu/ ${distro}-updates main universe" >>etc/apt/sources.list
     HOME= "${proot}" -S . -w / -b "${mount}:/mnt" /mnt/setup-sys.sh "$@"
 else
-    # https://stackoverflow.com/questions/29934204/mount-data-volume-to-docker-with-readwrite-permission
-    if [[ -d /tmp/lima ]]; then
-        tarball=/tmp/lima/export-$$.tgz
-    else
-        tarball=${PWD}/export.tgz
-    fi
-
-    touch "${tarball}"
+    tarball=${PWD}/export.tgz
     clean() { rm -f "${tarball}"; }
     trap clean EXIT
 
     ${ENV_DOCKER:=docker} run --platform linux/amd64 -i --rm \
-        -v "${mount}:/mnt" -v "${tarball}:/tmp/export.tgz" \
-        ubuntu:"${distro}" /mnt/export.sh /mnt/setup-sys.sh "$@"
+        -v "${mount}:/mnt" -v "${PWD}:/tmp/export" \
+        ubuntu:"${distro}" /mnt/export.sh /tmp/export/export.tgz /mnt/setup-sys.sh "$@"
     tar --exclude dev -vxzmf "${tarball}"
 fi
 
