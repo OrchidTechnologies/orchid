@@ -9,38 +9,48 @@
 # }}}
 
 
-# XXX: consider checking ANDROID_SDK_ROOT
+ifneq ($(ANDROID_SDK_ROOT),)
+export ANDROID_HOME := $(ANDROID_SDK_ROOT)
+else
+ifneq ($(ANDROID_HOME),)
+export ANDROID_SDK_ROOT := $(ANDROID_HOME)
+else
 
-ifeq ($(ANDROID_HOME),)
-export ANDROID_HOME := $(wildcard ~/Library/Android/sdk)
+ifeq ($(ANDROID_SDK_ROOT),)
+export ANDROID_SDK_ROOT := $(wildcard ~/Library/Android/sdk)
 endif
 
-ifeq ($(ANDROID_HOME),)
-export ANDROID_HOME := $(wildcard /usr/local/lib/android/sdk)
+ifeq ($(ANDROID_SDK_ROOT),)
+export ANDROID_SDK_ROOT := $(wildcard /usr/local/lib/android/sdk)
 endif
 
-ifeq ($(ANDROID_HOME),)
-export ANDROID_HOME := $(wildcard /usr/lib/android-sdk)
+ifeq ($(ANDROID_SDK_ROOT),)
+export ANDROID_SDK_ROOT := $(wildcard /usr/lib/android-sdk)
 endif
 
-ifeq ($(ANDROID_HOME),)
+ifeq ($(ANDROID_SDK_ROOT),)
 ifneq ($(shell which cygpath 2>/dev/null),)
-export ANDROID_HOME := $(wildcard $(shell cygpath '$(USERPROFILE)')/AppData/Local/Android/Sdk)
+export ANDROID_SDK_ROOT := $(wildcard $(shell cygpath '$(USERPROFILE)')/AppData/Local/Android/Sdk)
 endif
 endif
+
+export ANDROID_HOME := $(ANDROID_SDK_ROOT)
+endif
+endif
+
 
 ndk := $(ANDROID_NDK_ROOT)
 
-ifneq ($(ANDROID_HOME),)
+ifneq ($(ANDROID_SDK_ROOT),)
 ifeq ($(ndk),)
-ndk := $(shell ls $(ANDROID_HOME)/ndk 2>/dev/null | sort -nr | head -n1)
+ndk := $(shell ls $(ANDROID_SDK_ROOT)/ndk 2>/dev/null | sort -nr | head -n1)
 ifneq ($(ndk),)
-ndk := $(ANDROID_HOME)/ndk/$(ndk)
+ndk := $(ANDROID_SDK_ROOT)/ndk/$(ndk)
 endif
 endif
 
 ifeq ($(ndk),)
-ndk := $(wildcard $(ANDROID_HOME)/ndk-bundle)
+ndk := $(wildcard $(ANDROID_SDK_ROOT)/ndk-bundle)
 endif
 endif
 

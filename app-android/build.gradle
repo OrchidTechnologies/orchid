@@ -46,25 +46,6 @@ android {
         manifestPlaceholders = [orcUnique: orcUnique, orcName: orcName]
     }
 
-    signingConfigs {
-        orchid {
-            keyAlias orcAlias
-            keyPassword orcPassword
-            storeFile file(orcStore)
-            storePassword orcPassword
-        }
-    }
-
-    buildTypes {
-        debug {
-            signingConfig signingConfigs.orchid
-        }
-
-        release {
-            signingConfig signingConfigs.orchid
-        }
-    }
-
     compileOptions {
         sourceCompatibility 1.8
         targetCompatibility 1.8

@@ -24,7 +24,7 @@ include env/target.mk
 cflags += -DGUI_$(gui)
 
 .PHONY: all
-all: $(output)/$(name).apk
+all: apk
 
 .PHONY: install
 install: $(output)/$(name).apk
@@ -41,7 +41,7 @@ upload: $(output)/$(name).apk
 $(call include,vpn/target.mk)
 $(call include,shared/target-and.mk)
 
-apk := $(output)/build/outputs/apk/$(mode)/app-android-$(if $(filter noaot,$(debug)),debug,release).apk
+apk := $(output)/build/outputs/apk/$(mode)/app-android-$(if $(filter noaot,$(debug)),debug,release-unsigned).apk
 
 include env/output.mk
 
@@ -69,17 +69,9 @@ $(output)/jnilibs/%/libflutter.so: $(pwd/flutter)/bin/cache/artifacts/engine/$$(
 	@mkdir -p $(dir $@)
 	unzip -p $< lib/$*/libflutter.so >$@
 
-ifeq ($(keystore),)
-keystore := ../debug androiddebugkey android
-
-$(word 1,$(keystore)).keystore:
-	echo $$'$(word 3,$(keystore))\n$(word 3,$(keystore))\n\n\n' | keytool -genkey -v -keystore $@ -alias $(word 2,$(keystore)) -dname "CN=Android Debug,O=Android,C=US" -validity 365 -keyalg RSA -keysize 2048
-endif
-
-$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle $(word 1,$(keystore)).keystore src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json $(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar
+$(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -name '*.java') $(shell find src/main/res) build.gradle src/main/AndroidManifest.xml $(temp) $(subst %,.,$(generated)) $(output)/assets/flutter_assets/AssetManifest.json $(pwd/flutter)/bin/cache/artifacts/engine/android-arm-release/flutter.jar
 	@FLUTTER_ROOT=$(CURDIR)/shared/flutter ./gradlew assemble$(if $(filter noaot,$(debug)),Debug,Release) \
 	    -Pandroid.debug.obsoleteApi=true --console verbose --warning-mode all \
-	    -PorcStore='$(word 1,$(keystore)).keystore' -PorcAlias='$(word 2,$(keystore))' -PorcPassword='$(word 3,$(keystore))' \
 	    -PorcMonotonic='$(monotonic)' -PorcRevision='$(revision)' -PorcPackage='$(package)' -PorcVersion='$(version)' \
 	     -PorcFlutter=$(pwd/flutter)/bin/cache/artifacts/engine/$(flutter/$(machine))$(engine)/flutter.jar \
 	    -PorcUnique='$(domain).$(name)' -PorcName='$(name)' -PorcOutput='$(output)' -PorcInterface='$(pwd/gui)'
@@ -87,7 +79,14 @@ $(apk): $(shell find src/main/kotlin -name '*.kt') $(shell find src/main/java -n
 	touch $@
 
 $(output)/$(name).apk: $(apk)
-	cp -af $< $@
+	$(ANDROID_SDK_ROOT)/build-tools/35.0.0/apksigner sign \
+	    --alignment-preserved \
+	    --deterministic-dsa-signing --min-sdk-version $(aver) \
+	    $(apksigner) --out $@ $<
 
 .PHONY: apk
+ifeq ($(apksigner),)
+apk: $(apk)
+else
 apk: $(output)/$(name).apk
+endif

@@ -12,3 +12,7 @@ provision :=
 # suffix := -XXX
 
 #MAKEFLAGS += --output-sync=line
+
+apksigner := --ks ../debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android
+
+#echo $$'$(word 3,$(keystore))\n$(word 3,$(keystore))\n\n\n' | keytool -genkey -v -keystore $@ -alias $(word 2,$(keystore)) -dname "CN=Android Debug,O=Android,C=US" -validity 365 -keyalg RSA -keysize 2048
