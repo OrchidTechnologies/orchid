@@ -79,6 +79,8 @@ android {
         implementation "androidx.tracing:tracing:1.2.0"
         implementation "androidx.window:window:1.2.0"
         implementation "androidx.window:window-java:1.2.0"
+
+        implementation "com.getkeepsafe.relinker:relinker:1.4.5"
     }
 
     lintOptions {

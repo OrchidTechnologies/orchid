@@ -13,4 +13,4 @@ cd dexdump
 
 unzip ../Orchid.apk '*.dex'
 
-grep -Fxv -f<(dexdump *.dex | sed -e '/Class descriptor/!d;s/'\''$//;s/.*: '\''//' | sort -u) <(dexdump -d *.dex | tr ';' $'\n' | sed -e '/.*\(Landroidx\/[a-zA-Z/]*\)$/{s//\1;/;p;};d;' | sort -u) | grep -v '^Landroidx/window/\(extensions\|sidecar\)/'
+grep -Fxv -f<(dexdump *.dex | LANG=C sed -e '/Class descriptor/!d;s/'\''$//;s/.*: '\''//' | sort -u) <(dexdump -d *.dex | LANG=C tr ';' $'\n' | LANG=C sed -e '/.*\(L[a-zA-Z]*\/[a-zA-Z/$]*\)$/{s//\1;/;p;};d;' | sort -u) | grep -v '^L\(android\|androidx/window/\(extensions\|sidecar\)\|com/google/android/play/core\|dalvik/system\|javax\?\|libcore/io\|org/json\|sun/misc\)/'
