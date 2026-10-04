@@ -38,7 +38,24 @@ class StrictRedisBilling:
         
     async def debit(self, id: str, type: Optional[str] = None, amount: float = 0):
         await self.adjust(id, type, amount, -1)
-        
+
+    async def settle(self, id: str, held: float, actual: float) -> float:
+        """Reconcile a pre-authorized hold against the authoritative actual cost.
+
+        The inference path pre-debits a worst-case ``held`` ceiling as a balance
+        guard, then calls this once the upstream-reported usage is known. Refunds
+        ``held - actual`` when the hold exceeded the real cost (the common case:
+        char/4 + max_tokens overestimates), or collects the shortfall when the
+        real cost exceeded the hold (e.g. a long tool loop). Returns the signed
+        amount applied to the balance (positive = refunded to the client).
+        """
+        delta = Decimal(str(held)) - Decimal(str(actual))
+        if delta > 0:
+            await self.adjust(id, None, float(delta), 1)
+        elif delta < 0:
+            await self.adjust(id, None, float(-delta), -1)
+        return float(delta)
+
     async def adjust(self, id: str, type: Optional[str], amount: float, sign: int):
         key = self._get_client_key(id)
         channel = self._get_update_channel(id)

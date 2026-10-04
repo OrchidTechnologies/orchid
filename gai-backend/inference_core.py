@@ -15,6 +15,7 @@ from inference_models import (
     ChatChoice,
     Message,
     Usage,
+    OrchidBilling,
     ModelInfo,
     OpenAIModel,
     OpenAIModelList,
@@ -463,7 +464,45 @@ class InferenceAPI:
             
         return count
 
-    def query_backend(self, endpoint_config: Dict[str, Any], model_config: Dict[str, Any], 
+    async def _finalize_billing(self, session_id: str, completion: ChatCompletion,
+                                model_config: Dict[str, Any], held_cost: float) -> ChatCompletion:
+        """Reconcile the pre-authorized hold against authoritative upstream usage
+        and surface the metered price to the client.
+
+        Tier-0: bill on the provider's reported `usage`, not the char/4 ceiling
+        that was pre-debited as a balance guard. The held ceiling is refunded
+        down to the real cost (or the shortfall collected on a long tool loop).
+
+        NOTE: thinking/cache tokens are not in the `Usage` model yet (Tier-0 #3).
+        When added, fold them into `actual_cost` here at their own rates — this
+        is the single place per-request cost is finalized.
+        """
+        pricing = model_config.get('pricing', {})
+        try:
+            input_price, output_price = self.get_token_prices(pricing)
+        except Exception as e:
+            # tools-only / non-token pricing has no input/output rates — can't
+            # meter authoritatively, so leave the hold as-is rather than crash.
+            logger.warning(f"Skipping usage reconciliation for session {session_id} "
+                           f"(no token pricing): {e}")
+            return completion
+
+        usage = completion.usage
+        actual_cost = self.calculate_cost(pricing, usage.prompt_tokens, usage.completion_tokens)
+        refunded = await self.billing.settle(session_id, held=held_cost, actual=actual_cost)
+        logger.info(
+            f"Settled session {session_id}: held={held_cost} actual={actual_cost} "
+            f"refunded={refunded} (in={usage.prompt_tokens} out={usage.completion_tokens})"
+        )
+        completion.orchid_billing = OrchidBilling(
+            cost=actual_cost,
+            input_price=input_price,
+            output_price=output_price,
+            pricing_type=pricing.get('type', 'unknown'),
+        )
+        return completion
+
+    def query_backend(self, endpoint_config: Dict[str, Any], model_config: Dict[str, Any],
                      request: ChatCompletionRequest) -> ChatCompletion:
         try:
             # Check if we're in tools-only mode
@@ -1315,10 +1354,17 @@ class InferenceAPI:
                         final_completion.usage.completion_tokens = total_completion_tokens
                         final_completion.usage.total_tokens = total_prompt_tokens + total_completion_tokens
 
-                        return final_completion
-                    
-                    # If no tool calls, return the initial completion
-                    return initial_completion
+                        # Reconcile the held ceiling against the accumulated
+                        # authoritative usage across every backend call in the loop.
+                        return await self._finalize_billing(
+                            session_id, final_completion, model_config, max_cost
+                        )
+
+                    # If no tool calls, return the initial completion — bill on
+                    # the provider's reported usage, not the pre-debited ceiling.
+                    return await self._finalize_billing(
+                        session_id, initial_completion, model_config, max_cost
+                    )
                 
                 except Exception as e:
                     retry_count += 1

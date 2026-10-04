@@ -20,4 +20,5 @@ __pycache__
 
 cfg_server_test.json
 venv
+.venv
 env.sh

@@ -130,6 +130,19 @@ class Usage(BaseModel):
     completion_tokens: int
     total_tokens: int
 
+class OrchidBilling(BaseModel):
+    """Orchid metering surfaced to the client (non-OpenAI extension field).
+
+    Lets the client verify the charge: recompute cost from `usage` and these
+    prices and compare against public pricing. Tier-0 metering bills on
+    upstream-authoritative `usage`, not a server-side char/4 estimate, so this
+    is checkable rather than asserted. Prices are per 1M tokens.
+    """
+    cost: float
+    input_price: float
+    output_price: float
+    pricing_type: str
+
 class ChatCompletion(BaseModel):
     id: str
     object: str = "chat.completion"
@@ -138,6 +151,7 @@ class ChatCompletion(BaseModel):
     choices: List[ChatChoice]
     usage: Usage
     system_fingerprint: Optional[str] = None
+    orchid_billing: Optional[OrchidBilling] = None
 
 class ChatCompletionChunk(BaseModel):
     id: str
