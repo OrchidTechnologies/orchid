@@ -26,6 +26,7 @@ logger = configure_logging()
 async def lifespan(app: FastAPI):
     await api.init()
     yield
+    await api.aclose()
     await redis.close()
 
 async def validation_error_handler(request, exc: RequestValidationError):

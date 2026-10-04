@@ -1,6 +1,7 @@
 from redis.asyncio import Redis
+import asyncio
 import json
-import requests
+import httpx
 import copy
 from typing import Dict, Any, Tuple, AsyncGenerator, Union, List
 from datetime import datetime
@@ -40,6 +41,14 @@ from inference_logging import configure_logging
 
 logger = configure_logging()
 
+# Upstream provider call timeouts. connect/read are per-operation (httpx resets
+# the read timer on each received chunk); WALL_CLOCK is a hard total deadline so a
+# trickling or wedged upstream can't hang a request indefinitely — the per-chunk
+# trap hit during the perf baseline. See perf-baseline/PROD-VITALS.md.
+BACKEND_CONNECT_TIMEOUT = 10.0
+BACKEND_READ_TIMEOUT = 90.0
+BACKEND_WALL_CLOCK = 120.0
+
 TOOL_TOKENS = {
     "claude-3.5-sonnet-20241022": {
         "auto": 346,
@@ -65,6 +74,22 @@ class InferenceAPI:
         self.config_manager = ConfigManager(redis)
         self.billing = StrictRedisBilling(redis)
         self.mcp_session = None
+        self._http_client = None  # shared httpx.AsyncClient; lazily created
+
+    def _get_http_client(self) -> httpx.AsyncClient:
+        """Shared keep-alive client so upstream calls reuse TLS/connections
+        (TTFT matters — see perf-baseline/BASELINE.md)."""
+        if self._http_client is None:
+            self._http_client = httpx.AsyncClient(
+                timeout=httpx.Timeout(BACKEND_READ_TIMEOUT, connect=BACKEND_CONNECT_TIMEOUT),
+                limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
+            )
+        return self._http_client
+
+    async def aclose(self):
+        if self._http_client is not None:
+            await self._http_client.aclose()
+            self._http_client = None
 
     async def init(self):
         await self.billing.init()
@@ -502,7 +527,7 @@ class InferenceAPI:
         )
         return completion
 
-    def query_backend(self, endpoint_config: Dict[str, Any], model_config: Dict[str, Any],
+    async def query_backend(self, endpoint_config: Dict[str, Any], model_config: Dict[str, Any],
                      request: ChatCompletionRequest) -> ChatCompletion:
         try:
             # Check if we're in tools-only mode
@@ -578,32 +603,42 @@ class InferenceAPI:
             elif request.tools:
                 logger.warning("Request had tools but they were not included in backend request!")
             
-            response = requests.post(
-                endpoint_config['url'],
-                headers=headers,
-                json=data,
-                timeout=(10, 90)
-            )
-            
+            client = self._get_http_client()
+            try:
+                # Hard wall-clock deadline on top of httpx's per-operation timeouts:
+                # a trickling upstream resets the read timer, so wait_for is the
+                # real bound (perf-baseline/PROD-VITALS.md).
+                response = await asyncio.wait_for(
+                    client.post(endpoint_config['url'], headers=headers, json=data),
+                    timeout=BACKEND_WALL_CLOCK
+                )
+            except asyncio.TimeoutError:
+                logger.error(f"Backend request exceeded {BACKEND_WALL_CLOCK}s wall-clock deadline")
+                raise BackendServiceError("Provider request timed out")
+
             try:
                 response.raise_for_status()
-            except requests.exceptions.HTTPError as e:
+            except httpx.HTTPStatusError:
                 if response.status_code == 400:
-                    error_body = response.json()
+                    try:
+                        error_body = response.json()
+                    except Exception:
+                        error_body = {}
                     if 'error' in error_body and 'message' in error_body['error']:
                         raise BackendServiceError(error_body['error']['message'])
                 raise BackendServiceError("Provider request failed")
-            
+
             result = response.json()
-            
+
             return ModelAdapter.parse_response(
                 api_type=endpoint_config['api_type'],
                 response=result,
                 model=request.model,
                 request_id=request.request_id
             )
-                
-        except requests.exceptions.RequestException as e:
+
+        except httpx.RequestError as e:
+            logger.error(f"Backend request error: {e}")
             raise BackendServiceError()
 
     async def list_models(self) -> Dict[str, ModelInfo]:
@@ -1155,7 +1190,7 @@ class InferenceAPI:
                             logger.debug(f"Tool in request: {tool.function.name}")
                     
                     # Get initial completion which may include tool calls
-                    initial_completion = self.query_backend(endpoint_config, model_config, request)
+                    initial_completion = await self.query_backend(endpoint_config, model_config, request)
                     
                     # Check if this is a tool that was injected by the server 
                     # and should be handled server-side
@@ -1252,7 +1287,7 @@ class InferenceAPI:
                         while consecutive_errors < max_consecutive_errors:
                             try:
                                 # Get next completion with tool results
-                                next_completion = self.query_backend(endpoint_config, model_config, follow_up_request)
+                                next_completion = await self.query_backend(endpoint_config, model_config, follow_up_request)
                                 
                                 # Add costs
                                 total_prompt_tokens += next_completion.usage.prompt_tokens
@@ -1322,7 +1357,7 @@ class InferenceAPI:
                             ))
                             
                             # Get the final summary
-                            final_summary = self.query_backend(endpoint_config, model_config, follow_up_request)
+                            final_summary = await self.query_backend(endpoint_config, model_config, follow_up_request)
                             
                             # Add costs for the summary
                             total_prompt_tokens += final_summary.usage.prompt_tokens
