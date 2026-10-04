@@ -10,7 +10,7 @@ import websockets
 import aiohttp
 import time
 
-from account import OrchidAccount
+from account import OrchidAccount, InvalidAmountError
 from lottery import Lottery
 from ticket import Ticket
 
@@ -301,7 +301,12 @@ class ToolNodeClient:
             raise
 
 class OrchidLLMTestClient:
-    def __init__(self, config_path: str, wallet_only: bool = False, inference_only: bool = False, 
+    # How long a read escrow stays trusted before we re-read it. Escrow only
+    # drops when the funder withdraws collateral (rare, behind a warn+unlock
+    # delay), so brief staleness is safe — the chain is the final authority.
+    ESCROW_CACHE_TTL = 30.0
+
+    def __init__(self, config_path: str, wallet_only: bool = False, inference_only: bool = False,
                  inference_url: Optional[str] = None, auth_key: Optional[str] = None, 
                  prompt: Optional[str] = None, debug: bool = False):
         self.config = ClientConfig.from_file(config_path)
@@ -343,6 +348,12 @@ class OrchidLLMTestClient:
         self.inference_url = None
         self.message_queue = asyncio.Queue()
         self._handler_task = None
+
+        # Cached at-risk escrow collateral (wei). The ticket face is sized off
+        # this (face = escrow//2, DESIGN-DECISIONS D10); it only shrinks on a
+        # slow collateral withdraw, so a short TTL beats one RPC per invoice.
+        self._escrow_wei: Optional[int] = None
+        self._escrow_expiry: float = 0.0
         
         # Initialize tool clients dictionary
         self.tool_clients = {}
@@ -354,21 +365,49 @@ class OrchidLLMTestClient:
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
 
+    async def _get_escrow_wei(self) -> int:
+        """Read and cache the funder's at-risk escrow collateral, in wei.
+
+        The recipient honors a ticket only if 2*face <= escrow (DESIGN-DECISIONS
+        D10), so the client sizes face off this value. The read is an on-chain
+        RPC; we cache it for ESCROW_CACHE_TTL so a session does ~one read per TTL
+        rather than one per invoice."""
+        now = time.monotonic()
+        if self._escrow_wei is not None and now < self._escrow_expiry:
+            return self._escrow_wei
+        _balance, escrow = await self.account.get_balance_wei()
+        self._escrow_wei = escrow
+        self._escrow_expiry = now + self.ESCROW_CACHE_TTL
+        return escrow
+
     async def _handle_invoice(self, invoice_data: Dict) -> None:
         try:
             amount = int(invoice_data['amount'])
             recipient = invoice_data['recipient']
             commit = invoice_data['commit']
-            
+
             self.logger.info(f"Received invoice for {amount/1e18} tokens")
-            
+
+            # Size the face at half the at-risk escrow collateral: the recipient
+            # honors a ticket only if 2*face <= escrow, so face = escrow//2 is the
+            # largest honorable face — which minimizes the win probability and thus
+            # how often a winner must be claimed on-chain (DESIGN-DECISIONS D10).
+            # create_ticket then solves the ratio so the booked EV == amount.
+            escrow = await self._get_escrow_wei()
+            face = escrow // 2
+            if face < amount:
+                raise InvalidAmountError(
+                    f"escrow {escrow} too small to pay invoice: face=escrow//2={face} "
+                    f"< amount {amount}; add collateral (need escrow >= 2*amount)")
+
             # Create and send ticket immediately
             ticket_str = self.account.create_ticket(
                 amount=amount,
                 recipient=recipient,
-                commitment=commit
+                commitment=commit,
+                face=face
             )
-            
+
             payment = {
                 'type': 'payment',
                 'tickets': [ticket_str]

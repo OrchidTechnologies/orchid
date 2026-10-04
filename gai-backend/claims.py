@@ -85,10 +85,12 @@ class ClaimWorker:
 
     The on-chain submission is INJECTED (``submit``), so this orchestration is
     contract-agnostic and fully unit-testable without a chain. The real broadcast
-    wrapper is wired in server.py and is GATED OFF by default (``enabled=False``);
-    it also stays blocked on the funder-derivation question (DESIGN-DECISIONS D6)
-    until that is resolved on a testnet. While disabled, winners simply accumulate
-    in the durable queue.
+    wrapper is wired in server.py and is GATED OFF by default (``enabled=False``).
+    The funder-derivation question (DESIGN-DECISIONS D6 #1) is resolved — the
+    funder is signed into each ticket (packed1) and the crypto now matches the
+    contract (D8) — but broadcast spends real funds, so it stays gated until a
+    supervised testnet trial. While disabled, winners simply accumulate in the
+    durable queue.
 
     Claim policy (placeholders until the real A1 win-ratio and Gnosis gas are
     known — see DESIGN-DECISIONS D6 #2): claim when the pending face value reaches

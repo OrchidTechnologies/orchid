@@ -14,10 +14,10 @@ of every ticket unconditionally.
 
 import asyncio
 import secrets
+import time
 import unittest
 
 from eth_account import Account
-from eth_account.messages import encode_defunct
 from web3 import Web3
 
 from account import OrchidAccount
@@ -87,15 +87,20 @@ _LOTTERY = Lottery(Web3(Web3.HTTPProvider("http://127.0.0.1:1")), chain_id=100)
 _ACCT = OrchidAccount(_LOTTERY, FUNDER, FUNDER_KEY)
 
 
-def _mint(*, amount, recipient, commitment, ratio, key=FUNDER_KEY):
+def _mint(*, amount, recipient, commitment, ratio, key=FUNDER_KEY, funder=FUNDER,
+          issued=None, expire_delta=7 * 24 * 3600):
     """Mint a signed ticket with a chosen win ratio (OrchidAccount.create_ticket
-    hardcodes ratio=max, so we replicate its signing to forge winners AND losers).
-    ratio=UINT64_MAX -> always wins; ratio=0 -> effectively never wins."""
-    nonce = secrets.randbits(128)
-    packed0 = amount | (nonce << 128)
-    packed1 = (ratio << 161) | (0 << 160)
+    derives the ratio from win_prob, so we replicate its packing+signing to forge
+    winners AND losers). ratio=UINT64_MAX -> always wins; ratio=0 -> never wins.
+    Packs to the contract bit layout and signs the digest RAW, exactly like the
+    real mint, so these tickets are on-chain-valid (and post-Workstream-B the
+    acceptor reads the funder straight out of packed1)."""
+    nonce = secrets.randbits(64)
+    issued = int(time.time()) if issued is None else int(issued)
+    packed0 = (amount & ((1 << 128) - 1)) | (nonce << 128) | (issued << 192)
+    packed1 = (int(funder, 16) << 1) | (ratio << 161) | (expire_delta << 225)
     digest = _ACCT._get_ticket_hash(ZERO_TOKEN, recipient, commitment, packed0, packed1)
-    sig = _ACCT.web3.eth.account.sign_message(encode_defunct(digest), private_key=key)
+    sig = Account.unsafe_sign_hash(digest, private_key=key)
     packed1 |= (sig.v - 27)
     return (hex(packed0)[2:].zfill(64) + hex(packed1)[2:].zfill(64)
             + hex(sig.r)[2:].zfill(64) + hex(sig.s)[2:].zfill(64))
@@ -231,15 +236,49 @@ class TicketAcceptanceTest(unittest.TestCase):
             self.assertEqual(second.credit, 0.0)
         self._run(scenario())
 
-    def test_missing_funder_is_rejected(self):
+    def test_zero_funder_ticket_is_rejected(self):
+        """A ticket that names no funder (packed1 funder = 0 — the old broken mint)
+        can never be claimed: the on-chain account (token, 0x0, signer) holds
+        nothing. Rejected regardless of any advisory orchid_account the client
+        sends, because the funder is read from the ticket, not the client."""
         async def scenario():
             acc = self._acceptor()
             book, _, commit = self._book_with_challenge()
             ts = _mint(amount=10 ** 15, recipient=RECIPIENT,
-                       commitment=ChallengeBook.canon(commit), ratio=UINT64_MAX)
-            r = await acc.accept(ts, book=book, funder=None)
+                       commitment=ChallengeBook.canon(commit), ratio=UINT64_MAX,
+                       funder="0x" + "00" * 20)
+            r = await acc.accept(ts, book=book, funder=FUNDER)  # declared funder ignored
             self.assertEqual(r.status, AcceptStatus.REJECTED_NO_FUNDER)
             self.assertTrue(r.is_error)
+        self._run(scenario())
+
+    def test_declared_funder_is_advisory_signed_funder_wins(self):
+        """The funder is read from the signed ticket; a mismatched or absent
+        declared orchid_account does not change the verdict — the self-funded
+        ticket credits either way (fresh setup per case to isolate the effect)."""
+        async def scenario():
+            for declared in (STRANGER, None):
+                acc = self._acceptor()
+                book, _, commit = self._book_with_challenge()
+                ts = _mint(amount=10 ** 15, recipient=RECIPIENT,
+                           commitment=ChallengeBook.canon(commit), ratio=UINT64_MAX)
+                r = await acc.accept(ts, book=book, funder=declared)
+                self.assertEqual(r.status, AcceptStatus.CREDITED)
+                self.assertEqual(r.signer, FUNDER)
+        self._run(scenario())
+
+    def test_expired_ticket_is_rejected(self):
+        """issued + expire_delta <= now -> worthless on-chain -> not credited."""
+        async def scenario():
+            acc = self._acceptor()
+            book, _, commit = self._book_with_challenge()
+            ts = _mint(amount=10 ** 15, recipient=RECIPIENT,
+                       commitment=ChallengeBook.canon(commit), ratio=UINT64_MAX,
+                       issued=1_600_000_000, expire_delta=10)   # expired in 2020
+            r = await acc.accept(ts, book=book, funder=FUNDER, now=2_000_000_000)
+            self.assertEqual(r.status, AcceptStatus.REJECTED_EXPIRED)
+            self.assertTrue(r.is_error)
+            self.assertEqual(r.credit, 0.0)
         self._run(scenario())
 
     def test_malformed_ticket_is_rejected(self):

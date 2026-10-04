@@ -171,6 +171,10 @@ async def session(
 
                 if msg['type'] == 'request_token':
                     try:
+                        # Advisory only: the authoritative funder is signed into
+                        # each ticket (packed1) and read there by the acceptor. We
+                        # keep the declared orchid_account as a cross-check so a
+                        # client/funder mismatch can be logged, not trusted.
                         funder_addr = msg.get('orchid_account')
                         if funder_addr:
                             session_state['funder'] = funder_addr
@@ -196,6 +200,8 @@ async def session(
                         if not tickets:
                             await send_error(websocket, -6001)
                             continue
+                        # funder= is the advisory declared account; the acceptor
+                        # reads the authoritative funder from the signed ticket.
                         result = await acceptor.accept(
                             tickets[0], book=book, funder=session_state['funder']
                         )

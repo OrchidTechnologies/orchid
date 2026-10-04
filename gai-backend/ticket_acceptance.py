@@ -24,22 +24,29 @@ in exactly the wrong place; this module deliberately does not.)
 
 What this establishes chain-free:
 
-  1. signature authenticity — the ticket is signed by the funder the client
-     claims to be paying from (commit-1 self-funded model; #6b generalises to
-     escrow-funded delegated signers via the funding_verifier seam);
+  1. signature authenticity — the funder is read from the *signed* ticket
+     (packed1[1,161)), not the client's declared orchid_account, and the
+     signature must recover to that funder (the self-funded commit-1 model;
+     delegated signers are a future extension). The client can no longer name a
+     funder it does not control;
   2. commitment binding — the ticket answers a live, server-issued challenge, so
      the winners *within the credited stream* are actually claimable on-chain
      (commitment == keccak(reveal)) — which is what makes collection -> EV hold;
-  3. EV crediting — every accepted ticket books its expected value, once;
-  4. double-credit ledger — an atomic Redis guard so each ticket is booked at
+  3. not expired — issued + expire_delta > now, so winners remain claimable;
+  4. EV crediting — every accepted ticket books its expected value, once;
+  5. double-credit ledger — an atomic Redis guard so each ticket is booked at
      most once, even across the in-flight challenge race.
 
 The remaining trust assumption — that the funder's escrow actually backs the
-face value a winner would claim — is the ``funding_verifier`` seam, wired live in
-commit 2 (#6b). Until then accept() runs with funding unverified and says so.
+face value a winner would claim — is the ``funding_verifier`` seam (escrow.py).
+Crucially it is keyed on the ticket's own (token, funder, signer), the SAME
+account an on-chain claim debits, because both read the funder from the same
+signed bytes — so the funding check verifies exactly what collection will hit.
+Without a verifier wired, accept() runs with funding unverified and says so.
 """
 
 import logging
+import time
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
@@ -47,15 +54,19 @@ from typing import Awaitable, Callable, Optional
 
 from ticket import Ticket, TicketError
 
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
 logger = logging.getLogger(__name__)
 
 WEI = 10 ** 18
 ZERO_TOKEN = "0x0000000000000000000000000000000000000000"
 
-# A winning ticket retains on-chain value indefinitely (no expiry in the v1
-# packing), so the double-credit ledger entry must outlive any realistic claim
-# window. The on-chain contract independently prevents double-*claim*; this TTL
-# only bounds Redis growth for the server-side double-*credit* guard.
+# The double-credit ledger entry must outlive the ticket's own claim window — a
+# ticket is worthless once expire = issued + expire_delta passes, and the default
+# expire_delta is a week (account.DEFAULT_EXPIRE_SECONDS), so 90 days leaves a
+# wide margin even for unusually long-lived tickets. The on-chain contract
+# independently prevents double-*claim*; this TTL only bounds Redis growth for the
+# server-side double-*credit* guard.
 LEDGER_TTL_SECONDS = 90 * 24 * 3600
 
 
@@ -63,6 +74,7 @@ class AcceptStatus(str, Enum):
     CREDITED = "credited"
     REJECTED_NO_FUNDER = "rejected_no_funder"
     REJECTED_MALFORMED = "rejected_malformed"
+    REJECTED_EXPIRED = "rejected_expired"
     REJECTED_NO_CHALLENGE = "rejected_no_challenge"
     REJECTED_SIGNATURE = "rejected_signature"
     REJECTED_UNFUNDED = "rejected_unfunded"
@@ -178,14 +190,7 @@ class TicketAcceptor:
         return f"billing:ticket:seen:{ticket_id}"
 
     async def accept(self, ticket_str: str, *, book: ChallengeBook,
-                     funder: Optional[str]) -> AcceptResult:
-        # 0. We must know who is paying. The funder is the escrow owner the
-        #    client declared in request_token; without it we cannot tie the
-        #    signature to anything that backs value.
-        if not funder:
-            return AcceptResult(AcceptStatus.REJECTED_NO_FUNDER, 0.0, 0.0, False,
-                                None, None, "no funder declared (orchid_account)")
-
+                     funder: Optional[str] = None, now: Optional[int] = None) -> AcceptResult:
         # 1. Parse the immutable payload. ticket_id is independent of the
         #    server-supplied commitment/reveal, so compute it once up front.
         try:
@@ -200,19 +205,47 @@ class TicketAcceptor:
             return AcceptResult(AcceptStatus.REJECTED_MALFORMED, 0.0, 0.0, False,
                                 None, None, f"malformed ticket: {e}")
 
+        # 1a. Who is paying is read from the SIGNED ticket (packed1[1,161)), never
+        #     from the client's word. This is the funder whose escrow an on-chain
+        #     claim will debit — keyed (token, funder, signer) — so reading it from
+        #     the same signed bytes guarantees the funding check below verifies the
+        #     exact account collection will hit. A zero funder names no payer.
+        #     The `funder` argument (orchid_account) is now only an advisory
+        #     cross-check; the ticket's signed funder is authoritative.
+        ticket_funder = ticket.funder()
+        if int(ticket_funder, 16) == 0:
+            return AcceptResult(AcceptStatus.REJECTED_NO_FUNDER, 0.0, 0.0, False,
+                                None, ticket_id, "ticket carries no funder (packed1 funder = 0)")
+        if funder and funder.lower() != ticket_funder.lower():
+            logger.debug("Declared funder %s != signed ticket funder %s; the signed "
+                         "funder is authoritative", funder, ticket_funder)
+
         face = ticket.face_value() / WEI
         ev = ticket.expected_value() / WEI       # the value transferred at handoff
 
+        # 1b. Expiry. The contract treats a ticket as worthless once
+        #     expire = issued + delta <= now, so its winners are uncollectable —
+        #     crediting EV against value we could never claim would not reconcile.
+        now = int(time.time()) if now is None else int(now)
+        if ticket.is_expired(now):
+            return AcceptResult(AcceptStatus.REJECTED_EXPIRED, 0.0, face, False,
+                                ticket_funder, ticket_id,
+                                f"ticket expired (expire={ticket.expire()} <= now={now})")
+
         # 2. Commitment binding + signature authenticity, fused: find the
-        #    outstanding challenge whose commitment makes the signature recover
-        #    to the declared funder. The commitment is not in the ticket bytes,
+        #    outstanding challenge whose commitment makes the signature recover to
+        #    the ticket's signed funder. The commitment is not in the ticket bytes,
         #    so we try each live challenge; the one that verifies identifies both
-        #    the reveal to use and proves the funder signed *this* recipient,
-        #    face, and ratio. No live challenge matching -> the ticket answers a
-        #    commit we never issued (stale/foreign) or was signed by someone else.
+        #    the reveal to use and proves the funder signed *this* recipient, face,
+        #    and ratio. (This is the self-funded binding signer == funder, the
+        #    commit-1 model. Delegated signers — signer authorised by funder's
+        #    escrow but != funder — would need the escrow's signer set to identify
+        #    the commit chain-free; a future extension.) No match -> the ticket
+        #    answers a commit we never issued (stale/foreign) or wasn't signed by
+        #    its own funder.
         if len(book) == 0:
             return AcceptResult(AcceptStatus.REJECTED_NO_CHALLENGE, 0.0, face, False,
-                                None, ticket_id, "no outstanding challenge")
+                                ticket_funder, ticket_id, "no outstanding challenge")
 
         matched_commit = None
         matched_signer = None
@@ -222,20 +255,21 @@ class TicketAcceptor:
                 recovered = ticket.recover_signer()
             except TicketError:
                 continue
-            if recovered.lower() == funder.lower():
+            if recovered.lower() == ticket_funder.lower():
                 ticket.reveal = reveal
                 matched_commit = commit
                 matched_signer = recovered      # == funder in the self-funded model
                 break
         if matched_commit is None:
             return AcceptResult(AcceptStatus.REJECTED_SIGNATURE, 0.0, face, False,
-                                None, ticket_id,
-                                "signature does not match funder for any live challenge")
+                                ticket_funder, ticket_id,
+                                "signature does not match the ticket's funder for any live challenge")
 
         # 3. Funding check (commit 2 seam). The escrow must back the FACE value,
         #    because that is what a winner in this stream will claim on-chain; if
-        #    it can't, a credited EV could never be realised. Gates EVERY ticket
-        #    (any one could be the winner), not just the ones that happen to win.
+        #    it can't, a credited EV could never be realised. Keyed on the ticket's
+        #    own (funder, signer), the same pair the on-chain claim debits. Gates
+        #    EVERY ticket (any one could be the winner), not just winners.
         if self.funding_verifier is None:
             logger.warning(
                 "Crediting ticket %s (EV %s, face %s) with funding UNVERIFIED "
@@ -243,7 +277,7 @@ class TicketAcceptor:
         else:
             try:
                 check = await self.funding_verifier(
-                    funder, matched_signer, self.token_addr,
+                    ticket_funder, matched_signer, self.token_addr,
                     ticket.face_value())
             except Exception as e:
                 logger.error("Funding verifier raised for %s: %s", ticket_id[:12], e)
@@ -253,14 +287,14 @@ class TicketAcceptor:
                 # can't back the face a winner would claim — reject and penalise.
                 book.retire(matched_commit)
                 return AcceptResult(AcceptStatus.REJECTED_UNFUNDED, 0.0, face, False,
-                                    funder, ticket_id, "funder escrow does not back face value")
+                                    ticket_funder, ticket_id, "funder escrow does not back face value")
             if check == FundingCheck.UNAVAILABLE:
                 # We couldn't reach the chain — not the client's fault. Don't
                 # credit (funding unproven) and don't penalise; the client retries
                 # on the next invoice, by which point the RPC may have recovered.
                 book.retire(matched_commit)
                 return AcceptResult(AcceptStatus.REJECTED_FUNDING_UNAVAILABLE, 0.0, face,
-                                    False, funder, ticket_id,
+                                    False, ticket_funder, ticket_id,
                                     "escrow status unavailable (RPC) — not credited, not penalised")
 
         # 4. Double-credit ledger. EV is booked once per ticket (every ticket
@@ -271,7 +305,7 @@ class TicketAcceptor:
         if not first:
             book.retire(matched_commit)
             return AcceptResult(AcceptStatus.REJECTED_REPLAY, 0.0, face, False,
-                                funder, ticket_id, "ticket already credited")
+                                ticket_funder, ticket_id, "ticket already credited")
 
         # 5. Winner status is a COLLECTION fact, incidental to the books: it does
         #    not change the EV credited, only whether #6b queues this ticket for
@@ -282,7 +316,7 @@ class TicketAcceptor:
             winner = False
         if winner and self.claim_queue is not None:
             try:
-                await self.claim_queue.enqueue(ticket, funder, matched_signer)
+                await self.claim_queue.enqueue(ticket, ticket_funder, matched_signer)
             except Exception as e:
                 # The EV credit already stands — a queue failure is lost
                 # collection, never a client-facing error or an unwound credit.
@@ -293,5 +327,5 @@ class TicketAcceptor:
                         ticket_id[:12], face)
 
         book.retire(matched_commit)
-        return AcceptResult(AcceptStatus.CREDITED, ev, face, winner, funder,
+        return AcceptResult(AcceptStatus.CREDITED, ev, face, winner, matched_signer,
                             ticket_id, "winner" if winner else "miss")

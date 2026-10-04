@@ -1,7 +1,6 @@
 import datetime
 from web3 import Web3
 from eth_account import Account
-from eth_account.messages import encode_defunct
 from typing import Optional, Tuple
 
 class TicketError(Exception):
@@ -81,6 +80,29 @@ class Ticket:
         """Signed win-probability numerator: P(win) = (win_ratio + 1) / 2**64."""
         return (self.packed1 >> 161) & ((1 << 64) - 1)
 
+    def funder(self) -> str:
+        """The funder address packed into packed1[1,161) and covered by the
+        signature (the digest hashes packed1>>1). This is the account whose escrow
+        backs the face — keyed on-chain by keccak(token, funder, signer). It is read
+        from the *signed* ticket, never taken on the client's word."""
+        funder_int = (self.packed1 >> 1) & ((1 << 160) - 1)
+        return Web3.to_checksum_address('0x' + format(funder_int, '040x'))
+
+    def issued(self) -> int:
+        """Unix timestamp the ticket was minted, packed0[192,256) (uint64)."""
+        return self.packed0 >> 192
+
+    def expire(self) -> int:
+        """Unix time the ticket becomes worthless on-chain: issued + expire_delta,
+        where expire_delta is packed1[225,256) (uint31). Mirrors the contract's
+        `expire = (packed0 >> 192) + (packed1 >> 225)`."""
+        return self.issued() + (self.packed1 >> 225)
+
+    def is_expired(self, now: int) -> bool:
+        """The contract treats a ticket as worthless when `expire <= now`; the
+        recipient must refuse to credit such tickets — they can never be claimed."""
+        return self.expire() <= now
+
     def expected_value(self) -> int:
         """EV in wei = face_value * P(win), fixed at signing time (both face and
         ratio are signed). This is the value actually transferred when the ticket
@@ -105,7 +127,12 @@ class Ticket:
 
     def _signing_digest(self) -> bytes:
         """The EIP-191 v0 (intended-validator) digest the signer committed to.
-        Must mirror OrchidAccount._get_ticket_hash exactly, or recovery is wrong."""
+        Must mirror OrchidAccount._get_ticket_hash exactly, or recovery is wrong.
+
+        The commitment slot is the commitment *itself* — the contract hashes
+        `keccak256(abi.encodePacked(reveal))`, and the server-issued commitment IS
+        keccak(reveal), so it goes in directly (NOT keccak(commitment), which would
+        be a double hash and make on-chain ecrecover yield the wrong signer)."""
         if not all([self.commitment, self.recipient, self.lottery_addr]):
             raise TicketError("Missing required fields for signature verification")
         return Web3.solidity_keccak(
@@ -116,7 +143,7 @@ class Ticket:
              b'\x00' * 31 + b'\x64',
              self.token_addr,
              self.recipient,
-             Web3.solidity_keccak(['bytes32'], [self.commitment]),
+             self.commitment,
              self.packed0,
              self.packed1 >> 1,
              self.data]
@@ -125,15 +152,17 @@ class Ticket:
     def recover_signer(self) -> str:
         """Recover the address that signed this ticket.
 
-        The signer wraps the digest with encode_defunct (personal_sign) before
-        signing (see OrchidAccount.create_ticket), so recovery must do the same.
+        The signer signs the digest RAW (the EIP-191 v0 intended-validator envelope
+        is already baked into the digest preimage), exactly as the contract's
+        ecrecover(digest, v, r, s) expects — so recovery hashes nothing further.
         NOTE: any well-formed (r,s) recovers to *some* address — recovery proves
         authenticity only when the result is checked against an address known to
-        back the payment (the funder, or an escrow-funded signer in #6b)."""
+        back the payment (the funder read from the ticket, or an escrow-funded
+        signer)."""
         try:
             digest = self._signing_digest()
-            return Account.recover_message(
-                encode_defunct(digest),
+            return Account._recover_hash(
+                digest,
                 vrs=(self.sig_v + 27, int(self.sig_r, 16), int(self.sig_s, 16))
             )
         except TicketError:
