@@ -110,7 +110,15 @@ async def session(
 ):
     print("New client connection")
     try:
-        id = websocket.id
+        # The session identity is the per-connection UUID the websockets library
+        # assigns. It is the billing key (Redis `billing:balance:<session_id>`), the
+        # balance-update pubsub channel, AND the bearer token handed to the client in
+        # `auth_token` — so paying on THIS socket funds exactly the session the client
+        # later authenticates the inference HTTP API with. Stringify it once here and
+        # use that single value everywhere; downstream layers all call it `session_id`
+        # (see docs/BYOC-PROTOCOL.md). (Previously this was the raw UUID named `id`,
+        # which shadowed the builtin and only matched the string key by f-string luck.)
+        session_id = str(websocket.id)
         balance_monitor = BalanceMonitor(bills.redis, bills)
         book = ChallengeBook(payment_handler)
         acceptor = TicketAcceptor(
@@ -152,13 +160,13 @@ async def session(
             await websocket.close(reason='Configuration error')
             return
             
-        await bills.debit(id, type='invoice')
+        await bills.debit(session_id, type='invoice')
         _, commit = book.issue()
         await websocket.send(
             payment_handler.create_invoice(2 * await bills.min_balance(), commit)
         )
 
-        await balance_monitor.start_monitoring(id, websocket, payment_handler, book)
+        await balance_monitor.start_monitoring(session_id, websocket, payment_handler, book)
         
         try:
             while True:
@@ -178,11 +186,11 @@ async def session(
                         funder_addr = msg.get('orchid_account')
                         if funder_addr:
                             session_state['funder'] = funder_addr
-                        await bills.debit(id, type='auth_token')
+                        await bills.debit(session_id, type='auth_token')
                         print(f"Using inference URL: {inference_url}")
                         await websocket.send(json.dumps({
                             'type': 'auth_token',
-                            'session_id': str(id),
+                            'session_id': session_id,
                             'inference_url': inference_url
                         }))
                     except billing.BillingError as e:
@@ -209,13 +217,13 @@ async def session(
                             # Credit the EV transferred at handoff. Winner-ness is
                             # incidental to the books — it only decides whether the
                             # ticket is later claimed on-chain (#6b).
-                            await bills.credit(id, amount=result.credit)
+                            await bills.credit(session_id, amount=result.credit)
                             tag = "winner" if result.is_winner else "miss"
                             print(f"Credited ticket {result.ticket_id[:12]} "
                                   f"EV {result.credit} ({tag})")
                         elif result.is_error:
                             print(f"Rejected ticket: {result.status.value} — {result.detail}")
-                            await bills.debit(id, type='error')
+                            await bills.debit(session_id, type='error')
                             await send_error(websocket, -6001)
                         else:
                             # No-fault non-credit (e.g. escrow RPC unavailable):
@@ -225,7 +233,7 @@ async def session(
                                   f"{result.status.value} — {result.detail}")
                     except Exception as e:
                         print(f'Unexpected payment error: {e}')
-                        await bills.debit(id, type='error')
+                        await bills.debit(session_id, type='error')
                         await send_error(websocket, -6001)
                         continue
                         
@@ -235,7 +243,7 @@ async def session(
             print(f"Error processing message: {e}")
             await websocket.close(reason='Internal server error')
         finally:
-            await balance_monitor.stop_monitoring(id)
+            await balance_monitor.stop_monitoring(session_id)
                 
     except Exception as e:
         print(f"Fatal error in session: {e}")

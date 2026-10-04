@@ -52,14 +52,15 @@ async def inference_error_handler(request, exc: InferenceError):
 
 app = FastAPI(lifespan=lifespan)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
+# CORS handled by Caddy proxy
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+#     expose_headers=["*"],
+# )
 
 app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.add_exception_handler(InferenceError, inference_error_handler)
