@@ -46,29 +46,12 @@ class PaymentHandler:
             'recipient': self.recipient_addr
         })
             
-    async def process_ticket(self, ticket_data: str, reveal: str, commit: str) -> Tuple[float, str, str]:
-        try:
-            ticket = Ticket.deserialize(
-                ticket_data,
-                reveal=reveal,
-                commitment=commit,
-                recipient=self.recipient_addr,
-                lottery_addr=self.lottery_address
-            )
-            
-            if ticket.is_winner():
-                logger.info(
-                    f"Winner found! Face value: {ticket.face_value() / wei}, "
-                    "Adding to claim queue (stubbed)"
-                )
-
-            new_reveal, new_commit = self.new_reveal()
-            return ticket.face_value() / wei, new_reveal, new_commit
-            
-        except Exception as e:
-            logger.error("Failed to process ticket")
-            logger.error(traceback.format_exc())
-            raise PaymentError(f"Ticket processing failed: {e}")
+    # NOTE: ticket validation + crediting now lives in ticket_acceptance.py
+    # (TicketAcceptor) — the single billing-server trust boundary. The old
+    # process_ticket credited the face value of *every* ticket with no signature
+    # check, no winner gate, and no replay guard; it has been removed (Tier-1 #6a).
+    # PaymentHandler keeps only ticket minting concerns: new_reveal / create_invoice
+    # / recipient_addr, plus the (still-stubbed) on-chain claim queue for #6b.
 
     async def queue_claim(self, ticket: Ticket):
         logger.info(f"Queued ticket claim for {ticket.face_value() / wei} tokens (stubbed)")

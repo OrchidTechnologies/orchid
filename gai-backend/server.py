@@ -16,7 +16,9 @@ from typing import Optional, Dict
 
 import billing
 from config_manager import ConfigManager, ConfigError
-from payment_handler import PaymentHandler, PaymentError
+from payment_handler import PaymentHandler
+from ticket_acceptance import ChallengeBook, TicketAcceptor
+from escrow import EscrowVerifier
 
 # Configuration
 LOTTERY_ADDRESS = '0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'
@@ -35,15 +37,15 @@ class BalanceMonitor:
     def _get_channel(self, client_id: str) -> str:
         return f"billing:balance:updates:{client_id}"
         
-    async def start_monitoring(self, client_id: str, websocket, payment_handler: PaymentHandler, commit: str):
+    async def start_monitoring(self, client_id: str, websocket, payment_handler: PaymentHandler, book: ChallengeBook):
         if client_id in self._monitors:
             await self.stop_monitoring(client_id)
-            
+
         channel = self._get_channel(client_id)
         await self.pubsub.subscribe(channel)
-        
+
         self._monitors[client_id] = asyncio.create_task(
-            self._monitor_balance(client_id, channel, websocket, payment_handler, commit)
+            self._monitor_balance(client_id, channel, websocket, payment_handler, book)
         )
         
     async def stop_monitoring(self, client_id: str):
@@ -57,7 +59,7 @@ class BalanceMonitor:
                 pass
             del self._monitors[client_id]
             
-    async def _monitor_balance(self, client_id: str, channel: str, websocket, payment_handler: PaymentHandler, commit: str):
+    async def _monitor_balance(self, client_id: str, channel: str, websocket, payment_handler: PaymentHandler, book: ChallengeBook):
         try:
             last_invoice_time = 0
             MIN_INVOICE_INTERVAL = 1.0  # Minimum seconds between invoices
@@ -82,6 +84,7 @@ class BalanceMonitor:
                     if balance < min_balance:
                         await self.bills.debit(client_id, type='invoice')
                         invoice_amount = 2 * min_balance - balance
+                        _, commit = book.issue()
                         await websocket.send(
                             payment_handler.create_invoice(invoice_amount, commit)
                         )
@@ -99,12 +102,21 @@ async def session(
     websocket,
     bills=None,
     payment_handler=None,
-    config_manager=None
+    config_manager=None,
+    escrow_verifier=None
 ):
     print("New client connection")
     try:
         id = websocket.id
         balance_monitor = BalanceMonitor(bills.redis, bills)
+        book = ChallengeBook(payment_handler)
+        acceptor = TicketAcceptor(
+            recipient_addr=payment_handler.recipient_addr,
+            lottery_addr=LOTTERY_ADDRESS,
+            redis=bills.redis,
+            funding_verifier=(escrow_verifier.check if escrow_verifier else None),
+        )
+        session_state = {'funder': None}
         inference_url = None
 
         if config_manager:
@@ -137,12 +149,12 @@ async def session(
             return
             
         await bills.debit(id, type='invoice')
-        reveal, commit = payment_handler.new_reveal()
+        _, commit = book.issue()
         await websocket.send(
             payment_handler.create_invoice(2 * await bills.min_balance(), commit)
         )
-        
-        await balance_monitor.start_monitoring(id, websocket, payment_handler, commit)
+
+        await balance_monitor.start_monitoring(id, websocket, payment_handler, book)
         
         try:
             while True:
@@ -155,6 +167,9 @@ async def session(
 
                 if msg['type'] == 'request_token':
                     try:
+                        funder_addr = msg.get('orchid_account')
+                        if funder_addr:
+                            session_state['funder'] = funder_addr
                         await bills.debit(id, type='auth_token')
                         print(f"Using inference URL: {inference_url}")
                         await websocket.send(json.dumps({
@@ -173,16 +188,31 @@ async def session(
 
                 elif msg['type'] == 'payment':
                     try:
-                        amount, reveal, commit = await payment_handler.process_ticket(
-                            msg['tickets'][0], reveal, commit
+                        tickets = msg.get('tickets') or []
+                        if not tickets:
+                            await send_error(websocket, -6001)
+                            continue
+                        result = await acceptor.accept(
+                            tickets[0], book=book, funder=session_state['funder']
                         )
-                        print(f'Got ticket worth {amount}')
-                        await bills.credit(id, amount=amount)
-                    except PaymentError as e:
-                        print(f'Payment processing failed: {e}')
-                        await bills.debit(id, type='error')
-                        await send_error(websocket, -6001)
-                        continue
+                        if result.is_credited:
+                            # Credit the EV transferred at handoff. Winner-ness is
+                            # incidental to the books — it only decides whether the
+                            # ticket is later claimed on-chain (#6b).
+                            await bills.credit(id, amount=result.credit)
+                            tag = "winner" if result.is_winner else "miss"
+                            print(f"Credited ticket {result.ticket_id[:12]} "
+                                  f"EV {result.credit} ({tag})")
+                        elif result.is_error:
+                            print(f"Rejected ticket: {result.status.value} — {result.detail}")
+                            await bills.debit(id, type='error')
+                            await send_error(websocket, -6001)
+                        else:
+                            # No-fault non-credit (e.g. escrow RPC unavailable):
+                            # neither credit nor penalise; the client retries on
+                            # the next invoice.
+                            print(f"Ticket not credited (no fault): "
+                                  f"{result.status.value} — {result.detail}")
                     except Exception as e:
                         print(f'Unexpected payment error: {e}')
                         await bills.debit(id, type='error')
@@ -226,10 +256,14 @@ async def main(bind_addr, bind_port, recipient_key, redis_url, config_path: Opti
 
     payment_handler = PaymentHandler(LOTTERY_ADDRESS, recipient_key)
 
+    rpc_url = os.environ.get('ORCHID_GENAI_RPC_URL', 'https://rpc.gnosischain.com/')
+    escrow_verifier = EscrowVerifier(lottery_address=LOTTERY_ADDRESS, rpc_url=rpc_url)
+
     print("\n*****")
     print(f"* Server starting up at {bind_addr} {bind_port}")
     print(f"* Using wallet at {payment_handler.recipient_addr}")
     print(f"* Connected to Redis at {redis_url}")
+    print(f"* Verifying escrow against {rpc_url}")
     print("******\n\n")
 
     async with websockets.serve(
@@ -237,7 +271,8 @@ async def main(bind_addr, bind_port, recipient_key, redis_url, config_path: Opti
             session,
             bills=bills,
             payment_handler=payment_handler,
-            config_manager=config_manager
+            config_manager=config_manager,
+            escrow_verifier=escrow_verifier
         ),
         bind_addr,
         bind_port
