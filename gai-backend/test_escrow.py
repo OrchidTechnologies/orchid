@@ -4,9 +4,11 @@ Exercises the verifier's logic (threshold, caching, fail-closed) against a fake
 ``lottery.check_balance`` so no chain/network is touched. The real read path was
 validated separately against live Gnosis (funder 0x1E2094D7… -> 4.998 balance).
 
-The funding predicate gates on the funder's at-risk COLLATERAL (the escrow,
-upper-128 of escrow_amount_), not the spendable balance: a ticket is honored only
-if ``2*face <= escrow`` (DESIGN-DECISIONS D10). unittest, no new deps.
+The funding predicate has two parts: the COLLATERAL bound ``2*face <= escrow``
+(the funder's at-risk bond, upper-128 of escrow_amount_ — DESIGN-DECISIONS D10)
+and the LIQUIDITY check ``face <= balance`` (a winner is paid from the spendable
+balance, and claim_() slashes the whole escrow if it falls short). unittest, no
+new deps.
 """
 
 import asyncio
@@ -22,11 +24,14 @@ TOKEN = ZERO_TOKEN
 FACE = 10 ** 18
 
 
-def _make(escrow=None, *, raises=None, sleep=None, ttl=30.0, timeout=5.0):
+def _make(escrow=None, *, balance=None, raises=None, sleep=None, ttl=30.0,
+          timeout=5.0):
     """Build a verifier whose on-chain read is a controllable fake. Returns the
     verifier and a call-counter dict so tests can assert RPC frequency (caching).
-    The fake's spendable balance is irrelevant to the check (set to 0); only the
-    escrow (collateral) drives the FUNDED/UNFUNDED verdict."""
+    ``balance`` defaults to ``escrow`` so the collateral-bound tests are not
+    confounded by liquidity (balance >= 2*face >= face whenever escrow passes)."""
+    if balance is None:
+        balance = escrow
     v = EscrowVerifier(lottery_address=LOTTERY, cache_ttl_seconds=ttl,
                        rpc_timeout_seconds=timeout)
     calls = {"n": 0}
@@ -37,7 +42,7 @@ def _make(escrow=None, *, raises=None, sleep=None, ttl=30.0, timeout=5.0):
             await asyncio.sleep(sleep)
         if raises:
             raise raises
-        return (0, escrow)        # (balance_wei, escrow_wei) — escrow is the anchor
+        return (balance, escrow)  # (balance_wei, escrow_wei)
     v.lottery.check_balance = fake_check_balance
     return v, calls
 
@@ -74,6 +79,23 @@ class EscrowVerifierTest(unittest.TestCase):
             v, _ = _make(escrow=2 * FACE - 1)
             self.assertEqual(await v.check(FUNDER, SIGNER, TOKEN, FACE),
                              FundingCheck.UNFUNDED)
+        self._run(s())
+
+    def test_balance_below_face_is_unfunded_despite_ample_escrow(self):
+        """Liquidity check: ample collateral does not rescue a thin payout pool —
+        claim_() would pay only the balance and zero the funder's whole escrow."""
+        async def s():
+            v, _ = _make(escrow=10 * FACE, balance=FACE - 1)
+            self.assertEqual(await v.check(FUNDER, SIGNER, TOKEN, FACE),
+                             FundingCheck.UNFUNDED)
+        self._run(s())
+
+    def test_balance_exactly_face_is_funded(self):
+        """balance == face is the liquidity boundary and must pass (<=)."""
+        async def s():
+            v, _ = _make(escrow=2 * FACE, balance=FACE)
+            self.assertEqual(await v.check(FUNDER, SIGNER, TOKEN, FACE),
+                             FundingCheck.FUNDED)
         self._run(s())
 
     def test_cache_hit_avoids_second_rpc(self):

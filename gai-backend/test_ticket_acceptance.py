@@ -24,7 +24,11 @@ from account import OrchidAccount
 from lottery import Lottery
 from ticket_acceptance import (
     AcceptStatus, ChallengeBook, FundingCheck, TicketAcceptor, WEI, ZERO_TOKEN,
+    MIN_REMAINING_LIFETIME_SECONDS,
 )
+
+# secp256k1 group order, for forging the malleated twin of a signature.
+SECP256K1_N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 
 UINT64_MAX = (1 << 64) - 1
 
@@ -236,6 +240,34 @@ class TicketAcceptanceTest(unittest.TestCase):
             self.assertEqual(second.credit, 0.0)
         self._run(scenario())
 
+    def test_malleated_signature_is_rejected_by_ledger(self):
+        """ECDSA malleability: (v, r, s) and (v^1, r, N-s) are both valid
+        signatures by the same key over the same digest. The twin has different
+        ticket bytes (so a different ticket_id) but is the SAME payment — the
+        contract dedupes claims on keccak(digest, signer), and so must we. Keyed
+        on the raw bytes, the ledger credited the twin a second time."""
+        async def scenario():
+            acc = self._acceptor()
+            ph = _FakePaymentHandler(n=1)
+            book = ChallengeBook(ph)
+            _, commit = book.issue()
+            ts = _mint(amount=10 ** 15, recipient=RECIPIENT,
+                       commitment=ChallengeBook.canon(commit), ratio=UINT64_MAX)
+            first = await acc.accept(ts, book=book, funder=FUNDER)
+            self.assertEqual(first.status, AcceptStatus.CREDITED)
+
+            p0, p1, r, s = ts[:64], int(ts[64:128], 16), ts[128:192], int(ts[192:], 16)
+            twin = (p0 + hex(p1 ^ 1)[2:].zfill(64) + r
+                    + hex(SECP256K1_N - s)[2:].zfill(64))
+            self.assertNotEqual(twin, ts)
+
+            book.issue()  # re-arm the same commit so only the ledger stands in the way
+            second = await acc.accept(twin, book=book, funder=FUNDER)
+            self.assertEqual(second.status, AcceptStatus.REJECTED_REPLAY)
+            self.assertNotEqual(first.ticket_id, second.ticket_id)   # bytes differ...
+            self.assertEqual(second.credit, 0.0)                     # ...payment doesn't
+        self._run(scenario())
+
     def test_zero_funder_ticket_is_rejected(self):
         """A ticket that names no funder (packed1 funder = 0 — the old broken mint)
         can never be claimed: the on-chain account (token, 0x0, signer) holds
@@ -279,6 +311,35 @@ class TicketAcceptanceTest(unittest.TestCase):
             self.assertEqual(r.status, AcceptStatus.REJECTED_EXPIRED)
             self.assertTrue(r.is_error)
             self.assertEqual(r.credit, 0.0)
+        self._run(scenario())
+
+    def test_short_lifetime_ticket_is_rejected(self):
+        """Alive now but expiring before the claim worker could plausibly
+        broadcast it -> its winners would return 0 on-chain -> not credited."""
+        async def scenario():
+            acc = self._acceptor()
+            book, _, commit = self._book_with_challenge()
+            now = 2_000_000_000
+            ts = _mint(amount=10 ** 15, recipient=RECIPIENT,
+                       commitment=ChallengeBook.canon(commit), ratio=UINT64_MAX,
+                       issued=now, expire_delta=60)          # a one-minute ticket
+            r = await acc.accept(ts, book=book, funder=FUNDER, now=now)
+            self.assertEqual(r.status, AcceptStatus.REJECTED_SHORT_LIFETIME)
+            self.assertTrue(r.is_error)
+            self.assertEqual(r.credit, 0.0)
+        self._run(scenario())
+
+    def test_lifetime_just_past_minimum_is_credited(self):
+        """The boundary: expire must exceed now + MIN_REMAINING_LIFETIME_SECONDS."""
+        async def scenario():
+            acc = self._acceptor()
+            book, _, commit = self._book_with_challenge()
+            now = 2_000_000_000
+            ts = _mint(amount=10 ** 15, recipient=RECIPIENT,
+                       commitment=ChallengeBook.canon(commit), ratio=UINT64_MAX,
+                       issued=now, expire_delta=MIN_REMAINING_LIFETIME_SECONDS + 1)
+            r = await acc.accept(ts, book=book, funder=FUNDER, now=now)
+            self.assertEqual(r.status, AcceptStatus.CREDITED)
         self._run(scenario())
 
     def test_malformed_ticket_is_rejected(self):

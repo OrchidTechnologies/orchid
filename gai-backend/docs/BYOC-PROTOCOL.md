@@ -161,15 +161,18 @@ implementation is `OrchidAccount.create_ticket` in `account.py`; the canonical
 on-chain format is `lottery1.sol :: claim_()`. To pay an invoice for expected
 value `amount`:
 
-1. **Read the funder's on-chain escrow.** Call `check_balance(token, funder,
-   signer)` on the lottery contract; it returns `(balance, escrow)` where
-   `escrow` (the upper 128 bits of the funder's account) is the at-risk
-   **collateral** bond.
-2. **Size the face at half the escrow:** `face = escrow // 2`. The recipient only
-   honors tickets whose `2 × face ≤ escrow` (so the collateral the funder would
+1. **Read the funder's on-chain account.** Call `check_balance(token, funder,
+   signer)` on the lottery contract; it returns `(balance, escrow)`: `balance`
+   (lower 128 bits) is the spendable pool winners are paid from, `escrow` (upper
+   128 bits) is the at-risk **collateral** bond.
+2. **Size the face:** `face = min(escrow // 2, balance)`. The recipient only
+   honors tickets with `2 × face ≤ escrow` (so the collateral the funder would
    forfeit by double-spending always exceeds 2× any single face — cheating is
-   unprofitable). `face` must be `≥ amount` and `≤ uint128`; if `escrow` is too
-   small to cover the invoice (`escrow < 2 × amount`), add collateral.
+   unprofitable) **and** `face ≤ balance` (the contract pays a winner from
+   `balance`; if it falls short it pays only the remainder and zeroes the
+   funder's *entire* escrow — so a face above balance is a self-inflicted slash
+   waiting for the first winner). `face` must be `≥ amount` and `≤ uint128`; if
+   `escrow < 2 × amount` add collateral, if `balance < amount` deposit.
 3. **Solve the win ratio so the booked EV equals the invoice:**
    `ratio = (amount << 64) // face − 1`. Then `EV = face × (ratio+1) / 2^64 ≤
    amount` (the floor favors the recipient). `face == amount` ⇒ `ratio =
@@ -177,10 +180,17 @@ value `amount`:
 4. **Pack and sign** per the contract bit layout:
    - `packed0 = face[0,128) | nonce64[128,192) | issued64[192,256)`
    - `packed1 = v(bit0) | funder[1,161) | ratio64[161,225) | expire_delta31[225,256)`
+   - `expire_delta` must leave the ticket claimable well past handoff: the
+     recipient rejects tickets with **less than 6 hours** remaining
+     (`rejected_short_lifetime`), because it batches winners for up to an hour
+     before claiming on-chain. The reference client uses 7 days.
    - digest (EIP-191 v0): `keccak(0x19, 0x00, lotteryAddr, chainid, token,
      recipient, commit, packed0, packed1>>1, data=0)` — sign the digest **raw**
      (the 0x19/0x00 envelope is already inside it; do **not** wrap again in
-     `personal_sign`).
+     `personal_sign`). `chainid` is the lottery's chain (100 for Gnosis).
+   - Replay: the recipient dedupes on the contract's own key,
+     `keccak(digest, signer)`, so a re-signed or malleated copy of a ticket is
+     the same payment and is rejected (`rejected_replay`).
 5. **Serialize** as the concatenation of four 32-byte big-endian hex words (no
    `0x`, zero-padded to 64 chars each): `packed0 ‖ packed1 ‖ r ‖ s` → 256 hex
    chars.
@@ -188,7 +198,8 @@ value `amount`:
 The server credits the **expected value** of the ticket at handoff and only
 submits *winning* tickets on-chain, so most tickets never touch the chain — the
 point of probabilistic payments. Economic rationale: the project's
-DESIGN-DECISIONS notes (D3 EV-crediting, D10 ½-escrow face bound).
+DESIGN-DECISIONS notes (D3 EV-crediting, D10 ½-escrow face bound, D11 balance
+liquidity check).
 
 ---
 
@@ -204,8 +215,11 @@ call fails with an authentication / insufficient-balance error.
 
 ### `POST /v1/chat/completions`
 OpenAI chat-completions request body. Set `"stream": true` for Server-Sent
-Events (`text/event-stream`); otherwise a single JSON `ChatCompletion` is
-returned. Billing: the server pre-debits a worst-case hold up front, then
+Events framing (`text/event-stream`); otherwise a single JSON `ChatCompletion`
+is returned. Note that today the server awaits the full upstream completion and
+then emits it as SSE chunks — the wire format is standard, but time-to-first-
+token is not improved; true pass-through streaming is roadmap (§7). Billing:
+the server pre-debits a worst-case hold up front, then
 **settles** against the upstream-reported usage when the response completes
 (refunding the overage, or collecting a shortfall). Balance updates are also
 published on the Redis channel `billing:balance:updates:<session_id>`, which the
@@ -264,10 +278,13 @@ valid `session_id` (e.g. one minted elsewhere and still funded).
   the declared account is a logging cross-check only.
 - **CORS** is handled at the proxy (Caddy), not in the app — browser clients rely
   on the proxy's headers.
-- **Streaming** is real SSE on `/v1/chat/completions`. Tool calling uses the
-  OpenAI format. These are the surfaces an OpenAI-compatible connector
-  (e.g. a Hermes provider profile; see the project's Hermes integration notes)
-  binds to.
+- **Streaming** is SSE framing over a buffered completion on
+  `/v1/chat/completions`: the response is standard `text/event-stream`, but the
+  server currently awaits the whole upstream completion before re-chunking it,
+  so clients see no token-by-token latency benefit yet. True pass-through
+  streaming is roadmap. Tool calling uses the OpenAI format. These are the
+  surfaces an OpenAI-compatible connector (e.g. a Hermes provider profile; see
+  the project's Hermes integration notes) binds to.
 - **Direction.** This API is the integration target for the shim → gai-router
   path; keeping it standard OpenAI-compatible is what makes "bring your own
   client" hold.

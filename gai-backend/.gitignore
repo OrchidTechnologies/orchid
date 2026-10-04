@@ -22,3 +22,7 @@ cfg_server_test.json
 venv
 .venv
 env.sh
+
+# local test configs carry live keys; redis dumps carry session ledgers
+cfg_test.json
+dump.rdb

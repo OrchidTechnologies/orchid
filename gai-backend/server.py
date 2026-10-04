@@ -124,6 +124,7 @@ async def session(
         acceptor = TicketAcceptor(
             recipient_addr=payment_handler.recipient_addr,
             lottery_addr=LOTTERY_ADDRESS,
+            chain_id=payment_handler.lottery.chain_id,
             redis=bills.redis,
             funding_verifier=(escrow_verifier.check if escrow_verifier else None),
             claim_queue=claim_queue,
@@ -291,7 +292,7 @@ async def main(bind_addr, bind_port, recipient_key, redis_url, config_path: Opti
         tickets = [
             Ticket(packed0=int(r["packed0"]), packed1=int(r["packed1"]),
                    sig_r=r["sig_r"], sig_s=r["sig_s"], reveal=r["reveal"],
-                   token_addr=r["token"])
+                   token_addr=r["token"], chain_id=payment_handler.lottery.chain_id)
             for r in records
         ]
         token = records[0]["token"]

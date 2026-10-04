@@ -1,11 +1,13 @@
 """Tests for the client invoice path — OrchidLLMTestClient._handle_invoice (C3).
 
-When the server sends an invoice, the client reads the funder's at-risk escrow
-collateral, sizes the ticket face at escrow//2 (the largest face the recipient
-will honor, since it gates on 2*face <= escrow — DESIGN-DECISIONS D10), and mints
-a ticket whose booked EV equals the invoice amount. These tests assert that
-sizing, the EV target, the on-chain read is cached (~one read per TTL, not per
-invoice), and that an escrow too small to back the invoice is rejected.
+When the server sends an invoice, the client reads the funder's on-chain
+(balance, escrow), sizes the ticket face at min(escrow//2, balance) — the largest
+face the recipient will honor, since it gates on 2*face <= escrow (DESIGN-DECISIONS
+D10) and face <= balance (a winner is paid from balance; the contract slashes the
+whole escrow if it falls short) — and mints a ticket whose booked EV equals the
+invoice amount. These tests assert that sizing, the EV target, the on-chain read
+is cached (~one read per TTL, not per invoice), and that an account too small to
+back the invoice (thin escrow or thin balance) is rejected.
 
 No chain/network/config: the client is built field-by-field (bypassing __init__),
 the escrow read is faked, and the websocket send just captures the payload. The
@@ -46,9 +48,13 @@ class _FakeWS:
         self.sent.append(payload)
 
 
-def _client(escrow_wei):
+def _client(escrow_wei, balance_wei=None):
     """An OrchidLLMTestClient with just the fields _handle_invoice touches, a real
-    offline OrchidAccount, and a faked escrow read returning ``escrow_wei``."""
+    offline OrchidAccount, and a faked on-chain read returning
+    ``(balance_wei, escrow_wei)``. balance defaults to escrow so the face-sizing
+    tests are bounded by the collateral rule alone."""
+    if balance_wei is None:
+        balance_wei = escrow_wei
     lottery = Lottery(Web3(Web3.HTTPProvider("http://127.0.0.1:1")), chain_id=100)
     acct = OrchidAccount(lottery, FUNDER, FUNDER_KEY)
 
@@ -56,7 +62,7 @@ def _client(escrow_wei):
 
     async def fake_get_balance_wei(token_addr="0x0000000000000000000000000000000000000000"):
         reads["n"] += 1
-        return (0, escrow_wei)        # (balance, escrow) — escrow is the funding anchor
+        return (balance_wei, escrow_wei)        # (balance, escrow)
     acct.get_balance_wei = fake_get_balance_wei
 
     c = object.__new__(OrchidLLMTestClient)
@@ -64,8 +70,8 @@ def _client(escrow_wei):
     c.account = acct
     c.ws = _FakeWS()
     c.debug = False
-    c._escrow_wei = None
-    c._escrow_expiry = 0.0
+    c._funding_wei = None
+    c._funding_expiry = 0.0
     return c, reads
 
 
@@ -133,6 +139,32 @@ class HandleInvoiceTest(unittest.TestCase):
             amount = 10 ** 15
             with self.assertRaises(InvalidAmountError):
                 await c._handle_invoice({"amount": amount, "recipient": RECIPIENT,
+                                         "commit": _COMMIT})
+            self.assertEqual(c.ws.sent, [])
+        self._run(s())
+
+    def test_face_is_capped_by_spendable_balance(self):
+        """balance < escrow//2 -> face == balance. A face above the balance would
+        have the contract pay a winner only the balance and zero our whole escrow."""
+        async def s():
+            escrow = 10 ** 18                       # escrow//2 = 5e17 ...
+            balance = 3 * 10 ** 17                  # ... but only 3e17 is liquid
+            c, _ = _client(escrow, balance_wei=balance)
+            amount = 10 ** 17
+            await c._handle_invoice({"amount": amount, "recipient": RECIPIENT,
+                                     "commit": _COMMIT})
+            t = _sent_ticket(c)
+            self.assertEqual(t.face_value(), balance)
+            self.assertLessEqual(t.expected_value(), amount)
+        self._run(s())
+
+    def test_thin_balance_is_rejected_and_nothing_sent(self):
+        """balance < amount -> no honorable face can reach the invoiced EV: reject,
+        send nothing (the funder must deposit, not just add collateral)."""
+        async def s():
+            c, _ = _client(10 ** 18, balance_wei=10 ** 15 - 1)
+            with self.assertRaises(InvalidAmountError):
+                await c._handle_invoice({"amount": 10 ** 15, "recipient": RECIPIENT,
                                          "commit": _COMMIT})
             self.assertEqual(c.ws.sent, [])
         self._run(s())

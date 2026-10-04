@@ -195,7 +195,7 @@ class OrchidAccount:
                  'bytes32', 'uint256', 'uint256', 'bytes32'],
                 [b'\x19', b'\x00',
                  self.lottery.contract_addr,
-                 b'\x00' * 31 + b'\x64',  # Chain ID
+                 self.lottery.chain_id.to_bytes(32, 'big'),  # chainid() of the deployed lottery
                  token_addr,
                  recipient,
                  commitment,  # = keccak(reveal); contract hashes reveal once, so embed directly

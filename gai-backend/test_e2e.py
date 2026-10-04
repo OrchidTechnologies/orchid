@@ -108,7 +108,7 @@ def _escrow_verifier(escrow_wei):
     ev = EscrowVerifier(lottery_address=LOTTERY)
 
     async def fake_check_balance(token, funder, signer):
-        return (0, escrow_wei)      # (balance, escrow) — escrow is the funding anchor
+        return (escrow_wei, escrow_wei)   # (balance, escrow): liquid AND collateralised
 
     ev.lottery.check_balance = fake_check_balance
     return ev

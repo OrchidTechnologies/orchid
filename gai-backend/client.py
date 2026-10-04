@@ -301,9 +301,10 @@ class ToolNodeClient:
             raise
 
 class OrchidLLMTestClient:
-    # How long a read escrow stays trusted before we re-read it. Escrow only
-    # drops when the funder withdraws collateral (rare, behind a warn+unlock
-    # delay), so brief staleness is safe — the chain is the final authority.
+    # How long a read (balance, escrow) pair stays trusted before we re-read it.
+    # Escrow only drops when the funder withdraws collateral (rare, behind a
+    # warn+unlock delay); balance drops as our winners are claimed. Brief
+    # staleness is safe — the chain is the final authority.
     ESCROW_CACHE_TTL = 30.0
 
     def __init__(self, config_path: str, wallet_only: bool = False, inference_only: bool = False,
@@ -349,11 +350,12 @@ class OrchidLLMTestClient:
         self.message_queue = asyncio.Queue()
         self._handler_task = None
 
-        # Cached at-risk escrow collateral (wei). The ticket face is sized off
-        # this (face = escrow//2, DESIGN-DECISIONS D10); it only shrinks on a
-        # slow collateral withdraw, so a short TTL beats one RPC per invoice.
-        self._escrow_wei: Optional[int] = None
-        self._escrow_expiry: float = 0.0
+        # Cached on-chain (balance_wei, escrow_wei). The ticket face is sized off
+        # both — face = min(escrow//2, balance): the collateral bound (DESIGN-
+        # DECISIONS D10) and the liquidity check — and neither moves fast, so a
+        # short TTL beats one RPC per invoice.
+        self._funding_wei: Optional[tuple] = None
+        self._funding_expiry: float = 0.0
         
         # Initialize tool clients dictionary
         self.tool_clients = {}
@@ -365,20 +367,21 @@ class OrchidLLMTestClient:
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
 
-    async def _get_escrow_wei(self) -> int:
-        """Read and cache the funder's at-risk escrow collateral, in wei.
+    async def _get_funding_wei(self) -> tuple:
+        """Read and cache the funder's on-chain ``(balance_wei, escrow_wei)``.
 
         The recipient honors a ticket only if 2*face <= escrow (DESIGN-DECISIONS
-        D10), so the client sizes face off this value. The read is an on-chain
-        RPC; we cache it for ESCROW_CACHE_TTL so a session does ~one read per TTL
-        rather than one per invoice."""
+        D10) AND face <= balance (a winner is paid from balance, and the contract
+        slashes the whole escrow if it falls short), so the client sizes face off
+        both. The read is an on-chain RPC; we cache it for ESCROW_CACHE_TTL so a
+        session does ~one read per TTL rather than one per invoice."""
         now = time.monotonic()
-        if self._escrow_wei is not None and now < self._escrow_expiry:
-            return self._escrow_wei
-        _balance, escrow = await self.account.get_balance_wei()
-        self._escrow_wei = escrow
-        self._escrow_expiry = now + self.ESCROW_CACHE_TTL
-        return escrow
+        if self._funding_wei is not None and now < self._funding_expiry:
+            return self._funding_wei
+        balance, escrow = await self.account.get_balance_wei()
+        self._funding_wei = (balance, escrow)
+        self._funding_expiry = now + self.ESCROW_CACHE_TTL
+        return self._funding_wei
 
     async def _handle_invoice(self, invoice_data: Dict) -> None:
         try:
@@ -388,17 +391,23 @@ class OrchidLLMTestClient:
 
             self.logger.info(f"Received invoice for {amount/1e18} tokens")
 
-            # Size the face at half the at-risk escrow collateral: the recipient
-            # honors a ticket only if 2*face <= escrow, so face = escrow//2 is the
-            # largest honorable face — which minimizes the win probability and thus
-            # how often a winner must be claimed on-chain (DESIGN-DECISIONS D10).
-            # create_ticket then solves the ratio so the booked EV == amount.
-            escrow = await self._get_escrow_wei()
-            face = escrow // 2
+            # Size the face at the largest value the recipient will honor:
+            #   * at most half the at-risk escrow collateral (it gates on
+            #     2*face <= escrow, DESIGN-DECISIONS D10), and
+            #   * at most the spendable balance — a winner is paid from balance,
+            #     and lottery1.sol claim_() zeroes our ENTIRE escrow if the balance
+            #     can't cover the face, so a face above balance is a self-inflicted
+            #     slash waiting for the first winner.
+            # The largest honorable face minimizes the win probability and thus how
+            # often a winner must be claimed on-chain; create_ticket then solves
+            # the ratio so the booked EV == amount.
+            balance, escrow = await self._get_funding_wei()
+            face = min(escrow // 2, balance)
             if face < amount:
                 raise InvalidAmountError(
-                    f"escrow {escrow} too small to pay invoice: face=escrow//2={face} "
-                    f"< amount {amount}; add collateral (need escrow >= 2*amount)")
+                    f"account too small to pay invoice: face=min(escrow//2, balance)="
+                    f"min({escrow // 2}, {balance})={face} < amount {amount}; "
+                    f"need escrow >= 2*amount and balance >= amount")
 
             # Create and send ticket immediately
             ticket_str = self.account.create_ticket(

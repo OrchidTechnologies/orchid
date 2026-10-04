@@ -16,7 +16,8 @@ class Ticket:
                  commitment: Optional[str] = None,
                  recipient: Optional[str] = None,
                  lottery_addr: Optional[str] = None,
-                 token_addr: str = "0x0000000000000000000000000000000000000000"):
+                 token_addr: str = "0x0000000000000000000000000000000000000000",
+                 chain_id: int = 100):
         self.packed0 = packed0
         self.packed1 = packed1
         self.sig_r = sig_r
@@ -27,6 +28,11 @@ class Ticket:
         self.recipient = recipient
         self.lottery_addr = lottery_addr
         self.token_addr = token_addr
+        # The chain the lottery is deployed on. It is part of the signed digest's
+        # domain (the contract hashes chainid()), so it must match the deployed
+        # contract or recovery yields a stranger. Lottery.chain_id is the source
+        # of truth; 100 (Gnosis) is only the default.
+        self.chain_id = chain_id
         self.data = b'\x00' * 32  # Fixed empty data field
         
     @classmethod
@@ -36,7 +42,8 @@ class Ticket:
                    commitment: Optional[str] = None,
                    recipient: Optional[str] = None,
                    lottery_addr: Optional[str] = None,
-                   token_addr: str = "0x0000000000000000000000000000000000000000"
+                   token_addr: str = "0x0000000000000000000000000000000000000000",
+                   chain_id: int = 100,
                    ) -> 'Ticket':
         try:
             if len(ticket_str) != 256:  # 4 x 64 hex chars
@@ -52,7 +59,8 @@ class Ticket:
                 commitment=commitment,
                 recipient=recipient,
                 lottery_addr=lottery_addr,
-                token_addr=token_addr
+                token_addr=token_addr,
+                chain_id=chain_id,
             )
         except Exception as e:
             raise TicketError(f"Failed to deserialize ticket: {e}")
@@ -125,6 +133,18 @@ class Ticket:
                + bytes.fromhex(r) + bytes.fromhex(s))
         return Web3.keccak(raw).hex()
 
+    def track_key(self, signer: str) -> str:
+        """The contract's own replay key: keccak(digest || signer), the index into
+        lottery1.sol's ``tracks_`` mapping (``tracks_[keccak256(abi.encodePacked(
+        digest, signer))]``). Two tickets with the same key are the same payment
+        on-chain whatever their (r, s) bytes — so THIS, not ticket_id(), is what
+        the double-credit ledger must key on: a malleated signature (v flipped,
+        s -> N - s) recovers to the same signer over the same digest and collides
+        here while hashing to a different ticket_id. Requires the commitment to be
+        set (the digest covers it). No 0x prefix, like ticket_id()."""
+        return Web3.solidity_keccak(['bytes32', 'address'],
+                                    [self._signing_digest(), signer]).hex()
+
     def _signing_digest(self) -> bytes:
         """The EIP-191 v0 (intended-validator) digest the signer committed to.
         Must mirror OrchidAccount._get_ticket_hash exactly, or recovery is wrong.
@@ -132,7 +152,10 @@ class Ticket:
         The commitment slot is the commitment *itself* — the contract hashes
         `keccak256(abi.encodePacked(reveal))`, and the server-issued commitment IS
         keccak(reveal), so it goes in directly (NOT keccak(commitment), which would
-        be a double hash and make on-chain ecrecover yield the wrong signer)."""
+        be a double hash and make on-chain ecrecover yield the wrong signer).
+
+        The chain-id slot is ``self.chain_id`` (the contract hashes chainid()),
+        not a hardcoded constant — a ticket is bound to one deployment."""
         if not all([self.commitment, self.recipient, self.lottery_addr]):
             raise TicketError("Missing required fields for signature verification")
         return Web3.solidity_keccak(
@@ -140,7 +163,7 @@ class Ticket:
              'bytes32', 'uint256', 'uint256', 'bytes32'],
             [b'\x19', b'\x00',
              self.lottery_addr,
-             b'\x00' * 31 + b'\x64',
+             self.chain_id.to_bytes(32, 'big'),
              self.token_addr,
              self.recipient,
              self.commitment,

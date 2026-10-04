@@ -32,10 +32,15 @@ What this establishes chain-free:
   2. commitment binding — the ticket answers a live, server-issued challenge, so
      the winners *within the credited stream* are actually claimable on-chain
      (commitment == keccak(reveal)) — which is what makes collection -> EV hold;
-  3. not expired — issued + expire_delta > now, so winners remain claimable;
+  3. claimable lifetime — issued + expire_delta must exceed now by a safe
+     margin (MIN_REMAINING_LIFETIME_SECONDS), not merely be in the future: the
+     claim worker batches winners for up to an hour before broadcasting, and a
+     ticket that expires in the meantime pays nothing on-chain;
   4. EV crediting — every accepted ticket books its expected value, once;
   5. double-credit ledger — an atomic Redis guard so each ticket is booked at
-     most once, even across the in-flight challenge race.
+     most once, even across the in-flight challenge race. Keyed on the
+     contract's own replay key keccak(digest, signer) (Ticket.track_key), so a
+     re-signed/malleated copy of the same payment collides with the original.
 
 The remaining trust assumption — that the funder's escrow actually backs the
 face value a winner would claim — is the ``funding_verifier`` seam (escrow.py).
@@ -69,12 +74,22 @@ ZERO_TOKEN = "0x0000000000000000000000000000000000000000"
 # server-side double-*credit* guard.
 LEDGER_TTL_SECONDS = 90 * 24 * 3600
 
+# A ticket must still be claimable when the claim worker finally broadcasts it.
+# The worker holds winners for up to ClaimWorker.max_wait_seconds (default 1h)
+# plus a poll interval, and a restart can add more; six hours covers that with
+# margin. A ticket with less remaining life is rejected as the client's fault —
+# it minted a payment we could never collect on. The client's default lifetime
+# is a week (account.DEFAULT_EXPIRE_SECONDS), so honest clients clear this
+# easily. Keep this > the worker's window if either is ever tuned.
+MIN_REMAINING_LIFETIME_SECONDS = 6 * 3600
+
 
 class AcceptStatus(str, Enum):
     CREDITED = "credited"
     REJECTED_NO_FUNDER = "rejected_no_funder"
     REJECTED_MALFORMED = "rejected_malformed"
     REJECTED_EXPIRED = "rejected_expired"
+    REJECTED_SHORT_LIFETIME = "rejected_short_lifetime"
     REJECTED_NO_CHALLENGE = "rejected_no_challenge"
     REJECTED_SIGNATURE = "rejected_signature"
     REJECTED_UNFUNDED = "rejected_unfunded"
@@ -177,7 +192,9 @@ class TicketAcceptor:
                  token_addr: str = ZERO_TOKEN,
                  funding_verifier: Optional[FundingVerifier] = None,
                  claim_queue=None,
-                 ledger_ttl_seconds: int = LEDGER_TTL_SECONDS):
+                 ledger_ttl_seconds: int = LEDGER_TTL_SECONDS,
+                 chain_id: int = 100,
+                 min_remaining_lifetime_seconds: int = MIN_REMAINING_LIFETIME_SECONDS):
         self.recipient_addr = recipient_addr
         self.lottery_addr = lottery_addr
         self.token_addr = token_addr
@@ -185,9 +202,11 @@ class TicketAcceptor:
         self.funding_verifier = funding_verifier
         self.claim_queue = claim_queue
         self.ledger_ttl = ledger_ttl_seconds
+        self.chain_id = chain_id
+        self.min_remaining_lifetime = min_remaining_lifetime_seconds
 
-    def _ledger_key(self, ticket_id: str) -> str:
-        return f"billing:ticket:seen:{ticket_id}"
+    def _ledger_key(self, track_key: str) -> str:
+        return f"billing:ticket:seen:{track_key}"
 
     async def accept(self, ticket_str: str, *, book: ChallengeBook,
                      funder: Optional[str] = None, now: Optional[int] = None) -> AcceptResult:
@@ -199,6 +218,7 @@ class TicketAcceptor:
                 recipient=self.recipient_addr,
                 lottery_addr=self.lottery_addr,
                 token_addr=self.token_addr,
+                chain_id=self.chain_id,
             )
             ticket_id = ticket.ticket_id()
         except TicketError as e:
@@ -232,6 +252,16 @@ class TicketAcceptor:
                                 ticket_funder, ticket_id,
                                 f"ticket expired (expire={ticket.expire()} <= now={now})")
 
+        # 1c. Remaining lifetime. Alive now is not enough: the claim worker holds
+        #     winners for up to its batching window before broadcasting, and a
+        #     ticket that expires in between returns 0 at claim time — the client
+        #     would have been credited full EV for a payment we can never collect.
+        if ticket.expire() <= now + self.min_remaining_lifetime:
+            return AcceptResult(AcceptStatus.REJECTED_SHORT_LIFETIME, 0.0, face, False,
+                                ticket_funder, ticket_id,
+                                f"ticket lifetime too short to claim (expire={ticket.expire()} "
+                                f"<= now + {self.min_remaining_lifetime}s)")
+
         # 2. Commitment binding + signature authenticity, fused: find the
         #    outstanding challenge whose commitment makes the signature recover to
         #    the ticket's signed funder. The commitment is not in the ticket bytes,
@@ -264,6 +294,11 @@ class TicketAcceptor:
             return AcceptResult(AcceptStatus.REJECTED_SIGNATURE, 0.0, face, False,
                                 ticket_funder, ticket_id,
                                 "signature does not match the ticket's funder for any live challenge")
+
+        # The ledger key is the contract's own replay key, keccak(digest, signer).
+        # It needs the matched commitment (the digest covers it), so it can only
+        # be computed now; ticket_id (over the raw bytes) stays for logging.
+        ledger_id = ticket.track_key(matched_signer)
 
         # 3. Funding check (commit 2 seam). The escrow must back the FACE value,
         #    because that is what a winner in this stream will claim on-chain; if
@@ -300,7 +335,10 @@ class TicketAcceptor:
         # 4. Double-credit ledger. EV is booked once per ticket (every ticket
         #    carries value now, not just winners), so the atomic SET NX guard
         #    covers all of them. Done before the credit so a replay never books.
-        first = await self.redis.set(self._ledger_key(ticket_id), "1",
+        #    Keyed on keccak(digest, signer) — the key the contract dedupes claims
+        #    on — not on the signature bytes: a malleated (r, s) is a different
+        #    ticket_id but the same payment, and must be caught here.
+        first = await self.redis.set(self._ledger_key(ledger_id), "1",
                                      nx=True, ex=self.ledger_ttl)
         if not first:
             book.retire(matched_commit)

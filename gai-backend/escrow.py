@@ -8,32 +8,41 @@ could sign perfectly valid tickets against an empty escrow and get credited for
 EV the server can never realise.
 
 ``EscrowVerifier.check`` is the live funding_verifier wired into the acceptor. It
-reads the Orchid lottery escrow via ``lottery.check_balance(token, funder, signer)``
--> ``(balance, escrow)`` and returns a tri-state FundingCheck gated on the *escrow*
-(the funder's at-risk collateral, upper-128 of escrow_amount_), NOT the spendable
-balance (DESIGN-DECISIONS D10):
+reads the Orchid lottery account via ``lottery.check_balance(token, funder, signer)``
+-> ``(balance, escrow)`` and returns a tri-state FundingCheck. Two independent
+predicates must BOTH hold for FUNDED:
 
-  * FUNDED      — 2*face <= escrow  (collateral covers 2x face -> credit allowed)
-  * UNFUNDED    — 2*face >  escrow  (verified insufficient -> reject)
-  * UNAVAILABLE — RPC error/timeout (couldn't verify -> no credit, no penalty)
+  * ``2*face <= escrow`` — the COLLATERAL bound (DESIGN-DECISIONS D10). escrow is
+    the funder's bonded, slow-to-withdraw collateral (upper-128 of
+    escrow_amount_). Capping honored face at half of it guarantees the collateral
+    a funder forfeits on a double-spend always exceeds 2x any single face, so
+    cheating is unprofitable. This is the trust anchor.
+  * ``face <= balance`` — the LIQUIDITY check. A winner is *paid* from the
+    spendable balance (lower-128), and lottery1.sol claim_() is unforgiving when
+    it falls short: it pays out only what balance remains and then zeroes the
+    whole escrow_amount_ word — the funder loses its entire escrow and the
+    recipient is still short. So a balance below a single face is not a benign
+    dip of the payout pool; it is the state in which the next winner slashes an
+    honest funder and leaves our credited EV uncollectable. The contracts are
+    fixed; the service has to refuse to accept tickets in that state.
 
-Why bound on 2x the escrow, not the balance: winners are *paid* from the spendable
-balance, but that balance is the probabilistic payout pool and can legitimately dip
-below a single face. The trust anchor is the escrow — the funder's bonded,
-slow-to-withdraw collateral. Honoring only ``2*face <= escrow`` guarantees the
-collateral a funder forfeits on a double-spend always exceeds 2x any single face,
-so cheating is unprofitable and incentives align.
+  * FUNDED      — both hold                 (-> credit allowed)
+  * UNFUNDED    — either verified failing   (-> reject, client fault)
+  * UNAVAILABLE — RPC error/timeout         (-> no credit, no penalty)
+
+The client mirrors both when sizing a face: face = min(escrow//2, balance).
 
 Two design points the billing hot path demands:
 
   1. **Caching.** The escrow read is an on-chain RPC; doing one per ticket would
-     put Gnosis latency on every invoice round-trip. We cache the escrow per
-     (funder, signer, token) for a short TTL, so a session does ~one read per TTL
+     put Gnosis latency on every invoice round-trip. We cache the (balance,
+     escrow) pair per (funder, signer, token) for a short TTL, so a session does
+     ~one read per TTL
      rather than one per ticket. The escrow only drops as the funder withdraws
-     collateral (rare, behind a warn+unlock delay), so brief staleness is
-     acceptable — and the on-chain contract is the ultimate authority (a claim
-     simply fails if the escrow is dry, which is the accepted probabilistic-payment
-     variance).
+     collateral (rare, behind a warn+unlock delay); the balance drops as winners
+     are claimed, which is why the claim worker calls invalidate() after each
+     claim. Brief staleness between those events is acceptable — the on-chain
+     contract is the ultimate authority.
 
   2. **Fail-closed, but no-fault.** On RPC error or timeout we return UNAVAILABLE,
      never FUNDED — we never credit funding we couldn't prove. But UNAVAILABLE is
@@ -67,7 +76,7 @@ class EscrowVerifier:
         self.lottery = Lottery(self.async_w3, chain_id=chain_id, addr=lottery_address)
         self.cache_ttl = cache_ttl_seconds
         self.rpc_timeout = rpc_timeout_seconds
-        # (funder, signer, token) -> (escrow_wei, expiry_monotonic)
+        # (funder, signer, token) -> ((balance_wei, escrow_wei), expiry_monotonic)
         self._cache = {}
 
     async def check(self, funder: str, signer: str, token: str,
@@ -77,10 +86,10 @@ class EscrowVerifier:
 
         cached = self._cache.get(key)
         if cached is not None and cached[1] > now:
-            escrow = cached[0]
+            balance, escrow = cached[0]
         else:
             try:
-                _balance, escrow = await asyncio.wait_for(
+                balance, escrow = await asyncio.wait_for(
                     self.lottery.check_balance(token, funder, signer),
                     timeout=self.rpc_timeout,
                 )
@@ -91,12 +100,23 @@ class EscrowVerifier:
                 logger.error("escrow read failed (funder=%s signer=%s): %s: %s",
                              funder, signer, type(e).__name__, e)
                 return FundingCheck.UNAVAILABLE
-            self._cache[key] = (escrow, now + self.cache_ttl)
+            self._cache[key] = ((balance, escrow), now + self.cache_ttl)
 
-        # Honor a ticket only if the funder's at-risk COLLATERAL covers 2x its
-        # face: the bond forfeited on a double-spend then always exceeds any single
-        # face, so cheating is unprofitable (DESIGN-DECISIONS D10).
-        return FundingCheck.FUNDED if 2 * face_wei <= escrow else FundingCheck.UNFUNDED
+        # Honor a ticket only if (a) the funder's at-risk COLLATERAL covers 2x its
+        # face — the bond forfeited on a double-spend then always exceeds any
+        # single face, so cheating is unprofitable (DESIGN-DECISIONS D10) — AND
+        # (b) the spendable BALANCE covers the face itself, because claim_() pays
+        # a winner from balance and, if that falls short, zeroes the funder's
+        # whole escrow while paying us only the remainder (module docstring).
+        if 2 * face_wei > escrow:
+            logger.info("unfunded: 2*face %d > escrow %d (funder=%s)",
+                        face_wei, escrow, funder)
+            return FundingCheck.UNFUNDED
+        if face_wei > balance:
+            logger.info("unfunded: face %d > spendable balance %d (funder=%s)",
+                        face_wei, balance, funder)
+            return FundingCheck.UNFUNDED
+        return FundingCheck.FUNDED
 
     def invalidate(self, funder: str, signer: str,
                    token: str = ZERO_TOKEN) -> None:

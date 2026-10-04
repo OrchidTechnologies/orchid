@@ -129,6 +129,29 @@ class TicketCryptoTest(unittest.TestCase):
             t = _mint(win_prob=p)
             self.assertEqual(t.is_winner(), _contract_winner(t), msg=f"p={p}")
 
+    def test_digest_binds_the_lottery_chain_id(self):
+        """The contract hashes chainid() into the digest, so a ticket minted for
+        one chain must not recover to its funder when checked against another —
+        and the chain id must come from the Lottery, not a hardcoded 100."""
+        other = Lottery(Web3(Web3.HTTPProvider("http://127.0.0.1:1")), chain_id=1)
+        acct = OrchidAccount(other, SIGNER, KEY)
+        ts = acct.create_ticket(amount=10 ** 15, recipient=RECIPIENT, commitment=COMMIT,
+                                issued=ISSUED)
+        as_chain1 = Ticket.deserialize(ts, reveal=REVEAL, commitment=COMMIT,
+                                       recipient=RECIPIENT, lottery_addr=other.contract_addr,
+                                       chain_id=1)
+        as_chain100 = Ticket.deserialize(ts, reveal=REVEAL, commitment=COMMIT,
+                                         recipient=RECIPIENT, lottery_addr=other.contract_addr,
+                                         chain_id=100)
+        self.assertEqual(as_chain1.recover_signer(), SIGNER)
+        self.assertNotEqual(as_chain100.recover_signer(), SIGNER)
+        # And the digest for chain 1 is the contract formula with chainid = 1.
+        preimage = (b"\x19\x00" + _addr_bytes(other.contract_addr) + (1).to_bytes(32, "big")
+                    + _addr_bytes(TOKEN) + _addr_bytes(RECIPIENT) + Web3.keccak(_addr_bytes(REVEAL))
+                    + as_chain1.packed0.to_bytes(32, "big") + (as_chain1.packed1 >> 1).to_bytes(32, "big")
+                    + b"\x00" * 32)
+        self.assertEqual(as_chain1._signing_digest(), Web3.keccak(preimage))
+
     def test_expire_delta_clamped_to_uint31(self):
         funder = SIGNER
         acct = OrchidAccount(_LOTTERY, funder, KEY)
