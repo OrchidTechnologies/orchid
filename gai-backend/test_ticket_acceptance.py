@@ -36,9 +36,11 @@ STRANGER = Account.from_key("0x" + "44" * 32).address
 
 
 class _FakeRedis:
-    """Just the SET NX EX / GET the acceptor's double-credit ledger needs."""
+    """The SET NX EX / GET (double-credit ledger) and RPUSH/LLEN/LRANGE (claim
+    queue) the acceptor touches."""
     def __init__(self):
         self.kv = {}
+        self.lists = {}
 
     async def set(self, key, value, nx=False, ex=None):
         if nx and key in self.kv:
@@ -48,6 +50,17 @@ class _FakeRedis:
 
     async def get(self, key):
         return self.kv.get(key)
+
+    async def rpush(self, key, *values):
+        self.lists.setdefault(key, []).extend(values)
+        return len(self.lists[key])
+
+    async def llen(self, key):
+        return len(self.lists.get(key, []))
+
+    async def lrange(self, key, start, end):
+        lst = self.lists.get(key, [])
+        return lst[start:] if end == -1 else lst[start:end + 1]
 
 
 class _FakePaymentHandler:
@@ -314,6 +327,47 @@ class TicketAcceptanceTest(unittest.TestCase):
             funded = self._acceptor(_verifier(FundingCheck.FUNDED), redis=redis)
             r2 = await funded.accept(ts, book=book, funder=FUNDER)
             self.assertEqual(r2.status, AcceptStatus.CREDITED)  # ledger wasn't burned
+        self._run(scenario())
+
+    # --- claim queue (#6b-a: winners are durably handed off, not lost) -----
+
+    def test_winner_is_enqueued_for_claim(self):
+        async def scenario():
+            from claims import ClaimQueue
+            redis = _FakeRedis()
+            cq = ClaimQueue(redis)
+            acc = TicketAcceptor(recipient_addr=RECIPIENT, lottery_addr=_LOTTERY.contract_addr,
+                                 redis=redis, claim_queue=cq)
+            book, _, commit = self._book_with_challenge()
+            amount = 10 ** 15
+            ts = _mint(amount=amount, recipient=RECIPIENT,
+                       commitment=ChallengeBook.canon(commit), ratio=UINT64_MAX)
+            r = await acc.accept(ts, book=book, funder=FUNDER)
+            self.assertEqual(r.status, AcceptStatus.CREDITED)
+            self.assertTrue(r.is_winner)
+            self.assertEqual(await cq.pending_count(), 1)
+            rec = (await cq.peek())[0]
+            self.assertEqual(rec["ticket_id"], r.ticket_id)
+            self.assertEqual(rec["funder"], FUNDER)
+            self.assertEqual(rec["signer"].lower(), FUNDER.lower())   # self-funded
+            self.assertEqual(rec["face_wei"], str(amount))
+        self._run(scenario())
+
+    def test_queue_failure_does_not_unwind_credit(self):
+        """If enqueue throws, the EV credit must still stand (lost collection is
+        not a client-facing failure)."""
+        async def scenario():
+            class _BoomQueue:
+                async def enqueue(self, *a, **k):
+                    raise RuntimeError("redis down")
+            acc = TicketAcceptor(recipient_addr=RECIPIENT, lottery_addr=_LOTTERY.contract_addr,
+                                 redis=_FakeRedis(), claim_queue=_BoomQueue())
+            book, _, commit = self._book_with_challenge()
+            ts = _mint(amount=10 ** 15, recipient=RECIPIENT,
+                       commitment=ChallengeBook.canon(commit), ratio=UINT64_MAX)
+            r = await acc.accept(ts, book=book, funder=FUNDER)
+            self.assertEqual(r.status, AcceptStatus.CREDITED)   # credit survived
+            self.assertTrue(r.is_credited)
         self._run(scenario())
 
 

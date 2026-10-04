@@ -164,12 +164,14 @@ class TicketAcceptor:
     def __init__(self, *, recipient_addr: str, lottery_addr: str, redis,
                  token_addr: str = ZERO_TOKEN,
                  funding_verifier: Optional[FundingVerifier] = None,
+                 claim_queue=None,
                  ledger_ttl_seconds: int = LEDGER_TTL_SECONDS):
         self.recipient_addr = recipient_addr
         self.lottery_addr = lottery_addr
         self.token_addr = token_addr
         self.redis = redis
         self.funding_verifier = funding_verifier
+        self.claim_queue = claim_queue
         self.ledger_ttl = ledger_ttl_seconds
 
     def _ledger_key(self, ticket_id: str) -> str:
@@ -213,15 +215,18 @@ class TicketAcceptor:
                                 None, ticket_id, "no outstanding challenge")
 
         matched_commit = None
+        matched_signer = None
         for commit, reveal in book.outstanding():
             ticket.commitment = commit
             try:
-                if ticket.verify_signature(funder):
-                    ticket.reveal = reveal
-                    matched_commit = commit
-                    break
+                recovered = ticket.recover_signer()
             except TicketError:
                 continue
+            if recovered.lower() == funder.lower():
+                ticket.reveal = reveal
+                matched_commit = commit
+                matched_signer = recovered      # == funder in the self-funded model
+                break
         if matched_commit is None:
             return AcceptResult(AcceptStatus.REJECTED_SIGNATURE, 0.0, face, False,
                                 None, ticket_id,
@@ -238,7 +243,7 @@ class TicketAcceptor:
         else:
             try:
                 check = await self.funding_verifier(
-                    funder, ticket.recover_signer(), self.token_addr,
+                    funder, matched_signer, self.token_addr,
                     ticket.face_value())
             except Exception as e:
                 logger.error("Funding verifier raised for %s: %s", ticket_id[:12], e)
@@ -275,8 +280,16 @@ class TicketAcceptor:
             winner = ticket.is_winner()
         except TicketError:
             winner = False
-        if winner:
-            logger.info("Winning ticket %s (face %s) — to be queued for claim (#6b)",
+        if winner and self.claim_queue is not None:
+            try:
+                await self.claim_queue.enqueue(ticket, funder, matched_signer)
+            except Exception as e:
+                # The EV credit already stands — a queue failure is lost
+                # collection, never a client-facing error or an unwound credit.
+                logger.error("Failed to queue winning ticket %s for claim: %s",
+                             ticket_id[:12], e)
+        elif winner:
+            logger.info("Winning ticket %s (face %s) — no claim queue wired",
                         ticket_id[:12], face)
 
         book.retire(matched_commit)

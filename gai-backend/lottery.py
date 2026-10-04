@@ -133,10 +133,11 @@ class Lottery:
             })
 
             signed = self.web3.eth.account.sign_transaction(
-                tx, 
+                tx,
                 private_key=executor_key
             )
-            tx_hash = self.web3.eth.send_raw_transaction(signed.rawTransaction)
+            # web3 7.x renamed rawTransaction -> raw_transaction
+            tx_hash = self.web3.eth.send_raw_transaction(signed.raw_transaction)
             return tx_hash.hex()
             
         except Exception as e:

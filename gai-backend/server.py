@@ -19,6 +19,8 @@ from config_manager import ConfigManager, ConfigError
 from payment_handler import PaymentHandler
 from ticket_acceptance import ChallengeBook, TicketAcceptor
 from escrow import EscrowVerifier
+from claims import ClaimQueue, ClaimWorker
+from ticket import Ticket
 
 # Configuration
 LOTTERY_ADDRESS = '0x6dB8381b2B41b74E17F5D4eB82E8d5b04ddA0a82'
@@ -103,7 +105,8 @@ async def session(
     bills=None,
     payment_handler=None,
     config_manager=None,
-    escrow_verifier=None
+    escrow_verifier=None,
+    claim_queue=None
 ):
     print("New client connection")
     try:
@@ -115,6 +118,7 @@ async def session(
             lottery_addr=LOTTERY_ADDRESS,
             redis=bills.redis,
             funding_verifier=(escrow_verifier.check if escrow_verifier else None),
+            claim_queue=claim_queue,
         )
         session_state = {'funder': None}
         inference_url = None
@@ -258,13 +262,43 @@ async def main(bind_addr, bind_port, recipient_key, redis_url, config_path: Opti
 
     rpc_url = os.environ.get('ORCHID_GENAI_RPC_URL', 'https://rpc.gnosischain.com/')
     escrow_verifier = EscrowVerifier(lottery_address=LOTTERY_ADDRESS, rpc_url=rpc_url)
+    claim_queue = ClaimQueue(redis)
+
+    # Claim worker: drains queued winners and banks them on-chain. GATED OFF by
+    # default — broadcasting real claim() transactions requires opting in AND
+    # resolving the funder-derivation question (DESIGN-DECISIONS D6). While off,
+    # winners accumulate durably in Redis but are not claimed.
+    claim_enabled = os.environ.get('ORCHID_GENAI_CLAIM_ENABLED', '').lower() in ('1', 'true', 'yes')
+
+    async def submit_claims(records):
+        # Rebuild the signed tickets and submit one on-chain claim() for the front
+        # batch. claim_tickets uses PaymentHandler's sync web3, so run it off the
+        # event loop. All records share one token (native xDAI here).
+        tickets = [
+            Ticket(packed0=int(r["packed0"]), packed1=int(r["packed1"]),
+                   sig_r=r["sig_r"], sig_s=r["sig_s"], reveal=r["reveal"],
+                   token_addr=r["token"])
+            for r in records
+        ]
+        token = records[0]["token"]
+        return await asyncio.to_thread(
+            payment_handler.lottery.claim_tickets,
+            payment_handler.recipient_addr, tickets, recipient_key, token)
+
+    claim_worker = ClaimWorker(
+        claim_queue, submit=submit_claims,
+        recipient_addr=payment_handler.recipient_addr,
+        escrow_verifier=escrow_verifier, enabled=claim_enabled)
 
     print("\n*****")
     print(f"* Server starting up at {bind_addr} {bind_port}")
     print(f"* Using wallet at {payment_handler.recipient_addr}")
     print(f"* Connected to Redis at {redis_url}")
     print(f"* Verifying escrow against {rpc_url}")
+    print(f"* On-chain claim worker: {'ENABLED' if claim_enabled else 'disabled (winners queued only)'}")
     print("******\n\n")
+
+    claim_worker.start()
 
     async with websockets.serve(
         functools.partial(
@@ -272,7 +306,8 @@ async def main(bind_addr, bind_port, recipient_key, redis_url, config_path: Opti
             bills=bills,
             payment_handler=payment_handler,
             config_manager=config_manager,
-            escrow_verifier=escrow_verifier
+            escrow_verifier=escrow_verifier,
+            claim_queue=claim_queue
         ),
         bind_addr,
         bind_port
